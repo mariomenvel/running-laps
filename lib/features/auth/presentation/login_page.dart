@@ -5,52 +5,213 @@ class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<LoginPage> createState() {
+    return _LoginPageState();
+  }
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _emailCtrl = TextEditingController();
-  final _passCtrl  = TextEditingController();
-  bool _loading = false;
-  final _auth = AuthRepository();
+  final TextEditingController _nombreCtrl = TextEditingController();
+  final TextEditingController _emailCtrl = TextEditingController();
+  final TextEditingController _passCtrl  = TextEditingController();
+  final TextEditingController _pass2Ctrl = TextEditingController();
 
-  void _showError(Object e) {
-    final msg = e.toString();
+  final AuthRepository _auth = AuthRepository();
+
+  bool _loading = false;
+  bool _isRegisterMode = false; // false: login, true: registro
+
+  @override
+  void dispose() {
+    _nombreCtrl.dispose();
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
+    _pass2Ctrl.dispose();
+    super.dispose();
+  }
+
+  void _showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  Future<void> _signIn() async {
-    setState(() => _loading = true);
+  bool _validateForm(bool isRegister) { 
+    String nombre = _nombreCtrl.text.trim();
+    String email = _emailCtrl.text.trim();
+    String pass  = _passCtrl.text;
+    String pass2 = _pass2Ctrl.text;
+
+    if(isRegister){
+      if (nombre.isEmpty) {
+        _showSnack('El nombre es obligatorio.');
+        return false;
+      }
+    }
+    if (email.isEmpty) {
+      _showSnack('El email es obligatorio.');
+      return false;
+    }
+    if (pass.isEmpty) {
+      _showSnack('La contraseña es obligatoria.');
+      return false;
+    }
+    if (pass.length < 6) {
+      _showSnack('La contraseña debe tener al menos 6 caracteres.');
+      return false;
+    }
+    if (isRegister) {
+      if (pass2.isEmpty) {
+        _showSnack('Confirma la contraseña.');
+        return false;
+      }
+      if (pass != pass2) {
+        _showSnack('Las contraseñas no coinciden.');
+        return false;
+      }
+    }
+    return true;
+  }
+
+  Future<void> _doLogin() async {
+    if (!_validateForm(false)) {
+      return;
+    }
+    setState(() {
+      _loading = true;
+    });
     try {
-      await _auth.signIn(email: _emailCtrl.text, password: _passCtrl.text);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sesión iniciada')),
-      );
+      await _auth.signIn(_emailCtrl.text, _passCtrl.text);
+      _showSnack('Sesión iniciada');
+    } on AuthFailure catch (e) {
+      _showSnack(e.message);
     } catch (e) {
-      _showError(e);
+      _showSnack('Error inesperado al iniciar sesión.');
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
     }
   }
 
-  Future<void> _signUp() async {
-    setState(() => _loading = true);
+  Future<void> _doRegister() async {
+    if (!_validateForm(true)) {
+      return;
+    }
+    setState(() {
+      _loading = true;
+    });
     try {
-      await _auth.signUp(email: _emailCtrl.text, password: _passCtrl.text);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cuenta creada')),
-      );
+      await _auth.signUp(_emailCtrl.text, _passCtrl.text , _nombreCtrl.text);
+      _showSnack('Cuenta creada. Ya puedes iniciar sesión.');
+      if (mounted) {
+        setState(() {
+          _isRegisterMode = false; // volver a modo login
+        });
+      }
+    } on AuthFailure catch (e) {
+      _showSnack(e.message);
     } catch (e) {
-      _showError(e);
+      _showSnack('Error inesperado al registrar.');
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _doLogout() async {
+    try {
+      await _auth.signOut();
+      _showSnack('Sesión cerrada');
+    } catch (_) {
+      _showSnack('No se pudo cerrar sesión.');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Preparar handlers sin usar ternarios
+    VoidCallback? primaryAction;
+    String primaryText = '';
+    if (_loading) {
+      primaryAction = null;
+      if (_isRegisterMode) {
+        primaryText = 'Creando cuenta...';
+      } else {
+        primaryText = 'Entrando...';
+      }
+    } else {
+      if (_isRegisterMode) {
+        primaryAction = _doRegister;
+        primaryText = 'Crear cuenta';
+      } else {
+        primaryAction = _doLogin;
+        primaryText = 'Entrar';
+      }
+    }
+
+    VoidCallback? toggleModeAction;
+    String toggleText = '';
+    if (_loading) {
+      toggleModeAction = null;
+      if (_isRegisterMode) {
+        toggleText = 'Ya tengo cuenta';
+      } else {
+        toggleText = 'Crear cuenta nueva';
+      }
+    } else {
+      toggleModeAction = () {
+        setState(() {
+          _isRegisterMode = !_isRegisterMode;
+        });
+      };
+      if (_isRegisterMode) {
+        toggleText = 'Ya tengo cuenta';
+      } else {
+        toggleText = 'Crear cuenta nueva';
+      }
+    }
+
+    VoidCallback? logoutAction;
+    if (_loading) {
+      logoutAction = null;
+    } else {
+      logoutAction = _doLogout;
+    }
+
+    List<Widget> passwordConfirmRow = <Widget>[];
+    if (_isRegisterMode) {
+      passwordConfirmRow.add(const SizedBox(height: 12));
+      passwordConfirmRow.add(
+        TextField(
+          controller: _pass2Ctrl,
+          obscureText: true,
+          decoration: const InputDecoration(
+            labelText: 'Confirmar contraseña',
+            border: OutlineInputBorder(),
+          ),
+        ),
+      );
+    }
+
+    List<Widget> aniadirNombreRow = <Widget>[];
+    if (_isRegisterMode) {
+      aniadirNombreRow.add(const SizedBox(height: 12));
+      aniadirNombreRow.add(
+        TextField(
+          controller: _nombreCtrl,
+          obscureText: false,
+          decoration: const InputDecoration(
+            labelText: 'Nombre',
+            border: OutlineInputBorder(),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: Center(
         child: ConstrainedBox(
@@ -59,48 +220,61 @@ class _LoginPageState extends State<LoginPage> {
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('Running Laps', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              children: <Widget>[
+                const Text(
+                  'Running Laps',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                ...aniadirNombreRow,
+
                 const SizedBox(height: 16),
                 TextField(
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
+                  
+                
+
                 const SizedBox(height: 12),
                 TextField(
                   controller: _passCtrl,
                   obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Contraseña', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Contraseña',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
+                // Confirmación solo si está en modo registro
+                ...passwordConfirmRow,
                 const SizedBox(height: 16),
                 Row(
-                  children: [
+                  children: <Widget>[
                     Expanded(
                       child: FilledButton(
-                        onPressed: _loading ? null : _signIn,
-                        child: Text(_loading ? 'Entrando...' : 'Entrar'),
+                        onPressed: primaryAction,
+                        child: Text(primaryText),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: <Widget>[
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: _loading ? null : _signUp,
-                        child: const Text('Crear cuenta'),
+                        onPressed: toggleModeAction,
+                        child: Text(toggleText),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
                 TextButton(
-                  onPressed: _loading ? null : () async {
-                    await _auth.signOut();
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Sesión cerrada')),
-                      );
-                    }
-                  },
+                  onPressed: logoutAction,
                   child: const Text('Cerrar sesión'),
                 ),
               ],
