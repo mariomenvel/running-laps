@@ -5,12 +5,12 @@ import 'firebase_options.dart';
 import 'features/auth/presentation/login_page.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'training/domain/entrenamiento.dart';
+import 'training/domain/serie.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
