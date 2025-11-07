@@ -20,6 +20,7 @@ class Entrenamiento {
     }
     return total;
   }
+
   double tiempoTotalSec() {
     double total = 0;
     for (var serie in series) {
@@ -27,6 +28,7 @@ class Entrenamiento {
     }
     return total;
   }
+
   double rpePromedio() {
     if (series.isEmpty) return 0;
     double total = 0;
@@ -46,6 +48,7 @@ class Entrenamiento {
     final double secPerKm = tiempoSec / km;
     return secPerKm.round();
   }
+
   String ritmoMedioTexto() {
     final int secKm = ritmoMedioSecPorKm();
     final int mm = secKm ~/ 60;
@@ -54,12 +57,11 @@ class Entrenamiento {
     return mm.toString() + ':' + ss2 + ' /km';
   }
 
-   Map<String, dynamic> toMap() {
+  Map<String, dynamic> toMap() {
     final List<Map<String, dynamic>> listaSeries = <Map<String, dynamic>>[];
     for (int i = 0; i < series.length; i = i + 1) {
       listaSeries.add(series[i].toMap());
     }
-
 
     final Map<String, dynamic> base = <String, dynamic>{
       'titulo': titulo,
@@ -72,7 +74,6 @@ class Entrenamiento {
       'rpePromedio': rpePromedio(),
     };
 
-
     // Si quieres guardar también el ritmo medio (opcional):
     try {
       base['ritmoMedioSecKm'] = ritmoMedioSecPorKm();
@@ -80,10 +81,8 @@ class Entrenamiento {
       base['ritmoMedioSecKm'] = null; // sin distancia no hay ritmo
     }
 
-
     return base;
   }
-
 
   static Entrenamiento fromMap(Map<String, dynamic> map) {
     final List<dynamic> rawSeries = map['series'] as List<dynamic>;
@@ -93,10 +92,8 @@ class Entrenamiento {
       cargadas.add(Serie.fromMap(m));
     }
 
-
     final dynamic f = map['fecha'];
     final DateTime fechaParsed = _parseFechaFlexible(f);
-
 
     return Entrenamiento(
       titulo: map['titulo'] as String,
@@ -119,7 +116,3 @@ class Entrenamiento {
     return DateTime.now();
   }
 }
-
-
-
-

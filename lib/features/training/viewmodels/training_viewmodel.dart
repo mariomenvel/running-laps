@@ -1,4 +1,4 @@
-import '../domain/entrenamiento.dart';
+import '../data/entrenamiento.dart';
 import '../data/training_repository.dart';
 
 class TrainingController {
@@ -10,8 +10,7 @@ class TrainingController {
       throw Exception('El entrenamiento debe tener al menos una serie.');
     }
     //Guardar el entrenamiento usando el repositorio
-    final String entrenamientoId =
-        await _repo.createTraining(entrenamiento);
+    final String entrenamientoId = await _repo.createTraining(entrenamiento);
     return entrenamientoId;
   }
 }

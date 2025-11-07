@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../auth/data/auth_repository.dart';
+import '../data/auth_repository.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,7 +13,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _nombreCtrl = TextEditingController();
   final TextEditingController _emailCtrl = TextEditingController();
-  final TextEditingController _passCtrl  = TextEditingController();
+  final TextEditingController _passCtrl = TextEditingController();
   final TextEditingController _pass2Ctrl = TextEditingController();
 
   final AuthRepository _auth = AuthRepository();
@@ -34,13 +34,13 @@ class _LoginPageState extends State<LoginPage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  bool _validateForm(bool isRegister) { 
+  bool _validateForm(bool isRegister) {
     String nombre = _nombreCtrl.text.trim();
     String email = _emailCtrl.text.trim();
-    String pass  = _passCtrl.text;
+    String pass = _passCtrl.text;
     String pass2 = _pass2Ctrl.text;
 
-    if(isRegister){
+    if (isRegister) {
       if (nombre.isEmpty) {
         _showSnack('El nombre es obligatorio.');
         return false;
@@ -102,7 +102,7 @@ class _LoginPageState extends State<LoginPage> {
       _loading = true;
     });
     try {
-      await _auth.signUp(_emailCtrl.text, _passCtrl.text , _nombreCtrl.text);
+      await _auth.signUp(_emailCtrl.text, _passCtrl.text, _nombreCtrl.text);
       _showSnack('Cuenta creada. Ya puedes iniciar sesión.');
       if (mounted) {
         setState(() {
@@ -236,8 +236,6 @@ class _LoginPageState extends State<LoginPage> {
                     border: OutlineInputBorder(),
                   ),
                 ),
-                  
-                
 
                 const SizedBox(height: 12),
                 TextField(
