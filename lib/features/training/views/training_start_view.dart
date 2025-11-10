@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_core/firebase_core.dart'; // Para capturar FirebaseException
 
-// Asumo que están en estas rutas, ajústalas si es necesario
-import 'package:running_laps/features/training/data/entrenamiento.dart';
-import 'package:running_laps/features/training/data/serie.dart';
-import 'package:running_laps/features/training/data/training_repository.dart';
-
+// Asegúrate que las rutas son correctas
+import '../data/entrenamiento.dart';
+import '../data/serie.dart';
+import '../data/training_repository.dart';
 import 'training_session_view.dart';
 
 class TrainingStartView extends StatefulWidget {
@@ -17,7 +16,7 @@ class TrainingStartView extends StatefulWidget {
 }
 
 class _TrainingStartViewState extends State<TrainingStartView> {
-  // --- Repositorio ---
+  // --- Repositorio (Lazy) ---
   late final TrainingRepository _trainingRepo = TrainingRepository();
 
   // --- Estado ---
@@ -140,7 +139,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
   /// 1. Muestra un diálogo para pedir el nombre
   void _onFinishTrainingTap() {
-    if (_isSaving) return; 
+    if (_isSaving) return;
     _trainingNameController.clear();
 
     showDialog(
@@ -173,15 +172,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     );
   }
 
-  // --- ¡MÉTODO _saveTrainingToFirebase CORREGIDO! ---
-  // Se ha eliminado la definición anidada
   /// 2. Guarda el entrenamiento completo
-  Future<void> _saveTrainingToFirebase(String trainingName) async {
-    // ... (todo el código anterior)
-
-  /// 2. Guarda el entrenamiento completo (¡CON CAPTURA DE ERROR MÁS ROBUSTA!)
-  Future<void> _saveTrainingToFirebase(String trainingName) async {
-    // --- ¡MÉTODO _saveTrainingToFirebase CON LA CORRECCIÓN DE 'MOUNTED'! ---
   Future<void> _saveTrainingToFirebase(String trainingName) async {
     setState(() {
       _isSaving = true;
@@ -197,7 +188,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       final Entrenamiento newTraining = Entrenamiento(
         titulo: trainingName,
         fecha: DateTime.now(),
-        gps: _isGpsOn,
+        gps: _isGpsOn, // Usa el estado de _isGpsOn de la vista
         series: seriesAsObjects,
       );
 
@@ -206,7 +197,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
       print('Entrenamiento guardado con ID: $newTrainingId');
 
-      // --- ¡CORRECCIÓN! Comprobar 'mounted' ANTES de usar el context
+      // ¡Comprobar 'mounted' ANTES de usar el context!
       if (!mounted) return;
 
       // Éxito y limpieza
@@ -225,8 +216,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       });
 
     } catch (e) {
-      // --- ¡CORRECCIÓN! Comprobar 'mounted' ANTES de usar el context
-      if (!mounted) return; // Si el widget ya no existe, no hagas nada
+      // ¡Comprobar 'mounted' ANTES de usar el context!
+      if (!mounted) return;
 
       // Ahora es seguro mostrar el SnackBar de error
       print("--- ERROR CAPTURADO ---");
@@ -237,6 +228,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       String errorMessage = "Error desconocido";
       String errorString = e.toString();
 
+      // Analizar el texto del error
       if (errorString.contains("No hay usuario autenticado")) {
         errorMessage = "Error: No hay usuario autenticado";
       } else if (errorString.contains("PERMISSION_DENIED") || errorString.contains("permiso")) {
@@ -257,7 +249,6 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       );
 
     } finally {
-      // Esta parte ya estaba bien
       if (mounted) {
         setState(() {
           _isSaving = false; 
@@ -265,11 +256,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       }
     }
   }
-  }
-  // --- FIN DE LA FUNCIÓN CORREGIDA ---
 
   // ===================================================================
-  // Widgets de la UI (El resto del archivo no cambia)
+  // Widgets de la UI
   // ===================================================================
 
   @override
@@ -279,7 +268,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       body: SafeArea(
         child: Column(children: [
           _buildHeader(),
-          Expanded(child: _buildBody()), // Modificado para que el body se expanda
+          Expanded(child: _buildBody()), // El body se expande
           _buildFooter()
         ]),
       ),
@@ -341,7 +330,6 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   }
 
   Widget _buildBody() {
-    // Envuelto en Expanded para que ocupe el espacio disponible
     return Expanded(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -352,10 +340,13 @@ class _TrainingStartViewState extends State<TrainingStartView> {
             const SizedBox(height: 40.0),
             _buildFormContainer(),
             const SizedBox(height: 40.0),
+            
+            // GPS solo se muestra si no hay series
             if (series.isEmpty) ...[
               _buildGpsToggle(),
               const SizedBox(height: 30.0),
             ],
+
             const Text(
               'Series Guardadas',
               style: TextStyle(
@@ -586,22 +577,26 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 40.0),
             child: (series.isEmpty)
+                // Estado 1: Antes de la primera serie
                 ? _buildCircularButton(
                     icon: Icons.play_arrow,
                     onTap: _onStartSeriesTap,
                   )
+                // Estado 2: A partir de la segunda serie
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      // Botón Play
                       _buildCircularButton(
                         icon: Icons.play_arrow,
                         onTap: _onStartSeriesTap,
                       ),
+                      // Botón Terminar (con loader)
                       _buildCircularButton(
                         icon: Icons.close,
                         onTap: _onFinishTrainingTap,
                         color: Colors.red[700],
-                        isLoading: _isSaving,
+                        isLoading: _isSaving, // Pasa el estado de carga
                       ),
                     ],
                   ),
@@ -611,7 +606,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     );
   }
 
-  /// ¡CORREGIDO! `onTap` ahora se deshabilita si `isLoading` es true
+  /// Helper para botones circulares (con loader)
   Widget _buildCircularButton({
     required IconData icon,
     required VoidCallback onTap,
@@ -619,8 +614,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     bool isLoading = false,
   }) {
     return GestureDetector(
-      // Deshabilitar onTap si está cargando
-      onTap: isLoading ? null : onTap, 
+      onTap: isLoading ? null : onTap, // Deshabilitar onTap si está cargando
       child: Container(
         padding: const EdgeInsets.all(20.0),
         decoration: BoxDecoration(

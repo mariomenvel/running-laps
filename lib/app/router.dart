@@ -6,7 +6,7 @@ import '../features/auth/views/register_view.dart';
 
 // Training
 import '../features/training/views/training_start_view.dart';
-import '../features/training/views/training_running_view.dart';
+import '../features/training/views/training_session_view.dart';
 import '../features/training/views/training_pause_view.dart';
 
 class AppRouter {
