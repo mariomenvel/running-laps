@@ -54,8 +54,8 @@ class Serie {
   static Serie fromMap(Map<String, dynamic> map) {
     return Serie(
       tiempoSec: (map['tiempoSec'] as num).toDouble(),
-      distanciaM: map['distanciaM'] as int,
-      descansoSec: map['descansoSec'] as int,
+      distanciaM: (map['distanciaM'] as num).toInt(),     // <-- CAMBIADO
+      descansoSec: (map['descansoSec'] as num).toInt(), // <-- CAMBIADO
       rpe: (map['rpe'] as num).toDouble(),
     );
   }
