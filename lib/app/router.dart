@@ -1,40 +1,49 @@
 import 'package:flutter/material.dart';
 
-// Auth
-import '../features/auth/views/login_view.dart';
-import '../features/auth/views/register_view.dart';
-
-// Training
-import '../features/training/views/training_start_view.dart';
-import '../features/training/views/training_running_view.dart';
-import '../features/training/views/training_pause_view.dart';
-
 class AppRouter {
-  // 🔹 Ruta inicial al arrancar la app
-  static String get initialRoute {
-    return "/login";
-  }
+  static const String login = '/login';
+  static const String register = '/register';
+  static const String trainingStart = '/training/start';
+  static const String trainingRunning = '/training/running';
+  static const String trainingPause = '/training/pause';
 
-  // 🔹 Definición de todas las rutas
+  static String get initialRoute => login;
+
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
+    Widget page;
     switch (settings.name) {
-      // ------------------ AUTH ------------------
-      case "/login":
-        return MaterialPageRoute(builder: (_) => const LoginView());
-      case "/register":
-        return MaterialPageRoute(builder: (_) => const RegisterView());
-
-      // ----------------- TRAINING ----------------
-      case "/training/start":
-        return MaterialPageRoute(builder: (_) => const TrainingStartView());
-      case "/training/running":
-        return MaterialPageRoute(builder: (_) => const TrainingRunningView());
-      case "/training/pause":
-        return MaterialPageRoute(builder: (_) => const TrainingPauseView());
-
-      // ------------- RUTA POR DEFECTO ------------
+      case login:
+        page = const _Placeholder(title: 'Login (placeholder)');
+        break;
+      case register:
+        page = const _Placeholder(title: 'Register (placeholder)');
+        break;
+      case trainingStart:
+        page = const _Placeholder(title: 'Training Start (placeholder)');
+        break;
+      case trainingRunning:
+        page = const _Placeholder(title: 'Training Running (placeholder)');
+        break;
+      case trainingPause:
+        page = const _Placeholder(title: 'Training Pause (placeholder)');
+        break;
       default:
-        return MaterialPageRoute(builder: (_) => const LoginView());
+        page = const _Placeholder(title: 'Ruta no encontrada');
     }
+    return MaterialPageRoute(builder: (_) => page);
+  }
+}
+
+// Pantalla temporal para no romper compilación mientras creas las Views reales
+class _Placeholder extends StatelessWidget {
+  final String title;
+  const _Placeholder({required this.title, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: Center(child: Text(title)),
+    );
   }
 }
