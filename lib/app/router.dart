@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/features/home/views/home_view.dart';
 
 // Auth
 import '../features/auth/views/login_view.dart';
@@ -20,21 +21,21 @@ class AppRouter {
     switch (settings.name) {
       // ------------------ AUTH ------------------
       case "/login":
-        return MaterialPageRoute(builder: (_) => const LoginView());
+        return MaterialPageRoute(builder: (_) => const HomeView());
       case "/register":
-        return MaterialPageRoute(builder: (_) => const RegisterView());
+        return MaterialPageRoute(builder: (_) => const HomeView());
 
       // ----------------- TRAINING ----------------
       case "/training/start":
         return MaterialPageRoute(builder: (_) => const TrainingStartView());
       case "/training/running":
-        return MaterialPageRoute(builder: (_) => const TrainingRunningView());
+        return MaterialPageRoute(builder: (_) => const TrainingSessionView());
       case "/training/pause":
-        return MaterialPageRoute(builder: (_) => const TrainingPauseView());
+        return MaterialPageRoute(builder: (_) => const TrainingStartView());
 
       // ------------- RUTA POR DEFECTO ------------
       default:
-        return MaterialPageRoute(builder: (_) => const LoginView());
+        return MaterialPageRoute(builder: (_) => const HomeView());
     }
   }
 }

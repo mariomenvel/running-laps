@@ -27,7 +27,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   final TextEditingController _distanciaController = TextEditingController();
   final TextEditingController _descansoController = TextEditingController();
   final TextEditingController _trainingNameController = TextEditingController();
-  
+
   bool _isSaving = false;
 
   // --- Estado del Descanso ---
@@ -50,6 +50,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
   // ===================================================================
   // Lógica del Temporizador de Descanso
+  // ... (Toda tu lógica de _startRestCountdown, _skipRest, _formatRestTime, etc. va aquí)
+  // ... (No hay cambios en esta sección)
   // ===================================================================
 
   void _startRestCountdown() {
@@ -84,9 +86,10 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
   // ===================================================================
   // Lógica de Botones del Footer
+  // ... (Toda tu lógica de _onStartSeriesTap, _onFinishTrainingTap, _saveTrainingToFirebase, etc. va aquí)
+  // ... (No hay cambios en esta sección)
   // ===================================================================
 
-  /// Lógica para empezar la siguiente serie
   void _onStartSeriesTap() async {
     final String distanciaVal = _distanciaController.text;
     final String descansoVal = _descansoController.text;
@@ -137,7 +140,6 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     }
   }
 
-  /// 1. Muestra un diálogo para pedir el nombre
   void _onFinishTrainingTap() {
     if (_isSaving) return;
     _trainingNameController.clear();
@@ -149,7 +151,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         content: TextField(
           controller: _trainingNameController,
           autofocus: true,
-          decoration: const InputDecoration(labelText: 'Nombre del entrenamiento'),
+          decoration: const InputDecoration(
+            labelText: 'Nombre del entrenamiento',
+          ),
         ),
         actions: [
           TextButton(
@@ -162,8 +166,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
             onPressed: () {
               final String trainingName = _trainingNameController.text;
               if (trainingName.isEmpty) return;
-              
-              Navigator.of(ctx).pop();
+
               _saveTrainingToFirebase(trainingName);
             },
           ),
@@ -172,39 +175,36 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     );
   }
 
-  /// 2. Guarda el entrenamiento completo
   Future<void> _saveTrainingToFirebase(String trainingName) async {
     setState(() {
       _isSaving = true;
     });
 
     try {
-      // Convertir List<Map> a List<Serie>
       final List<Serie> seriesAsObjects = series
           .map((serieMap) => Serie.fromMap(serieMap))
           .toList();
 
-      // Crear el objeto de dominio
       final Entrenamiento newTraining = Entrenamiento(
         titulo: trainingName,
         fecha: DateTime.now(),
-        gps: _isGpsOn, // Usa el estado de _isGpsOn de la vista
+        gps: _isGpsOn,
         series: seriesAsObjects,
       );
 
-      // Llamar al repositorio
-      final String newTrainingId = await _trainingRepo.createTraining(newTraining);
+      final String newTrainingId = await _trainingRepo.createTraining(
+        newTraining,
+      );
 
       print('Entrenamiento guardado con ID: $newTrainingId');
 
-      // ¡Comprobar 'mounted' ANTES de usar el context!
       if (!mounted) return;
 
-      // Éxito y limpieza
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('¡Entrenamiento "$trainingName" guardado!'),
           backgroundColor: _brandPurple,
+          duration: const Duration(seconds: 2),
         ),
       );
 
@@ -215,11 +215,15 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         _restSecondsRemaining = 0;
       });
 
-    } catch (e) {
-      // ¡Comprobar 'mounted' ANTES de usar el context!
+      await Future.delayed(const Duration(seconds: 2));
+
       if (!mounted) return;
 
-      // Ahora es seguro mostrar el SnackBar de error
+      Navigator.pop(context); // Cierra el AlertDialog
+      Navigator.pop(context); // Cierra TrainingStartView
+    } catch (e) {
+      if (!mounted) return;
+
       print("--- ERROR CAPTURADO ---");
       print("runtimeType: ${e.runtimeType}");
       print("toString(): ${e.toString()}");
@@ -228,11 +232,12 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       String errorMessage = "Error desconocido";
       String errorString = e.toString();
 
-      // Analizar el texto del error
       if (errorString.contains("No hay usuario autenticado")) {
         errorMessage = "Error: No hay usuario autenticado";
-      } else if (errorString.contains("PERMISSION_DENIED") || errorString.contains("permiso")) {
-        errorMessage = "Error: Permiso denegado. Revisa las reglas de Firestore.";
+      } else if (errorString.contains("PERMISSION_DENIED") ||
+          errorString.contains("permiso")) {
+        errorMessage =
+            "Error: Permiso denegado. Revisa las reglas de Firestore.";
       } else if (e is FirebaseException) {
         errorMessage = e.message ?? "Error de Firebase";
       } else if (e is Exception) {
@@ -242,18 +247,29 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMessage),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
       );
-
     } finally {
       if (mounted) {
         setState(() {
-          _isSaving = false; 
+          _isSaving = false;
         });
       }
+    }
+  }
+
+  void _onLogoTapped() {
+    if (series.isEmpty) {
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Por favor, termina el entrenamiento actual antes de salir.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -266,11 +282,13 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(children: [
-          _buildHeader(),
-          Expanded(child: _buildBody()), // El body se expande
-          _buildFooter()
-        ]),
+        child: Column(
+          children: [
+            _buildHeader(),
+            Expanded(child: _buildBody()), // El body se expande
+            _buildFooter(),
+          ],
+        ),
       ),
     );
   }
@@ -284,6 +302,14 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           colors: [_bgGradientColor, Colors.white],
           stops: [0.0, 1.0],
         ),
+
+        // --- MODIFICACIÓN AQUÍ (1 de 3) ---
+        image: DecorationImage(
+          image: AssetImage('assets/images/fondo.png'), // Ruta de tu imagen
+          fit: BoxFit.cover, // Ajusta la imagen para cubrir
+        ),
+
+        // --- FIN DE LA MODIFICACIÓN ---
       ),
       child: Column(
         children: [
@@ -296,9 +322,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 GestureDetector(
-                  onTap: () {
-                    print("Botón de Logo presionado");
-                  },
+                  onTap: _onLogoTapped,
                   child: const CircleAvatar(
                     radius: 24.0,
                     backgroundColor: _brandPurple,
@@ -313,11 +337,12 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                   onTap: () {
                     print("Botón de Perfil presionado");
                   },
-                  child: const CircleAvatar(
+                  child: CircleAvatar(
+                    // <-- Se quitó el 'const'
                     radius: 24.0,
-                    backgroundImage: NetworkImage(
-                      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8cHJvZmlsZSwgbWFsZSxwb3J0cmFpdHx8fHx8fDE3MTkyNTg0MzQ&ixlib.rb-4.0.3&q=80&w=1080',
-                    ),
+                    backgroundImage: AssetImage(
+                      'assets/images/icono_defecto.jpg',
+                    ), // <-- Solución
                   ),
                 ),
               ],
@@ -328,6 +353,12 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       ),
     );
   }
+
+  // ===================================================================
+  // Body (Sin cambios de imagen)
+  // ... (Tus funciones _buildBody, _buildSeriesList, _buildFormContainer, _buildGpsToggle van aquí)
+  // ... (No hay cambios en esta sección)
+  // ===================================================================
 
   Widget _buildBody() {
     return Expanded(
@@ -340,8 +371,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
             const SizedBox(height: 40.0),
             _buildFormContainer(),
             const SizedBox(height: 40.0),
-            
-            // GPS solo se muestra si no hay series
+
             if (series.isEmpty) ...[
               _buildGpsToggle(),
               const SizedBox(height: 30.0),
@@ -350,9 +380,10 @@ class _TrainingStartViewState extends State<TrainingStartView> {
             const Text(
               'Series Guardadas',
               style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
             Container(
               height: 1.0,
@@ -372,7 +403,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       return const Padding(
         padding: EdgeInsets.only(top: 20.0),
         child: Text(
-          'Aún no has añadido series.',
+          'Aqui aparecerán las series que realices.',
           textAlign: TextAlign.center,
           style: TextStyle(color: Colors.grey),
         ),
@@ -396,7 +427,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               ),
             ),
             title: Text(
-                '${serie.distanciaM}m en ${serie.tiempoSec.toStringAsFixed(1)}s'),
+              '${serie.distanciaM}m en ${serie.tiempoSec.toStringAsFixed(1)}s',
+            ),
             subtitle: Text('Ritmo: ${serie.ritmoTexto()} | RPE: ${serie.rpe}'),
             trailing: Text('Desc: ${serie.descansoSec}s'),
           ),
@@ -427,8 +459,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 padding: const EdgeInsets.fromLTRB(16.0, 0, 8.0, 0),
                 child: TextField(
                   controller: _distanciaController,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: false),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: false,
+                  ),
                   decoration: InputDecoration(
                     labelText: 'Distancia en metros',
                     labelStyle: TextStyle(color: Colors.grey[600]),
@@ -451,8 +484,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 padding: const EdgeInsets.fromLTRB(16.0, 0, 8.0, 0),
                 child: TextField(
                   controller: _descansoController,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: false),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: false,
+                  ),
                   decoration: InputDecoration(
                     labelText: 'Descanso en segundos',
                     labelStyle: TextStyle(color: Colors.grey[600]),
@@ -506,13 +540,11 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   }
 
   // ===================================================================
-  // Footer Dinámico
+  // Footer Dinámico (Con modificaciones en ambos)
   // ===================================================================
 
   Widget _buildFooter() {
-    return _isResting
-        ? _buildRestTimerFooter()
-        : _buildStartButtonFooter();
+    return _isResting ? _buildRestTimerFooter() : _buildStartButtonFooter();
   }
 
   Widget _buildRestTimerFooter() {
@@ -524,13 +556,23 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           colors: [_bgGradientColor, Colors.white],
           stops: [0.0, 1.0],
         ),
+
+        // --- MODIFICACIÓN AQUÍ (2 de 3) ---
+        image: DecorationImage(
+          image: AssetImage('assets/images/fondo.png'), // Ruta de tu imagen
+          fit: BoxFit.cover, // Ajusta la imagen para cubrir
+        ),
+
+        // --- FIN DE LA MODIFICACIÓN ---
       ),
       child: Column(
         children: [
           Container(height: 1.0, color: Colors.grey.shade200),
           Padding(
-            padding:
-                const EdgeInsets.symmetric(vertical: 20.0, horizontal: 24.0),
+            padding: const EdgeInsets.symmetric(
+              vertical: 20.0,
+              horizontal: 24.0,
+            ),
             child: Column(
               children: [
                 Text(
@@ -549,10 +591,12 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 ),
                 const SizedBox(height: 10),
                 TextButton(
-                  child: const Text("Saltar descanso",
-                      style: TextStyle(color: _brandPurple)),
+                  child: const Text(
+                    "Saltar descanso",
+                    style: TextStyle(color: _brandPurple),
+                  ),
                   onPressed: _skipRest,
-                )
+                ),
               ],
             ),
           ),
@@ -570,12 +614,23 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           colors: [_bgGradientColor, Colors.white],
           stops: [0.0, 1.0],
         ),
+
+        // --- MODIFICACIÓN AQUÍ (3 de 3) ---
+        image: DecorationImage(
+          image: AssetImage('assets/images/fondo.png'), // Ruta de tu imagen
+          fit: BoxFit.cover, // Ajusta la imagen para cubrir
+        ),
+
+        // --- FIN DE LA MODIFICACIÓN ---
       ),
       child: Column(
         children: [
           Container(height: 1.0, color: Colors.grey.shade200),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 40.0),
+            padding: const EdgeInsets.symmetric(
+              vertical: 20.0,
+              horizontal: 40.0,
+            ),
             child: (series.isEmpty)
                 // Estado 1: Antes de la primera serie
                 ? _buildCircularButton(
@@ -606,7 +661,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     );
   }
 
-  /// Helper para botones circulares (con loader)
+  /// Helper para botones circulares (sin cambios)
   Widget _buildCircularButton({
     required IconData icon,
     required VoidCallback onTap,
@@ -634,14 +689,12 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 height: 40.0,
                 child: CircularProgressIndicator(
                   strokeWidth: 3.0,
-                  valueColor: AlwaysStoppedAnimation<Color>(color ?? _brandPurple),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    color ?? _brandPurple,
+                  ),
                 ),
               )
-            : Icon(
-                icon,
-                color: color ?? _brandPurple,
-                size: 40.0,
-              ),
+            : Icon(icon, color: color ?? _brandPurple, size: 40.0),
       ),
     );
   }

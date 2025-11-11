@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 // RUTA CORREGIDA:
 import 'package:running_laps/features/auth/data/auth_repository.dart';
+import 'package:running_laps/features/home/views/home_view.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -11,7 +12,8 @@ class AuthPage extends StatefulWidget {
 
 class _AuthPageState extends State<AuthPage> {
   // --- Estado de la UI ---
-  bool _isLoginView = true; // true = Vista Login (View1), false = Vista Registro (View2)
+  bool _isLoginView =
+      true; // true = Vista Login (View1), false = Vista Registro (View2)
   bool _loading = false;
 
   // --- Lógica de Auth (de LoginPage) ---
@@ -44,10 +46,9 @@ class _AuthPageState extends State<AuthPage> {
   void _showError(Object e) {
     final msg = e.toString();
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: Colors.red,
-    ));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.red));
   }
 
   Future<void> _signIn() async {
@@ -56,8 +57,16 @@ class _AuthPageState extends State<AuthPage> {
       // Usamos los controladores de email y pass
       await _auth.signIn(_emailCtrl.text, _passCtrl.text);
       if (!mounted) return;
+
+      // 1. Muestra la SnackBar PRIMERO
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sesión iniciada')),
+      ); // <-- El paréntesis de showSnackBar se cierra aquí
+
+      // 2. Navega a la nueva pantalla DESPUÉS
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const HomeView()),
+        (Route<dynamic> route) => false,
       );
     } catch (e) {
       _showError(e);
@@ -83,9 +92,9 @@ class _AuthPageState extends State<AuthPage> {
       );
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cuenta creada con éxito')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Cuenta creada con éxito')));
 
       // 3. Después de registrarse, volvemos al Login
       _toggleView();
@@ -202,7 +211,8 @@ class _AuthPageState extends State<AuthPage> {
             ),
           ),
           child: _loading
-              ? const SizedBox( // Indicador de carga
+              ? const SizedBox(
+                  // Indicador de carga
                   width: 24,
                   height: 24,
                   child: CircularProgressIndicator(
@@ -226,10 +236,7 @@ class _AuthPageState extends State<AuthPage> {
       children: [
         // NOTA: Tu View1 dice 'Nombre de usuario' pero la lógica _signIn
         // usa email. Lo dejo como 'Correo electrónico' para que funcione.
-        _buildTextField(
-          controller: _emailCtrl,
-          hintText: 'Correo electrónico',
-        ),
+        _buildTextField(controller: _emailCtrl, hintText: 'Correo electrónico'),
         const SizedBox(height: 16),
         _buildTextField(
           controller: _passCtrl,
@@ -259,10 +266,7 @@ class _AuthPageState extends State<AuthPage> {
           hintText: 'Nombre de usuario',
         ),
         const SizedBox(height: 16),
-        _buildTextField(
-          controller: _emailCtrl,
-          hintText: 'Correo electrónico',
-        ),
+        _buildTextField(controller: _emailCtrl, hintText: 'Correo electrónico'),
         const SizedBox(height: 16),
         _buildTextField(
           controller: _passCtrl,
@@ -285,12 +289,9 @@ class _AuthPageState extends State<AuthPage> {
           onPressed: _loading ? null : _toggleView, // <-- Llama a _toggleView
           child: const Text(
             '¿Ya tienes cuenta? Iniciar sesión',
-            style: TextStyle(
-              color: _brandColor,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(color: _brandColor, fontWeight: FontWeight.bold),
           ),
-        )
+        ),
       ],
     );
   }
@@ -340,9 +341,7 @@ class _AuthPageState extends State<AuthPage> {
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 key: ValueKey<bool>(_isLoginView),
-                child: _isLoginView
-                    ? _buildLoginForm()
-                    : _buildRegisterForm(),
+                child: _isLoginView ? _buildLoginForm() : _buildRegisterForm(),
               ),
             ],
           ),

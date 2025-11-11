@@ -117,8 +117,9 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
     String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-    String hundredths =
-        (duration.inMilliseconds.remainder(1000) ~/ 10).toString().padLeft(2, '0');
+    String hundredths = (duration.inMilliseconds.remainder(1000) ~/ 10)
+        .toString()
+        .padLeft(2, '0');
     return "$twoDigitMinutes:$twoDigitSeconds:$hundredths";
   }
 
@@ -177,11 +178,12 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                 size: 28.0,
               ),
             ),
-            const CircleAvatar(
+            CircleAvatar(
+              // <-- Se quitó el 'const'
               radius: 24.0,
-              backgroundImage: NetworkImage(
-                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8cHJvZmlsZSwgbWFsZSxwb3J0cmFpdHx8fHx8fDE3MTkyNTg0MzQ&ixlib.rb-4.0.3&q=80&w=1080',
-              ),
+              backgroundImage: AssetImage(
+                'assets/images/icono_defecto.jpg',
+              ), // <-- Solución
             ),
           ],
         ),
@@ -198,14 +200,14 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // --- Distancia ---
-          _buildInfoIcon(
-            Icons.route_outlined,
-            "${_distanciaInt}m",
-          ),
+          _buildInfoIcon(Icons.route_outlined, "${_distanciaInt}m"),
 
           // --- Cronómetro ---
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 20.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 32.0,
+              vertical: 20.0,
+            ),
             decoration: BoxDecoration(
               border: Border.all(color: _brandPurple, width: 6.0),
               borderRadius: BorderRadius.circular(100.0), // Borde muy redondo
@@ -263,7 +265,9 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 20.0),
         child: GestureDetector(
-          onTap: _isRunning ? _handlePausePress : null, // Solo funciona si está corriendo
+          onTap: _isRunning
+              ? _handlePausePress
+              : null, // Solo funciona si está corriendo
           child: Container(
             padding: const EdgeInsets.all(20.0),
             decoration: BoxDecoration(
@@ -309,17 +313,19 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
             height: 150,
             child: CupertinoPicker(
               itemExtent: 32.0, // Altura de cada ítem
-              scrollController: FixedExtentScrollController(initialItem: initialItemIndex),
+              scrollController: FixedExtentScrollController(
+                initialItem: initialItemIndex,
+              ),
               onSelectedItemChanged: (int index) {
                 // index 0 -> 1.0
                 // index 1 -> 1.1
                 // ...
                 // index 90 -> 10.0
-                _rpeSeleccionado = (index / 10.0) + 1.0;
+                _rpeSeleccionado = (index * 0.5) + 1.0;
               },
-              children: List.generate(91, (index) {
-                // 91 items: de 1.0 (índice 0) a 10.0 (índice 90)
-                final value = (index / 10.0) + 1.0;
+              children: List.generate(19, (index) {
+                // 19 items: de 1.0 (índice 0) a 10.0 (índice 90)
+                final value = (index * 0.5) + 1.0;
                 return Center(
                   child: Text(
                     value.toStringAsFixed(1),
@@ -339,8 +345,11 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
               },
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: _brandPurple),
-              child: const Text('Guardar', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _brandPurple, // Color de fondo
+                foregroundColor: Colors.white, // <-- ¡ESTA ES LA LÍNEA MÁGICA!
+              ),
+              child: const Text('Guardar'), // <-- Ya no necesita el estilo aquí
               onPressed: () {
                 // Guarda la serie y sale
                 _handleSave();
