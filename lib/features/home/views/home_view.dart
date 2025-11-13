@@ -1,10 +1,15 @@
+// Archivo: lib/features/home/views/home_view.dart
+
+import 'dart:ui' as ui; // Importación con prefijo para resolver TextDirection
 import 'package:flutter/material.dart';
-
-// 1. IMPORTA LA PÁGINA A LA QUE QUIERES NAVEGAR
-import 'package:running_laps/features/training/views/training_start_view.dart'; // Asegúrate que la ruta es correcta
+import 'package:running_laps/features/training/views/training_start_view.dart';
 import 'package:running_laps/features/profile/views/profile_view.dart';
+import 'package:intl/intl.dart'; 
 
-// 2. TU NUEVA PÁGINA (CON HEADER Y FOOTER)
+// Importar las clases de estadísticas
+import '../viewmodels/homeEstadistica_controller'; 
+import '../data/homeEstadistica_repository.dart'; // Necesario para los tipos de datos (Enums, DailyMetric)
+
 class HomeView extends StatefulWidget {
   const HomeView({Key? key}) : super(key: key);
 
@@ -15,12 +20,29 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   // --- Colores ---
   static const Color _brandPurple = Color(0xFF8E24AA);
+  static const Color _lightPurple = Color(0xFFC3A5D4);
   static const Color _bgGradientColor = Color(0xFFF9F5FB);
+
+  // --- CONTROLADOR DE ESTADÍSTICAS ---
+  late final HomeEstadisticaController _estadisticaController;
+
+  @override
+  void initState() {
+    super.initState();
+    // Inicializar el controlador (usará el constructor único)
+    _estadisticaController = HomeEstadisticaController();
+  }
+
+  @override
+  void dispose() {
+    // Liberar recursos
+    _estadisticaController.dispose();
+    super.dispose();
+  }
 
   // --- Lógica del Botón ---
   void _onPlayButtonTap() {
     print("Botón Play presionado. Navegando a TrainingStartView...");
-
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const TrainingStartView()),
@@ -36,22 +58,24 @@ class _HomeViewState extends State<HomeView> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(children: [
-          // 1. HEADER (Copiado 1:1 de tu código)
-          _buildHeader(),
+        child: Column(
+          children: [
+            // 1. HEADER
+            _buildHeader(),
 
-          // 2. BODY (Reemplazado por un placeholder)
-          Expanded(child: _buildNewBody()),
+            // 2. BODY (Contiene el gráfico)
+            Expanded(child: _buildNewBody()),
 
-          // 3. FOOTER (Simplificado para mostrar 1 solo botón)
-          _buildFooter()
-        ]),
+            // 3. FOOTER
+            _buildFooter(),
+          ],
+        ),
       ),
     );
   }
 
   // ===================================================================
-  // 1. HEADER (Idéntico al original PERO CON IMAGEN)
+  // 1. HEADER
   // ===================================================================
   Widget _buildHeader() {
     return Container(
@@ -60,16 +84,12 @@ class _HomeViewState extends State<HomeView> {
           center: Alignment.topCenter,
           radius: 1.2,
           colors: [_bgGradientColor, Colors.white],
-          stops: [0.0, 1.0],
+          stops: const [0.0, 1.0],
         ),
-        
-        // --- MODIFICACIÓN AQUÍ ---
-        image: DecorationImage(
-          image: AssetImage('assets/images/fondo.png'), // Ruta de tu imagen
-          fit: BoxFit.cover, // Ajusta la imagen para cubrir
+        image: const DecorationImage(
+          image: AssetImage('assets/images/fondo.png'),
+          fit: BoxFit.cover,
         ),
-        // --- FIN DE LA MODIFICACIÓN ---
-
       ),
       child: Column(
         children: [
@@ -88,20 +108,19 @@ class _HomeViewState extends State<HomeView> {
                   child: const CircleAvatar(
                     radius: 24.0,
                     backgroundColor: _brandPurple,
-                    child: Icon(
-                      Icons.directions_run,
-                      color: Colors.white,
-                      size: 28.0,
-                    ),
+                    backgroundImage: AssetImage('assets/images/logo.png'),
                   ),
                 ),
                 GestureDetector(
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (context) => const ProfileView(),
-                    ));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileView(),
+                      ),
+                    );
                   },
-                  child: CircleAvatar(
+                  child: const CircleAvatar(
                     radius: 24.0,
                     backgroundImage: AssetImage(
                       'assets/images/icono_defecto.jpg',
@@ -118,36 +137,197 @@ class _HomeViewState extends State<HomeView> {
   }
 
   // ===================================================================
-  // 2. BODY (¡Aquí pones tu nuevo contenido!)
+  // 2. BODY (Contiene la tarjeta del gráfico)
   // ===================================================================
   Widget _buildNewBody() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+      padding: const EdgeInsets.all(20.0),
       child: Center(
+        child: _buildStatisticsCard(),
+      ),
+    );
+  }
+
+  // ===================================================================
+  // WIDGET PRINCIPAL DEL GRÁFICO (El contenido de la foto)
+  // ===================================================================
+  Widget _buildStatisticsCard() {
+    return Card(
+      elevation: 4.0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.layers_outlined, size: 80, color: Colors.grey),
-            SizedBox(height: 20),
-            Text(
-              'Cuerpo en Blanco',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          children: [
+            // 1. SELECTOR DE RANGO DE TIEMPO (1S, 1M, etc.)
+            _buildTimeRangeSelector(),
+            const SizedBox(height: 20),
+
+            // 2. CONTENEDOR REACTIVO DEL GRÁFICO Y ESTADO DE CARGA/ERROR
+            ValueListenableBuilder<bool>(
+              valueListenable: _estadisticaController.isLoading,
+              builder: (context, isLoading, child) {
+                if (isLoading) {
+                  return const SizedBox(
+                    height: 200,
+                    child: Center(
+                      child: CircularProgressIndicator(color: _brandPurple),
+                    ),
+                  );
+                }
+
+                return ValueListenableBuilder<String?>(
+                  valueListenable: _estadisticaController.error,
+                  builder: (context, error, _) {
+                    if (error != null) {
+                      return SizedBox(
+                        height: 200,
+                        child: Center(child: Text('Error: $error')),
+                      );
+                    }
+                    return _buildChartArea(); // Contiene el gráfico real
+                  },
+                );
+              },
             ),
-            SizedBox(height: 10),
-            Text(
-              'Añade aquí los widgets para tu HomeView.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, color: Colors.black54),
-            ),
+            const SizedBox(height: 20),
+
+            // 3. SELECTOR DE RITMO/MÉTRICA
+            _buildMetricDropdown(),
           ],
         ),
       ),
     );
   }
 
+  // --- 1. Selector de Rango de Tiempo (1S, 1M, ...) ---
+  Widget _buildTimeRangeSelector() {
+    final List<TimeRange> ranges = [
+      TimeRange.oneWeek,
+      TimeRange.oneMonth,
+      TimeRange.threeMonths,
+      TimeRange.sixMonths,
+      TimeRange.oneYear,
+      TimeRange.max
+    ];
+
+    final Map<TimeRange, String> rangeLabels = {
+      TimeRange.oneWeek: '1S',
+      TimeRange.oneMonth: '1M',
+      TimeRange.threeMonths: '3M',
+      TimeRange.sixMonths: '6M',
+      TimeRange.oneYear: '1Y',
+      TimeRange.max: 'max',
+    };
+
+    return ValueListenableBuilder<TimeRange>(
+      valueListenable: _estadisticaController.selectedRange,
+      builder: (context, currentRange, child) {
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: ranges.map((range) {
+            final bool isSelected = currentRange == range;
+            return GestureDetector(
+              onTap: () => _estadisticaController.setRange(range),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isSelected ? _lightPurple.withOpacity(0.5) : Colors.white,
+                  border: Border.all(
+                    color: isSelected ? _brandPurple : Colors.grey.shade400,
+                    width: isSelected ? 1.5 : 1.0,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  rangeLabels[range]!,
+                  style: TextStyle(
+                    color: isSelected ? _brandPurple : Colors.black87,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  // --- 2. Área del Gráfico ---
+  Widget _buildChartArea() {
+    return ValueListenableBuilder<List<DailyMetric>>(
+      valueListenable: _estadisticaController.graphData,
+      builder: (context, data, child) {
+        if (data.isEmpty) {
+          return const SizedBox(
+            height: 200,
+            child: Center(
+              child: Text("No hay datos de entrenamiento para este periodo."),
+            ),
+          );
+        }
+
+        return SizedBox(
+          height: 200,
+          child: CustomPaint(
+            painter: BarChartPainter(
+              data: data,
+              metric: _estadisticaController.selectedMetric.value,
+              brandColor: _brandPurple,
+            ),
+            child: Container(),
+          ),
+        );
+      },
+    );
+  }
+
+  // --- 3. Selector de Métrica (Ritmo medio, Distancia, ...) ---
+  Widget _buildMetricDropdown() {
+    final Map<HomeMetric, String> metricLabels = {
+      HomeMetric.ritmoMedio: 'Ritmo medio',
+      HomeMetric.distanciaTotal: 'Distancia total (Km)',
+      HomeMetric.tiempoTotal: 'Tiempo total (min)',
+      HomeMetric.rpePromedio: 'RPE promedio',
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade400),
+      ),
+      child: ValueListenableBuilder<HomeMetric>(
+        valueListenable: _estadisticaController.selectedMetric,
+        builder: (context, currentMetric, child) {
+          return DropdownButtonHideUnderline(
+            child: DropdownButton<HomeMetric>(
+              isExpanded: true,
+              value: currentMetric,
+              icon: const Icon(Icons.arrow_drop_down),
+              onChanged: (HomeMetric? newMetric) {
+                if (newMetric != null) {
+                  _estadisticaController.setMetric(newMetric);
+                }
+              },
+              items: metricLabels.keys.map((metric) {
+                return DropdownMenuItem<HomeMetric>(
+                  value: metric,
+                  child: Text(metricLabels[metric]!),
+                );
+              }).toList(),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   // ===================================================================
-  // 3. FOOTER (Simplificado Y CON IMAGEN)
+  // 3. FOOTER
   // ===================================================================
   Widget _buildFooter() {
     return Container(
@@ -156,27 +336,24 @@ class _HomeViewState extends State<HomeView> {
           center: Alignment.bottomCenter,
           radius: 1.2,
           colors: [_bgGradientColor, Colors.white],
-          stops: [0.0, 1.0],
+          stops: const [0.0, 1.0],
         ),
-
-        // --- MODIFICACIÓN AQUÍ ---
-        image: DecorationImage(
-          image: AssetImage('assets/images/fondo.png'), // Ruta de tu imagen
-          fit: BoxFit.cover, // Ajusta la imagen para cubrir
+        image: const DecorationImage(
+          image: AssetImage('assets/images/fondo.png'),
+          fit: BoxFit.cover,
         ),
-        // --- FIN DE LA MODIFICACIÓN ---
-
       ),
       child: Column(
         children: [
           Container(height: 1.0, color: Colors.grey.shade200),
           Padding(
-            padding:
-                const EdgeInsets.symmetric(vertical: 20.0, horizontal: 40.0),
-            
+            padding: const EdgeInsets.symmetric(
+              vertical: 20.0,
+              horizontal: 40.0,
+            ),
             child: _buildCircularButton(
               icon: Icons.play_arrow,
-              onTap: _onPlayButtonTap, // <--- Tu nueva función simple
+              onTap: _onPlayButtonTap,
             ),
           ),
         ],
@@ -184,7 +361,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  /// Helper para botón circular (Copiado 1:1 de tu código)
+  /// Helper para botón circular
   Widget _buildCircularButton({
     required IconData icon,
     required VoidCallback onTap,
@@ -212,16 +389,81 @@ class _HomeViewState extends State<HomeView> {
                 height: 40.0,
                 child: CircularProgressIndicator(
                   strokeWidth: 3.0,
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(color ?? _brandPurple),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    color ?? _brandPurple,
+                  ),
                 ),
               )
-            : Icon(
-                icon,
-                color: color ?? _brandPurple,
-                size: 40.0,
-              ),
+            : Icon(icon, color: color ?? _brandPurple, size: 40.0),
       ),
     );
   }
+}
+
+// ===================================================================
+// CUSTOM PAINTER (AQUÍ ES CORRECTO)
+// ===================================================================
+class BarChartPainter extends CustomPainter {
+  final List<DailyMetric> data;
+  final HomeMetric metric;
+  final Color brandColor;
+
+  BarChartPainter({
+    required this.data,
+    required this.metric,
+    required this.brandColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (data.isEmpty) return;
+
+    final barPaint = Paint()..color = brandColor.withOpacity(0.8);
+    // Encontrar valor máximo para escalar
+    final maxValue = data.map((e) => e.value).reduce((a, b) => a > b ? a : b);
+    if (maxValue == 0) return; // Evitar división por cero
+
+    final barWidth = size.width / (data.length * 2);
+    final spacing = size.width / (data.length * 2);
+
+    for (int i = 0; i < data.length; i++) {
+      final metric = data[i];
+      final x = spacing * (i * 2 + 1);
+      final barHeight = (metric.value / maxValue) * (size.height - 20);
+
+      // Dibuja la barra
+      // 🚨 RRect SÍ USA 'ui.' porque está en dart:ui
+      final barRect = ui.RRect.fromRectAndRadius(
+        Rect.fromLTWH(x, size.height - barHeight, barWidth, barHeight),
+        const Radius.circular(5),
+      );
+      canvas.drawRRect(barRect, barPaint);
+
+      // Dibuja la etiqueta del día (Lu, Ma, Mi...)
+      final dayLabel = DateFormat(
+        'E',
+        'es', 
+      ).format(metric.date).substring(0, 2);
+      final textSpan = TextSpan(
+        text: dayLabel,
+        style: const TextStyle(color: Colors.black, fontSize: 12),
+      );
+
+      // 🚨 TextPainter NO USA 'ui.' porque está en painting.dart (material.dart)
+      final textPainter = TextPainter(
+        text: textSpan,
+        // 🚨 TextDirection SÍ USA 'ui.' para evitar la colisión con intl
+        textDirection: ui.TextDirection.ltr, 
+      );
+      
+      textPainter.layout(minWidth: 0, maxWidth: barWidth * 2);
+      textPainter.paint(
+        canvas,
+        Offset(x + barWidth / 2 - textPainter.width / 2, size.height + 5),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

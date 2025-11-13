@@ -322,15 +322,26 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 GestureDetector(
-                  onTap: _onLogoTapped,
-                  child: const CircleAvatar(
+                  // Corregido: Usar la función original () => Navigator.pop(context)
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                  // Se quita 'const' del CircleAvatar si se va a usar 'color:' en Image.asset,
+                  // ya que la aplicación de color hace que el widget Image no pueda ser constante.
+                  child: CircleAvatar(
                     radius: 24.0,
-                    backgroundColor: _brandPurple,
-                    child: Icon(
-                      Icons.directions_run,
-                      color: Colors.white,
-                      size: 28.0,
-                    ),
+                    backgroundColor:
+                        _brandPurple, // Este será el color si la imagen falla o tiene transparencia
+                    // 💡 SOLUCIÓN CLAVE: Usar backgroundImage para que la imagen rellene el círculo
+                    backgroundImage: const AssetImage('assets/images/logo.png'),
+
+                    // **IMPORTANTE:** Cuando usas backgroundImage, ya NO necesitas un 'child' con Image.asset
+                    // ni propiedades como 'width', 'height', 'fit', o 'color' para la imagen.
+                    // El CircleAvatar se encarga de recortar y ajustar la imagen para rellenar.
+
+                    // Si tu logo tiene un fondo transparente y quieres que el fondo del CircleAvatar
+                    // se vea (como el morado), 'backgroundImage' superpondrá la imagen.
+                    // El 'backgroundColor' actuará como un respaldo o un tinte si la imagen no tiene fondo.
                   ),
                 ),
                 GestureDetector(

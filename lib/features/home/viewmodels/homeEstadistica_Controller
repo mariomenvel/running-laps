@@ -1,0 +1,81 @@
+// Archivo: lib/features/home/viewmodels/homeEstadistica_controller.dart
+
+import 'package:flutter/material.dart';
+import '../data/homeEstadistica_repository.dart'; // Importa el repositorio y los modelos definidos
+
+class HomeEstadisticaController {
+  final HomeEstadisticaRepository _repository;
+
+  // CONSTRUCTOR ÚNICO (fusionado)
+  HomeEstadisticaController({HomeEstadisticaRepository? repository})
+      : _repository = repository ?? HomeEstadisticaRepository() {
+    
+    // Escucha cambios en las selecciones y recarga los datos automáticamente
+    selectedMetric.addListener(_loadData);
+    selectedRange.addListener(_loadData);
+    _loadData(); // Carga los datos iniciales
+  }
+
+  // Estado reactivo para la métrica seleccionada (Ritmo medio por defecto)
+  final ValueNotifier<HomeMetric> selectedMetric =
+      ValueNotifier<HomeMetric>(HomeMetric.ritmoMedio);
+
+  // Estado reactivo para el rango de tiempo seleccionado (1 semana por defecto)
+  final ValueNotifier<TimeRange> selectedRange =
+      ValueNotifier<TimeRange>(TimeRange.oneWeek);
+
+  // Estado reactivo para los datos de la gráfica
+  final ValueNotifier<List<DailyMetric>> graphData =
+      ValueNotifier<List<DailyMetric>>([]);
+
+  // Estado reactivo para la carga y errores
+  final ValueNotifier<bool> isLoading = ValueNotifier<bool>(false);
+  final ValueNotifier<String?> error = ValueNotifier<String?>(null);
+
+  // Lógica para recargar los datos
+  Future<void> _loadData() async {
+    error.value = null;
+    if (isLoading.value) return;
+    isLoading.value = true;
+
+    try {
+      final List<DailyMetric> data = await _repository.getMetricsForGraph(
+        range: selectedRange.value,
+        metric: selectedMetric.value,
+      );
+      graphData.value = data;
+    } catch (e) {
+      String errorMessage = e.toString();
+      if (errorMessage.contains('Exception:')) {
+        errorMessage = errorMessage.split('Exception:')[1].trim();
+      }
+      error.value = 'Error al cargar las estadísticas: $errorMessage';
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // Métodos públicos para que la vista interactúe
+  void setMetric(HomeMetric metric) {
+    if (selectedMetric.value != metric) {
+      selectedMetric.value = metric;
+    }
+  }
+
+  void setRange(TimeRange range) {
+    if (selectedRange.value != range) {
+      selectedRange.value = range;
+    }
+  }
+
+  // Disponer los ValueNotifier para evitar fugas de memoria
+  void dispose() {
+    selectedMetric.removeListener(_loadData);
+    selectedRange.removeListener(_loadData);
+    selectedMetric.dispose();
+    selectedRange.dispose();
+    graphData.dispose();
+    isLoading.dispose();
+    error.dispose();
+  }
+}

@@ -1,0 +1,65 @@
+import 'package:flutter/foundation.dart'; // Para ValueNotifier
+
+// Importaciones relativas a la capa del dominio
+import '../data/training_repository.dart'; // [FEATURES/PROFILE/DATA]
+import '../data/models/entrenamiento.dart'; // [FEATURES/PROFILE/DATA/MODELS]
+
+
+class ProfileController {
+  // --- Repositorios ---
+  final TrainingRepository _trainingRepo;
+
+  // Constructor con inyección de dependencia para el repositorio
+  ProfileController({TrainingRepository? trainingRepo})
+      : _trainingRepo = trainingRepo ?? TrainingRepository();
+  
+
+  // --- Estados Observables para la UI (La View) ---
+  
+  /// Estado de la lista de entrenamientos.
+  final ValueNotifier<List<Entrenamiento>> trainings = 
+      ValueNotifier<List<Entrenamiento>>([]);
+      
+  /// Estado de carga.
+  final ValueNotifier<bool> isLoading = ValueNotifier<bool>(false);
+  
+  /// Estado de error. Si hay un error, contendrá un mensaje de texto.
+  final ValueNotifier<String?> error = ValueNotifier<String?>(null);
+
+
+  // --- Lógica de Negocio ---
+
+  /// Carga la lista de entrenamientos desde el repositorio.
+  Future<void> loadTrainings() async {
+    // 1. Limpiar errores y establecer estado de carga
+    error.value = null;
+    if (isLoading.value) return; // Evitar llamadas múltiples
+    isLoading.value = true;
+
+    try {
+      // 2. Llamada al Repository para obtener los datos
+      final List<Entrenamiento> loadedTrainings = await _trainingRepo.getTrainings();
+      
+      // 3. Actualizar el estado de la lista
+      trainings.value = loadedTrainings;
+      
+    } catch (e) {
+      // 4. Manejar errores y actualizar el estado de error
+      // Usamos el mensaje de la excepción para la UI
+      error.value = e.toString().contains('Exception:') 
+          ? e.toString().split('Exception:')[1].trim()
+          : 'Error desconocido al cargar los entrenamientos.';
+          
+    } finally {
+      // 5. Finalizar el estado de carga
+      isLoading.value = false;
+    }
+  }
+
+  /// Limpia los recursos (ValueNotifier y otros) cuando el Controller ya no se usa.
+  void dispose() {
+    trainings.dispose();
+    isLoading.dispose();
+    error.dispose();
+  }
+}

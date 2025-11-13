@@ -1,0 +1,73 @@
+// Archivo: lib/features/profile/data/training_repository.dart
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+// Importamos tus clases de modelo
+import '../models/entrenamiento.dart'; 
+import '../models/serie.dart'; 
+
+// Asumo que tienes una clase de manejo de errores, como en tu auth_repository.dart
+import '../../../core/auth_failure.dart'; 
+
+class TrainingRepository {
+  // Inicialización de las instancias de Firebase
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+  TrainingRepository();
+
+  /// Obtiene la lista de todos los entrenamientos del usuario actual desde Firestore.
+  /// 
+  /// Utiliza la clase Entrenamiento.fromMap para mapear los documentos.
+  Future<List<Entrenamiento>> getTrainings() async {
+    // 1. Obtener el ID del usuario actual
+    final User? user = _auth.currentUser;
+    if (user == null) {
+      // Lanza una excepción si no hay usuario logueado
+      throw AuthFailure('No user logged in', 'User not authenticated.'); 
+    }
+
+    try {
+      // 2. Referencia a la subcolección 'trainings' del usuario
+      final CollectionReference trainingsRef = 
+          _db.collection('users').doc(user.uid).collection('trainings');
+      
+      // 3. Ejecutar la consulta (ordenamos por la fecha de creación en Firestore)
+      final QuerySnapshot snapshot = await trainingsRef
+          .orderBy('createdAt', descending: true) // Usamos el campo createdAt para ordenar
+          .get();
+
+      // 4. Mapear los documentos a una lista de objetos Entrenamiento
+      final List<Entrenamiento> trainings = snapshot.docs.map((doc) {
+        // Obtenemos los datos del documento (Map<String, dynamic>)
+        final Map<String, dynamic> data = doc.data()! as Map<String, dynamic>;
+
+        // **Ajuste clave:** Convertir los Timestamps de Firestore a los tipos que espera tu fromMap
+        // Tu clase Entrenamiento.fromMap espera que 'fecha' sea String (ISO) o int.
+        // Firestore proporciona 'createdAt' y 'updatedAt' como Timestamp. 
+        // Añadiremos estos campos al mapa para que tu modelo tenga todos los datos.
+        
+        // Mapeo de Timestamps de Firestore a String (ISO 8601) antes de pasarlo a fromMap
+        // Esto hace que tu _parseFechaFlexible() en Entrenamiento.dart pueda manejarlo.
+        if (data.containsKey('fecha') && data['fecha'] is Timestamp) {
+           data['fecha'] = (data['fecha'] as Timestamp).toDate().toIso8601String();
+        }
+        
+        // NOTA: Tu modelo 'Entrenamiento' actual no tiene los campos createdAt, updatedAt, 
+        // distanciaTotalM, tiempoTotalSec, etc., como propiedades finales, sino como métodos.
+        // Sin embargo, sí están guardados en el mapa de Firestore (porque los añades en toMap). 
+        // Solo necesitamos que Entrenamiento.fromMap lea lo esencial (titulo, fecha, gps, series).
+
+        // Usamos Entrenamiento.fromMap para construir el objeto
+        return Entrenamiento.fromMap(data);
+      }).toList();
+
+      return trainings;
+    } on FirebaseException catch (e) {
+      // Manejo de errores específicos de Firebase (ej. permisos, ruta incorrecta)
+      throw Exception('Error de Firebase al cargar entrenamientos: ${e.message}');
+    } catch (e) {
+      // Manejo de otros errores (ej. error de mapeo, o falta de datos)
+      throw Exception('Error inesperado al cargar entrenamientos: $e');
+    }
+  }
+}
