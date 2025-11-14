@@ -32,11 +32,29 @@ class _AuthPageState extends State<AuthPage> {
   // ===================================================================
 
   void _showError(Object e) {
-    final msg = e.toString();
+    final msg = _extractErrorMessage(e);
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.red));
+  }
+
+  String _extractErrorMessage(Object e) {
+    // Si ya es un string, devolver tal cual
+    if (e is String) return e;
+
+    final s = e.toString();
+
+    // Intentar extraer el texto después de un prefijo tipo "Exception: " o "Error: "
+    final regex = RegExp(r'^(?:.*?:\s*)(.*)$');
+    final match = regex.firstMatch(s);
+    if (match != null && match.groupCount >= 1) {
+      final extracted = match.group(1);
+      if (extracted != null && extracted.isNotEmpty) return extracted;
+    }
+
+    // Si no se pudo extraer, devolver el toString() original
+    return s;
   }
 
   Future<void> _signIn() async {
@@ -46,9 +64,9 @@ class _AuthPageState extends State<AuthPage> {
       if (!mounted) return;
 
       // 1. Muestra la SnackBar PRIMERO
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sesión iniciada')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Sesión iniciada')));
 
       // 2. Navega a la nueva pantalla DESPUÉS
       Navigator.of(context).pushAndRemoveUntil(
@@ -69,9 +87,11 @@ class _AuthPageState extends State<AuthPage> {
       await _authCtrl.signUp();
       if (!mounted) return;
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Cuenta creada con éxito. Inicia sesión.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cuenta creada con éxito. Inicia sesión.'),
+        ),
+      );
 
       // No es necesario llamar a _toggleView() aquí, el Controller ya lo hace.
     } catch (e) {
@@ -116,23 +136,12 @@ class _AuthPageState extends State<AuthPage> {
           keyboardType: hintText.contains('Correo')
               ? TextInputType.emailAddress
               : TextInputType.text,
-          style: const TextStyle(
-            color: Colors.black,
-            fontSize: 16,
-          ),
+          style: const TextStyle(color: Colors.black, fontSize: 16),
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: const TextStyle(
-              color: Colors.grey,
-              letterSpacing: 0.0,
-            ),
+            hintStyle: const TextStyle(color: Colors.grey, letterSpacing: 0.0),
             border: InputBorder.none,
-            contentPadding: const EdgeInsets.fromLTRB(
-              20,
-              20,
-              12,
-              7,
-            ),
+            contentPadding: const EdgeInsets.fromLTRB(20, 20, 12, 7),
           ),
         ),
       ),
@@ -164,7 +173,9 @@ class _AuthPageState extends State<AuthPage> {
             width: _fieldWidth,
             height: 60,
             child: OutlinedButton(
-              onPressed: isLoading ? null : onPressed, // Deshabilita si está cargando
+              onPressed: isLoading
+                  ? null
+                  : onPressed, // Deshabilita si está cargando
               style: OutlinedButton.styleFrom(
                 backgroundColor: _brandColor,
                 foregroundColor: Colors.white,
@@ -205,7 +216,10 @@ class _AuthPageState extends State<AuthPage> {
     return Column(
       children: [
         // CAMBIO: Usando los controladores del Controller
-        _buildTextField(controller: _authCtrl.emailCtrl, hintText: 'Correo electrónico'),
+        _buildTextField(
+          controller: _authCtrl.emailCtrl,
+          hintText: 'Correo electrónico',
+        ),
         const SizedBox(height: 16),
         _buildTextField(
           controller: _authCtrl.passCtrl,
@@ -213,16 +227,10 @@ class _AuthPageState extends State<AuthPage> {
           obscureText: true,
         ),
         const SizedBox(height: 20),
-        _buildButton(
-          text: 'INICIAR SESIÓN',
-          onPressed: _signIn,
-        ),
+        _buildButton(text: 'INICIAR SESIÓN', onPressed: _signIn),
         const SizedBox(height: 16),
         // CAMBIO: El botón de registro usa el mismo widget que ya gestiona la carga.
-        _buildButton(
-          text: 'REGISTRARSE',
-          onPressed: _toggleView,
-        ),
+        _buildButton(text: 'REGISTRARSE', onPressed: _toggleView),
       ],
     );
   }
@@ -237,7 +245,10 @@ class _AuthPageState extends State<AuthPage> {
           hintText: 'Nombre de usuario',
         ),
         const SizedBox(height: 16),
-        _buildTextField(controller: _authCtrl.emailCtrl, hintText: 'Correo electrónico'),
+        _buildTextField(
+          controller: _authCtrl.emailCtrl,
+          hintText: 'Correo electrónico',
+        ),
         const SizedBox(height: 16),
         _buildTextField(
           controller: _authCtrl.passCtrl,
@@ -251,10 +262,7 @@ class _AuthPageState extends State<AuthPage> {
           obscureText: true,
         ),
         const SizedBox(height: 32),
-        _buildButton(
-          text: 'REGISTRARSE',
-          onPressed: _signUp,
-        ),
+        _buildButton(text: 'REGISTRARSE', onPressed: _signUp),
         const SizedBox(height: 16),
         // CAMBIO: Este TextButton solo usa la carga para deshabilitarse (si está cargando, el onPressed es null)
         ValueListenableBuilder<bool>(
@@ -264,7 +272,10 @@ class _AuthPageState extends State<AuthPage> {
               onPressed: isLoading ? null : _toggleView,
               child: const Text(
                 '¿Ya tienes cuenta? Iniciar sesión',
-                style: TextStyle(color: _brandColor, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: _brandColor,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             );
           },
@@ -314,7 +325,9 @@ class _AuthPageState extends State<AuthPage> {
                   return AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
                     key: ValueKey<bool>(isLoginView),
-                    child: isLoginView ? _buildLoginForm() : _buildRegisterForm(),
+                    child: isLoginView
+                        ? _buildLoginForm()
+                        : _buildRegisterForm(),
                   );
                 },
               ),

@@ -26,7 +26,6 @@ class AuthController {
       // Llamada al Repository
       await _repo.signIn(emailCtrl.text, passCtrl.text);
     } catch (e) {
-      // El Controller solo lanza la excepción; la View se encarga de mostrar el error.
       rethrow;
     } finally {
       isLoading.value = false;
@@ -40,20 +39,17 @@ class AuthController {
       if (passCtrl.text != confirmPassCtrl.text) {
         throw Exception("Las contraseñas no coinciden");
       }
-      if (emailCtrl.text.trim().isEmpty || passCtrl.text.isEmpty || usernameCtrl.text.isEmpty) {
+      if (emailCtrl.text.trim().isEmpty ||
+          passCtrl.text.isEmpty ||
+          usernameCtrl.text.isEmpty) {
         throw Exception('Todos los campos son obligatorios.');
       }
 
       // 2. Llamada al Repository
-      await _repo.signUp(
-        emailCtrl.text,
-        passCtrl.text,
-        usernameCtrl.text,
-      );
+      await _repo.signUp(emailCtrl.text, passCtrl.text, usernameCtrl.text);
 
       // 3. Después de registrarse, volvemos al Login
       toggleView();
-
     } catch (e) {
       rethrow;
     } finally {
@@ -72,7 +68,7 @@ class AuthController {
     // Invertir la vista
     isLoginView.value = !isLoginView.value;
   }
-  
+
   // Limpieza de recursos
   void dispose() {
     emailCtrl.dispose();

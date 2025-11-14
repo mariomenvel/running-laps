@@ -33,8 +33,9 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
 
   // --- Colores ---
   static const Color _brandPurple = Color(0xFF8E24AA);
-  // ¡COLOR DEL GRADIENTE ACTUALIZADO! (Un poco más visible)
-  static const Color _bgGradientColor = Color(0xFFF5EEF8);
+  // --- MODIFICADO (1 de 4) ---
+  // Se iguala al color de TrainingStartView
+  static const Color _bgGradientColor = Color(0xFFF9F5FB);
 
   @override
   void initState() {
@@ -153,46 +154,51 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
     );
   }
 
+  // --- MODIFICADO (2 de 4) ---
   Widget _buildHeader() {
     return Container(
-      // ¡GRADIENTE ACTUALIZADO!
+      // ¡GRADIENTE Y FONDO ACTUALIZADOS!
       decoration: BoxDecoration(
         gradient: RadialGradient(
           center: Alignment.topCenter,
-          radius: 1.0, // Ajustado para un brillo más concentrado
+          radius: 1.2, // Ajustado para coincidir
           colors: [_bgGradientColor, Colors.white],
-          stops: [0.0, 0.9], // Se difumina al 90% del radio
+          stops: [0.0, 1.0], // Ajustado para coincidir
+        ),
+        // Añadido para coincidir
+        image: DecorationImage(
+          image: AssetImage('assets/images/fondo.png'), // Ruta de tu imagen
+          fit: BoxFit.cover, // Ajusta la imagen para cubrir
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            CircleAvatar(
-              radius: 24.0,
-              backgroundColor:
-                  _brandPurple, // Este será el color si la imagen falla o tiene transparencia
-              // 💡 SOLUCIÓN CLAVE: Usar backgroundImage para que la imagen rellene el círculo
-              backgroundImage: const AssetImage('assets/images/logo.png'),
-
-              // **IMPORTANTE:** Cuando usas backgroundImage, ya NO necesitas un 'child' con Image.asset
-              // ni propiedades como 'width', 'height', 'fit', o 'color' para la imagen.
-              // El CircleAvatar se encarga de recortar y ajustar la imagen para rellenar.
-
-              // Si tu logo tiene un fondo transparente y quieres que el fondo del CircleAvatar
-              // se vea (como el morado), 'backgroundImage' superpondrá la imagen.
-              // El 'backgroundColor' actuará como un respaldo o un tinte si la imagen no tiene fondo.
+      // Añadida Column y línea divisoria para coincidir
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20.0,
+              vertical: 16.0,
             ),
-            CircleAvatar(
-              // <-- Se quitó el 'const'
-              radius: 24.0,
-              backgroundImage: AssetImage(
-                'assets/images/icono_defecto.jpg',
-              ), // <-- Solución
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                CircleAvatar(
+                  radius: 24.0,
+                  backgroundColor: _brandPurple,
+                  backgroundImage: const AssetImage('assets/images/logo.png'),
+                ),
+                CircleAvatar(
+                  radius: 24.0,
+                  backgroundImage: AssetImage(
+                    'assets/images/icono_defecto.jpg',
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          // Línea divisoria añadida
+          Container(height: 1.0, color: Colors.grey.shade200),
+        ],
       ),
     );
   }
@@ -257,44 +263,57 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
     );
   }
 
+  // --- MODIFICADO (3 de 4) ---
   Widget _buildFooter() {
     return Container(
-      // ¡GRADIENTE ACTUALIZADO!
+      // ¡GRADIENTE Y FONDO ACTUALIZADOS!
       decoration: BoxDecoration(
         gradient: RadialGradient(
           center: Alignment.bottomCenter,
-          radius: 1.0, // Ajustado para un brillo más concentrado
+          radius: 1.2, // Ajustado para coincidir
           colors: [_bgGradientColor, Colors.white],
-          stops: [0.0, 0.9], // Se difumina al 90% del radio
+          stops: [0.0, 1.0], // Ajustado para coincidir
+        ),
+        // Añadido para coincidir
+        image: DecorationImage(
+          image: AssetImage('assets/images/fondo.png'), // Ruta de tu imagen
+          fit: BoxFit.cover, // Ajusta la imagen para cubrir
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20.0),
-        child: GestureDetector(
-          onTap: _isRunning
-              ? _handlePausePress
-              : null, // Solo funciona si está corriendo
-          child: Container(
-            padding: const EdgeInsets.all(20.0),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.12),
-                  blurRadius: 15.0,
-                  offset: const Offset(0, 5),
+      // Añadida Column y línea divisoria para coincidir
+      child: Column(
+        children: [
+          // Línea divisoria añadida
+          Container(height: 1.0, color: Colors.grey.shade200),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20.0),
+            child: GestureDetector(
+              onTap: _isRunning
+                  ? _handlePausePress
+                  : null, // Solo funciona si está corriendo
+              child: Container(
+                padding: const EdgeInsets.all(20.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.12),
+                      blurRadius: 15.0,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Icon(
-              // Si está corriendo muestra Pausa, si no, muestra Play
-              _isRunning ? Icons.pause : Icons.play_arrow,
-              color: _brandPurple,
-              size: 40.0,
+                child: Icon(
+                  // Si está corriendo muestra Pausa, si no, muestra Play
+                  _isRunning ? Icons.pause : Icons.play_arrow,
+                  color: _brandPurple,
+                  size: 40.0,
+                ),
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -303,11 +322,16 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
   // Diálogo de RPE (La "Ruleta")
   // ===================================================================
 
+  // --- MODIFICADO (4 de 4) ---
+  // Se ha corregido el generador de la lista del CupertinoPicker
+  // para que tenga 19 items (de 1.0 a 10.0, en pasos de 0.5)
+  // y se ha ajustado el cálculo del _rpeSeleccionado.
   void _showRpePicker() {
     // Guarda el RPE actual por si el usuario cancela
     final double rpeInicial = _rpeSeleccionado;
     // Calcula el índice inicial para la ruleta
-    final int initialItemIndex = ((_rpeSeleccionado - 1.0) * 10).round();
+    // (1.0 -> índice 0), (1.5 -> índice 1), (10.0 -> índice 18)
+    final int initialItemIndex = ((_rpeSeleccionado - 1.0) * 2).round();
 
     showDialog(
       context: context,
@@ -324,13 +348,13 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
               ),
               onSelectedItemChanged: (int index) {
                 // index 0 -> 1.0
-                // index 1 -> 1.1
+                // index 1 -> 1.5
                 // ...
-                // index 90 -> 10.0
+                // index 18 -> 10.0
                 _rpeSeleccionado = (index * 0.5) + 1.0;
               },
               children: List.generate(19, (index) {
-                // 19 items: de 1.0 (índice 0) a 10.0 (índice 90)
+                // 19 items: 1.0, 1.5 ... 10.0
                 final value = (index * 0.5) + 1.0;
                 return Center(
                   child: Text(
@@ -353,9 +377,9 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: _brandPurple, // Color de fondo
-                foregroundColor: Colors.white, // <-- ¡ESTA ES LA LÍNEA MÁGICA!
+                foregroundColor: Colors.white, // Color del texto
               ),
-              child: const Text('Guardar'), // <-- Ya no necesita el estilo aquí
+              child: const Text('Guardar'),
               onPressed: () {
                 // Guarda la serie y sale
                 _handleSave();

@@ -161,7 +161,11 @@ class _TrainingStartViewState extends State<TrainingStartView> {
             onPressed: () => Navigator.of(ctx).pop(),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: _brandPurple),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _brandPurple,
+              foregroundColor: Colors.white,
+            ),
+
             child: const Text('Guardar'),
             onPressed: () {
               final String trainingName = _trainingNameController.text;
