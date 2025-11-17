@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 // RUTA CORREGIDA:
 import 'package:running_laps/features/auth/viewmodels/auth_controller.dart'; // CAMBIO: Usamos el Controller
 import 'package:running_laps/features/home/views/home_view.dart';
+import '../../../app/tema.dart';
 
 // CAMBIO: La vista ahora usa el Controller
 class AuthPage extends StatefulWidget {
@@ -18,7 +19,6 @@ class _AuthPageState extends State<AuthPage> {
 
   // --- Constantes de Estilo ---
   static const double _fieldWidth = 300;
-  static const Color _brandColor = Color(0xFFA349A4);
 
   @override
   void dispose() {
@@ -177,7 +177,7 @@ class _AuthPageState extends State<AuthPage> {
                   ? null
                   : onPressed, // Deshabilita si está cargando
               style: OutlinedButton.styleFrom(
-                backgroundColor: _brandColor,
+                backgroundColor: Tema.brandPurple,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -273,7 +273,7 @@ class _AuthPageState extends State<AuthPage> {
               child: const Text(
                 '¿Ya tienes cuenta? Iniciar sesión',
                 style: TextStyle(
-                  color: _brandColor,
+                  color: Tema.brandPurple,
                   fontWeight: FontWeight.bold,
                 ),
               ),

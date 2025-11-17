@@ -4,10 +4,11 @@ import 'dart:ui' as ui; // Importación con prefijo para resolver TextDirection
 import 'package:flutter/material.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
 import 'package:running_laps/features/profile/views/profile_view.dart';
-import 'package:intl/intl.dart'; 
+import 'package:intl/intl.dart';
+import '../../../app/tema.dart'; // Importar la clase Tema
 
 // Importar las clases de estadísticas
-import '../viewmodels/homeEstadistica_controller'; 
+import '../viewmodels/homeEstadistica_controller';
 import '../data/homeEstadistica_repository.dart'; // Necesario para los tipos de datos (Enums, DailyMetric)
 
 class HomeView extends StatefulWidget {
@@ -19,7 +20,6 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   // --- Colores ---
-  static const Color _brandPurple = Color(0xFF8E24AA);
   static const Color _lightPurple = Color(0xFFC3A5D4);
   static const Color _bgGradientColor = Color(0xFFF9F5FB);
 
@@ -107,7 +107,7 @@ class _HomeViewState extends State<HomeView> {
                   },
                   child: const CircleAvatar(
                     radius: 24.0,
-                    backgroundColor: _brandPurple,
+                    backgroundColor: Tema.brandPurple,
                     backgroundImage: AssetImage('assets/images/logo.png'),
                   ),
                 ),
@@ -142,9 +142,7 @@ class _HomeViewState extends State<HomeView> {
   Widget _buildNewBody() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20.0),
-      child: Center(
-        child: _buildStatisticsCard(),
-      ),
+      child: Center(child: _buildStatisticsCard()),
     );
   }
 
@@ -154,9 +152,7 @@ class _HomeViewState extends State<HomeView> {
   Widget _buildStatisticsCard() {
     return Card(
       elevation: 4.0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.0),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -173,7 +169,7 @@ class _HomeViewState extends State<HomeView> {
                   return const SizedBox(
                     height: 200,
                     child: Center(
-                      child: CircularProgressIndicator(color: _brandPurple),
+                      child: CircularProgressIndicator(color: Tema.brandPurple),
                     ),
                   );
                 }
@@ -210,7 +206,7 @@ class _HomeViewState extends State<HomeView> {
       TimeRange.threeMonths,
       TimeRange.sixMonths,
       TimeRange.oneYear,
-      TimeRange.max
+      TimeRange.max,
     ];
 
     final Map<TimeRange, String> rangeLabels = {
@@ -232,11 +228,16 @@ class _HomeViewState extends State<HomeView> {
             return GestureDetector(
               onTap: () => _estadisticaController.setRange(range),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: isSelected ? _lightPurple.withOpacity(0.5) : Colors.white,
+                  color: isSelected
+                      ? _lightPurple.withOpacity(0.5)
+                      : Colors.white,
                   border: Border.all(
-                    color: isSelected ? _brandPurple : Colors.grey.shade400,
+                    color: isSelected ? Tema.brandPurple : Colors.grey.shade400,
                     width: isSelected ? 1.5 : 1.0,
                   ),
                   borderRadius: BorderRadius.circular(20),
@@ -244,8 +245,10 @@ class _HomeViewState extends State<HomeView> {
                 child: Text(
                   rangeLabels[range]!,
                   style: TextStyle(
-                    color: isSelected ? _brandPurple : Colors.black87,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    color: isSelected ? Tema.brandPurple : Colors.black87,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                   ),
                 ),
               ),
@@ -276,7 +279,7 @@ class _HomeViewState extends State<HomeView> {
             painter: BarChartPainter(
               data: data,
               metric: _estadisticaController.selectedMetric.value,
-              brandColor: _brandPurple,
+              brandColor: Tema.brandPurple,
             ),
             child: Container(),
           ),
@@ -390,11 +393,11 @@ class _HomeViewState extends State<HomeView> {
                 child: CircularProgressIndicator(
                   strokeWidth: 3.0,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    color ?? _brandPurple,
+                    color ?? Tema.brandPurple,
                   ),
                 ),
               )
-            : Icon(icon, color: color ?? _brandPurple, size: 40.0),
+            : Icon(icon, color: color ?? Tema.brandPurple, size: 40.0),
       ),
     );
   }
@@ -442,7 +445,7 @@ class BarChartPainter extends CustomPainter {
       // Dibuja la etiqueta del día (Lu, Ma, Mi...)
       final dayLabel = DateFormat(
         'E',
-        'es', 
+        'es',
       ).format(metric.date).substring(0, 2);
       final textSpan = TextSpan(
         text: dayLabel,
@@ -453,9 +456,9 @@ class BarChartPainter extends CustomPainter {
       final textPainter = TextPainter(
         text: textSpan,
         // 🚨 TextDirection SÍ USA 'ui.' para evitar la colisión con intl
-        textDirection: ui.TextDirection.ltr, 
+        textDirection: ui.TextDirection.ltr,
       );
-      
+
       textPainter.layout(minWidth: 0, maxWidth: barWidth * 2);
       textPainter.paint(
         canvas,

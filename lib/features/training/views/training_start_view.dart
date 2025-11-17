@@ -7,6 +7,7 @@ import '../data/entrenamiento.dart';
 import '../data/serie.dart';
 import '../data/training_repository.dart';
 import 'training_session_view.dart';
+import '../../../app/tema.dart';
 
 class TrainingStartView extends StatefulWidget {
   const TrainingStartView({Key? key}) : super(key: key);
@@ -36,7 +37,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   bool _isResting = false;
 
   // --- Colores ---
-  static const Color _brandPurple = Color(0xFF8E24AA);
+
   static const Color _bgGradientColor = Color(0xFFF9F5FB);
 
   @override
@@ -133,7 +134,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('¡Serie guardada! Ritmo: ${result.ritmoTexto()}'),
-            backgroundColor: _brandPurple,
+            backgroundColor: Tema.brandPurple,
           ),
         );
       }
@@ -162,7 +163,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: _brandPurple,
+              backgroundColor: Tema.brandPurple,
               foregroundColor: Colors.white,
             ),
 
@@ -207,7 +208,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('¡Entrenamiento "$trainingName" guardado!'),
-          backgroundColor: _brandPurple,
+          backgroundColor: Tema.brandPurple,
           duration: const Duration(seconds: 2),
         ),
       );
@@ -334,8 +335,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                   // ya que la aplicación de color hace que el widget Image no pueda ser constante.
                   child: CircleAvatar(
                     radius: 24.0,
-                    backgroundColor:
-                        _brandPurple, // Este será el color si la imagen falla o tiene transparencia
+                    backgroundColor: Tema
+                        .brandPurple, // Este será el color si la imagen falla o tiene transparencia
                     // 💡 SOLUCIÓN CLAVE: Usar backgroundImage para que la imagen rellene el círculo
                     backgroundImage: const AssetImage('assets/images/logo.png'),
 
@@ -435,7 +436,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           margin: const EdgeInsets.symmetric(vertical: 4.0),
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: _brandPurple,
+              backgroundColor: Tema.brandPurple,
               child: Text(
                 '${index + 1}',
                 style: const TextStyle(color: Colors.white),
@@ -528,11 +529,15 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           style: TextStyle(
             fontSize: 18.0,
             fontWeight: FontWeight.bold,
-            color: _brandPurple,
+            color: Tema.brandPurple,
           ),
         ),
         const SizedBox(height: 12.0),
-        const Icon(Icons.location_searching, color: _brandPurple, size: 48.0),
+        const Icon(
+          Icons.location_searching,
+          color: Tema.brandPurple,
+          size: 48.0,
+        ),
         const SizedBox(height: 12.0),
         Transform.scale(
           scale: 1.3,
@@ -544,8 +549,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               });
               print("GPS Alternado: $_isGpsOn");
             },
-            activeColor: _brandPurple,
-            activeTrackColor: _brandPurple.withOpacity(0.5),
+            activeColor: Tema.brandPurple,
+            activeTrackColor: Tema.brandPurple.withOpacity(0.5),
             inactiveThumbColor: Colors.grey[300],
             inactiveTrackColor: Colors.grey[400],
           ),
@@ -600,7 +605,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                   style: const TextStyle(
                     fontSize: 40,
                     fontWeight: FontWeight.bold,
-                    color: _brandPurple,
+                    color: Tema.brandPurple,
                     fontFeatures: [FontFeature.tabularFigures()],
                   ),
                 ),
@@ -608,7 +613,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 TextButton(
                   child: const Text(
                     "Saltar descanso",
-                    style: TextStyle(color: _brandPurple),
+                    style: TextStyle(color: Tema.brandPurple),
                   ),
                   onPressed: _skipRest,
                 ),
@@ -705,11 +710,11 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 child: CircularProgressIndicator(
                   strokeWidth: 3.0,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    color ?? _brandPurple,
+                    color ?? Tema.brandPurple,
                   ),
                 ),
               )
-            : Icon(icon, color: color ?? _brandPurple, size: 40.0),
+            : Icon(icon, color: color ?? Tema.brandPurple, size: 40.0),
       ),
     );
   }

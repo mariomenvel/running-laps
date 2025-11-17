@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import '../data/serie.dart'; // Asegúrate que la ruta es correcta
+import '../data/serie.dart';
+import '../../../app/tema.dart';
 
 class TrainingSessionView extends StatefulWidget {
   final String distancia;
@@ -31,8 +32,6 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
   int _distanciaInt = 0;
   int _descansoInt = 0;
 
-  // --- Colores ---
-  static const Color _brandPurple = Color(0xFF8E24AA);
   // --- MODIFICADO (1 de 4) ---
   // Se iguala al color de TrainingStartView
   static const Color _bgGradientColor = Color(0xFFF9F5FB);
@@ -184,7 +183,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
               children: [
                 CircleAvatar(
                   radius: 24.0,
-                  backgroundColor: _brandPurple,
+                  backgroundColor: Tema.brandPurple,
                   backgroundImage: const AssetImage('assets/images/logo.png'),
                 ),
                 CircleAvatar(
@@ -221,7 +220,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
               vertical: 20.0,
             ),
             decoration: BoxDecoration(
-              border: Border.all(color: _brandPurple, width: 6.0),
+              border: Border.all(color: Tema.brandPurple, width: 6.0),
               borderRadius: BorderRadius.circular(100.0), // Borde muy redondo
             ),
             child: Text(
@@ -249,7 +248,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
   Widget _buildInfoIcon(IconData icon, String text) {
     return Column(
       children: [
-        Icon(icon, color: _brandPurple, size: 48.0),
+        Icon(icon, color: Tema.brandPurple, size: 48.0),
         const SizedBox(height: 8.0),
         Text(
           text,
@@ -307,7 +306,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                 child: Icon(
                   // Si está corriendo muestra Pausa, si no, muestra Play
                   _isRunning ? Icons.pause : Icons.play_arrow,
-                  color: _brandPurple,
+                  color: Tema.brandPurple,
                   size: 40.0,
                 ),
               ),
@@ -376,7 +375,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: _brandPurple, // Color de fondo
+                backgroundColor: Tema.brandPurple, // Color de fondo
                 foregroundColor: Colors.white, // Color del texto
               ),
               child: const Text('Guardar'),

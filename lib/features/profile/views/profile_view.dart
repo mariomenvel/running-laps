@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../app/tema.dart';
 // Asumimos las rutas para los componentes necesarios
 // En un proyecto real, necesitarías un AuthFailure.dart o manejar el error directamente.
 // Para este ejemplo autocontenido, se asume que existe.
@@ -481,7 +482,6 @@ class ProfileView extends StatefulWidget {
 
 class _ProfileViewState extends State<ProfileView> {
   // --- Colores ---
-  static const Color _brandPurple = Color(0xFF8E24AA);
   static const Color _brandDark = Color(0xFF333333);
   static const Color _cardColor = Color(0xFFF0F0F0);
   static const Color _bgGradientColor = Color(0xFFF9F5FB);
@@ -569,8 +569,8 @@ class _ProfileViewState extends State<ProfileView> {
                   },
                   child: CircleAvatar(
                     radius: 24.0,
-                    backgroundColor: _ProfileViewState
-                        ._brandPurple, // Este será el color si la imagen falla o tiene transparencia
+                    backgroundColor: Tema
+                        .brandPurple, // Este será el color si la imagen falla o tiene transparencia
                     // 💡 SOLUCIÓN CLAVE: Usar backgroundImage para que la imagen rellene el círculo
                     backgroundImage: const AssetImage('assets/images/logo.png'),
 
@@ -617,7 +617,7 @@ class _ProfileViewState extends State<ProfileView> {
         // Muestra el indicador de carga si está cargando y la lista está vacía
         if (isLoading && _controller.trainings.value.isEmpty) {
           return const Center(
-            child: CircularProgressIndicator(color: _brandPurple),
+            child: CircularProgressIndicator(color: Tema.brandPurple),
           );
         }
 
@@ -643,7 +643,7 @@ class _ProfileViewState extends State<ProfileView> {
                         const Text(
                           'Toca para reintentar.',
                           style: TextStyle(
-                            color: _brandPurple,
+                            color: Tema.brandPurple,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
