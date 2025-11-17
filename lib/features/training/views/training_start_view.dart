@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart'; // Para capturar FirebaseException
 
 // Asegúrate que las rutas son correctas
-import '../data/entrenamiento.dart';
 import '../data/serie.dart';
-import '../data/training_repository.dart';
+import '../viewmodels/training_viewmodel.dart';
 import 'training_session_view.dart';
 import '../../../app/tema.dart';
 
@@ -17,27 +17,23 @@ class TrainingStartView extends StatefulWidget {
 }
 
 class _TrainingStartViewState extends State<TrainingStartView> {
-  // --- Repositorio (Lazy) ---
-  late final TrainingRepository _trainingRepo = TrainingRepository();
+  // --- ViewModel ---
+  final TrainingViewModel _vm = TrainingViewModel();
 
-  // --- Estado ---
-  bool _isGpsOn = false;
-  List<Map<String, dynamic>> series = [];
+  // --- Estado UI ---
+  bool _isSaving = false;
 
   // --- Controladores ---
   final TextEditingController _distanciaController = TextEditingController();
   final TextEditingController _descansoController = TextEditingController();
   final TextEditingController _trainingNameController = TextEditingController();
 
-  bool _isSaving = false;
-
-  // --- Estado del Descanso ---
+  // --- Estado del Descanso (UI) ---
   Timer? _restTimer;
   int _restSecondsRemaining = 0;
   bool _isResting = false;
 
   // --- Colores ---
-
   static const Color _bgGradientColor = Color(0xFFF9F5FB);
 
   @override
@@ -50,9 +46,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   }
 
   // ===================================================================
-  // Lógica del Temporizador de Descanso
-  // ... (Toda tu lógica de _startRestCountdown, _skipRest, _formatRestTime, etc. va aquí)
-  // ... (No hay cambios en esta sección)
+  // Lógica del Temporizador de Descanso (UI)
   // ===================================================================
 
   void _startRestCountdown() {
@@ -87,20 +81,21 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
   // ===================================================================
   // Lógica de Botones del Footer
-  // ... (Toda tu lógica de _onStartSeriesTap, _onFinishTrainingTap, _saveTrainingToFirebase, etc. va aquí)
-  // ... (No hay cambios en esta sección)
   // ===================================================================
 
   void _onStartSeriesTap() async {
     final String distanciaVal = _distanciaController.text;
     final String descansoVal = _descansoController.text;
 
-    if (distanciaVal.isEmpty || descansoVal.isEmpty) {
+    // 🔒 Validación centralizada en el ViewModel
+    final String? error = _vm.validarDistanciaYDescanso(
+      distanciaVal,
+      descansoVal,
+    );
+
+    if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor, introduce distancia y descanso.'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(error), backgroundColor: Colors.red),
       );
       return;
     }
@@ -111,14 +106,14 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         builder: (context) => TrainingSessionView(
           distancia: distanciaVal,
           descanso: descansoVal,
-          gpsActivo: _isGpsOn,
+          gpsActivo: _vm.gpsOn,
         ),
       ),
     );
 
     if (result != null && result is Serie) {
       setState(() {
-        series.add(result.toMap());
+        _vm.addSerie(result);
       });
 
       _distanciaController.clear();
@@ -166,7 +161,6 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               backgroundColor: Tema.brandPurple,
               foregroundColor: Colors.white,
             ),
-
             child: const Text('Guardar'),
             onPressed: () {
               final String trainingName = _trainingNameController.text;
@@ -186,20 +180,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     });
 
     try {
-      final List<Serie> seriesAsObjects = series
-          .map((serieMap) => Serie.fromMap(serieMap))
-          .toList();
-
-      final Entrenamiento newTraining = Entrenamiento(
-        titulo: trainingName,
-        fecha: DateTime.now(),
-        gps: _isGpsOn,
-        series: seriesAsObjects,
-      );
-
-      final String newTrainingId = await _trainingRepo.createTraining(
-        newTraining,
-      );
+      final String newTrainingId = await _vm.guardarEntrenamiento(trainingName);
 
       print('Entrenamiento guardado con ID: $newTrainingId');
 
@@ -214,7 +195,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       );
 
       setState(() {
-        series.clear();
+        _vm.clearSeries();
         _restTimer?.cancel();
         _isResting = false;
         _restSecondsRemaining = 0;
@@ -264,7 +245,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   }
 
   void _onLogoTapped() {
-    if (series.isEmpty) {
+    if (_vm.series.isEmpty) {
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -307,14 +288,10 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           colors: [_bgGradientColor, Colors.white],
           stops: [0.0, 1.0],
         ),
-
-        // --- MODIFICACIÓN AQUÍ (1 de 3) ---
-        image: DecorationImage(
-          image: AssetImage('assets/images/fondo.png'), // Ruta de tu imagen
-          fit: BoxFit.cover, // Ajusta la imagen para cubrir
+        image: const DecorationImage(
+          image: AssetImage('assets/images/fondo.png'),
+          fit: BoxFit.cover,
         ),
-
-        // --- FIN DE LA MODIFICACIÓN ---
       ),
       child: Column(
         children: [
@@ -327,38 +304,24 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 GestureDetector(
-                  // Corregido: Usar la función original () => Navigator.pop(context)
                   onTap: () {
                     Navigator.pop(context);
                   },
-                  // Se quita 'const' del CircleAvatar si se va a usar 'color:' en Image.asset,
-                  // ya que la aplicación de color hace que el widget Image no pueda ser constante.
-                  child: CircleAvatar(
+                  child: const CircleAvatar(
                     radius: 24.0,
-                    backgroundColor: Tema
-                        .brandPurple, // Este será el color si la imagen falla o tiene transparencia
-                    // 💡 SOLUCIÓN CLAVE: Usar backgroundImage para que la imagen rellene el círculo
-                    backgroundImage: const AssetImage('assets/images/logo.png'),
-
-                    // **IMPORTANTE:** Cuando usas backgroundImage, ya NO necesitas un 'child' con Image.asset
-                    // ni propiedades como 'width', 'height', 'fit', o 'color' para la imagen.
-                    // El CircleAvatar se encarga de recortar y ajustar la imagen para rellenar.
-
-                    // Si tu logo tiene un fondo transparente y quieres que el fondo del CircleAvatar
-                    // se vea (como el morado), 'backgroundImage' superpondrá la imagen.
-                    // El 'backgroundColor' actuará como un respaldo o un tinte si la imagen no tiene fondo.
+                    backgroundColor: Tema.brandPurple,
+                    backgroundImage: AssetImage('assets/images/logo.png'),
                   ),
                 ),
                 GestureDetector(
                   onTap: () {
                     print("Botón de Perfil presionado");
                   },
-                  child: CircleAvatar(
-                    // <-- Se quitó el 'const'
+                  child: const CircleAvatar(
                     radius: 24.0,
                     backgroundImage: AssetImage(
                       'assets/images/icono_defecto.jpg',
-                    ), // <-- Solución
+                    ),
                   ),
                 ),
               ],
@@ -369,12 +332,6 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       ),
     );
   }
-
-  // ===================================================================
-  // Body (Sin cambios de imagen)
-  // ... (Tus funciones _buildBody, _buildSeriesList, _buildFormContainer, _buildGpsToggle van aquí)
-  // ... (No hay cambios en esta sección)
-  // ===================================================================
 
   Widget _buildBody() {
     return Expanded(
@@ -388,7 +345,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
             _buildFormContainer(),
             const SizedBox(height: 40.0),
 
-            if (series.isEmpty) ...[
+            if (_vm.series.isEmpty) ...[
               _buildGpsToggle(),
               const SizedBox(height: 30.0),
             ],
@@ -407,7 +364,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               margin: const EdgeInsets.symmetric(vertical: 8.0),
             ),
             _buildSeriesList(),
-            const SizedBox(height: 40.0), // Espacio al final
+            const SizedBox(height: 40.0),
           ],
         ),
       ),
@@ -415,7 +372,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   }
 
   Widget _buildSeriesList() {
-    if (series.isEmpty) {
+    final List<Serie> lista = _vm.series;
+
+    if (lista.isEmpty) {
       return const Padding(
         padding: EdgeInsets.only(top: 20.0),
         child: Text(
@@ -428,9 +387,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: series.length,
+      itemCount: lista.length,
       itemBuilder: (context, index) {
-        final serie = Serie.fromMap(series[index]);
+        final Serie serie = lista[index];
         return Card(
           elevation: 2.0,
           margin: const EdgeInsets.symmetric(vertical: 4.0),
@@ -478,6 +437,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: false,
                   ),
+                  inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
                   decoration: InputDecoration(
                     labelText: 'Distancia en metros',
                     labelStyle: TextStyle(color: Colors.grey[600]),
@@ -503,6 +465,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: false,
                   ),
+                  inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
                   decoration: InputDecoration(
                     labelText: 'Descanso en segundos',
                     labelStyle: TextStyle(color: Colors.grey[600]),
@@ -542,12 +507,12 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         Transform.scale(
           scale: 1.3,
           child: Switch(
-            value: _isGpsOn,
+            value: _vm.gpsOn,
             onChanged: (bool value) {
               setState(() {
-                _isGpsOn = value;
+                _vm.setGpsOn(value);
               });
-              print("GPS Alternado: $_isGpsOn");
+              print("GPS Alternado: ${_vm.gpsOn}");
             },
             activeColor: Tema.brandPurple,
             activeTrackColor: Tema.brandPurple.withOpacity(0.5),
@@ -560,7 +525,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   }
 
   // ===================================================================
-  // Footer Dinámico (Con modificaciones en ambos)
+  // Footer Dinámico
   // ===================================================================
 
   Widget _buildFooter() {
@@ -574,16 +539,12 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           center: Alignment.bottomCenter,
           radius: 1.2,
           colors: [_bgGradientColor, Colors.white],
-          stops: [0.0, 1.0],
+          stops: const [0.0, 1.0],
         ),
-
-        // --- MODIFICACIÓN AQUÍ (2 de 3) ---
-        image: DecorationImage(
-          image: AssetImage('assets/images/fondo.png'), // Ruta de tu imagen
-          fit: BoxFit.cover, // Ajusta la imagen para cubrir
+        image: const DecorationImage(
+          image: AssetImage('assets/images/fondo.png'),
+          fit: BoxFit.cover,
         ),
-
-        // --- FIN DE LA MODIFICACIÓN ---
       ),
       child: Column(
         children: [
@@ -632,16 +593,12 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           center: Alignment.bottomCenter,
           radius: 1.2,
           colors: [_bgGradientColor, Colors.white],
-          stops: [0.0, 1.0],
+          stops: const [0.0, 1.0],
         ),
-
-        // --- MODIFICACIÓN AQUÍ (3 de 3) ---
-        image: DecorationImage(
-          image: AssetImage('assets/images/fondo.png'), // Ruta de tu imagen
-          fit: BoxFit.cover, // Ajusta la imagen para cubrir
+        image: const DecorationImage(
+          image: AssetImage('assets/images/fondo.png'),
+          fit: BoxFit.cover,
         ),
-
-        // --- FIN DE LA MODIFICACIÓN ---
       ),
       child: Column(
         children: [
@@ -651,7 +608,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               vertical: 20.0,
               horizontal: 40.0,
             ),
-            child: (series.isEmpty)
+            child: (_vm.series.isEmpty)
                 // Estado 1: Antes de la primera serie
                 ? _buildCircularButton(
                     icon: Icons.play_arrow,
@@ -661,17 +618,15 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Botón Play
                       _buildCircularButton(
                         icon: Icons.play_arrow,
                         onTap: _onStartSeriesTap,
                       ),
-                      // Botón Terminar (con loader)
                       _buildCircularButton(
                         icon: Icons.close,
                         onTap: _onFinishTrainingTap,
                         color: Colors.red[700],
-                        isLoading: _isSaving, // Pasa el estado de carga
+                        isLoading: _isSaving,
                       ),
                     ],
                   ),
@@ -681,7 +636,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     );
   }
 
-  /// Helper para botones circulares (sin cambios)
+  /// Helper para botones circulares (misma estética)
   Widget _buildCircularButton({
     required IconData icon,
     required VoidCallback onTap,
@@ -689,7 +644,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     bool isLoading = false,
   }) {
     return GestureDetector(
-      onTap: isLoading ? null : onTap, // Deshabilitar onTap si está cargando
+      onTap: isLoading ? null : onTap,
       child: Container(
         padding: const EdgeInsets.all(20.0),
         decoration: BoxDecoration(
