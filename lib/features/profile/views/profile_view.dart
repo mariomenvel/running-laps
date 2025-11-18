@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:running_laps/features/profile/views/avatar_editor_wrapper_view.dart';
 import '../../../app/tema.dart';
 // Asumimos las rutas para los componentes necesarios
 // En un proyecto real, necesitarías un AuthFailure.dart o manejar el error directamente.
@@ -586,7 +587,13 @@ class _ProfileViewState extends State<ProfileView> {
                 // Avatar del Usuario
                 GestureDetector(
                   onTap: () {
-                    debugPrint("Botón de Perfil presionado");
+                    // Esta es la línea que pediste:
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AvatarEditorWrapperView(),
+                      ),
+                    );
                   },
                   child: const CircleAvatar(
                     radius: 24.0,

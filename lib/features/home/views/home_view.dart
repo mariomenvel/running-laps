@@ -120,11 +120,8 @@ class _HomeViewState extends State<HomeView> {
                       ),
                     );
                   },
-                  child: const CircleAvatar(
-                    radius: 24.0,
-                    backgroundImage: AssetImage(
-                      'assets/images/icono_defecto.jpg',
-                    ),
+                  child: AvatarHelper.construirImagenPerfil(
+                    radius: 24.0, // Le pasamos el tamaño que quieras
                   ),
                 ),
               ],

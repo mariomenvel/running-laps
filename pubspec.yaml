@@ -31,6 +31,12 @@ dependencies:
   flutter:
     sdk: flutter
 
+  flutter_avatar_maker:
+    git:
+      url: https://github.com/wm4n/flutter-avatar-maker.git
+
+  # Paquete para guardar datos
+  shared_preferences: ^2.0.0 # <-- Usa la última versión
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
@@ -65,6 +71,18 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/avatar/accessories/
+    - assets/avatar/body/
+    - assets/avatar/clothing/
+    - assets/avatar/eyes/
+    - assets/avatar/facial hair/ # (Importante: con el espacio)
+    - assets/avatar/head/accessories/
+    - assets/avatar/head/hair/long/
+    - assets/avatar/head/hair/short/
+    - assets/avatar/mouth/
+    - assets/avatar/nose/
+
+ 
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
