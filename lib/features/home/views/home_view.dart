@@ -6,6 +6,7 @@ import 'package:running_laps/features/training/views/training_start_view.dart';
 import 'package:running_laps/features/profile/views/profile_view.dart';
 import 'package:intl/intl.dart';
 import '../../../app/tema.dart'; // Importar la clase Tema
+import '../../../core/widgets/app_footer.dart'; // Importar el footer reutilizable
 
 // Importar las clases de estadísticas
 import '../viewmodels/homeEstadistica_controller';
@@ -330,35 +331,7 @@ class _HomeViewState extends State<HomeView> {
   // 3. FOOTER
   // ===================================================================
   Widget _buildFooter() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment.bottomCenter,
-          radius: 1.2,
-          colors: [_bgGradientColor, Colors.white],
-          stops: const [0.0, 1.0],
-        ),
-        image: const DecorationImage(
-          image: AssetImage('assets/images/fondo.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Column(
-        children: [
-          Container(height: 1.0, color: Colors.grey.shade200),
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: 20.0,
-              horizontal: 40.0,
-            ),
-            child: _buildCircularButton(
-              icon: Icons.play_arrow,
-              onTap: _onPlayButtonTap,
-            ),
-          ),
-        ],
-      ),
-    );
+    return AppFooter(onTap: _onPlayButtonTap);
   }
 
   /// Helper para botón circular

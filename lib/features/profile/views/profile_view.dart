@@ -1,493 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:running_laps/app/tema.dart';
 import 'package:running_laps/features/profile/views/avatar_editor_wrapper_view.dart';
-import '../../../app/tema.dart';
-// Asumimos las rutas para los componentes necesarios
-// En un proyecto real, necesitarías un AuthFailure.dart o manejar el error directamente.
-// Para este ejemplo autocontenido, se asume que existe.
-import '../../../core/auth_failure.dart'; // Para el manejo de errores (Mantengo la línea original)
-
-// ===================================================================
-// DEFINICIÓN DE CLASES DE MODELO
-// ===================================================================
-
-// CLASE SERIE
-class Serie {
-  final double tiempoSec;
-  final int distanciaM;
-  final int descansoSec;
-  final double rpe;
-
-  Serie({
-    required this.tiempoSec,
-    required this.distanciaM,
-    required this.descansoSec,
-    required this.rpe,
-  }) : assert(tiempoSec >= 0),
-       assert(distanciaM >= 0),
-       assert(descansoSec >= 0),
-       assert(rpe >= 1 && rpe <= 10);
-
-  int ritmoSecPorKm() {
-    if (distanciaM <= 0) {
-      throw StateError('distanciaM debe ser > 0 para calcular ritmo');
-    }
-    final double km = distanciaM / 1000.0;
-    final double secPerKm = tiempoSec / km;
-    return secPerKm.round();
-  }
-
-  String ritmoTexto() {
-    try {
-      final int secKm = ritmoSecPorKm();
-      final int mm = secKm ~/ 60;
-      final int ss = secKm % 60;
-      final String ss2 = ss < 10 ? '0$ss' : ss.toString();
-      return '$mm:$ss2';
-    } catch (_) {
-      return '--:--';
-    }
-  }
-
-  Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'tiempoSec': tiempoSec,
-      'distanciaM': distanciaM,
-      'descansoSec': descansoSec,
-      'rpe': rpe,
-    };
-  }
-
-  static Serie fromMap(Map<String, dynamic> map) {
-    return Serie(
-      tiempoSec: (map['tiempoSec'] as num).toDouble(),
-      distanciaM: (map['distanciaM'] as num).toInt(),
-      descansoSec: (map['descansoSec'] as num).toInt(),
-      rpe: (map['rpe'] as num).toDouble(),
-    );
-  }
-}
-
-// CLASE ENTRENAMIENTO
-class Entrenamiento {
-  final String titulo;
-  final DateTime fecha;
-  final bool gps;
-  final List<Serie> series;
-
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
-
-  final String? id;
-
-  Entrenamiento({
-    required this.titulo,
-    required this.fecha,
-    required this.gps,
-    required this.series,
-    this.createdAt,
-    this.updatedAt,
-    this.id,
-  });
-
-  int distanciaTotalM() {
-    return series.fold(0, (sum, serie) => sum + serie.distanciaM);
-  }
-
-  double tiempoTotalSec() {
-    return series.fold(
-      0.0,
-      (sum, serie) => sum + serie.tiempoSec + serie.descansoSec,
-    );
-  }
-
-  double rpePromedio() {
-    if (series.isEmpty) return 0.0;
-    return series.fold(0.0, (sum, serie) => sum + serie.rpe) / series.length;
-  }
-
-  int ritmoMedioSecPorKm() {
-    final int distanciaM = distanciaTotalM();
-    final double tiempoSec = tiempoTotalSec();
-    if (distanciaM <= 0 || tiempoSec <= 0) return 0;
-
-    final double km = distanciaM / 1000.0;
-    final double secPerKm = tiempoSec / km;
-    return secPerKm.round();
-  }
-
-  String _formatSeconds(int totalSeconds) {
-    final int minutes = totalSeconds ~/ 60;
-    final int seconds = totalSeconds % 60;
-    return '$minutes min ${seconds.toString().padLeft(2, '0')}s';
-  }
-
-  String tiempoTotalTexto() {
-    return _formatSeconds(tiempoTotalSec().round());
-  }
-
-  String ritmoMedioTexto() {
-    final int secKm = ritmoMedioSecPorKm();
-    if (secKm == 0) return '--:-- /km';
-    final int mm = secKm ~/ 60;
-    final int ss = secKm % 60;
-    final String ss2 = ss < 10 ? '0$ss' : ss.toString();
-    return '$mm:$ss2 /km';
-  }
-
-  Map<String, dynamic> toMap() {
-    final List<Map<String, dynamic>> listaSeries = series
-        .map((s) => s.toMap())
-        .toList();
-    final Map<String, dynamic> base = <String, dynamic>{
-      'titulo': titulo,
-      'fecha': fecha.toIso8601String(),
-      'gps': gps,
-      'series': listaSeries,
-      'distanciaTotalM': distanciaTotalM(),
-      'tiempoTotalSec': tiempoTotalSec(),
-      'rpePromedio': rpePromedio(),
-    };
-    try {
-      base['ritmoMedioSecKm'] = ritmoMedioSecPorKm();
-    } catch (_) {
-      base['ritmoMedioSecKm'] = null;
-    }
-    return base;
-  }
-
-  static DateTime _parseFechaFlexible(dynamic v) {
-    if (v is Timestamp) {
-      // Soporte para Timestamp de Firestore
-      return v.toDate();
-    }
-    if (v is String) {
-      return DateTime.parse(v);
-    }
-    if (v is int) {
-      return DateTime.fromMillisecondsSinceEpoch(v);
-    }
-    return DateTime.now();
-  }
-
-  static Entrenamiento fromMap(Map<String, dynamic> map, {String? id}) {
-    final List<dynamic> rawSeries = map['series'] as List<dynamic>;
-    final List<Serie> cargadas = rawSeries
-        .map((m) => Serie.fromMap(m as Map<String, dynamic>))
-        .toList();
-
-    return Entrenamiento(
-      id: id,
-      titulo: map['titulo'] as String,
-      fecha: _parseFechaFlexible(map['fecha']),
-      gps: map['gps'] as bool,
-      series: cargadas,
-      // Extrayendo campos de metadatos de Firestore
-      createdAt: map.containsKey('createdAt')
-          ? _parseFechaFlexible(map['createdAt'])
-          : null,
-      updatedAt: map.containsKey('updatedAt')
-          ? _parseFechaFlexible(map['updatedAt'])
-          : null,
-    );
-  }
-}
-
-// ===================================================================
-// REPOSITORIO DE ENTRENAMIENTO
-// ===================================================================
-
-class TrainingRepository {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
-
-  Future<List<Entrenamiento>> getTrainings() async {
-    // Simulando un usuario logueado para que el código compile y funcione en un entorno de prueba
-    final User? user = _auth.currentUser;
-    if (user == null) {
-      // **IMPORTANTE**: Sustituir 'AuthFailure' por la gestión real de autenticación.
-      // Por ahora, se simula una lista vacía si no hay usuario real, para evitar crash.
-      // throw AuthFailure('No user logged inUser not authenticated.');
-      return Future.value(
-        [],
-      ); // Retorna lista vacía si no hay usuario simulado.
-    }
-
-    try {
-      final CollectionReference trainingsRef = _db
-          .collection('users')
-          .doc(user.uid)
-          .collection('trainings');
-
-      final QuerySnapshot snapshot = await trainingsRef
-          .orderBy('createdAt', descending: true)
-          .get();
-
-      final List<Entrenamiento> trainings = snapshot.docs.map((doc) {
-        final Map<String, dynamic> data = doc.data()! as Map<String, dynamic>;
-        return Entrenamiento.fromMap(data, id: doc.id);
-      }).toList();
-
-      return trainings;
-    } on FirebaseException catch (e) {
-      throw Exception(
-        'Error de Firebase al cargar entrenamientos: ${e.message}',
-      );
-    } catch (e) {
-      throw Exception('Error inesperado al cargar entrenamientos: $e');
-    }
-  }
-}
-
-// ===================================================================
-// CONTROLADOR
-// ===================================================================
-
-class ProfileController {
-  final TrainingRepository _trainingRepo;
-
-  ProfileController({TrainingRepository? trainingRepo})
-    : _trainingRepo = trainingRepo ?? TrainingRepository();
-
-  final ValueNotifier<List<Entrenamiento>> trainings =
-      ValueNotifier<List<Entrenamiento>>([]);
-  final ValueNotifier<bool> isLoading = ValueNotifier<bool>(false);
-  final ValueNotifier<String?> error = ValueNotifier<String?>(null);
-
-  Future<void> loadTrainings() async {
-    error.value = null;
-    if (isLoading.value) return;
-    isLoading.value = true;
-
-    try {
-      final List<Entrenamiento> loadedTrainings = await _trainingRepo
-          .getTrainings();
-      trainings.value = loadedTrainings;
-    } catch (e) {
-      error.value = e.toString().contains('Exception:')
-          ? e.toString().split('Exception:')[1].trim()
-          : 'Error desconocido al cargar los entrenamientos.';
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  void dispose() {
-    trainings.dispose();
-    isLoading.dispose();
-    error.dispose();
-  }
-}
-
-// ===================================================================
-// WIDGET TrainingCard (Tarjeta de Entrenamiento - CON DROP DOWN)
-// ===================================================================
-
-class _TrainingCard extends StatelessWidget {
-  final Entrenamiento training;
-
-  const _TrainingCard({required this.training});
-
-  String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
-  }
-
-  // --- FUNCIÓN DEL BOTÓN POPUP / DROPDOWN ---
-  Widget _buildDropdownButton(BuildContext context) {
-    // Opción que se mostrará en el menú
-    const String downloadOption = 'Descargar estadísticas en PDF';
-
-    return PopupMenuButton<String>(
-      // Icono que activa el menú (los tres puntos verticales)
-      icon: const Icon(Icons.more_vert, color: _ProfileViewState._brandDark),
-
-      // La función que se ejecuta cuando se selecciona una opción
-      onSelected: (String result) {
-        if (result == downloadOption) {
-          // =======================================================
-          // [ESPACIO PARA AÑADIR FUNCIONALIDAD]
-          // Aquí es donde irá la lógica para generar y descargar el PDF.
-          // Por ejemplo: call: generatePdf(training);
-          // =======================================================
-
-          // Muestra un mensaje temporal (Snackbar) al usuario
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Iniciando descarga de PDF para: ${training.titulo}',
-              ),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-      },
-
-      // Constructor del menú
-      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-        const PopupMenuItem<String>(
-          value: downloadOption,
-          child: Row(
-            children: [
-              Icon(Icons.picture_as_pdf, color: _ProfileViewState._brandDark),
-              SizedBox(width: 8),
-              Text(downloadOption),
-            ],
-          ),
-        ),
-      ],
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // 1. CABECERA DE LA TARJETA (Título y Dropdown)
-          Container(
-            padding: const EdgeInsets.only(
-              left: 16,
-              right: 0,
-              top: 8,
-              bottom: 8,
-            ),
-            decoration: BoxDecoration(
-              color: _ProfileViewState._cardColor,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12.0),
-              ),
-              border: Border.all(color: Colors.grey.shade300, width: 1),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    training.titulo,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: _ProfileViewState._brandDark,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                // Botón de menú contextual (Dropdown)
-                _buildDropdownButton(context),
-              ],
-            ),
-          ),
-
-          // 2. DETALLES DEL ENTRENAMIENTO
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Columna 1: Distancia y Ritmo
-                _buildDetailColumn([
-                  _buildDetailText(
-                    '${(training.distanciaTotalM() / 1000.0).toStringAsFixed(1)} KM',
-                    isPrimary: true,
-                  ),
-                  _buildDetailText(
-                    training.ritmoMedioTexto(),
-                    isPrimary: false,
-                  ),
-                ]),
-
-                // Columna 2: RPE
-                _buildDetailColumn([
-                  _buildDetailText(
-                    'RPE ${training.rpePromedio().toStringAsFixed(1).replaceAll('.', ',')}',
-                    isPrimary: true,
-                  ),
-                  _buildDetailText(
-                    '${training.tiempoTotalTexto()}',
-                    isPrimary: false,
-                  ),
-                ]),
-
-                // Columna 3: Series, Tiempo y Fecha
-                _buildDetailColumn([
-                  _buildDetailText(
-                    '${training.series.length} series',
-                    isPrimary: true,
-                  ),
-                  const SizedBox(height: 4),
-                  _buildDetailText(
-                    _formatDate(training.fecha),
-                    isPrimary: false,
-                  ),
-                ], alignment: CrossAxisAlignment.end),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Widget auxiliar para las columnas de detalles
-  Widget _buildDetailColumn(
-    List<Widget> children, {
-    CrossAxisAlignment alignment = CrossAxisAlignment.start,
-  }) {
-    return Column(crossAxisAlignment: alignment, children: children);
-  }
-
-  // Widget auxiliar para el texto de detalles
-  Widget _buildDetailText(String text, {required bool isPrimary}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 2.0),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: isPrimary ? 14 : 12,
-          fontWeight: isPrimary ? FontWeight.w600 : FontWeight.normal,
-          color: isPrimary
-              ? _ProfileViewState._brandDark
-              : Colors.grey.shade600,
-        ),
-      ),
-    );
-  }
-}
-
-// ===================================================================
-// VISTA DE PERFIL (ProfileView)
-// ===================================================================
+import 'package:running_laps/features/profile/viewmodels/profile_controller.dart';
+import 'package:running_laps/features/training/data/entrenamiento.dart';
+import 'package:running_laps/features/training/views/training_start_view.dart';
+import '../../training/data/serie.dart';
+import '../../../core/widgets/app_footer.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({Key? key}) : super(key: key);
 
   @override
-  _ProfileViewState createState() => _ProfileViewState();
+  _ProfileViewState createState() {
+    return _ProfileViewState();
+  }
 }
 
 class _ProfileViewState extends State<ProfileView> {
-  // --- Colores ---
+  // Colores de la vista
   static const Color _brandDark = Color(0xFF333333);
   static const Color _cardColor = Color(0xFFF0F0F0);
   static const Color _bgGradientColor = Color(0xFFF9F5FB);
 
-  // --- Controlador ---
   late final ProfileController _controller;
 
   @override
@@ -509,7 +43,7 @@ class _ProfileViewState extends State<ProfileView> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
-          children: [
+          children: <Widget>[
             // 1. HEADER
             _buildHeader(),
 
@@ -527,34 +61,48 @@ class _ProfileViewState extends State<ProfileView> {
               ),
             ),
 
-            // 3. BODY (LISTA DE ENTRENAMIENTOS)
+            // 3. LISTA (scrollable)
             Expanded(child: _buildTrainingList()),
+
+            // 4. FOOTER (Fijo abajo)
+            AppFooter(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (BuildContext context) {
+                      return const TrainingStartView();
+                    },
+                  ),
+                );
+              },
+              isLoading: false,
+            ),
           ],
         ),
       ),
     );
   }
 
-  // ===================================================================
-  // 1. HEADER
-  // ===================================================================
+  // ============================
+  // HEADER
+  // ============================
   Widget _buildHeader() {
     return Container(
       decoration: BoxDecoration(
         gradient: const RadialGradient(
           center: Alignment.topCenter,
           radius: 1.2,
-          colors: [_bgGradientColor, Colors.white],
-          stops: [0.0, 1.0],
+          colors: <Color>[_bgGradientColor, Colors.white],
+          stops: <double>[0.0, 1.0],
         ),
-        // **IMPORTANTE**: Asegúrate de que esta ruta de imagen sea válida
         image: const DecorationImage(
-          image: AssetImage('assets/images/fondo.png'), // Ruta de tu imagen
+          image: AssetImage('assets/images/fondo.png'),
           fit: BoxFit.cover,
         ),
       ),
       child: Column(
-        children: [
+        children: <Widget>[
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 20.0,
@@ -562,76 +110,60 @@ class _ProfileViewState extends State<ProfileView> {
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Icono de Corredor (Volver)
+              children: <Widget>[
                 GestureDetector(
                   onTap: () {
-                    Navigator.pop(context); // Funcionalidad de volver
+                    Navigator.pop(context);
                   },
                   child: CircleAvatar(
                     radius: 24.0,
-                    backgroundColor: Tema
-                        .brandPurple, // Este será el color si la imagen falla o tiene transparencia
-                    // 💡 SOLUCIÓN CLAVE: Usar backgroundImage para que la imagen rellene el círculo
+                    backgroundColor: Tema.brandPurple,
                     backgroundImage: const AssetImage('assets/images/logo.png'),
-
-                    // **IMPORTANTE:** Cuando usas backgroundImage, ya NO necesitas un 'child' con Image.asset
-                    // ni propiedades como 'width', 'height', 'fit', o 'color' para la imagen.
-                    // El CircleAvatar se encarga de recortar y ajustar la imagen para rellenar.
-
-                    // Si tu logo tiene un fondo transparente y quieres que el fondo del CircleAvatar
-                    // se vea (como el morado), 'backgroundImage' superpondrá la imagen.
-                    // El 'backgroundColor' actuará como un respaldo o un tinte si la imagen no tiene fondo.
                   ),
                 ),
-                // Avatar del Usuario
                 GestureDetector(
                   onTap: () {
-                    // Esta es la línea que pediste:
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const AvatarEditorWrapperView(),
+                        builder: (BuildContext context) {
+                          return const AvatarEditorWrapperView();
+                        },
                       ),
                     );
                   },
                   child: const CircleAvatar(
                     radius: 24.0,
-                    // **IMPORTANTE**: Asegúrate de que esta ruta de imagen sea válida
                     backgroundImage: AssetImage(
-                      'assets/images/icono_defecto.jpg', // Imagen de perfil
+                      'assets/images/icono_defecto.jpg',
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          // Línea divisoria debajo del header
           Container(height: 1.0, color: Colors.grey.shade200),
         ],
       ),
     );
   }
 
-  // ===================================================================
-  // 2. BODY - Lista de entrenamientos con manejo de estado
-  // ===================================================================
+  // ============================
+  // LISTA DE ENTRENAMIENTOS
+  // ============================
   Widget _buildTrainingList() {
-    // Escucha el estado de carga
     return ValueListenableBuilder<bool>(
       valueListenable: _controller.isLoading,
-      builder: (context, isLoading, child) {
-        // Muestra el indicador de carga si está cargando y la lista está vacía
+      builder: (BuildContext context, bool isLoading, Widget? child) {
         if (isLoading && _controller.trainings.value.isEmpty) {
           return const Center(
             child: CircularProgressIndicator(color: Tema.brandPurple),
           );
         }
 
-        // Escucha el estado de error
         return ValueListenableBuilder<String?>(
           valueListenable: _controller.error,
-          builder: (context, error, child) {
+          builder: (BuildContext context, String? error, Widget? child) {
             if (error != null) {
               return Center(
                 child: Padding(
@@ -640,9 +172,9 @@ class _ProfileViewState extends State<ProfileView> {
                     onTap: _controller.loadTrainings,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
+                      children: <Widget>[
                         Text(
-                          'Error al cargar entrenamientos: $error',
+                          error,
                           textAlign: TextAlign.center,
                           style: const TextStyle(color: Colors.red),
                         ),
@@ -661,28 +193,35 @@ class _ProfileViewState extends State<ProfileView> {
               );
             }
 
-            // Escucha la lista de entrenamientos
             return ValueListenableBuilder<List<Entrenamiento>>(
               valueListenable: _controller.trainings,
-              builder: (context, trainings, child) {
-                if (trainings.isEmpty && !isLoading) {
-                  return const Center(
-                    child: Text(
-                      'No hay entrenamientos registrados. ¡Comienza uno nuevo!',
-                    ),
-                  );
-                }
+              builder:
+                  (
+                    BuildContext context,
+                    List<Entrenamiento> trainings,
+                    Widget? child,
+                  ) {
+                    if (trainings.isEmpty && !isLoading) {
+                      return const Center(
+                        child: Text(
+                          'No hay entrenamientos registrados. ¡Comienza uno nuevo!',
+                        ),
+                      );
+                    }
 
-                // Lista de tarjetas (TrainingCard)
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  itemCount: trainings.length,
-                  itemBuilder: (context, index) {
-                    final training = trainings[index];
-                    return _TrainingCard(training: training);
+                    return ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      itemCount: trainings.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final Entrenamiento training = trainings[index];
+                        return TrainingCard(
+                          training: training,
+                          brandDark: _brandDark,
+                          cardColor: _cardColor,
+                        );
+                      },
+                    );
                   },
-                );
-              },
             );
           },
         );
@@ -691,6 +230,343 @@ class _ProfileViewState extends State<ProfileView> {
   }
 }
 
-// ===================================================================
-// Fin del código
-// ===================================================================
+// ============================
+// WIDGET: TARJETA ENTRENAMIENTO
+// ============================
+class TrainingCard extends StatefulWidget {
+  final Entrenamiento training;
+  final Color brandDark;
+  final Color cardColor;
+
+  const TrainingCard({
+    Key? key,
+    required this.training,
+    required this.brandDark,
+    required this.cardColor,
+  }) : super(key: key);
+
+  @override
+  _TrainingCardState createState() {
+    return _TrainingCardState();
+  }
+}
+
+class _TrainingCardState extends State<TrainingCard> {
+  bool _expanded = false;
+
+  String _formatDate(DateTime date) {
+    final String day = date.day.toString().padLeft(2, '0');
+    final String month = date.month.toString().padLeft(2, '0');
+    final String year = date.year.toString();
+    return day + '/' + month + '/' + year;
+  }
+
+  String _formatSeconds(int totalSeconds) {
+    final int minutes = totalSeconds ~/ 60;
+    final int seconds = totalSeconds % 60;
+    final String secText = seconds.toString().padLeft(2, '0');
+    return minutes.toString() + ' min ' + secText + 's';
+  }
+
+  Widget _buildDropdownButton(BuildContext context) {
+    const String downloadOption = 'Descargar estadísticas en PDF';
+
+    return PopupMenuButton<String>(
+      icon: Icon(Icons.more_vert, color: widget.brandDark),
+      onSelected: (String value) {
+        if (value == downloadOption) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Iniciando descarga de PDF para: ' + widget.training.titulo,
+              ),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      },
+      itemBuilder: (BuildContext context) {
+        final List<PopupMenuEntry<String>> items = <PopupMenuEntry<String>>[];
+        items.add(
+          PopupMenuItem<String>(
+            value: downloadOption,
+            child: Row(
+              children: <Widget>[
+                Icon(Icons.picture_as_pdf, color: widget.brandDark),
+                const SizedBox(width: 8),
+                const Text(downloadOption),
+              ],
+            ),
+          ),
+        );
+        return items;
+      },
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    );
+  }
+
+  Widget _buildDetailText(String text, bool isPrimary) {
+    FontWeight weight;
+    double size;
+    Color color;
+
+    if (isPrimary) {
+      weight = FontWeight.w600;
+      size = 14;
+      color = widget.brandDark;
+    } else {
+      weight = FontWeight.normal;
+      size = 12;
+      color = Colors.grey.shade600;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 2.0),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: size, fontWeight: weight, color: color),
+      ),
+    );
+  }
+
+  Widget _buildDetailColumn(
+    List<Widget> children,
+    CrossAxisAlignment alignment,
+  ) {
+    return Column(crossAxisAlignment: alignment, children: children);
+  }
+
+  // Lista de series: una línea por serie, con columnas alineadas
+  // Lista de series: columnas bien separadas
+  Widget _buildSeriesListInline() {
+    final List<Widget> children = <Widget>[];
+
+    for (int i = 0; i < widget.training.series.length; i = i + 1) {
+      final Serie serie = widget.training.series[i];
+
+      final String distanciaText = serie.distanciaM.toString() + ' m';
+      final String ritmoText = serie.ritmoTexto(); // ej: "0:09 /km"
+      final String rpeText = 'RPE ' + serie.rpe.toString();
+      final String descansoText =
+          'Descanso ' + serie.descansoSec.toString() + ' s';
+
+      children.add(
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              // Columna fija izquierda: "Serie 1", "Serie 2"...
+              SizedBox(
+                width: 80,
+                child: Text(
+                  'Serie ' + (i + 1).toString(),
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: widget.brandDark,
+                  ),
+                ),
+              ),
+
+              // Columna distancia
+              Expanded(
+                flex: 2,
+                child: Text(
+                  distanciaText,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(fontSize: 15, color: Colors.grey.shade800),
+                ),
+              ),
+              const SizedBox(width: 16),
+
+              // Columna ritmo
+              Expanded(
+                flex: 2,
+                child: Text(
+                  ritmoText,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(fontSize: 15, color: Colors.grey.shade800),
+                ),
+              ),
+              const SizedBox(width: 16),
+
+              // Columna RPE
+              Expanded(
+                flex: 2,
+                child: Text(
+                  rpeText,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(fontSize: 15, color: Colors.grey.shade800),
+                ),
+              ),
+              const SizedBox(width: 16),
+
+              // Columna Descanso
+              Expanded(
+                flex: 3,
+                child: Text(
+                  descansoText,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(fontSize: 15, color: Colors.grey.shade800),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: children,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final double kmTotal = widget.training.distanciaTotalM() / 1000.0;
+    final String distanciaTexto = kmTotal.toStringAsFixed(1) + ' KM';
+
+    final String ritmoTexto = widget.training.ritmoMedioTexto();
+    final String rpeTexto =
+        'RPE ' +
+        widget.training.rpePromedio().toStringAsFixed(1).replaceAll('.', ',');
+
+    final String tiempoTexto = _formatSeconds(
+      widget.training.tiempoTotalSec().round(),
+    );
+
+    // Icono de expandir/colapsar
+    IconData expandIcon;
+    if (_expanded) {
+      expandIcon = Icons.expand_less;
+    } else {
+      expandIcon = Icons.expand_more;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.0),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: <Widget>[
+          // Cabecera tarjeta (título + menú PDF)
+          Container(
+            padding: const EdgeInsets.only(
+              left: 16,
+              right: 0,
+              top: 8,
+              bottom: 8,
+            ),
+            decoration: BoxDecoration(
+              color: widget.cardColor,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12.0),
+              ),
+              border: Border.all(color: Colors.grey.shade300, width: 1),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    widget.training.titulo,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: widget.brandDark,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                _buildDropdownButton(context),
+              ],
+            ),
+          ),
+
+          // Resumen entrenamiento
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                _buildDetailColumn(<Widget>[
+                  _buildDetailText(distanciaTexto, true),
+                  _buildDetailText(ritmoTexto, false),
+                ], CrossAxisAlignment.start),
+                _buildDetailColumn(<Widget>[
+                  _buildDetailText(rpeTexto, true),
+                  _buildDetailText(tiempoTexto, false),
+                ], CrossAxisAlignment.center),
+                _buildDetailColumn(<Widget>[
+                  _buildDetailText(
+                    widget.training.series.length.toString() + ' series',
+                    true,
+                  ),
+                  const SizedBox(height: 4),
+                  _buildDetailText(_formatDate(widget.training.fecha), false),
+                ], CrossAxisAlignment.end),
+              ],
+            ),
+          ),
+
+          // Botón de desplegar + lista de series
+          if (widget.training.series.isNotEmpty)
+            Padding(
+              // mismo margen horizontal que el resumen (16)
+              padding: const EdgeInsets.only(
+                left: 16.0,
+                right: 16.0,
+                bottom: 8.0,
+                top: 0.0,
+              ),
+              child: Column(
+                children: <Widget>[
+                  // Icono arriba a la derecha, pegado al contenido
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: <Widget>[
+                      IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        icon: Icon(
+                          expandIcon,
+                          size: 22,
+                          color: Colors.grey.shade600,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _expanded = !_expanded;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+
+                  // Contenido desplegable (series)
+                  if (_expanded)
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(top: 4.0),
+                      child: _buildSeriesListInline(),
+                    ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}

@@ -29,6 +29,26 @@ class TrainingRepository {
       uid,
     ).add(data);
 
-    return doc.id; // útil para navegar luego al detalle
+    return doc.id;
+  }
+
+  // NUEVO: obtener lista de entrenamientos del usuario actual
+  Future<List<Entrenamiento>> getTrainings() async {
+    final String uid = _requireUid();
+
+    final QuerySnapshot<Map<String, dynamic>> snapshot = await _userTrainings(
+      uid,
+    ).orderBy('createdAt', descending: true).get();
+
+    final List<Entrenamiento> result = <Entrenamiento>[];
+
+    for (int i = 0; i < snapshot.docs.length; i = i + 1) {
+      final QueryDocumentSnapshot<Map<String, dynamic>> doc = snapshot.docs[i];
+      final Map<String, dynamic> data = doc.data();
+      // Usamos tu modelo de dominio centralizado
+      result.add(Entrenamiento.fromMap(data));
+    }
+
+    return result;
   }
 }
