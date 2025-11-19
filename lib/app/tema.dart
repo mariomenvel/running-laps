@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_avatar_maker/avatar_maker_controller.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_avatar_maker/assets.dart'; 
+import 'package:flutter_avatar_maker/assets.dart';
 
 class Tema {
   static const Color brandPurple = Color(0xFF8E24AA);

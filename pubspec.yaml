@@ -31,9 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  flutter_avatar_maker:
-    git:
-      url: https://github.com/wm4n/flutter-avatar-maker.git
+
 
   # Paquete para guardar datos
   shared_preferences: ^2.0.0 # <-- Usa la última versión
@@ -46,6 +44,10 @@ dependencies:
   firebase_storage: ^13.0.3
   image_picker: ^1.2.0
   intl: ^0.18.1
+  flutter_svg: ^2.0.7
+  get: ^4.6.5
+  flutter_avatar_maker: 
+    path: ./packages/flutter-avatar-maker
 
 dev_dependencies:
   flutter_test:
