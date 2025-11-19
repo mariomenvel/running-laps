@@ -12,6 +12,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter/gestures.dart';
 
 class AvatarMakerScreen extends StatefulWidget {
   const AvatarMakerScreen({super.key});
@@ -57,7 +58,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                             if (selectedCategory == "ROPA") {
                               controller.clothingColor =
                                   colorList![indexOffset];
-                            } else if (selectedCategory == "ACCESSORIOS") {
+                            } else if (selectedCategory == "ACCESORIOS") {
                               controller.accessoryColor =
                                   colorList![indexOffset];
                             } else if (selectedCategory == "BELLO FACIAL") {
@@ -352,10 +353,18 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
         });
   }
 
+// ... dentro de AvatarMakerScreen.dart ...
+
   @override
   Widget build(BuildContext context) {
     AvatarMakerController controller = Get.put(AvatarMakerController());
+
+    // Obtenemos el ancho de la pantalla actual (Ancho finito).
+    final double screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
+      backgroundColor: AppColorTheme.paleGrey,
+
       floatingActionButton: FloatingActionButton(
           backgroundColor: AppColorTheme.primaryColor,
           onPressed: () {
@@ -365,345 +374,472 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
             Icons.casino,
             color: Colors.white,
           )),
-      body: Container(
-          color: AppColorTheme.paleGrey,
-          child: Column(children: [
-            Expanded(
-              flex: 1,
-              child: Container(
-                  width: MediaQuery.of(context).size.width,
-                  decoration: const BoxDecoration(
-                      color: AppColorTheme.paleGrey,
-                      borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(24),
-                          bottomRight: Radius.circular(24))),
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: SizedBox(
-                      width: 180,
-                      height: 180,
-                      child: RepaintBoundary(
-                          key: _avatarKey,
-                          child: GetBuilder<AvatarMakerController>(
-                              id: "avatar_background",
-                              builder: (controller) {
-                                return Container(
-                                  clipBehavior: Clip.hardEdge,
-                                  decoration: BoxDecoration(
-                                      color: Color(
-                                          controller.selectedBackgroundColor),
-                                      shape:
-                                          controller.selectedBackgroundShape ==
-                                                  BackgroundShape.circle
-                                              ? BoxShape.circle
-                                              : BoxShape.rectangle,
-                                      borderRadius:
-                                          controller.selectedBackgroundShape ==
-                                                  BackgroundShape.roundedSquare
-                                              ? const BorderRadius.all(
-                                                  Radius.circular(16))
-                                              : null),
-                                  child: Stack(
-                                    children: [
-                                      GetBuilder<AvatarMakerController>(
-                                          id: "avatar_body",
+
+      // 1. Aplicar el Fix de Mouse Scroll (Web)
+      body: ScrollConfiguration(
+        behavior: WebScrollBehavior(),
+        // 2. Scroll Horizontal principal
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          // 3. Forzamos el ancho del contenido a ser al menos el de la pantalla.
+          // Esto resuelve el error "infinite width".
+          child: SizedBox(
+            width: screenWidth,
+            // 4. Usamos LayoutBuilder para obtener la altura (Height) disponible.
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Altura segura para el avatar
+                double avatarAreaHeight = constraints.maxHeight * 0.45;
+                if (avatarAreaHeight < 320) avatarAreaHeight = 320;
+
+                // 5. Scroll Vertical interno (solo si es necesario)
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    // Aseguramos que el contenido vertical siempre ocupe la altura mínima de la pantalla
+                    constraints:
+                        BoxConstraints(minHeight: constraints.maxHeight),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // --- ZONA SUPERIOR (AVATAR) ---
+                        SizedBox(
+                          height: avatarAreaHeight,
+                          width: double
+                              .infinity, // Seguro, ya que su padre SizedBox tiene ancho definido
+                          child: Container(
+                              decoration: const BoxDecoration(
+                                  color: AppColorTheme.paleGrey,
+                                  borderRadius: BorderRadius.only(
+                                      bottomLeft: Radius.circular(24),
+                                      bottomRight: Radius.circular(24))),
+                              child: Center(
+                                child: SizedBox(
+                                  width: 180,
+                                  height: 180,
+                                  child: RepaintBoundary(
+                                      key: _avatarKey,
+                                      child: GetBuilder<AvatarMakerController>(
+                                          id: "avatar_background",
                                           builder: (controller) {
-                                            return Positioned.fill(
-                                                bottom: -30,
-                                                child: Align(
-                                                    alignment:
-                                                        Alignment.bottomCenter,
-                                                    child: SvgPicture.asset(
-                                                        bodyAssets[controller
-                                                            .selectedBody],
-                                                        width: 160,
-                                                        height: 160)));
-                                          }),
-                                      GetBuilder<AvatarMakerController>(
-                                          id: "avatar_clothing",
-                                          builder: (controller) {
-                                            Color src = const Color(0xFF80C43B);
-                                            Color rep = controller
-                                                        .selectedClothingColor ==
-                                                    0
-                                                ? src
-                                                : Color(controller
-                                                    .selectedClothingColor);
-                                            return Positioned.fill(
-                                                bottom: -30,
-                                                child: Align(
-                                                    alignment:
-                                                        Alignment.bottomCenter,
-                                                    // ColorFiltered below replace clothing color but not lines
-                                                    child: replaceColorOrReturn(
-                                                        category[controller
-                                                                .selectedCategory] ==
-                                                            "ROPA",
-                                                        SvgPicture.asset(
-                                                            clothingAssets[
+                                            return Container(
+                                              clipBehavior: Clip.hardEdge,
+                                              decoration: BoxDecoration(
+                                                  color: Color(controller
+                                                      .selectedBackgroundColor),
+                                                  shape: controller
+                                                              .selectedBackgroundShape ==
+                                                          BackgroundShape.circle
+                                                      ? BoxShape.circle
+                                                      : BoxShape.rectangle,
+                                                  borderRadius: controller
+                                                              .selectedBackgroundShape ==
+                                                          BackgroundShape
+                                                              .roundedSquare
+                                                      ? const BorderRadius.all(
+                                                          Radius.circular(16))
+                                                      : null),
+                                              child: Stack(
+                                                children: [
+                                                  // --- BODY ---
+                                                  GetBuilder<
+                                                          AvatarMakerController>(
+                                                      id: "avatar_body",
+                                                      builder: (controller) {
+                                                        return Positioned.fill(
+                                                            bottom: -30,
+                                                            child: Align(
+                                                                alignment: Alignment
+                                                                    .bottomCenter,
+                                                                child: SvgPicture.asset(
+                                                                    bodyAssets[
+                                                                        controller
+                                                                            .selectedBody],
+                                                                    width: 160,
+                                                                    height:
+                                                                        160)));
+                                                      }),
+                                                  // --- CLOTHING ---
+                                                  GetBuilder<
+                                                          AvatarMakerController>(
+                                                      id: "avatar_clothing",
+                                                      builder: (controller) {
+                                                        Color src = const Color(
+                                                            0xFF80C43B);
+                                                        Color rep = controller
+                                                                    .selectedClothingColor ==
+                                                                0
+                                                            ? src
+                                                            : Color(controller
+                                                                .selectedClothingColor);
+                                                        return Positioned.fill(
+                                                            bottom: -30,
+                                                            child: Align(
+                                                                alignment: Alignment
+                                                                    .bottomCenter,
+                                                                child: replaceColorOrReturn(
+                                                                    category[controller
+                                                                            .selectedCategory] ==
+                                                                        "ROPA",
+                                                                    SvgPicture.asset(
+                                                                        clothingAssets[controller
+                                                                            .selectedClothing],
+                                                                        width:
+                                                                            160,
+                                                                        height:
+                                                                            70),
+                                                                    src,
+                                                                    rep)));
+                                                      }),
+                                                  // --- EYES ---
+                                                  GetBuilder<
+                                                          AvatarMakerController>(
+                                                      id: "avatar_eyes",
+                                                      builder: (controller) {
+                                                        return Positioned.fill(
+                                                            top: 90,
+                                                            child: Align(
+                                                                alignment:
+                                                                    Alignment
+                                                                        .topCenter,
+                                                                child: SvgPicture.asset(
+                                                                    eyesAssets[
+                                                                        controller
+                                                                            .selectedEyes],
+                                                                    width: 50,
+                                                                    height:
+                                                                        20)));
+                                                      }),
+                                                  // --- NOSE ---
+                                                  GetBuilder<
+                                                          AvatarMakerController>(
+                                                      id: "avatar_nose",
+                                                      builder: (controller) {
+                                                        return Positioned.fill(
+                                                            top: 90,
+                                                            child: Align(
+                                                                alignment:
+                                                                    Alignment
+                                                                        .topCenter,
+                                                                child: SvgPicture.asset(
+                                                                    noseAssets[
+                                                                        controller
+                                                                            .selectedNose],
+                                                                    width: 20,
+                                                                    height:
+                                                                        30)));
+                                                      }),
+                                                  // --- MOUTH ---
+                                                  GetBuilder<
+                                                          AvatarMakerController>(
+                                                      id: "avatar_mouth",
+                                                      builder: (controller) {
+                                                        return Positioned.fill(
+                                                            top: 115,
+                                                            child: Align(
+                                                                alignment:
+                                                                    Alignment
+                                                                        .topCenter,
+                                                                child: SvgPicture.asset(
+                                                                    mouthAssets[
+                                                                        controller
+                                                                            .selectedMouth],
+                                                                    width: 40,
+                                                                    height:
+                                                                        30)));
+                                                      }),
+                                                  // --- HAIR ---
+                                                  GetBuilder<
+                                                          AvatarMakerController>(
+                                                      id: "avatar_hair",
+                                                      builder: (controller) {
+                                                        return hatAssets[controller
+                                                                    .selectedHat] ==
+                                                                ""
+                                                            ? Positioned(
+                                                                top: 15,
+                                                                child: Align(
+                                                                    alignment:
+                                                                        Alignment
+                                                                            .topCenter,
+                                                                    child: SvgPicture.asset(
+                                                                        controller.selectedHairType == HairType.short
+                                                                            ? shortHairAssets[controller
+                                                                                .selectedShortHair]
+                                                                            : longHairAssets[controller
+                                                                                .selectedLongHair],
+                                                                        width:
+                                                                            180,
+                                                                        height:
+                                                                            195)))
+                                                            : const SizedBox
+                                                                .shrink();
+                                                      }),
+                                                  // --- FACIAL HAIR ---
+                                                  GetBuilder<
+                                                          AvatarMakerController>(
+                                                      id: "avatar_facial_hair",
+                                                      builder: (controller) {
+                                                        final path =
+                                                            facialHairAssets[
                                                                 controller
-                                                                    .selectedClothing],
-                                                            width: 160,
-                                                            height: 70),
-                                                        src,
-                                                        rep)));
-                                          }),
-                                      GetBuilder<AvatarMakerController>(
-                                          id: "avatar_eyes",
-                                          builder: (controller) {
-                                            return Positioned.fill(
-                                                top: 90,
-                                                child: Align(
-                                                    alignment:
-                                                        Alignment.topCenter,
-                                                    child: SvgPicture.asset(
-                                                        eyesAssets[controller
-                                                            .selectedEyes],
-                                                        width: 50,
-                                                        height: 20)));
-                                          }),
-                                      GetBuilder<AvatarMakerController>(
-                                          id: "avatar_nose",
-                                          builder: (controller) {
-                                            return Positioned.fill(
-                                                top: 90,
-                                                child: Align(
-                                                    alignment:
-                                                        Alignment.topCenter,
-                                                    child: SvgPicture.asset(
-                                                        noseAssets[controller
-                                                            .selectedNose],
-                                                        width: 20,
-                                                        height: 30)));
-                                          }),
-                                      GetBuilder<AvatarMakerController>(
-                                          id: "avatar_mouth",
-                                          builder: (controller) {
-                                            return Positioned.fill(
-                                                top: 115,
-                                                child: Align(
-                                                    alignment:
-                                                        Alignment.topCenter,
-                                                    child: SvgPicture.asset(
-                                                        mouthAssets[controller
-                                                            .selectedMouth],
-                                                        width: 40,
-                                                        height: 30)));
-                                          }),
-                                      GetBuilder<AvatarMakerController>(
-                                          id: "avatar_hair",
-                                          builder: (controller) {
-                                            return hatAssets[
-                                                        controller
-                                                            .selectedHat] ==
-                                                    ""
-                                                ? Positioned(
-                                                    top: 15,
-                                                    child: Align(
-                                                        alignment: Alignment
-                                                            .topCenter,
-                                                        child: SvgPicture.asset(
-                                                            controller.selectedHairType ==
-                                                                    HairType
-                                                                        .short
-                                                                ? shortHairAssets[
-                                                                    controller
-                                                                        .selectedShortHair]
-                                                                : longHairAssets[
-                                                                    controller
-                                                                        .selectedLongHair],
-                                                            width: 180,
-                                                            height: 195)))
-                                                : const SizedBox.shrink();
-                                          }),
-                                      GetBuilder<AvatarMakerController>(
-                                          id: "avatar_facial_hair",
-                                          builder: (controller) {
-                                            final path = facialHairAssets[
-                                                controller.selectedFacialHair];
-                                            // Color rep = controller
-                                            //             .selectedFacialHairColor ==
-                                            //         0
-                                            //     ? Colors.transparent
-                                            //     : Color(controller.selectedFacialHairColor);
-                                            Color rep = Colors.transparent;
-                                            return Positioned.fill(
-                                                top: 105,
-                                                child: Align(
-                                                    alignment:
-                                                        Alignment.topCenter,
-                                                    child: path != ""
-                                                        ? replaceColorOrReturn(
-                                                            category[controller
-                                                                    .selectedCategory] ==
-                                                                "BELLO FACIAL",
-                                                            SvgPicture.asset(
-                                                                path,
-                                                                width: 90,
-                                                                height: 80),
-                                                            null,
-                                                            rep)
-                                                        : const SizedBox
-                                                            .shrink()));
-                                          }),
-                                      GetBuilder<AvatarMakerController>(
-                                          id: "avatar_accessory",
-                                          builder: (controller) {
-                                            final path = accessoryAssets[
-                                                controller.selectedAccessory];
-                                            Color rep = controller
-                                                        .selectedAccessoryColor ==
-                                                    0
-                                                ? Colors.transparent
-                                                : Color(controller
-                                                    .selectedAccessoryColor);
-                                            return Positioned.fill(
-                                                top: 81,
-                                                child: Align(
-                                                    alignment:
-                                                        Alignment.topCenter,
-                                                    child: path != ""
-                                                        ? replaceColorOrReturn(
-                                                            category[controller
-                                                                    .selectedCategory] ==
-                                                                "ACCESORIOS",
-                                                            SvgPicture.asset(
-                                                                path,
-                                                                width: 80,
-                                                                height: 40),
-                                                            null,
-                                                            rep)
-                                                        : const SizedBox
-                                                            .shrink()));
-                                          }),
-                                      GetBuilder<AvatarMakerController>(
-                                          id: "avatar_hat",
-                                          builder: (controller) {
-                                            final path = hatAssets[
-                                                controller.selectedHat];
-                                            return Positioned(
-                                                top: 15,
-                                                child: Align(
-                                                    alignment:
-                                                        Alignment.topCenter,
-                                                    child: path != ""
-                                                        ? SvgPicture.asset(path,
-                                                            width: 180,
-                                                            height: 195)
-                                                        : const SizedBox
-                                                            .shrink()));
-                                          }),
-                                    ],
-                                  ),
-                                );
-                              })),
+                                                                    .selectedFacialHair];
+                                                        Color rep = controller
+                                                                    .selectedFacialHairColor ==
+                                                                0
+                                                            ? Colors.transparent
+                                                            : Color(controller
+                                                                .selectedFacialHairColor);
+
+                                                        return Positioned.fill(
+                                                            top: 105,
+                                                            child: Align(
+                                                                alignment:
+                                                                    Alignment
+                                                                        .topCenter,
+                                                                child: path != ""
+                                                                    ? replaceColorOrReturn(
+                                                                        true,
+                                                                        SvgPicture.asset(
+                                                                            path,
+                                                                            width:
+                                                                                90,
+                                                                            height:
+                                                                                80),
+                                                                        null,
+                                                                        rep)
+                                                                    : const SizedBox
+                                                                        .shrink()));
+                                                      }),
+                                                  // --- ACCESSORY ---
+                                                  GetBuilder<
+                                                          AvatarMakerController>(
+                                                      id: "avatar_accessory",
+                                                      builder: (controller) {
+                                                        final path =
+                                                            accessoryAssets[
+                                                                controller
+                                                                    .selectedAccessory];
+                                                        Color rep = controller
+                                                                    .selectedAccessoryColor ==
+                                                                0
+                                                            ? Colors.transparent
+                                                            : Color(controller
+                                                                .selectedAccessoryColor);
+                                                        return Positioned.fill(
+                                                            top: 81,
+                                                            child: Align(
+                                                                alignment:
+                                                                    Alignment
+                                                                        .topCenter,
+                                                                child: path != ""
+                                                                    ? replaceColorOrReturn(
+                                                                        category[controller.selectedCategory] ==
+                                                                            "ACCESORIOS",
+                                                                        SvgPicture.asset(
+                                                                            path,
+                                                                            width:
+                                                                                80,
+                                                                            height:
+                                                                                40),
+                                                                        null,
+                                                                        rep)
+                                                                    : const SizedBox
+                                                                        .shrink()));
+                                                      }),
+                                                  // --- HAT ---
+                                                  GetBuilder<
+                                                          AvatarMakerController>(
+                                                      id: "avatar_hat",
+                                                      builder: (controller) {
+                                                        final path = hatAssets[
+                                                            controller
+                                                                .selectedHat];
+                                                        return Positioned(
+                                                            top: 15,
+                                                            child: Align(
+                                                                alignment:
+                                                                    Alignment
+                                                                        .topCenter,
+                                                                child: path !=
+                                                                        ""
+                                                                    ? SvgPicture.asset(
+                                                                        path,
+                                                                        width:
+                                                                            180,
+                                                                        height:
+                                                                            195)
+                                                                    : const SizedBox
+                                                                        .shrink()));
+                                                      }),
+                                                ],
+                                              ),
+                                            );
+                                          })),
+                                ),
+                              )),
+                        ),
+
+                        // --- ZONA INFERIOR (CONTROLES) ---
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            categoryList(),
+                            Container(
+                              decoration: const BoxDecoration(
+                                  color: AppColorTheme.white,
+                                  borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(16),
+                                      topRight: Radius.circular(16))),
+                              padding: const EdgeInsets.symmetric(vertical: 32),
+                              child: Column(children: [
+                                colorList(),
+                                GetBuilder<AvatarMakerController>(
+                                    id: "avatar_category",
+                                    builder: (controller) {
+                                      switch (category[
+                                          controller.selectedCategory]) {
+                                        case "FONDO":
+                                          return componentList(
+                                              context,
+                                              backgroundAssets,
+                                              "avatar_background_shape",
+                                              (index) =>
+                                                  controller.backgroundShape =
+                                                      backgroundAssets[index],
+                                              (index) =>
+                                                  controller
+                                                      .selectedBackgroundShape ==
+                                                  backgroundAssets[index]);
+                                        case "CUERPO":
+                                          return componentList(
+                                              context,
+                                              bodyAssets,
+                                              "avatar_body",
+                                              (index) =>
+                                                  controller.body = index,
+                                              (index) =>
+                                                  controller.selectedBody ==
+                                                  index);
+                                        case "OJOS":
+                                          return componentList(
+                                              context,
+                                              eyesAssets,
+                                              "avatar_eyes",
+                                              (index) =>
+                                                  controller.eyes = index,
+                                              (index) =>
+                                                  controller.selectedEyes ==
+                                                  index);
+                                        case "NARIZ":
+                                          return componentList(
+                                              context,
+                                              noseAssets,
+                                              "avatar_nose",
+                                              (index) =>
+                                                  controller.nose = index,
+                                              (index) =>
+                                                  controller.selectedNose ==
+                                                  index);
+                                        case "BOCA":
+                                          return componentList(
+                                              context,
+                                              mouthAssets,
+                                              "avatar_mouth",
+                                              (index) =>
+                                                  controller.mouth = index,
+                                              (index) =>
+                                                  controller.selectedMouth ==
+                                                  index);
+                                        case "PELO CORTO":
+                                          return componentList(
+                                              context,
+                                              shortHairAssets,
+                                              "avatar_hair",
+                                              (index) =>
+                                                  controller.shortHair = index,
+                                              (index) =>
+                                                  controller
+                                                      .selectedShortHair ==
+                                                  index);
+                                        case "PELO LARGO":
+                                          return componentList(
+                                              context,
+                                              longHairAssets,
+                                              "avatar_hair",
+                                              (index) =>
+                                                  controller.longHair = index,
+                                              (index) =>
+                                                  controller.selectedLongHair ==
+                                                  index);
+                                        case "BELLO FACIAL":
+                                          return componentList(
+                                              context,
+                                              facialHairAssets,
+                                              "avatar_facial_hair",
+                                              (index) =>
+                                                  controller.facialHair = index,
+                                              (index) =>
+                                                  controller
+                                                      .selectedFacialHair ==
+                                                  index);
+                                        case "ROPA":
+                                          return componentList(
+                                              context,
+                                              clothingAssets,
+                                              "avatar_clothing",
+                                              (index) =>
+                                                  controller.clothing = index,
+                                              (index) =>
+                                                  controller.selectedClothing ==
+                                                  index);
+                                        case "GORROS":
+                                          return componentList(
+                                              context,
+                                              hatAssets,
+                                              "avatar_hat",
+                                              (index) => controller.hat = index,
+                                              (index) =>
+                                                  controller.selectedHat ==
+                                                  index);
+                                        case "ACCESORIOS":
+                                          return componentList(
+                                              context,
+                                              accessoryAssets,
+                                              "avatar_accessory",
+                                              (index) =>
+                                                  controller.accessory = index,
+                                              (index) =>
+                                                  controller
+                                                      .selectedAccessory ==
+                                                  index);
+                                        default:
+                                          return const SizedBox.shrink();
+                                      }
+                                    }),
+                                const SizedBox(height: 36)
+                              ]),
+                            )
+                          ],
+                        ),
+                      ],
                     ),
-                  )),
+                  ),
+                );
+              },
             ),
-            categoryList(),
-            Container(
-              decoration: const BoxDecoration(
-                  color: AppColorTheme.white,
-                  borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      topRight: Radius.circular(16))),
-              padding: const EdgeInsets.symmetric(vertical: 32),
-              child: Column(children: [
-                colorList(),
-                GetBuilder<AvatarMakerController>(
-                    id: "avatar_category",
-                    builder: (controller) {
-                      switch (category[controller.selectedCategory]) {
-                        case "FONDO":
-                          return componentList(
-                              context,
-                              backgroundAssets,
-                              "avatar_background_shape",
-                              (index) => controller.backgroundShape =
-                                  backgroundAssets[index],
-                              (index) =>
-                                  controller.selectedBackgroundShape ==
-                                  backgroundAssets[index]);
-                        case "CUERPO":
-                          return componentList(
-                              context,
-                              bodyAssets,
-                              "avatar_body",
-                              (index) => controller.body = index,
-                              (index) => controller.selectedBody == index);
-                        case "OJOS":
-                          return componentList(
-                              context,
-                              eyesAssets,
-                              "avatar_eyes",
-                              (index) => controller.eyes = index,
-                              (index) => controller.selectedEyes == index);
-                        case "NARIZ":
-                          return componentList(
-                              context,
-                              noseAssets,
-                              "avatar_nose",
-                              (index) => controller.nose = index,
-                              (index) => controller.selectedNose == index);
-                        case "BOCA":
-                          return componentList(
-                              context,
-                              mouthAssets,
-                              "avatar_mouth",
-                              (index) => controller.mouth = index,
-                              (index) => controller.selectedMouth == index);
-                        case "PELO CORTO":
-                          return componentList(
-                              context,
-                              shortHairAssets,
-                              "avatar_hair",
-                              (index) => controller.shortHair = index,
-                              (index) => controller.selectedShortHair == index);
-                        case "PELO LARGO":
-                          return componentList(
-                              context,
-                              longHairAssets,
-                              "avatar_hair",
-                              (index) => controller.longHair = index,
-                              (index) => controller.selectedLongHair == index);
-                        case "BELLO FACIAL":
-                          return componentList(
-                              context,
-                              facialHairAssets,
-                              "avatar_facial_hair",
-                              (index) => controller.facialHair = index,
-                              (index) =>
-                                  controller.selectedFacialHair == index);
-                        case "ROPA":
-                          return componentList(
-                              context,
-                              clothingAssets,
-                              "avatar_clothing",
-                              (index) => controller.clothing = index,
-                              (index) => controller.selectedClothing == index);
-                        case "GORROS":
-                          return componentList(
-                              context,
-                              hatAssets,
-                              "avatar_hat",
-                              (index) => controller.hat = index,
-                              (index) => controller.selectedHat == index);
-                        case "ACCESSORIOS":
-                          return componentList(
-                              context,
-                              accessoryAssets,
-                              "avatar_accessory",
-                              (index) => controller.accessory = index,
-                              (index) => controller.selectedAccessory == index);
-                        default:
-                          return const SizedBox.shrink();
-                      }
-                    }),
-                // Space for FAB to not cover the category items
-                const SizedBox(height: 36)
-              ]),
-            )
-          ])),
+          ),
+        ),
+      ),
     );
   }
+}
+
+class WebScrollBehavior extends ScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.stylus,
+        PointerDeviceKind.trackpad,
+      };
 }

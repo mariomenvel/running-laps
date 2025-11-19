@@ -182,60 +182,62 @@ class AvatarMakerController extends GetxController {
 
   // --- INICIO DE CÓDIGO AÑADIDO ---
 
-/// Método para convertir el estado actual del avatar a un Mapa (para JSON/Firebase).
-Map<String, dynamic> toJson() {
-  return {
-    'body': _selectedBody.value,
-    'hairType': _selectedHairType.value.name, // Guardamos el enum como string
-    'shortHair': _selectedShortHair.value,
-    'longHair': _selectedLongHair.value,
-    'eyes': _selectedEyes.value,
-    'nose': _selectedNose.value,
-    'mouth': _selectedMouth.value,
-    'facialHair': _selectedFacialHair.value,
-    'facialHairColor': _selectedFacialHairColor.value,
-    'hat': _selectedHat.value,
-    'clothing': _selectedClothing.value,
-    'clothingColor': _selectedClothingColor.value,
-    'accessory': _selectedAccessory.value,
-    'accessoryColor': _selectedAccessoryColor.value,
-    'backgroundColor': _selectedBackgroundColor.value,
-    'backgroundShape': _selectedBackgroundShape.value.name, // Guardamos el enum como string
-  };
-}
+  /// Método para convertir el estado actual del avatar a un Mapa (para JSON/Firebase).
+  Map<String, dynamic> toJson() {
+    return {
+      'body': _selectedBody.value,
+      'hairType': _selectedHairType.value.name, // Guardamos el enum como string
+      'shortHair': _selectedShortHair.value,
+      'longHair': _selectedLongHair.value,
+      'eyes': _selectedEyes.value,
+      'nose': _selectedNose.value,
+      'mouth': _selectedMouth.value,
+      'facialHair': _selectedFacialHair.value,
+      'facialHairColor': _selectedFacialHairColor.value,
+      'hat': _selectedHat.value,
+      'clothing': _selectedClothing.value,
+      'clothingColor': _selectedClothingColor.value,
+      'accessory': _selectedAccessory.value,
+      'accessoryColor': _selectedAccessoryColor.value,
+      'backgroundColor': _selectedBackgroundColor.value,
+      'backgroundShape':
+          _selectedBackgroundShape.value.name, // Guardamos el enum como string
+    };
+  }
 
-/// Método para cargar el estado del avatar desde un Mapa (desde JSON/Firebase).
-void updateFromJson(Map<String, dynamic> json) {
-  // Usamos los setters (ej. 'body = ...') para que la UI se actualice
+  /// Método para cargar el estado del avatar desde un Mapa (desde JSON/Firebase).
+  void updateFromJson(Map<String, dynamic> json) {
+    // Usamos los setters (ej. 'body = ...') para que la UI se actualice
 
-  body = json['body'] ?? 0;
+    body = json['body'] ?? 0;
 
-  String hairTypeString = json['hairType'] ?? HairType.short.name;
-  hairType = HairType.values.firstWhere(
-    (e) => e.name == hairTypeString,
-    orElse: () => HairType.short,
-  );
+    String hairTypeString = json['hairType'] ?? HairType.short.name;
+    hairType = HairType.values.firstWhere(
+      (e) => e.name == hairTypeString,
+      orElse: () => HairType.short,
+    );
 
-  shortHair = json['shortHair'] ?? 0;
-  longHair = json['longHair'] ?? 0;
-  eyes = json['eyes'] ?? 0;
-  nose = json['nose'] ?? 0;
-  mouth = json['mouth'] ?? 0;
-  facialHair = json['facialHair'] ?? 0;
-  facialHairColor = json['facialHairColor'] ?? 0;
-  hat = json['hat'] ?? 0;
-  clothing = json['clothing'] ?? 0;
-  clothingColor = json['clothingColor'] ?? 0;
-  accessory = json['accessory'] ?? 0;
-  accessoryColor = json['accessoryColor'] ?? 0;
-  backgroundColor = json['backgroundColor'] ?? 0;
+    shortHair = json['shortHair'] ?? 0;
+    longHair = json['longHair'] ?? 0;
+    eyes = json['eyes'] ?? 0;
+    nose = json['nose'] ?? 0;
+    mouth = json['mouth'] ?? 0;
+    facialHair = json['facialHair'] ?? 0;
+    facialHairColor = json['facialHairColor'] ?? 0;
+    hat = json['hat'] ?? 0;
+    clothing = json['clothing'] ?? 0;
+    clothingColor = json['clothingColor'] ?? 0;
+    accessory = json['accessory'] ?? 0;
+    accessoryColor = json['accessoryColor'] ?? 0;
+    backgroundColor = json['backgroundColor'] ?? 0;
 
-  String shapeString = json['backgroundShape'] ?? BackgroundShape.circle.name;
-  backgroundShape = BackgroundShape.values.firstWhere(
-    (e) => e.name == shapeString,
-    orElse: () => BackgroundShape.circle,
-  );
-}
+    String shapeString = json['backgroundShape'] ?? BackgroundShape.circle.name;
+    backgroundShape = BackgroundShape.values.firstWhere(
+      (e) => e.name == shapeString,
+      orElse: () => BackgroundShape.circle,
+    );
+  }
+
 // --- FIN DE CÓDIGO AÑADIDO ---
   final _random = Random();
 

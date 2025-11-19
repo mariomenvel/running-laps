@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart'; 
+import 'package:flutter/material.dart';
 
 abstract class AppColorTheme {
   static const Color appBackground = Color(0xFF6FB827);
@@ -9,5 +9,5 @@ abstract class AppColorTheme {
 
   static const Color white = Color(0xFFFFFFFF);
 
-  static const Color primaryColor = Colors.blue;
+  static const Color primaryColor = Color(0xFF8E24AA);
 }

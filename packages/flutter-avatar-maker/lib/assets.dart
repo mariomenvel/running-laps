@@ -11,7 +11,7 @@ const category = [
   "BELLO FACIAL",
   "ROPA",
   "GORROS",
-  "ACCESSORIOS",
+  "ACCESORIOS",
   "FONDO",
 ];
 
