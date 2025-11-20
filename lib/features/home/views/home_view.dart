@@ -2,11 +2,13 @@
 
 import 'dart:ui' as ui; // Importación con prefijo para resolver TextDirection
 import 'package:flutter/material.dart';
+import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
 import 'package:running_laps/features/profile/views/profile_view.dart';
 import 'package:intl/intl.dart';
 import '../../../app/tema.dart'; // Importar la clase Tema
 import '../../../core/widgets/app_footer.dart'; // Importar el footer reutilizable
+import '../../../core/widgets/app_header.dart'; // Importar el header reutilizable
 
 // Importar las clases de estadísticas
 import '../viewmodels/homeEstadistica_controller';
@@ -41,15 +43,6 @@ class _HomeViewState extends State<HomeView> {
     super.dispose();
   }
 
-  // --- Lógica del Botón ---
-  void _onPlayButtonTap() {
-    print("Botón Play presionado. Navegando a TrainingStartView...");
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const TrainingStartView()),
-    );
-  }
-
   // ===================================================================
   // Widgets de la UI
   // ===================================================================
@@ -79,63 +72,33 @@ class _HomeViewState extends State<HomeView> {
   // 1. HEADER
   // ===================================================================
   Widget _buildHeader() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment.topCenter,
-          radius: 1.2,
-          colors: [_bgGradientColor, Colors.white],
-          stops: const [0.0, 1.0],
-        ),
-        image: const DecorationImage(
-          image: AssetImage('assets/images/fondo.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20.0,
-              vertical: 16.0,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    print("Botón de Logo presionado");
-                  },
-                  child: const CircleAvatar(
-                    radius: 24.0,
-                    backgroundColor: Tema.brandPurple,
-                    backgroundImage: AssetImage('assets/images/logo.png'),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ProfileView(),
-                      ),
-                    );
-                  },
-                  child: AvatarHelper.construirImagenPerfil(
-                    radius: 24.0, // Le pasamos el tamaño que quieras
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(height: 1.0, color: Colors.grey.shade200),
-        ],
-      ),
+    return AppHeader(
+      onTapLeft: () {},
+      onTapRight: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ProfileView()),
+        );
+      },
     );
   }
 
   // ===================================================================
-  // 2. BODY (Contiene la tarjeta del gráfico)
+  // 2. FOOTER
+  // ===================================================================
+  Widget _buildFooter() {
+    return AppFooter(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const TrainingStartView()),
+        );
+      },
+    );
+  }
+
+  // ===================================================================
+  // 3. BODY (Contiene la tarjeta del gráfico)
   // ===================================================================
   Widget _buildNewBody() {
     return SingleChildScrollView(
@@ -325,13 +288,6 @@ class _HomeViewState extends State<HomeView> {
         },
       ),
     );
-  }
-
-  // ===================================================================
-  // 3. FOOTER
-  // ===================================================================
-  Widget _buildFooter() {
-    return AppFooter(onTap: _onPlayButtonTap);
   }
 
   /// Helper para botón circular

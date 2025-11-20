@@ -2,6 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart'; // Para capturar FirebaseException
+import 'package:running_laps/features/home/views/home_view.dart';
+import '../../../core/widgets/app_header.dart';
+import '../../profile/views/profile_view.dart';
 
 // Asegúrate que las rutas son correctas
 import '../data/serie.dart';
@@ -280,56 +283,39 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   }
 
   Widget _buildHeader() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment.topCenter,
-          radius: 1.2,
-          colors: [_bgGradientColor, Colors.white],
-          stops: [0.0, 1.0],
-        ),
-        image: const DecorationImage(
-          image: AssetImage('assets/images/fondo.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20.0,
-              vertical: 16.0,
+    return AppHeader(
+      onTapLeft: () {
+        if (_vm.series.isEmpty) {
+          Navigator.pop(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Por favor, termina el entrenamiento actual antes de salir.',
+              ),
+              backgroundColor: Colors.red,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  child: const CircleAvatar(
-                    radius: 24.0,
-                    backgroundColor: Tema.brandPurple,
-                    backgroundImage: AssetImage('assets/images/logo.png'),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    print("Botón de Perfil presionado");
-                  },
-                  child: const CircleAvatar(
-                    radius: 24.0,
-                    backgroundImage: AssetImage(
-                      'assets/images/icono_defecto.jpg',
-                    ),
-                  ),
-                ),
-              ],
+          );
+        }
+      },
+      onTapRight: () {
+        if (_vm.series.isEmpty) {
+          Navigator.pop(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Por favor, termina el entrenamiento actual antes de salir.',
+              ),
+              backgroundColor: Colors.red,
             ),
-          ),
-          Container(height: 1.0, color: Colors.grey.shade200),
-        ],
-      ),
+          );
+        }
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ProfileView()),
+        );
+      },
     );
   }
 

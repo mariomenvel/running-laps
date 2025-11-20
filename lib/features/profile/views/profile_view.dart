@@ -6,6 +6,7 @@ import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
 import '../../training/data/serie.dart';
 import '../../../core/widgets/app_footer.dart';
+import '../../../core/widgets/app_header.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({Key? key}) : super(key: key);
@@ -88,63 +89,20 @@ class _ProfileViewState extends State<ProfileView> {
   // HEADER
   // ============================
   Widget _buildHeader() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const RadialGradient(
-          center: Alignment.topCenter,
-          radius: 1.2,
-          colors: <Color>[_bgGradientColor, Colors.white],
-          stops: <double>[0.0, 1.0],
-        ),
-        image: const DecorationImage(
-          image: AssetImage('assets/images/fondo.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Column(
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20.0,
-              vertical: 16.0,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  child: CircleAvatar(
-                    radius: 24.0,
-                    backgroundColor: Tema.brandPurple,
-                    backgroundImage: const AssetImage('assets/images/logo.png'),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (BuildContext context) {
-                          return const AvatarEditorWrapperView();
-                        },
-                      ),
-                    );
-                  },
-                  child: const CircleAvatar(
-                    radius: 24.0,
-                    backgroundImage: AssetImage(
-                      'assets/images/icono_defecto.jpg',
-                    ),
-                  ),
-                ),
-              ],
-            ),
+    return AppHeader(
+      onTapLeft: () {
+        Navigator.pop(context);
+      },
+      onTapRight: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (BuildContext context) {
+              return const AvatarEditorWrapperView();
+            },
           ),
-          Container(height: 1.0, color: Colors.grey.shade200),
-        ],
-      ),
+        );
+      },
     );
   }
 
