@@ -2,9 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart'; // Para capturar FirebaseException
-import 'package:running_laps/features/home/views/home_view.dart';
 import '../../../core/widgets/app_header.dart';
-import '../../profile/views/profile_view.dart';
+import 'dart:ui' show FontFeature;
 
 // Asegúrate que las rutas son correctas
 import '../data/serie.dart';
@@ -34,6 +33,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   // --- Estado del Descanso (UI) ---
   Timer? _restTimer;
   int _restSecondsRemaining = 0;
+  int _restTotalSeconds = 0;
   bool _isResting = false;
 
   // --- Colores ---
@@ -124,6 +124,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
       if (result.descansoSec > 0) {
         setState(() {
+          _restTotalSeconds = result.descansoSec;
           _restSecondsRemaining = result.descansoSec;
           _isResting = true;
         });
@@ -311,10 +312,6 @@ class _TrainingStartViewState extends State<TrainingStartView> {
             ),
           );
         }
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ProfileView()),
-        );
       },
     );
   }
@@ -519,13 +516,19 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   }
 
   Widget _buildRestTimerFooter() {
+    double progress = 0.0;
+
+    if (_restTotalSeconds > 0) {
+      progress = _restSecondsRemaining / _restTotalSeconds;
+    }
+
     return Container(
       decoration: BoxDecoration(
         gradient: RadialGradient(
           center: Alignment.bottomCenter,
           radius: 1.2,
-          colors: [_bgGradientColor, Colors.white],
-          stops: const [0.0, 1.0],
+          colors: <Color>[_bgGradientColor, Colors.white],
+          stops: const <double>[0.0, 1.0],
         ),
         image: const DecorationImage(
           image: AssetImage('assets/images/fondo.png'),
@@ -533,7 +536,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         ),
       ),
       child: Column(
-        children: [
+        children: <Widget>[
           Container(height: 1.0, color: Colors.grey.shade200),
           Padding(
             padding: const EdgeInsets.symmetric(
@@ -541,21 +544,47 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               horizontal: 24.0,
             ),
             child: Column(
-              children: [
+              children: <Widget>[
                 Text(
                   "Descanso restante",
                   style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                 ),
                 const SizedBox(height: 10),
-                Text(
-                  _formatRestTime(),
-                  style: const TextStyle(
-                    fontSize: 40,
-                    fontWeight: FontWeight.bold,
-                    color: Tema.brandPurple,
-                    fontFeatures: [FontFeature.tabularFigures()],
+
+                // ⬇️ CÍRCULO MORADO + TIEMPO DENTRO
+                SizedBox(
+                  width: 120.0,
+                  height: 120.0,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: <Widget>[
+                      SizedBox(
+                        width: 120.0,
+                        height: 120.0,
+                        child: CircularProgressIndicator(
+                          value: progress, // 1.0 → lleno, 0.0 → vacío
+                          strokeWidth: 8.0,
+                          backgroundColor: Colors.white.withOpacity(0.4),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Tema.brandPurple,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        _formatRestTime(),
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Tema.brandPurple,
+                          fontFeatures: <FontFeature>[
+                            FontFeature.tabularFigures(),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+
                 const SizedBox(height: 10),
                 TextButton(
                   child: const Text(

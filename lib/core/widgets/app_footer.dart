@@ -27,7 +27,7 @@ class AppFooter extends StatelessWidget {
       ),
       child: Column(
         children: <Widget>[
-          Container(height: 1.0, color: Colors.grey),
+          Container(height: 0.3, color: Colors.grey),
           Padding(
             padding: const EdgeInsets.symmetric(
               vertical: 20.0,
