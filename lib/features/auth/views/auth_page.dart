@@ -14,15 +14,18 @@ class AuthPage extends StatefulWidget {
 
 class _AuthPageState extends State<AuthPage> {
   // --- Controller ---
-  // CAMBIO: El estado se gestiona en el Controller
   final _authCtrl = AuthController();
 
   // --- Constantes de Estilo ---
   static const double _fieldWidth = 300;
 
+  // --- Estado para ver/ocultar contraseñas ---
+  bool _showLoginPassword = false;
+  bool _showRegisterPassword = false;
+  bool _showRegisterConfirmPassword = false;
+
   @override
   void dispose() {
-    // CAMBIO: Limpiamos el Controller (que a su vez limpia sus controladores de texto)
     _authCtrl.dispose();
     super.dispose();
   }
@@ -40,12 +43,10 @@ class _AuthPageState extends State<AuthPage> {
   }
 
   String _extractErrorMessage(Object e) {
-    // Si ya es un string, devolver tal cual
     if (e is String) return e;
 
     final s = e.toString();
 
-    // Intentar extraer el texto después de un prefijo tipo "Exception: " o "Error: "
     final regex = RegExp(r'^(?:.*?:\s*)(.*)$');
     final match = regex.firstMatch(s);
     if (match != null && match.groupCount >= 1) {
@@ -53,22 +54,18 @@ class _AuthPageState extends State<AuthPage> {
       if (extracted != null && extracted.isNotEmpty) return extracted;
     }
 
-    // Si no se pudo extraer, devolver el toString() original
     return s;
   }
 
   Future<void> _signIn() async {
     try {
-      // CAMBIO: Llamamos al método del Controller.
       await _authCtrl.signIn();
       if (!mounted) return;
 
-      // 1. Muestra la SnackBar PRIMERO
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Sesión iniciada')));
 
-      // 2. Navega a la nueva pantalla DESPUÉS
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const HomeView()),
         (Route<dynamic> route) => false,
@@ -80,10 +77,6 @@ class _AuthPageState extends State<AuthPage> {
 
   Future<void> _signUp() async {
     try {
-      // CAMBIO: Llamamos al método del Controller. El Controller se encarga de:
-      // 1. Comprobar contraseñas
-      // 2. Llamar al Repository
-      // 3. Llamar a _authCtrl.toggleView()
       await _authCtrl.signUp();
       if (!mounted) return;
 
@@ -92,26 +85,24 @@ class _AuthPageState extends State<AuthPage> {
           content: Text('Cuenta creada con éxito. Inicia sesión.'),
         ),
       );
-
-      // No es necesario llamar a _toggleView() aquí, el Controller ya lo hace.
     } catch (e) {
       _showError(e);
     }
   }
 
-  // El método de cambio de vista también llama al Controller
   void _toggleView() {
     _authCtrl.toggleView();
   }
 
   // ===================================================================
-  // Helpers de UI (Sin cambios, pero usando los controladores del Controller)
+  // Helpers de UI
   // ===================================================================
 
   Widget _buildTextField({
     required TextEditingController controller,
     required String hintText,
     bool obscureText = false,
+    Widget? suffixIcon,
   }) {
     return SizedBox(
       width: _fieldWidth,
@@ -142,21 +133,24 @@ class _AuthPageState extends State<AuthPage> {
             hintStyle: const TextStyle(color: Colors.grey, letterSpacing: 0.0),
             border: InputBorder.none,
             contentPadding: const EdgeInsets.fromLTRB(20, 20, 12, 7),
+            suffixIcon: suffixIcon,
           ),
         ),
       ),
     );
   }
 
-  // CAMBIO: Envuelve el botón en un ValueListenableBuilder para reaccionar a _authCtrl.isLoading
+  // CAMBIO: Ahora el botón permite decidir si muestra el loading o no.
   Widget _buildButton({
     required String text,
     required VoidCallback? onPressed,
+    bool showLoading = true,
   }) {
-    // CAMBIO: Reconstruye el botón solo cuando el estado de carga cambia
     return ValueListenableBuilder<bool>(
       valueListenable: _authCtrl.isLoading,
       builder: (context, isLoading, child) {
+        final bool disabled = isLoading && showLoading;
+
         return Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
@@ -173,9 +167,7 @@ class _AuthPageState extends State<AuthPage> {
             width: _fieldWidth,
             height: 60,
             child: OutlinedButton(
-              onPressed: isLoading
-                  ? null
-                  : onPressed, // Deshabilita si está cargando
+              onPressed: disabled ? null : onPressed,
               style: OutlinedButton.styleFrom(
                 backgroundColor: Tema.brandPurple,
                 foregroundColor: Colors.white,
@@ -189,9 +181,8 @@ class _AuthPageState extends State<AuthPage> {
                   letterSpacing: 1.1,
                 ),
               ),
-              child: isLoading
+              child: isLoading && showLoading
                   ? const SizedBox(
-                      // Indicador de carga
                       width: 24,
                       height: 24,
                       child: CircularProgressIndicator(
@@ -211,11 +202,10 @@ class _AuthPageState extends State<AuthPage> {
   // Vistas de Formulario (Login / Registro)
   // ===================================================================
 
-  /// Devuelve el formulario de Login (basado en View1)
+  /// Formulario de Login
   Widget _buildLoginForm() {
     return Column(
       children: [
-        // CAMBIO: Usando los controladores del Controller
         _buildTextField(
           controller: _authCtrl.emailCtrl,
           hintText: 'Correo electrónico',
@@ -224,22 +214,41 @@ class _AuthPageState extends State<AuthPage> {
         _buildTextField(
           controller: _authCtrl.passCtrl,
           hintText: 'Contraseña',
-          obscureText: true,
+          obscureText: !_showLoginPassword,
+          suffixIcon: IconButton(
+            icon: Icon(
+              _showLoginPassword ? Icons.visibility_off : Icons.visibility,
+              color: Colors.grey,
+            ),
+            onPressed: () {
+              setState(() {
+                _showLoginPassword = !_showLoginPassword;
+              });
+            },
+          ),
         ),
         const SizedBox(height: 20),
-        _buildButton(text: 'INICIAR SESIÓN', onPressed: _signIn),
+        // SOLO este botón muestra el loading
+        _buildButton(
+          text: 'INICIAR SESIÓN',
+          onPressed: _signIn,
+          showLoading: true,
+        ),
         const SizedBox(height: 16),
-        // CAMBIO: El botón de registro usa el mismo widget que ya gestiona la carga.
-        _buildButton(text: 'REGISTRARSE', onPressed: _toggleView),
+        // Este botón NO muestra loading, solo se deshabilita si quisieras
+        _buildButton(
+          text: 'REGISTRARSE',
+          onPressed: _toggleView,
+          showLoading: false,
+        ),
       ],
     );
   }
 
-  /// Devuelve el formulario de Registro (basado en View2)
+  /// Formulario de Registro
   Widget _buildRegisterForm() {
     return Column(
       children: [
-        // CAMBIO: Usando los controladores del Controller
         _buildTextField(
           controller: _authCtrl.usernameCtrl,
           hintText: 'Nombre de usuario',
@@ -253,18 +262,46 @@ class _AuthPageState extends State<AuthPage> {
         _buildTextField(
           controller: _authCtrl.passCtrl,
           hintText: 'Contraseña',
-          obscureText: true,
+          obscureText: !_showRegisterPassword,
+          suffixIcon: IconButton(
+            icon: Icon(
+              _showRegisterPassword ? Icons.visibility_off : Icons.visibility,
+              color: Colors.grey,
+            ),
+            onPressed: () {
+              setState(() {
+                _showRegisterPassword = !_showRegisterPassword;
+              });
+            },
+          ),
         ),
         const SizedBox(height: 16),
         _buildTextField(
           controller: _authCtrl.confirmPassCtrl,
           hintText: 'Confirmar contraseña',
-          obscureText: true,
+          obscureText: !_showRegisterConfirmPassword,
+          suffixIcon: IconButton(
+            icon: Icon(
+              _showRegisterConfirmPassword
+                  ? Icons.visibility_off
+                  : Icons.visibility,
+              color: Colors.grey,
+            ),
+            onPressed: () {
+              setState(() {
+                _showRegisterConfirmPassword = !_showRegisterConfirmPassword;
+              });
+            },
+          ),
         ),
         const SizedBox(height: 32),
-        _buildButton(text: 'REGISTRARSE', onPressed: _signUp),
+        // Aquí sí queremos ver el loading al registrar
+        _buildButton(
+          text: 'REGISTRARSE',
+          onPressed: _signUp,
+          showLoading: true,
+        ),
         const SizedBox(height: 16),
-        // CAMBIO: Este TextButton solo usa la carga para deshabilitarse (si está cargando, el onPressed es null)
         ValueListenableBuilder<bool>(
           valueListenable: _authCtrl.isLoading,
           builder: (context, isLoading, child) {
@@ -308,17 +345,12 @@ class _AuthPageState extends State<AuthPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              // 1. El Logo
               Image.asset(
                 'assets/images/Icon.png',
                 height: 400,
                 fit: BoxFit.contain,
               ),
               const SizedBox(height: 0),
-
-              // 2. El formulario (Login o Registro)
-              // CAMBIO: ValueListenableBuilder para reconstruir solo el formulario
-              // cuando cambia la vista (_authCtrl.isLoginView)
               ValueListenableBuilder<bool>(
                 valueListenable: _authCtrl.isLoginView,
                 builder: (context, isLoginView, child) {

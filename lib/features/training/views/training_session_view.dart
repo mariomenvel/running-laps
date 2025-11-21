@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import '../data/serie.dart';
 import '../../../app/tema.dart';
+import '../../../core/widgets/app_header.dart';
 
 class TrainingSessionView extends StatefulWidget {
   final String distancia;
@@ -155,51 +156,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
 
   // --- MODIFICADO (2 de 4) ---
   Widget _buildHeader() {
-    return Container(
-      // ¡GRADIENTE Y FONDO ACTUALIZADOS!
-      decoration: BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment.topCenter,
-          radius: 1.2, // Ajustado para coincidir
-          colors: [_bgGradientColor, Colors.white],
-          stops: [0.0, 1.0], // Ajustado para coincidir
-        ),
-        // Añadido para coincidir
-        image: DecorationImage(
-          image: AssetImage('assets/images/fondo.png'), // Ruta de tu imagen
-          fit: BoxFit.cover, // Ajusta la imagen para cubrir
-        ),
-      ),
-      // Añadida Column y línea divisoria para coincidir
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20.0,
-              vertical: 16.0,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                CircleAvatar(
-                  radius: 24.0,
-                  backgroundColor: Tema.brandPurple,
-                  backgroundImage: const AssetImage('assets/images/logo.png'),
-                ),
-                CircleAvatar(
-                  radius: 24.0,
-                  backgroundImage: AssetImage(
-                    'assets/images/icono_defecto.jpg',
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Línea divisoria añadida
-          Container(height: 1.0, color: Colors.grey.shade200),
-        ],
-      ),
-    );
+    return AppHeader(onTapLeft: () {}, onTapRight: () {});
   }
 
   Widget _buildBody() {
