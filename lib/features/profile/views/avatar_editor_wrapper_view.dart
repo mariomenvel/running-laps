@@ -3,6 +3,7 @@ import 'package:flutter_avatar_maker/avatar_maker_screen.dart';
 import 'package:get/get.dart';
 import 'package:flutter_avatar_maker/avatar_maker_controller.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../home/views/home_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../app/tema.dart';
 
@@ -115,7 +116,14 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
                 // --- BOTÓN IZQUIERDO: VOLVER (Icono Logo) ---
                 GestureDetector(
                   onTap: () {
-                    Navigator.pop(context);
+                    Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (BuildContext context) {
+              return const HomeView();
+            },
+          ),
+        );
                   },
                   child: const CircleAvatar(
                     radius: 24.0,

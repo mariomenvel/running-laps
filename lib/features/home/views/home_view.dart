@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
 import 'package:running_laps/features/profile/views/profile_view.dart';
+import 'package:running_laps/features/profile/views/profile_menu_view.dart';
+
 import '../../../app/tema.dart';
 import '../../../core/widgets/app_footer.dart';
 
@@ -123,7 +125,7 @@ class _HomeViewState extends State<HomeView> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const ProfileView(),
+                        builder: (context) => const ProfileMenuView(),
                       ),
                     );
                   },
@@ -188,7 +190,14 @@ class _HomeViewState extends State<HomeView> {
               },
             ),
             const SizedBox(height: 20),
-            _buildMetricDropdown(),
+            Align(
+  alignment: Alignment.center,
+  child: SizedBox(
+    width: MediaQuery.of(context).size.width * 0.40, // 48% del ancho
+    child: _buildMetricDropdown(),
+  ),
+),
+
           ],
         ),
       ),
@@ -426,48 +435,64 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Widget _buildMetricDropdown() {
-    final Map<HomeMetric, String> metricLabels = {
-      HomeMetric.ritmoMedio: 'Ritmo medio',
-      HomeMetric.distanciaTotal: 'Distancia total (Km)',
-      HomeMetric.tiempoTotal: 'Tiempo total (min)',
-      HomeMetric.rpePromedio: 'RPE promedio',
-    };
+  final Map<HomeMetric, String> metricLabels = {
+    HomeMetric.ritmoMedio: 'Ritmo medio',
+    HomeMetric.distanciaTotal: 'Distancia total (Km)',
+    HomeMetric.tiempoTotal: 'Tiempo total (min)',
+    HomeMetric.rpePromedio: 'RPE promedio',
+  };
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade400),
-      ),
-      child: ValueListenableBuilder<HomeMetric>(
-        valueListenable: _estadisticaController.selectedMetric,
-        builder: (context, currentMetric, child) {
-          return DropdownButtonHideUnderline(
-            child: DropdownButton<HomeMetric>(
-              isExpanded: true,
-              value: currentMetric,
-              icon: const Icon(Icons.arrow_drop_down, color: Tema.brandPurple),
-              onChanged: (HomeMetric? newMetric) {
-                if (newMetric != null) {
-                  _estadisticaController.setMetric(newMetric);
-                  setState(() => _selectedMetric = null);
-                }
-              },
-              items: metricLabels.keys.map((metric) {
-                return DropdownMenuItem<HomeMetric>(
-                  value: metric,
-                  child: Text(
-                    metricLabels[metric]!,
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                );
-              }).toList(),
+  return Container(
+    height: 40, // más bajito
+    padding: const EdgeInsets.symmetric(horizontal: 14),
+    decoration: BoxDecoration(
+      color: Colors.grey.shade50,
+      borderRadius: BorderRadius.circular(24), // más redondeado
+      border: Border.all(color: Colors.grey.shade300, width: 1),
+    ),
+    child: ValueListenableBuilder<HomeMetric>(
+      valueListenable: _estadisticaController.selectedMetric,
+      builder: (context, currentMetric, child) {
+        return DropdownButtonHideUnderline(
+          child: DropdownButton<HomeMetric>(
+            isExpanded: true,
+            isDense: true, // compacto
+            value: currentMetric,
+            icon: const Icon(
+              Icons.arrow_drop_down_rounded,
+              color: Tema.brandPurple,
+              size: 20, // icono más pequeño
             ),
-          );
-        },
-      ),
-    );
-  }
+            borderRadius: BorderRadius.circular(16), // menú redondeado
+            dropdownColor: Colors.white,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Colors.black,
+            ),
+            onChanged: (HomeMetric? newMetric) {
+              if (newMetric != null) {
+                _estadisticaController.setMetric(newMetric);
+                setState(() => _selectedMetric = null);
+              }
+            },
+            items: metricLabels.keys.map((metric) {
+              return DropdownMenuItem<HomeMetric>(
+                value: metric,
+                child: Text(
+                  metricLabels[metric]!,
+                  style: const TextStyle(
+                    fontSize: 13,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        );
+      },
+    ),
+  );
+}
+
 }
 
 // ===================================================================

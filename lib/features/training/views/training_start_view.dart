@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart'; // Para capturar FirebaseException
 import '../../../core/widgets/app_header.dart';
+import '../../profile/views/profile_menu_view.dart';
+import '../../home/views/home_view.dart';
 import 'dart:ui' show FontFeature;
 
 // Asegúrate que las rutas son correctas
@@ -287,7 +289,14 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     return AppHeader(
       onTapLeft: () {
         if (_vm.series.isEmpty) {
-          Navigator.pop(context);
+          Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (BuildContext context) {
+              return const HomeView();
+            },
+          ),
+        );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -301,7 +310,14 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       },
       onTapRight: () {
         if (_vm.series.isEmpty) {
-          Navigator.pop(context);
+          Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (BuildContext context) {
+              return const ProfileMenuView();
+            },
+          ),
+        );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

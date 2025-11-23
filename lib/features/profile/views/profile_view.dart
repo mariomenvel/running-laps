@@ -4,6 +4,8 @@ import 'package:running_laps/features/profile/views/avatar_editor_wrapper_view.d
 import 'package:running_laps/features/profile/viewmodels/profile_controller.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
+import 'package:running_laps/features/profile/views/profile_menu_view.dart';
+import 'package:running_laps/features/home/views/home_view.dart';
 import '../../training/data/serie.dart';
 import '../../../core/widgets/app_footer.dart';
 import '../../../core/widgets/app_header.dart';
@@ -91,14 +93,21 @@ class _ProfileViewState extends State<ProfileView> {
   Widget _buildHeader() {
     return AppHeader(
       onTapLeft: () {
-        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (BuildContext context) {
+              return const HomeView();
+            },
+          ),
+        );
       },
       onTapRight: () {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (BuildContext context) {
-              return const AvatarEditorWrapperView();
+              return const ProfileMenuView();
             },
           ),
         );
