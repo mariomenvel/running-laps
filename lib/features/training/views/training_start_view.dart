@@ -32,6 +32,13 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   final TextEditingController _descansoController = TextEditingController();
   final TextEditingController _trainingNameController = TextEditingController();
 
+  // --- Focus y último valor usado ---
+  final FocusNode _distanciaFocus = FocusNode();
+  final FocusNode _descansoFocus = FocusNode();
+
+  String _ultimoValorDistancia = "";
+  String _ultimoValorDescanso = "";
+
   // --- Estado del Descanso (UI) ---
   Timer? _restTimer;
   int _restSecondsRemaining = 0;
@@ -42,10 +49,37 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   static const Color _bgGradientColor = Color(0xFFF9F5FB);
 
   @override
+  void initState() {
+    super.initState();
+
+    // Cuando el usuario hace tap en distancia y el texto es el "por defecto", se limpia
+    _distanciaFocus.addListener(() {
+      if (_distanciaFocus.hasFocus &&
+          _distanciaController.text == _ultimoValorDistancia &&
+          _distanciaController.text.isNotEmpty) {
+        _distanciaController.clear();
+        setState(() {});
+      }
+    });
+
+    // Igual para descanso
+    _descansoFocus.addListener(() {
+      if (_descansoFocus.hasFocus &&
+          _descansoController.text == _ultimoValorDescanso &&
+          _descansoController.text.isNotEmpty) {
+        _descansoController.clear();
+        setState(() {});
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _distanciaController.dispose();
     _descansoController.dispose();
     _trainingNameController.dispose();
+    _distanciaFocus.dispose();
+    _descansoFocus.dispose();
     _restTimer?.cancel();
     super.dispose();
   }
@@ -119,10 +153,14 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     if (result != null && result is Serie) {
       setState(() {
         _vm.addSerie(result);
-      });
 
-      _distanciaController.clear();
-      _descansoController.clear();
+        // Guardamos como "último valor" y lo dejamos puesto para la siguiente serie
+        _ultimoValorDistancia = result.distanciaM.toString();
+        _ultimoValorDescanso = result.descansoSec.toString();
+
+        _distanciaController.text = _ultimoValorDistancia;
+        _descansoController.text = _ultimoValorDescanso;
+      });
 
       if (result.descansoSec > 0) {
         setState(() {
@@ -277,7 +315,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         child: Column(
           children: [
             _buildHeader(),
-            Expanded(child: _buildBody()), // El body se expande
+            Expanded(child: _buildBody()),
             _buildFooter(),
           ],
         ),
@@ -290,13 +328,13 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       onTapLeft: () {
         if (_vm.series.isEmpty) {
           Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (BuildContext context) {
-              return const HomeView();
-            },
-          ),
-        );
+            context,
+            MaterialPageRoute(
+              builder: (BuildContext context) {
+                return const HomeView();
+              },
+            ),
+          );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -311,13 +349,13 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       onTapRight: () {
         if (_vm.series.isEmpty) {
           Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (BuildContext context) {
-              return const ProfileMenuView();
-            },
-          ),
-        );
+            context,
+            MaterialPageRoute(
+              builder: (BuildContext context) {
+                return const ProfileMenuView();
+              },
+            ),
+          );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -333,39 +371,37 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   }
 
   Widget _buildBody() {
-    return Expanded(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: 40.0),
-            _buildFormContainer(),
-            const SizedBox(height: 40.0),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: 40.0),
+          _buildFormContainer(),
+          const SizedBox(height: 40.0),
 
-            if (_vm.series.isEmpty) ...[
-              _buildGpsToggle(),
-              const SizedBox(height: 30.0),
-            ],
-
-            const Text(
-              'Series Guardadas',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            Container(
-              height: 1.0,
-              color: Colors.grey.shade300,
-              margin: const EdgeInsets.symmetric(vertical: 8.0),
-            ),
-            _buildSeriesList(),
-            const SizedBox(height: 40.0),
+          if (_vm.series.isEmpty) ...[
+            _buildGpsToggle(),
+            const SizedBox(height: 30.0),
           ],
-        ),
+
+          const Text(
+            'Series Guardadas',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          Container(
+            height: 1.0,
+            color: Colors.grey.shade300,
+            margin: const EdgeInsets.symmetric(vertical: 8.0),
+          ),
+          _buildSeriesList(),
+          const SizedBox(height: 40.0),
+        ],
       ),
     );
   }
@@ -428,24 +464,36 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       child: IntrinsicHeight(
         child: Row(
           children: [
+            // Distancia
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16.0, 0, 8.0, 0),
                 child: TextField(
                   controller: _distanciaController,
+                  focusNode: _distanciaFocus,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: false,
                   ),
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.digitsOnly,
                   ],
+                  style: TextStyle(
+                    color: (_distanciaController.text ==
+                                _ultimoValorDistancia &&
+                            _distanciaController.text.isNotEmpty)
+                        ? Colors.grey.shade500
+                        : Colors.black,
+                  ),
                   decoration: InputDecoration(
                     labelText: 'Distancia en metros',
                     labelStyle: TextStyle(color: Colors.grey[600]),
                     border: InputBorder.none,
                     suffixIcon: IconButton(
                       icon: Icon(Icons.cancel, color: Colors.grey[400]),
-                      onPressed: () => _distanciaController.clear(),
+                      onPressed: () {
+                        _distanciaController.clear();
+                        setState(() {});
+                      },
                     ),
                   ),
                 ),
@@ -456,24 +504,36 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               color: Colors.grey[300],
               margin: const EdgeInsets.symmetric(vertical: 12.0),
             ),
+            // Descanso
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16.0, 0, 8.0, 0),
                 child: TextField(
                   controller: _descansoController,
+                  focusNode: _descansoFocus,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: false,
                   ),
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.digitsOnly,
                   ],
+                  style: TextStyle(
+                    color: (_descansoController.text ==
+                                _ultimoValorDescanso &&
+                            _descansoController.text.isNotEmpty)
+                        ? Colors.grey.shade500
+                        : Colors.black,
+                  ),
                   decoration: InputDecoration(
                     labelText: 'Descanso en segundos',
                     labelStyle: TextStyle(color: Colors.grey[600]),
                     border: InputBorder.none,
                     suffixIcon: IconButton(
                       icon: Icon(Icons.cancel, color: Colors.grey[400]),
-                      onPressed: () => _descansoController.clear(),
+                      onPressed: () {
+                        _descansoController.clear();
+                        setState(() {});
+                      },
                     ),
                   ),
                 ),
@@ -566,8 +626,6 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                   style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                 ),
                 const SizedBox(height: 10),
-
-                // ⬇️ CÍRCULO MORADO + TIEMPO DENTRO
                 SizedBox(
                   width: 120.0,
                   height: 120.0,
@@ -578,7 +636,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                         width: 120.0,
                         height: 120.0,
                         child: CircularProgressIndicator(
-                          value: progress, // 1.0 → lleno, 0.0 → vacío
+                          value: progress,
                           strokeWidth: 8.0,
                           backgroundColor: Colors.white.withOpacity(0.4),
                           valueColor: const AlwaysStoppedAnimation<Color>(
@@ -600,7 +658,6 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 10),
                 TextButton(
                   child: const Text(
@@ -640,12 +697,10 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               horizontal: 40.0,
             ),
             child: (_vm.series.isEmpty)
-                // Estado 1: Antes de la primera serie
                 ? _buildCircularButton(
                     icon: Icons.play_arrow,
                     onTap: _onStartSeriesTap,
                   )
-                // Estado 2: A partir de la segunda serie
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -667,7 +722,6 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     );
   }
 
-  /// Helper para botones circulares (misma estética)
   Widget _buildCircularButton({
     required IconData icon,
     required VoidCallback onTap,
