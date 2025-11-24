@@ -45,6 +45,36 @@ class AuthRemote {
 
   // ----- Firestore (perfil básico) -----
   Future<void> saveUserDoc(String uid, Map<String, dynamic> data) async {
-    await _db.collection("users").doc(uid).set(data);
+    await _db.collection("users").doc(uid).set(data);  
   }
+
+  Future<String?> getUserName() async {
+  try {
+    User? userActual = _auth.currentUser;
+
+    if (userActual == null) {
+      return null;
+    }
+
+    String uid = userActual.uid;
+
+    DocumentSnapshot doc =
+        await _db.collection("users").doc(uid).get();
+
+    if (doc.exists) {
+      Map<String, dynamic>? data =
+          doc.data() as Map<String, dynamic>?;
+
+      if (data != null && data.containsKey("nombre")) {
+        return data["nombre"];
+      }
+    }
+
+    return null; // si no existe o no tiene nombre
+  } catch (e) {
+    print("Error obteniendo nombre: $e");
+    return null;
+  }
+}
+
 }

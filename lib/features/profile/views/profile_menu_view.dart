@@ -27,10 +27,29 @@ class ProfileMenuView extends StatefulWidget {
 class _ProfileMenuViewState extends State<ProfileMenuView> {
   late final AuthController _authCtrl;
 
+  // Nuevo: aquí guardaremos el nombre
+  String _nombreUsuario = "";
+
   @override
   void initState() {
     super.initState();
     _authCtrl = AuthController();
+    _cargarNombre();
+  }
+
+  // Cargar nombre desde Firebase
+  void _cargarNombre() async {
+    String? nombre = await _authCtrl.getUserName();
+
+    if (mounted) {
+      setState(() {
+        if (nombre != null) {
+          _nombreUsuario = nombre;
+        } else {
+          _nombreUsuario = "";
+        }
+      });
+    }
   }
 
   @override
@@ -48,7 +67,6 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
       context,
       MaterialPageRoute(
         builder: (BuildContext context) {
-          // Tu antigua vista de historial
           return const ProfileView();
         },
       ),
@@ -74,7 +92,6 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
         return;
       }
 
-      // Volver a la pantalla de Auth limpiando el stack
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
           builder: (BuildContext context) {
@@ -148,20 +165,19 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
       body: SafeArea(
         child: Column(
           children: <Widget>[
-            // HEADER igual que en ProfileView
+            // HEADER
             AppHeader(
               onTapLeft: () {
                 Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (BuildContext context) {
-              return const HomeView();
-            },
-          ),
-        );
-      },
-              onTapRight: () {
+                  context,
+                  MaterialPageRoute(
+                    builder: (BuildContext context) {
+                      return const HomeView();
+                    },
+                  ),
+                );
               },
+              onTapRight: () {},
             ),
 
             // Contenido central
@@ -171,17 +187,21 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
                 child: Column(
                   children: <Widget>[
                     const SizedBox(height: 32),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Perfil',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
+
+                    // Aquí cambia el PERFIL → nombre del usuario
+                    Center(
+  child: Text(
+    _nombreUsuario == "" ? "Perfil" : _nombreUsuario.toUpperCase(),
+    textAlign: TextAlign.center,
+    style: TextStyle(
+      color:  const Color.fromARGB(255, 67, 67, 67),
+      fontSize: 22,          // << más grande
+      fontWeight: FontWeight.bold, // << en negrita
+    ),
+  ),
+),
+
+
                     const SizedBox(height: 24),
 
                     _buildMenuButton(
@@ -195,7 +215,6 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Botón de Cerrar sesión escuchando isLoading
                     ValueListenableBuilder<bool>(
                       valueListenable: _authCtrl.isLoading,
                       builder: (
@@ -215,7 +234,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
               ),
             ),
 
-            // FOOTER igual que en ProfileView
+            // FOOTER
             AppFooter(
               onTap: () {
                 Navigator.push(

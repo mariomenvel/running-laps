@@ -15,6 +15,13 @@ class AuthController {
   final TextEditingController confirmPassCtrl = TextEditingController();
 
   // ==========================
+  // NUEVO: obtener nombre
+  // ==========================
+  Future<String?> getUserName() async {
+    return await _repo.getUserName();
+  }
+
+  // ==========================
   // LOGIN
   // ==========================
   Future<void> signIn() async {

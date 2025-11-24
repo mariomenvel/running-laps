@@ -1,70 +1,60 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../core/auth_failure.dart';
+
 import 'auth_remote.dart';
 
 class AuthRepository {
   AuthRemote _remote;
 
-  // Constructor clásico con inyección opcional para tests
-  AuthRepository({
-    AuthRemote? remote,
-    FirebaseAuth? auth,
-    FirebaseFirestore? db,
-  }) : _remote = AuthRemote(auth: auth, db: db) {
+  AuthRepository({AuthRemote? remote})
+      : _remote = AuthRemote() {
     if (remote != null) {
       _remote = remote;
     }
   }
 
-  // Flujo del estado de autenticación
+  // ==========================
+  // Auth básico
+  // ==========================
+
   Stream<User?> authStateChanges() {
     return _remote.authStateChanges();
   }
 
-  // Obtener usuario actual (puede ser null)
   User? getCurrentUser() {
     return _remote.getCurrentUser();
   }
 
-  // Registro con email + contraseña (+ guardar doc en users)
-  Future<UserCredential> signUp(
-    String email,
-    String password,
-    String nombre,
-  ) async {
-    try {
-      String cleanedEmail = email.trim();
-      UserCredential cred = await _remote.createUser(cleanedEmail, password);
-
-      User? user = cred.user;
-      if (user != null) {
-        await _remote.saveUserDoc(user.uid, <String, dynamic>{
-          "email": cleanedEmail,
-          "nombre": nombre,
-          "createdAt": FieldValue.serverTimestamp(),
-        });
-      }
-
-      return cred;
-    } on FirebaseAuthException catch (e) {
-      throw AuthFailure.fromCode(e.code, e.message);
-    }
+  Future<void> signIn(String email, String password) async {
+    await _remote.signIn(email, password);
   }
 
-  // Login con email + contraseña
-  Future<UserCredential> signIn(String email, String password) async {
-    try {
-      String cleanedEmail = email.trim();
-      UserCredential cred = await _remote.signIn(cleanedEmail, password);
-      return cred;
-    } on FirebaseAuthException catch (e) {
-      throw AuthFailure.fromCode(e.code, e.message);
+  Future<void> signUp(String email, String password, String nombre) async {
+    // 1) Crear usuario en Firebase Auth
+    UserCredential cred = await _remote.createUser(email, password);
+    User? user = cred.user;
+
+    if (user == null) {
+      throw Exception("No se pudo crear el usuario.");
     }
+
+    // 2) Guardar documento en Firestore
+    await _remote.saveUserDoc(user.uid, <String, dynamic>{
+      "nombre": nombre,
+      "email": email.trim(),
+      "createdAt": FieldValue.serverTimestamp(),
+    });
   }
 
-  // Cerrar sesión
   Future<void> signOut() async {
     await _remote.signOut();
+  }
+
+  // ==========================
+  // Obtener nombre
+  // ==========================
+
+  Future<String?> getUserName() async {
+    return await _remote.getUserName();
   }
 }
