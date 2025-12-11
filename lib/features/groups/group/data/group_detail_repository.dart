@@ -136,7 +136,18 @@ class GroupDetailRepository {
     }
   }
 
-  // --- 4. GENERADOR DE DATOS (SEEDING) ---
+  // --- 4. DATOS PARA PERFIL (Gamification) ---
+  Future<List<Entrenamiento>> fetchUserTrainings(String uid) async {
+    try {
+      final snap = await _db.collection('users').doc(uid).collection('trainings').orderBy('fecha', descending: true).get();
+      return snap.docs.map((d) => Entrenamiento.fromMap(d.data())).toList();
+    } catch (e) {
+      print("Error fetching user history: $e");
+      return [];
+    }
+  }
+
+  // --- 5. GENERADOR DE DATOS (SEEDING) ---
   // Llama a esto al iniciar la pantalla para crear retos si no existen
   Future<void> checkAndSeedChallenges(String groupId) async {
     final ref = _db.collection('groups').doc(groupId).collection('challenges');

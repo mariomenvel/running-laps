@@ -16,6 +16,7 @@ import '../data/group_detail_repository.dart';
 // IMPORT DEL REPOSITORIO DE HOME (Necesario para enviar la invitación)
 import '../../home/data/groups_repository.dart';
 import 'challenge_detail_screen.dart';
+import 'participant_profile_screen.dart';
 
 class GroupDetailScreen extends StatefulWidget {
   final String groupId;
@@ -346,64 +347,81 @@ class _RankingFullRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isPodium = pos <= 3;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        border: isPodium
-            ? Border.all(color: _getMedalColor(pos).withOpacity(0.5), width: 2)
-            : null,
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 5,
-              offset: const Offset(0, 2))
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: isPodium ? _getMedalColor(pos) : Colors.grey.shade200,
-              shape: BoxShape.circle,
-            ),
-            child: isPodium
-                ? const Icon(Icons.emoji_events, color: Colors.white, size: 18)
-                : Text("$pos",
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black54)),
-          ),
-          const SizedBox(width: 15),
-          AvatarHelper.construirAvatar(
-            radius: 18,
-            type: stat.profilePicType ?? 'none',
-            config: stat.avatarConfig,
-            url: stat.photoUrl,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              stat.name,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-              overflow: TextOverflow.ellipsis,
+    
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ParticipantProfileScreen(
+              uid: stat.uid,
+              name: stat.name,
+              photoUrl: stat.photoUrl,
+              profilePicType: stat.profilePicType,
+              avatarConfig: stat.avatarConfig,
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                "${stat.totalKm.toStringAsFixed(1)} Km",
-                style: const TextStyle(
-                    fontWeight: FontWeight.w900, fontSize: 16, color: Colors.purple),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          border: isPodium
+              ? Border.all(color: _getMedalColor(pos).withOpacity(0.5), width: 2)
+              : null,
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 5,
+                offset: const Offset(0, 2))
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isPodium ? _getMedalColor(pos) : Colors.grey.shade200,
+                shape: BoxShape.circle,
               ),
-              const Text("TOTAL", style: TextStyle(fontSize: 10, color: Colors.grey)),
-            ],
-          )
-        ],
+              child: isPodium
+                  ? const Icon(Icons.emoji_events, color: Colors.white, size: 18)
+                  : Text("$pos",
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black54)),
+            ),
+            const SizedBox(width: 15),
+            AvatarHelper.construirAvatar(
+              radius: 18,
+              type: stat.profilePicType ?? 'none',
+              config: stat.avatarConfig,
+              url: stat.photoUrl,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                stat.name,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  "${stat.totalKm.toStringAsFixed(1)} Km",
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w900, fontSize: 16, color: Colors.purple),
+                ),
+                const Text("TOTAL", style: TextStyle(fontSize: 10, color: Colors.grey)),
+              ],
+            )
+          ],
+        ),
       ),
     );
   }
