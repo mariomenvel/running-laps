@@ -25,11 +25,15 @@ class GroupMemberStats {
   final String name;
   final double totalKm;
   final String? photoUrl;
+  final String? profilePicType;
+  final Map<String, dynamic>? avatarConfig;
 
   GroupMemberStats({
     required this.uid,
     required this.name,
     required this.totalKm,
     this.photoUrl,
+    this.profilePicType,
+    this.avatarConfig,
   });
 }

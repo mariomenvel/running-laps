@@ -11,7 +11,7 @@ class Tema {
 
 class AvatarHelper {
 
-  /// Muestra el avatar del usuario actual
+  /// Muestra el avatar del usuario actual (con Stream)
   static Widget construirImagenPerfil({double radius = 24.0}) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
 
@@ -25,47 +25,61 @@ class AvatarHelper {
         if (!snapshot.hasData) return _buildPlaceholder(radius);
 
         final data = snapshot.data!.data() as Map<String, dynamic>?;
-        final String tipo = data?['profilePicType'] ?? 'none';
-
-        // 1. SI ES AVATAR
-        if (tipo == 'avatar') {
-          final config = data?['avatarConfig'] as Map<String, dynamic>? ?? {};
-          return CircleAvatar(
-            radius: radius,
-            backgroundColor: Colors.transparent,
-            child: ClipOval(
-              child: SizedBox(
-                width: radius * 2,
-                height: radius * 2,
-                // TRUCO: Forzamos renderizado a 180px y escalamos
-                child: FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
-                    width: 180, 
-                    height: 180, 
-                    child: _construirStackAvatar(config),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
         
-        // 2. SI ES FOTO DE GOOGLE/SUBIDA
-        else if (tipo == 'photo') {
-          final String url = data?['profileImageUrl'] ?? '';
-          return CircleAvatar(
-            radius: radius,
-            backgroundColor: Colors.grey[200],
-            backgroundImage: url.isNotEmpty ? NetworkImage(url) : null,
-            child: url.isEmpty ? const Icon(Icons.person) : null,
-          );
-        }
-
-        // 3. DEFECTO
-        return _buildPlaceholder(radius);
+        return construirAvatar(
+          radius: radius,
+          type: data?['profilePicType'] ?? 'none',
+          config: data?['avatarConfig'] as Map<String, dynamic>?,
+          url: data?['profileImageUrl'],
+        );
       },
     );
+  }
+
+  /// Construye un avatar estático con los datos proporcionados
+  static Widget construirAvatar({
+    required double radius,
+    required String type,
+    Map<String, dynamic>? config,
+    String? url,
+  }) {
+    // 1. SI ES AVATAR
+    if (type == 'avatar') {
+      final safeConfig = config ?? {};
+      return CircleAvatar(
+        radius: radius,
+        backgroundColor: Colors.transparent,
+        child: ClipOval(
+          child: SizedBox(
+            width: radius * 2,
+            height: radius * 2,
+            // TRUCO: Forzamos renderizado a 180px y escalamos
+            child: FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: 180, 
+                height: 180, 
+                child: _construirStackAvatar(safeConfig),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    
+    // 2. SI ES FOTO DE GOOGLE/SUBIDA
+    else if (type == 'photo') {
+      final String finalUrl = url ?? '';
+      return CircleAvatar(
+        radius: radius,
+        backgroundColor: Colors.grey[200],
+        backgroundImage: finalUrl.isNotEmpty ? NetworkImage(finalUrl) : null,
+        child: finalUrl.isEmpty ? const Icon(Icons.person) : null,
+      );
+    }
+
+    // 3. DEFECTO
+    return _buildPlaceholder(radius);
   }
 
   static Widget _buildPlaceholder(double radius) {

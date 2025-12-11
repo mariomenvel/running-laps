@@ -6,6 +6,8 @@ class ChallengeModel {
   final String description;
   final double targetKm;
   final DateTime endDate;
+  final DateTime startDate;
+  final List<String> participants;
   final int participantsCount;
 
   ChallengeModel({
@@ -14,6 +16,8 @@ class ChallengeModel {
     required this.description,
     required this.targetKm,
     required this.endDate,
+    required this.startDate, // New
+    required this.participants, // New
     required this.participantsCount,
   });
 
@@ -24,7 +28,9 @@ class ChallengeModel {
       description: data['description'] ?? '',
       targetKm: (data['targetKm'] ?? 0).toDouble(),
       endDate: (data['endDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      participantsCount: data['participantsCount'] ?? 0,
+      startDate: (data['startDate'] as Timestamp?)?.toDate() ?? DateTime.now(), // New
+      participants: List<String>.from(data['participants'] ?? []), // New
+      participantsCount: (data['participants'] as List?)?.length ?? data['participantsCount'] ?? 0, 
     );
   }
 }

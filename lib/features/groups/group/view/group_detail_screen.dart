@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 // IMPORTS DE TUS WIDGETS CORE
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_footer.dart';
+import '../../../../app/tema.dart';
 
 // IMPORTS DE MODELOS
 import '../data/challenge_model.dart';
@@ -14,6 +15,7 @@ import '../data/group_detail_repository.dart';
 
 // IMPORT DEL REPOSITORIO DE HOME (Necesario para enviar la invitación)
 import '../../home/data/groups_repository.dart';
+import 'challenge_detail_screen.dart';
 
 class GroupDetailScreen extends StatefulWidget {
   final String groupId;
@@ -206,29 +208,34 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
               ),
             ),
 
-            // 4. TABS
+            // 4. TABS MODERNOS (Segmented Control Style)
             Container(
+              height: 50,
               margin: const EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Colors.grey.shade200, // Fondo sutil
                 borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  )
-                ],
               ),
+              padding: const EdgeInsets.all(4), // Padding interno para efecto flotante
               child: TabBar(
                 controller: _tabController,
+                // Indicador flotante blanco con sombra suave
                 indicator: BoxDecoration(
-                  borderRadius: BorderRadius.circular(25),
-                  color: Colors.purple.shade400,
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(21),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.grey,
-                labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+                labelColor: Colors.black87, // Texto seleccionado oscuro
+                unselectedLabelColor: Colors.grey.shade600, // Texto no seleccionado
+                labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                dividerColor: Colors.transparent, // Quitar línea inferior
+                indicatorSize: TabBarIndicatorSize.tab,
                 tabs: const [
                   Tab(text: "Clasificación"),
                   Tab(text: "Retos"),
@@ -319,7 +326,10 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
           padding: const EdgeInsets.symmetric(horizontal: 20),
           itemCount: challenges.length,
           itemBuilder: (context, index) {
-            return _ChallengeCard(challenge: challenges[index]);
+            return _ChallengeCard(
+              challenge: challenges[index],
+              groupId: widget.groupId,
+            );
           },
         );
       },
@@ -368,13 +378,11 @@ class _RankingFullRow extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black54)),
           ),
           const SizedBox(width: 15),
-          CircleAvatar(
+          AvatarHelper.construirAvatar(
             radius: 18,
-            backgroundColor: Colors.grey.shade300,
-            backgroundImage: stat.photoUrl != null ? NetworkImage(stat.photoUrl!) : null,
-            child: stat.photoUrl == null
-                ? Text(stat.name[0].toUpperCase(), style: const TextStyle(color: Colors.black54))
-                : null,
+            type: stat.profilePicType ?? 'none',
+            config: stat.avatarConfig,
+            url: stat.photoUrl,
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -409,69 +417,141 @@ class _RankingFullRow extends StatelessWidget {
 
 class _ChallengeCard extends StatelessWidget {
   final ChallengeModel challenge;
-  const _ChallengeCard({required this.challenge});
+  final String groupId; // New
+  const _ChallengeCard({required this.challenge, required this.groupId});
 
   @override
   Widget build(BuildContext context) {
     final daysLeft = challenge.endDate.difference(DateTime.now()).inDays;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.white, Colors.purple.shade50],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.purple.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4))
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Chip(
-                label: Text("🎯 Objetivo: ${challenge.targetKm}km"),
-                backgroundColor: Colors.purple.shade100,
-                labelStyle: const TextStyle(
-                    color: Colors.purple, fontWeight: FontWeight.bold, fontSize: 12),
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final isParticipant = currentUser != null && challenge.participants.contains(currentUser.uid);
+
+    return GestureDetector(
+      onTap: () {
+         Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ChallengeDetailScreen(
+                challenge: challenge,
+                groupId: groupId,
               ),
-              Text(
-                daysLeft > 0 ? "$daysLeft días restantes" : "Finalizado",
-                style: TextStyle(
-                    color: daysLeft > 0 ? Colors.orange : Colors.red,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(challenge.title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 5),
-          Text(challenge.description,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: const Text("Ver Detalles / Aceptar", style: TextStyle(color: Colors.white)),
             ),
-          )
-        ],
+          );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 15),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.white, Colors.purple.shade50],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.purple.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4))
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Chip(
+                  label: Text("🎯 Objetivo: ${challenge.targetKm}km"),
+                  backgroundColor: Colors.purple.shade100,
+                  labelStyle: const TextStyle(
+                      color: Colors.purple, fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+                Text(
+                  daysLeft > 0 ? "$daysLeft días restantes" : "Finalizado",
+                  style: TextStyle(
+                      color: daysLeft > 0 ? Colors.orange : Colors.red,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(challenge.title,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 5),
+            Text(challenge.description,
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+            const SizedBox(height: 20),
+            
+            // LOGICA DE ESTADO: PARTICIPANDO vs NO
+            if (isParticipant)
+              _buildProgressSection(currentUser.uid)
+            else
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ChallengeDetailScreen(
+                          challenge: challenge,
+                          groupId: groupId, 
+                        ),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text("Ver Detalles / Aceptar", style: TextStyle(color: Colors.white)),
+                ),
+              )
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildProgressSection(String uid) {
+    return FutureBuilder<double>(
+      future: GroupDetailRepository().calculateChallengeProgress(
+          uid, challenge.startDate, challenge.endDate),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const LinearProgressIndicator(color: Colors.purple, backgroundColor: Colors.white);
+        }
+        final currentKm = snapshot.data!;
+        final progress = (currentKm / challenge.targetKm).clamp(0.0, 1.0);
+        final percent = (progress * 100).toInt();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Tu progreso: $percent%", 
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.purple)),
+                Text("${currentKm.toStringAsFixed(1)} / ${challenge.targetKm.toInt()} km",
+                  style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 10,
+                color: Colors.purple,
+                backgroundColor: Colors.purple.shade100,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

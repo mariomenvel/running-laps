@@ -54,14 +54,14 @@ class GroupsRepository {
 
   Future<GroupMemberStats?> _calculateUserTotalDistance(String uid) async {
     try {
-      final userDoc = await _db.collection('User').doc(uid).get();
+      final userDoc = await _db.collection('users').doc(uid).get();
       if (!userDoc.exists) return null;
 
       final userData = userDoc.data()!;
       final String name = userData['nombre'] ?? 'Usuario';
 
       final trainingsSnapshot = await _db
-          .collection('User')
+          .collection('users')
           .doc(uid)
           .collection('trainings')
           .get();
@@ -126,7 +126,7 @@ class GroupsRepository {
 
   Stream<List<InvitationModel>> getInvitationsStream(String userId) {
     return _db
-        .collection('User') // O 'users' según tu DB final
+        .collection('users') // O 'users' según tu DB final
         .doc(userId)
         .collection('invitations')
         .snapshots()
@@ -147,7 +147,7 @@ class GroupsRepository {
     try {
       // A. Buscar si existe un usuario con ese email
       final query = await _db
-          .collection('User') // O 'users'
+          .collection('users') // O 'users'
           .where('email', isEqualTo: targetEmail)
           .limit(1)
           .get();
@@ -167,7 +167,7 @@ class GroupsRepository {
 
       // C. Crear la invitación en el perfil del destinatario
       await _db
-          .collection('User')
+          .collection('users')
           .doc(targetUserId)
           .collection('invitations')
           .add({
@@ -192,7 +192,7 @@ class GroupsRepository {
 
     // Referencia a la invitación
     final inviteRef = _db
-        .collection('User')
+        .collection('users')
         .doc(userId)
         .collection('invitations')
         .doc(invitation.id);

@@ -38,14 +38,14 @@ class GroupDetailRepository {
 
   Future<GroupMemberStats?> _calculateUserDist(String uid, bool onlyThisMonth) async {
     try {
-      final userDoc = await _db.collection('User').doc(uid).get();
+      final userDoc = await _db.collection('users').doc(uid).get();
       if (!userDoc.exists) return null;
 
       final userData = userDoc.data()!;
       // Optimización: Podríamos filtrar en la Query de Firestore por fecha, 
       // pero como guardas fecha como String ISO8601 en tu modelo Entrenamiento,
       // descargamos y filtramos en memoria (para MVP está bien).
-      final trainingsSnap = await _db.collection('User').doc(uid).collection('trainings').get();
+      final trainingsSnap = await _db.collection('users').doc(uid).collection('trainings').get();
 
       double totalKm = 0;
       final now = DateTime.now();
@@ -63,11 +63,13 @@ class GroupDetailRepository {
         }
       }
 
-      return GroupMemberStats(
+        return GroupMemberStats(
         uid: uid,
         name: userData['nombre'] ?? 'Usuario',
         totalKm: totalKm,
         photoUrl: userData['photoUrl'],
+        profilePicType: userData['profilePicType'],
+        avatarConfig: userData['avatarConfig'],
       );
     } catch (e) {
       return null;
@@ -88,7 +90,53 @@ class GroupDetailRepository {
             .toList());
   }
 
-  // --- 3. GENERADOR DE DATOS (SEEDING) ---
+  // --- 3. LOGICA DE RETO (JOIN & PROGRESS) ---
+
+  Future<void> joinChallenge(String groupId, String challengeId, String uid) async {
+    await _db
+        .collection('groups')
+        .doc(groupId)
+        .collection('challenges')
+        .doc(challengeId)
+        .update({
+      'participants': FieldValue.arrayUnion([uid])
+    });
+  }
+
+  Future<double> calculateChallengeProgress(String uid, DateTime start, DateTime end) async {
+    try {
+      // Aseguramos que 'start' sea el inicio del día (00:00:00) para incluir todos los entrenos de ese día
+      final DateTime startOfDay = DateTime(start.year, start.month, start.day);
+      final DateTime endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
+
+      // Reusamos logica de filtrar entrenamientos
+      // Idealmente, harías una query con filtro de fecha si tienes muchos, pero por ahora encadenamos en memoria
+      // NOTA: Firestore guarda String ISO8601. La comparación lexicográfica funciona si el formato es estándar 'YYYY-MM-DD...'
+      final trainingsSnap = await _db
+          .collection('users')
+          .doc(uid)
+          .collection('trainings')
+          .where('fecha', isGreaterThanOrEqualTo: startOfDay.toIso8601String())
+          .get();
+
+      double totalM = 0;
+      for (var doc in trainingsSnap.docs) {
+        final t = Entrenamiento.fromMap(doc.data());
+        
+        // Verificamos rango exacto en memoria
+        if (t.fecha.isAfter(startOfDay.subtract(const Duration(seconds: 1))) && 
+            t.fecha.isBefore(endOfDay)) { 
+           totalM += t.distanciaTotalM();
+        }
+      }
+      return totalM / 1000.0; // Return KM
+    } catch (e) {
+      print("Error calculating progress: $e");
+      return 0.0;
+    }
+  }
+
+  // --- 4. GENERADOR DE DATOS (SEEDING) ---
   // Llama a esto al iniciar la pantalla para crear retos si no existen
   Future<void> checkAndSeedChallenges(String groupId) async {
     final ref = _db.collection('groups').doc(groupId).collection('challenges');
@@ -96,21 +144,27 @@ class GroupDetailRepository {
     
     if (snap.docs.isEmpty) {
       print("SEEDING: Creando retos por defecto...");
+      final now = DateTime.now();
+      
       // Reto 1: Mensual
       await ref.add({
         'title': 'El Gran Fondo de Noviembre',
         'description': 'Completa 100km acumulados este mes.',
         'targetKm': 100,
-        'endDate': Timestamp.fromDate(DateTime.now().add(const Duration(days: 30))),
-        'participantsCount': 3,
+        'startDate': Timestamp.fromDate(now),
+        'endDate': Timestamp.fromDate(now.add(const Duration(days: 30))),
+        'participants': [],
+        'participantsCount': 0,
       });
       // Reto 2: Semanal
       await ref.add({
         'title': 'Velocidad Pura',
         'description': 'Corre 3 veces esta semana.',
         'targetKm': 15,
-        'endDate': Timestamp.fromDate(DateTime.now().add(const Duration(days: 7))),
-        'participantsCount': 5,
+        'startDate': Timestamp.fromDate(now),
+        'endDate': Timestamp.fromDate(now.add(const Duration(days: 7))),
+        'participants': [],
+        'participantsCount': 0,
       });
     }
   }
