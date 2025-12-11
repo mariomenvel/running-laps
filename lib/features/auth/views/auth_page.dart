@@ -100,17 +100,18 @@ class _AuthPageState extends State<AuthPage> {
     required String hintText,
     bool obscureText = false,
     Widget? suffixIcon,
+    Widget? prefixIcon,
   }) {
     return Container(
       height: 60,
       decoration: BoxDecoration(
-        color: Colors.white, // Más limpio
-        borderRadius: BorderRadius.circular(16), // Más redondeado
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05), // Sombra muy suave
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -127,6 +128,7 @@ class _AuthPageState extends State<AuthPage> {
           hintStyle: TextStyle(color: Colors.grey[400], letterSpacing: 0.0),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          prefixIcon: prefixIcon,
           suffixIcon: suffixIcon,
         ),
       ),
@@ -201,12 +203,14 @@ class _AuthPageState extends State<AuthPage> {
         _buildTextField(
           controller: _authCtrl.emailCtrl,
           hintText: 'Correo electrónico',
+          prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[400]),
         ),
         const SizedBox(height: 16),
         _buildTextField(
           controller: _authCtrl.passCtrl,
           hintText: 'Contraseña',
           obscureText: !_showLoginPassword,
+          prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[400]),
           suffixIcon: IconButton(
             icon: Icon(
               _showLoginPassword ? Icons.visibility_off : Icons.visibility,
@@ -244,17 +248,20 @@ class _AuthPageState extends State<AuthPage> {
         _buildTextField(
           controller: _authCtrl.usernameCtrl,
           hintText: 'Nombre de usuario',
+          prefixIcon: Icon(Icons.person_outline, color: Colors.grey[400]),
         ),
         const SizedBox(height: 16),
         _buildTextField(
           controller: _authCtrl.emailCtrl,
           hintText: 'Correo electrónico',
+          prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[400]),
         ),
         const SizedBox(height: 16),
         _buildTextField(
           controller: _authCtrl.passCtrl,
           hintText: 'Contraseña',
           obscureText: !_showRegisterPassword,
+          prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[400]),
           suffixIcon: IconButton(
             icon: Icon(
               _showRegisterPassword ? Icons.visibility_off : Icons.visibility,
@@ -272,6 +279,7 @@ class _AuthPageState extends State<AuthPage> {
           controller: _authCtrl.confirmPassCtrl,
           hintText: 'Confirmar contraseña',
           obscureText: !_showRegisterConfirmPassword,
+          prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[400]),
           suffixIcon: IconButton(
             icon: Icon(
               _showRegisterConfirmPassword

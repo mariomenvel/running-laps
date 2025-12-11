@@ -10,6 +10,7 @@ import 'package:running_laps/features/profile/views/profile_menu_view.dart';
 
 import '../../../app/tema.dart';
 import '../../../core/widgets/app_footer.dart';
+import '../../../core/widgets/group_skeleton_card.dart';
 
 import '../viewmodels/homeEstadistica_Controller.dart';
 import '../data/homeEstadistica_repository.dart';
@@ -230,9 +231,14 @@ class _HomeViewState extends State<HomeView> {
           future: _groupsFuture,
           builder: (context, snapshot) {
              if (snapshot.connectionState == ConnectionState.waiting) {
-              return const SizedBox(
-                height: 150,
-                child: Center(child: CircularProgressIndicator(color: Tema.brandPurple)),
+              return SizedBox(
+                height: 180,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 3, // Show 3 skeleton cards
+                  separatorBuilder: (context, index) => const SizedBox(width: 15),
+                  itemBuilder: (context, index) => GroupSkeletonCard(),
+                ),
               );
             }
 
@@ -266,13 +272,13 @@ class _HomeViewState extends State<HomeView> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: Offset(0, 10))
         ],
       ),
       child: Column(
         children: [
-          const Icon(Icons.group_off_rounded, size: 40, color: Colors.grey),
+          const Icon(Icons.groups_outlined, size: 40, color: Colors.grey),
           const SizedBox(height: 10),
           const Text(
             "Aún no tienes equipos",
@@ -416,7 +422,7 @@ class _HomeViewState extends State<HomeView> {
                       color: isSelected ? Colors.white : Colors.transparent,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: isSelected ? [
-                        BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))
+                        BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 10))
                       ] : [],
                     ),
                     child: Text(
@@ -567,8 +573,8 @@ class _HomeViewState extends State<HomeView> {
       decoration: BoxDecoration(
         color: Colors.black87,
         borderRadius: BorderRadius.circular(8),
-        boxShadow: const [
-          BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12, offset: Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -869,8 +875,8 @@ class _GroupHighlightCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
-            BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4))
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: Offset(0, 10))
           ],
           border: Border.all(color: Colors.grey.shade100),
         ),
@@ -1058,3 +1064,5 @@ class _AnimatedBarChartState extends State<_AnimatedBarChart>
     );
   }
 }
+
+
