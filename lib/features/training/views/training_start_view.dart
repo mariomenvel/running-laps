@@ -1417,20 +1417,16 @@ class _TrainingStartViewState extends State<TrainingStartView> {
             ),
             child: Column(
               children: <Widget>[
-                Text(
-                  "Descanso restante",
-                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                ),
                 const SizedBox(height: 5),
                 SizedBox(
-                  width: 80.0,
-                  height: 80.0,
+                  width: 85.0,
+                  height: 85.0,
                   child: Stack(
                     alignment: Alignment.center,
                     children: <Widget>[
                       SizedBox(
-                        width: 80.0,
-                        height: 80.0,
+                        width: 85.0,
+                        height: 85.0,
                         child: CircularProgressIndicator(
                           value: progress,
                           strokeWidth: 6.0,
@@ -1529,7 +1525,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     return GestureDetector(
       onTap: isLoading ? null : onTap,
       child: Container(
-        padding: const EdgeInsets.all(15.0), // Reduced from 20.0
+        padding: const EdgeInsets.all(15.0),
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
@@ -1542,14 +1538,12 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           ],
         ),
         child: isLoading
-            ? SizedBox(
+            ? const SizedBox(
                 width: 40.0,
                 height: 40.0,
                 child: CircularProgressIndicator(
                   strokeWidth: 3.0,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    color ?? Tema.brandPurple,
-                  ),
+                  valueColor: AlwaysStoppedAnimation<Color>(Tema.brandPurple),
                 ),
               )
             : Icon(icon, color: color ?? Tema.brandPurple, size: 40.0),

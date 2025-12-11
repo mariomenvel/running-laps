@@ -153,7 +153,10 @@ class _HomeViewState extends State<HomeView> {
                       ),
                     );
                   },
-                  child: AvatarHelper.construirImagenPerfil(radius: 24.0),
+                  child: Hero(
+                    tag: 'profile_avatar',
+                    child: AvatarHelper.construirImagenPerfil(radius: 24.0),
+                  ),
                 ),
               ],
             ),
@@ -278,13 +281,48 @@ class _HomeViewState extends State<HomeView> {
       ),
       child: Column(
         children: [
-          const Icon(Icons.groups_outlined, size: 40, color: Colors.grey),
-          const SizedBox(height: 10),
-          const Text(
-            "Aún no tienes equipos",
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+          // Icon with gradient background
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Tema.brandPurple.withOpacity(0.1), Tema.brandPurple.withOpacity(0.05)],
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.groups_outlined, size: 48, color: Tema.brandPurple),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 16),
+          const Text(
+            "¡Únete a tu primera comunidad!",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Compite, mejora y alcanza tus metas",
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade600,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          // Benefits row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildBenefitItem(Icons.emoji_events_outlined, "Desafíos"),
+              _buildBenefitItem(Icons.trending_up_outlined, "Progreso"),
+              _buildBenefitItem(Icons.people_outline, "Comunidad"),
+            ],
+          ),
+          const SizedBox(height: 24),
+          // Button
           ElevatedButton(
             onPressed: () {
               Navigator.push(
@@ -295,12 +333,42 @@ class _HomeViewState extends State<HomeView> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Tema.brandPurple,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              elevation: 0,
+              shadowColor: Tema.brandPurple.withOpacity(0.3),
             ),
-            child: const Text("Explorar Grupos"),
+            child: const Text(
+              "Explorar Comunidades",
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, letterSpacing: 0.5),
+            ),
           )
         ],
       ),
+    );
+  }
+
+  Widget _buildBenefitItem(IconData icon, String label) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Tema.brandPurple.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, size: 20, color: Tema.brandPurple),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade700,
+          ),
+        ),
+      ],
     );
   }
 
@@ -1064,5 +1132,6 @@ class _AnimatedBarChartState extends State<_AnimatedBarChart>
     );
   }
 }
+
 
 
