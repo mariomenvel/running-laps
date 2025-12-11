@@ -465,14 +465,11 @@ class _HomeViewState extends State<HomeView> {
                     behavior: HitTestBehavior.opaque,
                     onTapUp: (details) =>
                         _handleChartTap(details, data, availableWidth),
-                    child: CustomPaint(
-                      size: Size(availableWidth, chartHeight),
-                      painter: BarChartPainter(
-                        data: data,
-                        metric: _estadisticaController.selectedMetric.value,
-                        range: _estadisticaController.selectedRange.value,
-                        brandColor: Tema.brandPurple,
-                      ),
+                    child: _AnimatedBarChart(
+                      data: data,
+                      metric: _estadisticaController.selectedMetric.value,
+                      range: _estadisticaController.selectedRange.value,
+                      brandColor: Tema.brandPurple,
                     ),
                   ),
 
@@ -666,18 +663,20 @@ class BarChartPainter extends CustomPainter {
   final HomeMetric metric;
   final TimeRange range;
   final Color brandColor;
+  final double animationValue; // 0.0 a 1.0
 
   BarChartPainter({
     required this.data,
     required this.metric,
     required this.range,
     required this.brandColor,
+    required this.animationValue,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     const double marginBottom = 30.0;
-    const double marginLeft = 45.0; // Un poco más de espacio para etiquetas largas
+    const double marginLeft = 45.0; 
     const double marginTop = 20.0;
     const double marginRight = 10.0;
 
@@ -697,43 +696,34 @@ class BarChartPainter extends CustomPainter {
         end: Alignment.bottomCenter,
       ).createShader(Rect.fromLTWH(0, marginTop, size.width, chartHeight));
 
-    // 1. Calcular Máximos
+    // 1. Calcular Máximos (igual que antes)
     double maxValue = 0;
     for (var item in data) {
       if (item.value > maxValue) maxValue = item.value;
     }
     if (maxValue == 0) maxValue = 1;
     
-    // Dar un respiro arriba (15%)
     final double yMaxScale = maxValue * 1.15;
 
-    // 2. Grid y Etiquetas Eje Y
+    // 2. Grid y Etiquetas Eje Y (Grid estático, no animado, para dar contexto)
     final int gridSteps = 4;
     for (int i = 0; i <= gridSteps; i++) {
-      // Valor en esta línea de grid
-      final double value = yMaxScale * (i / gridSteps);
-      
-      // Posición Y en canvas (invertida, 0 es abajo en la gráfica)
-      final double yPos = marginTop + chartHeight - (chartHeight * (i / gridSteps));
+        final double value = yMaxScale * (i / gridSteps);
+        final double yPos = marginTop + chartHeight - (chartHeight * (i / gridSteps));
 
-      // Dibujar línea horizontal
-      canvas.drawLine(
-        Offset(marginLeft, yPos),
-        Offset(size.width - marginRight, yPos),
-        gridPaint,
-      );
-
-      // --- FORMATO INTELIGENTE DEL EJE Y ---
+        canvas.drawLine(
+            Offset(marginLeft, yPos),
+            Offset(size.width - marginRight, yPos),
+            gridPaint,
+        );
+        
+        // ETIQUETAS (Copiar lógica de formato existente)
       String yLabel = value.toStringAsFixed(1);
-
       if (metric == HomeMetric.ritmoMedio) {
-        // Conversión de Segundos/km a min:ss
-        // value es segundos
         final int m = value ~/ 60;
         final int s = (value % 60).toInt();
         yLabel = "$m:${s.toString().padLeft(2, '0')}";
       } else if (metric == HomeMetric.tiempoTotal) {
-         // Si es tiempo, mostrar en min o horas si es muy grande
          if (value >= 60) {
             final h = (value / 60).toStringAsFixed(1);
             yLabel = "${h}h";
@@ -741,7 +731,6 @@ class BarChartPainter extends CustomPainter {
             yLabel = "${value.toStringAsFixed(0)}m";
          }
       } else {
-        // Distancia o RPE
         if (value >= 10) yLabel = value.toStringAsFixed(0);
       }
 
@@ -756,29 +745,22 @@ class BarChartPainter extends CustomPainter {
       textPainter.layout();
       textPainter.paint(
         canvas,
-        Offset(
-          marginLeft - textPainter.width - 6,
-          yPos - textPainter.height / 2,
-        ),
+        Offset(marginLeft - textPainter.width - 6, yPos - textPainter.height / 2),
       );
     }
-
-    // 3. DIBUJO DE BARRAS
+    
+    // 3. DIBUJO DE BARRAS ANIMADAS
     if (data.isEmpty) return;
+    
+    // Si la animación está empezando, quizás no pintar nada o pintar muy bajito
+    // Pero si usamos animationValue como multiplicador de altura, funciona bien.
 
     final double spacing = chartWidth / data.length;
-
-    // Ratio de ancho de barra
     double widthRatio = 0.6;
     if (data.length > 20) widthRatio = 0.7; 
-
     double barWidth = spacing * widthRatio;
-
-    // Clamps estéticos
-    if (barWidth > 32.0) barWidth = 32.0; // Barras no muy gordas
+    if (barWidth > 32.0) barWidth = 32.0;
     if (barWidth < 2.0) barWidth = 2.0;
-
-    // Evitar solapamiento
     if (barWidth > spacing - 1) barWidth = spacing - 1;
 
     for (int i = 0; i < data.length; i++) {
@@ -789,66 +771,69 @@ class BarChartPainter extends CustomPainter {
       final double bottom = marginTop + chartHeight;
 
       if (item.value > 0) {
-        final double barHeight = (item.value / yMaxScale) * chartHeight;
+        final double rawHeight = (item.value / yMaxScale) * chartHeight;
+        // APLICAR ANIMACIÓN
+        final double animatedHeight = rawHeight * animationValue;
         
-        // Mínimo visible
-        final double effectiveHeight = barHeight < 3.0 ? 3.0 : barHeight;
-        final double top = bottom - effectiveHeight;
-
-        final RRect rrect = RRect.fromRectAndRadius(
-          Rect.fromLTWH(left, top, barWidth, effectiveHeight),
-          Radius.circular(barWidth / 2.5), // Redondeo proporcional suave
-        );
-
-        canvas.drawRRect(rrect, barPaint);
-      }
-
-      // 4. Etiquetas Eje X
-      bool shouldDrawLabel = false;
-      String label = "";
-
-      if (range == TimeRange.oneWeek) {
-        shouldDrawLabel = true;
-        label = DateFormat('E', 'es').format(item.date).substring(0, 1).toUpperCase();
-      } else if (range == TimeRange.oneMonth) {
-        // Mostrar cada ~5 días o primera/ultima
-        if (i == 0 || i == data.length - 1 || (i + 1) % 5 == 0) {
-          shouldDrawLabel = true;
-          label = DateFormat('d').format(item.date);
+        final double effectiveHeight = animatedHeight < 1.0 ? 0.0 : animatedHeight;
+        
+        if (effectiveHeight > 0) {
+            final double top = bottom - effectiveHeight;
+            final RRect rrect = RRect.fromRectAndRadius(
+              Rect.fromLTWH(left, top, barWidth, effectiveHeight),
+              Radius.circular(barWidth / 2.5),
+            );
+            canvas.drawRRect(rrect, barPaint);
         }
-      } else if (range == TimeRange.sixMonths) {
-        if (i % 4 == 0) {
-          shouldDrawLabel = true;
-          label = DateFormat('MMM', 'es').format(item.date); // Mes
-        }
-      } else if (range == TimeRange.oneYear || range == TimeRange.max) {
-        shouldDrawLabel = true;
-        label = DateFormat('MMM', 'es').format(item.date).substring(0, 1).toUpperCase();
-        // Filtrar para no saturar
-        if (data.length > 12 && i % 2 != 0) shouldDrawLabel = false;
       }
+      
+      // Eje X (Etiquetas) - Solo pintar si animationValue > 0.5 para efecto escalonado? 
+      // O pintarlas siempre. Pintémoslas siempre para que se vea el grid.
+      // ... (Lógica de etiquetas X igual que antes) ...
+       bool shouldDrawLabel = false;
+       String label = "";
 
-      if (shouldDrawLabel) {
-        final xTextSpan = TextSpan(
-          text: label,
-          style: TextStyle(color: Colors.grey.shade500, fontSize: 10, fontWeight: FontWeight.w600),
-        );
-        final xTextPainter = TextPainter(
-          text: xTextSpan,
-          textDirection: ui.TextDirection.ltr,
-        );
-        xTextPainter.layout();
-
-        xTextPainter.paint(
-          canvas,
-          Offset(centerOfSlot - xTextPainter.width / 2, bottom + 8),
-        );
-      }
+       if (range == TimeRange.oneWeek) {
+         shouldDrawLabel = true;
+         label = DateFormat('E', 'es').format(item.date).substring(0, 1).toUpperCase();
+       } else if (range == TimeRange.oneMonth) {
+         if (i == 0 || i == data.length - 1 || (i + 1) % 5 == 0) {
+           shouldDrawLabel = true;
+           label = DateFormat('d').format(item.date);
+         }
+       } else if (range == TimeRange.sixMonths) {
+         if (i % 4 == 0) {
+           shouldDrawLabel = true;
+           label = DateFormat('MMM', 'es').format(item.date);
+         }
+       } else if (range == TimeRange.oneYear || range == TimeRange.max) {
+           // ... logic from before ...
+           if (i == 0 || i == data.length - 1 || i % 2 == 0) { // Simplificado
+               shouldDrawLabel = true;
+               label = DateFormat('MMM', 'es').format(item.date);
+           }
+       }
+       
+       if (shouldDrawLabel) {
+         final textSpan = TextSpan(
+            text: label,
+            style: TextStyle(color: Colors.grey.shade400, fontSize: 10),
+         );
+         final tp = TextPainter(text: textSpan, textDirection: ui.TextDirection.ltr);
+         tp.layout();
+         tp.paint(canvas, Offset(centerOfSlot - tp.width / 2, marginTop + chartHeight + 6));
+       }
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant BarChartPainter oldDelegate) {
+    // Repintar si cambian los datos o el valor de la animación
+    return oldDelegate.animationValue != animationValue ||
+           oldDelegate.data != data ||
+           oldDelegate.metric != metric ||
+           oldDelegate.range != range;
+  }
 }
 
 // ===================================================================
@@ -993,6 +978,83 @@ class _GroupHighlightCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ===================================================================
+// ANIMATED BAR CHART
+// ===================================================================
+class _AnimatedBarChart extends StatefulWidget {
+  final List<DailyMetric> data;
+  final HomeMetric metric;
+  final TimeRange range;
+  final Color brandColor;
+
+  const _AnimatedBarChart({
+    Key? key,
+    required this.data,
+    required this.metric,
+    required this.range,
+    required this.brandColor,
+  }) : super(key: key);
+
+  @override
+  State<_AnimatedBarChart> createState() => _AnimatedBarChartState();
+}
+
+class _AnimatedBarChartState extends State<_AnimatedBarChart>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutQuart,
+    );
+    _controller.forward();
+  }
+
+  @override
+  void didUpdateWidget(covariant _AnimatedBarChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Si cambian los datos o la métrica, reiniciar animación
+    if (oldWidget.data != widget.data ||
+        oldWidget.metric != widget.metric ||
+        oldWidget.range != widget.range) {
+      _controller.forward(from: 0.0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return CustomPaint(
+          size: Size.infinite,
+          painter: BarChartPainter(
+            data: widget.data,
+            metric: widget.metric,
+            range: widget.range,
+            brandColor: widget.brandColor,
+            animationValue: _animation.value,
+          ),
+        );
+      },
     );
   }
 }

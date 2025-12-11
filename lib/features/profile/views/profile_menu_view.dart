@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/app/tema.dart';
 
 // Auth
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:running_laps/features/auth/viewmodels/auth_controller.dart';
 import 'package:running_laps/features/auth/views/auth_page.dart';
 import 'package:running_laps/features/home/views/home_view.dart';
@@ -11,6 +13,7 @@ import 'package:running_laps/features/profile/views/profile_view.dart';
 import 'package:running_laps/features/profile/views/avatar_editor_wrapper_view.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
 import '../../groups/home/view/groups_home_screen.dart';
+import '../../groups/group/view/participant_profile_screen.dart';
 
 // Widgets comunes
 import 'package:running_laps/core/widgets/app_header.dart';
@@ -95,6 +98,42 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
     
   }
 
+  // --- NUEVA FUNCIÓN PARA PERFIL PÚBLICO ---
+  Future<void> _openPublicProfile() async {
+     final user = FirebaseAuth.instance.currentUser;
+     if (user == null) return;
+     
+     // Mostrar loading rápido
+     showDialog(
+       context: context, 
+       barrierDismissible: false,
+       builder: (c) => const Center(child: CircularProgressIndicator(color: Tema.brandPurple)),
+     );
+     
+     try {
+       final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+       if (mounted) Navigator.pop(context); // cerrar loading
+       
+       if (doc.exists && mounted) {
+         final data = doc.data() as Map<String, dynamic>;
+         
+         Navigator.push(
+           context,
+           MaterialPageRoute(builder: (context) => ParticipantProfileScreen(
+             uid: user.uid,
+             name: data['nombre'] ?? data['username'] ?? "Usuario", // Fallback a nombre, luego username
+             photoUrl: data['profileImageUrl'],
+             profilePicType: data['profilePicType'],
+             avatarConfig: data['avatarConfig'],
+           )),
+         );
+       }
+     } catch (e) {
+       if (mounted) Navigator.pop(context); // cerrar loading en error
+       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+     }
+  }
+
   Future<void> _logout() async {
     try {
       await _authCtrl.signOut();
@@ -130,35 +169,85 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
   // Widgets auxiliares
   // =====================================================
 
-  Widget _buildMenuButton({
-    required String text,
-    required VoidCallback? onPressed,
-    Color? textColor,
-  }) {
-    return SizedBox(
-      width: double.infinity,
-      height: 44,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.white,
-          side: BorderSide(
-            color: Colors.grey.shade300,
-            width: 1,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.0,
-          ),
+  // =====================================================
+  // Widgets auxiliares (REDESIGN)
+  // =====================================================
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8, top: 16),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          color: Colors.grey.shade500,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
         ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: textColor ?? Colors.black,
+      ),
+    );
+  }
+
+  Widget _buildMenuTile({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+    bool isDestructive = false,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                // Icon Container
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 22),
+                ),
+                const SizedBox(width: 16),
+                // Title
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: isDestructive ? Colors.red : Colors.black87,
+                    ),
+                  ),
+                ),
+                // Arrow
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 16,
+                  color: Colors.grey.shade400,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -172,20 +261,17 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF9FAFB), // Fondo ligeramente gris
       body: SafeArea(
         child: Column(
           children: <Widget>[
             // HEADER
             AppHeader(
               onTapLeft: () {
-                Navigator.push(
+                Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(
-                    builder: (BuildContext context) {
-                      return const HomeView();
-                    },
-                  ),
+                  MaterialPageRoute(builder: (c) => const HomeView()),
+                  (route) => false,
                 );
               },
               onTapRight: () {},
@@ -193,65 +279,94 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
 
             // Contenido central
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 30),
 
-                    // Aquí cambia el PERFIL → nombre del usuario
+                    // NOMBRE DE USUARIO
                     Center(
-                      child: Text(
-                        _nombreUsuario == ""
-                            ? "Perfil"
-                            : _nombreUsuario.toUpperCase(),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Color.fromARGB(255, 67, 67, 67),
-                          fontSize: 22, // << más grande
-                          fontWeight: FontWeight.bold, // << en negrita
-                        ),
+                      child: Column(
+                        children: [
+                           // Avatar grande (opcional, pero queda bien)
+                           Hero(
+                             tag: 'profile_avatar_big',
+                             child: GestureDetector(
+                               onTap: _openAvatarEditor,
+                               child: AvatarHelper.construirImagenPerfil(radius: 50),
+                             ),
+                           ),
+                           const SizedBox(height: 16),
+                           Text(
+                            _nombreUsuario == ""
+                                ? "Perfil"
+                                : _nombreUsuario, // Mostramos tal cual viene (ya hicimos fallback)
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.black87,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                           ),
+                           const SizedBox(height: 4),
+                           Text(
+                             "Gestiona tu cuenta y actividad",
+                             style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+                           )
+                        ],
                       ),
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 30),
 
-                    _buildMenuButton(
-                      text: 'HISTORIAL DE ENTRENAMIENTOS',
-                      onPressed: _openHistory,
+                    // SECTION 1: SOCIAL
+                    _buildSectionHeader("Social"),
+                    _buildMenuTile(
+                      title: "Mis Grupos",
+                      icon: Icons.groups_rounded,
+                      color: Colors.blueAccent,
+                      onTap: _openGroups,
                     ),
-                    const SizedBox(height: 12),
-                    
-                    _buildMenuButton(
-                      text: 'EDITAR AVATAR',
-                      onPressed: _openAvatarEditor,
+                    _buildMenuTile(
+                      title: "Mi Perfil Público",
+                      icon: Icons.person_pin_rounded,
+                      color: Tema.brandPurple,
+                      onTap: _openPublicProfile,
                     ),
-                    const SizedBox(height: 12),
 
-                    // --- NUEVO BOTÓN DE GRUPOS ---
-                    _buildMenuButton(
-                      text: 'GRUPOS',
-                      onPressed: _openGroups,
+                    // SECTION 2: PERSONAL
+                    _buildSectionHeader("Personal"),
+                    _buildMenuTile(
+                      title: "Historial de Entrenamientos",
+                      icon: Icons.history_rounded,
+                      color: Colors.orangeAccent,
+                      onTap: _openHistory,
                     ),
-                    const SizedBox(height: 12),
-                    // -----------------------------
+                    _buildMenuTile(
+                      title: "Editar Avatar",
+                      icon: Icons.face_rounded,
+                      color: Colors.green,
+                      onTap: _openAvatarEditor,
+                    ),
 
+                    // SECTION 3: CUENTA
+                    _buildSectionHeader("Cuenta"),
                     ValueListenableBuilder<bool>(
                       valueListenable: _authCtrl.isLoading,
-                      builder: (
-                        BuildContext context,
-                        bool isLoading,
-                        Widget? child,
-                      ) {
-                        return _buildMenuButton(
-                          text: isLoading
-                              ? 'CERRANDO SESIÓN...'
-                              : 'CERRAR SESION',
-                          onPressed: isLoading ? null : _logout,
-                          textColor: Colors.red,
+                      builder: (context, isLoading, _) {
+                        return _buildMenuTile(
+                          title: isLoading ? "Cerrando sesión..." : "Cerrar Sesión",
+                          icon: Icons.logout_rounded,
+                          color: Colors.redAccent,
+                          isDestructive: true,
+                          onTap: isLoading ? () {} : () => _logout(),
                         );
                       },
                     ),
+                    
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),
@@ -262,11 +377,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (BuildContext context) {
-                      return const TrainingStartView();
-                    },
-                  ),
+                  MaterialPageRoute(builder: (context) => const TrainingStartView()),
                 );
               },
               isLoading: false,
