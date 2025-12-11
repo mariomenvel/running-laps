@@ -10,7 +10,7 @@ import 'package:flutter_avatar_maker/shared/color.dart';
 import 'package:flutter_avatar_maker/shared/text_style.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/gestures.dart';
 
@@ -317,9 +317,12 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
     ByteData? byteData =
         await (image.toByteData(format: ui.ImageByteFormat.png));
     if (byteData != null) {
-      final result =
-          await ImageGallerySaver.saveImage(byteData.buffer.asUint8List());
-      print(result);
+      try {
+        await Gal.putImageBytes(byteData.buffer.asUint8List());
+        print("Image saved to gallery");
+      } catch (e) {
+        print("Error saving image: $e");
+      }
     }
   }
 
