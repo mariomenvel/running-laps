@@ -104,14 +104,13 @@ class _AuthPageState extends State<AuthPage> {
     return Container(
       height: 60,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(8),
+        color: Colors.white, // Más limpio
+        borderRadius: BorderRadius.circular(16), // Más redondeado
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.25),
-            blurRadius: 2,
-            spreadRadius: 2,
-            offset: const Offset(0, 0),
+            color: Colors.black.withOpacity(0.05), // Sombra muy suave
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -122,12 +121,12 @@ class _AuthPageState extends State<AuthPage> {
         keyboardType: hintText.contains('Correo')
             ? TextInputType.emailAddress
             : TextInputType.text,
-        style: const TextStyle(color: Colors.black, fontSize: 16),
+        style: const TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.w500),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: const TextStyle(color: Colors.grey, letterSpacing: 0.0),
+          hintStyle: TextStyle(color: Colors.grey[400], letterSpacing: 0.0),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.fromLTRB(20, 20, 12, 7),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
           suffixIcon: suffixIcon,
         ),
       ),
@@ -148,13 +147,12 @@ class _AuthPageState extends State<AuthPage> {
         return Container(
           height: 60,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                blurRadius: 10,
-                spreadRadius: 2,
-                offset: const Offset(0, 0),
+                color: Tema.brandPurple.withOpacity(0.3), // Sombra con color de marca
+                blurRadius: 15,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
@@ -166,7 +164,7 @@ class _AuthPageState extends State<AuthPage> {
                 backgroundColor: Tema.brandPurple,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 elevation: 0,
                 textStyle: const TextStyle(
@@ -324,12 +322,22 @@ class _AuthPageState extends State<AuthPage> {
     final size = MediaQuery.of(context).size;
     final double logoHeight = size.height * 0.35; // 35% de la altura
 
+    // Color de fondo para el gradiente (coincide con HomeView)
+    const Color _bgGradientColor = Color(0xFFF9F5FB);
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment.center,
+            radius: 1.5,
+            colors: [_bgGradientColor, Colors.white],
+            stops: [0.0, 1.0],
+          ),
           image: DecorationImage(
             image: AssetImage('assets/images/fondo.png'),
             fit: BoxFit.cover,
+            opacity: 0.6, // Un poco más sutil
           ),
         ),
         child: Center(

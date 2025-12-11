@@ -290,15 +290,6 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
                     Center(
                       child: Column(
                         children: [
-                           // Avatar grande (opcional, pero queda bien)
-                           Hero(
-                             tag: 'profile_avatar_big',
-                             child: GestureDetector(
-                               onTap: _openAvatarEditor,
-                               child: AvatarHelper.construirImagenPerfil(radius: 50),
-                             ),
-                           ),
-                           const SizedBox(height: 16),
                            Text(
                             _nombreUsuario == ""
                                 ? "Perfil"

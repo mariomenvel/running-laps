@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart'; // Para SystemSound
 import 'dart:ui' show FontFeature;
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 
 
 import '../data/serie.dart';
@@ -105,18 +106,15 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
   // LÓGICA DE LA ALARMA
   // ===================================================================
 
-
   void _startBeepTimerIfNeeded() {
     _beepTimer?.cancel();
-
 
     if (_alarmIntervalMs != null && _alarmIntervalMs! > 0 && _isRunning) {
       _beepTimer = Timer.periodic(Duration(milliseconds: _alarmIntervalMs!), (
         Timer timer,
       ) {
-        // 1. Sonido
-        SystemSound.play(SystemSoundType.click);
-
+        // 1. Sonido (Notificación fuerte)
+        FlutterRingtonePlayer().playNotification();
 
         // 2. Efecto Visual (Pulse)
         if (mounted) {

@@ -48,6 +48,7 @@ dependencies:
   get: ^4.6.5
   flutter_avatar_maker: 
     path: ./packages/flutter-avatar-maker
+  flutter_ringtone_player: ^4.0.0+4
 
 dev_dependencies:
   flutter_test:
