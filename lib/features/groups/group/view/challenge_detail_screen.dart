@@ -12,6 +12,8 @@ import '../../../../app/tema.dart'; // AvatarHelper
 // CORE WIDGETS
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_footer.dart';
+import '../../../../features/home/views/home_view.dart';
+import '../../../../features/profile/views/profile_menu_view.dart';
 
 class ChallengeDetailScreen extends StatefulWidget {
   final ChallengeModel challenge;
@@ -95,6 +97,8 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
     final dateFormat = DateFormat('dd MMM yyyy', 'es_ES');
     final String rangeStr = "${dateFormat.format(widget.challenge.startDate)} - ${dateFormat.format(widget.challenge.endDate)}";
 
+
+
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F8),
       body: SafeArea(
@@ -102,9 +106,54 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
           children: [
             // 1. HEADER
             AppHeader(
-              onTapLeft: () => Navigator.pop(context),
-              onTapRight: () {},
+              onTapLeft: () {
+                 Navigator.pushAndRemoveUntil(
+                   context,
+                   MaterialPageRoute(builder: (_) => const HomeView()),
+                   (route) => false,
+                 );
+              },
+              onTapRight: () {
+                 Navigator.push(
+                   context,
+                   MaterialPageRoute(builder: (_) => const ProfileMenuView()),
+                 );
+              },
               showBottomDivider: false,
+            ),
+
+            // 1.5 CUSTOM BACK BUTTON
+             Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
+                      border: Border.all(color: Colors.deepPurple.withOpacity(0.1)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: Colors.deepPurple),
+                        SizedBox(width: 5),
+                        Text("Volver", style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold, fontSize: 13)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
 
             // 2. CONTENT

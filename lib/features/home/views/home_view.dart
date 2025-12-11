@@ -43,11 +43,25 @@ class _HomeViewState extends State<HomeView> {
   // Estado para el Tooltip
   DailyMetric? _selectedMetric;
   Offset? _tooltipPosition;
+  
+  // Cache para grupos
+  Future<List<GroupModel>>? _groupsFuture;
 
   @override
   void initState() {
     super.initState();
     _estadisticaController = HomeEstadisticaController();
+    // Iniciar carga de grupos
+    _loadGroups();
+  }
+  
+  void _loadGroups() {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      _groupsFuture = _groupsRepository.fetchUserGroupsPreview(userId);
+    } else {
+      _groupsFuture = Future.value([]);
+    }
   }
 
   @override
@@ -77,7 +91,7 @@ class _HomeViewState extends State<HomeView> {
         }
 
         return Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: const Color(0xFFF4F6F8), // Background gris suave para contraste
           body: GestureDetector(
             // Al tocar fuera del gráfico, cerramos el tooltip
             onTap: () {
@@ -166,6 +180,11 @@ class _HomeViewState extends State<HomeView> {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return const SizedBox.shrink();
 
+    // Safety for Hot Reload: Ensure future is initialized
+    if (_groupsFuture == null) {
+       _groupsFuture = _groupsRepository.fetchUserGroupsPreview(userId);
+    }
+
     return Column(
       children: [
         // HEADER DE SECCIÓN
@@ -187,7 +206,12 @@ class _HomeViewState extends State<HomeView> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const GroupsHomeScreen()),
-                  );
+                  ).then((_) {
+                     // Recargar si vuelve de grupos (por si se salió de uno)
+                     setState(() {
+                       _loadGroups();
+                     });
+                  });
                 },
                 child: const Text(
                   "Ver todos",
@@ -201,9 +225,9 @@ class _HomeViewState extends State<HomeView> {
           ),
         ),
 
-        // LISTA DE TARJETAS
+        // LISTA DE TARJETAS (CACHED FUTURE)
         FutureBuilder<List<GroupModel>>(
-          future: _groupsRepository.fetchUserGroupsPreview(userId),
+          future: _groupsFuture,
           builder: (context, snapshot) {
              if (snapshot.connectionState == ConnectionState.waiting) {
               return const SizedBox(
@@ -275,58 +299,76 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Widget _buildStatisticsCard() {
-    return Card(
-      elevation: 4.0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            _buildTimeRangeSelector(),
-            const SizedBox(height: 30),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header: Selector de Métricas + Rango (en línea si cabe, o columna)
+           Row(
+             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+             children: [
+               const Text("Tu Progreso", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+               // METRIC DROPDOWN SMALL
+               SizedBox(
+                  width: 140,
+                  child: _buildMetricDropdown(),
+               ),
+             ],
+           ),
+           
+           const SizedBox(height: 20),
 
-            ValueListenableBuilder<bool>(
-              valueListenable: _estadisticaController.isLoading,
-              builder: (context, isLoading, child) {
-                if (isLoading) {
-                  return const SizedBox(
-                    height: 250,
-                    child: Center(
-                      child: CircularProgressIndicator(color: Tema.brandPurple),
-                    ),
-                  );
-                }
+          // Selector de Tiempo (Segmented Control Style)
+          _buildTimeRangeSelector(),
 
-                return ValueListenableBuilder<String?>(
-                  valueListenable: _estadisticaController.error,
-                  builder: (context, error, _) {
-                    if (error != null) {
-                      return SizedBox(
-                        height: 250,
-                        child: Center(
-                          child: Text(
-                            'Error: $error',
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      );
-                    }
-                    return _buildChartArea();
-                  },
+          const SizedBox(height: 30),
+
+          // CHART AREA
+          ValueListenableBuilder<bool>(
+            valueListenable: _estadisticaController.isLoading,
+            builder: (context, isLoading, child) {
+              if (isLoading) {
+                return const SizedBox(
+                  height: 250,
+                  child: Center(
+                    child: CircularProgressIndicator(color: Tema.brandPurple),
+                  ),
                 );
-              },
-            ),
-            const SizedBox(height: 20),
-            Align(
-  alignment: Alignment.center,
-  child: SizedBox(
-    width: MediaQuery.of(context).size.width * 0.40, // 48% del ancho
-    child: _buildMetricDropdown(),
-  ),
-),
+              }
 
-          ],
-        ),
+              return ValueListenableBuilder<String?>(
+                valueListenable: _estadisticaController.error,
+                builder: (context, error, _) {
+                  if (error != null) {
+                    return SizedBox(
+                      height: 250,
+                      child: Center(
+                        child: Text(
+                          'Error: $error',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.red.shade300),
+                        ),
+                      ),
+                    );
+                  }
+                  return _buildChartArea();
+                },
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -344,52 +386,46 @@ class _HomeViewState extends State<HomeView> {
       TimeRange.oneMonth: '1M',
       TimeRange.sixMonths: '6M',
       TimeRange.oneYear: '1A',
-      TimeRange.max: 'máx',
+      TimeRange.max: 'Todo',
     };
 
     return ValueListenableBuilder<TimeRange>(
       valueListenable: _estadisticaController.selectedRange,
       builder: (context, currentRange, child) {
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
+        return Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: ranges.map((range) {
               final bool isSelected = currentRange == range;
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              return Expanded(
                 child: GestureDetector(
                   onTap: () {
                     _estadisticaController.setRange(range);
                     setState(() => _selectedMetric = null);
                   },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
-                      color: isSelected
-                          ? _lightPurple.withOpacity(0.5)
-                          : Colors.transparent,
-                      border: Border.all(
-                        color: isSelected
-                            ? Tema.brandPurple
-                            : Colors.grey.shade300,
-                        width: isSelected ? 1.5 : 1.0,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
+                      color: isSelected ? Colors.white : Colors.transparent,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: isSelected ? [
+                        BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))
+                      ] : [],
                     ),
                     child: Text(
                       rangeLabels[range]!,
+                      textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: isSelected
-                            ? Tema.brandPurple
-                            : Colors.grey.shade700,
-                        fontWeight: isSelected
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        fontSize: 13,
+                        color: isSelected ? Tema.brandPurple : Colors.grey.shade500,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                        fontSize: 12,
                       ),
                     ),
                   ),
@@ -641,21 +677,25 @@ class BarChartPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     const double marginBottom = 30.0;
-    const double marginLeft = 40.0;
+    const double marginLeft = 45.0; // Un poco más de espacio para etiquetas largas
     const double marginTop = 20.0;
     const double marginRight = 10.0;
 
     final double chartWidth = size.width - marginLeft - marginRight;
     final double chartHeight = size.height - marginBottom - marginTop;
 
-    final Paint axisPaint = Paint()
-      ..color = Colors.grey.shade300
+    // Pintura del Grid (Líneas punteadas simuladas con opacidad baja)
+    final Paint gridPaint = Paint()
+      ..color = Colors.grey.shade200
       ..strokeWidth = 1.0;
 
-    final Paint barPaint = Paint()..color = brandColor;
-    final Paint shadowPaint = Paint()
-      ..color = brandColor.withOpacity(0.3)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.0);
+    // Pintura de las barras con GRADIENTE
+    final Paint barPaint = Paint()
+      ..shader = LinearGradient(
+        colors: [brandColor, brandColor.withOpacity(0.6)],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(Rect.fromLTWH(0, marginTop, size.width, chartHeight));
 
     // 1. Calcular Máximos
     double maxValue = 0;
@@ -663,30 +703,51 @@ class BarChartPainter extends CustomPainter {
       if (item.value > maxValue) maxValue = item.value;
     }
     if (maxValue == 0) maxValue = 1;
-    final double yMaxScale = maxValue * 1.1;
+    
+    // Dar un respiro arriba (15%)
+    final double yMaxScale = maxValue * 1.15;
 
-    // 2. Grid
+    // 2. Grid y Etiquetas Eje Y
     final int gridSteps = 4;
     for (int i = 0; i <= gridSteps; i++) {
+      // Valor en esta línea de grid
       final double value = yMaxScale * (i / gridSteps);
-      final double yPos =
-          marginTop + chartHeight - (chartHeight * (i / gridSteps));
+      
+      // Posición Y en canvas (invertida, 0 es abajo en la gráfica)
+      final double yPos = marginTop + chartHeight - (chartHeight * (i / gridSteps));
 
+      // Dibujar línea horizontal
       canvas.drawLine(
         Offset(marginLeft, yPos),
         Offset(size.width - marginRight, yPos),
-        axisPaint,
+        gridPaint,
       );
 
-      // Formato del eje Y inteligente
+      // --- FORMATO INTELIGENTE DEL EJE Y ---
       String yLabel = value.toStringAsFixed(1);
-      if (metric == HomeMetric.tiempoTotal || metric == HomeMetric.ritmoMedio) {
-        if (value > 10) yLabel = value.toStringAsFixed(0);
+
+      if (metric == HomeMetric.ritmoMedio) {
+        // Conversión de Segundos/km a min:ss
+        // value es segundos
+        final int m = value ~/ 60;
+        final int s = (value % 60).toInt();
+        yLabel = "$m:${s.toString().padLeft(2, '0')}";
+      } else if (metric == HomeMetric.tiempoTotal) {
+         // Si es tiempo, mostrar en min o horas si es muy grande
+         if (value >= 60) {
+            final h = (value / 60).toStringAsFixed(1);
+            yLabel = "${h}h";
+         } else {
+            yLabel = "${value.toStringAsFixed(0)}m";
+         }
+      } else {
+        // Distancia o RPE
+        if (value >= 10) yLabel = value.toStringAsFixed(0);
       }
 
       final textSpan = TextSpan(
         text: yLabel,
-        style: TextStyle(color: Colors.grey.shade600, fontSize: 10),
+        style: TextStyle(color: Colors.grey.shade400, fontSize: 10, fontWeight: FontWeight.w500),
       );
       final textPainter = TextPainter(
         text: textSpan,
@@ -696,37 +757,29 @@ class BarChartPainter extends CustomPainter {
       textPainter.paint(
         canvas,
         Offset(
-          marginLeft - textPainter.width - 5,
+          marginLeft - textPainter.width - 6,
           yPos - textPainter.height / 2,
         ),
       );
     }
 
-    // 3. DIBUJO DE BARRAS (LÓGICA ROBUSTA)
+    // 3. DIBUJO DE BARRAS
     if (data.isEmpty) return;
 
     final double spacing = chartWidth / data.length;
 
-    // Ratio según cantidad de datos
-    double widthRatio = 0.65;
-    if (data.length > 20) widthRatio = 0.75; // Para 1M
+    // Ratio de ancho de barra
+    double widthRatio = 0.6;
+    if (data.length > 20) widthRatio = 0.7; 
 
     double barWidth = spacing * widthRatio;
 
-    // REGLAS DE ANCHO:
-    // 1. Máximo 50px por estética
-    if (barWidth > 50.0) barWidth = 50.0;
-
-    // 2. Mínimo 2px para que se vea siempre
+    // Clamps estéticos
+    if (barWidth > 32.0) barWidth = 32.0; // Barras no muy gordas
     if (barWidth < 2.0) barWidth = 2.0;
 
-    // 3. Seguridad contra solapamiento:
-    // Si el ancho calculado invade la siguiente celda, reducirlo
-    // Dejamos al menos 0.5px de aire
-    if (barWidth > spacing - 0.5) {
-      barWidth = spacing - 0.5;
-      if (barWidth < 0.5) barWidth = 0.5; // Caso extremo pantalla minúscula
-    }
+    // Evitar solapamiento
+    if (barWidth > spacing - 1) barWidth = spacing - 1;
 
     for (int i = 0; i < data.length; i++) {
       final item = data[i];
@@ -737,35 +790,28 @@ class BarChartPainter extends CustomPainter {
 
       if (item.value > 0) {
         final double barHeight = (item.value / yMaxScale) * chartHeight;
-
-        // Altura mínima visual (si tiene valor, que se vea algo)
-        final double effectiveHeight = barHeight < 2.0 ? 2.0 : barHeight;
+        
+        // Mínimo visible
+        final double effectiveHeight = barHeight < 3.0 ? 3.0 : barHeight;
         final double top = bottom - effectiveHeight;
 
-        final Rect rect = Rect.fromLTWH(left, top, barWidth, effectiveHeight);
-        // Radio no puede ser mayor que la mitad del ancho
-        final double radius = barWidth / 2;
         final RRect rrect = RRect.fromRectAndRadius(
-          rect,
-          Radius.circular(radius),
+          Rect.fromLTWH(left, top, barWidth, effectiveHeight),
+          Radius.circular(barWidth / 2.5), // Redondeo proporcional suave
         );
 
-        canvas.drawRRect(rrect.shift(const Offset(2, 2)), shadowPaint);
         canvas.drawRRect(rrect, barPaint);
       }
 
-      // 4. Etiquetas
+      // 4. Etiquetas Eje X
       bool shouldDrawLabel = false;
       String label = "";
 
       if (range == TimeRange.oneWeek) {
         shouldDrawLabel = true;
-        label = DateFormat(
-          'E',
-          'es',
-        ).format(item.date).substring(0, 1).toUpperCase();
+        label = DateFormat('E', 'es').format(item.date).substring(0, 1).toUpperCase();
       } else if (range == TimeRange.oneMonth) {
-        // Etiquetas cada 5 días
+        // Mostrar cada ~5 días o primera/ultima
         if (i == 0 || i == data.length - 1 || (i + 1) % 5 == 0) {
           shouldDrawLabel = true;
           label = DateFormat('d').format(item.date);
@@ -773,21 +819,19 @@ class BarChartPainter extends CustomPainter {
       } else if (range == TimeRange.sixMonths) {
         if (i % 4 == 0) {
           shouldDrawLabel = true;
-          label = DateFormat('MMM', 'es').format(item.date);
+          label = DateFormat('MMM', 'es').format(item.date); // Mes
         }
       } else if (range == TimeRange.oneYear || range == TimeRange.max) {
         shouldDrawLabel = true;
-        label = DateFormat(
-          'MMM',
-          'es',
-        ).format(item.date).substring(0, 1).toUpperCase();
-        if (data.length > 15 && i % 2 != 0) shouldDrawLabel = false;
+        label = DateFormat('MMM', 'es').format(item.date).substring(0, 1).toUpperCase();
+        // Filtrar para no saturar
+        if (data.length > 12 && i % 2 != 0) shouldDrawLabel = false;
       }
 
       if (shouldDrawLabel) {
         final xTextSpan = TextSpan(
           text: label,
-          style: TextStyle(color: Colors.grey.shade700, fontSize: 10),
+          style: TextStyle(color: Colors.grey.shade500, fontSize: 10, fontWeight: FontWeight.w600),
         );
         final xTextPainter = TextPainter(
           text: xTextSpan,

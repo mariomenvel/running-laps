@@ -11,6 +11,8 @@ import '../../invitation_model.dart'; // EL NUEVO MODELO DE INVITACIÓN
 // 2. IMPORTS TUS WIDGETS CORE
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_footer.dart';
+import '../../../home/views/home_view.dart';
+import '../../../profile/views/profile_menu_view.dart';
 
 class GroupsHomeScreen extends StatefulWidget {
   const GroupsHomeScreen({Key? key}) : super(key: key);
@@ -251,10 +253,24 @@ class _GroupsHomeScreenState extends State<GroupsHomeScreen> {
       body: SafeArea(
         child: Column(
           children: [
+
+
             // 1. HEADER
             AppHeader(
-              onTapLeft: () {},
-              onTapRight: () {},
+              onTapLeft: () {
+                 // Navegar a Home (limpiando stack para evitar loops)
+                 Navigator.pushAndRemoveUntil(
+                   context,
+                   MaterialPageRoute(builder: (_) => const HomeView()),
+                   (route) => false,
+                 );
+              },
+              onTapRight: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfileMenuView()),
+                );
+              },
               showBottomDivider: false,
             ),
 

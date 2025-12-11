@@ -5,7 +5,9 @@ import '../../../../core/widgets/app_footer.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import '../data/group_detail_repository.dart';
 import '../logic/gamification_service.dart';
-import '../../group_model.dart'; // Para GroupMemberStats si lo necesitamos o pasamos datos directos
+import '../../group_model.dart';
+import '../../../../features/home/views/home_view.dart';
+import '../../../../features/profile/views/profile_menu_view.dart';
 
 class ParticipantProfileScreen extends StatefulWidget {
   final String uid;
@@ -90,9 +92,54 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
           children: [
             // 1. HEADER
             AppHeader(
-              onTapLeft: () => Navigator.pop(context),
-              onTapRight: () {}, // Maybe share profile?
+              onTapLeft: () {
+                 Navigator.pushAndRemoveUntil(
+                   context,
+                   MaterialPageRoute(builder: (_) => const HomeView()),
+                   (route) => false,
+                 );
+              },
+              onTapRight: () {
+                 Navigator.push(
+                   context,
+                   MaterialPageRoute(builder: (_) => const ProfileMenuView()),
+                 );
+              },
               showBottomDivider: false,
+            ),
+
+            // 1.5 CUSTOM BACK BUTTON
+             Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
+                      border: Border.all(color: Colors.deepPurple.withOpacity(0.1)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: Colors.deepPurple),
+                        SizedBox(width: 5),
+                        Text("Volver", style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold, fontSize: 13)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
 
             // 2. CONTENT

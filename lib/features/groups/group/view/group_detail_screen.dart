@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_footer.dart';
 import '../../../../app/tema.dart';
+import '../../../../features/home/views/home_view.dart';
+import '../../../../features/profile/views/profile_menu_view.dart';
 
 // IMPORTS DE MODELOS
 import '../data/challenge_model.dart';
@@ -162,13 +164,58 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
       body: SafeArea(
         child: Column(
           children: [
+
+
             // 1. HEADER
             AppHeader(
-              onTapLeft: () => Navigator.pop(context),
+              onTapLeft: () {
+                 Navigator.pushAndRemoveUntil(
+                   context,
+                   MaterialPageRoute(builder: (_) => const HomeView()),
+                   (route) => false,
+                 );
+              },
               onTapRight: () {
-                // Acción de perfil (ya no es invitar)
+                 Navigator.push(
+                   context,
+                   MaterialPageRoute(builder: (_) => const ProfileMenuView()),
+                 );
               },
               showBottomDivider: false,
+            ),
+
+            // 1.5 BOTÓN ATRÁS (CUSTOM COOL)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
+                      border: Border.all(color: Colors.purple.withOpacity(0.1)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: Colors.purple),
+                        SizedBox(width: 5),
+                        Text("Volver", style: TextStyle(color: Colors.purple, fontWeight: FontWeight.bold, fontSize: 13)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
 
             // 2. NOMBRE DEL GRUPO
