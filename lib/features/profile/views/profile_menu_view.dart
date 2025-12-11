@@ -10,6 +10,7 @@ import 'package:running_laps/features/home/views/home_view.dart';
 import 'package:running_laps/features/profile/views/profile_view.dart';
 import 'package:running_laps/features/profile/views/avatar_editor_wrapper_view.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
+import '../../groups/home/view/groups_home_screen.dart';
 
 // Widgets comunes
 import 'package:running_laps/core/widgets/app_header.dart';
@@ -82,6 +83,16 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
         },
       ),
     );
+  }
+
+  // --- NUEVA FUNCIÓN PARA GRUPOS ---
+  void _openGroups() {
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const GroupsHomeScreen()),
+    );
+    
   }
 
   Future<void> _logout() async {
@@ -190,17 +201,18 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
 
                     // Aquí cambia el PERFIL → nombre del usuario
                     Center(
-  child: Text(
-    _nombreUsuario == "" ? "Perfil" : _nombreUsuario.toUpperCase(),
-    textAlign: TextAlign.center,
-    style: TextStyle(
-      color:  const Color.fromARGB(255, 67, 67, 67),
-      fontSize: 22,          // << más grande
-      fontWeight: FontWeight.bold, // << en negrita
-    ),
-  ),
-),
-
+                      child: Text(
+                        _nombreUsuario == ""
+                            ? "Perfil"
+                            : _nombreUsuario.toUpperCase(),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color.fromARGB(255, 67, 67, 67),
+                          fontSize: 22, // << más grande
+                          fontWeight: FontWeight.bold, // << en negrita
+                        ),
+                      ),
+                    ),
 
                     const SizedBox(height: 24),
 
@@ -209,11 +221,20 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
                       onPressed: _openHistory,
                     ),
                     const SizedBox(height: 12),
+                    
                     _buildMenuButton(
                       text: 'EDITAR AVATAR',
                       onPressed: _openAvatarEditor,
                     ),
                     const SizedBox(height: 12),
+
+                    // --- NUEVO BOTÓN DE GRUPOS ---
+                    _buildMenuButton(
+                      text: 'GRUPOS',
+                      onPressed: _openGroups,
+                    ),
+                    const SizedBox(height: 12),
+                    // -----------------------------
 
                     ValueListenableBuilder<bool>(
                       valueListenable: _authCtrl.isLoading,
@@ -223,7 +244,9 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
                         Widget? child,
                       ) {
                         return _buildMenuButton(
-                          text: isLoading ? 'CERRANDO SESIÓN...' : 'CERRAR SESION',
+                          text: isLoading
+                              ? 'CERRANDO SESIÓN...'
+                              : 'CERRAR SESION',
                           onPressed: isLoading ? null : _logout,
                           textColor: Colors.red,
                         );

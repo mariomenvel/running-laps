@@ -3,13 +3,14 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 // Asegúrate de que la ruta de este import sea correcta en tu proyecto
-import 'package:flutter_avatar_maker/assets.dart';
+import 'package:flutter_avatar_maker/assets.dart'; 
 
 class Tema {
   static const Color brandPurple = Color(0xFF8E24AA);
 }
 
 class AvatarHelper {
+
   /// Muestra el avatar del usuario actual
   static Widget construirImagenPerfil({double radius = 24.0}) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -19,10 +20,7 @@ class AvatarHelper {
     }
 
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .snapshots(),
+      stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return _buildPlaceholder(radius);
 
@@ -43,8 +41,8 @@ class AvatarHelper {
                 child: FittedBox(
                   fit: BoxFit.cover,
                   child: SizedBox(
-                    width: 180,
-                    height: 180,
+                    width: 180, 
+                    height: 180, 
                     child: _construirStackAvatar(config),
                   ),
                 ),
@@ -52,6 +50,7 @@ class AvatarHelper {
             ),
           );
         }
+        
         // 2. SI ES FOTO DE GOOGLE/SUBIDA
         else if (tipo == 'photo') {
           final String url = data?['profileImageUrl'] ?? '';
@@ -79,6 +78,7 @@ class AvatarHelper {
 
   // --- LÓGICA DE CONSTRUCCIÓN ---
   static Widget _construirStackAvatar(Map<String, dynamic> config) {
+    
     // --- HELPERS ---
     int toInt(dynamic val) {
       if (val is int) return val;
@@ -88,7 +88,7 @@ class AvatarHelper {
     }
 
     int safeIndex(int index, List list) {
-      if (index < 0 || index >= list.length) return 0;
+      if (index < 0 || index >= list.length) return 0; 
       return index;
     }
 
@@ -96,44 +96,30 @@ class AvatarHelper {
     final rawAccessory = config['accessory'];
     final int parsedIndex = toInt(rawAccessory);
     // Asegúrate de tener importado assets.dart para que esto no de error
-    final int safeIdx = safeIndex(parsedIndex, accessoryAssets);
+    final int safeIdx = safeIndex(parsedIndex, accessoryAssets); 
     final String path = accessoryAssets[safeIdx];
     final bool hasAcc = path != "";
     // ... El resto de tus variables (bodyIndex, clothingIndex, etc.) ...
     final int bodyIndex = safeIndex(toInt(config['body']), bodyAssets);
-    final int clothingIndex = safeIndex(
-      toInt(config['clothing']),
-      clothingAssets,
-    );
+    final int clothingIndex = safeIndex(toInt(config['clothing']), clothingAssets);
     final int eyesIndex = safeIndex(toInt(config['eyes']), eyesAssets);
     final int noseIndex = safeIndex(toInt(config['nose']), noseAssets);
     final int mouthIndex = safeIndex(toInt(config['mouth']), mouthAssets);
     final int hatIndex = safeIndex(toInt(config['hat']), hatAssets);
-    final int facialHairIndex = safeIndex(
-      toInt(config['facialHair']),
-      facialHairAssets,
-    );
+    final int facialHairIndex = safeIndex(toInt(config['facialHair']), facialHairAssets);
     final int accessoryIndex = safeIdx; // Usamos el que calculamos arriba
 
     // ... Resto de variables de color ...
-    final int bgColorInt = toInt(config['backgroundColor']) == 0
-        ? 0xFF65C9FF
-        : toInt(config['backgroundColor']);
+    final int bgColorInt = toInt(config['backgroundColor']) == 0 ? 0xFF65C9FF : toInt(config['backgroundColor']);
     final int clothingColorInt = toInt(config['clothingColor']);
     final int accessoryColorInt = toInt(config['accessoryColor']);
     final int facialHairColorInt = toInt(config['facialHairColor']);
-
+    
     // ... Lógica de Pelo ...
     final String hairTypeStr = config['hairType'] ?? 'short';
     final bool isShortHair = hairTypeStr.contains('short');
-    final int shortHairIndex = safeIndex(
-      toInt(config['shortHair']),
-      shortHairAssets,
-    );
-    final int longHairIndex = safeIndex(
-      toInt(config['longHair']),
-      longHairAssets,
-    );
+    final int shortHairIndex = safeIndex(toInt(config['shortHair']), shortHairAssets);
+    final int longHairIndex = safeIndex(toInt(config['longHair']), longHairAssets);
 
     // Variables booleanas finales
     final bool hasHat = hatAssets[hatIndex] != "";
@@ -153,11 +139,7 @@ class AvatarHelper {
             bottom: -30,
             child: Align(
               alignment: Alignment.bottomCenter,
-              child: SvgPicture.asset(
-                bodyAssets[bodyIndex],
-                width: 160,
-                height: 160,
-              ),
+              child: SvgPicture.asset(bodyAssets[bodyIndex], width: 160, height: 160),
             ),
           ),
 
@@ -168,15 +150,9 @@ class AvatarHelper {
               alignment: Alignment.bottomCenter,
               child: _replaceColorOrReturn(
                 true,
-                SvgPicture.asset(
-                  clothingAssets[clothingIndex],
-                  width: 160,
-                  height: 70,
-                ),
+                SvgPicture.asset(clothingAssets[clothingIndex], width: 160, height: 70),
                 const Color(0xFF80C43B), // Color verde original de los assets
-                clothingColorInt == 0
-                    ? const Color(0xFF80C43B)
-                    : Color(clothingColorInt),
+                clothingColorInt == 0 ? const Color(0xFF80C43B) : Color(clothingColorInt),
               ),
             ),
           ),
@@ -186,11 +162,7 @@ class AvatarHelper {
             top: 90,
             child: Align(
               alignment: Alignment.topCenter,
-              child: SvgPicture.asset(
-                eyesAssets[eyesIndex],
-                width: 50,
-                height: 20,
-              ),
+              child: SvgPicture.asset(eyesAssets[eyesIndex], width: 50, height: 20),
             ),
           ),
 
@@ -199,11 +171,7 @@ class AvatarHelper {
             top: 90,
             child: Align(
               alignment: Alignment.topCenter,
-              child: SvgPicture.asset(
-                noseAssets[noseIndex],
-                width: 20,
-                height: 30,
-              ),
+              child: SvgPicture.asset(noseAssets[noseIndex], width: 20, height: 30),
             ),
           ),
 
@@ -212,11 +180,7 @@ class AvatarHelper {
             top: 115,
             child: Align(
               alignment: Alignment.topCenter,
-              child: SvgPicture.asset(
-                mouthAssets[mouthIndex],
-                width: 40,
-                height: 30,
-              ),
+              child: SvgPicture.asset(mouthAssets[mouthIndex], width: 40, height: 30),
             ),
           ),
 
@@ -229,9 +193,7 @@ class AvatarHelper {
               child: Align(
                 alignment: Alignment.topCenter,
                 child: SvgPicture.asset(
-                  isShortHair
-                      ? shortHairAssets[shortHairIndex]
-                      : longHairAssets[longHairIndex],
+                  isShortHair ? shortHairAssets[shortHairIndex] : longHairAssets[longHairIndex],
                   width: 180,
                   height: 195,
                 ),
@@ -245,17 +207,11 @@ class AvatarHelper {
               child: Align(
                 alignment: Alignment.topCenter,
                 child: _replaceColorOrReturn(
-                  true,
-                  SvgPicture.asset(
-                    facialHairAssets[facialHairIndex],
-                    width: 90,
-                    height: 80,
-                  ),
-                  null,
+                  true, 
+                  SvgPicture.asset(facialHairAssets[facialHairIndex], width: 90, height: 80),
+                  null, 
                   // Si el color es 0 o null, lo deja transparente (original) o por defecto
-                  facialHairColorInt == 0
-                      ? Colors.transparent
-                      : Color(facialHairColorInt),
+                  facialHairColorInt == 0 ? Colors.transparent : Color(facialHairColorInt),
                 ),
               ),
             ),
@@ -268,15 +224,9 @@ class AvatarHelper {
                 alignment: Alignment.topCenter,
                 child: _replaceColorOrReturn(
                   true,
-                  SvgPicture.asset(
-                    accessoryAssets[accessoryIndex],
-                    width: 80,
-                    height: 40,
-                  ),
+                  SvgPicture.asset(accessoryAssets[accessoryIndex], width: 80, height: 40),
                   null,
-                  accessoryColorInt == 0
-                      ? Colors.transparent
-                      : Color(accessoryColorInt),
+                  accessoryColorInt == 0 ? Colors.transparent : Color(accessoryColorInt),
                 ),
               ),
             ),
@@ -289,11 +239,7 @@ class AvatarHelper {
               right: 0,
               child: Align(
                 alignment: Alignment.topCenter,
-                child: SvgPicture.asset(
-                  hatAssets[hatIndex],
-                  width: 180,
-                  height: 195,
-                ),
+                child: SvgPicture.asset(hatAssets[hatIndex], width: 180, height: 195),
               ),
             ),
         ],
@@ -302,37 +248,16 @@ class AvatarHelper {
   }
 
   // --- UTILIDAD DE COLOR ---
-  static Widget _replaceColorOrReturn(
-    bool shouldReplace,
-    SvgPicture picture,
-    Color? src,
-    Color rep,
-  ) {
+  static Widget _replaceColorOrReturn(bool shouldReplace, SvgPicture picture, Color? src, Color rep) {
     if (!shouldReplace || rep == Colors.transparent) return picture;
 
     return ColorFiltered(
       colorFilter: src != null
           ? ColorFilter.matrix(<double>[
-              rep.red / src.red,
-              0,
-              0,
-              0,
-              0,
-              0,
-              rep.green / src.green,
-              0,
-              0,
-              0,
-              0,
-              0,
-              rep.blue / src.blue,
-              0,
-              0,
-              0,
-              0,
-              0,
-              1,
-              0,
+              rep.red / src.red, 0, 0, 0, 0,
+              0, rep.green / src.green, 0, 0, 0,
+              0, 0, rep.blue / src.blue, 0, 0,
+              0, 0, 0, 1, 0,
             ])
           : ColorFilter.mode(rep, BlendMode.srcIn),
       child: picture,
