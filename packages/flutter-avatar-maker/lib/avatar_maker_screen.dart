@@ -22,827 +22,794 @@ class AvatarMakerScreen extends StatefulWidget {
 }
 
 class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
-  Widget colorList() {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      height: 40,
-      child: GetBuilder<AvatarMakerController>(
-          id: "avatar_category",
-          builder: (controller) {
-            final selectedCategory = category[controller.selectedCategory];
-            final List<int>? colorList;
-            if (selectedCategory == "ROPA") {
-              colorList = clothingColor;
-            } else if (selectedCategory == "ACCESORIOS") {
-              colorList = accessoryColor;
-            } else if (selectedCategory == "BELLO FACIAL") {
-              colorList = facialHairColor;
-            } else if (selectedCategory == "FONDO") {
-              colorList = backgroundColor;
-            } else {
-              colorList = null;
-            }
-            return colorList == null
-                ? const SizedBox.shrink()
-                : ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: colorList.length + 2,
-                    itemBuilder: (context, index) {
-                      if (index == 0 || index == colorList!.length + 1) {
-                        return const SizedBox(width: 36);
-                      }
-                      final indexOffset = index - 1;
-                      final color = Color(colorList[indexOffset]);
-                      return InkWell(
-                          onTap: () {
-                            if (selectedCategory == "ROPA") {
-                              controller.clothingColor =
-                                  colorList![indexOffset];
-                            } else if (selectedCategory == "ACCESORIOS") {
-                              controller.accessoryColor =
-                                  colorList![indexOffset];
-                            } else if (selectedCategory == "BELLO FACIAL") {
-                              controller.facialHairColor =
-                                  colorList![indexOffset];
-                            } else if (selectedCategory == "FONDO") {
-                              controller.backgroundColor =
-                                  colorList![indexOffset];
-                            }
-                          },
-                          child: color.alpha != 0
-                              ? Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: color,
-                                  ),
-                                )
-                              : Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.grey),
-                                  ),
-                                ));
-                    },
-                    separatorBuilder: ((context, index) =>
-                        const SizedBox(width: 16)),
-                  );
-          }),
-    );
-  }
-
-  Widget backgroundShapeWidget(BuildContext context, BackgroundShape shape) {
-    return GetBuilder<AvatarMakerController>(
-        id: "avatar_background_color",
-        builder: (controller) {
-          return Container(
-            width: 195,
-            height: 195,
-            decoration: BoxDecoration(
-                shape: shape == BackgroundShape.circle
-                    ? BoxShape.circle
-                    : BoxShape.rectangle,
-                color: Color(controller.selectedBackgroundColor),
-                borderRadius: shape == BackgroundShape.roundedSquare
-                    ? const BorderRadius.all(Radius.circular(16))
-                    : null),
-          );
-        });
-  }
-
-  Widget componentWidget(BuildContext context, dynamic component) {
-    if (component is String) {
-      return component != ""
-          ? SvgPicture.asset(
-              component,
-              width: 160,
-              height: 160,
-            )
-          : const SizedBox.shrink();
-    } else if (component is BackgroundShape) {
-      return backgroundShapeWidget(context, component);
-    } else {
-      return const SizedBox.shrink();
-    }
-  }
-
-  Widget componentList(
-      BuildContext context,
-      List<dynamic> components,
-      String notifyId,
-      void Function(int) onTap,
-      bool Function(int) isSelected) {
-    return Container(
-        height: 195,
-        margin: const EdgeInsets.symmetric(vertical: 36),
-        child: GetBuilder<AvatarMakerController>(
-            id: notifyId,
-            builder: (controller) {
-              return ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: components.length + 2,
-                  separatorBuilder: ((context, index) =>
-                      const SizedBox(width: 24)),
-                  itemBuilder: (context, index) {
-                    if (index == 0 || index == components.length + 1) {
-                      return const SizedBox(width: 36);
-                    }
-                    final indexOffset = index - 1;
-                    final component = components[indexOffset];
-                    return InkWell(
-                        onTap: () => onTap(indexOffset),
-                        child: Stack(children: [
-                          component is String
-                              ? Container(
-                                  width: 195,
-                                  height: 195,
-                                  decoration: BoxDecoration(
-                                      color: AppColorTheme.paleGrey,
-                                      borderRadius: BorderRadius.circular(16)))
-                              : const SizedBox(width: 195, height: 195),
-                          Positioned.fill(
-                            child: Align(
-                              alignment: Alignment.bottomCenter,
-                              child: componentWidget(context, component),
-                            ),
-                          ),
-                          ...isSelected(indexOffset)
-                              ? [
-                                  Positioned(
-                                      top: 0,
-                                      left: 0,
-                                      child: Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: const BoxDecoration(
-                                              color: AppColorTheme.primaryColor,
-                                              borderRadius: BorderRadius.only(
-                                                  topLeft: Radius.zero,
-                                                  topRight: Radius.zero,
-                                                  bottomLeft: Radius.zero,
-                                                  bottomRight:
-                                                      Radius.circular(16))),
-                                          child: const Icon(Icons.done,
-                                              color: Colors.white, size: 32))),
-                                  Container(
-                                      width: 195,
-                                      height: 195,
-                                      clipBehavior: Clip.hardEdge,
-                                      decoration: BoxDecoration(
-                                          border: Border.all(
-                                              color: AppColorTheme.primaryColor,
-                                              width: 4),
-                                          borderRadius: component is String
-                                              ? const BorderRadius.only(
-                                                  topLeft: Radius.zero,
-                                                  topRight: Radius.circular(16),
-                                                  bottomLeft:
-                                                      Radius.circular(16),
-                                                  bottomRight:
-                                                      Radius.circular(16))
-                                              : null))
-                                ]
-                              : [const SizedBox.shrink()]
-                        ]));
-                  });
-            }));
-  }
-
-  Widget categoryList() {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 16),
-      height: 44,
-      child: GetBuilder<AvatarMakerController>(
-          id: "avatar_category",
-          builder: (controller) {
-            return ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: category.length + 2,
-              itemBuilder: (context, index) {
-                if (index == 0 || index == category.length + 1) {
-                  return const SizedBox(width: 36);
-                }
-                final indexOffset = index - 1;
-                return InkWell(
-                  onTap: () {
-                    controller.category = indexOffset;
-                    if (category[indexOffset] == "PELO CORTO") {
-                      controller.hairType = HairType.short;
-                    } else if (category[indexOffset] == "PELO LARGO") {
-                      controller.hairType = HairType.long;
-                    }
-                  },
-                  child: Chip(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    label: Text(category[indexOffset]),
-                    backgroundColor: controller.selectedCategory == indexOffset
-                        ? AppColorTheme.primaryColor
-                        : AppColorTheme.lightGrey,
-                    labelStyle: controller.selectedCategory == indexOffset
-                        ? AppTextStyle.primaryWhiteText
-                        : AppTextStyle.primaryDarkGreyText,
-                  ),
-                );
-              },
-              separatorBuilder: ((context, index) => const SizedBox(width: 24)),
-            );
-          }),
-    );
-  }
-
-  /// function that replaces the color of the svg picture
-  Widget replaceColorOrReturn(
-      bool shouldReplace, SvgPicture picture, Color? src, Color rep) {
-    return shouldReplace && rep != Colors.transparent
-        ? ColorFiltered(
-            colorFilter: src != null
-                ? ColorFilter.matrix(<double>[
-                    rep.red / src.red,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    rep.green / src.green,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    rep.blue / src.blue,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    1,
-                    0,
-                  ])
-                : ColorFilter.mode(rep, BlendMode.srcIn),
-            child: picture,
-          )
-        : picture;
-  }
-
   final GlobalKey _avatarKey = GlobalKey();
 
-  /// function that generates unique file name for the avatar
+  // Colores Premium (Hardcoded para asegurar consistencia con la app principal)
+  static const Color _brandPurple = Color(0xFF8E24AA);
+  static const Color _bgGradientStart = Color(0xFFF3E5F5); // Purple 50
+  static const Color _bgGradientEnd = Colors.white;
+
+  // ===========================================================================
+  // WIDGETS DE UI
+  // ===========================================================================
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Botón Atrás
+          IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black87),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white,
+              elevation: 2,
+              shadowColor: Colors.black12,
+            ),
+          ),
+          
+          const Text(
+            "EDITOR DE AVATAR",
+            style: TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              letterSpacing: 1.2,
+            ),
+          ),
+
+          // Botón Guardar
+          IconButton(
+            onPressed: _buildSaveAvatarOptions,
+            icon: const Icon(Icons.save_alt_rounded, color: _brandPurple),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white,
+              elevation: 2,
+              shadowColor: Colors.black12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryTabs(AvatarMakerController controller) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        alignment: WrapAlignment.center,
+        children: List.generate(category.length, (index) {
+          final isSelected = controller.selectedCategory == index;
+          return GestureDetector(
+            onTap: () {
+              controller.category = index;
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: isSelected ? _brandPurple : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  if (isSelected)
+                    BoxShadow(
+                      color: _brandPurple.withOpacity(0.4),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    )
+                  else
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    )
+                ],
+              ),
+              child: Text(
+                category[index],
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.grey[700],
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildColorSelector(AvatarMakerController controller) {
+    final selectedCategory = category[controller.selectedCategory];
+    final List<int>? colorList;
+    
+    if (selectedCategory == "ROPA") colorList = clothingColor;
+    else if (selectedCategory == "ACCESORIOS") colorList = accessoryColor;
+    else if (selectedCategory == "BELLO FACIAL") colorList = facialHairColor;
+    else if (selectedCategory == "FONDO") colorList = backgroundColor;
+    else if (selectedCategory == "PELO") colorList = hairColor;
+    else if (selectedCategory == "OJOS") colorList = eyeColor;
+    else colorList = null;
+
+    if (colorList == null) return const SizedBox.shrink();
+
+    return Container(
+      height: 60,
+      margin: const EdgeInsets.only(bottom: 10),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: colorList.length,
+        separatorBuilder: (c, i) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final colorValue = colorList![index];
+          final color = Color(colorValue);
+          
+          // Determinar si está seleccionado
+          bool isSelected = false;
+          if (selectedCategory == "ROPA") isSelected = (controller.selectedClothingColor == colorValue);
+          else if (selectedCategory == "ACCESORIOS") isSelected = (controller.selectedAccessoryColor == colorValue);
+          else if (selectedCategory == "BELLO FACIAL") isSelected = (controller.selectedFacialHairColor == colorValue);
+          else if (selectedCategory == "FONDO") isSelected = (controller.selectedBackgroundColor == colorValue);
+          else if (selectedCategory == "PELO") isSelected = (controller.selectedHairColor == colorValue);
+          else if (selectedCategory == "OJOS") isSelected = (controller.selectedEyeColor == colorValue);
+
+          return GestureDetector(
+            onTap: () {
+              if (selectedCategory == "ROPA") controller.clothingColor = colorValue;
+              else if (selectedCategory == "ACCESORIOS") controller.accessoryColor = colorValue;
+              else if (selectedCategory == "BELLO FACIAL") controller.facialHairColor = colorValue;
+              else if (selectedCategory == "FONDO") controller.backgroundColor = colorValue;
+              else if (selectedCategory == "PELO") controller.hairColor = colorValue;
+              else if (selectedCategory == "OJOS") controller.eyeColor = colorValue;
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: isSelected ? 48 : 40,
+              height: isSelected ? 48 : 40,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? Colors.white : Colors.transparent,
+                  width: 3,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(0.4),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  )
+                ],
+              ),
+              child: isSelected 
+                ? Icon(Icons.check, color: color.computeLuminance() > 0.5 ? Colors.black : Colors.white, size: 20)
+                : null,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+
+
+  Widget _buildComponentPreview(dynamic component) {
+    if (component is String && component.isNotEmpty) {
+      return SvgPicture.asset(
+        component,
+        width: 60,
+        height: 60,
+        fit: BoxFit.contain,
+      );
+    } else if (component is BackgroundShape) {
+      return Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade300,
+          shape: component == BackgroundShape.circle ? BoxShape.circle : BoxShape.rectangle,
+          borderRadius: component == BackgroundShape.roundedSquare ? BorderRadius.circular(12) : null,
+        ),
+      );
+    }
+    return const Icon(Icons.block, color: Colors.grey);
+  }
+
+  // ===========================================================================
+  // LOGIC & HELPERS
+  // ===========================================================================
+
+  Widget replaceColorOrReturn(bool shouldReplace, SvgPicture picture, Color? src, Color rep) {
+    if (!shouldReplace || rep == Colors.transparent) return picture;
+    
+    return ColorFiltered(
+      colorFilter: src != null
+          ? ColorFilter.matrix(<double>[
+              rep.red / src.red, 0, 0, 0, 0,
+              0, rep.green / src.green, 0, 0, 0,
+              0, 0, rep.blue / src.blue, 0, 0,
+              0, 0, 0, 1, 0,
+            ])
+          : ColorFilter.mode(rep, BlendMode.srcIn),
+      child: picture,
+    );
+  }
+
   String generateFileName() {
     final now = DateTime.now();
-    return "${now.year}${now.month}${now.day}${now.hour}${now.minute}${now.second}${now.millisecond}${now.microsecond}";
+    return "${now.year}${now.month}${now.day}${now.hour}${now.minute}${now.second}${now.millisecond}";
   }
 
-  /// function that saves the avatar to the application folder
   void _saveAvatarToAppFolder() async {
-    RenderRepaintBoundary boundary =
-        _avatarKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-    ui.Image image = await boundary.toImage(pixelRatio: 2.0);
-    ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-    Uint8List pngBytes = byteData!.buffer.asUint8List();
+    try {
+      RenderRepaintBoundary boundary = _avatarKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0); // Higher quality
+      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
 
-    // Save the image
-    final directory = await getApplicationDocumentsDirectory();
-    final file = File('${directory.path}/${generateFileName()}.png');
-    await file.writeAsBytes(pngBytes);
-  }
-
-  /// function that saves the avatar to the device gallery
-  void _saveAvatarToGallery() async {
-    RenderRepaintBoundary boundary =
-        _avatarKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-    ui.Image image = await boundary.toImage(pixelRatio: 2.0);
-    ByteData? byteData =
-        await (image.toByteData(format: ui.ImageByteFormat.png));
-    if (byteData != null) {
-      try {
-        await Gal.putImageBytes(byteData.buffer.asUint8List());
-        print("Image saved to gallery");
-      } catch (e) {
-        print("Error saving image: $e");
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/${generateFileName()}.png');
+      await file.writeAsBytes(pngBytes);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Avatar guardado en la app"), backgroundColor: Colors.green),
+        );
       }
+    } catch (e) {
+      debugPrint("Error saving: $e");
     }
   }
 
-  void _buildSaveAvatarOptions() async {
-    await showModalBottomSheet(
-        context: context,
-        builder: (context) {
-          return SizedBox(
-            height: 200,
-            child: Column(
-              children: [
-                ListTile(
-                  onTap: () {
-                    _saveAvatarToAppFolder();
-                    Get.back();
-                  },
-                  leading: const Icon(Icons.save_alt),
-                  title: const Text("Save to app folder"),
-                ),
-                ListTile(
-                  onTap: () {
-                    _saveAvatarToGallery();
-                    Get.back();
-                  },
-                  leading: const Icon(Icons.save),
-                  title: const Text("Save to gallery"),
-                ),
-              ],
-            ),
+  void _saveAvatarToGallery() async {
+    try {
+      RenderRepaintBoundary boundary = _avatarKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      
+      if (byteData != null) {
+        await Gal.putImageBytes(byteData.buffer.asUint8List());
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Avatar guardado en Galería"), backgroundColor: Colors.green),
           );
-        });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error saving to gallery: $e");
+    }
   }
 
-// ... dentro de AvatarMakerScreen.dart ...
+  void _buildSaveAvatarOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 10),
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+              const SizedBox(height: 20),
+              ListTile(
+                onTap: () {
+                  _saveAvatarToAppFolder();
+                  Navigator.pop(context);
+                },
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                  child: const Icon(Icons.folder_special, color: Colors.blue),
+                ),
+                title: const Text("Guardar en la App"),
+                subtitle: const Text("Para usarlo en tu perfil"),
+              ),
+              ListTile(
+                onTap: () {
+                  _saveAvatarToGallery();
+                  Navigator.pop(context);
+                },
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                  child: const Icon(Icons.photo_library, color: Colors.green),
+                ),
+                title: const Text("Guardar en Galería"),
+                subtitle: const Text("Descargar imagen PNG"),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      }
+    );
+  }
+
+  // ===========================================================================
+  // BUILD
+  // ===========================================================================
 
   @override
   Widget build(BuildContext context) {
     AvatarMakerController controller = Get.put(AvatarMakerController());
-
-    // Obtenemos el ancho de la pantalla actual (Ancho finito).
-    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+    // Ajustar altura del avatar basado en la pantalla disponible
+    final double avatarAreaHeight = screenHeight * 0.55; 
 
     return Scaffold(
-      backgroundColor: AppColorTheme.paleGrey,
-
-      floatingActionButton: FloatingActionButton(
-          backgroundColor: AppColorTheme.primaryColor,
-          onPressed: () {
-            controller.randomizeForInterval(1500);
-          },
-          child: const Icon(
-            Icons.casino,
-            color: Colors.white,
-          )),
-
-      // 1. Aplicar el Fix de Mouse Scroll (Web)
-      body: ScrollConfiguration(
-        behavior: WebScrollBehavior(),
-        // 2. Scroll Horizontal principal
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          // 3. Forzamos el ancho del contenido a ser al menos el de la pantalla.
-          // Esto resuelve el error "infinite width".
-          child: SizedBox(
-            width: screenWidth,
-            // 4. Usamos LayoutBuilder para obtener la altura (Height) disponible.
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Altura segura para el avatar
-                double avatarAreaHeight = constraints.maxHeight * 0.45;
-                if (avatarAreaHeight < 320) avatarAreaHeight = 320;
-
-                // 5. Scroll Vertical interno (solo si es necesario)
-                return SingleChildScrollView(
-                  child: ConstrainedBox(
-                    // Aseguramos que el contenido vertical siempre ocupe la altura mínima de la pantalla
-                    constraints:
-                        BoxConstraints(minHeight: constraints.maxHeight),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // --- ZONA SUPERIOR (AVATAR) ---
-                        SizedBox(
-                          height: avatarAreaHeight,
-                          width: double
-                              .infinity, // Seguro, ya que su padre SizedBox tiene ancho definido
-                          child: Container(
-                              decoration: const BoxDecoration(
-                                  color: AppColorTheme.paleGrey,
-                                  borderRadius: BorderRadius.only(
-                                      bottomLeft: Radius.circular(24),
-                                      bottomRight: Radius.circular(24))),
-                              child: Center(
-                                child: SizedBox(
-                                  width: 180,
-                                  height: 180,
-                                  child: RepaintBoundary(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment(0, -0.5),
+            radius: 1.5,
+            colors: [_bgGradientStart, _bgGradientEnd],
+          ),
+        ),
+        child: SafeArea(
+          bottom: false, // Permitir que el sheet baje hasta el fondo
+          child: Stack(
+            children: [
+              // 1. HEADER & AVATAR (Background Layer)
+              Column(
+                children: [
+                  _buildHeader(),
+                  SizedBox(
+                    height: avatarAreaHeight,
+                    width: double.infinity,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 80), // Padding extra abajo para el sheet inicial
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final double size = constraints.biggest.shortestSide * 0.9;
+                          return Center(
+                            child: SizedBox(
+                              width: size,
+                              height: size,
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  // Glow effect
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.white.withOpacity(0.5),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: _brandPurple.withOpacity(0.2),
+                                          blurRadius: 40,
+                                          spreadRadius: 10,
+                                        )
+                                      ]
+                                    ),
+                                  ),
+                                  // Avatar
+                                  FittedBox(
+                                    fit: BoxFit.contain,
+                                    child: RepaintBoundary(
                                       key: _avatarKey,
-                                      child: GetBuilder<AvatarMakerController>(
-                                          id: "avatar_background",
-                                          builder: (controller) {
-                                            return Container(
-                                              clipBehavior: Clip.hardEdge,
-                                              decoration: BoxDecoration(
-                                                  color: Color(controller
-                                                      .selectedBackgroundColor),
-                                                  shape: controller
-                                                              .selectedBackgroundShape ==
-                                                          BackgroundShape.circle
-                                                      ? BoxShape.circle
-                                                      : BoxShape.rectangle,
-                                                  borderRadius: controller
-                                                              .selectedBackgroundShape ==
-                                                          BackgroundShape
-                                                              .roundedSquare
-                                                      ? const BorderRadius.all(
-                                                          Radius.circular(16))
-                                                      : null),
-                                              child: Stack(
-                                                children: [
-                                                  // --- BODY ---
-                                                  GetBuilder<
-                                                          AvatarMakerController>(
-                                                      id: "avatar_body",
-                                                      builder: (controller) {
-                                                        return Positioned.fill(
-                                                            bottom: -30,
-                                                            child: Align(
-                                                                alignment: Alignment
-                                                                    .bottomCenter,
-                                                                child: SvgPicture.asset(
-                                                                    bodyAssets[
-                                                                        controller
-                                                                            .selectedBody],
-                                                                    width: 160,
-                                                                    height:
-                                                                        160)));
-                                                      }),
-                                                  // --- CLOTHING ---
-                                                  GetBuilder<
-                                                          AvatarMakerController>(
-                                                      id: "avatar_clothing",
-                                                      builder: (controller) {
-                                                        Color src = const Color(
-                                                            0xFF80C43B);
-                                                        Color rep = controller
-                                                                    .selectedClothingColor ==
-                                                                0
-                                                            ? src
-                                                            : Color(controller
-                                                                .selectedClothingColor);
-                                                        return Positioned.fill(
-                                                            bottom: -30,
-                                                            child: Align(
-                                                                alignment: Alignment
-                                                                    .bottomCenter,
-                                                                child: replaceColorOrReturn(
-                                                                    category[controller
-                                                                            .selectedCategory] ==
-                                                                        "ROPA",
-                                                                    SvgPicture.asset(
-                                                                        clothingAssets[controller
-                                                                            .selectedClothing],
-                                                                        width:
-                                                                            160,
-                                                                        height:
-                                                                            70),
-                                                                    src,
-                                                                    rep)));
-                                                      }),
-                                                  // --- EYES ---
-                                                  GetBuilder<
-                                                          AvatarMakerController>(
-                                                      id: "avatar_eyes",
-                                                      builder: (controller) {
-                                                        return Positioned.fill(
-                                                            top: 90,
-                                                            child: Align(
-                                                                alignment:
-                                                                    Alignment
-                                                                        .topCenter,
-                                                                child: SvgPicture.asset(
-                                                                    eyesAssets[
-                                                                        controller
-                                                                            .selectedEyes],
-                                                                    width: 50,
-                                                                    height:
-                                                                        20)));
-                                                      }),
-                                                  // --- NOSE ---
-                                                  GetBuilder<
-                                                          AvatarMakerController>(
-                                                      id: "avatar_nose",
-                                                      builder: (controller) {
-                                                        return Positioned.fill(
-                                                            top: 90,
-                                                            child: Align(
-                                                                alignment:
-                                                                    Alignment
-                                                                        .topCenter,
-                                                                child: SvgPicture.asset(
-                                                                    noseAssets[
-                                                                        controller
-                                                                            .selectedNose],
-                                                                    width: 20,
-                                                                    height:
-                                                                        30)));
-                                                      }),
-                                                  // --- MOUTH ---
-                                                  GetBuilder<
-                                                          AvatarMakerController>(
-                                                      id: "avatar_mouth",
-                                                      builder: (controller) {
-                                                        return Positioned.fill(
-                                                            top: 115,
-                                                            child: Align(
-                                                                alignment:
-                                                                    Alignment
-                                                                        .topCenter,
-                                                                child: SvgPicture.asset(
-                                                                    mouthAssets[
-                                                                        controller
-                                                                            .selectedMouth],
-                                                                    width: 40,
-                                                                    height:
-                                                                        30)));
-                                                      }),
-                                                  // --- HAIR ---
-                                                  GetBuilder<
-                                                          AvatarMakerController>(
-                                                      id: "avatar_hair",
-                                                      builder: (controller) {
-                                                        return hatAssets[controller
-                                                                    .selectedHat] ==
-                                                                ""
-                                                            ? Positioned(
-                                                                top: 15,
-                                                                child: Align(
-                                                                    alignment:
-                                                                        Alignment
-                                                                            .topCenter,
-                                                                    child: SvgPicture.asset(
-                                                                        controller.selectedHairType == HairType.short
-                                                                            ? shortHairAssets[controller
-                                                                                .selectedShortHair]
-                                                                            : longHairAssets[controller
-                                                                                .selectedLongHair],
-                                                                        width:
-                                                                            180,
-                                                                        height:
-                                                                            195)))
-                                                            : const SizedBox
-                                                                .shrink();
-                                                      }),
-                                                  // --- FACIAL HAIR ---
-                                                  GetBuilder<
-                                                          AvatarMakerController>(
-                                                      id: "avatar_facial_hair",
-                                                      builder: (controller) {
-                                                        final path =
-                                                            facialHairAssets[
-                                                                controller
-                                                                    .selectedFacialHair];
-                                                        Color rep = controller
-                                                                    .selectedFacialHairColor ==
-                                                                0
-                                                            ? Colors.transparent
-                                                            : Color(controller
-                                                                .selectedFacialHairColor);
+                                      child: _buildAvatarStack(controller),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+                      ),
+                    ),
+                  ),
+                ],
+              ),
 
-                                                        return Positioned.fill(
-                                                            top: 105,
-                                                            child: Align(
-                                                                alignment:
-                                                                    Alignment
-                                                                        .topCenter,
-                                                                child: path != ""
-                                                                    ? replaceColorOrReturn(
-                                                                        true,
-                                                                        SvgPicture.asset(
-                                                                            path,
-                                                                            width:
-                                                                                90,
-                                                                            height:
-                                                                                80),
-                                                                        null,
-                                                                        rep)
-                                                                    : const SizedBox
-                                                                        .shrink()));
-                                                      }),
-                                                  // --- ACCESSORY ---
-                                                  GetBuilder<
-                                                          AvatarMakerController>(
-                                                      id: "avatar_accessory",
-                                                      builder: (controller) {
-                                                        final path =
-                                                            accessoryAssets[
-                                                                controller
-                                                                    .selectedAccessory];
-                                                        Color rep = controller
-                                                                    .selectedAccessoryColor ==
-                                                                0
-                                                            ? Colors.transparent
-                                                            : Color(controller
-                                                                .selectedAccessoryColor);
-                                                        return Positioned.fill(
-                                                            top: 81,
-                                                            child: Align(
-                                                                alignment:
-                                                                    Alignment
-                                                                        .topCenter,
-                                                                child: path != ""
-                                                                    ? replaceColorOrReturn(
-                                                                        category[controller.selectedCategory] ==
-                                                                            "ACCESORIOS",
-                                                                        SvgPicture.asset(
-                                                                            path,
-                                                                            width:
-                                                                                80,
-                                                                            height:
-                                                                                40),
-                                                                        null,
-                                                                        rep)
-                                                                    : const SizedBox
-                                                                        .shrink()));
-                                                      }),
-                                                  // --- HAT ---
-                                                  GetBuilder<
-                                                          AvatarMakerController>(
-                                                      id: "avatar_hat",
-                                                      builder: (controller) {
-                                                        final path = hatAssets[
-                                                            controller
-                                                                .selectedHat];
-                                                        return Positioned(
-                                                            top: 15,
-                                                            child: Align(
-                                                                alignment:
-                                                                    Alignment
-                                                                        .topCenter,
-                                                                child: path !=
-                                                                        ""
-                                                                    ? SvgPicture.asset(
-                                                                        path,
-                                                                        width:
-                                                                            180,
-                                                                        height:
-                                                                            195)
-                                                                    : const SizedBox
-                                                                        .shrink()));
-                                                      }),
-                                                ],
-                                              ),
-                                            );
-                                          })),
+              // 2. CONTROLS (Draggable Sheet)
+              DraggableScrollableSheet(
+                initialChildSize: 0.45,
+                minChildSize: 0.25,
+                maxChildSize: 0.9,
+                snap: true,
+                snapSizes: const [0.25, 0.45, 0.9],
+                builder: (context, scrollController) {
+                  return ScrollConfiguration(
+                    behavior: ScrollConfiguration.of(context).copyWith(
+                      dragDevices: {
+                        PointerDeviceKind.touch,
+                        PointerDeviceKind.mouse,
+                      },
+                    ),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 20,
+                            offset: Offset(0, -5),
+                          )
+                        ]
+                      ),
+                      child: CustomScrollView(
+                        controller: scrollController,
+                        slivers: [
+                          // Handle - Larger drag area
+                          SliverToBoxAdapter(
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.translucent,
+                              child: Center(
+                                child: Container(
+                                  margin: const EdgeInsets.symmetric(vertical: 12),
+                                  padding: const EdgeInsets.symmetric(vertical: 8), // Larger hit area
+                                  child: Container(
+                                    width: 60, 
+                                    height: 5, 
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[400], 
+                                      borderRadius: BorderRadius.circular(2.5)
+                                    ),
+                                  ),
                                 ),
-                              )),
+                              ),
+                            ),
+                          ),
+                        
+                        // Categories
+                        SliverToBoxAdapter(
+                          child: GetBuilder<AvatarMakerController>(
+                            id: "avatar_category",
+                            builder: (ctrl) => _buildCategoryTabs(ctrl)
+                          ),
                         ),
 
-                        // --- ZONA INFERIOR (CONTROLES) ---
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            categoryList(),
-                            Container(
-                              decoration: const BoxDecoration(
-                                  color: AppColorTheme.white,
-                                  borderRadius: BorderRadius.only(
-                                      topLeft: Radius.circular(16),
-                                      topRight: Radius.circular(16))),
-                              padding: const EdgeInsets.symmetric(vertical: 32),
-                              child: Column(children: [
-                                colorList(),
-                                GetBuilder<AvatarMakerController>(
-                                    id: "avatar_category",
-                                    builder: (controller) {
-                                      switch (category[
-                                          controller.selectedCategory]) {
-                                        case "FONDO":
-                                          return componentList(
-                                              context,
-                                              backgroundAssets,
-                                              "avatar_background_shape",
-                                              (index) =>
-                                                  controller.backgroundShape =
-                                                      backgroundAssets[index],
-                                              (index) =>
-                                                  controller
-                                                      .selectedBackgroundShape ==
-                                                  backgroundAssets[index]);
-                                        case "CUERPO":
-                                          return componentList(
-                                              context,
-                                              bodyAssets,
-                                              "avatar_body",
-                                              (index) =>
-                                                  controller.body = index,
-                                              (index) =>
-                                                  controller.selectedBody ==
-                                                  index);
-                                        case "OJOS":
-                                          return componentList(
-                                              context,
-                                              eyesAssets,
-                                              "avatar_eyes",
-                                              (index) =>
-                                                  controller.eyes = index,
-                                              (index) =>
-                                                  controller.selectedEyes ==
-                                                  index);
-                                        case "NARIZ":
-                                          return componentList(
-                                              context,
-                                              noseAssets,
-                                              "avatar_nose",
-                                              (index) =>
-                                                  controller.nose = index,
-                                              (index) =>
-                                                  controller.selectedNose ==
-                                                  index);
-                                        case "BOCA":
-                                          return componentList(
-                                              context,
-                                              mouthAssets,
-                                              "avatar_mouth",
-                                              (index) =>
-                                                  controller.mouth = index,
-                                              (index) =>
-                                                  controller.selectedMouth ==
-                                                  index);
-                                        case "PELO CORTO":
-                                          return componentList(
-                                              context,
-                                              shortHairAssets,
-                                              "avatar_hair",
-                                              (index) =>
-                                                  controller.shortHair = index,
-                                              (index) =>
-                                                  controller
-                                                      .selectedShortHair ==
-                                                  index);
-                                        case "PELO LARGO":
-                                          return componentList(
-                                              context,
-                                              longHairAssets,
-                                              "avatar_hair",
-                                              (index) =>
-                                                  controller.longHair = index,
-                                              (index) =>
-                                                  controller.selectedLongHair ==
-                                                  index);
-                                        case "BELLO FACIAL":
-                                          return componentList(
-                                              context,
-                                              facialHairAssets,
-                                              "avatar_facial_hair",
-                                              (index) =>
-                                                  controller.facialHair = index,
-                                              (index) =>
-                                                  controller
-                                                      .selectedFacialHair ==
-                                                  index);
-                                        case "ROPA":
-                                          return componentList(
-                                              context,
-                                              clothingAssets,
-                                              "avatar_clothing",
-                                              (index) =>
-                                                  controller.clothing = index,
-                                              (index) =>
-                                                  controller.selectedClothing ==
-                                                  index);
-                                        case "GORROS":
-                                          return componentList(
-                                              context,
-                                              hatAssets,
-                                              "avatar_hat",
-                                              (index) => controller.hat = index,
-                                              (index) =>
-                                                  controller.selectedHat ==
-                                                  index);
-                                        case "ACCESORIOS":
-                                          return componentList(
-                                              context,
-                                              accessoryAssets,
-                                              "avatar_accessory",
-                                              (index) =>
-                                                  controller.accessory = index,
-                                              (index) =>
-                                                  controller
-                                                      .selectedAccessory ==
-                                                  index);
-                                        default:
-                                          return const SizedBox.shrink();
-                                      }
-                                    }),
-                                const SizedBox(height: 36)
-                              ]),
-                            )
-                          ],
+                        // Colors (Optional)
+                        SliverToBoxAdapter(
+                          child: GetBuilder<AvatarMakerController>(
+                            id: "avatar_category",
+                            builder: (ctrl) => _buildColorSelector(ctrl)
+                          ),
                         ),
+
+                        // Divider
+                        const SliverToBoxAdapter(child: Divider(height: 1)),
+
+                        // Components Grid (Sliver)
+                        GetBuilder<AvatarMakerController>(
+                          id: "avatar_category",
+                          builder: (ctrl) {
+                            return _buildComponentsForCategory(ctrl);
+                          }
+                        ),
+                        
+                        // Bottom Padding for FAB
+                        const SliverToBoxAdapter(child: SizedBox(height: 80)),
                       ],
+                    ),
+                  ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => controller.randomizeForInterval(1000),
+        backgroundColor: _brandPurple,
+        elevation: 4,
+        child: const Icon(Icons.casino_rounded, color: Colors.white),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  Widget _buildComponentsForCategory(AvatarMakerController controller) {
+    final cat = category[controller.selectedCategory];
+    
+    switch (cat) {
+      case "FONDO":
+        return _buildComponentGrid(context, backgroundAssets, "avatar_background_shape", 
+          (i) => controller.backgroundShape = backgroundAssets[i], 
+          (i) => controller.selectedBackgroundShape == backgroundAssets[i]);
+      case "CUERPO":
+        return _buildComponentGrid(context, bodyAssets, "avatar_body", 
+          (i) => controller.body = i, 
+          (i) => controller.selectedBody == i);
+      case "OJOS":
+        return _buildComponentGrid(context, eyesAssets, "avatar_eyes", 
+          (i) => controller.eyes = i, 
+          (i) => controller.selectedEyes == i);
+      case "NARIZ":
+        return _buildComponentGrid(context, noseAssets, "avatar_nose", 
+          (i) => controller.nose = i, 
+          (i) => controller.selectedNose == i);
+      case "BOCA":
+        return _buildComponentGrid(context, mouthAssets, "avatar_mouth", 
+          (i) => controller.mouth = i, 
+          (i) => controller.selectedMouth == i);
+      case "PELO":
+        return _buildComponentGrid(context, hairAssets, "avatar_hair", 
+          (i) => controller.hair = i, 
+          (i) => controller.selectedHair == i);
+      case "BELLO FACIAL":
+        return _buildComponentGrid(context, facialHairAssets, "avatar_facial_hair", 
+          (i) => controller.facialHair = i, 
+          (i) => controller.selectedFacialHair == i);
+      case "ROPA":
+        return _buildComponentGrid(context, clothingAssets, "avatar_clothing", 
+          (i) => controller.clothing = i, 
+          (i) => controller.selectedClothing == i);
+      case "GORROS":
+        return _buildComponentGrid(context, hatAssets, "avatar_hat", 
+          (i) => controller.hat = i, 
+          (i) => controller.selectedHat == i);
+      case "ACCESORIOS":
+        return _buildComponentGrid(context, accessoryAssets, "avatar_accessory", 
+          (i) => controller.accessory = i, 
+          (i) => controller.selectedAccessory == i);
+      default:
+        return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+  }
+
+  Widget _buildComponentGrid(
+    BuildContext context,
+    List<dynamic> components,
+    String notifyId,
+    void Function(int) onTap,
+    bool Function(int) isSelected
+  ) {
+    return GetBuilder<AvatarMakerController>(
+      id: notifyId,
+      builder: (controller) {
+        return SliverPadding(
+          padding: const EdgeInsets.all(20),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 100, // Responsive grid
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 1.0,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final component = components[index];
+                final selected = isSelected(index);
+
+                return GestureDetector(
+                  onTap: () => onTap(index),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: selected ? _brandPurple : Colors.grey.shade200,
+                        width: selected ? 3 : 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(13),
+                      child: Stack(
+                        children: [
+                          Center(child: _buildComponentPreview(component)),
+                          if (selected)
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: _brandPurple,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.check, color: Colors.white, size: 12),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 );
               },
+              childCount: components.length,
             ),
           ),
-        ),
+        );
+      }
+    );
+  }
+
+  Widget _buildAvatarStack(AvatarMakerController controller) {
+    return SizedBox(
+      width: 200,
+      height: 200,
+      child: GetBuilder<AvatarMakerController>(
+        id: "avatar_background",
+        builder: (controller) {
+          return Container(
+            clipBehavior: Clip.hardEdge,
+            decoration: BoxDecoration(
+              color: Color(controller.selectedBackgroundColor),
+              shape: controller.selectedBackgroundShape == BackgroundShape.circle
+                  ? BoxShape.circle
+                  : BoxShape.rectangle,
+              borderRadius: controller.selectedBackgroundShape == BackgroundShape.roundedSquare
+                  ? BorderRadius.circular(32)
+                  : null,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                )
+              ]
+            ),
+            child: Stack(
+              children: [
+                // BODY
+                GetBuilder<AvatarMakerController>(
+                  id: "avatar_body",
+                  builder: (c) => Positioned.fill(
+                    bottom: -30,
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: SvgPicture.asset(bodyAssets[c.selectedBody], width: 180, height: 180)
+                    )
+                  )
+                ),
+                // CLOTHING
+                GetBuilder<AvatarMakerController>(
+                  id: "avatar_clothing",
+                  builder: (c) {
+                    Color src = const Color(0xFF80C43B);
+                    Color rep = c.selectedClothingColor == 0 ? src : Color(c.selectedClothingColor);
+                    return Positioned.fill(
+                      bottom: -30,
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: replaceColorOrReturn(
+                          category[c.selectedCategory] == "ROPA",
+                          SvgPicture.asset(clothingAssets[c.selectedClothing], width: 180, height: 80),
+                          src, rep
+                        )
+                      )
+                    );
+                  }
+                ),
+                // EYES
+                GetBuilder<AvatarMakerController>(
+                  id: "avatar_eyes",
+                  builder: (c) {
+                    Color eyeRep = c.selectedEyeColor == 0 ? Colors.transparent : Color(c.selectedEyeColor);
+                    return Positioned.fill(
+                      top: 100,
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: replaceColorOrReturn(
+                          eyeRep != Colors.transparent,
+                          SvgPicture.asset(eyesAssets[c.selectedEyes], width: 55, height: 22),
+                          null, eyeRep
+                        )
+                      )
+                    );
+                  }
+                ),
+                // NOSE
+                GetBuilder<AvatarMakerController>(
+                  id: "avatar_nose",
+                  builder: (c) => Positioned.fill(
+                    top: 100,
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: SvgPicture.asset(noseAssets[c.selectedNose], width: 22, height: 33)
+                    )
+                  )
+                ),
+                // MOUTH
+                GetBuilder<AvatarMakerController>(
+                  id: "avatar_mouth",
+                  builder: (c) => Positioned.fill(
+                    top: 128,
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: SvgPicture.asset(mouthAssets[c.selectedMouth], width: 44, height: 33)
+                    )
+                  )
+                ),
+                // HAIR
+                GetBuilder<AvatarMakerController>(
+                  id: "avatar_hair",
+                  builder: (c) {
+                    if (hatAssets[c.selectedHat] != "") return const SizedBox.shrink();
+                    Color hairRep = c.selectedHairColor == 0 ? Colors.transparent : Color(c.selectedHairColor);
+                    return Positioned(
+                      top: 16,
+                      left: 0, right: 0,
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: replaceColorOrReturn(
+                          hairRep != Colors.transparent,
+                          SvgPicture.asset(
+                            hairAssets[c.selectedHair],
+                            width: 200, height: 215
+                          ),
+                          null, hairRep
+                        )
+                      )
+                    );
+                  }
+                ),
+                // FACIAL HAIR
+                GetBuilder<AvatarMakerController>(
+                  id: "avatar_facial_hair",
+                  builder: (c) {
+                    final path = facialHairAssets[c.selectedFacialHair];
+                    Color rep = c.selectedFacialHairColor == 0 ? Colors.transparent : Color(c.selectedFacialHairColor);
+                    if (path == "") return const SizedBox.shrink();
+                    return Positioned.fill(
+                      top: 116,
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: replaceColorOrReturn(true, SvgPicture.asset(path, width: 100, height: 90), null, rep)
+                      )
+                    );
+                  }
+                ),
+                // ACCESSORY
+                GetBuilder<AvatarMakerController>(
+                  id: "avatar_accessory",
+                  builder: (c) {
+                    final path = accessoryAssets[c.selectedAccessory];
+                    Color rep = c.selectedAccessoryColor == 0 ? Colors.transparent : Color(c.selectedAccessoryColor);
+                    if (path == "") return const SizedBox.shrink();
+                    return Positioned.fill(
+                      top: 90,
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: replaceColorOrReturn(
+                          category[c.selectedCategory] == "ACCESORIOS",
+                          SvgPicture.asset(path, width: 90, height: 45),
+                          null, rep
+                        )
+                      )
+                    );
+                  }
+                ),
+                // HAT
+                GetBuilder<AvatarMakerController>(
+                  id: "avatar_hat",
+                  builder: (c) {
+                    final path = hatAssets[c.selectedHat];
+                    if (path == "") return const SizedBox.shrink();
+                    return Positioned(
+                      top: 16,
+                      left: 0, right: 0,
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: SvgPicture.asset(path, width: 200, height: 215)
+                      )
+                    );
+                  }
+                ),
+              ],
+            ),
+          );
+        }
       ),
     );
   }
-}
-
-class WebScrollBehavior extends ScrollBehavior {
-  @override
-  Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.stylus,
-        PointerDeviceKind.trackpad,
-      };
 }

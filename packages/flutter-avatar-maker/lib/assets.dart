@@ -6,8 +6,7 @@ const category = [
   "OJOS",
   "NARIZ",
   "BOCA",
-  "PELO CORTO",
-  "PELO LARGO",
+  "PELO",
   "BELLO FACIAL",
   "ROPA",
   "GORROS",
@@ -52,6 +51,28 @@ const facialHairColor = [
   0xFFA0522D, // (Sienna)
   0xFF928770, // (Taupe)
   0xFF604439, // (Dark Taupe)
+];
+
+/// Colors for hair
+const hairColor = [
+  0xFF59332A, // Brown
+  0xFF726658, // Dark Brown
+  0xFF4E4E50, // Charcoal
+  0xFFFFCA00, // Blonde
+  0xFFFB344F, // Red
+  0xFF434343, // Gray
+  0xFF000000, // Black
+  0xFFAF8662, // Light Brown
+];
+
+/// Colors for eyes  
+const eyeColor = [
+  0xFF4E4E50, // Dark Gray/Black
+  0xFF5C4033, // Brown
+  0xFF2384F5, // Blue
+  0xFF80C43B, // Green
+  0xFF888888, // Gray
+  0xFFAF8662, // Hazel
 ];
 
 /// Colors that will be used in picking color for the avatar background
@@ -177,4 +198,11 @@ const hatAssets = [
 
 const backgroundAssets = [
   BackgroundShape.circle,
+  BackgroundShape.roundedSquare,
+];
+
+/// Combined hair assets (short + long)
+const hairAssets = [
+  ...shortHairAssets,
+  ...longHairAssets,
 ];

@@ -128,12 +128,11 @@ class AvatarHelper {
     final int clothingColorInt = toInt(config['clothingColor']);
     final int accessoryColorInt = toInt(config['accessoryColor']);
     final int facialHairColorInt = toInt(config['facialHairColor']);
+    final int hairColorInt = toInt(config['hairColor']);
+    final int eyeColorInt = toInt(config['eyeColor']);
     
-    // ... Lógica de Pelo ...
-    final String hairTypeStr = config['hairType'] ?? 'short';
-    final bool isShortHair = hairTypeStr.contains('short');
-    final int shortHairIndex = safeIndex(toInt(config['shortHair']), shortHairAssets);
-    final int longHairIndex = safeIndex(toInt(config['longHair']), longHairAssets);
+    // Lógica de Pelo (nuevo sistema unificado)
+    final int hairIndex = safeIndex(toInt(config['hair']), hairAssets);
 
     // Variables booleanas finales
     final bool hasHat = hatAssets[hatIndex] != "";
@@ -176,7 +175,12 @@ class AvatarHelper {
             top: 90,
             child: Align(
               alignment: Alignment.topCenter,
-              child: SvgPicture.asset(eyesAssets[eyesIndex], width: 50, height: 20),
+              child: _replaceColorOrReturn(
+                eyeColorInt != 0,
+                SvgPicture.asset(eyesAssets[eyesIndex], width: 50, height: 20),
+                null,
+                eyeColorInt == 0 ? Colors.transparent : Color(eyeColorInt),
+              ),
             ),
           ),
 
@@ -206,10 +210,15 @@ class AvatarHelper {
               right: 0,
               child: Align(
                 alignment: Alignment.topCenter,
-                child: SvgPicture.asset(
-                  isShortHair ? shortHairAssets[shortHairIndex] : longHairAssets[longHairIndex],
-                  width: 180,
-                  height: 195,
+                child: _replaceColorOrReturn(
+                  hairColorInt != 0,
+                  SvgPicture.asset(
+                    hairAssets[hairIndex],
+                    width: 180,
+                    height: 195,
+                  ),
+                  null,
+                  hairColorInt == 0 ? Colors.transparent : Color(hairColorInt),
                 ),
               ),
             ),

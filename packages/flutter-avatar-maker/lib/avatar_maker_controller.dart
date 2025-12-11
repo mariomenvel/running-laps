@@ -4,11 +4,6 @@ import 'package:flutter_avatar_maker/assets.dart' as assets;
 import 'package:flutter_avatar_maker/shared/background_shape.dart';
 import 'package:get/get.dart';
 
-enum HairType {
-  short,
-  long,
-}
-
 class AvatarMakerController extends GetxController {
   final _selectedCategory = 0.obs;
   get selectedCategory => _selectedCategory.value;
@@ -31,25 +26,18 @@ class AvatarMakerController extends GetxController {
     update(["avatar_body"]);
   }
 
-  final _selectedHairType = HairType.short.obs;
-  get selectedHairType => _selectedHairType.value;
-  set hairType(HairType value) {
-    _selectedHairType.value = value;
-    update(["avatar_hair_type"]);
-  }
-
-  final _selectedShortHair = 0.obs;
-  get selectedShortHair => _selectedShortHair.value;
-  set shortHair(int value) {
-    _selectedShortHair.value = value;
+  final _selectedHair = 0.obs;
+  get selectedHair => _selectedHair.value;
+  set hair(int value) {
+    _selectedHair.value = value;
     update(["avatar_hair"]);
   }
 
-  final _selectedLongHair = 0.obs;
-  get selectedLongHair => _selectedLongHair.value;
-  set longHair(int value) {
-    _selectedLongHair.value = value;
-    update(["avatar_hair"]);
+  final _selectedHairColor = 0xFF59332A.obs; // Brown
+  get selectedHairColor => _selectedHairColor.value;
+  set hairColor(int value) {
+    _selectedHairColor.value = value;
+    update(["avatar_hair", "avatar_category"]);
   }
 
   final _selectedEyes = 0.obs;
@@ -57,6 +45,13 @@ class AvatarMakerController extends GetxController {
   set eyes(int value) {
     _selectedEyes.value = value;
     update(["avatar_eyes"]);
+  }
+
+  final _selectedEyeColor = 0xFF4E4E50.obs; // Dark Gray/Black
+  get selectedEyeColor => _selectedEyeColor.value;
+  set eyeColor(int value) {
+    _selectedEyeColor.value = value;
+    update(["avatar_eyes", "avatar_category"]);
   }
 
   final _selectedNose = 0.obs;
@@ -84,7 +79,7 @@ class AvatarMakerController extends GetxController {
   get selectedFacialHairColor => _selectedFacialHairColor.value;
   set facialHairColor(int value) {
     _selectedFacialHairColor.value = value;
-    update(["avatar_facial_hair"]);
+    update(["avatar_facial_hair", "avatar_category"]);
   }
 
   final _selectedHat = 0.obs;
@@ -107,7 +102,7 @@ class AvatarMakerController extends GetxController {
   get selectedClothingColor => _selectedClothingColor.value;
   set clothingColor(int value) {
     _selectedClothingColor.value = value;
-    update(["avatar_clothing"]);
+    update(["avatar_clothing", "avatar_category"]);
   }
 
   final _selectedAccessory = 0.obs;
@@ -121,14 +116,14 @@ class AvatarMakerController extends GetxController {
   get selectedAccessoryColor => _selectedAccessoryColor.value;
   set accessoryColor(int value) {
     _selectedAccessoryColor.value = value;
-    update(["avatar_accessory"]);
+    update(["avatar_accessory", "avatar_category"]);
   }
 
   final _selectedBackgroundColor = 0.obs;
   get selectedBackgroundColor => _selectedBackgroundColor.value;
   set backgroundColor(int value) {
     _selectedBackgroundColor.value = value;
-    update(["avatar_background_color", "avatar_background"]);
+    update(["avatar_background_color", "avatar_background", "avatar_category"]);
   }
 
   final _selectedBackgroundShape = BackgroundShape.circle.obs;
@@ -155,24 +150,23 @@ class AvatarMakerController extends GetxController {
     }
   }
 
-  void randomize() {
+ void randomize() {
     body = _randomInt(0, assets.bodyAssets.length - 1);
-    hairType = _randomInt(0, 1) == 0 ? HairType.short : HairType.long;
-    if (selectedHairType == HairType.short) {
-      shortHair = _randomInt(0, assets.shortHairAssets.length - 1);
-    } else {
-      longHair = _randomInt(0, assets.longHairAssets.length - 1);
-    }
+    hair = _randomInt(0, assets.hairAssets.length - 1);
+    hairColor = assets.hairColor[_randomInt(0, assets.hairColor.length - 1)];
     eyes = _randomInt(0, assets.eyesAssets.length - 1);
+    eyeColor = assets.eyeColor[_randomInt(0, assets.eyeColor.length - 1)];
     nose = _randomInt(0, assets.noseAssets.length - 1);
     mouth = _randomInt(0, assets.mouthAssets.length - 1);
     facialHair = _randomInt(0, assets.facialHairAssets.length - 1);
-    facialHairColor = _randomInt(0, assets.facialHairColor.length - 1);
+    facialHairColor = assets.facialHairColor[_randomInt(0, assets.facialHairColor.length - 1)];
     hat = _randomInt(0, assets.hatAssets.length - 1);
     clothing = _randomInt(0, assets.clothingAssets.length - 1);
-    clothingColor = _randomInt(0, assets.clothingColor.length - 1);
+    clothingColor = assets.clothingColor[_randomInt(0, assets.clothingColor.length - 1)];
     accessory = _randomInt(0, assets.accessoryAssets.length - 1);
-    accessoryColor = _randomInt(0, assets.accessoryColor.length - 1);
+    accessoryColor = assets.accessoryColor[_randomInt(0, assets.accessoryColor.length - 1)];
+    backgroundColor = assets.backgroundColor[_randomInt(0, assets.backgroundColor.length - 1)];
+    backgroundShape = assets.backgroundAssets[_randomInt(0, assets.backgroundAssets.length - 1)];
     update();
   }
 
@@ -186,10 +180,10 @@ class AvatarMakerController extends GetxController {
   Map<String, dynamic> toJson() {
     return {
       'body': _selectedBody.value,
-      'hairType': _selectedHairType.value.name, // Guardamos el enum como string
-      'shortHair': _selectedShortHair.value,
-      'longHair': _selectedLongHair.value,
+      'hair': _selectedHair.value,
+      'hairColor': _selectedHairColor.value,
       'eyes': _selectedEyes.value,
+      'eyeColor': _selectedEyeColor.value,
       'nose': _selectedNose.value,
       'mouth': _selectedMouth.value,
       'facialHair': _selectedFacialHair.value,
@@ -200,26 +194,17 @@ class AvatarMakerController extends GetxController {
       'accessory': _selectedAccessory.value,
       'accessoryColor': _selectedAccessoryColor.value,
       'backgroundColor': _selectedBackgroundColor.value,
-      'backgroundShape':
-          _selectedBackgroundShape.value.name, // Guardamos el enum como string
+      'backgroundShape': _selectedBackgroundShape.value.name,
     };
   }
 
   /// Método para cargar el estado del avatar desde un Mapa (desde JSON/Firebase).
   void updateFromJson(Map<String, dynamic> json) {
-    // Usamos los setters (ej. 'body = ...') para que la UI se actualice
-
     body = json['body'] ?? 0;
-
-    String hairTypeString = json['hairType'] ?? HairType.short.name;
-    hairType = HairType.values.firstWhere(
-      (e) => e.name == hairTypeString,
-      orElse: () => HairType.short,
-    );
-
-    shortHair = json['shortHair'] ?? 0;
-    longHair = json['longHair'] ?? 0;
+    hair = json['hair'] ?? 0;
+    hairColor = json['hairColor'] ?? 0;
     eyes = json['eyes'] ?? 0;
+    eyeColor = json['eyeColor'] ?? 0;
     nose = json['nose'] ?? 0;
     mouth = json['mouth'] ?? 0;
     facialHair = json['facialHair'] ?? 0;
