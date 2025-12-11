@@ -147,7 +147,46 @@ class GroupDetailRepository {
     }
   }
 
-  // --- 5. GENERADOR DE DATOS (SEEDING) ---
+  // --- 5. LEADERBOARD RETO ---
+  Future<List<GroupMemberStats>> fetchChallengeLeaderboard(List<String> uids, DateTime start, DateTime end) async {
+     List<Future<GroupMemberStats?>> futures = [];
+     
+     for (String uid in uids) {
+       futures.add(_getChallengeUserStat(uid, start, end));
+     }
+     
+     final results = await Future.wait(futures);
+     final validStats = results.whereType<GroupMemberStats>().toList();
+     
+     // Ordenar por mayor distancia
+     validStats.sort((a, b) => b.totalKm.compareTo(a.totalKm));
+     return validStats;
+  }
+
+  Future<GroupMemberStats?> _getChallengeUserStat(String uid, DateTime start, DateTime end) async {
+    try {
+      // 1. Datos usuario
+      final userDoc = await _db.collection('users').doc(uid).get();
+      if (!userDoc.exists) return null;
+      final userData = userDoc.data()!;
+
+      // 2. Progreso
+      final km = await calculateChallengeProgress(uid, start, end);
+
+      return GroupMemberStats(
+        uid: uid,
+        name: userData['nombre'] ?? 'Usuario',
+        totalKm: km, // Aquí guardamos el progreso del reto
+        photoUrl: userData['photoUrl'],
+        profilePicType: userData['profilePicType'],
+        avatarConfig: userData['avatarConfig'],
+      );
+    } catch (e) {
+      return null;
+    }
+  }  
+
+  // --- 6. GENERADOR DE DATOS (SEEDING) ---
   // Llama a esto al iniciar la pantalla para crear retos si no existen
   Future<void> checkAndSeedChallenges(String groupId) async {
     final ref = _db.collection('groups').doc(groupId).collection('challenges');

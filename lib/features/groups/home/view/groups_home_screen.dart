@@ -46,43 +46,79 @@ class _GroupsHomeScreenState extends State<GroupsHomeScreen> {
     });
   }
 
-  // --- LÓGICA UI: CREAR GRUPO ---
+  // --- lOGICA UI: CREAR GRUPO ---
   void _handleCreateGroup() {
     final TextEditingController _nameController = TextEditingController();
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Nuevo Grupo"),
-        content: TextField(
-          controller: _nameController,
-          decoration: const InputDecoration(
-            hintText: "Ej: Corredores del Sur",
-            labelText: "Nombre del Grupo",
+      barrierDismissible: false,
+      builder: (context) => _CoolDialog(
+        title: "Nuevo Grupo",
+        icon: Icons.group_add_rounded,
+        color: Colors.purple,
+        children: [
+          const Text(
+            "Crea un espacio para tu equipo y empieza a sumar kilómetros juntos.",
+            style: TextStyle(color: Colors.grey, fontSize: 13),
           ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancelar"),
+          const SizedBox(height: 20),
+          TextField(
+            controller: _nameController,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+            decoration: InputDecoration(
+              hintText: "Ej: Corredores del Sur",
+              labelText: "Nombre del Grupo",
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: const BorderSide(color: Colors.purple, width: 2),
+              ),
+              prefixIcon: const Icon(Icons.stars_rounded, color: Colors.purple),
+            ),
+            autofocus: true,
           ),
-          ElevatedButton(
-            onPressed: () async {
-              if (_nameController.text.isNotEmpty && _currentUserId != null) {
-                Navigator.pop(context); // Cerrar
-                await _repository.createGroup(
-                  _nameController.text,
-                  _currentUserId!,
-                );
-                _refreshGroups(); // Refrescar
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Grupo '${_nameController.text}' creado")),
-                );
-              }
-            },
-            child: const Text("Crear"),
-          ),
+          const SizedBox(height: 25),
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(foregroundColor: Colors.grey),
+                  child: const Text("Cancelar"),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    if (_nameController.text.isNotEmpty && _currentUserId != null) {
+                      Navigator.pop(context); // Cerrar
+                      await _repository.createGroup(
+                        _nameController.text,
+                        _currentUserId!,
+                      );
+                      _refreshGroups(); // Refrescar
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Grupo '${_nameController.text}' creado")),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text("Crear Grupo"),
+                ),
+              ),
+            ],
+          )
         ],
       ),
     );
@@ -99,48 +135,89 @@ class _GroupsHomeScreenState extends State<GroupsHomeScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => SimpleDialog(
-        title: const Text("¿Qué grupo quieres dejar?"),
-        children: currentGroups.map((group) {
-          return SimpleDialogOption(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(group.name, style: const TextStyle(fontSize: 16)),
-                const Icon(Icons.exit_to_app, color: Colors.red),
-              ],
-            ),
-            onPressed: () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text("Confirmar"),
-                  content: Text("¿Seguro que quieres salir de ${group.name}?"),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      child: const Text("No"),
+      builder: (context) => _CoolDialog(
+        title: "Abandonar Grupo",
+        icon: Icons.exit_to_app_rounded,
+        color: Colors.redAccent,
+        children: [
+          const Text(
+            "Selecciona el grupo que deseas abandonar. Esta acción no se puede deshacer si eres el único administrador.",
+            style: TextStyle(color: Colors.grey, fontSize: 13),
+          ),
+          const SizedBox(height: 15),
+          Container(
+            constraints: const BoxConstraints(maxHeight: 200),
+            child: SingleChildScrollView(
+              child: Column(
+                children: currentGroups.map((group) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      child: const Text("Sí, salir", style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
-                ),
-              );
+                    child: ListTile(
+                      title: Text(group.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.red),
+                      onTap: () async {
+                        // Confirmación anidada
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => _CoolDialog(
+                            title: "¿Estás seguro?",
+                            icon: Icons.warning_amber_rounded,
+                            color: Colors.orange,
+                            children: [
+                              Text("Vas a salir de '${group.name}'. Perderás tu historial en este grupo.",
+                                  textAlign: TextAlign.center),
+                              const SizedBox(height: 20),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextButton(
+                                      onPressed: () => Navigator.pop(ctx, false),
+                                      child: const Text("Me quedo"),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                        foregroundColor: Colors.white,
+                                      ),
+                                      child: const Text("Salir"),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            ],
+                          ),
+                        );
 
-              if (confirm == true && _currentUserId != null) {
-                Navigator.pop(context);
-                await _repository.leaveGroup(group.id, _currentUserId!);
-                _refreshGroups();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Has salido del grupo")),
-                );
-              }
-            },
-          );
-        }).toList(),
+                        if (confirm == true && _currentUserId != null) {
+                          Navigator.pop(context); // Cerrar lista
+                          await _repository.leaveGroup(group.id, _currentUserId!);
+                          _refreshGroups();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Has salido del grupo")),
+                          );
+                        }
+                      },
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancelar", style: TextStyle(color: Colors.grey)),
+            ),
+          )
+        ],
       ),
     );
   }
@@ -573,6 +650,82 @@ class _InvitationCard extends StatelessWidget {
               ),
             ],
           )
+        ],
+      ),
+    );
+  }
+}
+
+// === WIDGET: COOL DIALOG ===
+class _CoolDialog extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final List<Widget> children;
+
+  const _CoolDialog({
+    Key? key,
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.children,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(20),
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.topCenter,
+        children: [
+          // CARD
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.only(
+              top: 50, // Espacio para el icono flotante
+              left: 20,
+              right: 20,
+              bottom: 20,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: const [
+                BoxShadow(color: Colors.black26, blurRadius: 20, offset: Offset(0, 10))
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, height: 1.1),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 15),
+                ...children,
+              ],
+            ),
+          ),
+          
+          // ICONO FLOTANTE
+          Positioned(
+            top: -30,
+            child: Container(
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 4),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 5))
+                ],
+              ),
+              child: Icon(icon, size: 30, color: Colors.white),
+            ),
+          ),
         ],
       ),
     );

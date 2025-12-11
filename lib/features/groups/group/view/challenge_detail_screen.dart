@@ -4,7 +4,10 @@ import 'package:intl/intl.dart';
 
 // REPOSITORIO & MODELS
 import '../data/group_detail_repository.dart';
+import '../data/group_detail_repository.dart';
 import '../data/challenge_model.dart';
+import '../../group_model.dart'; // GroupMemberStats
+import '../../../../app/tema.dart'; // AvatarHelper
 
 // CORE WIDGETS
 import '../../../../core/widgets/app_header.dart';
@@ -182,6 +185,11 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                     const SizedBox(height: 30),
 
                     // --- PARTICIPANTES ---
+                    _buildParticipantsList(),
+
+                    const SizedBox(height: 30),
+
+                    // --- PARTICIPANTES ---
                     Text(
                       "${widget.challenge.participantsCount} Corredores participan",
                       style: TextStyle(
@@ -200,6 +208,88 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildParticipantsList() {
+    if (widget.challenge.participants.isEmpty) return const SizedBox();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(left: 10, bottom: 10),
+          child: Text("Clasificación del Reto", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        ),
+        FutureBuilder<List<GroupMemberStats>>(
+          future: _repository.fetchChallengeLeaderboard(
+            widget.challenge.participants, 
+            widget.challenge.startDate, 
+            widget.challenge.endDate
+          ),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+            final stats = snapshot.data!;
+            
+            return ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: stats.length,
+              itemBuilder: (context, index) {
+                final s = stats[index];
+                final progress = (s.totalKm / widget.challenge.targetKm).clamp(0.0, 1.0);
+                
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 5)
+                    ]
+                  ),
+                  child: Row(
+                    children: [
+                      // Avatar
+                      AvatarHelper.construirAvatar(
+                        radius: 20, 
+                        type: s.profilePicType ?? 'none',
+                        config: s.avatarConfig,
+                        url: s.photoUrl
+                      ),
+                      const SizedBox(width: 10),
+                      // Info
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(s.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 5),
+                            LinearProgressIndicator(
+                              value: progress,
+                              backgroundColor: Colors.grey.shade100,
+                              color: progress >= 1.0 ? Colors.green : Colors.purple,
+                              minHeight: 6,
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 15),
+                      // Km
+                      Text(
+                        "${s.totalKm.toStringAsFixed(1)}km",
+                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+                      )
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ],
     );
   }
 

@@ -14,6 +14,13 @@ import '../../../core/widgets/app_footer.dart';
 import '../viewmodels/homeEstadistica_Controller.dart';
 import '../data/homeEstadistica_repository.dart';
 
+// GROUPS FEATURE IMPORTS
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../groups/home/data/groups_repository.dart';
+import '../../groups/group_model.dart';
+import '../../groups/home/view/groups_home_screen.dart';
+import '../../groups/group/view/group_detail_screen.dart';
+
 class HomeView extends StatefulWidget {
   const HomeView({Key? key}) : super(key: key);
 
@@ -26,6 +33,8 @@ class _HomeViewState extends State<HomeView> {
   static const Color _lightPurple = Color(0xFFC3A5D4);
 
   late final HomeEstadisticaController _estadisticaController;
+  final GroupsRepository _groupsRepository = GroupsRepository(); // Repository initialization
+
   final Future<void> _initializationFuture = initializeDateFormatting(
     'es',
     null,
@@ -143,7 +152,125 @@ class _HomeViewState extends State<HomeView> {
   Widget _buildNewBody() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20.0),
-      child: Center(child: _buildStatisticsCard()),
+      child: Column(
+        children: [
+          Center(child: _buildStatisticsCard()),
+          const SizedBox(height: 25),
+          _buildGroupsPreview(), // New Groups Preview Section
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGroupsPreview() {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return const SizedBox.shrink();
+
+    return Column(
+      children: [
+        // HEADER DE SECCIÓN
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Mis Comunidades",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const GroupsHomeScreen()),
+                  );
+                },
+                child: const Text(
+                  "Ver todos",
+                  style: TextStyle(
+                    color: Tema.brandPurple,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // LISTA DE TARJETAS
+        FutureBuilder<List<GroupModel>>(
+          future: _groupsRepository.fetchUserGroupsPreview(userId),
+          builder: (context, snapshot) {
+             if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SizedBox(
+                height: 150,
+                child: Center(child: CircularProgressIndicator(color: Tema.brandPurple)),
+              );
+            }
+
+            final groups = snapshot.data ?? [];
+
+            if (groups.isEmpty) {
+              return _buildEmptyGroupsState();
+            }
+
+            return SizedBox(
+              height: 180, // Altura para las tarjetas
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: groups.length,
+                separatorBuilder: (context, index) => const SizedBox(width: 15),
+                itemBuilder: (context, index) {
+                  return _GroupHighlightCard(group: groups[index]);
+                },
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyGroupsState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))
+        ],
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.group_off_rounded, size: 40, color: Colors.grey),
+          const SizedBox(height: 10),
+          const Text(
+            "Aún no tienes equipos",
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+          ),
+          const SizedBox(height: 5),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const GroupsHomeScreen()),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Tema.brandPurple,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+            child: const Text("Explorar Grupos"),
+          )
+        ],
+      ),
     );
   }
 
@@ -678,4 +805,150 @@ class BarChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+// ===================================================================
+// TARJETA DESTACADA DE GRUPO
+// ===================================================================
+class _GroupHighlightCard extends StatelessWidget {
+  final GroupModel group;
+
+  const _GroupHighlightCard({Key? key, required this.group}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    // Buscar al top runner (el primero de la lista)
+    final topRunner = (group.topRunners != null && group.topRunners!.isNotEmpty)
+        ? group.topRunners!.first
+        : null;
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => GroupDetailScreen(
+              groupId: group.id,
+              groupName: group.name,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        width: 160,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4))
+          ],
+          border: Border.all(color: Colors.grey.shade100),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icono y Nombre
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Tema.brandPurple.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.emoji_events_rounded, size: 18, color: Tema.brandPurple),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    group.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            
+            const Spacer(),
+            
+            // SECCIÓN TOP RUNNER
+            if (topRunner != null) ...[
+              const Text(
+                "Líder actual",
+                style: TextStyle(fontSize: 10, color: Colors.grey),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  // Avatar pequeño
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.amber, width: 1.5),
+                    ),
+                    child: ClipOval(
+                      child: AvatarHelper.construirAvatar(
+                        url: topRunner.photoUrl,
+                        type: topRunner.profilePicType ?? 'none',
+                        config: topRunner.avatarConfig,
+                        radius: 12
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          topRunner.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          "${topRunner.totalKm.toStringAsFixed(1)} km",
+                          style: const TextStyle(fontSize: 10, color: Tema.brandPurple, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  )
+                ],
+              )
+            ] else ...[
+               const Text(
+                "¡Sé el primero!",
+                style: TextStyle(fontSize: 11, color: Colors.grey, fontStyle: FontStyle.italic),
+              ),
+            ],
+
+            const Spacer(),
+
+            // Botón Entrar
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF3E5F5), // Purple 50
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Center(
+                child: Text(
+                  "Ver Ranking",
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Tema.brandPurple,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
