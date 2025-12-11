@@ -30,7 +30,7 @@ class AppFooter extends StatelessWidget {
           Container(height: 0.3, color: Colors.grey),
           Padding(
             padding: const EdgeInsets.symmetric(
-              vertical: 20.0,
+              vertical: 10.0, // Reduced from 20.0
               horizontal: 40.0,
             ),
             child: _buildButton(),
@@ -44,7 +44,7 @@ class AppFooter extends StatelessWidget {
     return GestureDetector(
       onTap: isLoading ? null : onTap,
       child: Container(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(15.0), // Reduced from 20.0
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,

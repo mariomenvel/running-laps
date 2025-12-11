@@ -322,15 +322,18 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                         )
                       ] : [],
                     ),
-                    child: Text(
-                      _tiempoMostrado,
-                      style: const TextStyle(
-                        fontSize: 80.0,
-                        fontWeight: FontWeight.w200,
-                        height: 1.0,
-                        letterSpacing: -2.0,
-                        fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
-                        color: Colors.black87,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        _tiempoMostrado,
+                        style: const TextStyle(
+                          fontSize: 80.0,
+                          fontWeight: FontWeight.w200,
+                          height: 1.0,
+                          letterSpacing: -2.0,
+                          fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
+                          color: Colors.black87,
+                        ),
                       ),
                     ),
                   ),
@@ -360,7 +363,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
     required IconData icon,
   }) {
     return Container(
-      height: 110,
+      constraints: const BoxConstraints(minHeight: 110),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20.0),
@@ -429,7 +432,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
         children: <Widget>[
           Container(height: 1.0, color: Colors.grey.shade200),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20.0),
+            padding: const EdgeInsets.symmetric(vertical: 10.0), // Reduced from 20.0
             child: GestureDetector(
               onTap: _isRunning ? _handlePausePress : null,
               child: AnimatedContainer(

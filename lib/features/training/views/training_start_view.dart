@@ -442,7 +442,6 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       if (!mounted) return;
 
 
-      Navigator.pop(context); // Cierra el AlertDialog
       Navigator.pop(context); // Cierra TrainingStartView
     } catch (e) {
       if (!mounted) return;
@@ -686,7 +685,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 100,
+        constraints: const BoxConstraints(minHeight: 100),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16.0),
@@ -1413,28 +1412,28 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           Container(height: 1.0, color: Colors.grey.shade200),
           Padding(
             padding: const EdgeInsets.symmetric(
-              vertical: 20.0,
+              vertical: 10.0, // Reduced from 20.0
               horizontal: 24.0,
             ),
             child: Column(
               children: <Widget>[
                 Text(
                   "Descanso restante",
-                  style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 5),
                 SizedBox(
-                  width: 120.0,
-                  height: 120.0,
+                  width: 80.0,
+                  height: 80.0,
                   child: Stack(
                     alignment: Alignment.center,
                     children: <Widget>[
                       SizedBox(
-                        width: 120.0,
-                        height: 120.0,
+                        width: 80.0,
+                        height: 80.0,
                         child: CircularProgressIndicator(
                           value: progress,
-                          strokeWidth: 8.0,
+                          strokeWidth: 6.0,
                           backgroundColor: Colors.white.withOpacity(0.4),
                           valueColor: const AlwaysStoppedAnimation<Color>(
                             Tema.brandPurple,
@@ -1444,7 +1443,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                       Text(
                         _formatRestTime(),
                         style: const TextStyle(
-                          fontSize: 32,
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Tema.brandPurple,
                           fontFeatures: <FontFeature>[
@@ -1455,11 +1454,11 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 5),
                 TextButton(
                   child: const Text(
                     "Saltar descanso",
-                    style: TextStyle(color: Tema.brandPurple),
+                    style: TextStyle(color: Tema.brandPurple, fontSize: 12),
                   ),
                   onPressed: _skipRest,
                 ),
@@ -1491,7 +1490,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           Container(height: 1.0, color: Colors.grey.shade200),
           Padding(
             padding: const EdgeInsets.symmetric(
-              vertical: 20.0,
+              vertical: 10.0, // Reduced from 20.0
               horizontal: 40.0,
             ),
             child: (_vm.series.isEmpty)
@@ -1530,7 +1529,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     return GestureDetector(
       onTap: isLoading ? null : onTap,
       child: Container(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(15.0), // Reduced from 20.0
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,

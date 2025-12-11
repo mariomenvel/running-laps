@@ -16,9 +16,6 @@ class _AuthPageState extends State<AuthPage> {
   // --- Controller ---
   final _authCtrl = AuthController();
 
-  // --- Constantes de Estilo ---
-  static const double _fieldWidth = 300;
-
   // --- Estado para ver/ocultar contraseñas ---
   bool _showLoginPassword = false;
   bool _showRegisterPassword = false;
@@ -104,37 +101,34 @@ class _AuthPageState extends State<AuthPage> {
     bool obscureText = false,
     Widget? suffixIcon,
   }) {
-    return SizedBox(
-      width: _fieldWidth,
+    return Container(
       height: 60,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.7),
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.25),
-              blurRadius: 2,
-              spreadRadius: 2,
-              offset: const Offset(0, 0),
-            ),
-          ],
-        ),
-        child: TextField(
-          controller: controller,
-          obscureText: obscureText,
-          obscuringCharacter: '•',
-          keyboardType: hintText.contains('Correo')
-              ? TextInputType.emailAddress
-              : TextInputType.text,
-          style: const TextStyle(color: Colors.black, fontSize: 16),
-          decoration: InputDecoration(
-            hintText: hintText,
-            hintStyle: const TextStyle(color: Colors.grey, letterSpacing: 0.0),
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.fromLTRB(20, 20, 12, 7),
-            suffixIcon: suffixIcon,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.25),
+            blurRadius: 2,
+            spreadRadius: 2,
+            offset: const Offset(0, 0),
           ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        obscuringCharacter: '•',
+        keyboardType: hintText.contains('Correo')
+            ? TextInputType.emailAddress
+            : TextInputType.text,
+        style: const TextStyle(color: Colors.black, fontSize: 16),
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: const TextStyle(color: Colors.grey, letterSpacing: 0.0),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.fromLTRB(20, 20, 12, 7),
+          suffixIcon: suffixIcon,
         ),
       ),
     );
@@ -152,6 +146,7 @@ class _AuthPageState extends State<AuthPage> {
         final bool disabled = isLoading && showLoading;
 
         return Container(
+          height: 60,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             boxShadow: [
@@ -164,8 +159,7 @@ class _AuthPageState extends State<AuthPage> {
             ],
           ),
           child: SizedBox(
-            width: _fieldWidth,
-            height: 60,
+            width: double.infinity,
             child: OutlinedButton(
               onPressed: disabled ? null : onPressed,
               style: OutlinedButton.styleFrom(
@@ -327,6 +321,9 @@ class _AuthPageState extends State<AuthPage> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final double logoHeight = size.height * 0.35; // 35% de la altura
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -335,35 +332,35 @@ class _AuthPageState extends State<AuthPage> {
             fit: BoxFit.cover,
           ),
         ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(
-            top: 80.0,
-            left: 24.0,
-            right: 24.0,
-            bottom: 24.0,
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Image.asset(
-                'assets/images/Icon.png',
-                height: 400,
-                fit: BoxFit.contain,
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/images/Icon.png',
+                    height: logoHeight > 400 ? 400 : logoHeight, // Max 400
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 20),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _authCtrl.isLoginView,
+                    builder: (context, isLoginView, child) {
+                      return AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        key: ValueKey<bool>(isLoginView),
+                        child: isLoginView
+                            ? _buildLoginForm()
+                            : _buildRegisterForm(),
+                      );
+                    },
+                  ),
+                ],
               ),
-              const SizedBox(height: 0),
-              ValueListenableBuilder<bool>(
-                valueListenable: _authCtrl.isLoginView,
-                builder: (context, isLoginView, child) {
-                  return AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    key: ValueKey<bool>(isLoginView),
-                    child: isLoginView
-                        ? _buildLoginForm()
-                        : _buildRegisterForm(),
-                  );
-                },
-              ),
-            ],
+            ),
           ),
         ),
       ),
