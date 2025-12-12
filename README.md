@@ -5,7 +5,6 @@
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
-![Riverpod](https://img.shields.io/badge/Riverpod-2D2D2D?style=for-the-badge&logo=riverpod&logoColor=white)
 
 **Running Laps** es una aplicación móvil avanzada para corredores, diseñada específicamente para el registro y análisis de entrenamientos por **series (intervalos)**. A diferencia de las apps de running convencionales, nos enfocamos en el esfuerzo percibido (RPE) y la precisión en entrenamientos fraccionados.
 
@@ -41,7 +40,7 @@ El proyecto está construido sobre una arquitectura escalable y moderna:
   - **Auth**: Gestión de usuarios.
   - **Firestore**: Base de datos NoSQL en tiempo real.
   - **Storage**: (Planificado) Almacenamiento de imágenes.
-- **Estado**: [Riverpod](https://riverpod.dev/) (Gestión de estado reactiva y segura).
+- **Estado**: MVVM con `ValueNotifier` y controladores nativos.
 - **Arquitectura**: Feature-First (Modular y mantenible).
 
 ---
