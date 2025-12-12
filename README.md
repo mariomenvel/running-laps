@@ -1,77 +1,116 @@
-🏃‍♂️ Running Laps
+# 🏃‍♂️ Running Laps
 
-“Cada paso cuenta.”
+> **"Cada paso cuenta."**
 
-Aplicación móvil desarrollada en Flutter + Firebase para registrar y analizar entrenamientos de carrera por series, con funcionalidades de GPS básico, RPE (esfuerzo percibido) y rankings entre grupos de usuarios.
+![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
+![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
 
-🧩 Tecnologías principales
+**Running Laps** es una aplicación móvil avanzada para corredores, diseñada específicamente para el registro y análisis de entrenamientos por **series (intervalos)**. A diferencia de las apps de running convencionales, nos enfocamos en el esfuerzo percibido (RPE) y la precisión en entrenamientos fraccionados.
 
-Flutter (Dart)
+---
 
-Firebase Authentication
+## ✨ Características Principales
 
-Cloud Firestore
+### 🎯 Gestión de Entrenamientos
+- **Modo Series**: Crea entrenamientos complejos con intervalos de trabajo y descanso.
+- **Registro RPE**: Escala de esfuerzo percibido para cada serie, permitiendo un análisis subjetivo del rendimiento.
+- **Historial Detallado**: Visualiza tus entrenamientos pasados con métricas clave.
 
-Firebase Storage (futuro)
+### 📍 Geolocalización y Métricas
+- **GPS Tracking**: Rastreo de ruta, distancia y ritmo en tiempo real.
+- **Estadísticas Visuales**: Gráficas de rendimiento impulsadas por `fl_chart`.
 
-Geolocator (GPS básico)
+### 👥 Social y Competitivo
+- **Grupos de Corredores**: Únete a grupos y compite con amigos.
+- **Rankings**: Clasificaciones basadas en distancia total y consistencia.
 
-Riverpod (gestión de estado)
+### 🔐 Seguridad y Perfil
+- **Autenticación Robusta**: Inicio de sesión seguro con correo/contraseña (Firebase Auth).
+- **Perfil Personalizable**: Avatar, estadísticas personales y configuración.
 
-fl_chart (gráficas)
+---
 
-Git / GitHub
+## 🛠️ Stack Tecnológico
 
-🚀 Funcionalidades MVP
+El proyecto está construido sobre una arquitectura escalable y moderna:
 
-Registro e inicio de sesión (Firebase Auth)
+- **Frontend**: [Flutter](https://flutter.dev/) (Dart)
+- **Backend (BaaS)**: [Firebase](https://firebase.google.com/)
+  - **Auth**: Gestión de usuarios.
+  - **Firestore**: Base de datos NoSQL en tiempo real.
+  - **Storage**: (Planificado) Almacenamiento de imágenes.
+- **Estado**: MVVM con `ValueNotifier` y controladores nativos.
+- **Arquitectura**: Feature-First (Modular y mantenible).
 
-Perfil de usuario con estadísticas básicas
+---
 
-Creación y guardado de entrenamientos con series y RPE
+## 📱 Captures de Pantalla
 
-Seguimiento GPS (distancia y ritmo aproximado)
+| Inicio de Sesión | Entrenamiento | Estadísticas |
+|:---:|:---:|:---:|
+| *[Inserte captura aquí]* | *[Inserte captura aquí]* | *[Inserte captura aquí]* |
 
-Historial de entrenamientos
+---
 
-Grupos y rankings por distancia total
+## 🚀 Instalación y Uso
 
-Diseño basado en prototipo Figma
+### Requisitos Previos
+- Flutter SDK (3.x o superior)
+- Dart SDK
+- Un dispositivo físico o emulador (Android/iOS)
 
-Reglas de seguridad básicas en Firestore
+### Pasos
 
-🗓️ Metodología Scrum
+1. **Clonar el repositorio**
+   ```bash
+   git clone https://github.com/tu-usuario/running-laps.git
+   cd running-laps
+   ```
 
-Duración del proyecto: 28 oct – 15 dic 2025
-Equipo: Mario & Álvaro
-Duración de sprint: 1–2 semanas
-Reuniones: Daily Scrum cortos + Review al final de cada sprint
+2. **Instalar dependencias**
+   ```bash
+   flutter pub get
+   ```
 
-🧭 Sprints
-Sprint	Fecha	Objetivo principal
-1	28 oct – 10 nov	Configuración y autenticación
-2	11 nov – 24 nov	Entrenamientos y RPE
-3	25 nov – 8 dic	GPS y estadísticas
-4	9 dic – 15 dic	Grupos, ranking y cierre
-🧠 Arquitectura
+3. **Configuración de Firebase**
+   - Este proyecto utiliza `flutterfire_cli`. Necesitas tener acceso al proyecto de Firebase vinculado.
+   - Si tienes tus propias credenciales, reemplaza `firebase_options.dart`.
+
+4. **Ejecutar la App**
+   ```bash
+   flutter run
+   ```
+
+---
+
+## 📂 Estructura del Proyecto
+
+```
 lib/
-  main.dart
-  app.dart
-  core/
-  features/
-    auth/
-    training/
-    groups/
-    profile/
-    stats/
-  services/
-  routing/
+├── core/            # Utilidades, temas y widgets compartidos
+├── features/        # Módulos principales (Auth, Training, Groups, etc.)
+│   ├── auth/
+│   ├── training/
+│   └── ...
+├── main.dart        # Punto de entrada
+└── firebase_options.dart
+```
 
-👥 Equipo
-Nombre	Rol	Contacto
-Mario	Desarrollador	—
-Álvaro	Desarrollador	—
-🧾 Licencia
+---
 
-Proyecto académico – 2º DAM (2025).
-Uso educativo, sin fines comerciales.
+## 👥 Equipo
+
+Proyecto académico desarrollado para el ciclo de **Desarrollo de Aplicaciones Multiplataforma (DAM) - 2025**.
+
+| Desarrollador | Rol |
+|:-------------:|:---:|
+| **Mario** | Lead Developer |
+| **Álvaro** | Lead Developer |
+
+---
+
+## 📄 Licencia
+
+Este proyecto es para fines educativos y académicos.
+© 2025 Running Laps Team.
