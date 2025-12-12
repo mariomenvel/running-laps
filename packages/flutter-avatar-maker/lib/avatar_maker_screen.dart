@@ -360,7 +360,6 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
               // 1. HEADER & AVATAR (Background Layer)
               Column(
                 children: [
-                  _buildHeader(),
                   SizedBox(
                     height: avatarAreaHeight,
                     width: double.infinity,
