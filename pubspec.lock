@@ -278,13 +278,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_avatar_maker:
-    dependency: "direct main"
-    description:
-      path: "packages/flutter-avatar-maker"
-      relative: true
-    source: path
-    version: "1.0.0+1"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -328,7 +321,7 @@ packages:
     source: sdk
     version: "0.0.0"
   gal:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: gal
       sha256: "969598f986789127fd407a750413249e1352116d4c2be66e81837ffeeaafdfee"
@@ -528,7 +521,7 @@ packages:
     source: hosted
     version: "1.1.0"
   path_provider:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: path_provider
       sha256: "50c5dd5b6e1aaf6fb3a78b33f6aa3afca52bf903a8a5298f53101fdaee55bbcd"

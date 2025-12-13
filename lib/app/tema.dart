@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 // Asegúrate de que la ruta de este import sea correcta en tu proyecto
-import 'package:flutter_avatar_maker/assets.dart'; 
+import 'package:running_laps/features/avatar/data/assets.dart'; 
 
 class Tema {
   static const Color brandPurple = Color(0xFF8E24AA);
