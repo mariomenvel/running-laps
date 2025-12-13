@@ -12,7 +12,7 @@ import '../../invitation_model.dart'; // EL NUEVO MODELO DE INVITACIÓN
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_footer.dart';
 import '../../../home/views/home_view.dart';
-import '../../../profile/views/profile_menu_view.dart';
+import '../../../profile/views/profile_menu_screen.dart';
 
 class GroupsHomeScreen extends StatefulWidget {
   const GroupsHomeScreen({Key? key}) : super(key: key);

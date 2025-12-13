@@ -9,7 +9,7 @@ import 'package:running_laps/features/auth/views/auth_page.dart';
 import 'package:running_laps/features/home/views/home_view.dart';
 
 // Vistas de perfil / entrenos
-import 'package:running_laps/features/profile/views/profile_view.dart';
+import 'package:running_laps/features/profile/views/history_screen.dart';
 import 'package:running_laps/features/profile/views/avatar_editor_wrapper_view.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
 import '../../groups/home/view/groups_home_screen.dart';

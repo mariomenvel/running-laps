@@ -5,7 +5,7 @@ import 'package:running_laps/features/profile/views/avatar_editor_wrapper_view.d
 import 'package:running_laps/features/profile/viewmodels/profile_controller.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
-import 'package:running_laps/features/profile/views/profile_menu_view.dart';
+import 'package:running_laps/features/profile/views/profile_menu_screen.dart';
 import 'package:running_laps/features/home/views/home_view.dart';
 import '../../training/data/serie.dart';
 import '../../../core/widgets/app_footer.dart';
@@ -801,9 +801,42 @@ class _TrainingCardState extends State<TrainingCard> {
           ),
           const SizedBox(height: 12),
           // Lista de series
-          ...widget.training.series.asMap().entries.map((entry) {
-             return _buildSerieRow(entry.key + 1, entry.value);
-          }).toList(),
+          ..._buildSeriesList(),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildSeriesList() {
+    final List<Widget> list = [];
+    final series = widget.training.series;
+    for (int i = 0; i < series.length; i++) {
+      list.add(_buildSerieRow(i + 1, series[i]));
+      
+      // Mostrar descanso entre series si existe
+      if (i < series.length - 1 && series[i].descansoSec > 0) {
+        list.add(_buildRestRow(series[i].descansoSec));
+      }
+    }
+    return list;
+  }
+
+  Widget _buildRestRow(int seconds) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.timer_off_outlined, size: 14, color: Colors.grey.shade400),
+          const SizedBox(width: 4),
+          Text(
+            "Descanso: ${_formatSeconds(seconds)}",
+            style: TextStyle(
+              fontSize: 12, 
+              color: Colors.grey.shade500, 
+              fontStyle: FontStyle.italic
+            ),
+          ),
         ],
       ),
     );
@@ -840,9 +873,9 @@ class _TrainingCardState extends State<TrainingCard> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                  _buildSerieDetail('${serie.distanciaM}m', Icons.straighten, Colors.grey.shade800),
+                 _buildSerieDetail(_formatSeconds(serie.tiempoSec.round()), Icons.timer_outlined, Colors.grey.shade800),
                  _buildSerieDetail(serie.ritmoTexto(), Icons.speed, Colors.grey.shade800),
                  _buildSerieDetail('RPE ${serie.rpe}', Icons.bolt, Colors.grey.shade600),
-                 _buildSerieDetail('${serie.descansoSec}s', Icons.timer_off_outlined, Colors.grey.shade500),
               ],
             ),
           )

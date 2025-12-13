@@ -13,7 +13,7 @@ import '../../../../app/tema.dart'; // AvatarHelper
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_footer.dart';
 import '../../../../features/home/views/home_view.dart';
-import '../../../../features/profile/views/profile_menu_view.dart';
+import '../../../../features/profile/views/profile_menu_screen.dart';
 
 class ChallengeDetailScreen extends StatefulWidget {
   final ChallengeModel challenge;

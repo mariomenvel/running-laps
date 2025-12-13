@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart'; // Para capturar FirebaseException
 import '../../../core/widgets/app_header.dart';
-import '../../profile/views/profile_menu_view.dart';
+import '../../profile/views/profile_menu_screen.dart';
 import '../../home/views/home_view.dart';
 import 'dart:ui' show FontFeature;
 

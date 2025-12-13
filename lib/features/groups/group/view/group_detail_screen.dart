@@ -6,7 +6,7 @@ import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_footer.dart';
 import '../../../../app/tema.dart';
 import '../../../../features/home/views/home_view.dart';
-import '../../../../features/profile/views/profile_menu_view.dart';
+import '../../../../features/profile/views/profile_menu_screen.dart';
 
 // IMPORTS DE MODELOS
 import '../data/challenge_model.dart';

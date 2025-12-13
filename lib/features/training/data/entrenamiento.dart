@@ -24,7 +24,7 @@ class Entrenamiento {
   double tiempoTotalSec() {
     double total = 0;
     for (var serie in series) {
-      total += serie.tiempoSec + serie.descansoSec;
+      total += serie.tiempoSec;
     }
     return total;
   }

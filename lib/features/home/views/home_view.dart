@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
-import 'package:running_laps/features/profile/views/profile_view.dart';
-import 'package:running_laps/features/profile/views/profile_menu_view.dart';
+import 'package:running_laps/features/profile/views/history_screen.dart';
+import 'package:running_laps/features/profile/views/profile_menu_screen.dart';
 
 import '../../../app/tema.dart';
 import '../../../core/widgets/app_footer.dart';

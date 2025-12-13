@@ -7,7 +7,7 @@ import '../data/group_detail_repository.dart';
 import '../logic/gamification_service.dart';
 import '../../group_model.dart';
 import '../../../../features/home/views/home_view.dart';
-import '../../../../features/profile/views/profile_menu_view.dart';
+import '../../../../features/profile/views/profile_menu_screen.dart';
 
 class ParticipantProfileScreen extends StatefulWidget {
   final String uid;
