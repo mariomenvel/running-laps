@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../../core/auth_failure.dart';
 
 class AuthRemote {
   FirebaseAuth _auth;
@@ -26,40 +27,33 @@ class AuthRemote {
   }
 
   Future<UserCredential> createUser(String email, String password) async {
-    return await _auth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
+    try {
+      return await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } on FirebaseAuthException catch (e) {
+      throw AuthFailure.fromCode(e.code, e.message);
+    } catch (e) {
+      throw AuthFailure(e.toString());
+    }
   }
 
   Future<UserCredential> signIn(String email, String password) async {
-    return await _auth.signInWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
+    try {
+      return await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } on FirebaseAuthException catch (e) {
+      throw AuthFailure.fromCode(e.code, e.message);
+    } catch (e) {
+      throw AuthFailure(e.toString());
+    }
   }
 
   Future<void> signOut() async {
     await _auth.signOut();
-  }
-
-  // --- Helper de Errores ---
-  String _mapFirebaseError(Object e) {
-    if (e is FirebaseAuthException) {
-      switch (e.code) {
-        case 'user-not-found':
-          return 'No encontramos ninguna cuenta con ese correo.';
-        case 'invalid-email':
-          return 'El correo electrónico no es válido.';
-        case 'network-request-failed':
-          return 'Error de conexión. Revisa tu internet.';
-        case 'too-many-requests':
-          return 'Demasiados intentos. Inténtalo más tarde.';
-        default:
-          return 'Ocurrió un error: ${e.message}';
-      }
-    }
-    return 'Ocurrió un error inesperado.';
   }
 
   Future<void> sendPasswordResetEmail(String email) async {
@@ -76,16 +70,18 @@ class AuthRemote {
 
       if (querySnapshot.docs.isEmpty) {
         // Lanzamos manualmente el error si no existe en nuestra base de datos
-        throw FirebaseAuthException(code: 'user-not-found');
+        throw AuthFailure.fromCode('user-not-found', null);
       }
 
       print("DEBUG: Usuario encontrado. Intentando enviar correo de restablecimiento.");
       await _auth.sendPasswordResetEmail(email: email);
       print("DEBUG: Correo de restablecimiento enviado correctamente.");
+    } on FirebaseAuthException catch (e) {
+      throw AuthFailure.fromCode(e.code, e.message);
     } catch (e) {
+      if (e is AuthFailure) rethrow; // Si ya es AuthFailure (lanzado manualmente), lo dejamos pasar
       print("DEBUG: Error al enviar correo de restablecimiento: $e");
-      // Utilizamos nuestro mapeador para asegurar mensajes amigables
-      throw _mapFirebaseError(e);
+      throw AuthFailure(e.toString());
     }
   }
 
@@ -97,9 +93,11 @@ class AuthRemote {
         await user.sendEmailVerification();
         print("DEBUG: Correo de verificación enviado.");
       }
+    } on FirebaseAuthException catch (e) {
+      throw AuthFailure.fromCode(e.code, e.message);
     } catch (e) {
       print("DEBUG: Error al enviar verificación: $e");
-      throw _mapFirebaseError(e);
+      throw AuthFailure(e.toString());
     }
   }
 

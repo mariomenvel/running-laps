@@ -301,6 +301,48 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 }
 
 
+  void _discardTraining(BuildContext modalContext) async {
+    // Cerramos el modal de guardar primero
+    Navigator.of(modalContext).pop();
+
+    // Pedimos confirmación
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("¿Descartar entrenamiento?"),
+        content: const Text("Se perderán todas las series registradas de esta sesión."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancelar", style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Descartar", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() {
+        _vm.clearSeries();
+        _trainingNameController.clear();
+        _isResting = false;
+        _restTimer?.cancel();
+        _restSecondsRemaining = 0;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sesión descartada')),
+        );
+        // Navegamos al Home
+        Navigator.of(context).pop(); 
+      }
+    }
+  }
+
   void _onFinishTrainingTap() {
   if (_isSaving) return;
   _trainingNameController.clear();
@@ -391,10 +433,24 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               },
             ),
             const SizedBox(height: 12),
-            TextButton(
-              child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
-              onPressed: () => Navigator.of(ctx).pop(),
-            ),
+            // FINISH / DISCARD buttons row
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => _discardTraining(ctx),
+                    child: const Text('Descartar', style: TextStyle(color: Colors.red)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextButton(
+                    child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+                    onPressed: () => Navigator.of(ctx).pop(),
+                  ),
+                ),
+              ],
+            )
           ],
         ),
       ),
@@ -1415,9 +1471,24 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               vertical: 10.0, // Reduced from 20.0
               horizontal: 24.0,
             ),
-            child: Column(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                const SizedBox(height: 5),
+                // BOTÓN FANTASMA (Para equilibrar y centrar el reloj)
+                Visibility(
+                  visible: false, 
+                  maintainSize: true, 
+                  maintainAnimation: true, 
+                  maintainState: true,
+                  child: _buildCircularButton(
+                    icon: Icons.skip_next_rounded,
+                    onTap: () {},
+                  ),
+                ),
+                
+                const SizedBox(width: 20),
+
+                // TIMER CIRCULAR
                 SizedBox(
                   width: 85.0,
                   height: 85.0,
@@ -1450,17 +1521,19 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 5),
-                TextButton(
-                  child: const Text(
-                    "Saltar descanso",
-                    style: TextStyle(color: Tema.brandPurple, fontSize: 12),
-                  ),
-                  onPressed: _skipRest,
+                
+                const SizedBox(width: 20), // Espacio entre reloj y botón
+                
+                // BOTÓN SALTAR REAL
+                _buildCircularButton(
+                   icon: Icons.skip_next_rounded,
+                   onTap: _skipRest,
+                   color: Tema.brandPurple,
                 ),
               ],
             ),
-          ),
+            ),
+
         ],
       ),
     );

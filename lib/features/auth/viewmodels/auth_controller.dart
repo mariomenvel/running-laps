@@ -31,11 +31,33 @@ class AuthController {
         throw Exception('Todos los campos son obligatorios.');
       }
       await _repo.signIn(emailCtrl.text, passCtrl.text);
+
+      // VERIFICACIÓN DE EMAIL
+      final user = _repo.getCurrentUser();
+      if (user != null && !user.emailVerified) {
+        await _repo.signOut(); // No dejarle entrar
+        throw Exception('Debes verificar tu correo electrónico antes de iniciar sesión. Revisalo.');
+      }
+
     } catch (e) {
       rethrow;
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> resendVerificationEmail(String email, String password) async {
+      isLoading.value = true;
+      try {
+        // Necesitamos iniciar sesión temporalmente para enviar el correo si no hay usuario activo
+         await _repo.signIn(email, password);
+         await _repo.sendEmailVerification();
+         await _repo.signOut();
+      } catch (e) {
+        rethrow;
+      } finally {
+        isLoading.value = false;
+      }
   }
 
   // ==========================
@@ -51,6 +73,17 @@ class AuthController {
           passCtrl.text.isEmpty ||
           usernameCtrl.text.isEmpty) {
         throw Exception('Todos los campos son obligatorios.');
+      }
+
+      // VALIDACIÓN DE CONTRASEÑA
+      final password = passCtrl.text;
+      final hasMinLength = password.length >= 8;
+      final hasUppercase = password.contains(RegExp(r'[A-Z]'));
+      final hasDigits = password.contains(RegExp(r'[0-9]'));
+
+      if (!hasMinLength || !hasUppercase || !hasDigits) {
+        throw Exception(
+            'La contraseña no cumple los requisitos.'); 
       }
 
       await _repo.signUp(emailCtrl.text, passCtrl.text, usernameCtrl.text);

@@ -88,7 +88,40 @@ class _AuthPageState extends State<AuthPage> {
         (Route<dynamic> route) => false,
       );
     } catch (e) {
-      _showError(e);
+      final msg = _extractErrorMessage(e);
+      if (!mounted) return;
+
+      if (msg.contains("verificar tu correo")) {
+        // Mostrar opción de reenviar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(msg),
+            backgroundColor: Colors.orange[800],
+            duration: const Duration(seconds: 6),
+            action: SnackBarAction(
+              label: 'REENVIAR',
+              textColor: Colors.white,
+              onPressed: () async {
+                 // Reenviar correo
+                 try {
+                   await _authCtrl.resendVerificationEmail(
+                     _authCtrl.emailCtrl.text, 
+                     _authCtrl.passCtrl.text
+                   );
+                   if(!mounted) return;
+                   ScaffoldMessenger.of(context).showSnackBar(
+                     const SnackBar(content: Text('Correo enviado. Revisa tu bandeja.'))
+                   );
+                 } catch (resendError) {
+                   _showError(resendError);
+                 }
+              },
+            ),
+          ),
+        );
+      } else {
+         _showError(e);
+      }
     }
   }
 
@@ -99,7 +132,8 @@ class _AuthPageState extends State<AuthPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Cuenta creada con éxito. Inicia sesión.'),
+          content: Text('Cuenta creada. Revisa tu correo para verificarla antes de entrar.'),
+          duration: Duration(seconds: 5),
         ),
       );
     } catch (e) {
@@ -301,6 +335,71 @@ class _AuthPageState extends State<AuthPage> {
     );
   }
 
+
+  Widget _buildPasswordRequirements() {
+    // Escuchamos ambos controladores para actualizar si cambia cualquiera
+    return AnimatedBuilder(
+      animation: Listenable.merge([_authCtrl.passCtrl, _authCtrl.confirmPassCtrl]),
+      builder: (context, child) {
+        final pass = _authCtrl.passCtrl.text;
+        final confirm = _authCtrl.confirmPassCtrl.text;
+
+        final hasMinLength = pass.length >= 8;
+        final hasUppercase = pass.contains(RegExp(r'[A-Z]'));
+        final hasDigits = pass.contains(RegExp(r'[0-9]')); 
+        // Coinciden si no están vacías y son iguales
+        final passwordsMatch = pass.isNotEmpty && pass == confirm;
+
+        return Column(
+          children: [
+            _buildRequirementRow("Mínimo 8 caracteres", hasMinLength),
+            const SizedBox(height: 4),
+            _buildRequirementRow("Al menos 1 mayúscula", hasUppercase),
+            const SizedBox(height: 4),
+            _buildRequirementRow("Al menos 1 número", hasDigits),
+            const SizedBox(height: 4),
+            _buildRequirementRow("Las contraseñas coinciden", passwordsMatch),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildRequirementRow(String text, bool isMet) {
+    return Row(
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: 20,
+          height: 20,
+          decoration: BoxDecoration(
+            color: isMet ? Colors.green : Colors.transparent,
+            border: Border.all(
+              color: isMet ? Colors.green : Colors.grey.shade400,
+            ),
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Icon(
+              Icons.check,
+              size: 14,
+              color: isMet ? Colors.white : Colors.transparent,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: TextStyle(
+            color: isMet ? Colors.green : Colors.grey.shade600,
+            fontSize: 13,
+            fontWeight: isMet ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+      ],
+    );
+  }
+
   // ===================================================================
   // Helpers de UI
   // ===================================================================
@@ -407,7 +506,11 @@ class _AuthPageState extends State<AuthPage> {
   // ===================================================================
 
   /// Formulario de Login
-  Widget _buildLoginForm() {
+  // ===================================================================
+  // Vistas de Formulario (Campos)
+  // ===================================================================
+
+  Widget _buildLoginFields() {
     return Column(
       children: [
         _buildTextField(
@@ -448,16 +551,23 @@ class _AuthPageState extends State<AuthPage> {
             ),
           ),
         ),
-        const SizedBox(height: 10),
-        const SizedBox(height: 20),
-        // SOLO este botón muestra el loading
+      ],
+    );
+  }
+
+  // ===================================================================
+  // Vistas de Botones (Footer)
+  // ===================================================================
+
+  Widget _buildLoginButtons() {
+    return Column(
+      children: [
         _buildButton(
           text: 'INICIAR SESIÓN',
           onPressed: _signIn,
           showLoading: true,
         ),
         const SizedBox(height: 16),
-        // Este botón NO muestra loading, solo se deshabilita si quisieras
         _buildButton(
           text: 'REGISTRARSE',
           onPressed: _toggleView,
@@ -468,7 +578,7 @@ class _AuthPageState extends State<AuthPage> {
   }
 
   /// Formulario de Registro
-  Widget _buildRegisterForm() {
+  Widget _buildRegisterFields() {
     return Column(
       children: [
         _buildTextField(
@@ -500,7 +610,7 @@ class _AuthPageState extends State<AuthPage> {
             },
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         _buildTextField(
           controller: _authCtrl.confirmPassCtrl,
           hintText: 'Confirmar contraseña',
@@ -520,8 +630,16 @@ class _AuthPageState extends State<AuthPage> {
             },
           ),
         ),
-        const SizedBox(height: 32),
-        // Aquí sí queremos ver el loading al registrar
+        const SizedBox(height: 12),
+        // Checklist de Requisitos en tiempo real (MOVIDO AQUÍ)
+        _buildPasswordRequirements(),
+      ],
+    );
+  }
+
+  Widget _buildRegisterButtons() {
+    return Column(
+      children: [
         _buildButton(
           text: 'REGISTRARSE',
           onPressed: _signUp,
@@ -560,6 +678,7 @@ class _AuthPageState extends State<AuthPage> {
     const Color _bgGradientColor = Color(0xFFF9F5FB);
 
     return Scaffold(
+      resizeToAvoidBottomInset: true, // El footer sube con el teclado
       body: Container(
         decoration: const BoxDecoration(
           gradient: RadialGradient(
@@ -571,38 +690,66 @@ class _AuthPageState extends State<AuthPage> {
           image: DecorationImage(
             image: AssetImage('assets/images/fondo.png'),
             fit: BoxFit.cover,
-            opacity: 0.6, // Un poco más sutil
+            opacity: 0.6, 
           ),
         ),
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
+        child: SafeArea(
+          child: Column(
+            children: [
+              // ================= HEADER FIJO =================
+              SizedBox(
+                height: logoHeight > 300 ? 300 : logoHeight, // Topé altura
+                child: Center(
+                  child: Image.asset(
                     'assets/images/Icon.png',
-                    height: logoHeight > 400 ? 400 : logoHeight, // Max 400
                     fit: BoxFit.contain,
                   ),
-                  const SizedBox(height: 20),
-                  ValueListenableBuilder<bool>(
+                ),
+              ),
+              
+              // ================= BODY SCROLLABLE =================
+              Expanded(
+                child: Center( // Centramos verticalmente si sobra espacio
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 400),
+                      child: ValueListenableBuilder<bool>(
+                        valueListenable: _authCtrl.isLoginView,
+                        builder: (context, isLoginView, child) {
+                          return AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            key: ValueKey<bool>(isLoginView), // Cambio de key força animación
+                            child: isLoginView
+                                ? _buildLoginFields()
+                                : _buildRegisterFields(),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              
+              // ================= FOOTER FIJO =================
+              Container(
+                padding: const EdgeInsets.all(24.0),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  child: ValueListenableBuilder<bool>(
                     valueListenable: _authCtrl.isLoginView,
                     builder: (context, isLoginView, child) {
-                      return AnimatedSwitcher(
+                       return AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
-                        key: ValueKey<bool>(isLoginView),
-                        child: isLoginView
-                            ? _buildLoginForm()
-                            : _buildRegisterForm(),
+                        child: isLoginView 
+                            ? _buildLoginButtons() 
+                            : _buildRegisterButtons(),
                       );
                     },
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
