@@ -55,8 +55,28 @@ class AuthController {
 
       await _repo.signUp(emailCtrl.text, passCtrl.text, usernameCtrl.text);
 
+      // Enviar email de verificación
+      await _repo.sendEmailVerification();
+
       // Volver a la vista de login
       toggleView();
+    } catch (e) {
+      rethrow;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // ==========================
+  // RECUPERAR CONTRASEÑA
+  // ==========================
+  Future<void> recoverPassword(String email) async {
+    if (email.trim().isEmpty) {
+      throw Exception('Por favor, introduce tu correo electrónico.');
+    }
+    isLoading.value = true;
+    try {
+      await _repo.sendPasswordResetEmail(email.trim());
     } catch (e) {
       rethrow;
     } finally {

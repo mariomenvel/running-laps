@@ -34,9 +34,29 @@ class _AuthPageState extends State<AuthPage> {
   void _showError(Object e) {
     final msg = _extractErrorMessage(e);
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.red));
+    
+    // SnackBar "Bonito"
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.info_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                msg,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.orange[800], // Naranja advertencia en vez de Rojo error
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+        elevation: 4,
+      ),
+    );
   }
 
   String _extractErrorMessage(Object e) {
@@ -89,6 +109,196 @@ class _AuthPageState extends State<AuthPage> {
 
   void _toggleView() {
     _authCtrl.toggleView();
+  }
+
+  Future<void> _recoverPassword(String email) async {
+    try {
+      await _authCtrl.recoverPassword(email);
+      if (!mounted) return;
+      Navigator.of(context).pop(); // Cerrar el diálogo
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Correo de recuperación enviado. Revisa tu bandeja.'),
+        ),
+      );
+    } catch (e) {
+      _showError(e);
+    }
+  }
+
+  void _showForgotPasswordDialog() {
+    final TextEditingController _resetEmailCtrl = TextEditingController();
+    // Variable local para el error dentro del BottomSheet
+    String? _localError;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            
+            // Función interna para manejar el envío y actualizar el estado LOCAL del modal
+            Future<void> _submitRecovery() async {
+              setModalState(() {
+                _localError = null; // Limpiar error previo
+              });
+
+              try {
+                await _authCtrl.recoverPassword(_resetEmailCtrl.text);
+                
+                if (!mounted) return;
+                Navigator.of(context).pop(); // Cerrar modal si éxito
+                
+                // Mostrar éxito en SnackBar (ya no hay modal tapándolo)
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Correo enviado. Revisa tu bandeja.'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } catch (e) {
+                // Si falla, actualizamos el estado DEL MODAL para mostrar el error
+                setModalState(() {
+                   // Usamos la misma lógica de extracción de mensaje
+                   // pero sin mostrar SnackBar, sino texto rojo.
+                   _localError = _extractErrorMessage(e);
+                });
+              }
+            }
+
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(25),
+                  topRight: Radius.circular(25),
+                ),
+              ),
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Recuperar contraseña',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Tema.brandPurple,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Introduce tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+                  _buildTextField(
+                    controller: _resetEmailCtrl,
+                    hintText: 'Correo electrónico',
+                    prefixIcon: const Icon(Icons.email_outlined, color: Colors.grey),
+                  ),
+                  
+                  // ZONA DE ERROR INLINE
+                  if (_localError != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red[50], // Fondo rojo suave
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.red.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline, color: Colors.red),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              _localError!,
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 24),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _authCtrl.isLoading,
+                    builder: (context, isLoading, child) {
+                      return SizedBox(
+                        height: 55,
+                        child: ElevatedButton(
+                          onPressed: isLoading
+                              ? null
+                              : _submitRecovery, // Llamamos a la función interna
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Tema.brandPurple,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            textStyle: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          child: isLoading
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text('ENVIAR ENLACE'),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(
+                      'Cancelar',
+                      style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   // ===================================================================
@@ -223,6 +433,22 @@ class _AuthPageState extends State<AuthPage> {
             },
           ),
         ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: _showForgotPasswordDialog,
+            child: const Text(
+              '¿Olvidaste tu contraseña?',
+              style: TextStyle(
+                color: Tema.brandPurple,
+                fontWeight: FontWeight.bold,
+                decoration: TextDecoration.underline,
+                decorationColor: Tema.brandPurple,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
         const SizedBox(height: 20),
         // SOLO este botón muestra el loading
         _buildButton(

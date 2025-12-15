@@ -50,6 +50,14 @@ class AuthRepository {
     await _remote.signOut();
   }
 
+  Future<void> sendPasswordResetEmail(String email) async {
+    await _remote.sendPasswordResetEmail(email);
+  }
+
+  Future<void> sendEmailVerification() async {
+    await _remote.sendEmailVerification();
+  }
+
   // ==========================
   // Obtener nombre
   // ==========================
