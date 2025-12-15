@@ -43,6 +43,12 @@ class TrainingViewModel {
     _series.clear();
   }
 
+  void removeSerieAt(int index) {
+    if (index >= 0 && index < _series.length) {
+      _series.removeAt(index);
+    }
+  }
+
   // ------- VALIDACIONES -------
 
   /// Devuelve un mensaje de error o null si todo está correcto.

@@ -628,18 +628,18 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
 
   Widget _buildBody() {
-    return SingleChildScrollView(
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch, // Cambiado a stretch para ocupar ancho
         children: [
-          const SizedBox(height: 40.0),
+          const SizedBox(height: 20.0), // Reducido un poco el espacio superior
           _buildFormContainer(),
-        const SizedBox(height: 32.0),
-        _buildAlarmSection(),
-        const SizedBox(height: 20.0), // + 12 margin = 32
-        if (_vm.series.isEmpty) ...[
+          const SizedBox(height: 24.0),
+          _buildAlarmSection(),
+          const SizedBox(height: 20.0), 
+          if (_vm.series.isEmpty) ...[
             _buildGpsToggle(),
             const SizedBox(height: 30.0),
           ],
@@ -656,8 +656,14 @@ class _TrainingStartViewState extends State<TrainingStartView> {
             color: Colors.grey.shade300,
             margin: const EdgeInsets.symmetric(vertical: 8.0),
           ),
-          _buildSeriesList(),
-          const SizedBox(height: 40.0),
+          
+          // Área scrollable para la lista
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 20), // Padding inferior para que no quede pegado
+              child: _buildSeriesList(),
+            ),
+          ),
         ],
       ),
     );
@@ -678,31 +684,169 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         ),
       );
     }
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: lista.length,
-      itemBuilder: (context, index) {
-        final Serie serie = lista[index];
-        return Card(
-          elevation: 2.0,
-          margin: const EdgeInsets.symmetric(vertical: 4.0),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: Tema.brandPurple,
-              child: Text(
-                '${index + 1}',
-                style: const TextStyle(color: Colors.white),
+    final List<Widget> children = [];
+
+
+    for (int i = 0; i < lista.length; i++) {
+        final Serie serie = lista[i];
+        final Key itemKey = ValueKey("${i}_${serie.hashCode}");
+
+        // 1. Ficha de la Serie (Dismissible)
+        children.add(
+          Dismissible(
+            key: itemKey,
+            direction: DismissDirection.endToStart,
+            background: Container(
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 20.0),
+              margin: const EdgeInsets.symmetric(vertical: 4.0),
+              decoration: BoxDecoration(
+                color: Colors.red.shade400,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
+            ),
+            confirmDismiss: (direction) async {
+              return await showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text("¿Borrar serie?"),
+                    content: const Text("Esta acción no se puede deshacer."),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text("Cancelar", style: TextStyle(color: Colors.grey)),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text("Borrar", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            onDismissed: (direction) {
+              setState(() {
+                _vm.removeSerieAt(i);
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Serie eliminada')),
+              );
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 2.0),
+              padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 16.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    offset: const Offset(0, 4),
+                    blurRadius: 12,
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  // 1. Badge Índice (Más vivo)
+                  Container(
+                    width: 32,
+                    height: 32,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Tema.brandPurple, Color(0xFF9C27B0)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Tema.brandPurple.withOpacity(0.4),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      '${i + 1}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+
+                  // 2. Datos Principales con Iconos de color
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildSerieStat('${serie.distanciaM}m', Icons.straighten, Colors.blue.shade400),
+                        _buildSerieStat('${serie.tiempoSec.toStringAsFixed(1)}s', Icons.timer_outlined, Colors.orange.shade400),
+                        _buildSerieStat(serie.ritmoTexto(), Icons.speed, Colors.green.shade400),
+                        _buildSerieStat('RPE ${serie.rpe}', Icons.bolt, Colors.red.shade400, isRpe: true),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-            title: Text(
-              '${serie.distanciaM}m en ${serie.tiempoSec.toStringAsFixed(1)}s',
-            ),
-            subtitle: Text('Ritmo: ${serie.ritmoTexto()} | RPE: ${serie.rpe}'),
-            trailing: Text('Desc: ${serie.descansoSec}s'),
           ),
         );
-      },
+
+        // 2. Fila de Descanso (Entre series)
+        if (i < lista.length - 1 && serie.descansoSec > 0) {
+           children.add(
+             Padding(
+               padding: const EdgeInsets.symmetric(vertical: 4.0),
+               child: Row(
+                 mainAxisAlignment: MainAxisAlignment.center,
+                 children: [
+                   Container(width: 20, height: 1, color: Colors.grey.shade300),
+                   const SizedBox(width: 8),
+                   Icon(Icons.snooze_rounded, size: 14, color: Colors.grey.shade400),
+                   const SizedBox(width: 4),
+                   Text(
+                     _formatDescanso(serie.descansoSec),
+                     style: TextStyle(
+                       fontSize: 12,
+                       color: Colors.grey.shade500,
+                       fontWeight: FontWeight.w500,
+                     ),
+                   ),
+                   const SizedBox(width: 8),
+                   Container(width: 20, height: 1, color: Colors.grey.shade300),
+                 ],
+               ),
+             ),
+           );
+        }
+    }
+
+    return Column(children: children);
+  }
+
+  Widget _buildSerieStat(String text, IconData icon, Color color, {bool isRpe = false}) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: color),
+        const SizedBox(height: 4),
+        Text(
+          text,
+          style: TextStyle(
+             fontSize: 12,
+             fontWeight: FontWeight.w600,
+             color: Colors.grey.shade800,
+          ),
+        ),
+      ],
     );
   }
 
@@ -1351,6 +1495,15 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     );
   }
 
+  String _formatDescanso(int totalSeconds) {
+    if (totalSeconds < 60) {
+      return '${totalSeconds}s';
+    }
+    final int minutes = totalSeconds ~/ 60;
+    final int seconds = totalSeconds % 60;
+    return '${minutes}m ${seconds.toString().padLeft(2, '0')}s';
+  }
+
 
   Widget _buildGpsToggle() {
     return AnimatedContainer(
@@ -1444,11 +1597,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   Widget _buildRestTimerFooter() {
     double progress = 0.0;
 
-
     if (_restTotalSeconds > 0) {
       progress = _restSecondsRemaining / _restTotalSeconds;
     }
-
 
     return Container(
       decoration: BoxDecoration(
@@ -1468,72 +1619,66 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           Container(height: 1.0, color: Colors.grey.shade200),
           Padding(
             padding: const EdgeInsets.symmetric(
-              vertical: 10.0, // Reduced from 20.0
+              vertical: 6.0, // Reducido para mantener la altura del footer original
               horizontal: 24.0,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                // BOTÓN FANTASMA (Para equilibrar y centrar el reloj)
-                Visibility(
-                  visible: false, 
-                  maintainSize: true, 
-                  maintainAnimation: true, 
-                  maintainState: true,
-                  child: _buildCircularButton(
-                    icon: Icons.skip_next_rounded,
-                    onTap: () {},
-                  ),
-                ),
-                
-                const SizedBox(width: 20),
-
-                // TIMER CIRCULAR
-                SizedBox(
-                  width: 85.0,
-                  height: 85.0,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: <Widget>[
-                      SizedBox(
-                        width: 85.0,
-                        height: 85.0,
-                        child: CircularProgressIndicator(
-                          value: progress,
-                          strokeWidth: 6.0,
-                          backgroundColor: Colors.white.withOpacity(0.4),
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            Tema.brandPurple,
+            child: Center(
+              child: SizedBox(
+                width: 100.0, // Tamaño contenido (era 85, subimos un poco solo)
+                height: 100.0,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: <Widget>[
+                    SizedBox(
+                      width: 100.0,
+                      height: 100.0,
+                      child: CircularProgressIndicator(
+                        value: progress,
+                        strokeWidth: 6.0, // Grosor original
+                        backgroundColor: Colors.grey.shade200,
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          Tema.brandPurple,
+                        ),
+                      ),
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _formatRestTime(),
+                          style: const TextStyle(
+                            fontSize: 22, // Tamaño ajustado
+                            fontWeight: FontWeight.bold,
+                            color: Tema.brandPurple,
+                            fontFeatures: <FontFeature>[
+                              FontFeature.tabularFigures(),
+                            ],
                           ),
                         ),
-                      ),
-                      Text(
-                        _formatRestTime(),
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Tema.brandPurple,
-                          fontFeatures: <FontFeature>[
-                            FontFeature.tabularFigures(),
-                          ],
+                        const SizedBox(height: 2),
+                        // Botón de saltar compacto
+                        GestureDetector(
+                          onTap: _skipRest,
+                          child: Container(
+                            padding: const EdgeInsets.all(4.0),
+                            decoration: BoxDecoration(
+                              color: Tema.brandPurple.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.skip_next_rounded,
+                              color: Tema.brandPurple,
+                              size: 24.0, // Icono pequeño
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ),
-                
-                const SizedBox(width: 20), // Espacio entre reloj y botón
-                
-                // BOTÓN SALTAR REAL
-                _buildCircularButton(
-                   icon: Icons.skip_next_rounded,
-                   onTap: _skipRest,
-                   color: Tema.brandPurple,
-                ),
-              ],
+              ),
             ),
-            ),
-
+          ),
         ],
       ),
     );
