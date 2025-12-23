@@ -1117,15 +1117,29 @@ class _TrainingStartViewState extends State<TrainingStartView> {
             style: ElevatedButton.styleFrom(backgroundColor: Tema.brandPurple),
             onPressed: () {
               final int? val = int.tryParse(manualController.text);
-              if (val != null && val >= 0) {
-                setState(() {
-                  if (isDistance) {
-                    _distanciaSeleccionada = val;
-                  } else {
-                    _descansoSeleccionado = val;
-                  }
-                });
-                Navigator.pop(context);
+              if (val != null) {
+                // Validación diferenciada
+                bool isValid = false;
+                if (isDistance) {
+                   isValid = val > 0; // Distancia debe ser > 0
+                } else {
+                   isValid = val >= 0; // Descanso puede ser 0
+                }
+
+                if (isValid) {
+                  setState(() {
+                    if (isDistance) {
+                      _distanciaSeleccionada = val;
+                    } else {
+                      _descansoSeleccionado = val;
+                    }
+                  });
+                  Navigator.pop(context);
+                } else {
+                   ScaffoldMessenger.of(context).showSnackBar(
+                     SnackBar(content: Text(isDistance ? "La distancia debe ser mayor a 0" : "Valor inválido"))
+                   );
+                }
               }
             },
             child: const Text("Aceptar", style: TextStyle(color: Colors.white)),
@@ -1644,31 +1658,17 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          _formatRestTime(),
-                          style: const TextStyle(
-                            fontSize: 22, // Tamaño ajustado
-                            fontWeight: FontWeight.bold,
-                            color: Tema.brandPurple,
-                            fontFeatures: <FontFeature>[
-                              FontFeature.tabularFigures(),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        // Botón de saltar compacto
                         GestureDetector(
                           onTap: _skipRest,
-                          child: Container(
-                            padding: const EdgeInsets.all(4.0),
-                            decoration: BoxDecoration(
-                              color: Tema.brandPurple.withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.skip_next_rounded,
+                          child: Text(
+                            _formatRestTime(),
+                            style: const TextStyle(
+                              fontSize: 22, // Tamaño ajustado
+                              fontWeight: FontWeight.bold,
                               color: Tema.brandPurple,
-                              size: 24.0, // Icono pequeño
+                              fontFeatures: <FontFeature>[
+                                FontFeature.tabularFigures(),
+                              ],
                             ),
                           ),
                         ),

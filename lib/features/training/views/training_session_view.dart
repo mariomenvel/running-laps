@@ -252,9 +252,6 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
 
     // Reanudar alarma si procede
     _startBeepTimerIfNeeded();
-
-    // Cerrar diálogo de RPE
-    Navigator.of(context).pop();
   }
 
 
@@ -351,6 +348,36 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
 
 
   // ===================================================================
+  // HELPERS COLOR
+  // ===================================================================
+
+  Color _getPaceColor(String paceString) {
+    if (paceString.contains("--")) return Colors.grey;
+
+    try {
+      // Formato esperado "mm:ss /km" o "mm:ss"
+      final parts = paceString.split(' ')[0].split(':');
+      if (parts.length != 2) return Colors.black87;
+
+      final int minutes = int.tryParse(parts[0]) ?? 0;
+      final int seconds = int.tryParse(parts[1]) ?? 0;
+      final int totalSeconds = (minutes * 60) + seconds;
+
+      // Lógica de colores simple
+      if (totalSeconds < 240) { // < 4:00 min/km
+        return Colors.green.shade600;
+      } else if (totalSeconds < 300) { // 4:00 - 5:00 min/km
+        return Colors.orange.shade700;
+      } else { // > 5:00 min/km
+        return Colors.red.shade400;
+      }
+    } catch (e) {
+      return Colors.black87;
+    }
+  }
+
+
+  // ===================================================================
   // UI
   // ===================================================================
 
@@ -408,7 +435,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
               ],
             )
           else
-            // CON GPS: Distancia GPS, Ritmo, y Descanso
+            // CON GPS: Distancia GPS y Descanso (Ritmo va al centro)
             Row(
               children: [
                 Expanded(
@@ -417,15 +444,6 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                     value: "${_distanciaGpsMetros.round()}m",
                     icon: Icons.location_on,
                     color: Tema.brandPurple,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildMetricCard(
-                    label: "Ritmo",
-                    value: _ritmoActual,
-                    icon: Icons.speed,
-                    color: Colors.orange,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -465,29 +483,53 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                     ),
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
-                      child: Text(
-                        _tiempoMostrado,
-                        style: const TextStyle(
-                          fontSize: 80.0,
-                          fontWeight: FontWeight.w200,
-                          height: 1.0,
-                          letterSpacing: -2.0,
-                          fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
-                          color: Colors.black87,
-                        ),
+                      child: Column(
+                       mainAxisAlignment: MainAxisAlignment.center,
+                       children: [
+                          // 1. TIEMPO
+                          Text(
+                            _tiempoMostrado,
+                            style: const TextStyle(
+                              fontSize: 56.0, // Reducido para caber
+                              fontWeight: FontWeight.w200,
+                              height: 1.0,
+                              letterSpacing: -1.0,
+                              fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
+                              color: Colors.black87,
+                            ),
+                          ),
+                          // 2. RITMO (Solo si GPS activo)
+                          if (widget.gpsActivo) ...[
+                            const SizedBox(height: 8), 
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                Text(
+                                  _ritmoActual.split(' ')[0], // Solo "mm:ss"
+                                  style: TextStyle(
+                                    fontSize: 56.0,
+                                    fontWeight: FontWeight.w200,
+                                    height: 1.0,
+                                    letterSpacing: -1.0,
+                                    fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+                                    color: _getPaceColor(_ritmoActual), // Color dinámico
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                const Text(
+                                  "min/km",
+                                  style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
+                                )
+                              ],
+                            ),
+                          ]
+                       ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "TIEMPO TOTAL",
-                    style: TextStyle(
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
-                      color: Colors.grey,
-                    ),
-                  ),
+                  // Etiqueta "TIEMPO TOTAL" eliminada por petición
                 ],
               ),
             ),
@@ -565,10 +607,6 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
   }
 
 
-
-
-
-
   Widget _buildFooter() {
     return Container(
       decoration: BoxDecoration(
@@ -628,12 +666,12 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
   // ===================================================================
 
 
-  void _showRpePicker() {
+  Future<void> _showRpePicker() async {
     final double rpeInicial = _rpeSeleccionado;
     final int initialItemIndex = ((_rpeSeleccionado - 1.0) * 2).round();
 
 
-    showModalBottomSheet(
+    final bool? result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -643,51 +681,50 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
         return WillPopScope(
           onWillPop: () async => false, // Prevent back button
           child: Container(
-            height: 350,
+            height: 320, // Altura ajustada
             decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
+                topLeft: Radius.circular(20), // Radio más suave tipo iOS
+                topRight: Radius.circular(20),
               ),
             ),
             child: Column(
               children: [
-                const SizedBox(height: 12),
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2)
-                  )
-                ),
+                // Header estilo iOS
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Valora tu esfuerzo (RPE)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      IconButton(
-                        icon: const Icon(Icons.check, color: Tema.brandPurple, size: 28),
-                        onPressed: () {
-                           // Si GPS est\u00e1 activo, mostrar di\u00e1logo de selecci\u00f3n de distancia
-                           if (widget.gpsActivo) {
-                             Navigator.of(context).pop(); // Cerrar RPE picker
-                             _showDistanceSelectionDialog();
-                           } else {
-                             // Sin GPS, guardar directamente
-                             _handleSave();
-                           }
-                        },
-                      )
+                      // Botón Cancelar (Izquierda)
+                      CupertinoButton(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text("Reanudar", style: TextStyle(color: Colors.red.shade400, fontSize: 17)),
+                        onPressed: () => Navigator.of(context).pop(false),
+                      ),
+                      
+                      // Título (Centro)
+                      const Text(
+                        "Esfuerzo (RPE)",
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                      ),
+                      
+                      // Botón Guardar (Derecha)
+                      CupertinoButton(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: const Text("Listo", style: TextStyle(color: Tema.brandPurple, fontSize: 17, fontWeight: FontWeight.bold)),
+                        onPressed: () => Navigator.of(context).pop(true),
+                      ),
                     ],
                   ),
                 ),
-                const Divider(height: 1),
+                const Divider(height: 1, thickness: 0.5),
+                
+                // Picker
                 Expanded(
                   child: CupertinoPicker(
-                    itemExtent: 40.0,
+                    itemExtent: 32.0, // Más compacto
                     scrollController: FixedExtentScrollController(
                       initialItem: initialItemIndex,
                     ),
@@ -701,21 +738,19 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                       return Center(
                         child: Text(
                           value.toStringAsFixed(1),
-                          style: const TextStyle(fontSize: 24.0, fontWeight: FontWeight.w500),
+                          style: const TextStyle(fontSize: 21.0, fontWeight: FontWeight.w400, color: Colors.black),
                         ),
                       );
                     }),
                   ),
                 ),
-                // Safety cancel button just in case
+                
+                // Nota informativa abajo
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 24.0, top: 8.0),
-                  child: TextButton(
-                    child: const Text('Cancelar / Reanudar', style: TextStyle(color: Colors.grey)),
-                    onPressed: () {
-                        _rpeSeleccionado = rpeInicial;
-                        _handleResume();
-                    },
+                  padding: const EdgeInsets.only(bottom: 30.0, top: 4),
+                  child: Text(
+                    "1 = Muy suave   ·   10 = Máximo esfuerzo",
+                    style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
                   ),
                 )
               ],
@@ -724,201 +759,176 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
         );
       },
     );
+
+    // Logic after sheet closes
+    if (result == true) {
+      // Confirmed
+      if (widget.gpsActivo) {
+        // Small delay to allow the previous sheet to close smoothly
+        await Future.delayed(const Duration(milliseconds: 200));
+        if (mounted) {
+           _showDistanceSelectionSheet();
+        }
+      } else {
+        _handleSave();
+      }
+    } else {
+      // Cancelled
+      _rpeSeleccionado = rpeInicial;
+      _handleResume();
+    }
   }
 
   // ===================================================================
-  // DIÁLOGO DE SELECCIÓN DE DISTANCIA (GPS vs Manual)
+  // SHEET DE SELECCIÓN DE DISTANCIA (GPS vs Manual)
   // ===================================================================
 
-  void _showDistanceSelectionDialog() {
+  void _showDistanceSelectionSheet() {
     final int distanciaGps = _distanciaGpsMetros.round();
     final int diferencia = (distanciaGps - _distanciaInt).abs();
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: false, // No cerrar al tocar fuera
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      isDismissible: false,
+      enableDrag: false,
       builder: (BuildContext ctx) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Row(
-            children: [
-              Icon(Icons.compare_arrows, color: Tema.brandPurple),
-              const SizedBox(width: 12),
-              const Text('Selecciona la distancia', style: TextStyle(fontSize: 20)),
-            ],
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
           ),
-          content: Column(
+          padding: EdgeInsets.fromLTRB(24, 20, 24, MediaQuery.of(ctx).padding.bottom + 20),
+          child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                '¿Qué distancia quieres usar para esta serie?',
-                style: TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-              const SizedBox(height: 24),
-              
-              // Distancia planificada (Manual)
-              _buildDistanceOption(
-                label: 'Distancia Planificada',
-                value: '$_distanciaInt m',
-                icon: Icons.route,
-                color: Colors.blue,
-                subtitle: 'Distancia que introdujiste',
-              ),
-              
-              const SizedBox(height: 16),
-              
-              // Distancia GPS
-              _buildDistanceOption(
-                label: 'Distancia GPS',
-                value: '$distanciaGps m',
-                icon: Icons.location_on,
-                color: Tema.brandPurple,
-                subtitle: 'Medida por GPS',
-              ),
-              
-              const SizedBox(height: 16),
-              
-              // Diferencia
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline, color: Colors.orange, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Diferencia: $diferencia m',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+               // Header
+               Center(
+                 child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2)
+                  )
+                 ),
+               ),
+               
+               const Text(
+                 'Confirma la Distancia',
+                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
+                 textAlign: TextAlign.center,
+               ),
+               const SizedBox(height: 8),
+               const Text(
+                 'Hemos calculado la distancia por GPS. ¿Cuál prefieres usar para esta serie?',
+                 style: TextStyle(fontSize: 14, color: Colors.grey),
+                 textAlign: TextAlign.center,
+               ),
+               const SizedBox(height: 24),
+               
+               // Botones de selección grandes
+               Row(
+                 children: [
+                   // OPCIÓN MANUAL
+                   Expanded(
+                     child: GestureDetector(
+                       onTap: () {
+                          Navigator.of(context).pop();
+                          _saveWithSelectedDistance(_distanciaInt, false);
+                       },
+                       child: Container(
+                         padding: const EdgeInsets.all(16),
+                         decoration: BoxDecoration(
+                           color: Colors.white,
+                           borderRadius: BorderRadius.circular(16),
+                           border: Border.all(color: Colors.grey.shade300, width: 2),
+                           boxShadow: [
+                             BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
+                           ]
+                         ),
+                         child: Column(
+                           children: [
+                             const Icon(Icons.edit_road, size: 32, color: Colors.purple),
+                             const SizedBox(height: 12),
+                             const Text("MANUAL", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1)),
+                             const SizedBox(height: 4),
+                             Text("$_distanciaInt m", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
+                           ],
+                         ),
+                       ),
+                     ),
+                   ),
+                   
+                   const SizedBox(width: 16),
+                   
+                   // OPCIÓN GPS
+                   Expanded(
+                     child: GestureDetector(
+                        onTap: distanciaGps > 0 ? () {
+                          Navigator.of(context).pop();
+                          _saveWithSelectedDistance(distanciaGps, true);
+                       } : null,
+                       child: Opacity(
+                         opacity: distanciaGps > 0 ? 1.0 : 0.5,
+                         child: Container(
+                           padding: const EdgeInsets.all(16),
+                           decoration: BoxDecoration(
+                             color: Colors.white,
+                             borderRadius: BorderRadius.circular(16),
+                             border: Border.all(color: Colors.grey.shade300, width: 2), // Borde neutro
+                              boxShadow: [
+                               BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
+                             ]
+                           ),
+                           child: Column(
+                             children: [
+                               const Icon(Icons.gps_fixed, size: 32, color: Tema.brandPurple),
+                               const SizedBox(height: 12),
+                               const Text("GPS", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Tema.brandPurple, letterSpacing: 1)),
+                               const SizedBox(height: 4),
+                               Text("$distanciaGps m", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
+                             ],
+                           ),
+                         ),
+                       ),
+                     ),
+                   ),
+                 ],
+               ),
+               
+               const SizedBox(height: 24),
+               
+               // Diferencia info
+               if (diferencia > 0)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.compare_arrows, size: 16, color: Colors.grey.shade600),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Diferencia de $diferencia m detectada",
+                        style: TextStyle(color: Colors.grey.shade700, fontSize: 13, fontWeight: FontWeight.w500),
+                      )
+                    ],
+                  ),
+                )
             ],
           ),
-          actions: [
-            // Botón: Usar Manual
-            Expanded(
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  side: BorderSide(color: Colors.blue),
-                ),
-                icon: const Icon(Icons.route, color: Colors.blue, size: 20),
-                label: Text(
-                  'Usar Manual ($_distanciaInt m)',
-                  style: const TextStyle(color: Colors.blue, fontSize: 13),
-                ),
-                onPressed: () {
-                  Navigator.of(context).pop(); // Cerrar diálogo
-                  _saveWithSelectedDistance(_distanciaInt, false);
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Botón: Usar GPS
-            Expanded(
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  backgroundColor: Tema.brandPurple,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                icon: const Icon(Icons.location_on, color: Colors.white, size: 20),
-                label: Text(
-                  'Usar GPS ($distanciaGps m)',
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
-                ),
-                onPressed: () {
-                  Navigator.of(context).pop(); // Cerrar diálogo
-                  _saveWithSelectedDistance(distanciaGps, true);
-                },
-              ),
-            ),
-          ],
         );
       },
     );
   }
-
-  /// Widget helper para opciones de distancia
-  Widget _buildDistanceOption({
-    required String label,
-    required String value,
-    required IconData icon,
-    required Color color,
-    String? subtitle,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
-
-
-
