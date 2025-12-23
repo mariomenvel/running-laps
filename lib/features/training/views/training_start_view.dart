@@ -13,6 +13,10 @@ import 'dart:ui' show FontFeature;
 import '../data/serie.dart';
 import '../viewmodels/training_viewmodel.dart';
 import 'training_session_view.dart';
+import '../data/tag_manager.dart';
+import '../data/tag_model.dart';
+import '../widgets/tag_chip.dart';
+import '../widgets/create_tag_dialog.dart';
 import '../../../app/tema.dart';
 
 
@@ -89,6 +93,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
 
   int? _alarmIntervalMs; // intervalo final en milisegundos
+
+  // --- Tags (Selección al guardar) ---
+  final Set<String> _selectedTags = {};
 
 
   @override
@@ -344,129 +351,220 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   }
 
   void _onFinishTrainingTap() {
-  if (_isSaving) return;
-  _trainingNameController.clear();
+    if (_isSaving) return;
+    _trainingNameController.clear();
+    // Limpiar tags seleccionadas previas
+    _selectedTags.clear();
 
-
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (ctx) => Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(ctx).viewInsets.bottom,
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(24.0),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Handle
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 24),
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (BuildContext context, StateSetter setModalState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom,
             ),
-            const Text(
-              'Guardar Entrenamiento',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+            child: Container(
+              padding: const EdgeInsets.all(24.0),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-             TextField(
-              controller: _trainingNameController,
-              autofocus: true,
-              style: const TextStyle(fontSize: 18),
-              decoration: InputDecoration(
-                labelText: 'Nombre de la sesión',
-                labelStyle: TextStyle(color: Colors.grey[600]),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                   borderRadius: BorderRadius.circular(12),
-                   borderSide: const BorderSide(color: Tema.brandPurple, width: 2),
-                ),
-                filled: true,
-                fillColor: Colors.grey.shade50,
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Tema.brandPurple,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
-              child: const Text(
-                'Guardar',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              onPressed: () {
-                final String trainingName = _trainingNameController.text;
-                if (trainingName.isEmpty) return;
-               
-                // Close sheet first
-                Navigator.of(ctx).pop();
-               
-                _saveTrainingToFirebase(trainingName);
-              },
-            ),
-            const SizedBox(height: 12),
-            // FINISH / DISCARD buttons row
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => _discardTraining(ctx),
-                    child: const Text('Descartar', style: TextStyle(color: Colors.red)),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Handle
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 24),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextButton(
-                    child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
-                    onPressed: () => Navigator.of(ctx).pop(),
+                  const Text(
+                    'Guardar Entrenamiento',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                ),
-              ],
-            )
-          ],
-        ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _trainingNameController,
+                    autofocus: true,
+                    style: const TextStyle(fontSize: 18),
+                    decoration: InputDecoration(
+                      labelText: 'Nombre de la sesión',
+                      labelStyle: TextStyle(color: Colors.grey[600]),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                         borderRadius: BorderRadius.circular(12),
+                         borderSide: const BorderSide(color: Tema.brandPurple, width: 2),
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  
+                  // -- SECCIÓN ETIQUETAS --
+                  const Text(
+                    'Etiquetas',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  const SizedBox(height: 8),
+                  FutureBuilder<List<TrainingTag>>(
+                    future: TagManager().getUserTags(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const SizedBox(
+                          height: 40, 
+                          child: Center(
+                            child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                          )
+                        );
+                      }
+                      
+                      final tags = snapshot.data!;
+                      
+                      return Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          // Botón nueva etiqueta
+                          ActionChip(
+                            avatar: const Icon(Icons.add, size: 16, color: Tema.brandPurple),
+                            label: const Text('Nueva', style: TextStyle(color: Tema.brandPurple)),
+                            backgroundColor: Tema.brandPurple.withOpacity(0.1),
+                            side: BorderSide.none,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            onPressed: () async {
+                              final bool? created = await showDialog(
+                                context: context, 
+                                builder: (_) => const CreateTagDialog()
+                              );
+                              if (created == true) {
+                                // Recargar tags (simplemente actualizando estado del modal para que el FutureBuilder se dispare si no usas future variable)
+                                // Mejor: TagManager guarda en Firestore, al hacer setState el Future se vuelve a ejecutar
+                                setModalState(() {});
+                              }
+                            },
+                          ),
+                          
+                          // Lista de etiquetas
+                          ...tags.map((tag) {
+                            final bool isSelected = _selectedTags.contains(tag.name);
+                            return FilterChip(
+                              label: Text(
+                                tag.name,
+                                style: TextStyle(
+                                  color: isSelected ? Colors.white : Colors.black87,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              ),
+                              selected: isSelected,
+                              selectedColor: Color(tag.colorValue),
+                              backgroundColor: Colors.grey.shade100,
+                              checkmarkColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                                side: BorderSide(
+                                  color: isSelected ? Colors.transparent : Colors.grey.shade300,
+                                ),
+                              ),
+                              onSelected: (bool selected) {
+                                setModalState(() {
+                                  if (selected) {
+                                    _selectedTags.add(tag.name);
+                                  } else {
+                                    _selectedTags.remove(tag.name);
+                                  }
+                                });
+                              },
+                            );
+                          }).toList(),
+                        ],
+                      );
+                    },
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Tema.brandPurple,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Guardar y Terminar',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: () {
+                      final String trainingName = _trainingNameController.text;
+                      if (trainingName.isEmpty) return;
+                     
+                      // Close sheet first
+                      Navigator.of(ctx).pop();
+                     
+                      _saveTrainingToFirebase(trainingName, _selectedTags.toList());
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  // FINISH / DISCARD buttons row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => _discardTraining(ctx),
+                          child: const Text('Descartar', style: TextStyle(color: Colors.red)),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextButton(
+                          child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+                          onPressed: () => Navigator.of(ctx).pop(),
+                        ),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ),
+          );
+        },
       ),
-    ),
-  );
-}
+    );
+  }
 
 
-  Future<void> _saveTrainingToFirebase(String trainingName) async {
+  Future<void> _saveTrainingToFirebase(String trainingName, List<String> tags) async {
     setState(() {
       _isSaving = true;
     });
 
 
     try {
-      final String newTrainingId = await _vm.guardarEntrenamiento(trainingName);
+      final String newTrainingId = await _vm.guardarEntrenamiento(
+        trainingName, 
+        tags: tags.isNotEmpty ? tags : null
+      );
 
 
       print('Entrenamiento guardado con ID: $newTrainingId');
@@ -489,6 +587,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         _restTimer?.cancel();
         _isResting = false;
         _restSecondsRemaining = 0;
+        _selectedTags.clear(); // Limpiar tags
       });
 
 

@@ -8,12 +8,19 @@ import 'package:running_laps/features/training/views/training_start_view.dart';
 import 'package:running_laps/features/profile/views/profile_menu_screen.dart';
 import 'package:running_laps/features/home/views/home_view.dart';
 import '../../training/data/serie.dart';
+import '../../training/data/tag_model.dart';
+import '../../training/data/tag_manager.dart';
+import '../../training/widgets/tag_chip.dart';
+import '../../training/widgets/tag_selector_sheet.dart';
 import '../../../core/widgets/app_footer.dart';
 import '../../../core/widgets/app_header.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/core/services/pdf_generator_service.dart';
 import 'package:printing/printing.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:running_laps/features/profile/views/widgets/history_filter_sheet.dart';
+import 'package:running_laps/features/profile/views/widgets/history_calendar_widget.dart';
+import 'package:running_laps/features/profile/views/analytics_screen.dart'; // Import
 import 'package:universal_html/html.dart' as html;
 
 class ProfileView extends StatefulWidget {
@@ -31,6 +38,10 @@ class _ProfileViewState extends State<ProfileView> {
   static const Color _brandDark = Color(0xFF2C3E50);
 
   late final ProfileController _controller;
+  
+  // VIEW MODE: List vs Calendar
+  bool _isCalendarView = false;
+  DateTime? _selectedCalendarDate;
 
   @override
   void initState() {
@@ -60,14 +71,14 @@ class _ProfileViewState extends State<ProfileView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                   // TÍTULO CON ESTILO MEJORADO
+                   // TÍTULO Y CONTROLES
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20.0, 24.0, 20.0, 10.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Historial de Entrenos',
+                          'Historial',
                           style: TextStyle(
                             fontSize: 22, // Más grande
                             fontWeight: FontWeight.w800, // Más bold
@@ -75,17 +86,145 @@ class _ProfileViewState extends State<ProfileView> {
                             letterSpacing: -0.5,
                           ),
                         ),
-                        // Filter menu button
-                         _buildFilterMenu(),
+                        // Controles: View Toggle + Filter
+                        Row(
+                          children: [
+                            // View Toggle
+                            IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _isCalendarView = !_isCalendarView;
+                                  if (!_isCalendarView) {
+                                    _selectedCalendarDate = null;
+                                    _controller.setDateRange(null, null);
+                                  }
+                                });
+                              },
+                              icon: Icon(
+                                _isCalendarView ? Icons.list_rounded : Icons.calendar_month_rounded,
+                                color: Tema.brandPurple,
+                              ),
+                              tooltip: _isCalendarView ? 'Ver lista' : 'Ver calendario',
+                            ),
+
+                            // ANALYTICS BUTTON
+                            IconButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context, 
+                                  MaterialPageRoute(
+                                    builder: (_) => AnalyticsScreen(viewModel: _controller.analytics),
+                                  ),
+                                );
+                              }, 
+                              icon: const Icon(Icons.bar_chart_rounded, color: Tema.brandPurple),
+                              tooltip: 'Ver estadísticas',
+                            ),
+                            
+                            // Filter menu button
+                             _buildFilterMenu(),
+                          ],
+                        ),
                       ],
                     ),
                   ),
+
+                  // CALENDAR WIDGET (Solo visible en modo calendario)
+                  if (_isCalendarView)
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      height: _isCalendarView ? null : 0,
+                      child: ValueListenableBuilder<List<Entrenamiento>>(
+                        valueListenable: _controller.trainings, // Escuchamos cambios para actualizar puntos? 
+                        // Mejor escuchar _allTrainings, pero get eventsByDay usa _allTrainings.
+                        // Usaremos AnimatedBuilder para reconstruir si cargan datos
+                        builder: (context, _, __) {
+                           // Necesitamos reconstruir el calendario si cargan nuevos datos
+                           return HistoryCalendarWidget(
+                             events: _controller.eventsByDay,
+                             selectedDay: _selectedCalendarDate,
+                             getTagColor: _controller.getColorForTag, // PASAMOS EL PROVIDER
+                             onDaySelected: (date) {
+                               setState(() {
+                                 _selectedCalendarDate = date;
+                               });
+                               // Filtrar lista por este día
+                               _controller.setDateRange(date, date); 
+                             },
+                           );
+                        },
+                      ),
+                    ),
+
+
+                  // FILTROS ACTIVOS (CHIPS)
+                  if (!_isCalendarView) 
+                    _buildActiveFilters(), // Ocultar chips si estamos en calendario? O mostrarlos?
+                  // Dejémoslos visibles si no son de fecha, o mostrarlos siempre para saber qué pasa.
+                  // Si estamos en calendario, el filtro de fecha es implícito visualmente, pero los demás (tags) siguen aplicando.
+                  // Vamos a mostrarlos siempre, pero quizas con padding ajustado.
+                  if (_isCalendarView && _selectedCalendarDate != null)
+                     Padding(
+                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                       child: Row(
+                         children: [
+                           Text(
+                             'Entrenos del ${_formatDateShort(_selectedCalendarDate!)}',
+                             style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+                           ),
+                           const Spacer(),
+                           TextButton(
+                             onPressed: () {
+                               setState(() {
+                                  _selectedCalendarDate = null;
+                                  _controller.setDateRange(null, null);
+                               });
+                             }, 
+                             child: const Text('Ver todos')
+                           )
+                         ],
+                       ),
+                     ),
+                  
+                  if (_isCalendarView && _selectedCalendarDate != null)
+                    const Divider(height: 1),
+
+                  /*
+                  // BARRA DE BÚSQUEDA
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20.0, 0, 20.0, 16.0),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Buscar por título...',
+                        hintStyle: TextStyle(color: Colors.grey.shade500),
+                        prefixIcon: Icon(Icons.search, color: Colors.grey.shade600),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.grey.shade200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: Tema.brandPurple, width: 2),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      onChanged: (value) => _controller.setSearchQuery(value),
+                    ),
+                  ),
+                  */
 
                   // LISTA (scrollable)
                   Expanded(child: _buildTrainingList()),
                 ],
               ),
             ),
+
 
             // 3. FOOTER (Fijo abajo)
             AppFooter(
@@ -136,64 +275,144 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   // ============================
-  // FILTER MENU
+  // FILTER MENU BUTTON & CHIPS
   // ============================
   Widget _buildFilterMenu() {
-    return ValueListenableBuilder<TrainingFilter>(
-      valueListenable: _controller.currentFilter,
-      builder: (context, currentFilter, child) {
-        String filterLabel = _getFilterLabel(currentFilter);
-        
-        return Theme(
-          data: Theme.of(context).copyWith(
-            popupMenuTheme: PopupMenuThemeData(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 6,
-              color: Colors.white,
-              surfaceTintColor: Colors.white,
+    // 1. Botón Principal de Filtro (Abre el Sheet)
+    return Padding(
+      padding: const EdgeInsets.only(left: 8.0),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => HistoryFilterSheet(controller: _controller),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade200),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.tune_rounded, size: 18, color: Tema.brandPurple),
+                const SizedBox(width: 6),
+                ValueListenableBuilder<int>( // Escuchar cambios en profile_controller para mostrar badge
+                  valueListenable: ValueNotifier<int>(0), // TODO: Esto debería ser reactivo real, ver abajo
+                  builder: (context, _, __) {
+                    // Hack rápido: Usamos AnimatedBuilder para reconstruir cuando cambie ALGO en el controller
+                    return AnimatedBuilder(
+                      animation: Listenable.merge([
+                        _controller.currentFilter,
+                        _controller.searchQuery,
+                        _controller.selectedTags,
+                        _controller.filterStartDate,
+                        _controller.filterEndDate,
+                        _controller.filterMinDist,
+                        _controller.filterMaxDist,
+                        _controller.filterSeriesDistance,
+                      ]),
+                      builder: (context, _) {
+                        final int count = _controller.activeFiltersCount;
+                        if (count == 0) return const Text('Filtrar', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13));
+                        
+                        return Text(
+                          'Filtros ($count)', 
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: Tema.brandPurple, fontSize: 13)
+                        );
+                      },
+                    );
+                  },
+                ),
+              ],
             ),
           ),
-          child: PopupMenuButton<TrainingFilter>(
-            tooltip: 'Filtrar historial',
-            offset: const Offset(0, 40),
-            onSelected: (filter) {
-              _controller.setFilter(filter);
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Tema.brandPurple.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    filterLabel,
-                    style: const TextStyle(
-                      color: Tema.brandPurple,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
+        ),
+      ),
+    );
+  }
+
+  // Widget para mostrar los chips de filtros activos debajo del título
+  Widget _buildActiveFilters() {
+    return AnimatedBuilder(
+      animation: Listenable.merge([
+        _controller.currentFilter,
+        _controller.searchQuery,
+        _controller.selectedTags,
+        _controller.filterStartDate,
+        _controller.filterEndDate,
+        _controller.filterMinDist,
+        _controller.filterMaxDist,
+        _controller.filterSeriesDistance,
+      ]),
+      builder: (context, _) {
+        final List<Widget> chips = [];
+
+        // 1. Rando Fechas
+        if (_controller.filterStartDate.value != null || _controller.filterEndDate.value != null) {
+            String label = 'Fechas';
+            if (_controller.filterStartDate.value != null && _controller.filterEndDate.value != null) {
+              label = '${DateFormat('dd/MM').format(_controller.filterStartDate.value!)} - ${DateFormat('dd/MM').format(_controller.filterEndDate.value!)}';
+            } else if (_controller.filterStartDate.value != null) {
+              label = 'Desde ${DateFormat('dd/MM').format(_controller.filterStartDate.value!)}';
+            } else {
+              label = 'Hasta ${DateFormat('dd/MM').format(_controller.filterEndDate.value!)}';
+            }
+            chips.add(_buildChip(label, () => _controller.setDateRange(null, null)));
+        }
+
+        // 2. Distancia
+        if (_controller.filterMinDist.value != null || _controller.filterMaxDist.value != null) {
+           String label = 'Distancia';
+           if (_controller.filterMinDist.value != null && _controller.filterMaxDist.value != null) {
+             label = '${(_controller.filterMinDist.value!/1000).toStringAsFixed(1)}-${(_controller.filterMaxDist.value!/1000).toStringAsFixed(1)} km';
+           } else if (_controller.filterMinDist.value != null) {
+             label = '> ${(_controller.filterMinDist.value!/1000).toStringAsFixed(1)} km';
+           } else {
+             label = '< ${(_controller.filterMaxDist.value!/1000).toStringAsFixed(1)} km';
+           }
+           chips.add(_buildChip(label, () => _controller.setDistanceRange(null, null)));
+        }
+
+        // 3. Series
+        if (_controller.filterSeriesDistance.value != null) {
+          chips.add(_buildChip('Series ${_controller.filterSeriesDistance.value}m', () => _controller.setSeriesDistanceFilter(null)));
+        }
+        
+        // 4. Tags
+        for (var tag in _controller.selectedTags.value) {
+          chips.add(_buildChip('#$tag', () => _controller.toggleTagFilter(tag)));
+        }
+
+        if (chips.isEmpty) return const SizedBox.shrink();
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ...chips,
+              // Botón limpiar todo
+              GestureDetector(
+                onTap: _controller.clearAllFilters,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  const SizedBox(width: 4),
-                  const Icon(
-                    Icons.filter_list_rounded,
-                    color: Tema.brandPurple,
-                    size: 16,
-                  ),
-                ],
-              ),
-            ),
-            itemBuilder: (context) => [
-              _buildFilterMenuItem(TrainingFilter.all, 'Todos', Icons.list_rounded, currentFilter),
-              const PopupMenuDivider(height: 1),
-              _buildFilterMenuItem(TrainingFilter.last7Days, 'Últimos 7 días', Icons.calendar_today_rounded, currentFilter),
-              _buildFilterMenuItem(TrainingFilter.last30Days, 'Últimos 30 días', Icons.calendar_month_rounded, currentFilter),
-              _buildFilterMenuItem(TrainingFilter.thisMonth, 'Este mes', Icons.date_range_rounded, currentFilter),
-              const PopupMenuDivider(height: 1),
-              _buildFilterMenuItem(TrainingFilter.longRuns, 'Carreras largas (+10km)', Icons.directions_run_rounded, currentFilter),
-              _buildFilterMenuItem(TrainingFilter.highIntensity, 'Alta intensidad (RPE>7)', Icons.local_fire_department_rounded, currentFilter),
+                  child: const Text('Borrar todo', style: TextStyle(fontSize: 11, color: Colors.red, fontWeight: FontWeight.bold)),
+                ),
+              )
             ],
           ),
         );
@@ -201,71 +420,29 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
-  PopupMenuItem<TrainingFilter> _buildFilterMenuItem(
-    TrainingFilter filter,
-    String label,
-    IconData icon,
-    TrainingFilter currentFilter,
-  ) {
-    final bool isSelected = filter == currentFilter;
-    
-    return PopupMenuItem<TrainingFilter>(
-      value: filter,
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+  Widget _buildChip(String label, VoidCallback onRemove) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Tema.brandPurple.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Tema.brandPurple.withOpacity(0.3)),
+      ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: isSelected 
-                  ? Tema.brandPurple.withOpacity(0.15)
-                  : Colors.grey.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              icon,
-              size: 16,
-              color: isSelected ? Tema.brandPurple : Colors.grey.shade600,
-            ),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12, color: Tema.brandPurple, fontWeight: FontWeight.w600),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? Tema.brandPurple : Colors.black87,
-              ),
-            ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: onRemove,
+            child: const Icon(Icons.close, size: 14, color: Tema.brandPurple),
           ),
-          if (isSelected)
-            const Icon(
-              Icons.check_circle_rounded,
-              size: 18,
-              color: Tema.brandPurple,
-            ),
         ],
       ),
     );
-  }
-
-  String _getFilterLabel(TrainingFilter filter) {
-    switch (filter) {
-      case TrainingFilter.all:
-        return 'Todos';
-      case TrainingFilter.last7Days:
-        return '7 días';
-      case TrainingFilter.last30Days:
-        return '30 días';
-      case TrainingFilter.thisMonth:
-        return 'Este mes';
-      case TrainingFilter.longRuns:
-        return 'Largos';
-      case TrainingFilter.highIntensity:
-        return 'Intensos';
-    }
   }
 
   // ============================
@@ -363,6 +540,7 @@ class _ProfileViewState extends State<ProfileView> {
                           padding: const EdgeInsets.only(bottom: 16.0),
                           child: TrainingCard(
                             training: training,
+                            onUpdate: _controller.loadTrainings, // Recargar al actualizar
                           ),
                         );
                       },
@@ -374,6 +552,9 @@ class _ProfileViewState extends State<ProfileView> {
       },
     );
   }
+  String _formatDateShort(DateTime date) {
+    return '${date.day}/${date.month}';
+  }
 }
 
 // ============================
@@ -381,10 +562,12 @@ class _ProfileViewState extends State<ProfileView> {
 // ============================
 class TrainingCard extends StatefulWidget {
   final Entrenamiento training;
+  final VoidCallback? onUpdate; // Callback para recargar
 
   const TrainingCard({
     Key? key,
     required this.training,
+    this.onUpdate,
   }) : super(key: key);
 
   @override
@@ -574,6 +757,35 @@ class _TrainingCardState extends State<TrainingCard> {
                      color: Colors.grey.shade500,
                    ),
                  ),
+                 // Mostrar etiquetas si existen
+                 if (widget.training.tags != null && widget.training.tags!.isNotEmpty) ...[
+                   const SizedBox(height: 8),
+                   FutureBuilder<List<TrainingTag>>(
+                     future: TagManager().getUserTags(),
+                     builder: (context, snapshot) {
+                       if (snapshot.hasError) return const SizedBox.shrink(); // Silenciar error en UI
+                       if (!snapshot.hasData) return const SizedBox.shrink();
+                       
+                       final allTags = snapshot.data!;
+                       final tagMap = {for (var t in allTags) t.name: t};
+                       
+                       return Wrap(
+                         spacing: 6,
+                         runSpacing: 4,
+                         children: widget.training.tags!.map((tagName) {
+                           final tag = tagMap[tagName];
+                           if (tag == null) return const SizedBox.shrink();
+                           
+                           return TagChip(
+                             tagName: tag.name,
+                             color: tag.color,
+                             small: true,
+                           );
+                         }).toList(),
+                       );
+                     },
+                   ),
+                 ],
                ],
              ),
            ),
@@ -643,7 +855,49 @@ class _TrainingCardState extends State<TrainingCard> {
         tooltip: 'Opciones',
         offset: const Offset(0, 40),
         onSelected: (val) async {
-          if (val == 'pdf') {
+          if (val == 'tags') {
+            // Verificar que tenemos ID
+            if (widget.training.id == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Error: No se puede editar este entrenamiento'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+              return;
+            }
+
+            // Abrir selector de etiquetas
+            final result = await showModalBottomSheet<bool>(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: TagSelectorSheet(
+                  training: widget.training,
+                  trainingId: widget.training.id!,
+                ),
+              ),
+            );
+
+              // Si se guardaron cambios, recargar
+              if (result == true && mounted) {
+                // Notificar actualización al padre
+                widget.onUpdate?.call();
+                
+                // Opcional: Mostrar confirmación
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Etiquetas actualizadas'),
+                    behavior: SnackBarBehavior.floating,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+          } else if (val == 'pdf') {
             // Mostrar loading
             ScaffoldMessenger.of(context).showSnackBar(
                const SnackBar(
@@ -739,6 +993,34 @@ class _TrainingCardState extends State<TrainingCard> {
           }
         },
         itemBuilder: (context) => [
+          PopupMenuItem(
+            value: 'tags',
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Tema.brandPurple.withOpacity(0.1),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
+                  ),
+                  child: const Icon(Icons.label_rounded, size: 18, color: Tema.brandPurple),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Editar etiquetas',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors
+.black87
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const PopupMenuDivider(height: 1),
           PopupMenuItem(
             value: 'pdf',
              height: 48,

@@ -78,7 +78,7 @@ class TrainingViewModel {
 
   // ------- GUARDAR ENTRENAMIENTO -------
 
-  Future<String> guardarEntrenamiento(String titulo) async {
+  Future<String> guardarEntrenamiento(String titulo, {List<String>? tags}) async {
     if (_series.isEmpty) {
       throw Exception('El entrenamiento debe tener al menos una serie.');
     }
@@ -88,6 +88,7 @@ class TrainingViewModel {
       fecha: DateTime.now(),
       gps: _gpsOn,
       series: List<Serie>.from(_series),
+      tags: tags,
     );
 
     final String entrenamientoId = await _repo.createTraining(entrenamiento);

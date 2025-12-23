@@ -32,6 +32,7 @@ class TrainingRepository {
     return doc.id;
   }
 
+
   // NUEVO: obtener lista de entrenamientos del usuario actual
   Future<List<Entrenamiento>> getTrainings() async {
     final String uid = _requireUid();
@@ -45,10 +46,20 @@ class TrainingRepository {
     for (int i = 0; i < snapshot.docs.length; i = i + 1) {
       final QueryDocumentSnapshot<Map<String, dynamic>> doc = snapshot.docs[i];
       final Map<String, dynamic> data = doc.data();
-      // Usamos tu modelo de dominio centralizado
-      result.add(Entrenamiento.fromMap(data));
+      // Pasar el ID del documento al modelo
+      result.add(Entrenamiento.fromMap(data, id: doc.id));
     }
 
     return result;
+  }
+
+  /// Actualiza solo las etiquetas de un entrenamiento existente
+  Future<void> updateTrainingTags(String trainingId, List<String> tags) async {
+    final String uid = _requireUid();
+
+    await _userTrainings(uid).doc(trainingId).update({
+      'tags': tags,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 }

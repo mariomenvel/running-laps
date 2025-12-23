@@ -276,7 +276,8 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
     );
 
     // 3. Cerrar el diálogo de RPE
-    Navigator.of(context).pop();
+    // El diálogo ya está cerrado porque awaiting por el resultado en _showRpePicker
+    
     // 4. Volver a la pantalla anterior devolviendo la serie
     Navigator.of(context).pop(serieTerminada);
   }

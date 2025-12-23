@@ -1,16 +1,20 @@
 import 'serie.dart';
 
 class Entrenamiento {
+  final String? id;  // ID del documento en Firestore (opcional para compatibilidad)
   final String titulo;
   final DateTime fecha;
   final bool gps;
   final List<Serie> series;
+  final List<String>? tags; // Etiquetas del entrenamiento
 
   Entrenamiento({
+    this.id,
     required this.titulo,
     required this.fecha,
     required this.gps,
     required this.series,
+    this.tags,
   });
 
   int distanciaTotalM() {
@@ -81,10 +85,16 @@ class Entrenamiento {
       base['ritmoMedioSecKm'] = null; // sin distancia no hay ritmo
     }
 
+    // Guardar tags si existen
+    if (tags != null) {
+      base['tags'] = tags;
+    }
+
+
     return base;
   }
 
-  static Entrenamiento fromMap(Map<String, dynamic> map) {
+  static Entrenamiento fromMap(Map<String, dynamic> map, {String? id}) {
     final List<dynamic> rawSeries = map['series'] as List<dynamic>;
     final List<Serie> cargadas = <Serie>[];
     for (int i = 0; i < rawSeries.length; i = i + 1) {
@@ -95,11 +105,19 @@ class Entrenamiento {
     final dynamic f = map['fecha'];
     final DateTime fechaParsed = _parseFechaFlexible(f);
 
+    // Leer tags si existen (compatibilidad con entrenamientos antiguos)
+    List<String>? tagsList;
+    if (map.containsKey('tags') && map['tags'] != null) {
+      tagsList = List<String>.from(map['tags'] as List);
+    }
+
     return Entrenamiento(
+      id: id,  // Asignar el ID del documento
       titulo: map['titulo'] as String,
       fecha: fechaParsed,
       gps: map['gps'] as bool,
       series: cargadas,
+      tags: tagsList,
     );
   }
 
