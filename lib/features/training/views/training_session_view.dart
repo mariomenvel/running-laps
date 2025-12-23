@@ -5,10 +5,10 @@ import 'package:flutter/services.dart'; // Para SystemSound
 import 'dart:ui' show FontFeature;
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 
-
 import '../data/serie.dart';
 import '../../../app/tema.dart';
 import '../../../core/widgets/app_header.dart';
+import '../../../core/services/gps_service.dart';
 
 
 class TrainingSessionView extends StatefulWidget {
@@ -39,18 +39,21 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
   String _tiempoMostrado = "00:00.00";
   bool _isRunning = true;
 
-
   // --- Valores serie ---
   double _rpeSeleccionado = 5.0; // RPE inicial (escala 1-10)
   int _distanciaInt = 0;
   int _descansoInt = 0;
-
 
   // --- Alarma ---
   Timer? _beepTimer;
   int? _alarmIntervalMs;
   bool _isAlarmActive = false; // Para efecto visual
 
+  // --- GPS ---
+  GPSService? _gpsService;
+  double _distanciaGpsMetros = 0.0;
+  String _ritmoActual = "--:-- /km";
+  Timer? _gpsUpdateTimer;
 
   // --- Colores (coincide con TrainingStartView) ---
   static const Color _bgGradientColor = Color(0xFFF9F5FB);
@@ -60,20 +63,92 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
   void initState() {
     super.initState();
 
-
     // Parsear los valores de la serie
     _distanciaInt = int.tryParse(widget.distancia) ?? 0;
     _descansoInt = int.tryParse(widget.descanso) ?? 0;
 
-
     // Intervalo de alarma recibido
     _alarmIntervalMs = widget.alarmIntervalMs;
-
 
     // Iniciar el cronómetro
     _stopwatch.start();
     _startTimer();
     _startBeepTimerIfNeeded();
+
+    // Iniciar GPS si está activo
+    if (widget.gpsActivo) {
+      _initializeGPS();
+    }
+  }
+
+  /// Inicializa el GPS service
+  Future<void> _initializeGPS() async {
+    _gpsService = GPSService();
+    final bool initialized = await _gpsService!.initialize();
+    
+    if (initialized) {
+      await _gpsService!.startTracking();
+      
+      // Timer para actualizar distancia y ritmo GPS cada 500ms
+      _gpsUpdateTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+        if (mounted && _gpsService != null) {
+          setState(() {
+            _distanciaGpsMetros = _gpsService!.totalDistanceMeters;
+            _ritmoActual = _gpsService!.currentPace;
+          });
+        }
+      });
+    } else {
+      // Mostrar error específico según el estado del GPS
+      if (mounted) {
+        String errorMessage = 'No se pudo activar el GPS.';
+        String actionMessage = '';
+        
+        if (_gpsService!.status == GpsStatus.disabled) {
+          errorMessage = '📍 GPS desactivado';
+          actionMessage = 'Activa la ubicación en los ajustes de tu móvil';
+        } else if (_gpsService!.status == GpsStatus.permissionDenied) {
+          errorMessage = '🔒 Permisos de ubicación denegados';
+          actionMessage = 'Ve a Ajustes → Apps → Running Laps → Permisos → Ubicación';
+        } else {
+          errorMessage = '❌ Error al iniciar GPS';
+          actionMessage = 'Verifica que el GPS esté activo y los permisos estén dados';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  errorMessage,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                if (actionMessage.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    actionMessage,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ],
+              ],
+            ),
+            backgroundColor: Colors.red.shade700,
+            duration: const Duration(seconds: 6),
+            behavior: SnackBarBehavior.floating,
+            action: SnackBarAction(
+              label: 'OK',
+              textColor: Colors.white,
+              onPressed: () {},
+            ),
+          ),
+        );
+      }
+    }
   }
 
 
@@ -81,6 +156,8 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
   void dispose() {
     _timer?.cancel();
     _beepTimer?.cancel();
+    _gpsUpdateTimer?.cancel();
+    _gpsService?.dispose();
     _stopwatch.stop();
     super.dispose();
   }
@@ -152,12 +229,11 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
     _stopwatch.stop();
     _timer?.cancel();
     _stopBeepTimer();
-
+    _gpsService?.pause(); // Pausar GPS
 
     setState(() {
       _isRunning = false;
     });
-
 
     // Mostrar selector de RPE
     _showRpePicker();
@@ -168,16 +244,14 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
     // Reanudar crono
     _stopwatch.start();
     _startTimer();
-
+    _gpsService?.resume(); // Reanudar GPS
 
     setState(() {
       _isRunning = true;
     });
 
-
     // Reanudar alarma si procede
     _startBeepTimerIfNeeded();
-
 
     // Cerrar diálogo de RPE
     Navigator.of(context).pop();
@@ -190,22 +264,56 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
     _stopBeepTimer();
     _stopwatch.stop();
 
+    // 1. Obtener tiempo final en segundos
+    final double tiempoFinalSec = _stopwatch.elapsed.inMilliseconds / 1000.0;
+
+    // 2. Crear el objeto Serie (sin GPS)
+    final Serie serieTerminada = Serie(
+      tiempoSec: tiempoFinalSec,
+      distanciaM: _distanciaInt, // Distancia manual
+      descansoSec: _descansoInt,
+      rpe: _rpeSeleccionado,
+      usedGps: false,
+      usedGpsDistance: null,
+      gpsPoints: null,
+    );
+
+    // 3. Cerrar el diálogo de RPE
+    Navigator.of(context).pop();
+    // 4. Volver a la pantalla anterior devolviendo la serie
+    Navigator.of(context).pop(serieTerminada);
+  }
+
+  /// Guardar con distancia seleccionada (GPS o manual)
+  void _saveWithSelectedDistance(int distanciaFinal, bool usedGpsDistance) {
+    // Detener todo
+    _timer?.cancel();
+    _stopBeepTimer();
+    _gpsUpdateTimer?.cancel();
+    _stopwatch.stop();
 
     // 1. Obtener tiempo final en segundos
     final double tiempoFinalSec = _stopwatch.elapsed.inMilliseconds / 1000.0;
 
+    // 2. Convertir puntos GPS a Map
+    List<Map<String, dynamic>>? gpsPointsMaps;
+    if (_gpsService != null) {
+      gpsPointsMaps = _gpsService!.points
+          .map((point) => point.toMap())
+          .toList();
+    }
 
-    // 2. Crear el objeto Serie
+    // 3. Crear el objeto Serie con GPS
     final Serie serieTerminada = Serie(
       tiempoSec: tiempoFinalSec,
-      distanciaM: _distanciaInt,
+      distanciaM: distanciaFinal, // Distancia elegida por el usuario
       descansoSec: _descansoInt,
       rpe: _rpeSeleccionado,
+      usedGps: true,
+      usedGpsDistance: usedGpsDistance,
+      gpsPoints: gpsPointsMaps,
     );
 
-
-    // 3. Cerrar el diálogo de RPE
-    Navigator.of(context).pop();
     // 4. Volver a la pantalla anterior devolviendo la serie
     Navigator.of(context).pop(serieTerminada);
   }
@@ -276,26 +384,61 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
       child: Column(
         children: <Widget>[
           const SizedBox(height: 32.0),
-          // Info Cards (Distancia & Descanso)
-          Row(
-            children: [
-              Expanded(
-                child: _buildMetricCard(
-                  label: "Distancia",
-                  value: "${_distanciaInt}m",
-                  icon: Icons.route_outlined,
+          
+          // Info Cards - 2 cards si no GPS, 3 cards si GPS
+          if (!widget.gpsActivo)
+            // SIN GPS: solo Distancia Manual y Descanso
+            Row(
+              children: [
+                Expanded(
+                  child: _buildMetricCard(
+                    label: "Distancia",
+                    value: "${_distanciaInt}m",
+                    icon: Icons.route_outlined,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildMetricCard(
-                  label: "Descanso",
-                  value: _formatDescanso(_descansoInt),
-                  icon: Icons.snooze_rounded,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildMetricCard(
+                    label: "Descanso",
+                    value: _formatDescanso(_descansoInt),
+                    icon: Icons.snooze_rounded,
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            )
+          else
+            // CON GPS: Distancia GPS, Ritmo, y Descanso
+            Row(
+              children: [
+                Expanded(
+                  child: _buildMetricCard(
+                    label: "Distancia GPS",
+                    value: "${_distanciaGpsMetros.round()}m",
+                    icon: Icons.location_on,
+                    color: Tema.brandPurple,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildMetricCard(
+                    label: "Ritmo",
+                    value: _ritmoActual,
+                    icon: Icons.speed,
+                    color: Colors.orange,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildMetricCard(
+                    label: "Descanso",
+                    value: _formatDescanso(_descansoInt),
+                    icon: Icons.snooze_rounded,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+              ],
+            ),
          
           // Cronómetro Central
           Expanded(
@@ -359,7 +502,10 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
     required String label,
     required String value,
     required IconData icon,
+    Color? color,
   }) {
+    final cardColor = color ?? Tema.brandPurple;
+    
     return Container(
       constraints: const BoxConstraints(minHeight: 110),
       decoration: BoxDecoration(
@@ -374,35 +520,46 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
           ),
         ],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 16, color: Tema.brandPurple.withOpacity(0.8)),
-              const SizedBox(width: 6),
-              Text(
-                label.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 11.0,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 16, color: cardColor.withOpacity(0.8)),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    label.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 10.0,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                      color: Colors.grey[600],
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 22.0,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                  color: Colors.grey[600],
+                  color: Colors.black87,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 26.0,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -514,8 +671,14 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                       IconButton(
                         icon: const Icon(Icons.check, color: Tema.brandPurple, size: 28),
                         onPressed: () {
-                           // Guardar y cerrar
-                           _handleSave();
+                           // Si GPS est\u00e1 activo, mostrar di\u00e1logo de selecci\u00f3n de distancia
+                           if (widget.gpsActivo) {
+                             Navigator.of(context).pop(); // Cerrar RPE picker
+                             _showDistanceSelectionDialog();
+                           } else {
+                             // Sin GPS, guardar directamente
+                             _handleSave();
+                           }
                         },
                       )
                     ],
@@ -560,6 +723,199 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
           ),
         );
       },
+    );
+  }
+
+  // ===================================================================
+  // DIÁLOGO DE SELECCIÓN DE DISTANCIA (GPS vs Manual)
+  // ===================================================================
+
+  void _showDistanceSelectionDialog() {
+    final int distanciaGps = _distanciaGpsMetros.round();
+    final int diferencia = (distanciaGps - _distanciaInt).abs();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false, // No cerrar al tocar fuera
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Icon(Icons.compare_arrows, color: Tema.brandPurple),
+              const SizedBox(width: 12),
+              const Text('Selecciona la distancia', style: TextStyle(fontSize: 20)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '¿Qué distancia quieres usar para esta serie?',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+              const SizedBox(height: 24),
+              
+              // Distancia planificada (Manual)
+              _buildDistanceOption(
+                label: 'Distancia Planificada',
+                value: '$_distanciaInt m',
+                icon: Icons.route,
+                color: Colors.blue,
+                subtitle: 'Distancia que introdujiste',
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Distancia GPS
+              _buildDistanceOption(
+                label: 'Distancia GPS',
+                value: '$distanciaGps m',
+                icon: Icons.location_on,
+                color: Tema.brandPurple,
+                subtitle: 'Medida por GPS',
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Diferencia
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.orange, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Diferencia: $diferencia m',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            // Botón: Usar Manual
+            Expanded(
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  side: BorderSide(color: Colors.blue),
+                ),
+                icon: const Icon(Icons.route, color: Colors.blue, size: 20),
+                label: Text(
+                  'Usar Manual ($_distanciaInt m)',
+                  style: const TextStyle(color: Colors.blue, fontSize: 13),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop(); // Cerrar diálogo
+                  _saveWithSelectedDistance(_distanciaInt, false);
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Botón: Usar GPS
+            Expanded(
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  backgroundColor: Tema.brandPurple,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.location_on, color: Colors.white, size: 20),
+                label: Text(
+                  'Usar GPS ($distanciaGps m)',
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop(); // Cerrar diálogo
+                  _saveWithSelectedDistance(distanciaGps, true);
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Widget helper para opciones de distancia
+  Widget _buildDistanceOption({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
+    String? subtitle,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

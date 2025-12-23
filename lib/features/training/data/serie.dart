@@ -3,6 +3,11 @@ class Serie {
   final int distanciaM;     // distancia recorrida en metros (>= 1 para ritmo)
   final int descansoSec;    // descanso en Secundos (obligatorio; si no hay, 0)
   final double rpe;         // escala 1..10 (puede ser decimal)
+  
+  // Campos GPS opcionales
+  final bool? usedGps;           // ¿Se activó GPS para esta serie?
+  final bool? usedGpsDistance;   // ¿Se eligió la distancia GPS al guardar?
+  final List<Map<String, dynamic>>? gpsPoints;  // Puntos GPS del recorrido
 
 
   Serie({
@@ -10,6 +15,9 @@ class Serie {
     required this.distanciaM,
     required this.descansoSec,
     required this.rpe,
+    this.usedGps,
+    this.usedGpsDistance,
+    this.gpsPoints,
   }):assert(tiempoSec >= 0),
      assert(distanciaM >= 0),
      assert(descansoSec >= 0),
@@ -47,6 +55,9 @@ class Serie {
       'distanciaM': distanciaM,
       'descansoSec': descansoSec,
       'rpe': rpe,
+      if (usedGps != null) 'usedGps': usedGps,
+      if (usedGpsDistance != null) 'usedGpsDistance': usedGpsDistance,
+      if (gpsPoints != null) 'gpsPoints': gpsPoints,
     };
   }
 
@@ -54,9 +65,14 @@ class Serie {
   static Serie fromMap(Map<String, dynamic> map) {
     return Serie(
       tiempoSec: (map['tiempoSec'] as num).toDouble(),
-      distanciaM: (map['distanciaM'] as num).toInt(),     // <-- CAMBIADO
-      descansoSec: (map['descansoSec'] as num).toInt(), // <-- CAMBIADO
+      distanciaM: (map['distanciaM'] as num).toInt(),
+      descansoSec: (map['descansoSec'] as num).toInt(),
       rpe: (map['rpe'] as num).toDouble(),
+      usedGps: map['usedGps'] as bool?,
+      usedGpsDistance: map['usedGpsDistance'] as bool?,
+      gpsPoints: map['gpsPoints'] != null 
+        ? List<Map<String, dynamic>>.from(map['gpsPoints'] as List)
+        : null,
     );
   }
 }
