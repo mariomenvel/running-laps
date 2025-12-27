@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart'; // Para SystemSound
 import 'dart:ui' show FontFeature;
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import '../../../core/widgets/modern_snackbar.dart';
 
 import '../data/serie.dart';
 import '../../../app/tema.dart';
@@ -115,37 +116,10 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
           actionMessage = 'Verifica que el GPS esté activo y los permisos estén dados';
         }
         
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  errorMessage,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                if (actionMessage.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    actionMessage,
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ],
-              ],
-            ),
-            backgroundColor: Colors.red.shade700,
-            duration: const Duration(seconds: 6),
-            behavior: SnackBarBehavior.floating,
-            action: SnackBarAction(
-              label: 'OK',
-              textColor: Colors.white,
-              onPressed: () {},
-            ),
-          ),
+        ModernSnackBar.showError(
+          context,
+          '$errorMessage${actionMessage.isNotEmpty ? '\n$actionMessage' : ''}',
+          duration: const Duration(seconds: 6),
         );
       }
     }

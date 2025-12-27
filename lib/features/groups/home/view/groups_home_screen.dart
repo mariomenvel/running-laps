@@ -11,6 +11,7 @@ import '../../invitation_model.dart'; // EL NUEVO MODELO DE INVITACIÓN
 // 2. IMPORTS TUS WIDGETS CORE
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_footer.dart';
+import '../../../../core/widgets/modern_snackbar.dart';
 import '../../../home/views/home_view.dart';
 import '../../../profile/views/profile_menu_screen.dart';
 
@@ -105,8 +106,9 @@ class _GroupsHomeScreenState extends State<GroupsHomeScreen> {
                         _currentUserId!,
                       );
                       _refreshGroups(); // Refrescar
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Grupo '${_nameController.text}' creado")),
+                      ModernSnackBar.showSuccess(
+                        context, 
+                        "Grupo '${_nameController.text}' creado",
                       );
                     }
                   },
@@ -129,9 +131,7 @@ class _GroupsHomeScreenState extends State<GroupsHomeScreen> {
   // --- LÓGICA UI: ABANDONAR GRUPO ---
   void _handleLeaveGroup(List<GroupModel> currentGroups) {
     if (currentGroups.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No tienes grupos para abandonar")),
-      );
+      ModernSnackBar.showInfo(context, "No tienes grupos para abandonar");
       return;
     }
 
@@ -201,9 +201,7 @@ class _GroupsHomeScreenState extends State<GroupsHomeScreen> {
                           Navigator.pop(context); // Cerrar lista
                           await _repository.leaveGroup(group.id, _currentUserId!);
                           _refreshGroups();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Has salido del grupo")),
-                          );
+                          ModernSnackBar.showSuccess(context, "Has salido del grupo");
                         }
                       },
                     ),
@@ -231,18 +229,12 @@ class _GroupsHomeScreenState extends State<GroupsHomeScreen> {
       await _repository.answerInvitation(_currentUserId!, invite, accept);
       if (accept) {
         _refreshGroups(); // Si aceptamos, recargamos la lista para ver el grupo nuevo
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Te uniste a ${invite.groupName}")),
-        );
+        ModernSnackBar.showSuccess(context, "Te uniste a ${invite.groupName}");
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Invitación rechazada")),
-        );
+        ModernSnackBar.showInfo(context, "Invitación rechazada");
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
-      );
+      ModernSnackBar.showError(context, "Error: $e");
     }
   }
 

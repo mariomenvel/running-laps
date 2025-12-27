@@ -7,6 +7,7 @@ import '../../../../core/widgets/app_footer.dart';
 import '../../../../app/tema.dart';
 import '../../../../features/home/views/home_view.dart';
 import '../../../../features/profile/views/profile_menu_screen.dart';
+import '../../../../core/widgets/modern_snackbar.dart';
 
 // IMPORTS DE MODELOS
 import '../data/challenge_model.dart';
@@ -119,29 +120,19 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
                     emailController.text.trim(),
                   );
 
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Row(children: [
-                          const Icon(Icons.check_circle, color: Colors.white),
-                          const SizedBox(width: 10),
-                          Expanded(child: Text("Invitación enviada a ${emailController.text}")),
-                        ]),
-                        backgroundColor: Colors.green,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                    );
-                  }
+                    if (mounted) {
+                      ModernSnackBar.showSuccess(
+                        context,
+                        "Invitación enviada a ${emailController.text}",
+                      );
+                    }
                 } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text("Error: ${e.toString().replaceAll('Exception:', '')}"),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
+                    if (mounted) {
+                      ModernSnackBar.showError(
+                        context, 
+                        "Error: ${e.toString().replaceAll('Exception:', '')}",
+                      );
+                    }
                 }
               }
             },

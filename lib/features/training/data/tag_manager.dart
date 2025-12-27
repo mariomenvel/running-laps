@@ -24,20 +24,29 @@ class TagManager {
 
   /// Obtiene todas las etiquetas del usuario actual
   Future<List<TrainingTag>> getUserTags() async {
-    final String uid = _requireUid();
+    try {
+      final String uid = _requireUid();
 
-    final QuerySnapshot<Map<String, dynamic>> snapshot =
-        await _userTags(uid).get();
+      final QuerySnapshot<Map<String, dynamic>> snapshot =
+          await _userTags(uid)
+              .get()
+              .timeout(const Duration(seconds: 10)); // Timeout de 10s
 
-    final List<TrainingTag> tags = [];
-    for (var doc in snapshot.docs) {
-      tags.add(TrainingTag.fromMap(doc.data()));
+      final List<TrainingTag> tags = [];
+      for (var doc in snapshot.docs) {
+        tags.add(TrainingTag.fromMap(doc.data()));
+      }
+
+      // Ordenar alfabéticamente
+      tags.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+
+      return tags;
+    } catch (e) {
+      // En caso de error (timeout, sin conexión, permisos), devolver lista vacía
+      // Esto evita que la UI se congele
+      print('Error al cargar etiquetas: $e');
+      return [];
     }
-
-    // Ordenar alfabéticamente
-    tags.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-
-    return tags;
   }
 
   /// Crea una nueva etiqueta

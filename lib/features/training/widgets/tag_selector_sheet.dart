@@ -6,6 +6,7 @@ import '../data/training_repository.dart';
 import '../data/entrenamiento.dart';
 import 'tag_chip.dart';
 import 'create_tag_dialog.dart';
+import '../../../core/widgets/modern_snackbar.dart';
 
 /// Bottom sheet para seleccionar etiquetas de un entrenamiento
 class TagSelectorSheet extends StatefulWidget {
@@ -63,12 +64,7 @@ class _TagSelectorSheetState extends State<TagSelectorSheet> {
       } else {
         if (_selectedTagNames.length >= 5) {
           // Límite de 5 etiquetas por entrenamiento
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Máximo 5 etiquetas por entrenamiento'),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          ModernSnackBar.showWarning(context, 'Máximo 5 etiquetas por entrenamiento');
           return;
         }
         _selectedTagNames.add(tagName);
@@ -77,8 +73,10 @@ class _TagSelectorSheetState extends State<TagSelectorSheet> {
   }
 
   Future<void> _createNewTag() async {
-    final newTag = await showDialog<TrainingTag>(
+    final newTag = await showModalBottomSheet<TrainingTag>(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) => const CreateTagDialog(),
     );
 

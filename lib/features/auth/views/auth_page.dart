@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 // RUTA CORREGIDA:
 import 'package:running_laps/features/auth/viewmodels/auth_controller.dart'; // CAMBIO: Usamos el Controller
 import 'package:running_laps/features/home/views/home_view.dart';
+import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import '../../../app/tema.dart';
 
 // CAMBIO: La vista ahora usa el Controller
@@ -36,27 +37,8 @@ class _AuthPageState extends State<AuthPage> {
     if (!mounted) return;
     
     // SnackBar "Bonito"
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.info_outline, color: Colors.white),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                msg,
-                style: const TextStyle(fontWeight: FontWeight.w500),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.orange[800], // Naranja advertencia en vez de Rojo error
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-        elevation: 4,
-      ),
-    );
+    // SnackBar "Bonito"
+    ModernSnackBar.showError(context, msg);
   }
 
   String _extractErrorMessage(Object e) {
@@ -79,9 +61,7 @@ class _AuthPageState extends State<AuthPage> {
       await _authCtrl.signIn();
       if (!mounted) return;
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Sesión iniciada')));
+      ModernSnackBar.showSuccess(context, 'Sesión iniciada');
 
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const HomeView()),
@@ -93,30 +73,27 @@ class _AuthPageState extends State<AuthPage> {
 
       if (msg.contains("verificar tu correo")) {
         // Mostrar opción de reenviar
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(msg),
-            backgroundColor: Colors.orange[800],
-            duration: const Duration(seconds: 6),
-            action: SnackBarAction(
-              label: 'REENVIAR',
-              textColor: Colors.white,
-              onPressed: () async {
-                 // Reenviar correo
-                 try {
-                   await _authCtrl.resendVerificationEmail(
-                     _authCtrl.emailCtrl.text, 
-                     _authCtrl.passCtrl.text
-                   );
-                   if(!mounted) return;
-                   ScaffoldMessenger.of(context).showSnackBar(
-                     const SnackBar(content: Text('Correo enviado. Revisa tu bandeja.'))
-                   );
-                 } catch (resendError) {
-                   _showError(resendError);
-                 }
-              },
-            ),
+        // Mostrar opción de reenviar
+        ModernSnackBar.showWarning(
+          context,
+          msg,
+          duration: const Duration(seconds: 6),
+          action: SnackBarAction(
+            label: 'REENVIAR',
+            textColor: Colors.white,
+            onPressed: () async {
+               // Reenviar correo
+               try {
+                 await _authCtrl.resendVerificationEmail(
+                   _authCtrl.emailCtrl.text, 
+                   _authCtrl.passCtrl.text
+                 );
+                 if(!mounted) return;
+                 ModernSnackBar.showSuccess(context, 'Correo enviado. Revisa tu bandeja.');
+               } catch (resendError) {
+                 _showError(resendError);
+               }
+            },
           ),
         );
       } else {
@@ -130,11 +107,10 @@ class _AuthPageState extends State<AuthPage> {
       await _authCtrl.signUp();
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cuenta creada. Revisa tu correo para verificarla antes de entrar.'),
-          duration: Duration(seconds: 5),
-        ),
+      ModernSnackBar.showSuccess(
+        context, 
+        'Cuenta creada. Revisa tu correo para verificarla antes de entrar.',
+        duration: const Duration(seconds: 5),
       );
     } catch (e) {
       _showError(e);
@@ -150,10 +126,9 @@ class _AuthPageState extends State<AuthPage> {
       await _authCtrl.recoverPassword(email);
       if (!mounted) return;
       Navigator.of(context).pop(); // Cerrar el diálogo
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Correo de recuperación enviado. Revisa tu bandeja.'),
-        ),
+      ModernSnackBar.showSuccess(
+        context,
+        'Correo de recuperación enviado. Revisa tu bandeja.',
       );
     } catch (e) {
       _showError(e);
@@ -186,11 +161,10 @@ class _AuthPageState extends State<AuthPage> {
                 Navigator.of(context).pop(); // Cerrar modal si éxito
                 
                 // Mostrar éxito en SnackBar (ya no hay modal tapándolo)
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Correo enviado. Revisa tu bandeja.'),
-                    backgroundColor: Colors.green,
-                  ),
+                // Mostrar éxito en SnackBar (ya no hay modal tapándolo)
+                ModernSnackBar.showSuccess(
+                  context,
+                  'Correo enviado. Revisa tu bandeja.',
                 );
               } catch (e) {
                 // Si falla, actualizamos el estado DEL MODAL para mostrar el error

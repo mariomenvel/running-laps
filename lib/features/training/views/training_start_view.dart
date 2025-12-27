@@ -1,23 +1,24 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/services.dart';
-import 'package:firebase_core/firebase_core.dart'; // Para capturar FirebaseException
-import '../../../core/widgets/app_header.dart';
-import '../../profile/views/profile_menu_screen.dart';
-import '../../home/views/home_view.dart';
+import 'package:flutter/services.dart'; // Para SystemSound
 import 'dart:ui' show FontFeature;
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import 'package:firebase_core/firebase_core.dart'; // Para FirebaseException
 
-
-// Asegúrate que las rutas son correctas
 import '../data/serie.dart';
-import '../viewmodels/training_viewmodel.dart';
-import 'training_session_view.dart';
-import '../data/tag_manager.dart';
-import '../data/tag_model.dart';
-import '../widgets/tag_chip.dart';
-import '../widgets/create_tag_dialog.dart';
 import '../../../app/tema.dart';
+import '../../../core/widgets/app_header.dart';
+import '../../../core/services/gps_service.dart';
+import '../../../core/widgets/modern_snackbar.dart';
+
+import '../../home/views/home_view.dart';
+import '../../profile/views/profile_menu_screen.dart';
+import '../viewmodels/training_viewmodel.dart';
+import '../data/tag_model.dart';
+import '../data/tag_manager.dart';
+import '../widgets/create_tag_dialog.dart';
+import 'training_session_view.dart';
 
 
 // ===============================================================
@@ -250,9 +251,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     // Validamos datos (aunque con los selectores es difícil que falle,
     // pero por si acaso)
     if (_distanciaSeleccionada <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('La distancia debe ser mayor a 0')),
-      );
+      ModernSnackBar.showError(context, 'La distancia debe ser mayor a 0');
       return;
     }
 
@@ -297,12 +296,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         });
         _startRestCountdown();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('¡Serie guardada! Ritmo: ${result.ritmoTexto()}'),
-            backgroundColor: Tema.brandPurple,
-          ),
-        );
+        ModernSnackBar.showSuccess(context, '¡Serie guardada! Ritmo: ${result.ritmoTexto()}');
       }
   }
 }
@@ -312,22 +306,113 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     // Cerramos el modal de guardar primero
     Navigator.of(modalContext).pop();
 
-    // Pedimos confirmación
-    final bool? confirm = await showDialog<bool>(
+    // Pedimos confirmación con bottom sheet moderno
+    final bool? confirm = await showModalBottomSheet<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("¿Descartar entrenamiento?"),
-        content: const Text("Se perderán todas las series registradas de esta sesión."),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Cancelar", style: TextStyle(color: Colors.grey)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text("Descartar", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-          ),
-        ],
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 24),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            
+            // Icono de warning
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.warning_rounded,
+                size: 48,
+                color: Colors.red.shade600,
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Título
+            const Text(
+              '¿Descartar entrenamiento?',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            
+            // Descripción
+            Text(
+              'Se perderán todas las series registradas de esta sesión.',
+              style: TextStyle(
+                fontSize: 15,
+                color: Colors.grey.shade600,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            
+            // Botón de descarte (rojo y prominente)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade600,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 4,
+                  shadowColor: Colors.red.shade600.withOpacity(0.4),
+                ),
+                child: const Text(
+                  'Descartar',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            
+            // Botón cancelar (secundario)
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: Text(
+                'Cancelar',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
 
@@ -341,9 +426,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       });
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sesión descartada')),
-        );
+        ModernSnackBar.showInfo(context, 'Sesión descartada');
         // Navegamos al Home
         Navigator.of(context).pop(); 
       }
@@ -428,7 +511,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                   FutureBuilder<List<TrainingTag>>(
                     future: TagManager().getUserTags(),
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
+                      // 1. LOADING
+                      if (snapshot.connectionState == ConnectionState.waiting) {
                         return const SizedBox(
                           height: 40, 
                           child: Center(
@@ -437,7 +521,50 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                         );
                       }
                       
-                      final tags = snapshot.data!;
+                      // 2. ERROR (CRUCIAL: esto evita el congelamiento)
+                      if (snapshot.hasError) {
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.red.shade200),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.error_outline, color: Colors.red.shade400, size: 32),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Error al cargar etiquetas',
+                                style: TextStyle(
+                                  color: Colors.red.shade700,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Puedes reintentar o continuar sin etiquetas',
+                                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 8),
+                              TextButton.icon(
+                                onPressed: () => setModalState(() {}),
+                                icon: const Icon(Icons.refresh, size: 18),
+                                label: const Text('Reintentar'),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Tema.brandPurple,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      
+                      // 3. SUCCESS
+                      final tags = snapshot.data ?? [];
                       
                       return Wrap(
                         spacing: 8,
@@ -451,14 +578,17 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                             side: BorderSide.none,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                             onPressed: () async {
-                              final bool? created = await showDialog(
-                                context: context, 
+                              final TrainingTag? newTag = await showModalBottomSheet<TrainingTag>(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
                                 builder: (_) => const CreateTagDialog()
                               );
-                              if (created == true) {
-                                // Recargar tags (simplemente actualizando estado del modal para que el FutureBuilder se dispare si no usas future variable)
-                                // Mejor: TagManager guarda en Firestore, al hacer setState el Future se vuelve a ejecutar
-                                setModalState(() {});
+                              if (newTag != null) {
+                                // Auto-seleccionar la nueva etiqueta
+                                setModalState(() {
+                                  _selectedTags.add(newTag.name);
+                                });
                               }
                             },
                           ),
@@ -573,12 +703,10 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       if (!mounted) return;
 
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('¡Entrenamiento "$trainingName" guardado!'),
-          backgroundColor: Tema.brandPurple,
-          duration: const Duration(seconds: 2),
-        ),
+      ModernSnackBar.showSuccess(
+        context,
+        '¡Entrenamiento "$trainingName" guardado!',
+        duration: const Duration(seconds: 2),
       );
 
 
@@ -627,9 +755,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       }
 
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
-      );
+      ModernSnackBar.showError(context, errorMessage);
     } finally {
       if (mounted) {
         setState(() {
@@ -644,13 +770,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     if (_vm.series.isEmpty) {
       Navigator.pop(context);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Por favor, termina el entrenamiento actual antes de salir.',
-          ),
-          backgroundColor: Colors.red,
-        ),
+      ModernSnackBar.showWarning(
+        context,
+        'Por favor, termina el entrenamiento actual antes de salir.',
       );
     }
   }
@@ -691,13 +813,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
             ),
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Por favor, termina el entrenamiento actual antes de salir.',
-              ),
-              backgroundColor: Colors.red,
-            ),
+          ModernSnackBar.showWarning(
+            context,
+            'Por favor, termina el entrenamiento actual antes de salir.',
           );
         }
       },
@@ -707,18 +825,14 @@ class _TrainingStartViewState extends State<TrainingStartView> {
             context,
             MaterialPageRoute(
               builder: (BuildContext context) {
-                return const ProfileMenuView();
+                return ProfileMenuView();
               },
             ),
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Por favor, termina el entrenamiento actual antes de salir.',
-              ),
-              backgroundColor: Colors.red,
-            ),
+          ModernSnackBar.showWarning(
+            context,
+            'Por favor, termina el entrenamiento actual antes de salir.',
           );
         }
       },
@@ -830,9 +944,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               setState(() {
                 _vm.removeSerieAt(i);
               });
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Serie eliminada')),
-              );
+              ModernSnackBar.showInfo(context, 'Serie eliminada');
             },
             child: Container(
               margin: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 2.0),
@@ -1194,56 +1306,216 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
   void _showManualInputDialog({required bool isDistance}) {
     final TextEditingController manualController = TextEditingController();
-    showDialog(
+    
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(isDistance ? "Distancia Manual" : "Descanso Manual"),
-        content: TextField(
-          controller: manualController,
-          keyboardType: TextInputType.number,
-          autofocus: true,
-          decoration: InputDecoration(
-            hintText: isDistance ? "Metros (ej. 450)" : "Segundos (ej. 90)",
-            suffixText: isDistance ? "m" : "s",
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancelar"),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Tema.brandPurple),
-            onPressed: () {
-              final int? val = int.tryParse(manualController.text);
-              if (val != null) {
-                // Validación diferenciada
-                bool isValid = false;
-                if (isDistance) {
-                   isValid = val > 0; // Distancia debe ser > 0
-                } else {
-                   isValid = val >= 0; // Descanso puede ser 0
-                }
-
-                if (isValid) {
-                  setState(() {
-                    if (isDistance) {
-                      _distanciaSeleccionada = val;
-                    } else {
-                      _descansoSeleccionado = val;
-                    }
-                  });
-                  Navigator.pop(context);
-                } else {
-                   ScaffoldMessenger.of(context).showSnackBar(
-                     SnackBar(content: Text(isDistance ? "La distancia debe ser mayor a 0" : "Valor inválido"))
-                   );
-                }
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (BuildContext context, StateSetter setModalState) {
+          final int? currentValue = int.tryParse(manualController.text);
+          final bool hasValue = currentValue != null;
+          final bool isValid = hasValue && (isDistance ? currentValue > 0 : currentValue >= 0);
+          
+          // Preview text
+          String preview = '';
+          if (hasValue) {
+            if (isDistance) {
+              if (currentValue >= 1000) {
+                preview = '${(currentValue / 1000).toStringAsFixed(2)} km';
+              } else {
+                preview = '$currentValue metros';
               }
-            },
-            child: const Text("Aceptar", style: TextStyle(color: Colors.white)),
-          ),
-        ],
+            } else {
+              final int minutes = currentValue ~/ 60;
+              final int seconds = currentValue % 60;
+              if (minutes > 0) {
+                preview = '$minutes min ${seconds}s';
+              } else {
+                preview = '${seconds}s';
+              }
+            }
+          }
+          
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Handle
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  
+                  // Título
+                  Text(
+                    isDistance ? 'Distancia Manual' : 'Descanso Manual',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    isDistance ? 'Introduce los metros' : 'Introduce los segundos',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  
+                  // Input grande
+                  TextField(
+                    controller: manualController,
+                    keyboardType: TextInputType.number,
+                    autofocus: true,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.w300,
+                      color: Colors.black87,
+                      letterSpacing: -1,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: isDistance ? '400' : '90',
+                      hintStyle: TextStyle(
+                        color: Colors.grey.shade300,
+                        fontSize: 48,
+                        fontWeight: FontWeight.w300,
+                      ),
+                      suffixText: isDistance ? 'm' : 's',
+                      suffixStyle: TextStyle(
+                        fontSize: 24,
+                        color: Colors.grey.shade500,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 20,
+                      ),
+                    ),
+                    onChanged: (value) => setModalState(() {}),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Preview
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    height: hasValue ? 32 : 0,
+                    child: hasValue
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                isValid ? Icons.check_circle : Icons.error,
+                                color: isValid ? Colors.green.shade400 : Colors.red.shade400,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                preview,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: isValid ? Colors.green.shade700 : Colors.red.shade700,
+                                ),
+                              ),
+                            ],
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                  
+                  const SizedBox(height: 28),
+                  
+                  // Botones
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            side: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          child: Text(
+                            'Cancelar',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton(
+                          onPressed: !isValid
+                              ? null
+                              : () {
+                                  setState(() {
+                                    if (isDistance) {
+                                      _distanciaSeleccionada = currentValue!;
+                                    } else {
+                                      _descansoSeleccionado = currentValue!;
+                                    }
+                                  });
+                                  Navigator.pop(context);
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Tema.brandPurple,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: isValid ? 4 : 0,
+                            shadowColor: Tema.brandPurple.withOpacity(0.4),
+                          ),
+                          child: const Text(
+                            'Aceptar',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

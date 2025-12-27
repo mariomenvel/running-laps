@@ -12,6 +12,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:flutter/gestures.dart';
 
 class AvatarMakerScreen extends StatefulWidget {
@@ -258,9 +259,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
       await file.writeAsBytes(pngBytes);
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Avatar guardado en la app"), backgroundColor: Colors.green),
-        );
+        ModernSnackBar.showSuccess(context, "Avatar guardado en la app");
       }
     } catch (e) {
       debugPrint("Error saving: $e");
@@ -276,9 +275,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
       if (byteData != null) {
         await Gal.putImageBytes(byteData.buffer.asUint8List());
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Avatar guardado en Galería"), backgroundColor: Colors.green),
-          );
+          ModernSnackBar.showSuccess(context, "Avatar guardado en Galería");
         }
       }
     } catch (e) {

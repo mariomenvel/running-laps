@@ -20,8 +20,9 @@ import 'package:printing/printing.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:running_laps/features/profile/views/widgets/history_filter_sheet.dart';
 import 'package:running_laps/features/profile/views/widgets/history_calendar_widget.dart';
-import 'package:running_laps/features/profile/views/analytics_screen.dart'; // Import
+import 'package:running_laps/features/profile/views/analytics_screen.dart';
 import 'package:universal_html/html.dart' as html;
+import 'package:running_laps/core/widgets/modern_snackbar.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({Key? key}) : super(key: key);
@@ -858,11 +859,9 @@ class _TrainingCardState extends State<TrainingCard> {
           if (val == 'tags') {
             // Verificar que tenemos ID
             if (widget.training.id == null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Error: No se puede editar este entrenamiento'),
-                  behavior: SnackBarBehavior.floating,
-                ),
+              ModernSnackBar.showError(
+                context,
+                'Error: No se puede editar este entrenamiento',
               );
               return;
             }
@@ -889,40 +888,18 @@ class _TrainingCardState extends State<TrainingCard> {
                 widget.onUpdate?.call();
                 
                 // Opcional: Mostrar confirmación
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Etiquetas actualizadas'),
-                    behavior: SnackBarBehavior.floating,
-                    duration: Duration(seconds: 2),
-                  ),
+                ModernSnackBar.showSuccess(
+                  context,
+                  'Etiquetas actualizadas',
+                  duration: const Duration(seconds: 2),
                 );
               }
           } else if (val == 'pdf') {
             // Mostrar loading
-            ScaffoldMessenger.of(context).showSnackBar(
-               const SnackBar(
-                content: Row(
-                  children: [
-                    SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Text('Generando PDF...', style: TextStyle(fontWeight: FontWeight.bold)),
-                  ],
-                ),
-                behavior: SnackBarBehavior.floating,
-                backgroundColor: Tema.brandPurple,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                ),
-                margin: EdgeInsets.all(16),
-                duration: Duration(seconds: 2),
-               )
+            ModernSnackBar.showInfo(
+              context,
+              'Generando PDF...',
+              duration: const Duration(seconds: 2),
             );
 
             try {
@@ -949,44 +926,16 @@ class _TrainingCardState extends State<TrainingCard> {
               }
 
               if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Row(
-                      children: [
-                        Icon(Icons.check_circle, color: Colors.white),
-                        SizedBox(width: 12),
-                        Text('PDF descargado correctamente', style: TextStyle(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    behavior: SnackBarBehavior.floating,
-                    backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(12)),
-                    ),
-                    margin: EdgeInsets.all(16),
-                  )
+                ModernSnackBar.showSuccess(
+                  context,
+                  'PDF descargado correctamente',
                 );
               }
             } catch (e) {
               if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Row(
-                      children: [
-                        const Icon(Icons.error_outline, color: Colors.white),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text('Error al generar PDF: $e', style: const TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-                    behavior: SnackBarBehavior.floating,
-                    backgroundColor: Colors.red,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(12)),
-                    ),
-                    margin: const EdgeInsets.all(16),
-                  )
+                ModernSnackBar.showError(
+                  context,
+                  'Error al generar PDF: $e',
                 );
               }
             }

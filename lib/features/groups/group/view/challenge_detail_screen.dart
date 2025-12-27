@@ -14,6 +14,7 @@ import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_footer.dart';
 import '../../../../features/home/views/home_view.dart';
 import '../../../../features/profile/views/profile_menu_screen.dart';
+import '../../../../core/widgets/modern_snackbar.dart';
 
 class ChallengeDetailScreen extends StatefulWidget {
   final ChallengeModel challenge;
@@ -75,16 +76,12 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
       await _checkParticipationAndProgress(); 
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("¡Reto aceptado! ¡A correr!")),
-        );
+        ModernSnackBar.showSuccess(context, "¡Reto aceptado! ¡A correr!");
         Navigator.pop(context); // Regresar a la pantalla anterior
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error al unirse: $e"), backgroundColor: Colors.red),
-        );
+        ModernSnackBar.showError(context, "Error al unirse: $e");
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

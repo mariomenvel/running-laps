@@ -18,6 +18,7 @@ import '../../groups/group/view/participant_profile_screen.dart';
 // Widgets comunes
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/app_footer.dart';
+import 'package:running_laps/core/widgets/modern_snackbar.dart';
 
 class ProfileMenuView extends StatefulWidget {
   const ProfileMenuView({Key? key}) : super(key: key);
@@ -130,7 +131,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
        }
      } catch (e) {
        if (mounted) Navigator.pop(context); // cerrar loading en error
-       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+       if (mounted) ModernSnackBar.showError(context, "Error: $e");
      }
   }
 
@@ -156,12 +157,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-          backgroundColor: Colors.red,
-        ),
-      );
+      ModernSnackBar.showError(context, e.toString());
     }
   }
 

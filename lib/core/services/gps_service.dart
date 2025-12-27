@@ -66,10 +66,10 @@ class GPSService {
   DateTime? _pauseTime;
   
   // CONFIGURACIÓN AVANZADA
-  static const double _minAccuracy = 15.0; // Descartar > 15m de error
+  static const double _minAccuracy = 25.0; // Descartar > 25m de error (ajustado para ciudad)
   static const double _maxSpeedMps = 10.0; // ~36 km/h (Mundo récord Usain Bolt ~12m/s, maratón ~6m/s)
                                            // Usamos 10m/s para permitir sprints fuertes pero filtrar coches/teletransporte
-  static const double _minDistAccumulate = 2.0; // Mínimo movimiento para sumar distancia
+  static const double _minDistAccumulate = 0.5; // Mínimo movimiento para sumar distancia (0.5m para pasos pequeños)
 
   // Getters
   GpsStatus get status => _status;
