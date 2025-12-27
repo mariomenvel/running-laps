@@ -14,6 +14,7 @@ import 'package:running_laps/features/profile/views/avatar_editor_wrapper_view.d
 import 'package:running_laps/features/training/views/training_start_view.dart';
 import '../../groups/home/view/groups_home_screen.dart';
 import '../../groups/group/view/participant_profile_screen.dart';
+import 'package:running_laps/features/analytics/views/analytics_hub_screen.dart';
 
 // Widgets comunes
 import 'package:running_laps/core/widgets/app_header.dart';
@@ -325,6 +326,19 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
 
                     // SECTION 2: PERSONAL
                     _buildSectionHeader("Personal"),
+                    _buildMenuTile(
+                      title: "Analytics Hub",
+                      icon: Icons.analytics_rounded,
+                      color: Colors.purpleAccent,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AnalyticsHubScreen(),
+                          ),
+                        );
+                      },
+                    ),
                     _buildMenuTile(
                       title: "Historial de Entrenamientos",
                       icon: Icons.history_rounded,

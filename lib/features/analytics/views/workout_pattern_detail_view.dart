@@ -1,0 +1,236 @@
+import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:running_laps/features/analytics/data/workout_pattern.dart';
+import 'package:running_laps/app/tema.dart';
+
+class WorkoutPatternDetailView extends StatelessWidget {
+  final WorkoutPattern pattern;
+
+  const WorkoutPatternDetailView({super.key, required this.pattern});
+
+  @override
+  Widget build(BuildContext context) {
+    // Sort instances chronologically
+    final sortedInstances = List<WorkoutInstance>.from(pattern.instances)
+      ..sort((a, b) => a.fecha.compareTo(b.fecha));
+
+    // Determine title: Use key or a generated structure string
+    final title = pattern.patternKey;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF2F2F7),
+      appBar: AppBar(
+        title: Text(title, overflow: TextOverflow.ellipsis),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Tema.brandPurple),
+          onPressed: () => Navigator.pop(context),
+        ),
+        titleTextStyle: const TextStyle(
+             color: Colors.black, fontSize: 16, fontWeight: FontWeight.w600
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            // KPI Header
+            Row(
+              children: [
+                Expanded(child: _buildKpiCard("Ritmo Medio", pattern.averagePaceFormatted, Icons.speed, Colors.blue)),
+                const SizedBox(width: 12),
+                Expanded(child: _buildKpiCard("Consistencia", "${(pattern.averageConsistency * 100).toInt()}%", Icons.track_changes, Colors.green)),
+                const SizedBox(width: 12),
+                Expanded(child: _buildKpiCard("Sesiones", "${pattern.count}", Icons.calendar_today, Colors.orange)),
+              ],
+            ),
+            
+            const SizedBox(height: 24),
+            
+            // Stats Chart
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                   const Text("Evolución del Rendimiento", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                   const SizedBox(height: 24),
+                   SizedBox(
+                     height: 200,
+                     child: _PerformanceChart(instances: sortedInstances),
+                   ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+
+            // History List
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text("Sesiones Realizadas", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.grey)),
+            ),
+            const SizedBox(height: 12),
+            
+            ListView.separated(
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              itemCount: sortedInstances.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final instance = sortedInstances[sortedInstances.length - 1 - index];
+                return _buildHistoryItem(instance);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildKpiCard(String title, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 8),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          const SizedBox(height: 4),
+          Text(title, style: TextStyle(color: Colors.grey.shade500, fontSize: 11), textAlign: TextAlign.center),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHistoryItem(WorkoutInstance instance) {
+    // Format pace
+    final paceSec = instance.averagePace.round();
+    final m = paceSec ~/ 60;
+    final s = (paceSec % 60).toInt();
+    final pace = '$m:${s.toString().padLeft(2, '0')}';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+           Row(
+             children: [
+               Container(
+                 padding: const EdgeInsets.all(8),
+                 decoration: BoxDecoration(
+                   color: Colors.grey.shade100,
+                   shape: BoxShape.circle,
+                 ),
+                 child: Icon(Icons.fitness_center, color: Colors.grey.shade600, size: 16),
+               ),
+               const SizedBox(width: 12),
+               Column(
+                 crossAxisAlignment: CrossAxisAlignment.start,
+                 children: [
+                   Text(
+                     "${instance.fecha.day}/${instance.fecha.month}/${instance.fecha.year}",
+                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                   ),
+                   const SizedBox(height: 4),
+                   Text(
+                     "Consistencia: ${(instance.consistency * 100).toInt()}%",
+                     style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                   ),
+                 ],
+               ),
+             ],
+           ),
+           Container(
+             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+             decoration: BoxDecoration(
+               color: Tema.brandPurple.withOpacity(0.1),
+               borderRadius: BorderRadius.circular(20),
+               ),
+             child: Text(
+               "$pace /km",
+               style: const TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold),
+             ),
+           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PerformanceChart extends StatelessWidget {
+  final List<WorkoutInstance> instances;
+  const _PerformanceChart({required this.instances});
+
+  @override
+  Widget build(BuildContext context) {
+    final spots = instances.asMap().entries.map((e) {
+      return FlSpot(e.key.toDouble(), e.value.averagePace.toDouble());
+    }).toList();
+
+    if (spots.isEmpty) return const SizedBox.shrink();
+
+    final maxY = spots.map((e) => e.y).reduce((a, b) => a > b ? a : b);
+    final minY = spots.map((e) => e.y).reduce((a, b) => a < b ? a : b);
+    final targetMinY = (minY * 0.9).floorToDouble();
+
+    return LineChart(
+      LineChartData(
+        gridData: FlGridData(
+          show: true, 
+          drawVerticalLine: false,
+          getDrawingHorizontalLine: (_) => FlLine(color: Colors.grey.shade100),
+        ),
+        titlesData: FlTitlesData(show: false),
+        borderData: FlBorderData(show: false),
+        minY: targetMinY,
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true, // Smooth curve for average performance
+            color: Colors.blueAccent,
+            barWidth: 3,
+            dotData: const FlDotData(show: true),
+            belowBarData: BarAreaData(
+              show: true,
+              color: Colors.blueAccent.withOpacity(0.1),
+            ),
+          ),
+        ],
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+             getTooltipItems: (touchedSpots) {
+                 return touchedSpots.map((spot) {
+                    final val = spot.y;
+                    final m = val ~/ 60;
+                    final s = (val % 60).toInt();
+                    return LineTooltipItem(
+                       '$m:${s.toString().padLeft(2, '0')}', 
+                       const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    );
+                 }).toList();
+             }
+          ),
+        ),
+      ),
+    );
+  }
+}

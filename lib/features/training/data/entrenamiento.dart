@@ -7,6 +7,12 @@ class Entrenamiento {
   final bool gps;
   final List<Serie> series;
   final List<String>? tags; // Etiquetas del entrenamiento
+  
+  // Campos para analytics
+  final String? weekKey;  // Semana ISO: "2025-W52"
+  final double? load;     // Carga de entrenamiento: RPE * duración_min
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   Entrenamiento({
     this.id,
@@ -15,6 +21,10 @@ class Entrenamiento {
     required this.gps,
     required this.series,
     this.tags,
+    this.weekKey,
+    this.load,
+    this.createdAt,
+    this.updatedAt,
   });
 
   int distanciaTotalM() {
@@ -89,7 +99,20 @@ class Entrenamiento {
     if (tags != null) {
       base['tags'] = tags;
     }
-
+    
+    // Guardar campos de analytics
+    if (weekKey != null) {
+      base['weekKey'] = weekKey;
+    }
+    if (load != null) {
+      base['load'] = load;
+    }
+    if (createdAt != null) {
+      base['createdAt'] = createdAt!.toIso8601String();
+    }
+    if (updatedAt != null) {
+      base['updatedAt'] = updatedAt!.toIso8601String();
+    }
 
     return base;
   }
@@ -110,6 +133,27 @@ class Entrenamiento {
     if (map.containsKey('tags') && map['tags'] != null) {
       tagsList = List<String>.from(map['tags'] as List);
     }
+    
+    // Leer campos de analytics (compatibilidad)
+    String? weekKeyValue;
+    if (map.containsKey('weekKey')) {
+      weekKeyValue = map['weekKey'] as String?;
+    }
+    
+    double? loadValue;
+    if (map.containsKey('load')) {
+      loadValue = (map['load'] as num?)?.toDouble();
+    }
+    
+    DateTime? createdAtValue;
+    if (map.containsKey('createdAt') && map['createdAt'] != null) {
+      createdAtValue = _parseFechaFlexible(map['createdAt']);
+    }
+    
+    DateTime? updatedAtValue;
+    if (map.containsKey('updatedAt') && map['updatedAt'] != null) {
+      updatedAtValue = _parseFechaFlexible(map['updatedAt']);
+    }
 
     return Entrenamiento(
       id: id,  // Asignar el ID del documento
@@ -118,6 +162,10 @@ class Entrenamiento {
       gps: map['gps'] as bool,
       series: cargadas,
       tags: tagsList,
+      weekKey: weekKeyValue,
+      load: loadValue,
+      createdAt: createdAtValue,
+      updatedAt: updatedAtValue,
     );
   }
 

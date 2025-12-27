@@ -62,4 +62,12 @@ class TrainingRepository {
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
+  Future<List<Entrenamiento>> getAllEntrenamientos(String uid) async {
+    // Alias for getTrainings but with explicit uid argument (which getTrainings ignores and uses auth user)
+    // To match the new signature: getAllEntrenamientos(String uid)
+    // However, existing getTrainings uses _requireUid inside.
+    // We should check if uid matches current user or if we need to support other users.
+    // For now, assuming analytics is for current user.
+    return getTrainings();
+  }
 }
