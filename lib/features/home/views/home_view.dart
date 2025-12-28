@@ -19,6 +19,8 @@ import 'package:running_laps/features/groups/group_model.dart';
 import 'package:running_laps/features/groups/home/view/groups_home_screen.dart';
 import 'package:running_laps/features/groups/group/view/group_detail_screen.dart';
 import 'package:running_laps/core/widgets/group_skeleton_card.dart';
+import 'package:running_laps/features/analytics/data/coach_insight_service.dart';
+import 'package:running_laps/features/analytics/widgets/coach_insight_widget.dart';
 
 /// Home View rediseñado con widgets configurables
 /// Versión moderna con sistema de personalización
@@ -33,6 +35,7 @@ class _HomeViewState extends State<HomeView> {
   late final HomeConfigController _configController;
   final TrainingRepository _trainingRepository = TrainingRepository();
   final GroupsRepository _groupsRepository = GroupsRepository();
+  final CoachInsightService _coachService = CoachInsightService();
   
   List<Entrenamiento> _entrenamientos = [];
   List<Entrenamiento> _allEntrenamientos = []; // Full history for Flagship Chart
@@ -198,6 +201,8 @@ class _HomeViewState extends State<HomeView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildWelcomeHeader(),
+                const SizedBox(height: 12),
+                CoachInsightWidget(insight: _coachService.generateInsight(_allEntrenamientos)),
                 const SizedBox(height: 24),
                 _buildKPICards(),
                 const SizedBox(height: 32),

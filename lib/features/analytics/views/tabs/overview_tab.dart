@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/features/analytics/viewmodels/analytics_hub_controller.dart';
 import 'package:running_laps/core/widgets/kpi_card_with_delta.dart';
 import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/features/analytics/data/coach_insight_service.dart';
+import 'package:running_laps/features/analytics/widgets/coach_insight_widget.dart';
 
 class OverviewTab extends StatelessWidget {
   final AnalyticsHubController controller;
@@ -28,7 +30,6 @@ class OverviewTab extends StatelessWidget {
         final totalKm = controller.totalDistanceKm;
         final totalWorkouts = controller.totalWorkouts;
         final avgPace = controller.formattedAvgPace;
-        final last30Km = controller.distanceLast30Days;
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -84,50 +85,7 @@ class OverviewTab extends StatelessWidget {
 
               const SizedBox(height: 32),
               
-              // INSIGHT MOCK
-              Container(
-                 padding: const EdgeInsets.all(20),
-                 decoration: BoxDecoration(
-                   gradient: const LinearGradient(
-                     colors: [Color(0xFF2196F3), Color(0xFF1976D2)],
-                     begin: Alignment.topLeft,
-                     end: Alignment.bottomRight,
-                   ),
-                   borderRadius: BorderRadius.circular(16),
-                   boxShadow: [
-                     BoxShadow(color: Colors.blue.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6)),
-                   ],
-                 ),
-                 child: Row(
-                   children: [
-                     Container(
-                       padding: const EdgeInsets.all(12),
-                       decoration: BoxDecoration(
-                         color: Colors.white.withOpacity(0.2),
-                         shape: BoxShape.circle,
-                       ),
-                       child: const Icon(Icons.tips_and_updates, color: Colors.white, size: 28),
-                     ),
-                     const SizedBox(width: 16),
-                     Expanded(
-                       child: Column(
-                         crossAxisAlignment: CrossAxisAlignment.start,
-                         children: const [
-                           Text(
-                             "Insight Semanal",
-                             style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600),
-                           ),
-                           SizedBox(height: 4),
-                           Text(
-                             "¡Sigue así! Mantienes un buen ritmo constante.",
-                             style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
-                           ),
-                         ],
-                       ),
-                     )
-                   ],
-                 ),
-              ),
+              CoachInsightWidget(insight: CoachInsightService().generateInsight(controller.filteredData.value)),
             ],
           ),
         );

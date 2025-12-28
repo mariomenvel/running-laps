@@ -90,6 +90,8 @@ class DistributionTab extends StatelessWidget {
   /// Sección de consistencia
   Widget _buildConsistencySection(List<Entrenamiento> data) {
     final score = _calculateConsistencyScore(data);
+    final color = _getConsistencyColor(score);
+    final label = _getConsistencyLabel(score);
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,10 +107,11 @@ class DistributionTab extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Container(
-          padding: const EdgeInsets.all(32),
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.white, Colors.green.shade50.withOpacity(0.3)],
+              colors: [Colors.white, color.withOpacity(0.05)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -116,33 +119,58 @@ class DistributionTab extends StatelessWidget {
             border: Border.all(color: Colors.grey.shade200),
             boxShadow: [
               BoxShadow(
-                color: Colors.green.withOpacity(0.1),
+                color: color.withOpacity(0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
                 spreadRadius: -5,
               ),
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-              ),
             ],
           ),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Score circular
+              // Score circular centrado y mejorado
               SizedBox(
-                width: 150,
-                height: 150,
+                width: 180,
+                height: 180,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    CircularProgressIndicator(
-                      value: score / 100,
-                      strokeWidth: 12,
-                      backgroundColor: Colors.grey.shade200,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        _getConsistencyColor(score),
+                    // Sombra de fondo (glow)
+                    Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: color.withOpacity(0.2),
+                            blurRadius: 30,
+                            spreadRadius: 5,
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Track de fondo
+                    SizedBox(
+                      width: 160,
+                      height: 160,
+                      child: CircularProgressIndicator(
+                        value: 1.0,
+                        strokeWidth: 14,
+                        strokeCap: StrokeCap.round,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.grey.shade100),
+                      ),
+                    ),
+                    // Progreso real
+                    SizedBox(
+                      width: 160,
+                      height: 160,
+                      child: CircularProgressIndicator(
+                        value: score / 100,
+                        strokeWidth: 14,
+                        strokeCap: StrokeCap.round,
+                        valueColor: AlwaysStoppedAnimation<Color>(color),
                       ),
                     ),
                     Column(
@@ -151,18 +179,20 @@ class DistributionTab extends StatelessWidget {
                         Text(
                           '${score.toInt()}',
                           style: TextStyle(
-                            fontSize: 48,
-                            fontWeight: FontWeight.bold,
-                            color: _getConsistencyColor(score),
-                            letterSpacing: -1,
+                            fontSize: 56,
+                            fontWeight: FontWeight.w900,
+                            color: color,
+                            letterSpacing: -2,
+                            height: 1.0,
                           ),
                         ),
                         Text(
-                          'Score',
+                          'PUNTOS',
                           style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 10,
+                            color: Colors.grey.shade500,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 2,
                           ),
                         ),
                       ],
@@ -170,14 +200,34 @@ class DistributionTab extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
+              // Badge de estado
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: color.withOpacity(0.3)),
+                ),
+                child: Text(
+                  label.toUpperCase(),
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               Text(
                 _getConsistencyMessage(score),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey.shade700,
-                  height: 1.5,
+                  fontWeight: FontWeight.w500,
+                  height: 1.4,
                 ),
               ),
             ],
@@ -297,29 +347,42 @@ class DistributionTab extends StatelessWidget {
   }
 
   Color _getConsistencyColor(double score) {
-    if (score >= 75) return Colors.green;
-    if (score >= 50) return Colors.orange;
-    return Colors.red;
+    if (score >= 80) return Colors.green.shade600;
+    if (score >= 50) return Colors.orange.shade600;
+    return Colors.red.shade600;
+  }
+
+  String _getConsistencyLabel(double score) {
+    if (score >= 80) return 'Excelente';
+    if (score >= 50) return 'Mantenimiento';
+    return 'Mejorable';
   }
 
   String _getConsistencyMessage(double score) {
-    if (score >= 75) return '¡Excelente! Mantén este ritmo constante.';
-    if (score >= 50) return 'Buen trabajo. Intenta entrenar más regularmente.';
-    return 'Aumenta la frecuencia de tus entrenamientos.';
+    if (score >= 80) return '¡Increíble! Tu disciplina es de atleta profesional.';
+    if (score >= 50) return 'Buen ritmo. Mantente constante para ver mejores resultados.';
+    return '¡Ánimo! El primer paso es ponerse las zapatillas.';
   }
 }
 
 /// Contenido de distribución de tags - Premium
-class _TagDistributionContent extends StatelessWidget {
+class _TagDistributionContent extends StatefulWidget {
   final List<Entrenamiento> workouts;
   const _TagDistributionContent({required this.workouts});
+
+  @override
+  State<_TagDistributionContent> createState() => _TagDistributionContentState();
+}
+
+class _TagDistributionContentState extends State<_TagDistributionContent> {
+  int touchedIndex = -1;
 
   @override
   Widget build(BuildContext context) {
     final Map<String, double> distribution = {};
     double totalKm = 0;
 
-    for (var e in workouts) {
+    for (var e in widget.workouts) {
       final km = e.distanciaTotalM() / 1000.0;
       totalKm += km;
       if (e.tags != null && e.tags!.isNotEmpty) {
@@ -333,71 +396,133 @@ class _TagDistributionContent extends StatelessWidget {
 
     if (distribution.isEmpty) return const SizedBox.shrink();
 
-    // Top 3 tags
     final sortedEntries = distribution.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     final top3 = sortedEntries.take(3).toList();
 
     return Column(
       children: [
-        // Donut chart
+        // Donut chart with Central Label
         SizedBox(
-          height: 180,
+          height: 220,
           child: Row(
             children: [
               Expanded(
-                flex: 2,
-                child: PieChart(
-                  PieChartData(
-                    sections: sortedEntries.asMap().entries.map((e) {
-                      final index = e.key;
-                      final entry = e.value;
-                      final color = _getTagColor(index);
-                      
-                      return PieChartSectionData(
-                        color: color,
-                        value: entry.value,
-                        title: '',
-                        radius: 50,
-                      );
-                    }).toList(),
-                    centerSpaceRadius: 40,
-                    sectionsSpace: 2,
-                    borderData: FlBorderData(show: false),
-                  ),
+                flex: 3,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    PieChart(
+                      PieChartData(
+                        pieTouchData: PieTouchData(
+                          touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                            setState(() {
+                              if (!event.isInterestedForInteractions ||
+                                  pieTouchResponse == null ||
+                                  pieTouchResponse.touchedSection == null) {
+                                touchedIndex = -1;
+                                return;
+                              }
+                              touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                            });
+                          },
+                        ),
+                        sections: sortedEntries.asMap().entries.map((e) {
+                          final index = e.key;
+                          final entry = e.value;
+                          final isTouched = index == touchedIndex;
+                          final color = _getTagColor(index);
+                          final fontSize = isTouched ? 16.0 : 12.0;
+                          final radius = isTouched ? 60.0 : 50.0;
+                          
+                          return PieChartSectionData(
+                            color: color,
+                            value: entry.value,
+                            title: isTouched ? '${entry.value.toStringAsFixed(0)}km' : '',
+                            radius: radius,
+                            titleStyle: TextStyle(
+                              fontSize: fontSize,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              shadows: const [Shadow(color: Colors.black26, blurRadius: 4)],
+                            ),
+                          );
+                        }).toList(),
+                        centerSpaceRadius: 55,
+                        sectionsSpace: 3,
+                        borderData: FlBorderData(show: false),
+                      ),
+                    ),
+                    // Central Text
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          totalKm >= 100 ? totalKm.toStringAsFixed(0) : totalKm.toStringAsFixed(1),
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            color: Tema.brandPurple,
+                            letterSpacing: -1,
+                            height: 1.0,
+                          ),
+                        ),
+                        Text(
+                          'KM TOTALES',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.grey.shade500,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 20),
+              const SizedBox(width: 16),
+              // Legend Side
               Expanded(
-                flex: 1,
+                flex: 2,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: sortedEntries.asMap().entries.map((e) {
+                  children: sortedEntries.take(5).toList().asMap().entries.map((e) {
                     final index = e.key;
                     final entry = e.value;
+                    final isTouched = index == touchedIndex;
                     final color = _getTagColor(index);
                     final percent = (entry.value / totalKm * 100).toInt();
                     
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: isTouched ? color.withOpacity(0.1) : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       child: Row(
                         children: [
                           Container(
-                            width: 12,
-                            height: 12,
+                            width: 10,
+                            height: 10,
                             decoration: BoxDecoration(
                               color: color,
-                              borderRadius: BorderRadius.circular(2),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(color: color.withOpacity(0.3), blurRadius: 4, spreadRadius: 1)
+                              ]
                             ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               entry.key,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: isTouched ? FontWeight.bold : FontWeight.w600,
+                                color: isTouched ? color : Colors.black87,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -405,9 +530,9 @@ class _TagDistributionContent extends StatelessWidget {
                           Text(
                             '$percent%',
                             style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey.shade600,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                              color: isTouched ? color : Colors.grey.shade600,
+                              fontWeight: isTouched ? FontWeight.w800 : FontWeight.w500,
                             ),
                           ),
                         ],
@@ -420,9 +545,11 @@ class _TagDistributionContent extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 24),
-        // Top 3 badges
+        // Premium Badges for Top 3
         Wrap(
           spacing: 12,
+          runSpacing: 12,
+          alignment: WrapAlignment.center,
           children: top3.asMap().entries.map((e) {
             final index = e.key;
             final entry = e.value;
@@ -430,37 +557,50 @@ class _TagDistributionContent extends StatelessWidget {
             final percent = (entry.value / totalKm * 100).toInt();
             
             return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [color.withOpacity(0.2), color.withOpacity(0.1)],
-                ),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: color.withOpacity(0.5)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.label, color: color, size: 16),
-                  const SizedBox(width: 8),
-                  Text(
-                    entry.key,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '$percent%',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: color.withOpacity(0.8),
-                      fontWeight: FontWeight.w600,
-                    ),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(0.15),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
                 ],
+                border: Border.all(color: color.withOpacity(0.2)),
+              ),
+              child: IntrinsicWidth(
+                child: Row(
+                  children: [
+                    Icon(Icons.stars_rounded, color: color, size: 18),
+                    const SizedBox(width: 6),
+                    Text(
+                      entry.key,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '$percent%',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: color,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           }).toList(),
@@ -471,12 +611,12 @@ class _TagDistributionContent extends StatelessWidget {
 
   Color _getTagColor(int index) {
     final colors = [
-      Colors.purple,
-      Colors.blue,
-      Colors.green,
-      Colors.orange,
-      Colors.pink,
-      Colors.teal,
+      Tema.brandPurple,
+      const Color(0xFF2196F3),
+      const Color(0xFF4CAF50),
+      const Color(0xFFFF9800),
+      const Color(0xFFE91E63),
+      const Color(0xFF00BCD4),
     ];
     return colors[index % colors.length];
   }

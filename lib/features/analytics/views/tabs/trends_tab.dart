@@ -323,6 +323,35 @@ class _WeeklyVolumeChart extends StatelessWidget {
     return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
+        barTouchData: BarTouchData(
+          touchTooltipData: BarTouchTooltipData(
+            getTooltipColor: (_) => Colors.blueGrey.shade900,
+            tooltipBorderRadius: BorderRadius.circular(8),
+            tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            getTooltipItem: (group, groupIndex, rod, rodIndex) {
+              final workout = displayData[groupIndex];
+              final date = "${workout.fecha.day}/${workout.fecha.month}";
+              return BarTooltipItem(
+                "$date\n",
+                const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+                children: [
+                  TextSpan(
+                    text: "${rod.toY.toStringAsFixed(1)} km",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
@@ -367,6 +396,41 @@ class _PaceEvolutionChart extends StatelessWidget {
 
     return LineChart(
       LineChartData(
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipColor: (_) => Colors.blueGrey.shade900,
+            tooltipBorderRadius: BorderRadius.circular(8),
+            tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            getTooltipItems: (touchedSpots) {
+              return touchedSpots.map((spot) {
+                final workout = displayData[spot.x.toInt()];
+                final date = "${workout.fecha.day}/${workout.fecha.month}";
+                final totalSeconds = spot.y.toInt();
+                final m = totalSeconds ~/ 60;
+                final s = (totalSeconds % 60).toString().padLeft(2, '0');
+                
+                return LineTooltipItem(
+                  "$date\n",
+                  const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: "$m:$s /km",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                );
+              }).toList();
+            },
+          ),
+        ),
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
