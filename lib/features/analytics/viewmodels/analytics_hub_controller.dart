@@ -144,6 +144,26 @@ class AnalyticsHubController {
     return '$m:${s.toString().padLeft(2, '0')}';
   }
 
+  // Duración total en segundos
+  double get totalDurationSeconds {
+    return filteredData.value.fold(0.0, (sum, e) => sum + e.tiempoTotalSec());
+  }
+
+  // Formato duración formateada (ej: 5h 30m)
+  String get formattedTotalDuration {
+    final totalSeconds = totalDurationSeconds;
+    if (totalSeconds == 0) return '0h';
+    
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    
+    if (hours > 0) {
+      return '${hours}h ${minutes}m';
+    } else {
+      return '${minutes}m';
+    }
+  }
+
   // --- LAST 30 DAYS METRICS ---
   
   double get distanceLast30Days {

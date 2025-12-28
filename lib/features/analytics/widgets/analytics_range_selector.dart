@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/features/analytics/viewmodels/analytics_hub_controller.dart';
 import 'package:running_laps/app/tema.dart';
+import 'dart:ui'; // For BackdropFilter
 
 class AnalyticsRangeSelector extends StatelessWidget {
   final AnalyticsHubController controller;
@@ -20,29 +21,40 @@ class AnalyticsRangeSelector extends StatelessWidget {
         }
 
         return GestureDetector(
-          onTap: () => _showRangePicker(context),
+          onTap: () => _showPremiumRangePicker(context),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Tema.brandPurple.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Tema.brandPurple.withOpacity(0.3)),
+              gradient: LinearGradient(
+                colors: [Tema.brandPurple, Tema.brandPurple.withOpacity(0.8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                 BoxShadow(
+                   color: Tema.brandPurple.withOpacity(0.4),
+                   blurRadius: 10,
+                   offset: const Offset(0, 4),
+                 ),
+              ],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.calendar_today, size: 14, color: Tema.brandPurple),
+                const Icon(Icons.calendar_month_rounded, size: 16, color: Colors.white),
                 const SizedBox(width: 8),
                 Text(
                   label,
                   style: const TextStyle(
-                    color: Tema.brandPurple,
+                    color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 13,
+                    fontSize: 14,
+                    letterSpacing: 0.5,
                   ),
                 ),
-                const SizedBox(width: 4),
-                const Icon(Icons.arrow_drop_down, size: 18, color: Tema.brandPurple),
+                const SizedBox(width: 6),
+                const Icon(Icons.keyboard_arrow_down_rounded, size: 20, color: Colors.white70),
               ],
             ),
           ),
@@ -54,89 +66,175 @@ class AnalyticsRangeSelector extends StatelessWidget {
   String _getLabel(AnalyticsTimeRange range) {
     switch (range) {
       case AnalyticsTimeRange.week:
-        return '7 días';
+        return '7 Días';
       case AnalyticsTimeRange.month:
-        return '30 días';
+        return '30 Días';
       case AnalyticsTimeRange.threeMonths:
-        return '3 meses';
+        return '3 Meses';
       case AnalyticsTimeRange.year:
-        return 'Este año';
+        return 'Este Año';
       case AnalyticsTimeRange.custom:
         return 'Personalizado';
     }
   }
 
-  void _showRangePicker(BuildContext context) {
+  void _showPremiumRangePicker(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 20,
+              offset: Offset(0, -5),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Seleccionar periodo",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            _buildOption(context, AnalyticsTimeRange.week, "Últimos 7 días"),
-            _buildOption(context, AnalyticsTimeRange.month, "Últimos 30 días"),
-            _buildOption(context, AnalyticsTimeRange.threeMonths, "Últimos 3 meses"),
-            _buildOption(context, AnalyticsTimeRange.year, "Último año"),
-            const Divider(height: 30),
-            ListTile(
-              leading: const Icon(Icons.date_range, color: Tema.brandPurple),
-              title: const Text("Rango personalizado"),
-              onTap: () async {
-                Navigator.pop(context);
-                final range = await showDateRangePicker(
-                  context: context,
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime.now(),
-                  builder: (context, child) {
-                    return Theme(
-                      data: Theme.of(context).copyWith(
-                        colorScheme: const ColorScheme.light(
-                          primary: Tema.brandPurple,
-                        ),
-                      ),
-                      child: child!,
-                    );
-                  },
-                );
-                
-                if (range != null) {
-                  controller.setRange(AnalyticsTimeRange.custom, custom: range);
-                }
-              },
-            ),
+             // Handle bar
+             Container(
+               width: 40,
+               height: 4,
+               margin: const EdgeInsets.only(bottom: 20),
+               decoration: BoxDecoration(
+                 color: Colors.grey[300],
+                 borderRadius: BorderRadius.circular(2),
+               ),
+             ),
+             
+             const Text(
+               "Seleccionar Periodo",
+               style: TextStyle(
+                 fontSize: 20, 
+                 fontWeight: FontWeight.bold,
+                 color: Colors.black87,
+               ),
+             ),
+             const SizedBox(height: 24),
+             
+             _buildPremiumOption(context, AnalyticsTimeRange.week, "Últimos 7 días", Icons.calendar_view_week_rounded),
+             const SizedBox(height: 12),
+             _buildPremiumOption(context, AnalyticsTimeRange.month, "Últimos 30 días", Icons.calendar_view_month_rounded),
+             const SizedBox(height: 12),
+             _buildPremiumOption(context, AnalyticsTimeRange.threeMonths, "Últimos 3 meses", Icons.grid_view_rounded),
+             const SizedBox(height: 12),
+             _buildPremiumOption(context, AnalyticsTimeRange.year, "Último año", Icons.calendar_today_rounded),
+             
+             const Padding(
+               padding: EdgeInsets.symmetric(vertical: 16.0),
+               child: Divider(),
+             ),
+             
+             ListTile(
+               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+               tileColor: Colors.grey[50],
+               leading: Container(
+                 padding: const EdgeInsets.all(8),
+                 decoration: BoxDecoration(
+                   color: Colors.blue.withOpacity(0.1),
+                   borderRadius: BorderRadius.circular(10),
+                 ),
+                 child: const Icon(Icons.date_range_rounded, color: Colors.blue),
+               ),
+               title: const Text(
+                 "Rango Personalizado",
+                 style: TextStyle(fontWeight: FontWeight.w600),
+               ),
+               trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+               onTap: () async {
+                 Navigator.pop(context);
+                 final range = await showDateRangePicker(
+                   context: context,
+                   firstDate: DateTime(2020),
+                   lastDate: DateTime.now(),
+                   builder: (context, child) {
+                     return Theme(
+                       data: Theme.of(context).copyWith(
+                         colorScheme: const ColorScheme.light(
+                           primary: Tema.brandPurple,
+                         ),
+                       ),
+                       child: child!,
+                     );
+                   },
+                 );
+                 
+                 if (range != null) {
+                   controller.setRange(AnalyticsTimeRange.custom, custom: range);
+                 }
+               },
+             ),
+             
+             const SizedBox(height: 20),
+             SizedBox(
+               width: double.infinity,
+               child: TextButton(
+                 onPressed: () => Navigator.pop(context),
+                 style: TextButton.styleFrom(
+                   padding: const EdgeInsets.symmetric(vertical: 16),
+                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                   foregroundColor: Colors.grey[600],
+                 ),
+                 child: const Text("Cancelar", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+               ),
+             ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildOption(BuildContext context, AnalyticsTimeRange range, String text) {
-    final isSelected = controller.selectedRange.value == range;
-    return ListTile(
-      leading: Icon(
-        isSelected ? Icons.check_circle : Icons.circle_outlined,
-        color: isSelected ? Tema.brandPurple : Colors.grey,
-      ),
-      title: Text(
-        text,
-        style: TextStyle(
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected ? Tema.brandPurple : Colors.black87,
-        ),
-      ),
-      onTap: () {
-        controller.setRange(range);
-        Navigator.pop(context);
+  Widget _buildPremiumOption(BuildContext context, AnalyticsTimeRange range, String text, IconData icon) {
+    return ValueListenableBuilder<AnalyticsTimeRange>(
+      valueListenable: controller.selectedRange,
+      builder: (context, selected, _) {
+        final isSelected = selected == range;
+        return InkWell(
+          onTap: () {
+            controller.setRange(range);
+            Navigator.pop(context);
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            decoration: BoxDecoration(
+              color: isSelected ? Tema.brandPurple.withOpacity(0.08) : Colors.transparent,
+              borderRadius: BorderRadius.circular(16),
+              border: isSelected ? Border.all(color: Tema.brandPurple, width: 1.5) : Border.all(color: Colors.grey.withOpacity(0.2)),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  color: isSelected ? Tema.brandPurple : Colors.grey[600],
+                  size: 22,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      color: isSelected ? Tema.brandPurple : Colors.black87,
+                    ),
+                  ),
+                ),
+                if (isSelected)
+                  const Icon(Icons.check_circle_rounded, color: Tema.brandPurple, size: 24),
+              ],
+            ),
+          ),
+        );
       },
     );
   }

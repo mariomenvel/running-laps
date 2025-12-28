@@ -95,8 +95,8 @@ class KpiCardWithDelta extends StatelessWidget {
                     child: Text(
                       title,
                       style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
                         color: Colors.grey[700],
                         letterSpacing: 0.3,
                       ),
@@ -140,7 +140,7 @@ class KpiCardWithDelta extends StatelessWidget {
               Text(
                 subtitle!,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 13.5,
                   color: Colors.grey[600],
                 ),
               ),
@@ -202,7 +202,7 @@ class KpiCardWithDelta extends StatelessWidget {
           Text(
             '${delta.abs().toStringAsFixed(1)}%',
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 13,
               fontWeight: FontWeight.w600,
               color: chipColor,
             ),
