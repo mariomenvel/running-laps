@@ -6,8 +6,6 @@ import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/app/tema.dart';
 
 import 'package:running_laps/features/analytics/views/tabs/overview_tab.dart';
-import 'package:running_laps/features/analytics/views/tabs/trends_tab.dart';
-import 'package:running_laps/features/analytics/views/tabs/distribution_tab.dart';
 import 'package:running_laps/features/analytics/views/tabs/patterns_tab.dart';
 
 class AnalyticsHubScreen extends StatefulWidget {
@@ -29,7 +27,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with SingleTick
     _controller = AnalyticsHubController(userId: userId);
     _controller.initialize(initialData: widget.preFilteredData);
     
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -62,7 +60,6 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with SingleTick
         ],
         bottom: TabBar(
           controller: _tabController,
-          isScrollable: true,
           labelColor: Tema.brandPurple,
           unselectedLabelColor: Colors.grey,
           indicatorColor: Tema.brandPurple,
@@ -70,8 +67,6 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with SingleTick
           labelStyle: const TextStyle(fontWeight: FontWeight.bold),
           tabs: const [
             Tab(text: 'Resumen'),
-            Tab(text: 'Tendencias'),
-            Tab(text: 'Distribución'),
             Tab(text: 'Patrones'),
           ],
         ),
@@ -87,8 +82,6 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with SingleTick
             controller: _tabController,
             children: [
               OverviewTab(controller: _controller),
-              TrendsTab(controller: _controller),
-              DistributionTab(controller: _controller),
               PatternsTab(controller: _controller),
             ],
           );
