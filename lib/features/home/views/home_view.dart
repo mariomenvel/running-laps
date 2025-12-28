@@ -6,7 +6,8 @@ import 'package:running_laps/features/home/widgets/configurable_widget_renderer.
 import 'package:running_laps/features/home/views/edit_home_view.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/data/training_repository.dart';
-import 'package:running_laps/features/training/views/training_start_view.dart'; // Added missing import
+import 'package:running_laps/features/home/widgets/home_flagship_chart.dart'; // Added Chart Import
+import 'package:running_laps/features/training/views/training_start_view.dart';
 import 'package:running_laps/features/profile/views/profile_menu_screen.dart';
 import 'package:running_laps/core/widgets/app_footer.dart';
 import 'package:running_laps/core/widgets/kpi_card_with_delta.dart';
@@ -16,7 +17,7 @@ import 'package:running_laps/app/tema.dart';
 import 'package:running_laps/features/groups/home/data/groups_repository.dart';
 import 'package:running_laps/features/groups/group_model.dart';
 import 'package:running_laps/features/groups/home/view/groups_home_screen.dart';
-import 'package:running_laps/features/groups/group/view/group_detail_screen.dart'; // Added missing import
+import 'package:running_laps/features/groups/group/view/group_detail_screen.dart';
 import 'package:running_laps/core/widgets/group_skeleton_card.dart';
 
 /// Home View rediseñado con widgets configurables
@@ -34,6 +35,7 @@ class _HomeViewState extends State<HomeView> {
   final GroupsRepository _groupsRepository = GroupsRepository();
   
   List<Entrenamiento> _entrenamientos = [];
+  List<Entrenamiento> _allEntrenamientos = []; // Full history for Flagship Chart
   bool _isLoadingData = true;
 
   // Groups State
@@ -78,6 +80,7 @@ class _HomeViewState extends State<HomeView> {
         final cutoffDate = _getCutoffDate(now, _selectedRange);
         
         setState(() {
+          _allEntrenamientos = allData; // Store full history
           _entrenamientos = allData
               .where((e) => e.fecha.isAfter(cutoffDate))
               .toList()
@@ -198,6 +201,12 @@ class _HomeViewState extends State<HomeView> {
                 const SizedBox(height: 24),
                 _buildKPICards(),
                 const SizedBox(height: 32),
+                
+                // --- FLAGSHIP CHART ---
+                HomeFlagshipChart(workouts: _allEntrenamientos),
+                const SizedBox(height: 32),
+                // ----------------------
+
                 _buildRecentWorkoutsSection(),
                 const SizedBox(height: 32),
                 _buildGroupsPreview(), // Added Groups Preview
