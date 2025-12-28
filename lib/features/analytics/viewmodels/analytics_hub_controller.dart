@@ -32,7 +32,16 @@ class AnalyticsHubController {
     TrainingRepository? repository,
   }) : _repository = repository ?? TrainingRepository();
 
-  Future<void> initialize() async {
+  Future<void> initialize({List<Entrenamiento>? initialData}) async {
+    if (initialData != null) {
+      _allData = List.from(initialData);
+      // Ordenar por fecha desc por si acaso
+      _allData.sort((a, b) => b.fecha.compareTo(a.fecha));
+      isLoading.value = false;
+      _applyFilters();
+      return;
+    }
+
     await _loadAllData();
     _applyFilters();
   }

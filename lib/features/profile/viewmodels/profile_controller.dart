@@ -79,7 +79,7 @@ class ProfileController {
         // No bloqueamos la app si fallan los tags
       }
 
-      _applyFilter();
+      applyFilters();
     } catch (e) {
       error.value = 'Error al cargar entrenamientos: ' + e.toString();
     } finally {
@@ -97,10 +97,10 @@ class ProfileController {
     currentFilter.value = filter;
     // Al seleccionar un filtro rápido, limpiamos los personalizados para evitar confusión
     // O podríamos mantenerlos, pero simplifiquemos por ahora.
-    _applyFilter();
+    applyFilters();
   }
 
-  void _applyFilter() {
+  void applyFilters() {
     final now = DateTime.now();
     List<Entrenamiento> filtered = List.from(_allTrainings.value);
 
@@ -219,7 +219,7 @@ class ProfileController {
   
   void setSearchQuery(String query) {
     searchQuery.value = query;
-    _applyFilter();
+    applyFilters();
   }
 
   void toggleTagFilter(String tag) {
@@ -230,24 +230,24 @@ class ProfileController {
       currentTags.add(tag);
     }
     selectedTags.value = currentTags;
-    _applyFilter();
+    applyFilters();
   }
 
   void setDateRange(DateTime? start, DateTime? end) {
     filterStartDate.value = start;
     filterEndDate.value = end;
-    _applyFilter();
+    applyFilters();
   }
 
   void setDistanceRange(double? minMeters, double? maxMeters) {
     filterMinDist.value = minMeters;
     filterMaxDist.value = maxMeters;
-    _applyFilter();
+    applyFilters();
   }
 
   void setSeriesDistanceFilter(int? distanceMeters) {
     filterSeriesDistance.value = distanceMeters;
-    _applyFilter();
+    applyFilters();
   }
 
   void clearAllFilters() {
@@ -259,7 +259,7 @@ class ProfileController {
     filterMinDist.value = null;
     filterMaxDist.value = null;
     filterSeriesDistance.value = null;
-    _applyFilter();
+    applyFilters();
   }
 
   int get activeFiltersCount {
@@ -271,6 +271,64 @@ class ProfileController {
     if (filterMinDist.value != null || filterMaxDist.value != null) count++;
     if (filterSeriesDistance.value != null) count++;
     return count;
+  }
+  
+  /// Genera descripción legible del filtro activo (para Analytics banner)
+  String get filterDescription {
+    List<String> parts = [];
+    
+    // Rango de fechas
+    if (filterStartDate.value != null || filterEndDate.value != null) {
+      if (filterStartDate.value != null && filterEndDate.value != null) {
+        final start = filterStartDate.value!;
+        final end = filterEndDate.value!;
+        if (start.year == end.year && start.month == end.month && start.day == end.day) {
+          // Mismo día
+          parts.add('${start.day}/${start.month}/${start.year}');
+        } else {
+          parts.add('${start.day}/${start.month} - ${end.day}/${end.month}');
+        }
+      } else if (filterStartDate.value != null) {
+        final date = filterStartDate.value!;
+        parts.add('Desde ${date.day}/${date.month}/${date.year}');
+      } else {
+        final date = filterEndDate.value!;
+        parts.add('Hasta ${date.day}/${date.month}/${date.year}');
+      }
+    }
+    
+    // Tags
+    if (selectedTags.value.isNotEmpty) {
+      if (selectedTags.value.length == 1) {
+        parts.add('Tag: ${selectedTags.value.first}');
+      } else {
+        parts.add('Tags: ${selectedTags.value.take(2).join(', ')}${selectedTags.value.length > 2 ? '...' : ''}');
+      }
+    }
+    
+    // Distancia
+    if (filterMinDist.value != null || filterMaxDist.value != null) {
+      if (filterMinDist.value != null && filterMaxDist.value != null) {
+        parts.add('${(filterMinDist.value!/1000).toStringAsFixed(1)}-${(filterMaxDist.value!/1000).toStringAsFixed(1)} km');
+      } else if (filterMinDist.value != null) {
+        parts.add('> ${(filterMinDist.value!/1000).toStringAsFixed(1)} km');
+      } else {
+        parts.add('< ${(filterMaxDist.value!/1000).toStringAsFixed(1)} km');
+      }
+    }
+    
+    // Series
+    if (filterSeriesDistance.value != null) {
+      parts.add('Series ${filterSeriesDistance.value}m');
+    }
+    
+    // Búsqueda
+    if (searchQuery.value.trim().isNotEmpty) {
+      parts.add('"${searchQuery.value.trim()}"');
+    }
+    
+    if (parts.isEmpty) return 'Todos los entrenos';
+    return parts.join(' • ');
   }
 
   void dispose() {

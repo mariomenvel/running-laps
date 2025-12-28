@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'firebase_options.dart'; // Generado por flutterfire CLI
 import 'features/auth/views/auth_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Inicializar locale para el calendario en español
+  await initializeDateFormatting('es_ES', null);
 
   // Inicializar Firebase para Web, Android e iOS
   await Firebase.initializeApp(

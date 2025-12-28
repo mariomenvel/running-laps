@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/features/analytics/viewmodels/analytics_hub_controller.dart';
 import 'package:running_laps/features/analytics/widgets/analytics_range_selector.dart';
+import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/app/tema.dart';
 
 import 'package:running_laps/features/analytics/views/tabs/overview_tab.dart';
@@ -10,7 +11,8 @@ import 'package:running_laps/features/analytics/views/tabs/distribution_tab.dart
 import 'package:running_laps/features/analytics/views/tabs/patterns_tab.dart';
 
 class AnalyticsHubScreen extends StatefulWidget {
-  const AnalyticsHubScreen({super.key});
+  final List<Entrenamiento>? preFilteredData;
+  const AnalyticsHubScreen({super.key, this.preFilteredData});
 
   @override
   State<AnalyticsHubScreen> createState() => _AnalyticsHubScreenState();
@@ -25,7 +27,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with SingleTick
     super.initState();
     final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
     _controller = AnalyticsHubController(userId: userId);
-    _controller.initialize();
+    _controller.initialize(initialData: widget.preFilteredData);
     
     _tabController = TabController(length: 4, vsync: this);
   }
@@ -42,7 +44,10 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with SingleTick
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F8),
       appBar: AppBar(
-        title: const Text('Analytics Hub', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+        title: Text(
+          widget.preFilteredData != null ? 'Resultados Filtrados' : 'Analytics Hub',
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
