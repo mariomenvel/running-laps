@@ -102,6 +102,32 @@ class SeriesPattern {
     return '$mm:$ss2 /km';
   }
 
+  /// Mejor tiempo formateado de todas las series del patrón
+  String get bestTimeFormatted {
+    if (instances.isEmpty) return '-';
+    final bestTime = instances.map((i) => i.serie.tiempoSec).reduce((a, b) => a < b ? a : b);
+    return formatDuration(bestTime);
+  }
+
+  /// Tiempo promedio formateado
+  String get averageTimeFormatted {
+    if (instances.isEmpty) return '-';
+    final sum = instances.fold<double>(0, (sum, i) => sum + i.serie.tiempoSec);
+    final avg = sum / instances.length;
+    return formatDuration(avg);
+  }
+
+  static String formatDuration(double totalSeconds) {
+    final int h = totalSeconds ~/ 3600;
+    final int m = (totalSeconds % 3600) ~/ 60;
+    final int s = (totalSeconds % 60).toInt();
+    
+    if (h > 0) {
+      return '$h:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+    }
+    return '$m:${s.toString().padLeft(2, '0')}';
+  }
+
   /// Número de instancias
   int get count => instances.length;
 

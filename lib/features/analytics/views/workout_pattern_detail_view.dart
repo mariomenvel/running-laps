@@ -41,7 +41,7 @@ class WorkoutPatternDetailView extends StatelessWidget {
               children: [
                 Expanded(child: _buildKpiCard("Ritmo Medio", pattern.averagePaceFormatted, Icons.speed, Colors.blue)),
                 const SizedBox(width: 12),
-                Expanded(child: _buildKpiCard("Consistencia", "${(pattern.averageConsistency * 100).toInt()}%", Icons.track_changes, Colors.green)),
+                Expanded(child: _buildKpiCard("Tiempo Medio", pattern.averageTotalTimeFormatted, Icons.timer, Colors.green)),
                 const SizedBox(width: 12),
                 Expanded(child: _buildKpiCard("Sesiones", "${pattern.count}", Icons.calendar_today, Colors.orange)),
               ],
@@ -159,17 +159,27 @@ class WorkoutPatternDetailView extends StatelessWidget {
                ),
              ],
            ),
-           Container(
-             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-             decoration: BoxDecoration(
-               color: Tema.brandPurple.withOpacity(0.1),
-               borderRadius: BorderRadius.circular(20),
-               ),
-             child: Text(
-               "$pace /km",
-               style: const TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold),
-             ),
-           ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Tema.brandPurple.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+                ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    WorkoutPattern.formatDuration(instance.entrenamiento.tiempoTotalSec()),
+                    style: const TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  Text(
+                    "$pace /km",
+                    style: TextStyle(color: Tema.brandPurple.withOpacity(0.6), fontSize: 11, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

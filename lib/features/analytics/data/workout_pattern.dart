@@ -132,6 +132,33 @@ class WorkoutPattern {
     return '$mm:$ss2 /km';
   }
 
+  /// Mejor tiempo total de entrenamiento (suma de tiempos de series)
+  String get bestTotalTimeFormatted {
+    final workout = bestWorkout;
+    if (workout == null) return '-';
+    final totalSec = workout.entrenamiento.tiempoTotalSec();
+    return formatDuration(totalSec);
+  }
+
+  /// Tiempo total promedio
+  String get averageTotalTimeFormatted {
+    if (instances.isEmpty) return '-';
+    final sum = instances.fold<double>(0, (sum, i) => sum + i.entrenamiento.tiempoTotalSec());
+    final avg = sum / instances.length;
+    return formatDuration(avg);
+  }
+
+  static String formatDuration(double totalSeconds) {
+    final int h = totalSeconds ~/ 3600;
+    final int m = (totalSeconds % 3600) ~/ 60;
+    final int s = (totalSeconds % 60).toInt();
+    
+    if (h > 0) {
+      return '$h:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+    }
+    return '$m:${s.toString().padLeft(2, '0')}';
+  }
+
   /// Descripción del patrón (ej: "4 series de 400m")
   String get description {
     if (distances.isEmpty) return patternKey;

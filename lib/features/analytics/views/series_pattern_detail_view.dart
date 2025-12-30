@@ -36,9 +36,9 @@ class SeriesPatternDetailView extends StatelessWidget {
             // KPI Header
             Row(
               children: [
-                Expanded(child: _buildKpiCard("Mejor Ritmo", pattern.bestPaceFormatted, Icons.emoji_events, Colors.amber)),
+                Expanded(child: _buildKpiCard("Mejor Tiempo", pattern.bestTimeFormatted, Icons.emoji_events, Colors.amber, subValue: pattern.bestPaceFormatted)),
                 const SizedBox(width: 12),
-                Expanded(child: _buildKpiCard("Ritmo Medio", pattern.averagePaceFormatted, Icons.speed, Colors.blue)),
+                Expanded(child: _buildKpiCard("Tiempo Medio", pattern.averageTimeFormatted, Icons.speed, Colors.blue, subValue: pattern.averagePaceFormatted)),
                 const SizedBox(width: 12),
                 Expanded(child: _buildKpiCard("Total Veces", "${pattern.count}", Icons.repeat, Colors.purple)),
               ],
@@ -92,7 +92,7 @@ class SeriesPatternDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildKpiCard(String title, String value, IconData icon, Color color) {
+  Widget _buildKpiCard(String title, String value, IconData icon, Color color, {String? subValue}) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -106,7 +106,10 @@ class SeriesPatternDetailView extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: 24),
           const SizedBox(height: 8),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          FittedBox(fit: BoxFit.scaleDown, child: Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16))),
+          if (subValue != null) ...[
+            Text(subValue, style: TextStyle(color: Colors.grey.shade400, fontSize: 10)),
+          ],
           const SizedBox(height: 4),
           Text(title, style: TextStyle(color: Colors.grey.shade500, fontSize: 11), textAlign: TextAlign.center),
         ],
@@ -149,9 +152,19 @@ class SeriesPatternDetailView extends StatelessWidget {
                color: Tema.brandPurple.withOpacity(0.1),
                borderRadius: BorderRadius.circular(20),
              ),
-             child: Text(
-               "$pace /km",
-               style: const TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold),
+             child: Column(
+               mainAxisAlignment: MainAxisAlignment.center,
+               crossAxisAlignment: CrossAxisAlignment.end,
+               children: [
+                 Text(
+                   SeriesPattern.formatDuration(instance.serie.tiempoSec),
+                   style: const TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold, fontSize: 16),
+                 ),
+                 Text(
+                   "$pace /km",
+                   style: TextStyle(color: Tema.brandPurple.withOpacity(0.6), fontSize: 11, fontWeight: FontWeight.w500),
+                 ),
+               ],
              ),
           ),
         ],

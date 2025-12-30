@@ -196,8 +196,8 @@ class SeriesPatternCard extends StatelessWidget {
              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                   _buildMetric("Mejor Ritmo", pattern.bestPaceFormatted),
-                   _buildMetric("Ritmo Medio", pattern.averagePaceFormatted),
+                   _buildMetric("Mejor Tiempo", pattern.bestTimeFormatted, subValue: pattern.bestPaceFormatted),
+                   _buildMetric("Tiempo Medio", pattern.averageTimeFormatted, subValue: pattern.averagePaceFormatted),
                 ],
              )
           ],
@@ -205,32 +205,49 @@ class SeriesPatternCard extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildMetric(String label, String value) {
-     return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-           Text(
-             label,
-             style: TextStyle(
-               color: Colors.grey.shade600,
-               fontSize: 11,
-               fontWeight: FontWeight.w500,
-               letterSpacing: 0.5,
-             ),
+Widget _buildMetric(String label, String value, {String? subValue}) {
+   return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+         Text(
+           label,
+           style: TextStyle(
+             color: Colors.grey.shade600,
+             fontSize: 11,
+             fontWeight: FontWeight.w500,
+             letterSpacing: 0.5,
            ),
-           const SizedBox(height: 4),
-           Text(
-             value,
-             style: const TextStyle(
-               fontWeight: FontWeight.bold,
-               fontSize: 16,
-               letterSpacing: -0.3,
+         ),
+         const SizedBox(height: 4),
+         Row(
+           crossAxisAlignment: CrossAxisAlignment.baseline,
+           textBaseline: TextBaseline.alphabetic,
+           children: [
+             Text(
+               value,
+               style: const TextStyle(
+                 fontWeight: FontWeight.bold,
+                 fontSize: 22,
+                 letterSpacing: -0.5,
+               ),
              ),
-           ),
-        ],
-     );
-  }
+             if (subValue != null) ...[
+               const SizedBox(width: 8),
+               Text(
+                 subValue,
+                 style: TextStyle(
+                   fontSize: 12,
+                   color: Colors.grey.shade500,
+                   fontWeight: FontWeight.w500,
+                 ),
+               ),
+             ],
+           ],
+         ),
+      ],
+   );
 }
 
 class WorkoutPatternCard extends StatelessWidget {
@@ -354,6 +371,16 @@ class WorkoutPatternCard extends StatelessWidget {
                   )
                ).toList(),
              ),
+              const SizedBox(height: 8),
+              const Divider(),
+              const SizedBox(height: 8),
+              Row(
+                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                 children: [
+                    _buildMetric("Mejor Tiempo Total", pattern.bestTotalTimeFormatted, subValue: pattern.bestPaceFormatted),
+                    _buildMetric("Tiempo Medio Total", pattern.averageTotalTimeFormatted, subValue: pattern.averagePaceFormatted),
+                 ],
+              )
           ],
         ),
       ),
