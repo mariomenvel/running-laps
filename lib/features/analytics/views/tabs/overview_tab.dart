@@ -39,76 +39,81 @@ class OverviewTab extends StatelessWidget {
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. COACH INSIGHT (Top priority)
-              CoachInsightWidget(insight: CoachInsightService().generateInsight(data)),
-              const SizedBox(height: 32),
-
-              // 2. RESUMEN GLOBAL (KPIs)
-              const Text(
-                'Resumen Global',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: -0.5),
-              ),
-              const SizedBox(height: 16),
-              GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                childAspectRatio: 1.3,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  KpiCardWithDelta(
-                    title: 'Distancia',
-                    value: '${totalKm.toStringAsFixed(1)} km',
-                    subtitle: 'En periodo',
-                    icon: Icons.map,
-                    primaryColor: Colors.blue,
+                  // 1. COACH INSIGHT (Top priority)
+                  CoachInsightWidget(insight: CoachInsightService().generateInsight(data)),
+                  const SizedBox(height: 32),
+    
+                  // 2. RESUMEN GLOBAL (KPIs)
+                  const Text(
+                    'Resumen Global',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: -0.5),
                   ),
-                  KpiCardWithDelta(
-                    title: 'Sesiones',
-                    value: '$totalWorkouts',
-                    subtitle: 'Entrenamientos',
-                    icon: Icons.directions_run,
-                    primaryColor: Colors.orange,
+                  const SizedBox(height: 16),
+                  GridView.count(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    childAspectRatio: 1.35,
+                    children: [
+                      KpiCardWithDelta(
+                        title: 'Distancia',
+                        value: '${totalKm.toStringAsFixed(1)} km',
+                        subtitle: 'En periodo',
+                        icon: Icons.map,
+                        primaryColor: Colors.blue,
+                      ),
+                      KpiCardWithDelta(
+                        title: 'Sesiones',
+                        value: '$totalWorkouts',
+                        subtitle: 'Entrenamientos',
+                        icon: Icons.directions_run,
+                        primaryColor: Colors.orange,
+                      ),
+                      KpiCardWithDelta(
+                        title: 'Ritmo Medio',
+                        value: avgPace,
+                        subtitle: '/km',
+                        icon: Icons.speed,
+                        primaryColor: Colors.purple,
+                        isInverted: true,
+                      ),
+                      KpiCardWithDelta(
+                        title: 'Tiempo Total',
+                        value: controller.formattedTotalDuration,
+                        subtitle: 'En periodo',
+                        icon: Icons.timer,
+                        primaryColor: Colors.teal,
+                      ),
+                    ],
                   ),
-                  KpiCardWithDelta(
-                    title: 'Ritmo Medio',
-                    value: avgPace,
-                    subtitle: '/km',
-                    icon: Icons.speed,
-                    primaryColor: Colors.purple,
-                    isInverted: true,
-                  ),
-                  KpiCardWithDelta(
-                    title: 'Tiempo Total',
-                    value: controller.formattedTotalDuration,
-                    subtitle: 'En periodo',
-                    icon: Icons.timer,
-                    primaryColor: Colors.teal,
-                  ),
+                  const SizedBox(height: 40),
+    
+                  // 3. TENDENCIAS (Trends)
+                  _buildBestPerformancesSection(data),
+                  const SizedBox(height: 32),
+                  _buildWeeklyProgressSection(data),
+                  const SizedBox(height: 32),
+                  _buildPaceEvolutionSection(data),
+                  const SizedBox(height: 40),
+    
+                  // 4. DISTRIBUCIÓN (Distribution)
+                  _buildTrainingBalanceSection(data),
+                  const SizedBox(height: 32),
+                  _buildConsistencySection(data),
+                  const SizedBox(height: 32),
+                  _buildNextMilestoneSection(data),
+                  const SizedBox(height: 40),
                 ],
               ),
-              const SizedBox(height: 40),
-
-              // 3. TENDENCIAS (Trends)
-              _buildBestPerformancesSection(data),
-              const SizedBox(height: 32),
-              _buildWeeklyProgressSection(data),
-              const SizedBox(height: 32),
-              _buildPaceEvolutionSection(data),
-              const SizedBox(height: 40),
-
-              // 4. DISTRIBUCIÓN (Distribution)
-              _buildTrainingBalanceSection(data),
-              const SizedBox(height: 32),
-              _buildConsistencySection(data),
-              const SizedBox(height: 32),
-              _buildNextMilestoneSection(data),
-              const SizedBox(height: 40),
-            ],
+            ),
           ),
         );
       },

@@ -392,35 +392,43 @@ class _HomeViewState extends State<HomeView> {
 
     final avgPace = _calculateAveragePace();
     final totalWorkouts = _entrenamientos.length;
+    final totalDurationSec = _entrenamientos.fold<double>(
+      0,
+      (sum, e) => sum + e.tiempoTotalSec(),
+    );
 
-    return Row(
+    return GridView.count(
+      crossAxisCount: 2,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      childAspectRatio: 1.35,
       children: [
-        Expanded(
-          child: KpiCardWithDelta(
-            title: 'Km Totales',
-            value: totalKm.toStringAsFixed(1),
-            primaryColor: const Color(0xFF4CAF50),
-            icon: Icons.directions_run,
-          ),
+        KpiCardWithDelta(
+          title: 'Km Totales',
+          value: totalKm.toStringAsFixed(1),
+          primaryColor: const Color(0xFF4CAF50),
+          icon: Icons.directions_run,
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: KpiCardWithDelta(
-            title: 'Ritmo Medio',
-            value: _formatPace(avgPace),
-            primaryColor: const Color(0xFF2196F3),
-            icon: Icons.speed,
-            isInverted: true,
-          ),
+        KpiCardWithDelta(
+          title: 'Ritmo Medio',
+          value: _formatPace(avgPace),
+          primaryColor: const Color(0xFF2196F3),
+          icon: Icons.speed,
+          isInverted: true,
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: KpiCardWithDelta(
-            title: 'Entrenamientos',
-            value: totalWorkouts.toString(),
-            primaryColor: const Color(0xFFFF9800),
-            icon: Icons.fitness_center,
-          ),
+        KpiCardWithDelta(
+          title: 'Sesiones',
+          value: totalWorkouts.toString(),
+          primaryColor: const Color(0xFFFF9800),
+          icon: Icons.fitness_center,
+        ),
+        KpiCardWithDelta(
+          title: 'Tiempo Total',
+          value: _formatDuration(totalDurationSec),
+          primaryColor: Colors.teal,
+          icon: Icons.timer,
         ),
       ],
     );

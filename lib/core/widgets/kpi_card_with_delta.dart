@@ -33,6 +33,13 @@ class KpiCardWithDelta extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveGradientColor = gradientColor ?? primaryColor.withOpacity(0.6);
+    final screenWidth = MediaQuery.of(context).size.width;
+    
+    // Tamaños responsivos basados en el ancho de pantalla
+    // Escalamos entre un mínimo razonable y un máximo para pantallas grandes
+    final double responsiveValueSize = (32 * (screenWidth / 375)).clamp(28.0, 42.0);
+    final double responsiveTitleSize = (14 * (screenWidth / 375)).clamp(12.0, 16.0);
+    final double responsiveSubtitleSize = (12.5 * (screenWidth / 375)).clamp(11.0, 15.0);
     
     // Determinar si es mejora (positivo en deltas normales, negativo si inverted)
     final bool? isImprovement = deltaPercentage == null
@@ -44,7 +51,7 @@ class KpiCardWithDelta extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -68,6 +75,7 @@ class KpiCardWithDelta extends StatelessWidget {
           ],
         ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header: título + icono
@@ -95,7 +103,7 @@ class KpiCardWithDelta extends StatelessWidget {
                     child: Text(
                       title,
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: responsiveTitleSize,
                         fontWeight: FontWeight.bold,
                         color: Colors.grey[700],
                         letterSpacing: 0.3,
@@ -105,7 +113,7 @@ class KpiCardWithDelta extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             
             // Valor principal (grande, animado, responsive)
             TweenAnimationBuilder<double>(
@@ -126,7 +134,7 @@ class KpiCardWithDelta extends StatelessWidget {
                 child: Text(
                   value,
                   style: TextStyle(
-                    fontSize: 36,
+                    fontSize: responsiveValueSize,
                     fontWeight: FontWeight.bold,
                     color: primaryColor,
                     height: 1.0,
@@ -140,26 +148,28 @@ class KpiCardWithDelta extends StatelessWidget {
               Text(
                 subtitle!,
                 style: TextStyle(
-                  fontSize: 13.5,
+                  fontSize: responsiveSubtitleSize,
                   color: Colors.grey[600],
                 ),
               ),
             ],
             
-            const SizedBox(height: 12),
-            
-            // Delta y sparkline
-            Row(
-              children: [
-                if (deltaPercentage != null) ...[
-                  _buildDeltaChip(isImprovement, deltaPercentage!),
-                  const SizedBox(width: 12),
+            if (deltaPercentage != null || (sparklineData != null && sparklineData!.isNotEmpty)) ...[
+              const SizedBox(height: 8),
+              
+              // Delta y sparkline
+              Row(
+                children: [
+                  if (deltaPercentage != null) ...[
+                    _buildDeltaChip(isImprovement, deltaPercentage!),
+                    const SizedBox(width: 12),
+                  ],
+                  
+                  if (sparklineData != null && sparklineData!.isNotEmpty)
+                    Expanded(child: _buildSparkline()),
                 ],
-                
-                if (sparklineData != null && sparklineData!.isNotEmpty)
-                  Expanded(child: _buildSparkline()),
-              ],
-            ),
+              ),
+            ],
           ],
         ),
       ),
