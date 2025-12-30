@@ -11,6 +11,7 @@ import 'package:running_laps/features/training/views/training_start_view.dart';
 import 'package:running_laps/features/profile/views/profile_menu_screen.dart';
 import 'package:running_laps/core/widgets/app_footer.dart';
 import 'package:running_laps/core/widgets/kpi_card_with_delta.dart';
+import 'package:running_laps/core/constants/app_help_content.dart';
 import 'package:running_laps/app/tema.dart';
 
 // GROUPS IMPORTS
@@ -403,13 +404,14 @@ class _HomeViewState extends State<HomeView> {
       mainAxisSpacing: 12,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 1.35,
+      childAspectRatio: 1.2,
       children: [
         KpiCardWithDelta(
           title: 'Km Totales',
           value: totalKm.toStringAsFixed(1),
           primaryColor: const Color(0xFF4CAF50),
           icon: Icons.directions_run,
+          helpText: AppHelpContent.homeKmTotales,
         ),
         KpiCardWithDelta(
           title: 'Ritmo Medio',
@@ -417,18 +419,21 @@ class _HomeViewState extends State<HomeView> {
           primaryColor: const Color(0xFF2196F3),
           icon: Icons.speed,
           isInverted: true,
+          helpText: AppHelpContent.homeRitmoMedio,
         ),
         KpiCardWithDelta(
           title: 'Sesiones',
           value: totalWorkouts.toString(),
           primaryColor: const Color(0xFFFF9800),
           icon: Icons.fitness_center,
+          helpText: AppHelpContent.homeSesiones,
         ),
         KpiCardWithDelta(
           title: 'Tiempo Total',
           value: _formatDuration(totalDurationSec),
           primaryColor: Colors.teal,
           icon: Icons.timer,
+          helpText: AppHelpContent.homeTiempoTotal,
         ),
       ],
     );

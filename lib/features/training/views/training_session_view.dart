@@ -9,6 +9,8 @@ import '../../../core/widgets/modern_snackbar.dart';
 import '../data/serie.dart';
 import '../../../app/tema.dart';
 import '../../../core/widgets/app_header.dart';
+import 'package:running_laps/core/constants/app_help_content.dart';
+import 'package:running_laps/core/widgets/info_tooltip.dart';
 import '../../../core/services/gps_service.dart';
 
 
@@ -680,9 +682,16 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                       ),
                       
                       // Título (Centro)
-                      const Text(
-                        "Esfuerzo (RPE)",
-                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            "Esfuerzo (RPE)",
+                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(width: 4),
+                          const InfoTooltip(content: AppHelpContent.trainingRPE),
+                        ],
                       ),
                       
                       // Botón Guardar (Derecha)

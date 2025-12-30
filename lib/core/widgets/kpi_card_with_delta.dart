@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:running_laps/core/widgets/info_tooltip.dart';
 
 /// Card KPI premium con valor principal, delta vs periodo anterior y sparkline
 /// 
+///
 /// Diseño iOS-style con gradientes, sombras suaves y animaciones
 class KpiCardWithDelta extends StatelessWidget {
   final String title;
@@ -15,6 +17,7 @@ class KpiCardWithDelta extends StatelessWidget {
   final IconData? icon;
   final bool isInverted; // true si valores bajos son mejor (ej: ritmo)
   final VoidCallback? onTap;
+  final String? helpText; // Added helpText property
 
   const KpiCardWithDelta({
     super.key,
@@ -28,19 +31,20 @@ class KpiCardWithDelta extends StatelessWidget {
     this.icon,
     this.isInverted = false,
     this.onTap,
+    this.helpText, // Added to constructor
   });
 
   @override
   Widget build(BuildContext context) {
     final effectiveGradientColor = gradientColor ?? primaryColor.withOpacity(0.6);
     final screenWidth = MediaQuery.of(context).size.width;
-    
+
     // Tamaños responsivos basados en el ancho de pantalla
     // Escalamos entre un mínimo razonable y un máximo para pantallas grandes
     final double responsiveValueSize = (32 * (screenWidth / 375)).clamp(28.0, 42.0);
     final double responsiveTitleSize = (14 * (screenWidth / 375)).clamp(12.0, 16.0);
     final double responsiveSubtitleSize = (12.5 * (screenWidth / 375)).clamp(11.0, 15.0);
-    
+
     // Determinar si es mejora (positivo en deltas normales, negativo si inverted)
     final bool? isImprovement = deltaPercentage == null
         ? null
@@ -96,24 +100,29 @@ class KpiCardWithDelta extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                 ],
-                Expanded(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: responsiveTitleSize,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[700],
-                        letterSpacing: 0.3,
+                Expanded( // Modified title display
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                           maxLines: 1, // Strictly one line to prevent overflow
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: responsiveTitleSize,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
-                    ),
+                      if (helpText != null)
+                        InfoTooltip(content: helpText!),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             
             // Valor principal (grande, animado, responsive)
             TweenAnimationBuilder<double>(
@@ -155,7 +164,7 @@ class KpiCardWithDelta extends StatelessWidget {
             ],
             
             if (deltaPercentage != null || (sparklineData != null && sparklineData!.isNotEmpty)) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 4), // Reduced spacing
               
               // Delta y sparkline
               Row(

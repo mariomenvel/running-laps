@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:running_laps/features/analytics/viewmodels/analytics_hub_controller.dart';
+import 'package:running_laps/core/constants/app_help_content.dart';
 import 'package:running_laps/core/widgets/kpi_card_with_delta.dart';
 import 'package:running_laps/app/tema.dart';
 import 'package:running_laps/features/analytics/data/coach_insight_service.dart';
@@ -61,7 +62,7 @@ class OverviewTab extends StatelessWidget {
                     mainAxisSpacing: 12,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    childAspectRatio: 1.35,
+                    childAspectRatio: 1.1,
                     children: [
                       KpiCardWithDelta(
                         title: 'Distancia',
@@ -69,6 +70,7 @@ class OverviewTab extends StatelessWidget {
                         subtitle: 'En periodo',
                         icon: Icons.map,
                         primaryColor: Colors.blue,
+                        helpText: AppHelpContent.analyticsDistancia,
                       ),
                       KpiCardWithDelta(
                         title: 'Sesiones',
@@ -76,6 +78,7 @@ class OverviewTab extends StatelessWidget {
                         subtitle: 'Entrenamientos',
                         icon: Icons.directions_run,
                         primaryColor: Colors.orange,
+                        helpText: AppHelpContent.analyticsSesiones,
                       ),
                       KpiCardWithDelta(
                         title: 'Ritmo Medio',
@@ -84,6 +87,7 @@ class OverviewTab extends StatelessWidget {
                         icon: Icons.speed,
                         primaryColor: Colors.purple,
                         isInverted: true,
+                        helpText: AppHelpContent.analyticsRitmo,
                       ),
                       KpiCardWithDelta(
                         title: 'Tiempo Total',
@@ -91,6 +95,7 @@ class OverviewTab extends StatelessWidget {
                         subtitle: 'En periodo',
                         icon: Icons.timer,
                         primaryColor: Colors.teal,
+                        helpText: AppHelpContent.analyticsTiempoTotal, 
                       ),
                     ],
                   ),

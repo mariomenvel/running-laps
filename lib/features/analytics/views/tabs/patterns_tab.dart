@@ -7,6 +7,9 @@ import 'package:running_laps/features/analytics/data/workout_pattern.dart';
 import 'package:running_laps/features/analytics/views/series_pattern_carousel_view.dart';
 import 'package:running_laps/features/analytics/views/workout_pattern_carousel_view.dart';
 
+import 'package:running_laps/core/constants/app_help_content.dart';
+import 'package:running_laps/core/widgets/info_tooltip.dart';
+
 class PatternsTab extends StatelessWidget {
   final AnalyticsHubController controller;
 
@@ -50,7 +53,7 @@ class PatternsTab extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
                if (validSeries.isNotEmpty) ...[
-                 _buildSectionTitle("Patrones de Series (Repeticiones)"),
+                 _buildSectionTitle("Patrones de Series (Repeticiones)", helpText: AppHelpContent.patternsSeries),
                  const SizedBox(height: 12),
                  ListView.separated(
                     shrinkWrap: true,
@@ -68,7 +71,7 @@ class PatternsTab extends StatelessWidget {
                ],
 
                if (validWorkouts.isNotEmpty) ...[
-                 _buildSectionTitle("Entrenamientos Recurrentes"),
+                 _buildSectionTitle("Entrenamientos Recurrentes", helpText: AppHelpContent.patternsWorkout),
                  const SizedBox(height: 12),
                  ListView.separated(
                     shrinkWrap: true,
@@ -90,10 +93,18 @@ class PatternsTab extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+  Widget _buildSectionTitle(String title, {String? helpText}) {
+    return Row(
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+        ),
+        if (helpText != null) ...[
+          const SizedBox(width: 8),
+          InfoTooltip(content: helpText),
+        ],
+      ],
     );
   }
 }
