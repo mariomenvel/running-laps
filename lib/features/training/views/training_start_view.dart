@@ -725,7 +725,11 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       if (!mounted) return;
 
 
-      Navigator.pop(context); // Cierra TrainingStartView
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeView()),
+        (route) => false,
+      );
     } catch (e) {
       if (!mounted) return;
 

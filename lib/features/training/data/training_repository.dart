@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'entrenamiento.dart';
+import '../../../features/groups/data/training_challenge_sync_service.dart';
 
 class TrainingRepository {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final TrainingChallengeSyncService _syncService = TrainingChallengeSyncService();
 
   String _requireUid() {
     final User? u = _auth.currentUser;
@@ -29,7 +31,19 @@ class TrainingRepository {
       uid,
     ).add(data);
 
-    return doc.id;
+    final trainingId = doc.id;
+
+    // Sync to challenges (async, don't await to avoid blocking)
+    _syncService.onTrainingSaved(
+      uid: uid,
+      entrenamiento: e.copyWith(id: trainingId),
+      trainingId: trainingId,
+      isUpdate: false,
+    ).catchError((error) {
+      // Log error but don't fail training creation
+    });
+
+    return trainingId;
   }
 
 
@@ -61,6 +75,21 @@ class TrainingRepository {
       'tags': tags,
       'updatedAt': FieldValue.serverTimestamp(),
     });
+
+    // Re-sync to challenges on update (async)
+    // Fetch the updated training document
+    final doc = await _userTrainings(uid).doc(trainingId).get();
+    if (doc.exists) {
+      final training = Entrenamiento.fromMap(doc.data()!, id: doc.id);
+      _syncService.onTrainingSaved(
+        uid: uid,
+        entrenamiento: training,
+        trainingId: trainingId,
+        isUpdate: true,
+      ).catchError((error) {
+        // Log error but don't fail update
+      });
+    }
   }
   Future<List<Entrenamiento>> getAllEntrenamientos(String uid) async {
     // Alias for getTrainings but with explicit uid argument (which getTrainings ignores and uses auth user)

@@ -1,3 +1,5 @@
+import 'data/enums.dart';
+
 class GroupModel {
   final String id;
   final String name;
@@ -27,6 +29,7 @@ class GroupMemberStats {
   final String? photoUrl;
   final String? profilePicType;
   final Map<String, dynamic>? avatarConfig;
+  final MemberStatus status;
 
   GroupMemberStats({
     required this.uid,
@@ -35,5 +38,6 @@ class GroupMemberStats {
     this.photoUrl,
     this.profilePicType,
     this.avatarConfig,
+    this.status = MemberStatus.active,
   });
 }

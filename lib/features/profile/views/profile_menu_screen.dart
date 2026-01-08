@@ -12,7 +12,7 @@ import 'package:running_laps/features/home/views/home_view.dart';
 import 'package:running_laps/features/profile/views/history_screen.dart';
 import 'package:running_laps/features/profile/views/avatar_editor_wrapper_view.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
-import '../../groups/home/view/groups_home_screen.dart';
+import '../../groups/views/groups_list_screen.dart';
 import '../../groups/group/view/participant_profile_screen.dart';
 import 'package:running_laps/features/analytics/views/analytics_hub_screen.dart';
 
@@ -92,12 +92,10 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
 
   // --- NUEVA FUNCIÓN PARA GRUPOS ---
   void _openGroups() {
-    
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const GroupsHomeScreen()),
+      MaterialPageRoute(builder: (context) => const GroupsListScreen()),
     );
-    
   }
 
   // --- NUEVA FUNCIÓN PARA PERFIL PÚBLICO ---

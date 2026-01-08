@@ -85,6 +85,7 @@ class _AppFooterState extends State<AppFooter>
         ),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Container(height: 0.3, color: Colors.grey),
           Padding(

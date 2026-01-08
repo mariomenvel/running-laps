@@ -15,10 +15,11 @@ import 'package:running_laps/core/constants/app_help_content.dart';
 import 'package:running_laps/app/tema.dart';
 
 // GROUPS IMPORTS
-import 'package:running_laps/features/groups/home/data/groups_repository.dart';
-import 'package:running_laps/features/groups/group_model.dart';
-import 'package:running_laps/features/groups/home/view/groups_home_screen.dart';
-import 'package:running_laps/features/groups/group/view/group_detail_screen.dart';
+import 'package:running_laps/features/groups/data/groups_repository.dart';
+import 'package:running_laps/features/groups/data/user_groups_repository.dart';
+import 'package:running_laps/features/groups/data/group_models.dart';
+import 'package:running_laps/features/groups/views/groups_list_screen.dart';
+import 'package:running_laps/features/groups/views/group_screen.dart';
 import 'package:running_laps/core/widgets/group_skeleton_card.dart';
 import 'package:running_laps/features/analytics/data/coach_insight_service.dart';
 import 'package:running_laps/features/analytics/widgets/coach_insight_widget.dart';
@@ -36,6 +37,7 @@ class _HomeViewState extends State<HomeView> {
   late final HomeConfigController _configController;
   final TrainingRepository _trainingRepository = TrainingRepository();
   final GroupsRepository _groupsRepository = GroupsRepository();
+  final UserGroupsRepository _userGroupsRepository = UserGroupsRepository();
   final CoachInsightService _coachService = CoachInsightService();
   
   List<Entrenamiento> _entrenamientos = [];
@@ -43,7 +45,7 @@ class _HomeViewState extends State<HomeView> {
   bool _isLoadingData = true;
 
   // Groups State
-  Future<List<GroupModel>>? _groupsFuture;
+  Future<List<Group>>? _userGroupsFuture;
   
   // Selector de rango temporal
   TimeRange _selectedRange = TimeRange.thirtyDays;
@@ -60,9 +62,26 @@ class _HomeViewState extends State<HomeView> {
   void _loadGroups() {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId != null) {
-      _groupsFuture = _groupsRepository.fetchUserGroupsPreview(userId);
+      _userGroupsFuture = _fetchUserGroups(userId);
     } else {
-      _groupsFuture = Future.value([]);
+      _userGroupsFuture = Future.value([]);
+    }
+  }
+
+  Future<List<Group>> _fetchUserGroups(String userId) async {
+    try {
+      final groupIds = await _userGroupsRepository.getUserGroupIds(userId);
+      if (groupIds.isEmpty) return [];
+
+      final groups = <Group>[];
+      for (final id in groupIds) {
+        final g = await _groupsRepository.getGroupById(id);
+        if (g != null) groups.add(g);
+      }
+      return groups;
+    } catch (e) {
+      print("Error fetching groups: $e");
+      return [];
     }
   }
 
@@ -253,7 +272,7 @@ class _HomeViewState extends State<HomeView> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const GroupsHomeScreen()),
+                    MaterialPageRoute(builder: (context) => const GroupsListScreen()),
                   ).then((_) {
                      setState(() {
                        _loadGroups();
@@ -273,8 +292,8 @@ class _HomeViewState extends State<HomeView> {
         ),
 
         // LISTA DE TARJETAS
-        FutureBuilder<List<GroupModel>>(
-          future: _groupsFuture,
+        FutureBuilder<List<Group>>(
+          future: _userGroupsFuture,
           builder: (context, snapshot) {
              if (snapshot.connectionState == ConnectionState.waiting) {
               return SizedBox(
@@ -349,7 +368,7 @@ class _HomeViewState extends State<HomeView> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const GroupsHomeScreen()),
+                MaterialPageRoute(builder: (context) => const GroupsListScreen()),
               );
             },
             style: ElevatedButton.styleFrom(
@@ -809,140 +828,119 @@ enum TimeRange {
 // TARJETA DESTACADA DE GRUPO
 // ===================================================================
 class _GroupHighlightCard extends StatelessWidget {
-  final GroupModel group;
+  final Group group;
 
   const _GroupHighlightCard({required this.group});
 
   @override
   Widget build(BuildContext context) {
-    // Buscar al top runner (el primero de la lista)
-    final topRunner = (group.topRunners != null && group.topRunners!.isNotEmpty)
-        ? group.topRunners!.first
-        : null;
-
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => GroupDetailScreen(
-              groupId: group.id,
-              groupName: group.name,
-            ),
+            builder: (context) => GroupScreen(groupId: group.id),
           ),
         );
       },
       child: Container(
         width: 160,
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 10))
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            )
           ],
           border: Border.all(color: Colors.grey.shade100),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             // Icono y Nombre
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Tema.brandPurple.withOpacity(0.1),
-                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [Tema.brandPurple.withOpacity(0.15), Tema.brandPurple.withOpacity(0.05)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.emoji_events_rounded, size: 18, color: Tema.brandPurple),
+                  child: const Icon(Icons.groups_rounded, size: 22, color: Tema.brandPurple),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    group.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                const SizedBox(height: 12),
+                Text(
+                  group.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700, 
+                    fontSize: 14,
+                    height: 1.2,
+                    letterSpacing: -0.3,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
             
-            const Spacer(),
-            
-            // SECCIÓN TOP RUNNER
-            if (topRunner != null) ...[
-              const Text(
-                "Líder actual",
-                style: TextStyle(fontSize: 10, color: Colors.grey),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  // Avatar pequeño
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.amber, width: 1.5),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Member Count
+                Row(
+                  children: [
+                    Icon(Icons.person_outline_rounded, size: 14, color: Colors.grey.shade500),
+                    const SizedBox(width: 4),
+                    Text(
+                      "${group.memberCount} ${group.memberCount == 1 ? 'miembro' : 'miembros'}",
+                      style: TextStyle(
+                        fontSize: 12, 
+                        color: Colors.grey.shade600, 
+                        fontWeight: FontWeight.w500
+                      ),
                     ),
-                    child: ClipOval(
-                      child: AvatarHelper.construirAvatar(
-                        url: topRunner.photoUrl,
-                        type: topRunner.profilePicType ?? 'none',
-                        config: topRunner.avatarConfig,
-                        radius: 12
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Botón Entrar Minimalista
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Tema.brandPurple,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Tema.brandPurple.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Text(
+                      "Entrar",
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          topRunner.name,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          "${topRunner.totalKm.toStringAsFixed(1)} km",
-                          style: const TextStyle(fontSize: 10, color: Tema.brandPurple, fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                  )
-                ],
-              )
-            ] else ...[
-               const Text(
-                "¡Sé el primero!",
-                style: TextStyle(fontSize: 11, color: Colors.grey, fontStyle: FontStyle.italic),
-              ),
-            ],
-
-            const Spacer(),
-
-            // Botón Entrar
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3E5F5), // Purple 50
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Center(
-                child: Text(
-                  "Ver Ranking",
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Tema.brandPurple,
-                  ),
                 ),
-              ),
+              ],
             ),
           ],
         ),

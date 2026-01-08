@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../training/data/entrenamiento.dart'; // Importa tus modelos existentes
 import '../../group_model.dart';   // Reusamos GroupMemberStats
 import '../data/challenge_model.dart';
+import '../../data/enums.dart'; // MemberStatus
 
 class GroupDetailRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -11,16 +12,26 @@ class GroupDetailRepository {
   /// Calcula el ranking. Si [onlyThisMonth] es true, filtra entrenos del mes actual.
   Future<List<GroupMemberStats>> fetchMemberStats(String groupId, {bool onlyThisMonth = true}) async {
     try {
-      // A. Obtener IDs de miembros del grupo
-      final groupDoc = await _db.collection('groups').doc(groupId).get();
-      if (!groupDoc.exists) return [];
+    // A. Obtener miembros de la subcolección 'members'
+      final membersSnap = await _db
+          .collection('groups')
+          .doc(groupId)
+          .collection('members')
+          .get();
       
-      final List<String> memberIds = List<String>.from(groupDoc.data()?['members'] ?? []);
+      if (membersSnap.docs.isEmpty) return [];
+      
+      // Map UID -> Status
+      final memberStatusMap = <String, MemberStatus>{};
+      for (var doc in membersSnap.docs) {
+        final data = doc.data();
+        memberStatusMap[doc.id] = MemberStatus.fromFirestore(data['status'] ?? 'active');
+      }
       
       // B. Calcular stats en paralelo
       List<Future<GroupMemberStats?>> futures = [];
-      for (String uid in memberIds) {
-        futures.add(_calculateUserDist(uid, onlyThisMonth));
+      for (String uid in memberStatusMap.keys) {
+        futures.add(_calculateUserDist(uid, onlyThisMonth, memberStatusMap[uid]!));
       }
       
       final results = await Future.wait(futures);
@@ -36,7 +47,7 @@ class GroupDetailRepository {
     }
   }
 
-  Future<GroupMemberStats?> _calculateUserDist(String uid, bool onlyThisMonth) async {
+  Future<GroupMemberStats?> _calculateUserDist(String uid, bool onlyThisMonth, MemberStatus status) async {
     try {
       final userDoc = await _db.collection('users').doc(uid).get();
       if (!userDoc.exists) return null;
@@ -70,6 +81,7 @@ class GroupDetailRepository {
         photoUrl: userData['photoUrl'],
         profilePicType: userData['profilePicType'],
         avatarConfig: userData['avatarConfig'],
+        status: status,
       );
     } catch (e) {
       return null;

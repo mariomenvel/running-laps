@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/app/tema.dart';
 
+import 'package:running_laps/features/home/views/home_view.dart';
+
 class AppHeader extends StatelessWidget {
   final VoidCallback? onTapLeft;
   final VoidCallback? onTapRight;
@@ -8,7 +10,7 @@ class AppHeader extends StatelessWidget {
 
   const AppHeader({
     Key? key,
-    this.onTapLeft,
+    this.onTapLeft, // Kept for backwards compatibility if needed, but Logo ignores it now
     this.onTapRight,
     this.showBottomDivider = true,
   }) : super(key: key);
@@ -31,6 +33,7 @@ class AppHeader extends StatelessWidget {
         ),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Padding(
             padding: const EdgeInsets.symmetric(
@@ -40,9 +43,16 @@ class AppHeader extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                // --- LOGO FIJO ---
+                // --- LOGO FIJO (SIEMPRE VA A HOME) ---
                 GestureDetector(
-                  onTap: onTapLeft,
+                  onTap: () {
+                    // Navegación Directa al Home (Limpia stack)
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const HomeView()),
+                      (route) => false,
+                    );
+                  },
                   child: const CircleAvatar(
                     radius: 24.0,
                     backgroundColor: Tema.brandPurple,

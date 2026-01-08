@@ -27,6 +27,32 @@ class Entrenamiento {
     this.updatedAt,
   });
 
+  Entrenamiento copyWith({
+    String? id,
+    String? titulo,
+    DateTime? fecha,
+    bool? gps,
+    List<Serie>? series,
+    List<String>? tags,
+    String? weekKey,
+    double? load,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return Entrenamiento(
+      id: id ?? this.id,
+      titulo: titulo ?? this.titulo,
+      fecha: fecha ?? this.fecha,
+      gps: gps ?? this.gps,
+      series: series ?? this.series,
+      tags: tags ?? this.tags,
+      weekKey: weekKey ?? this.weekKey,
+      load: load ?? this.load,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
   int distanciaTotalM() {
     int total = 0;
     for (var serie in series) {
