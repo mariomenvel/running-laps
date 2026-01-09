@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 import '../data/tag_model.dart';
 import '../data/tag_manager.dart';
 
@@ -323,3 +323,4 @@ class _CreateTagDialogState extends State<CreateTagDialog> with SingleTickerProv
     );
   }
 }
+

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 
 class HistoryCarousel extends StatefulWidget {
@@ -235,3 +235,4 @@ class _HistoryCarouselState extends State<HistoryCarousel> {
     }
   }
 }
+

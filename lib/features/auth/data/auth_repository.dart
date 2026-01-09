@@ -66,3 +66,4 @@ class AuthRepository {
     return await _remote.getUserName();
   }
 }
+

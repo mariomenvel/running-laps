@@ -809,3 +809,4 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
     );
   }
 }
+

@@ -12,12 +12,12 @@ import 'package:running_laps/features/profile/views/profile_menu_screen.dart';
 import 'package:running_laps/core/widgets/app_footer.dart';
 import 'package:running_laps/core/widgets/kpi_card_with_delta.dart';
 import 'package:running_laps/core/constants/app_help_content.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 
 // GROUPS IMPORTS
-import 'package:running_laps/features/groups/data/groups_repository.dart';
-import 'package:running_laps/features/groups/data/user_groups_repository.dart';
-import 'package:running_laps/features/groups/data/group_models.dart';
+import 'package:running_laps/features/groups/data/repositories/groups_repository.dart';
+import 'package:running_laps/features/groups/data/repositories/user_groups_repository.dart';
+import 'package:running_laps/features/groups/data/models/group_models.dart';
 import 'package:running_laps/features/groups/views/groups_list_screen.dart';
 import 'package:running_laps/features/groups/views/group_screen.dart';
 import 'package:running_laps/core/widgets/group_skeleton_card.dart';
@@ -948,3 +948,4 @@ class _GroupHighlightCard extends StatelessWidget {
     );
   }
 }
+

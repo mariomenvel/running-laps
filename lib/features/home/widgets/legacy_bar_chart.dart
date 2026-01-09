@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 
 // Enum definitions if they aren't available globally
 enum HomeMetric { distancia, tiempoTotal, ritmoMedio, calorias }
@@ -259,3 +259,4 @@ class _BarChartPainter extends CustomPainter {
         oldDelegate.range != range;
   }
 }
+

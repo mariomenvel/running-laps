@@ -4,27 +4,27 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 
 // Repositories
-import '../data/user_groups_repository.dart';
-import '../data/groups_repository.dart';
-import '../data/invites_repository.dart';
+import '../data/repositories/user_groups_repository.dart';
+import '../data/repositories/groups_repository.dart';
+import '../data/repositories/invites_repository.dart';
 
 // Models
-import '../data/group_models.dart';
-import '../data/enums.dart';
-import '../../../../app/tema.dart';
+import '../data/models/group_models.dart';
+import '../data/models/enums.dart';
+import 'package:running_laps/config/app_theme.dart';
 import '../../../../core/widgets/modern_snackbar.dart';
 
 // Widgets
 import '../../../core/widgets/app_header.dart';
 import '../../../core/widgets/app_footer.dart';
 import '../../../core/widgets/gradient_banner.dart';
-import '../../../app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 
 // Navigation
 import 'group_screen.dart';
 import '../../training/views/training_start_view.dart';
 import '../../profile/views/profile_menu_screen.dart';
-import '../data/result_notification_model.dart';
+import '../data/models/result_notification_model.dart';
 import 'widgets/challenge_result_dialog.dart';
 
 /// Pantalla profesional y moderna que lista todos los grupos del usuario
@@ -1267,3 +1267,6 @@ class _PremiumFloatingActionButtonState extends State<_PremiumFloatingActionButt
     );
   }
 }
+
+
+

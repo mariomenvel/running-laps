@@ -1,17 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../data/group_models.dart';
-import '../data/challenge_models.dart';
-import '../data/enums.dart';
-import '../data/groups_repository.dart';
-import '../data/challenges_repository.dart';
-import '../data/group_prefs_repository.dart';
-import '../data/rewards_repository.dart';
-import '../data/ensure_auto_challenges_service.dart';
-import '../data/auto_join_service.dart';
-import '../data/challenge_finalize_service.dart';
-import '../group/data/group_detail_repository.dart';
-import '../group_model.dart';
+import '../data/models/group_models.dart';
+import '../data/models/challenge_models.dart';
+import '../data/models/enums.dart';
+import '../data/repositories/groups_repository.dart';
+import '../data/repositories/challenges_repository.dart';
+import '../data/repositories/group_prefs_repository.dart';
+import '../data/repositories/rewards_repository.dart';
+import '../data/services/ensure_auto_challenges_service.dart';
+import '../data/services/auto_join_service.dart';
+import '../data/services/challenge_finalize_service.dart';
+import '../data/repositories/group_detail_repository.dart';
+import '../data/models/group_stats_model.dart';
 
 /// ViewModel para la pantalla de retos del grupo
 class GroupChallengesController {
@@ -268,3 +268,6 @@ class GroupChallengesController {
     }
   }
 }
+
+
+

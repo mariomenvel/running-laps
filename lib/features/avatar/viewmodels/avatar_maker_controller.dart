@@ -228,3 +228,4 @@ class AvatarMakerController extends GetxController {
 
   AvatarMakerController();
 }
+

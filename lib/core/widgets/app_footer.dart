@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 
 class AppFooter extends StatefulWidget {
   final VoidCallback onTap;

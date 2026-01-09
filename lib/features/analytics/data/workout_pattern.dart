@@ -263,3 +263,4 @@ double calculatePaceConsistency(Entrenamiento entrenamiento) {
   // Desviación estándar
   return variance > 0 ? variance : 0; // sqrt en UI si se necesita
 }
+

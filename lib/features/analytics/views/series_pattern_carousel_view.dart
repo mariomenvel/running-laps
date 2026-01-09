@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:running_laps/features/analytics/data/series_pattern.dart';
 import 'package:running_laps/features/analytics/widgets/pattern_carousel.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 
 class SeriesPatternCarouselView extends StatelessWidget {
   final List<SeriesPattern> patterns;
@@ -412,3 +412,4 @@ class _PaceProgressionChart extends StatelessWidget {
     );
   }
 }
+

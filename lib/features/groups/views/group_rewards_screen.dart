@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
 import '../../profile/views/profile_menu_screen.dart';
 import '../viewmodels/group_rewards_controller.dart';
-import '../data/rewards_models.dart';
-import '../data/enums.dart';
+import '../data/models/rewards_models.dart';
+import '../data/models/enums.dart';
 
 class GroupRewardsScreen extends StatefulWidget {
   final String groupId;
@@ -920,3 +920,6 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
     );
   }
 }
+
+
+

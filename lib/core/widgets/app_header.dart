@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 
 import 'package:running_laps/features/home/views/home_view.dart';
 
@@ -76,3 +76,4 @@ class AppHeader extends StatelessWidget {
     );
   }
 }
+

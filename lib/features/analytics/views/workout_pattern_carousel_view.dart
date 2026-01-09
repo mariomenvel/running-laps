@@ -3,7 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:running_laps/features/analytics/data/workout_pattern.dart';
 import 'package:running_laps/features/analytics/widgets/pattern_carousel.dart';
 import 'package:running_laps/features/analytics/views/pattern_comparison_view.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 
 class WorkoutPatternCarouselView extends StatefulWidget {
   final List<WorkoutPattern> patterns;
@@ -612,3 +612,4 @@ class _PerformanceChart extends StatelessWidget {
     );
   }
 }
+

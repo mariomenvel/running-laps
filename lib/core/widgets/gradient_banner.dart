@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 
 /// Banner decorativo con gradiente para secciones del módulo de grupos.
 /// Ofrece una estética premium con animaciones sutiles.
@@ -218,3 +218,4 @@ class GradientChip extends StatelessWidget {
     );
   }
 }
+

@@ -206,3 +206,4 @@ const hairAssets = [
   ...shortHairAssets,
   ...longHairAssets,
 ];
+

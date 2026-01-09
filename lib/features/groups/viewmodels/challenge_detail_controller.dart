@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../data/challenge_models.dart';
-import '../data/challenges_repository.dart';
-import '../data/rewards_repository.dart';
-import '../data/challenge_ranking_helper.dart';
+import '../data/models/challenge_models.dart';
+import '../data/repositories/challenges_repository.dart';
+import '../data/repositories/rewards_repository.dart';
+import '../data/helpers/challenge_ranking_helper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 
@@ -155,3 +155,5 @@ class ChallengeDetailController {
     hasGoalBadge.dispose();
   }
 }
+
+

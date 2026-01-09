@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart'; // Asumo que usas GetX para navegar
 import 'package:image_picker/image_picker.dart';
 // Importa tus otras vistas y viewmodels
-import 'avatar_editor_wrapper_view.dart'; // Crearemos esta en el Paso 3
+import '../../avatar/views/avatar_maker_screen.dart';
 // import 'package:firebase_storage/firebase_storage.dart';
 // import 'package:firebase_firestore/firebase_firestore.dart';
 // import 'package:firebase_auth/firebase_auth.dart';
@@ -46,7 +46,7 @@ class EditProfilePictureView extends StatelessWidget {
   void _createAvatar() {
     // Navegamos a la pantalla de edición de avatar
     // (La crearemos en el siguiente paso)
-    Get.to(() => AvatarEditorWrapperView()); 
+    Get.to(() => const AvatarMakerScreen()); 
   }
 
   @override

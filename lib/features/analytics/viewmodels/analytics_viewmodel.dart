@@ -144,3 +144,4 @@ class AnalyticsViewModel extends ChangeNotifier {
     return frequent;
   }
 }
+

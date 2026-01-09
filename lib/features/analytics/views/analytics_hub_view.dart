@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/features/analytics/viewmodels/analytics_hub_controller.dart';
 import 'package:running_laps/features/analytics/widgets/analytics_range_selector.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 
 // Placeholder imports for tabs (Phase 4)
 // import 'package:running_laps/features/analytics/views/tabs/overview_tab.dart';
@@ -113,3 +113,4 @@ class _AnalyticsHubViewState extends State<AnalyticsHubView> with SingleTickerPr
     );
   }
 }
+

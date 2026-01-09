@@ -282,3 +282,4 @@ class GPSService {
     _status = GpsStatus.uninitialized;
   }
 }
+

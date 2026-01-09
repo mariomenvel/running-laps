@@ -107,3 +107,4 @@ class TagManager {
     return doc.exists;
   }
 }
+

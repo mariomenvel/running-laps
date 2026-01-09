@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'entrenamiento.dart';
-import '../../../features/groups/data/training_challenge_sync_service.dart';
+import '../../../features/groups/data/services/training_challenge_sync_service.dart';
 
 class TrainingRepository {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -100,3 +100,4 @@ class TrainingRepository {
     return getTrainings();
   }
 }
+

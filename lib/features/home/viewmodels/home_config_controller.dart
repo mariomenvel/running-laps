@@ -118,3 +118,4 @@ class HomeConfigController {
     isSaving.dispose();
   }
 }
+

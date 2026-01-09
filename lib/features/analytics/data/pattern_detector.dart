@@ -253,3 +253,4 @@ class PatternStats {
     this.mostCommonWorkoutPattern,
   });
 }
+

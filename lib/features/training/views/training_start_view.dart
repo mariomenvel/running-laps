@@ -7,7 +7,7 @@ import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:firebase_core/firebase_core.dart'; // Para FirebaseException
 
 import '../data/serie.dart';
-import '../../../app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 import '../../../core/widgets/app_header.dart';
 import '../../../core/services/gps_service.dart';
 import '../../../core/widgets/modern_snackbar.dart';
@@ -2144,6 +2144,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     );
   }
 }
+
+
 
 
 

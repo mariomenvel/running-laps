@@ -7,7 +7,7 @@ import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import '../../../core/widgets/modern_snackbar.dart';
 
 import '../data/serie.dart';
-import '../../../app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 import '../../../core/widgets/app_header.dart';
 import 'package:running_laps/core/constants/app_help_content.dart';
 import 'package:running_laps/core/widgets/info_tooltip.dart';
@@ -916,3 +916,5 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
     );
   }
 }
+
+

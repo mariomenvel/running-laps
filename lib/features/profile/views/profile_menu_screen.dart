@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 
 // Auth
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,11 +9,12 @@ import 'package:running_laps/features/auth/views/auth_page.dart';
 import 'package:running_laps/features/home/views/home_view.dart';
 
 // Vistas de perfil / entrenos
-import 'package:running_laps/features/profile/views/history_screen.dart';
-import 'package:running_laps/features/profile/views/avatar_editor_wrapper_view.dart';
+// Vistas de perfil / entrenos
+import 'package:running_laps/features/history/views/history_screen.dart';
+// import 'package:running_laps/features/profile/views/avatar_editor_wrapper_view.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
 import '../../groups/views/groups_list_screen.dart';
-import '../../groups/group/view/participant_profile_screen.dart';
+import '../../groups/views/participant_profile_screen.dart';
 import 'package:running_laps/features/analytics/views/analytics_hub_screen.dart';
 
 // Widgets comunes
@@ -73,21 +74,23 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
       context,
       MaterialPageRoute(
         builder: (BuildContext context) {
-          return const ProfileView();
+          return const HistoryScreen();
         },
       ),
     );
   }
 
   void _openAvatarEditor() {
-    Navigator.push(
+    // TODO: Implementar navegación a nuevo editor de avatar
+    ModernSnackBar.showInfo(context, "Próximamente: Nuevo editor de avatar");
+    /* Navigator.push(
       context,
       MaterialPageRoute(
         builder: (BuildContext context) {
           return const AvatarEditorWrapperView();
         },
       ),
-    );
+    ); */
   }
 
   // --- NUEVA FUNCIÓN PARA GRUPOS ---

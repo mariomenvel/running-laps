@@ -182,3 +182,4 @@ class AnalyticsHubController {
     isLoading.dispose();
   }
 }
+

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/features/analytics/data/workout_pattern.dart';
 import 'package:running_laps/features/training/data/serie.dart';
 
@@ -377,3 +377,4 @@ class PatternComparisonView extends StatelessWidget {
     return i.bestSerie?.ritmoSecPorKm() ?? 0;
   }
 }
+

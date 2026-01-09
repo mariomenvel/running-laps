@@ -148,3 +148,4 @@ class _PatternCarouselState<T> extends State<PatternCarousel<T>> {
     );
   }
 }
+

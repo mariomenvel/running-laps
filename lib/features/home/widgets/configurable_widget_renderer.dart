@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:running_laps/features/analytics/data/home_layout_config.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 
 /// Renderiza un widget configurable según su tipo y configuración
 class ConfigurableWidgetRenderer extends StatelessWidget {
@@ -264,3 +264,4 @@ class ConfigurableWidgetRenderer extends StatelessWidget {
       );
   }
 }
+

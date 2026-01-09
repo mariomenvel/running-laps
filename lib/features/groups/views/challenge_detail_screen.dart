@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import '../viewmodels/challenge_detail_controller.dart';
-import '../data/challenge_models.dart';
-import '../data/challenge_helpers.dart';
-import '../data/enums.dart';
+import '../data/models/challenge_models.dart';
+import '../data/helpers/challenge_helpers.dart';
+import '../data/models/enums.dart';
 
 import 'package:intl/intl.dart';
-import '../../../../app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/gradient_banner.dart';
 import '../../profile/views/profile_menu_screen.dart';
@@ -775,3 +775,7 @@ extension GoalKindToMetric on GoalKind {
     }
   }
 }
+
+
+
+

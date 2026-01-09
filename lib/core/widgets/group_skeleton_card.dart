@@ -119,3 +119,4 @@ class _GroupSkeletonCardState extends State<GroupSkeletonCard>
     );
   }
 }
+

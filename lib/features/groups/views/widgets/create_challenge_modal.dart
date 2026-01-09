@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../data/enums.dart';
-import '../../../../app/tema.dart';
+import '../../data/models/enums.dart';
+import 'package:running_laps/config/app_theme.dart';
 
 
 class CreateChallengeModal extends StatefulWidget {
@@ -585,3 +585,5 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
     }
   }
 }
+
+

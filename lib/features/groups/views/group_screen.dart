@@ -3,10 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:confetti/confetti.dart';
 
 import '../viewmodels/group_challenges_controller.dart';
-import '../data/enums.dart';
-import '../data/challenge_models.dart';
-import '../data/challenges_repository.dart';
-import '../../../../app/tema.dart';
+import '../data/models/enums.dart';
+import '../data/models/challenge_models.dart';
+import '../data/repositories/challenges_repository.dart';
+import 'package:running_laps/config/app_theme.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_footer.dart';
 import '../../../../core/widgets/gradient_banner.dart';
@@ -14,15 +14,15 @@ import '../../../../core/widgets/gradient_banner.dart';
 // Screens
 import 'challenge_detail_screen.dart';
 import 'group_rewards_screen.dart';
-import '../group/view/participant_profile_screen.dart';
-import '../group_model.dart';
+import 'participant_profile_screen.dart';
+import '../data/models/group_stats_model.dart';
 
 // Widgets
 import 'widgets/create_challenge_modal.dart';
-import '../../../../features/groups/data/challenge_helpers.dart';
+import '../../../../features/groups/data/helpers/challenge_helpers.dart';
 import '../../training/views/training_start_view.dart';
 import '../../profile/views/profile_menu_screen.dart';
-import '../data/invites_repository.dart';
+import '../data/repositories/invites_repository.dart';
 import '../../../../core/widgets/modern_snackbar.dart';
 
 /// Pantalla de Grupo Rediseñada: Premium, moderna con animaciones fluidas
@@ -1614,3 +1614,8 @@ class _PremiumFloatingActionButtonState extends State<_PremiumFloatingActionButt
     );
   }
 }
+
+
+
+
+

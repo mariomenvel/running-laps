@@ -31,3 +31,4 @@ class TagUtils {
     return _palette[index];
   }
 }
+

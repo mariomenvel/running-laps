@@ -273,3 +273,4 @@ class KpiCardWithDelta extends StatelessWidget {
     );
   }
 }
+

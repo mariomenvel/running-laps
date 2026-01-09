@@ -13,3 +13,4 @@ abstract class AppTextStyle {
     color: Color(0xFFFFFFFF),
   );
 }
+

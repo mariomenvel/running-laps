@@ -19,3 +19,4 @@ class AppHelpContent {
   // Training
   static const String trainingRPE = "Esfuerzo Percibido (1-10). Cómo de duro has sentido el entrenamiento. Ayuda a detectar sobreentrenamiento.";
 }
+

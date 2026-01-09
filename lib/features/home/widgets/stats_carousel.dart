@@ -1,11 +1,11 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:running_laps/app/tema.dart';
-import 'package:running_laps/features/profile/viewmodels/analytics_view_model.dart';
-import 'package:running_laps/features/profile/views/analytics_detail_screen.dart';
+import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/features/history/viewmodels/history_analytics_view_model.dart';
+// import 'package:running_laps/features/profile/views/analytics_detail_screen.dart'; // Deleted/Moved
 
 class StatsCarousel extends StatefulWidget {
-  final AnalyticsViewModel viewModel;
+  final HistoryAnalyticsViewModel viewModel;
   final VoidCallback onTapExplore; // Callback para ir a pantalla de detalle genérica
 
   const StatsCarousel({
@@ -313,3 +313,4 @@ class _StatsCarouselState extends State<StatsCarousel> {
     );
   }
 }
+

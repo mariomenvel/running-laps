@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:running_laps/features/groups/data/period_helper.dart';
+import 'package:running_laps/features/groups/data/helpers/period_helper.dart';
 
 void main() {
   group('PeriodHelper', () {
@@ -76,3 +76,4 @@ void main() {
     });
   });
 }
+

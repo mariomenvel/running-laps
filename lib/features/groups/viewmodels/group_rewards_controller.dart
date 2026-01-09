@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../data/rewards_models.dart';
-import '../data/rewards_repository.dart';
+import '../data/models/rewards_models.dart';
+import '../data/repositories/rewards_repository.dart';
 
 /// ViewModel para la pantalla de recompensas del grupo
 class GroupRewardsController {
@@ -120,3 +120,5 @@ class GroupRewardsController {
     myBadgeHistory.dispose();
   }
 }
+
+

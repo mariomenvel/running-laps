@@ -580,3 +580,4 @@ class PdfGeneratorService {
     return PdfColors.red700;
   }
 }
+

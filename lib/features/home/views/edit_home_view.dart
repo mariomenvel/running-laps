@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/features/home/viewmodels/home_config_controller.dart';
 import 'package:running_laps/features/analytics/data/home_layout_config.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 
 class EditHomeView extends StatefulWidget {
   final HomeConfigController controller;
@@ -196,3 +196,4 @@ class _EditHomeViewState extends State<EditHomeView> {
     }
   }
 }
+

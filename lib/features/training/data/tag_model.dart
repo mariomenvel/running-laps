@@ -63,3 +63,4 @@ class TagColors {
     return palette.indexOf(color);
   }
 }
+

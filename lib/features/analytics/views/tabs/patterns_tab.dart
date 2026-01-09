@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/features/analytics/viewmodels/analytics_hub_controller.dart';
 import 'package:running_laps/features/analytics/data/pattern_detector.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/features/analytics/data/series_pattern.dart';
 import 'package:running_laps/features/analytics/data/workout_pattern.dart';
 import 'package:running_laps/features/analytics/views/series_pattern_carousel_view.dart';
@@ -398,3 +398,4 @@ class WorkoutPatternCard extends StatelessWidget {
     );
   }
 }
+

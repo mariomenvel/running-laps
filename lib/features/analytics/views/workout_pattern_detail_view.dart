@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:running_laps/features/analytics/data/workout_pattern.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 
 class WorkoutPatternDetailView extends StatelessWidget {
   final WorkoutPattern pattern;
@@ -244,3 +244,4 @@ class _PerformanceChart extends StatelessWidget {
     );
   }
 }
+

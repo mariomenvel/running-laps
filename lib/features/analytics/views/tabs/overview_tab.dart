@@ -3,7 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:running_laps/features/analytics/viewmodels/analytics_hub_controller.dart';
 import 'package:running_laps/core/constants/app_help_content.dart';
 import 'package:running_laps/core/widgets/kpi_card_with_delta.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/features/analytics/data/coach_insight_service.dart';
 import 'package:running_laps/features/analytics/widgets/coach_insight_widget.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
@@ -512,3 +512,4 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
     return colors[index % colors.length];
   }
 }
+

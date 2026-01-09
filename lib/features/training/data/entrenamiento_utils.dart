@@ -183,3 +183,4 @@ class WeekStats {
     return '$mm:$ss2 /km';
   }
 }
+

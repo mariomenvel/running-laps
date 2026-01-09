@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/features/auth/viewmodels/auth_controller.dart'; // CAMBIO: Usamos el Controller
 import 'package:running_laps/features/home/views/home_view.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
-import '../../../app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 
 // CAMBIO: La vista ahora usa el Controller
 class AuthPage extends StatefulWidget {
@@ -730,3 +730,5 @@ class _AuthPageState extends State<AuthPage> {
     );
   }
 }
+
+

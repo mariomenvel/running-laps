@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'dart:math' as math;
 
@@ -566,3 +566,4 @@ class _ChartGroup {
     required this.sortKey,
   });
 }
+

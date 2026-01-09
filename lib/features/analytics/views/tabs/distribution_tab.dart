@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:running_laps/features/analytics/viewmodels/analytics_hub_controller.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 
 /// Tab de Insights - Muestra balance, consistencia y próximos hitos
@@ -621,3 +621,4 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
     return colors[index % colors.length];
   }
 }
+

@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:running_laps/features/groups/data/challenge_calculator.dart';
-import 'package:running_laps/features/groups/data/challenge_models.dart';
-import 'package:running_laps/features/groups/data/challenge_helpers.dart'; // Needed for ChallengeGoal
-import 'package:running_laps/features/groups/data/enums.dart';
+import 'package:running_laps/features/groups/data/services/challenge_calculator.dart';
+import 'package:running_laps/features/groups/data/models/challenge_models.dart';
+import 'package:running_laps/features/groups/data/helpers/challenge_helpers.dart'; // Needed for ChallengeGoal
+import 'package:running_laps/features/groups/data/models/enums.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/data/serie.dart';
 
@@ -141,3 +141,4 @@ void main() {
     });
   });
 }
+

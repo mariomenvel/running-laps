@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../app/tema.dart';
-import '../../data/result_notification_model.dart';
-import '../../data/enums.dart';
+import 'package:running_laps/config/app_theme.dart';
+import '../../data/models/result_notification_model.dart';
+import '../../data/models/enums.dart';
 
 class ChallengeResultDialog extends StatelessWidget {
   final GroupResultNotification notification;
@@ -135,6 +135,11 @@ class ChallengeResultDialog extends StatelessWidget {
           icon = Icons.emoji_events_rounded;
           gradient = [const Color(0xFFD7CCC8), const Color(0xFF8D6E63)];
           break;
+        default:
+          iconColor = const Color(0xFFCD7F32);
+          icon = Icons.emoji_events_rounded;
+          gradient = [const Color(0xFFD7CCC8), const Color(0xFF8D6E63)];
+          break;
       }
     } else {
       iconColor = Colors.green.shade400;
@@ -232,3 +237,6 @@ class ChallengeResultDialog extends StatelessWidget {
     );
   }
 }
+
+
+

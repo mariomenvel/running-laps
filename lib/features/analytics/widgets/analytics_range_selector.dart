@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/features/analytics/viewmodels/analytics_hub_controller.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 import 'dart:ui'; // For BackdropFilter
 
 class AnalyticsRangeSelector extends StatelessWidget {
@@ -239,3 +239,4 @@ class AnalyticsRangeSelector extends StatelessWidget {
     );
   }
 }
+

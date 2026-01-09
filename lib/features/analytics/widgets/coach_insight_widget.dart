@@ -110,3 +110,4 @@ class CoachInsightWidget extends StatelessWidget {
     );
   }
 }
+

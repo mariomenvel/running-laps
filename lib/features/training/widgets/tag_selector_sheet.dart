@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:running_laps/app/tema.dart';
+import 'package:running_laps/config/app_theme.dart';
 import '../data/tag_model.dart';
 import '../data/tag_manager.dart';
 import '../data/training_repository.dart';
@@ -321,3 +321,4 @@ class _TagSelectorSheetState extends State<TagSelectorSheet> {
     );
   }
 }
+
