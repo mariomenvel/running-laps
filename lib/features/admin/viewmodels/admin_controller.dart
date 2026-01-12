@@ -6,6 +6,9 @@ import 'package:uuid/uuid.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../groups/data/models/enums.dart';
 
+
+enum AdminDateFilter { week, month, year, all }
+
 class AdminController extends ChangeNotifier {
   final AdminRepository _repository;
   
@@ -15,14 +18,42 @@ class AdminController extends ChangeNotifier {
   Map<String, dynamic> _stats = {};
   Map<String, dynamic> get stats => _stats;
 
+  AdminDateFilter _currentFilter = AdminDateFilter.all;
+  AdminDateFilter get currentFilter => _currentFilter;
+
   AdminController({AdminRepository? repository})
       : _repository = repository ?? AdminRepository();
+
+  /// Cambiar filtro de fecha y recargar
+  void setDateFilter(AdminDateFilter filter) {
+    if (_currentFilter == filter) return;
+    _currentFilter = filter;
+    loadDashboardStats();
+  }
 
   /// Cargar estadísticas del dashboard
   Future<void> loadDashboardStats() async {
     _setLoading(true);
     try {
-      _stats = await _repository.getGlobalStats();
+      DateTime? startDate;
+      final now = DateTime.now();
+      
+      switch (_currentFilter) {
+        case AdminDateFilter.week:
+          startDate = now.subtract(const Duration(days: 7));
+          break;
+        case AdminDateFilter.month:
+          startDate = now.subtract(const Duration(days: 30));
+          break;
+        case AdminDateFilter.year:
+          startDate = now.subtract(const Duration(days: 365));
+          break;
+        case AdminDateFilter.all:
+          startDate = null;
+          break;
+      }
+      
+      _stats = await _repository.getGlobalStats(startDate: startDate);
     } catch (e) {
       print("Error loading admin stats: $e");
     } finally {
