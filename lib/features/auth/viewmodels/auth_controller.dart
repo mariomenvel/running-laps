@@ -21,6 +21,10 @@ class AuthController {
     return await _repo.getUserName();
   }
 
+  Future<bool> isUserAdmin() async {
+    return await _repo.isUserAdmin();
+  }
+
   // ==========================
   // LOGIN
   // ==========================

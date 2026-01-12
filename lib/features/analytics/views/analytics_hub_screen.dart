@@ -8,6 +8,10 @@ import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/features/analytics/views/tabs/overview_tab.dart';
 import 'package:running_laps/features/analytics/views/tabs/patterns_tab.dart';
 
+import '../../../../core/widgets/app_header.dart';
+import '../../../../core/widgets/gradient_banner.dart';
+import '../../profile/views/profile_menu_screen.dart';
+
 class AnalyticsHubScreen extends StatefulWidget {
   final List<Entrenamiento>? preFilteredData;
   const AnalyticsHubScreen({super.key, this.preFilteredData});
@@ -41,51 +45,93 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with SingleTick
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F8),
-      appBar: AppBar(
-        title: Text(
-          widget.preFilteredData != null ? 'Resultados Filtrados' : 'Analytics Hub',
-          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: false,
-        iconTheme: const IconThemeData(color: Colors.black87),
-        actions: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 16.0),
-              child: AnalyticsRangeSelector(controller: _controller),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // 1. Header
+            AppHeader(
+              onTapRight: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProfileMenuView()),
+                );
+              },
+              showBottomDivider: false,
             ),
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Tema.brandPurple,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: Tema.brandPurple,
-          indicatorWeight: 3,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-          tabs: const [
-            Tab(text: 'Resumen'),
-            Tab(text: 'Patrones'),
+
+            // 2. Banner
+            GradientBanner(
+              title: widget.preFilteredData != null ? 'Resultados Filtrados' : 'Analytics Hub',
+              subtitle: "Tu rendimiento en detalle",
+              icon: Icons.analytics_rounded,
+              gradientColors: const [Color(0xFF6A1B9A), Color(0xFF8E24AA)], // Purple gradient
+              height: 85,
+              trailing: SizedBox(
+                width: 140, // Limit width for the selector
+                child: AnalyticsRangeSelector(controller: _controller),
+              ),
+            ),
+
+            // 3. Tabs
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: TabBar(
+                controller: _tabController,
+                indicator: BoxDecoration(
+                  color: Tema.brandPurple,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Tema.brandPurple.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.grey.shade600,
+                dividerColor: Colors.transparent,
+                splashBorderRadius: BorderRadius.circular(16),
+                tabs: const [
+                  Tab(text: 'Resumen'),
+                  Tab(text: 'Patrones'),
+                ],
+              ),
+            ),
+
+            // 4. Content
+            Expanded(
+              child: ValueListenableBuilder<bool>(
+                valueListenable: _controller.isLoading,
+                builder: (context, isLoading, child) {
+                  if (isLoading) {
+                    return const Center(child: CircularProgressIndicator(color: Tema.brandPurple));
+                  }
+                  
+                  return TabBarView(
+                    controller: _tabController,
+                    children: [
+                      OverviewTab(controller: _controller),
+                      PatternsTab(controller: _controller),
+                    ],
+                  );
+                },
+              ),
+            ),
           ],
         ),
-      ),
-      body: ValueListenableBuilder<bool>(
-        valueListenable: _controller.isLoading,
-        builder: (context, isLoading, child) {
-          if (isLoading) {
-            return const Center(child: CircularProgressIndicator(color: Tema.brandPurple));
-          }
-          
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              OverviewTab(controller: _controller),
-              PatternsTab(controller: _controller),
-            ],
-          );
-        },
       ),
     );
   }

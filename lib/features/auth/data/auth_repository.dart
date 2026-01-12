@@ -65,5 +65,9 @@ class AuthRepository {
   Future<String?> getUserName() async {
     return await _remote.getUserName();
   }
+
+  Future<bool> isUserAdmin() async {
+    return await _remote.isUserAdmin();
+  }
 }
 

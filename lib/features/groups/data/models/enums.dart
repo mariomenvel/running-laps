@@ -103,7 +103,8 @@ enum ChallengeAggregation {
 /// Origen del reto
 enum ChallengeOrigin {
   template,  // Creado automáticamente desde template
-  owner;     // Creado manualmente por el dueño
+  owner,     // Creado manualmente por el dueño
+  global;    // Creado por un administrador para todos
 
   String toFirestore() {
     return name;

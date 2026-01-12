@@ -11,11 +11,12 @@ import 'package:running_laps/features/home/views/home_view.dart';
 // Vistas de perfil / entrenos
 // Vistas de perfil / entrenos
 import 'package:running_laps/features/history/views/history_screen.dart';
-// import 'package:running_laps/features/profile/views/avatar_editor_wrapper_view.dart';
+import '../../avatar/views/avatar_maker_screen.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
 import '../../groups/views/groups_list_screen.dart';
 import '../../groups/views/participant_profile_screen.dart';
 import 'package:running_laps/features/analytics/views/analytics_hub_screen.dart';
+import '../../admin/views/admin_panel_screen.dart';
 
 // Widgets comunes
 import 'package:running_laps/core/widgets/app_header.dart';
@@ -36,6 +37,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
 
   // Nuevo: aquí guardaremos el nombre
   String _nombreUsuario = "";
+  bool _isAdmin = false;
 
   @override
   void initState() {
@@ -47,6 +49,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
   // Cargar nombre desde Firebase
   void _cargarNombre() async {
     String? nombre = await _authCtrl.getUserName();
+    bool admin = await _authCtrl.isUserAdmin();
 
     if (mounted) {
       setState(() {
@@ -55,6 +58,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
         } else {
           _nombreUsuario = "";
         }
+        _isAdmin = admin;
       });
     }
   }
@@ -81,16 +85,14 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
   }
 
   void _openAvatarEditor() {
-    // TODO: Implementar navegación a nuevo editor de avatar
-    ModernSnackBar.showInfo(context, "Próximamente: Nuevo editor de avatar");
-    /* Navigator.push(
+    Navigator.push(
       context,
       MaterialPageRoute(
         builder: (BuildContext context) {
-          return const AvatarEditorWrapperView();
+          return const AvatarMakerScreen();
         },
       ),
-    ); */
+    );
   }
 
   // --- NUEVA FUNCIÓN PARA GRUPOS ---
@@ -352,6 +354,21 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
                       color: Colors.green,
                       onTap: _openAvatarEditor,
                     ),
+
+                    if (_isAdmin) ...[
+                      _buildSectionHeader("Administración"),
+                      _buildMenuTile(
+                        title: "Panel de Administrador",
+                        icon: Icons.admin_panel_settings,
+                        color: Colors.black87,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (c) => const AdminPanelScreen()),
+                          );
+                        },
+                      ),
+                    ],
 
                     // SECTION 3: CUENTA
                     _buildSectionHeader("Cuenta"),

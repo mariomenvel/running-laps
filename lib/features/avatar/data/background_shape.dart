@@ -3,4 +3,3 @@ enum BackgroundShape {
   square,
   roundedSquare,
 }
-

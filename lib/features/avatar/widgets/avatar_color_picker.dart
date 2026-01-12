@@ -11,4 +11,3 @@ abstract class AppColorTheme {
 
   static const Color primaryColor = Color(0xFF8E24AA);
 }
-

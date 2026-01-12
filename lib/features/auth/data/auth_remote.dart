@@ -135,5 +135,22 @@ class AuthRemote {
   }
 }
 
+Future<bool> isUserAdmin() async {
+  try {
+    User? userActual = _auth.currentUser;
+    if (userActual == null) return false;
+
+    DocumentSnapshot doc = await _db.collection("users").doc(userActual.uid).get();
+    if (doc.exists) {
+       final data = doc.data() as Map<String, dynamic>?;
+       return data?['isAdmin'] == true;
+    }
+    return false;
+  } catch (e) {
+    print("Error checando admin: $e");
+    return false;
+  }
+}
+
 }
 

@@ -14,6 +14,10 @@ import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:flutter/gestures.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:running_laps/core/widgets/app_header.dart';
+import 'package:running_laps/core/widgets/gradient_banner.dart';
 
 class AvatarMakerScreen extends StatefulWidget {
   const AvatarMakerScreen({super.key});
@@ -34,47 +38,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
   // WIDGETS DE UI
   // ===========================================================================
 
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Botón Atrás
-          IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black87),
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.white,
-              elevation: 2,
-              shadowColor: Colors.black12,
-            ),
-          ),
-          
-          const Text(
-            "EDITOR DE AVATAR",
-            style: TextStyle(
-              color: Colors.black87,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              letterSpacing: 1.2,
-            ),
-          ),
 
-          // Botón Guardar
-          IconButton(
-            onPressed: _buildSaveAvatarOptions,
-            icon: const Icon(Icons.save_alt_rounded, color: _brandPurple),
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.white,
-              elevation: 2,
-              shadowColor: Colors.black12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildCategoryTabs(AvatarMakerController controller) {
     return Padding(
@@ -248,21 +212,30 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
   }
 
   void _saveAvatarToAppFolder() async {
-    try {
-      RenderRepaintBoundary boundary = _avatarKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-      ui.Image image = await boundary.toImage(pixelRatio: 3.0); // Higher quality
-      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      Uint8List pngBytes = byteData!.buffer.asUint8List();
+    // ESTA FUNCIÓN AHORA SE USA PARA ACTUALIZAR EL PERFIL (FIRESTORE)
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+       if (mounted) ModernSnackBar.showError(context, "Error: No hay usuario logueado");
+       return;
+    }
 
-      final directory = await getApplicationDocumentsDirectory();
-      final file = File('${directory.path}/${generateFileName()}.png');
-      await file.writeAsBytes(pngBytes);
+    try {
+      final controller = Get.find<AvatarMakerController>();
+      
+      // 1. Guardamos la config en Firestore
+      await FirebaseFirestore.instance.collection('users').doc(uid).update({
+        'profilePicType': 'avatar',
+        'avatarConfig': controller.toJson(),
+      });
       
       if (mounted) {
-        ModernSnackBar.showSuccess(context, "Avatar guardado en la app");
+        ModernSnackBar.showSuccess(context, "¡Avatar actualizado en tu perfil!");
       }
     } catch (e) {
       debugPrint("Error saving: $e");
+      if (mounted) {
+        ModernSnackBar.showError(context, "Error al guardar: $e");
+      }
     }
   }
 
@@ -306,8 +279,8 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                   decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
                   child: const Icon(Icons.folder_special, color: Colors.blue),
                 ),
-                title: const Text("Guardar en la App"),
-                subtitle: const Text("Para usarlo en tu perfil"),
+                title: const Text("Usar como Perfil"),
+                subtitle: const Text("Actualizar tu foto de perfil"),
               ),
               ListTile(
                 onTap: () {
@@ -357,48 +330,71 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
               // 1. HEADER & AVATAR (Background Layer)
               Column(
                 children: [
-                  SizedBox(
-                    height: avatarAreaHeight,
-                    width: double.infinity,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 80), // Padding extra abajo para el sheet inicial
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final double size = constraints.biggest.shortestSide * 0.9;
-                          return Center(
-                            child: SizedBox(
-                              width: size,
-                              height: size,
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  // Glow effect
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.white.withOpacity(0.5),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: _brandPurple.withOpacity(0.2),
-                                          blurRadius: 40,
-                                          spreadRadius: 10,
-                                        )
-                                      ]
+                   // 1. AppHeader
+                  AppHeader(
+                    onTapRight: () {},
+                    showBottomDivider: false,
+                  ),
+
+                  // 2. GradientBanner with Save Button
+                  GradientBanner(
+                    title: "Editor de Avatar",
+                    subtitle: "Personaliza tu avatar",
+                    icon: Icons.face_rounded,
+                    gradientColors: const [_brandPurple, Color(0xFFAB47BC)],
+                    height: 85,
+                    trailing: IconButton(
+                      onPressed: _buildSaveAvatarOptions,
+                      icon: const Icon(Icons.save_alt_rounded, color: Colors.white),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white.withOpacity(0.2),
+                      ),
+                    ),
+                  ),
+
+                  Expanded(
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 10, 20, 80), // Padding extra abajo para el sheet inicial
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final double size = constraints.biggest.shortestSide * 0.9;
+                            return Center(
+                              child: SizedBox(
+                                width: size,
+                                height: size,
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    // Glow effect
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.white.withOpacity(0.5),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: _brandPurple.withOpacity(0.2),
+                                            blurRadius: 40,
+                                            spreadRadius: 10,
+                                          )
+                                        ]
+                                      ),
                                     ),
-                                  ),
-                                  // Avatar
-                                  FittedBox(
-                                    fit: BoxFit.contain,
-                                    child: RepaintBoundary(
-                                      key: _avatarKey,
-                                      child: _buildAvatarStack(controller),
+                                    // Avatar
+                                    FittedBox(
+                                      fit: BoxFit.contain,
+                                      child: RepaintBoundary(
+                                        key: _avatarKey,
+                                        child: _buildAvatarStack(controller),
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          );
-                        }
+                            );
+                          }
+                        ),
                       ),
                     ),
                   ),
@@ -809,4 +805,3 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
     );
   }
 }
-
