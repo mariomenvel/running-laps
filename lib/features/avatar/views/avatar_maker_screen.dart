@@ -1,23 +1,20 @@
-import 'dart:io';
-import 'dart:ui' as ui;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
+
 import 'package:running_laps/features/avatar/data/assets.dart';
 import 'package:running_laps/features/avatar/viewmodels/avatar_maker_controller.dart';
 import 'package:running_laps/features/avatar/data/background_shape.dart';
 import 'package:running_laps/features/avatar/widgets/avatar_color_picker.dart';
 import 'package:running_laps/features/avatar/widgets/avatar_text_styles.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:get/get.dart';
-import 'package:gal/gal.dart';
-import 'package:path_provider/path_provider.dart';
+
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:flutter/gestures.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
+import 'package:running_laps/features/profile/views/profile_menu_screen.dart';
 
 class AvatarMakerScreen extends StatefulWidget {
   const AvatarMakerScreen({super.key});
@@ -27,7 +24,7 @@ class AvatarMakerScreen extends StatefulWidget {
 }
 
 class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
-  final GlobalKey _avatarKey = GlobalKey();
+
 
   // Colores Premium (Hardcoded para asegurar consistencia con la app principal)
   static const Color _brandPurple = Color(0xFF8E24AA);
@@ -206,12 +203,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
     );
   }
 
-  String generateFileName() {
-    final now = DateTime.now();
-    return "${now.year}${now.month}${now.day}${now.hour}${now.minute}${now.second}${now.millisecond}";
-  }
-
-  void _saveAvatarToAppFolder() async {
+  void _saveToProfile() async {
     // ESTA FUNCIÓN AHORA SE USA PARA ACTUALIZAR EL PERFIL (FIRESTORE)
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
@@ -237,70 +229,6 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
         ModernSnackBar.showError(context, "Error al guardar: $e");
       }
     }
-  }
-
-  void _saveAvatarToGallery() async {
-    try {
-      RenderRepaintBoundary boundary = _avatarKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      
-      if (byteData != null) {
-        await Gal.putImageBytes(byteData.buffer.asUint8List());
-        if (mounted) {
-          ModernSnackBar.showSuccess(context, "Avatar guardado en Galería");
-        }
-      }
-    } catch (e) {
-      debugPrint("Error saving to gallery: $e");
-    }
-  }
-
-  void _buildSaveAvatarOptions() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 10),
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
-              const SizedBox(height: 20),
-              ListTile(
-                onTap: () {
-                  _saveAvatarToAppFolder();
-                  Navigator.pop(context);
-                },
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                  child: const Icon(Icons.folder_special, color: Colors.blue),
-                ),
-                title: const Text("Usar como Perfil"),
-                subtitle: const Text("Actualizar tu foto de perfil"),
-              ),
-              ListTile(
-                onTap: () {
-                  _saveAvatarToGallery();
-                  Navigator.pop(context);
-                },
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                  child: const Icon(Icons.photo_library, color: Colors.green),
-                ),
-                title: const Text("Guardar en Galería"),
-                subtitle: const Text("Descargar imagen PNG"),
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        );
-      }
-    );
   }
 
   // ===========================================================================
@@ -332,7 +260,10 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                 children: [
                    // 1. AppHeader
                   AppHeader(
-                    onTapRight: () {},
+                    onTapRight: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ProfileMenuView()),
+                    ),
                     showBottomDivider: false,
                   ),
 
@@ -341,13 +272,14 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                     title: "Editor de Avatar",
                     subtitle: "Personaliza tu avatar",
                     icon: Icons.face_rounded,
-                    gradientColors: const [_brandPurple, Color(0xFFAB47BC)],
+                    gradientColors: const [Colors.green, Color(0xFF66BB6A)],
                     height: 85,
                     trailing: IconButton(
-                      onPressed: _buildSaveAvatarOptions,
-                      icon: const Icon(Icons.save_alt_rounded, color: Colors.white),
+                      onPressed: _saveToProfile,
+                      icon: const Icon(Icons.check_circle_rounded, color: Colors.white, size: 28),
                       style: IconButton.styleFrom(
                         backgroundColor: Colors.white.withOpacity(0.2),
+                        padding: const EdgeInsets.all(12),
                       ),
                     ),
                   ),
@@ -384,10 +316,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                                     // Avatar
                                     FittedBox(
                                       fit: BoxFit.contain,
-                                      child: RepaintBoundary(
-                                        key: _avatarKey,
-                                        child: _buildAvatarStack(controller),
-                                      ),
+                                      child: _buildAvatarStack(controller),
                                     ),
                                   ],
                                 ),

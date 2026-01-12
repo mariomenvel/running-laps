@@ -103,6 +103,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with SingleTick
                 labelColor: Colors.white,
                 unselectedLabelColor: Colors.grey.shade600,
                 dividerColor: Colors.transparent,
+                indicatorSize: TabBarIndicatorSize.tab,
                 splashBorderRadius: BorderRadius.circular(16),
                 tabs: const [
                   Tab(text: 'Resumen'),

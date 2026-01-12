@@ -15,6 +15,7 @@ import '../../training/widgets/tag_chip.dart';
 import '../../training/widgets/tag_selector_sheet.dart';
 import '../../../core/widgets/app_footer.dart';
 import '../../../core/widgets/app_header.dart';
+import 'package:running_laps/core/widgets/gradient_banner.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/core/services/pdf_generator_service.dart';
 import 'package:printing/printing.dart';
@@ -94,42 +95,28 @@ class _HistoryScreenState extends State<HistoryScreen> {
             // 1. HEADER (Reutilizando AppHeader que ya tiene el gradiente)
             _buildHeader(),
 
-            // 2. CONTENIDO PRINCIPAL
+            // 2. Gradient Banner
+            GradientBanner(
+              title: 'Historial',
+              subtitle: 'Todos tus entrenamientos',
+              icon: Icons.history_rounded,
+              gradientColors: const [Colors.orange, Colors.deepOrange],
+              height: 85,
+              trailing: IconButton(
+                 onPressed: _openAnalytics,
+                 icon: const Icon(Icons.bar_chart_rounded, color: Colors.white),
+                 style: IconButton.styleFrom(
+                   backgroundColor: Colors.white.withOpacity(0.2),
+                 ),
+                 tooltip: 'Ver estadísticas',
+              ),
+            ),
+
+            // 3. CONTENIDO PRINCIPAL
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                   // TÍTULO Y ACCIONES
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20.0, 16.0, 20.0, 0.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Historial',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.black87,
-                            letterSpacing: -1,
-                          ),
-                        ),
-                        // Botón Analytics General
-                        IconButton(
-                           onPressed: _openAnalytics,
-                           icon: Container(
-                             padding: const EdgeInsets.all(8),
-                             decoration: BoxDecoration(
-                               color: Tema.brandPurple.withOpacity(0.1),
-                               shape: BoxShape.circle,
-                             ),
-                             child: const Icon(Icons.bar_chart_rounded, color: Tema.brandPurple, size: 24),
-                           ),
-                           tooltip: 'Ver estadísticas',
-                        ),
-                      ],
-                    ),
-                  ),
 
                   // SEARCH BAR & CONTROLS
                   Padding(
@@ -359,6 +346,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   // ============================
   Widget _buildHeader() {
     return AppHeader(
+      showBottomDivider: false,
       onTapLeft: () {
         Navigator.push(
           context,

@@ -128,8 +128,8 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
               subtitle: 'Compite con tu comunidad de corredores',
               icon: Icons.groups_3_rounded,
               gradientColors: [
-                const Color(0xFF8E24AA),
-                const Color(0xFFAB47BC),
+                Colors.blueAccent,
+                Colors.lightBlue,
               ],
               height: 90,
             ),

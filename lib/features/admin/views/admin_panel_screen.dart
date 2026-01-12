@@ -4,8 +4,9 @@ import 'admin_dashboard_tab.dart';
 import 'admin_challenges_tab.dart';
 import '../../../../config/app_theme.dart';
 
-import '../../../../core/widgets/app_header.dart';
-import '../../../../core/widgets/gradient_banner.dart';
+import 'package:running_laps/core/widgets/app_header.dart';
+import 'package:running_laps/core/widgets/gradient_banner.dart';
+import 'package:running_laps/features/profile/views/profile_menu_screen.dart';
 
 class AdminPanelScreen extends StatefulWidget {
   const AdminPanelScreen({super.key});
@@ -41,7 +42,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> with SingleTickerPr
              // 1. Header Fijo
             AppHeader(
               showBottomDivider: false,
-              onTapRight: () {}, // Opcional
+              onTapRight: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfileMenuView()),
+              ),
             ),
 
             // 2. Banner con gradiente
@@ -77,6 +81,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> with SingleTickerPr
                 labelColor: Colors.white,
                 unselectedLabelColor: Colors.grey.shade600,
                 dividerColor: Colors.transparent,
+                indicatorSize: TabBarIndicatorSize.tab,
                 splashBorderRadius: BorderRadius.circular(16),
                 tabs: const [
                   Tab(text: "Dashboard"),

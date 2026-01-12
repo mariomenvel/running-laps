@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../config/app_theme.dart';
 import '../../../core/widgets/app_header.dart';
 import '../../../core/widgets/app_footer.dart';
+import '../../../core/widgets/gradient_banner.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import '../data/repositories/group_detail_repository.dart';
 import '../data/services/gamification_service.dart';
@@ -108,38 +109,13 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
               showBottomDivider: false,
             ),
 
-            // 1.5 CUSTOM BACK BUTTON
-             Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                child: GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        )
-                      ],
-                      border: Border.all(color: Colors.deepPurple.withOpacity(0.1)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: Colors.deepPurple),
-                        SizedBox(width: 5),
-                        Text("Volver", style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold, fontSize: 13)),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+            // 2. BANNER
+            GradientBanner(
+              title: "Perfil de Corredor",
+              subtitle: widget.name,
+              icon: Icons.verified_user_rounded,
+              gradientColors: const [Colors.deepPurple, Colors.purpleAccent],
+              height: 90,
             ),
 
             // 2. CONTENT
@@ -156,7 +132,7 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
                           alignment: Alignment.center,
                           children: [
                             Container(
-                              margin: const EdgeInsets.only(top: 50),
+                              margin: const EdgeInsets.only(top: 60),
                               padding: const EdgeInsets.only(top: 60, bottom: 20, left: 20, right: 20),
                               width: double.infinity,
                               decoration: BoxDecoration(
