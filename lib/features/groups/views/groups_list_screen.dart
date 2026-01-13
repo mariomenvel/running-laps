@@ -41,64 +41,15 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
   final GroupsRepository _groupsRepo = GroupsRepository();
 
   String? _currentUserId;
-  StreamSubscription? _notifSubscription;
 
   @override
   void initState() {
     super.initState();
     _currentUserId = FirebaseAuth.instance.currentUser?.uid;
-    if (_currentUserId != null) {
-      _initNotificationListener();
-    }
-  }
-
-  void _initNotificationListener() {
-    _notifSubscription?.cancel();
-    _notifSubscription = FirebaseFirestore.instance
-        .collection('users')
-        .doc(_currentUserId)
-        .collection('result_notifications')
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .listen((snapshot) {
-      if (!mounted) return;
-      if (snapshot.docs.isNotEmpty) {
-        // Mostrar la más reciente si hay varias
-        final doc = snapshot.docs.first;
-        final notif = GroupResultNotification.fromMap(doc.data(), doc.id);
-        
-        // Pequeño delay para que no salte justo al entrar si la pantalla está cargando
-        Future.delayed(const Duration(milliseconds: 1000), () {
-          if (mounted) _showResultDialog(notif);
-        });
-      }
-    });
-  }
-
-  void _showResultDialog(GroupResultNotification notif) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => ChallengeResultDialog(
-        notification: notif,
-        onClosed: () async {
-          if (!mounted) return;
-          Navigator.pop(context);
-          // Borrar para marcar como leída
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(_currentUserId)
-              .collection('result_notifications')
-              .doc(notif.id)
-              .delete();
-        },
-      ),
-    );
   }
 
   @override
   void dispose() {
-    _notifSubscription?.cancel();
     super.dispose();
   }
 

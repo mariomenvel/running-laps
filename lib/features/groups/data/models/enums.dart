@@ -215,3 +215,23 @@ enum GoalKind {
   }
 }
 
+// ============================================
+// NOTIFICACIONES
+// ============================================
+
+/// Tipo de notificación de grupo
+enum GroupNotificationType {
+  challengeFinished, // Reto terminado (al cerrar el reto)
+  goalMet;           // Meta completada (durante el progreso)
+
+  String toFirestore() {
+    return name;
+  }
+
+  static GroupNotificationType fromFirestore(String value) {
+    return GroupNotificationType.values.firstWhere(
+      (e) => e.name == value,
+      orElse: () => GroupNotificationType.challengeFinished,
+    );
+  }
+}

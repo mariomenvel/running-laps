@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
 import '../../data/models/result_notification_model.dart';
 import '../../data/models/enums.dart';
+import 'package:confetti/confetti.dart';
 
-class ChallengeResultDialog extends StatelessWidget {
+class ChallengeResultDialog extends StatefulWidget {
   final GroupResultNotification notification;
   final VoidCallback onClosed;
 
@@ -14,102 +15,160 @@ class ChallengeResultDialog extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<ChallengeResultDialog> createState() => _ChallengeResultDialogState();
+}
+
+class _ChallengeResultDialogState extends State<ChallengeResultDialog> {
+  late ConfettiController _confettiController;
+
+  @override
+  void initState() {
+    super.initState();
+    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
+    
+    // Si es meta completada o tiene medalla de oro/plata, celebramos con confeti
+    if (widget.notification.type == GroupNotificationType.goalMet || 
+        widget.notification.medal == MedalType.gold ||
+        widget.notification.medal == MedalType.silver) {
+      _confettiController.play();
+    }
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      child: TweenAnimationBuilder<double>(
-        duration: const Duration(milliseconds: 600),
-        curve: Curves.elasticOut,
-        tween: Tween(begin: 0.0, end: 1.0),
-        builder: (context, value, child) {
-          return Transform.scale(
-            scale: value,
-            child: child,
-          );
-        },
-        child: Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(32),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: 30,
-                offset: const Offset(0, 15),
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: TweenAnimationBuilder<double>(
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.elasticOut,
+            tween: Tween(begin: 0.0, end: 1.0),
+            builder: (context, value, child) {
+              return Transform.scale(
+                scale: value,
+                child: child,
+              );
+            },
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(32),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 30,
+                    offset: const Offset(0, 15),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Top Section with Gradient and Icon
-              _buildHeader(),
-              
-              Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  children: [
-                    Text(
-                      "¡Enhorabuena!",
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                        color: Tema.brandPurple,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      notification.hasBadge 
-                        ? "Has completado el objetivo del reto y ganado un logro."
-                        : "Has finalizado el reto en el podio.",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey.shade700,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    
-                    // Detail Card
-                    _buildDetailCard(),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: onClosed,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Tema.brandPurple,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 8,
-                          shadowColor: Tema.brandPurple.withOpacity(0.4),
-                        ),
-                        child: const Text(
-                          "¡Genial!",
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Top Section with Gradient and Icon
+                  _buildHeader(),
+                  
+                  Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      children: [
+                        Text(
+                          widget.notification.type == GroupNotificationType.goalMet 
+                            ? "¡Meta Lograda!" 
+                            : "¡Enhorabuena!",
                           style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            color: widget.notification.type == GroupNotificationType.goalMet 
+                              ? Colors.green.shade700 
+                              : Tema.brandPurple,
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 12),
+                        Text(
+                          widget.notification.type == GroupNotificationType.goalMet
+                            ? "Has completado el objetivo de este reto. ¡Sigue así! 🚀"
+                            : (widget.notification.hasBadge 
+                              ? "Has completado el objetivo del reto y ganado un logro."
+                              : "Has finalizado el reto en el podio."),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey.shade700,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        
+                        // Detail Card
+                        _buildDetailCard(),
+                        
+                        const SizedBox(height: 32),
+                        
+                        // Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: widget.onClosed,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: widget.notification.type == GroupNotificationType.goalMet 
+                                ? Colors.green.shade600 
+                                : Tema.brandPurple,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 8,
+                              shadowColor: (widget.notification.type == GroupNotificationType.goalMet 
+                                ? Colors.green 
+                                : Tema.brandPurple).withOpacity(0.4),
+                            ),
+                            child: Text(
+                              widget.notification.type == GroupNotificationType.goalMet 
+                                ? "¡VAMOS!" 
+                                : "¡Genial!",
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
-      ),
+        
+        // Confetti Widget
+        ConfettiWidget(
+          confettiController: _confettiController,
+          blastDirectionality: BlastDirectionality.explosive,
+          shouldLoop: false,
+          colors: const [
+            Colors.green,
+            Colors.blue,
+            Colors.pink,
+            Colors.orange,
+            Colors.purple,
+            Colors.yellow,
+          ],
+        ),
+      ],
     );
   }
 
@@ -118,8 +177,12 @@ class ChallengeResultDialog extends StatelessWidget {
     IconData icon;
     List<Color> gradient;
 
-    if (notification.medal != null) {
-      switch (notification.medal!) {
+    if (widget.notification.type == GroupNotificationType.goalMet) {
+      iconColor = Colors.orange.shade400;
+      icon = Icons.stars_rounded;
+      gradient = [Colors.orange.shade300, Colors.deepOrange.shade600];
+    } else if (widget.notification.medal != null) {
+      switch (widget.notification.medal!) {
         case MedalType.gold:
           iconColor = const Color(0xFFFFD700);
           icon = Icons.emoji_events_rounded;
@@ -198,18 +261,18 @@ class ChallengeResultDialog extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _buildRow(Icons.groups_rounded, notification.groupName),
+          _buildRow(Icons.groups_rounded, widget.notification.groupName),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
             child: Divider(height: 1),
           ),
-          _buildRow(Icons.timer_outlined, notification.challengeTitle),
-          if (notification.rank != null) ...[
+          _buildRow(Icons.timer_outlined, widget.notification.challengeTitle),
+          if (widget.notification.rank != null) ...[
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 12),
               child: Divider(height: 1),
             ),
-            _buildRow(Icons.format_list_numbered_rounded, "Posición #${notification.rank}"),
+            _buildRow(Icons.format_list_numbered_rounded, "Posición #${widget.notification.rank}"),
           ],
         ],
       ),

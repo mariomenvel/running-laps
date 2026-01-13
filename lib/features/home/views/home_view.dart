@@ -23,6 +23,10 @@ import 'package:running_laps/features/groups/views/group_screen.dart';
 import 'package:running_laps/core/widgets/group_skeleton_card.dart';
 import 'package:running_laps/features/analytics/data/coach_insight_service.dart';
 import 'package:running_laps/features/analytics/widgets/coach_insight_widget.dart';
+import 'package:running_laps/features/groups/data/models/result_notification_model.dart';
+import 'package:running_laps/features/groups/views/widgets/challenge_result_dialog.dart';
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Home View rediseñado con widgets configurables
 /// Versión moderna con sistema de personalización
@@ -50,13 +54,19 @@ class _HomeViewState extends State<HomeView> {
   // Selector de rango temporal
   TimeRange _selectedRange = TimeRange.thirtyDays;
 
+  StreamSubscription? _notifSubscription;
+  String? _currentUserId;
+  final Set<String> _showingNotifIds = {};
+  bool _isShowingDialog = false;
+
   @override
   void initState() {
     super.initState();
-    final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
-    _configController = HomeConfigController(userId: userId);
+    _currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    _configController = HomeConfigController(userId: _currentUserId!);
     _initializeHome();
     _loadGroups();
+    _initNotificationListener();
   }
 
   void _loadGroups() {
@@ -131,7 +141,93 @@ class _HomeViewState extends State<HomeView> {
   @override
   void dispose() {
     _configController.dispose();
+    _notifSubscription?.cancel();
     super.dispose();
+  }
+
+  void _initNotificationListener() {
+    if (_currentUserId == null || _currentUserId!.isEmpty) return;
+    
+    _notifSubscription?.cancel();
+    _notifSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(_currentUserId)
+        .collection('result_notifications')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+      if (!mounted) return;
+      if (snapshot.docs.isNotEmpty) {
+        for (final doc in snapshot.docs) {
+          final notifId = doc.id;
+          
+          // Si ya la estamos mostrando o ya hay un diálogo abierto, pasamos
+          if (_showingNotifIds.contains(notifId)) continue;
+          if (_isShowingDialog) break; 
+
+          final notif = GroupResultNotification.fromMap(doc.data(), notifId);
+          _showingNotifIds.add(notifId);
+          
+          // Pequeño delay de cortesía (solo 500ms) para no ser brusco
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted && !_isShowingDialog) {
+              _showResultDialog(notif);
+            }
+          });
+          break; // Solo procesamos una por snapshot
+        }
+      }
+    });
+  }
+
+  void _showResultDialog(GroupResultNotification notif) {
+    if (!mounted || _isShowingDialog) return;
+    
+    setState(() {
+      _isShowingDialog = true;
+    });
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return ChallengeResultDialog(
+          notification: notif,
+          onClosed: () async {
+            // 1. Cerrar el diálogo usando su propio contexto
+            if (dialogContext.mounted) {
+              Navigator.of(dialogContext).pop();
+            }
+            
+            // 2. Liberar el estado para la siguiente notificación
+            if (mounted) {
+              setState(() {
+                _isShowingDialog = false;
+              });
+            }
+
+            // 3. Borrar de Firestore (esto disparará el siguiente snapshot si hay más)
+            try {
+              await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(_currentUserId)
+                  .collection('result_notifications')
+                  .doc(notif.id)
+                  .delete();
+            } catch (e) {
+              debugPrint('Error deleting notification: $e');
+            }
+          },
+        );
+      },
+    ).then((_) {
+      // Backup por si se cierra por otros medios (aunque barrierDismissible es false)
+      if (mounted && _isShowingDialog) {
+        setState(() {
+          _isShowingDialog = false;
+        });
+      }
+    });
   }
 
   @override

@@ -11,6 +11,7 @@ class GroupResultNotification {
   final MedalType? medal; // null si no ganó medalla
   final int? rank;        // null si no hay ranking (solo badge)
   final bool hasBadge;
+  final GroupNotificationType type;
   final DateTime createdAt;
 
   const GroupResultNotification({
@@ -22,6 +23,7 @@ class GroupResultNotification {
     this.medal,
     this.rank,
     this.hasBadge = false,
+    this.type = GroupNotificationType.challengeFinished,
     required this.createdAt,
   });
 
@@ -34,6 +36,7 @@ class GroupResultNotification {
       'medal': medal?.toFirestore(),
       'rank': rank,
       'hasBadge': hasBadge,
+      'type': type.toFirestore(),
       'createdAt': createdAt.toIso8601String(),
     };
   }
@@ -48,6 +51,9 @@ class GroupResultNotification {
       medal: map['medal'] != null ? MedalType.fromFirestore(map['medal'] as String) : null,
       rank: map['rank'] as int?,
       hasBadge: map['hasBadge'] as bool? ?? false,
+      type: map['type'] != null 
+          ? GroupNotificationType.fromFirestore(map['type'] as String)
+          : GroupNotificationType.challengeFinished,
       createdAt: map['createdAt'] != null 
           ? DateTime.parse(map['createdAt'] as String) 
           : DateTime.now(),

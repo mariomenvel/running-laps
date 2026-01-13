@@ -6,6 +6,7 @@ import '../models/challenge_models.dart';
 import '../helpers/challenge_helpers.dart';
 import '../services/challenge_calculator.dart';
 import '../repositories/challenges_repository.dart';
+import '../models/result_notification_model.dart';
 import '../models/enums.dart';
 
 /// Service para sincronizar entrenamientos con el progreso de retos
@@ -241,6 +242,12 @@ class TrainingChallengeSyncService {
       );
       
       debugPrint('[Sync]   ✅ Participant updated successfully');
+      
+      // 7. Detect goal completion for notification
+      if (currentParticipant.reachedGoalAt == null && updatedParticipant.reachedGoalAt != null) {
+        debugPrint('[Sync]   🎯 GOAL COMPLETED! Triggering notification...');
+        await _createGoalMetNotification(groupId, challenge, uid);
+      }
     } catch (e) {
       debugPrint('[Sync]   ❌ ERROR: $e');
       throw Exception('Error recomputing participant: $e');
@@ -312,6 +319,45 @@ class TrainingChallengeSyncService {
           .toList();
     } catch (e) {
       return [];
+    }
+  }
+
+  /// Crea una notificación de meta completada
+  Future<void> _createGoalMetNotification(
+    String groupId,
+    Challenge challenge,
+    String uid,
+  ) async {
+    try {
+      // 1. Obtener nombre del grupo
+      String groupName = "Grupo";
+      final groupDoc = await _firestore.collection('groups').doc(groupId).get();
+      if (groupDoc.exists) {
+        groupName = groupDoc.data()?['name'] ?? "Grupo";
+      }
+
+      // 2. Crear notificación
+      final notifRef = _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('result_notifications')
+          .doc('goal_${challenge.id}'); // Usamos un ID prefijado para no colisionar
+
+      final notif = GroupResultNotification(
+        id: 'goal_${challenge.id}',
+        groupId: groupId,
+        groupName: groupName,
+        challengeId: challenge.id,
+        challengeTitle: challenge.title,
+        hasBadge: true,
+        type: GroupNotificationType.goalMet,
+        createdAt: DateTime.now(),
+      );
+
+      await notifRef.set(notif.toMap());
+      debugPrint('[Sync] Notification created: ${notif.id}');
+    } catch (e) {
+      debugPrint('[Sync] Error creating goal notification: $e');
     }
   }
 }
