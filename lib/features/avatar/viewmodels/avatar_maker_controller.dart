@@ -202,9 +202,11 @@ class AvatarMakerController extends GetxController {
   void updateFromJson(Map<String, dynamic> json) {
     body = json['body'] ?? 0;
     hair = json['hair'] ?? 0;
-    hairColor = json['hairColor'] ?? 0;
+    
+    // Usar los mismos valores por defecto que en la declaración de variables
+    hairColor = json['hairColor'] ?? 0xFF59332A;
     eyes = json['eyes'] ?? 0;
-    eyeColor = json['eyeColor'] ?? 0;
+    eyeColor = json['eyeColor'] ?? 0xFF4E4E50;
     nose = json['nose'] ?? 0;
     mouth = json['mouth'] ?? 0;
     facialHair = json['facialHair'] ?? 0;
@@ -214,13 +216,18 @@ class AvatarMakerController extends GetxController {
     clothingColor = json['clothingColor'] ?? 0;
     accessory = json['accessory'] ?? 0;
     accessoryColor = json['accessoryColor'] ?? 0;
-    backgroundColor = json['backgroundColor'] ?? 0;
+    
+    // El fondo por defecto si no hay es el azul claro de assets
+    backgroundColor = json['backgroundColor'] ?? 0xFF9292B3;
 
     String shapeString = json['backgroundShape'] ?? BackgroundShape.circle.name;
     backgroundShape = BackgroundShape.values.firstWhere(
       (e) => e.name == shapeString,
       orElse: () => BackgroundShape.circle,
     );
+    
+    // Forzamos actualización de todo
+    update();
   }
 
 // --- FIN DE CÓDIGO AÑADIDO ---

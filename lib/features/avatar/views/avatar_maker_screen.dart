@@ -1,20 +1,19 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:get/get.dart';
-
+import 'package:flutter/rendering.dart';
 import 'package:running_laps/features/avatar/data/assets.dart';
 import 'package:running_laps/features/avatar/viewmodels/avatar_maker_controller.dart';
 import 'package:running_laps/features/avatar/data/background_shape.dart';
 import 'package:running_laps/features/avatar/widgets/avatar_color_picker.dart';
 import 'package:running_laps/features/avatar/widgets/avatar_text_styles.dart';
-
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
+import 'package:gal/gal.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:flutter/gestures.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:running_laps/core/widgets/app_header.dart';
-import 'package:running_laps/core/widgets/gradient_banner.dart';
-import 'package:running_laps/features/profile/views/profile_menu_screen.dart';
 
 class AvatarMakerScreen extends StatefulWidget {
   const AvatarMakerScreen({super.key});
@@ -24,7 +23,7 @@ class AvatarMakerScreen extends StatefulWidget {
 }
 
 class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
-
+  final GlobalKey _avatarKey = GlobalKey();
 
   // Colores Premium (Hardcoded para asegurar consistencia con la app principal)
   static const Color _brandPurple = Color(0xFF8E24AA);
@@ -35,7 +34,47 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
   // WIDGETS DE UI
   // ===========================================================================
 
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Botón Atrás
+          IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black87),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white,
+              elevation: 2,
+              shadowColor: Colors.black12,
+            ),
+          ),
+          
+          const Text(
+            "EDITOR DE AVATAR",
+            style: TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              letterSpacing: 1.2,
+            ),
+          ),
 
+          // Botón Guardar
+          IconButton(
+            onPressed: _buildSaveAvatarOptions,
+            icon: const Icon(Icons.save_alt_rounded, color: _brandPurple),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white,
+              elevation: 2,
+              shadowColor: Colors.black12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildCategoryTabs(AvatarMakerController controller) {
     return Padding(
@@ -203,32 +242,92 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
     );
   }
 
-  void _saveToProfile() async {
-    // ESTA FUNCIÓN AHORA SE USA PARA ACTUALIZAR EL PERFIL (FIRESTORE)
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-       if (mounted) ModernSnackBar.showError(context, "Error: No hay usuario logueado");
-       return;
-    }
+  String generateFileName() {
+    final now = DateTime.now();
+    return "${now.year}${now.month}${now.day}${now.hour}${now.minute}${now.second}${now.millisecond}";
+  }
 
+  void _saveAvatarToAppFolder() async {
     try {
-      final controller = Get.find<AvatarMakerController>();
-      
-      // 1. Guardamos la config en Firestore
-      await FirebaseFirestore.instance.collection('users').doc(uid).update({
-        'profilePicType': 'avatar',
-        'avatarConfig': controller.toJson(),
-      });
+      RenderRepaintBoundary boundary = _avatarKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0); // Higher quality
+      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/${generateFileName()}.png');
+      await file.writeAsBytes(pngBytes);
       
       if (mounted) {
-        ModernSnackBar.showSuccess(context, "¡Avatar actualizado en tu perfil!");
+        ModernSnackBar.showSuccess(context, "Avatar guardado en la app");
       }
     } catch (e) {
       debugPrint("Error saving: $e");
-      if (mounted) {
-        ModernSnackBar.showError(context, "Error al guardar: $e");
-      }
     }
+  }
+
+  void _saveAvatarToGallery() async {
+    try {
+      RenderRepaintBoundary boundary = _avatarKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      
+      if (byteData != null) {
+        await Gal.putImageBytes(byteData.buffer.asUint8List());
+        if (mounted) {
+          ModernSnackBar.showSuccess(context, "Avatar guardado en Galería");
+        }
+      }
+    } catch (e) {
+      debugPrint("Error saving to gallery: $e");
+    }
+  }
+
+  void _buildSaveAvatarOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 10),
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+              const SizedBox(height: 20),
+              ListTile(
+                onTap: () {
+                  _saveAvatarToAppFolder();
+                  Navigator.pop(context);
+                },
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                  child: const Icon(Icons.folder_special, color: Colors.blue),
+                ),
+                title: const Text("Guardar en la App"),
+                subtitle: const Text("Para usarlo en tu perfil"),
+              ),
+              ListTile(
+                onTap: () {
+                  _saveAvatarToGallery();
+                  Navigator.pop(context);
+                },
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                  child: const Icon(Icons.photo_library, color: Colors.green),
+                ),
+                title: const Text("Guardar en Galería"),
+                subtitle: const Text("Descargar imagen PNG"),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      }
+    );
   }
 
   // ===========================================================================
@@ -237,7 +336,10 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    AvatarMakerController controller = Get.put(AvatarMakerController());
+    // Intentamos buscarlo primero, si no lo creamos (por si el Wrapper no lo hizo por alguna razón)
+    final AvatarMakerController controller = Get.isRegistered<AvatarMakerController>() 
+      ? Get.find<AvatarMakerController>() 
+      : Get.put(AvatarMakerController());
     final double screenHeight = MediaQuery.of(context).size.height;
     // Ajustar altura del avatar basado en la pantalla disponible
     final double avatarAreaHeight = screenHeight * 0.55; 
@@ -258,72 +360,48 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
               // 1. HEADER & AVATAR (Background Layer)
               Column(
                 children: [
-                   // 1. AppHeader
-                  AppHeader(
-                    onTapRight: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const ProfileMenuView()),
-                    ),
-                    showBottomDivider: false,
-                  ),
-
-                  // 2. GradientBanner with Save Button
-                  GradientBanner(
-                    title: "Editor de Avatar",
-                    subtitle: "Personaliza tu avatar",
-                    icon: Icons.face_rounded,
-                    gradientColors: const [Colors.green, Color(0xFF66BB6A)],
-                    height: 85,
-                    trailing: IconButton(
-                      onPressed: _saveToProfile,
-                      icon: const Icon(Icons.check_circle_rounded, color: Colors.white, size: 28),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.white.withOpacity(0.2),
-                        padding: const EdgeInsets.all(12),
-                      ),
-                    ),
-                  ),
-
-                  Expanded(
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 10, 20, 80), // Padding extra abajo para el sheet inicial
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            final double size = constraints.biggest.shortestSide * 0.9;
-                            return Center(
-                              child: SizedBox(
-                                width: size,
-                                height: size,
-                                child: Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    // Glow effect
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.white.withOpacity(0.5),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: _brandPurple.withOpacity(0.2),
-                                            blurRadius: 40,
-                                            spreadRadius: 10,
-                                          )
-                                        ]
-                                      ),
+                  SizedBox(
+                    height: avatarAreaHeight,
+                    width: double.infinity,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 80), // Padding extra abajo para el sheet inicial
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final double size = constraints.biggest.shortestSide * 0.9;
+                          return Center(
+                            child: SizedBox(
+                              width: size,
+                              height: size,
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  // Glow effect
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.white.withOpacity(0.5),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: _brandPurple.withOpacity(0.2),
+                                          blurRadius: 40,
+                                          spreadRadius: 10,
+                                        )
+                                      ]
                                     ),
-                                    // Avatar
-                                    FittedBox(
-                                      fit: BoxFit.contain,
+                                  ),
+                                  // Avatar
+                                  FittedBox(
+                                    fit: BoxFit.contain,
+                                    child: RepaintBoundary(
+                                      key: _avatarKey,
                                       child: _buildAvatarStack(controller),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                            );
-                          }
-                        ),
+                            ),
+                          );
+                        }
                       ),
                     ),
                   ),
@@ -560,15 +638,15 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
       height: 200,
       child: GetBuilder<AvatarMakerController>(
         id: "avatar_background",
-        builder: (controller) {
+        builder: (c) {
           return Container(
             clipBehavior: Clip.hardEdge,
             decoration: BoxDecoration(
-              color: Color(controller.selectedBackgroundColor),
-              shape: controller.selectedBackgroundShape == BackgroundShape.circle
+              color: Color(c.selectedBackgroundColor == 0 ? 0xFF9292B3 : c.selectedBackgroundColor),
+              shape: c.selectedBackgroundShape == BackgroundShape.circle
                   ? BoxShape.circle
                   : BoxShape.rectangle,
-              borderRadius: controller.selectedBackgroundShape == BackgroundShape.roundedSquare
+              borderRadius: c.selectedBackgroundShape == BackgroundShape.roundedSquare
                   ? BorderRadius.circular(32)
                   : null,
               boxShadow: [
@@ -584,27 +662,27 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                 // BODY
                 GetBuilder<AvatarMakerController>(
                   id: "avatar_body",
-                  builder: (c) => Positioned.fill(
+                  builder: (cb) => Positioned.fill(
                     bottom: -30,
                     child: Align(
                       alignment: Alignment.bottomCenter,
-                      child: SvgPicture.asset(bodyAssets[c.selectedBody], width: 180, height: 180)
+                      child: SvgPicture.asset(bodyAssets[cb.selectedBody], width: 180, height: 180)
                     )
                   )
                 ),
                 // CLOTHING
                 GetBuilder<AvatarMakerController>(
                   id: "avatar_clothing",
-                  builder: (c) {
+                  builder: (cc) {
                     Color src = const Color(0xFF80C43B);
-                    Color rep = c.selectedClothingColor == 0 ? src : Color(c.selectedClothingColor);
+                    Color rep = cc.selectedClothingColor == 0 ? src : Color(cc.selectedClothingColor);
                     return Positioned.fill(
                       bottom: -30,
                       child: Align(
                         alignment: Alignment.bottomCenter,
                         child: replaceColorOrReturn(
-                          category[c.selectedCategory] == "ROPA",
-                          SvgPicture.asset(clothingAssets[c.selectedClothing], width: 180, height: 80),
+                          cc.selectedClothingColor != 0,
+                          SvgPicture.asset(clothingAssets[cc.selectedClothing], width: 180, height: 80),
                           src, rep
                         )
                       )
@@ -614,15 +692,15 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                 // EYES
                 GetBuilder<AvatarMakerController>(
                   id: "avatar_eyes",
-                  builder: (c) {
-                    Color eyeRep = c.selectedEyeColor == 0 ? Colors.transparent : Color(c.selectedEyeColor);
+                  builder: (ce) {
+                    Color eyeRep = ce.selectedEyeColor == 0 ? Colors.transparent : Color(ce.selectedEyeColor);
                     return Positioned.fill(
                       top: 100,
                       child: Align(
                         alignment: Alignment.topCenter,
                         child: replaceColorOrReturn(
                           eyeRep != Colors.transparent,
-                          SvgPicture.asset(eyesAssets[c.selectedEyes], width: 55, height: 22),
+                          SvgPicture.asset(eyesAssets[ce.selectedEyes], width: 55, height: 22),
                           null, eyeRep
                         )
                       )
@@ -632,31 +710,31 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                 // NOSE
                 GetBuilder<AvatarMakerController>(
                   id: "avatar_nose",
-                  builder: (c) => Positioned.fill(
+                  builder: (cn) => Positioned.fill(
                     top: 100,
                     child: Align(
                       alignment: Alignment.topCenter,
-                      child: SvgPicture.asset(noseAssets[c.selectedNose], width: 22, height: 33)
+                      child: SvgPicture.asset(noseAssets[cn.selectedNose], width: 22, height: 33)
                     )
                   )
                 ),
                 // MOUTH
                 GetBuilder<AvatarMakerController>(
                   id: "avatar_mouth",
-                  builder: (c) => Positioned.fill(
+                  builder: (cm) => Positioned.fill(
                     top: 128,
                     child: Align(
                       alignment: Alignment.topCenter,
-                      child: SvgPicture.asset(mouthAssets[c.selectedMouth], width: 44, height: 33)
+                      child: SvgPicture.asset(mouthAssets[cm.selectedMouth], width: 44, height: 33)
                     )
                   )
                 ),
                 // HAIR
                 GetBuilder<AvatarMakerController>(
                   id: "avatar_hair",
-                  builder: (c) {
-                    if (hatAssets[c.selectedHat] != "") return const SizedBox.shrink();
-                    Color hairRep = c.selectedHairColor == 0 ? Colors.transparent : Color(c.selectedHairColor);
+                  builder: (ch) {
+                    if (hatAssets[ch.selectedHat] != "") return const SizedBox.shrink();
+                    Color hairRep = ch.selectedHairColor == 0 ? Colors.transparent : Color(ch.selectedHairColor);
                     return Positioned(
                       top: 16,
                       left: 0, right: 0,
@@ -665,7 +743,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                         child: replaceColorOrReturn(
                           hairRep != Colors.transparent,
                           SvgPicture.asset(
-                            hairAssets[c.selectedHair],
+                            hairAssets[ch.selectedHair],
                             width: 200, height: 215
                           ),
                           null, hairRep
@@ -677,9 +755,9 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                 // FACIAL HAIR
                 GetBuilder<AvatarMakerController>(
                   id: "avatar_facial_hair",
-                  builder: (c) {
-                    final path = facialHairAssets[c.selectedFacialHair];
-                    Color rep = c.selectedFacialHairColor == 0 ? Colors.transparent : Color(c.selectedFacialHairColor);
+                  builder: (cf) {
+                    final path = facialHairAssets[cf.selectedFacialHair];
+                    Color rep = cf.selectedFacialHairColor == 0 ? Colors.transparent : Color(cf.selectedFacialHairColor);
                     if (path == "") return const SizedBox.shrink();
                     return Positioned.fill(
                       top: 116,
@@ -693,16 +771,16 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                 // ACCESSORY
                 GetBuilder<AvatarMakerController>(
                   id: "avatar_accessory",
-                  builder: (c) {
-                    final path = accessoryAssets[c.selectedAccessory];
-                    Color rep = c.selectedAccessoryColor == 0 ? Colors.transparent : Color(c.selectedAccessoryColor);
+                  builder: (ca) {
+                    final path = accessoryAssets[ca.selectedAccessory];
+                    Color rep = ca.selectedAccessoryColor == 0 ? Colors.transparent : Color(ca.selectedAccessoryColor);
                     if (path == "") return const SizedBox.shrink();
                     return Positioned.fill(
                       top: 90,
                       child: Align(
                         alignment: Alignment.topCenter,
                         child: replaceColorOrReturn(
-                          category[c.selectedCategory] == "ACCESORIOS",
+                          ca.selectedAccessoryColor != 0,
                           SvgPicture.asset(path, width: 90, height: 45),
                           null, rep
                         )
@@ -713,8 +791,8 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                 // HAT
                 GetBuilder<AvatarMakerController>(
                   id: "avatar_hat",
-                  builder: (c) {
-                    final path = hatAssets[c.selectedHat];
+                  builder: (ct) {
+                    final path = hatAssets[ct.selectedHat];
                     if (path == "") return const SizedBox.shrink();
                     return Positioned(
                       top: 16,
@@ -729,7 +807,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
               ],
             ),
           );
-        }
+        },
       ),
     );
   }

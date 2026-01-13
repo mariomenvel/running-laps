@@ -11,7 +11,7 @@ import 'package:running_laps/features/home/views/home_view.dart';
 // Vistas de perfil / entrenos
 // Vistas de perfil / entrenos
 import 'package:running_laps/features/history/views/history_screen.dart';
-import '../../avatar/views/avatar_maker_screen.dart';
+import 'avatar_editor_wraper_view.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
 import '../../groups/views/groups_list_screen.dart';
 import '../../groups/views/participant_profile_screen.dart';
@@ -89,7 +89,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
       context,
       MaterialPageRoute(
         builder: (BuildContext context) {
-          return const AvatarMakerScreen();
+          return const AvatarEditorWrapperView();
         },
       ),
     );

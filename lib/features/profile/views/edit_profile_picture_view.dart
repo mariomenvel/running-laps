@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart'; // Asumo que usas GetX para navegar
 import 'package:image_picker/image_picker.dart';
 // Importa tus otras vistas y viewmodels
-import '../../avatar/views/avatar_maker_screen.dart';
+import 'avatar_editor_wraper_view.dart';
 // import 'package:firebase_storage/firebase_storage.dart';
 // import 'package:firebase_firestore/firebase_firestore.dart';
 // import 'package:firebase_auth/firebase_auth.dart';
@@ -43,10 +43,12 @@ class EditProfilePictureView extends StatelessWidget {
 
 
   // --- Lógica para CREAR AVATAR ---
-  void _createAvatar() {
+  void _createAvatar(BuildContext context) {
     // Navegamos a la pantalla de edición de avatar
-    // (La crearemos en el siguiente paso)
-    Get.to(() => const AvatarMakerScreen()); 
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AvatarEditorWrapperView()),
+    );
   }
 
   @override
@@ -69,7 +71,7 @@ class EditProfilePictureView extends StatelessWidget {
             ElevatedButton.icon(
               icon: Icon(Icons.person_search),
               label: Text('Crear/Editar Avatar'),
-              onPressed: _createAvatar,
+              onPressed: () => _createAvatar(context),
             ),
           ],
         ),
