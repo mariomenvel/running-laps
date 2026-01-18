@@ -10,6 +10,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   firebase_storage
   gal
   geolocator_windows
+  permission_handler_windows
   printing
 )
 

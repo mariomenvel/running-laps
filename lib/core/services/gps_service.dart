@@ -1,285 +1,268 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 
-/// Modelo para almacenar puntos GPS
+import 'package:running_laps/core/services/sensor_service.dart';
+import 'package:running_laps/core/tracking/tracking_state.dart';
+import 'package:running_laps/core/tracking/sensor_frame.dart';
+import 'package:running_laps/core/utils/kalman_filter.dart';
+
+enum GpsStatus {
+  unknown,
+  disabled,
+  permissionDenied,
+  running,
+  paused,
+}
+
 class GpsPoint {
   final double latitude;
   final double longitude;
-  final DateTime timestamp;
-  final double? accuracy; // Precisión en metros
 
-  GpsPoint({
-    required this.latitude,
-    required this.longitude,
-    required this.timestamp,
-    this.accuracy,
-  });
+  GpsPoint(this.latitude, this.longitude);
 
   Map<String, dynamic> toMap() {
-    return {
-      'latitude': latitude,
-      'longitude': longitude,
-      'timestamp': timestamp.toIso8601String(),
-      'accuracy': accuracy,
-    };
-  }
-
-  static GpsPoint fromMap(Map<String, dynamic> map) {
-    return GpsPoint(
-      latitude: (map['latitude'] as num).toDouble(),
-      longitude: (map['longitude'] as num).toDouble(),
-      timestamp: DateTime.parse(map['timestamp'] as String),
-      accuracy: map['accuracy'] != null ? (map['accuracy'] as num).toDouble() : null,
-    );
+    return {'latitude': latitude, 'longitude': longitude};
   }
 }
 
-/// Estados posibles del servicio GPS
-enum GpsStatus {
-  uninitialized,   // No inicializado
-  permissionDenied, // Permisos denegados
-  disabled,        // GPS desactivado en el dispositivo
-  ready,           // Listo para usar
-  active,          // Tracking activo
-  paused,          // Tracking pausado
-  error,           // Error general
-}
-
-/// Servicio para gestionar el tracking GPS durante entrenamientos
 class GPSService {
-  StreamSubscription<Position>? _positionStreamSubscription;
-  
-  // Historial completo para guardar en BD
-  final List<GpsPoint> _points = [];
-  
-  // Ventana deslizante para cálculo de ritmo (últimos X segundos)
-  final List<GpsPoint> _windowPoints = [];
-  final Duration _windowDuration = const Duration(seconds: 15);
-  
-  // Última posición válida (filtrada)
-  Position? _lastPosition;
-  
-  GpsStatus _status = GpsStatus.uninitialized;
-  double _totalDistanceMeters = 0.0;
-  
-  DateTime? _startTime;
-  DateTime? _pauseTime;
-  
-  // CONFIGURACIÓN AVANZADA
-  static const double _minAccuracy = 25.0; // Descartar > 25m de error (ajustado para ciudad)
-  static const double _maxSpeedMps = 10.0; // ~36 km/h (Mundo récord Usain Bolt ~12m/s, maratón ~6m/s)
-                                           // Usamos 10m/s para permitir sprints fuertes pero filtrar coches/teletransporte
-  static const double _minDistAccumulate = 0.5; // Mínimo movimiento para sumar distancia (0.5m para pasos pequeños)
+  /* ================= LEGACY API ================= */
 
-  // Getters
-  GpsStatus get status => _status;
-  List<GpsPoint> get points => List.unmodifiable(_points);
-  double get totalDistanceMeters => _totalDistanceMeters;
-  Position? get lastPosition => _lastPosition;
+  final ValueNotifier<GpsStatus> status =
+      ValueNotifier(GpsStatus.unknown);
 
-  // Tiempo total corriendo (excluyendo pausas)
-  Duration get _runningDuration {
-    if (_startTime == null) return Duration.zero;
-    if (_status == GpsStatus.paused && _pauseTime != null) {
-      return _pauseTime!.difference(_startTime!);
-    }
-    return DateTime.now().difference(_startTime!);
-  }
-  
-  /// Ritmo suavizado usando ventana deslizante
-  String get currentPace {
-    // Si no tenemos suficientes puntos recientes, o estamos parados
-    if (_windowPoints.length < 2) return "--:-- /km";
+  final ValueNotifier<int> totalDistanceMeters =
+      ValueNotifier(0);
 
-    final first = _windowPoints.first;
-    final last = _windowPoints.last;
+  final ValueNotifier<String> currentPace =
+      ValueNotifier("--:-- /km");
 
-    final double distWindow = Geolocator.distanceBetween(
-      first.latitude, first.longitude, 
-      last.latitude, last.longitude
-    );
+  final ValueNotifier<int> cadence =
+      ValueNotifier(0);
 
-    final int timeWindowMs = last.timestamp.difference(first.timestamp).inMilliseconds;
+  final List<GpsPoint> points = [];
 
-    // Si la distancia es despreciable o t=0
-    if (distWindow < 5.0 || timeWindowMs < 1000) {
-      // Si llevamos mucho sin movernos, devolvemos "--"
-      // Check last point age
-      if (DateTime.now().difference(last.timestamp).inSeconds > 5) {
-        return "--:-- /km";
-      }
-      // Si es reciente, mantenemos el último ritmo conocido o mostramos -- 
-      // Para ser reactivos, si casi no hay distancia en la ventana, es que paró.
-      return "--:-- /km";
-    }
+  /* ================= INTERNAL ================= */
 
-    final double secondsPerKm = (timeWindowMs / 1000.0) / (distWindow / 1000.0);
+  final SensorService _sensorService = SensorService();
+  final KalmanFilter _kalmanLat = KalmanFilter();
+  final KalmanFilter _kalmanLon = KalmanFilter();
 
-    // Filtros visuales (igual que antes)
-    if (secondsPerKm < 120) return "--:-- /km"; // < 2:00 min/km
-    if (secondsPerKm > 6000) return "99:59 /km"; // > 100 min/km
+  final ValueNotifier<TrackingState> _trackingState =
+      ValueNotifier(createInitialTrackingState());
 
-    int minutes = secondsPerKm ~/ 60;
-    int seconds = (secondsPerKm % 60).round();
-    
-    if (minutes > 99) {
-      minutes = 99;
-      seconds = 59;
-    }
+  Timer? _timer;
 
-    return '${minutes}:${seconds.toString().padLeft(2, '0')} /km';
-  }
+  int _gpsStableSeconds = 0;
+
+  /* ================= LIFECYCLE ================= */
+
+  GPSService();
 
   Future<bool> initialize() async {
-    try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        _status = GpsStatus.disabled;
-        return false;
-      }
-
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          _status = GpsStatus.permissionDenied;
-          return false;
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        _status = GpsStatus.permissionDenied;
-        return false;
-      }
-
-      _status = GpsStatus.ready;
-      return true;
-    } catch (e) {
-      _status = GpsStatus.error;
+    final ok = await _sensorService.initialize();
+    if (!ok) {
+      status.value = GpsStatus.permissionDenied;
       return false;
     }
+
+    final perm = await Geolocator.checkPermission();
+    if (perm == LocationPermission.denied ||
+        perm == LocationPermission.deniedForever) {
+      status.value = GpsStatus.permissionDenied;
+      return false;
+    }
+
+    status.value = GpsStatus.paused;
+    return true;
   }
 
   Future<void> startTracking() async {
-    if (_status != GpsStatus.ready && _status != GpsStatus.paused) {
-      throw StateError('GPS must be initialized');
-    }
+    status.value = GpsStatus.running;
 
-    _status = GpsStatus.active;
-    _startTime ??= DateTime.now();
-    
-    // Pedimos alta precisión
-    const LocationSettings locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.bestForNavigation, 
-      distanceFilter: 0, 
+    _trackingState.value = createInitialTrackingState();
+    _sensorService.resetSession();
+    points.clear();
+    _gpsStableSeconds = 0;
+
+    _timer?.cancel();
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+      _onTick,
     );
-
-    _positionStreamSubscription = Geolocator.getPositionStream(
-      locationSettings: locationSettings,
-    ).listen(
-      _onPositionUpdate,
-      onError: (error) {
-        print('GPS Error: $error');
-        _status = GpsStatus.error;
-      },
-      cancelOnError: false,
-    );
-  }
-
-  void _onPositionUpdate(Position position) {
-    if (_status == GpsStatus.paused) return;
-
-    // 1. FILTRO DE PRECISIÓN
-    // Si la precisión es mala (> 15-20m), descartar
-    if (position.accuracy > _minAccuracy) return;
-
-    // 2. FILTRO DE PICOS DE VELOCIDAD
-    if (_lastPosition != null) {
-      final double dist = Geolocator.distanceBetween(
-        _lastPosition!.latitude, _lastPosition!.longitude,
-        position.latitude, position.longitude
-      );
-      
-      final int timeDiffMs = position.timestamp!.difference(_lastPosition!.timestamp!).inMilliseconds.abs();
-      
-      // Si el tiempo es muy pequeño, ignorar para evitar división por cero o ruido extremo
-      if (timeDiffMs < 500) return;
-
-      final double speedMps = dist / (timeDiffMs / 1000.0);
-
-      if (speedMps > _maxSpeedMps) {
-        // Pico irreal, descartar punto
-        return; 
-      }
-      
-      // 3. ACUMULACIÓN DE DISTANCIA (con umbral mínimo)
-      // Solo sumamos si nos movimos una distancia "real" para evitar sumar ruido estático
-      if (dist >= _minDistAccumulate) {
-        _totalDistanceMeters += dist;
-      }
-    }
-
-    // ACEPTAR PUNTO
-    _lastPosition = position;
-    
-    final newPoint = GpsPoint(
-      latitude: position.latitude,
-      longitude: position.longitude,
-      timestamp: position.timestamp ?? DateTime.now(),
-      accuracy: position.accuracy,
-    );
-
-    _points.add(newPoint);
-    _addToWindow(newPoint);
-  }
-
-  void _addToWindow(GpsPoint point) {
-    _windowPoints.add(point);
-
-    // Limpiar puntos antiguos (> 15s)
-    final DateTime threshold = point.timestamp.subtract(_windowDuration);
-    _windowPoints.removeWhere((p) => p.timestamp.isBefore(threshold));
   }
 
   void pause() {
-    if (_status != GpsStatus.active) return;
-    _pauseTime = DateTime.now();
-    _status = GpsStatus.paused;
+    if (status.value == GpsStatus.running) {
+      status.value = GpsStatus.paused;
+    }
   }
 
   void resume() {
-    if (_status != GpsStatus.paused) return;
-    if (_pauseTime != null && _startTime != null) {
-      final Duration pauseDuration = DateTime.now().difference(_pauseTime!);
-      _startTime = _startTime!.add(pauseDuration);
-      
-      // Limpiar ventana al reanudar para no calcular ritmo con salto de tiempo
-      _windowPoints.clear();
-      _lastPosition = null; // Reiniciar referencia inmediata
+    if (status.value == GpsStatus.paused) {
+      status.value = GpsStatus.running;
     }
-    _pauseTime = null;
-    _status = GpsStatus.active;
   }
 
-  Future<void> stopTracking() async {
-    await _positionStreamSubscription?.cancel();
-    _positionStreamSubscription = null;
-    _status = GpsStatus.ready;
+  void dispose() {
+    _timer?.cancel();
+    status.dispose();
+    totalDistanceMeters.dispose();
+    currentPace.dispose();
+    cadence.dispose();
   }
 
-  void reset() {
-    _points.clear();
-    _windowPoints.clear();
-    _lastPosition = null;
-    _totalDistanceMeters = 0.0;
-    _startTime = null;
-    _pauseTime = null;
+  /* ================= TICK ================= */
+
+  void _onTick(Timer timer) async {
+    if (status.value != GpsStatus.running) return;
+
+    final now = DateTime.now();
+    Position? gps;
+
+    try {
+      gps = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.bestForNavigation,
+      );
+    } catch (_) {}
+
+    final frame = SensorFrame(
+      latitude: gps?.latitude,
+      longitude: gps?.longitude,
+      gpsAccuracy: gps?.accuracy,
+      gpsSpeed: gps?.speed,
+      stepsDelta: _sensorService.consumeStepsDelta(),
+      acceleration: 0.0,
+      timestamp: now,
+    );
+
+    final newState =
+        _processTick(_trackingState.value, frame);
+
+    _trackingState.value = newState;
+
+    totalDistanceMeters.value =
+        newState.distanceTotal.round();
+
+    cadence.value = _sensorService.cadence.value;
+
+    if (newState.velocity > 0) {
+      currentPace.value =
+          _formatPace(1000 / newState.velocity);
+    } else {
+      currentPace.value = "--:-- /km";
+    }
+
+    if (newState.latitude != null &&
+        newState.longitude != null) {
+      points.add(
+        GpsPoint(newState.latitude!, newState.longitude!),
+      );
+    }
   }
 
-  Future<void> dispose() async {
-    await stopTracking();
-    reset();
-    _status = GpsStatus.uninitialized;
-  }
+  /* ================= CORE LOGIC ================= */
+
+  TrackingState _processTick(
+    TrackingState state,
+    SensorFrame frame,
+  ) {
+    final dt =
+        frame.timestamp.difference(state.lastTimestamp).inMilliseconds /
+            1000.0;
+    if (dt <= 0) return state;
+
+    final deltaTime = dt > 2.0 ? 1.0 : dt;
+
+    final bool gpsStable =
+        frame.gpsAccuracy != null &&
+        frame.gpsAccuracy! <= 12 &&
+        frame.gpsSpeed != null &&
+        frame.gpsSpeed! >= 0.8 &&
+        frame.gpsSpeed! <= 6.0;
+
+    if (gpsStable) {
+      _gpsStableSeconds++;
+    } else {
+      _gpsStableSeconds = 0;
+    }
+
+    // 🛑 Anti-drift
+    // 🛑 Anti-drift (parado real)
+if (frame.stepsDelta == 0 && !gpsStable) {
+  return TrackingState(
+    latitude: state.latitude,
+    longitude: state.longitude,
+    velocity: 0.0,
+    heading: state.heading,
+    distanceTotal: state.distanceTotal,
+    strideLength: state.strideLength,
+    lastTimestamp: frame.timestamp,
+  );
 }
 
+
+    // Velocidad
+    double velocity;
+    if (gpsStable) {
+      velocity = frame.gpsSpeed!;
+    } else if (frame.stepsDelta > 0) {
+      velocity =
+          (frame.stepsDelta * state.strideLength) / deltaTime;
+    } else {
+      velocity = 0.0;
+    }
+
+    if (velocity > 6.0) velocity = 6.0;
+    if (velocity < 0) velocity = 0;
+
+    // Distancia
+    double distance = velocity * deltaTime;
+    if (distance < 0.3) distance = 0;
+    if (distance > 6.0) distance = 6.0;
+
+    // Posición filtrada
+    double? lat = state.latitude;
+    double? lon = state.longitude;
+
+    if (gpsStable &&
+        frame.latitude != null &&
+        frame.longitude != null) {
+      lat = _kalmanLat.filter(frame.latitude!);
+      lon = _kalmanLon.filter(frame.longitude!);
+    }
+
+    // Recalibración de zancada
+    double stride = state.strideLength;
+    if (_gpsStableSeconds >= 8 &&
+        frame.stepsDelta > 0 &&
+        gpsStable) {
+      final gpsStride =
+          (velocity * deltaTime) / frame.stepsDelta;
+      final maxChange = stride * 0.05;
+      final diff = gpsStride - stride;
+      final clamped =
+          diff.clamp(-maxChange, maxChange);
+      stride = stride + clamped * 0.1;
+    }
+
+    return TrackingState(
+      latitude: lat,
+      longitude: lon,
+      velocity: velocity,
+      heading: state.heading,
+      distanceTotal: state.distanceTotal + distance,
+      strideLength: stride,
+      lastTimestamp: frame.timestamp,
+    );
+  }
+
+  /* ================= HELPERS ================= */
+
+  String _formatPace(double secPerKm) {
+    final m = (secPerKm / 60).floor();
+    final s = (secPerKm % 60).round();
+    return "${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')} /km";
+  }
+}

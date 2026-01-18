@@ -91,26 +91,18 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
     
     if (initialized) {
       await _gpsService!.startTracking();
-      
-      // Timer para actualizar distancia y ritmo GPS cada 500ms
-      _gpsUpdateTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
-        if (mounted && _gpsService != null) {
-          setState(() {
-            _distanciaGpsMetros = _gpsService!.totalDistanceMeters;
-            _ritmoActual = _gpsService!.currentPace;
-          });
-        }
-      });
+      // Ya no necesitamos timer, la UI es reactiva con ValueListenableBuilder
+      setState(() {}); // Rebuild para que los builders tengan acceso a _gpsService inicializado
     } else {
       // Mostrar error específico según el estado del GPS
       if (mounted) {
         String errorMessage = 'No se pudo activar el GPS.';
         String actionMessage = '';
         
-        if (_gpsService!.status == GpsStatus.disabled) {
+        if (_gpsService!.status.value == GpsStatus.disabled) {
           errorMessage = '📍 GPS desactivado';
           actionMessage = 'Activa la ubicación en los ajustes de tu móvil';
-        } else if (_gpsService!.status == GpsStatus.permissionDenied) {
+        } else if (_gpsService!.status.value == GpsStatus.permissionDenied) {
           errorMessage = '🔒 Permisos de ubicación denegados';
           actionMessage = 'Ve a Ajustes → Apps → Running Laps → Permisos → Ubicación';
         } else {
@@ -132,7 +124,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
   void dispose() {
     _timer?.cancel();
     _beepTimer?.cancel();
-    _gpsUpdateTimer?.cancel();
+    _gpsUpdateTimer?.cancel(); // Se mantiene por seguridad si existe instancia previa
     _gpsService?.dispose();
     _stopwatch.stop();
     super.dispose();
@@ -412,15 +404,20 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
               ],
             )
           else
-            // CON GPS: Distancia GPS y Descanso (Ritmo va al centro)
+            // CON GPS: Distancia GPS (Reactiva) y Descanso
             Row(
               children: [
                 Expanded(
-                  child: _buildMetricCard(
-                    label: "Distancia GPS",
-                    value: "${_distanciaGpsMetros.round()}m",
-                    icon: Icons.location_on,
-                    color: Tema.brandPurple,
+                  child: ValueListenableBuilder<int>(
+                    valueListenable: _gpsService?.totalDistanceMeters ?? ValueNotifier(0),
+                    builder: (context, distance, _) {
+                      return _buildMetricCard(
+                        label: "Distancia GPS",
+                        value: "${distance}m",
+                        icon: Icons.location_on,
+                        color: Tema.brandPurple,
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -475,38 +472,58 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                               color: Colors.black87,
                             ),
                           ),
-                          // 2. RITMO (Solo si GPS activo)
+                          // 2. RITMO (Solo si GPS activo - Reactivo)
                           if (widget.gpsActivo) ...[
                             const SizedBox(height: 8), 
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.baseline,
-                              textBaseline: TextBaseline.alphabetic,
-                              children: [
-                                Text(
-                                  _ritmoActual.split(' ')[0], // Solo "mm:ss"
-                                  style: TextStyle(
-                                    fontSize: 56.0,
-                                    fontWeight: FontWeight.w200,
-                                    height: 1.0,
-                                    letterSpacing: -1.0,
-                                    fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
-                                    color: _getPaceColor(_ritmoActual), // Color dinámico
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                const Text(
-                                  "min/km",
-                                  style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
-                                )
-                              ],
+                            ValueListenableBuilder<String>(
+                              valueListenable: _gpsService?.currentPace ?? ValueNotifier("--:-- /km"),
+                              builder: (context, pace, _) {
+                                return Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Text(
+                                      pace.split(' ')[0], // Solo "mm:ss"
+                                      style: TextStyle(
+                                        fontSize: 56.0,
+                                        fontWeight: FontWeight.w200,
+                                        height: 1.0,
+                                        letterSpacing: -1.0,
+                                        fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+                                        color: _getPaceColor(pace), // Color dinámico
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    const Text(
+                                      "min/km",
+                                      style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
+                                    )
+                                  ],
+                                );
+                              }
                             ),
+                            // Cadencia (Opcional, pequeño abajo)
+                             const SizedBox(height: 4), 
+                             ValueListenableBuilder<int>(
+                               valueListenable: _gpsService?.cadence ?? ValueNotifier(0),
+                               builder: (context, spm, _) {
+                                 if (spm < 10) return const SizedBox.shrink();
+                                 return Text(
+                                   "$spm spm",
+                                   style: TextStyle(
+                                     fontSize: 14, 
+                                     color: Colors.grey.shade400,
+                                     fontWeight: FontWeight.w500
+                                   ),
+                                 );
+                               },
+                             ),
                           ]
                        ],
                       ),
                     ),
                   ),
-                  // Etiqueta "TIEMPO TOTAL" eliminada por petición
                 ],
               ),
             ),
