@@ -646,13 +646,13 @@ class _AuthPageState extends State<AuthPage> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final double logoHeight = size.height * 0.35; // 35% de la altura
+    final double logoHeight = size.height * 0.30; // Un poco menos para dar espacio
 
     // Color de fondo para el gradiente (coincide con HomeView)
     const Color _bgGradientColor = Color(0xFFF9F5FB);
 
     return Scaffold(
-      resizeToAvoidBottomInset: true, // El footer sube con el teclado
+      resizeToAvoidBottomInset: true, // Crucial para que el teclado desplace el contenido
       body: Container(
         decoration: const BoxDecoration(
           gradient: RadialGradient(
@@ -668,62 +668,65 @@ class _AuthPageState extends State<AuthPage> {
           ),
         ),
         child: SafeArea(
-          child: Column(
-            children: [
-              // ================= HEADER FIJO =================
-              SizedBox(
-                height: logoHeight > 300 ? 300 : logoHeight, // Topé altura
-                child: Center(
-                  child: Image.asset(
-                    'assets/images/Icon.png',
-                    fit: BoxFit.contain,
-                  ),
-                ),
+          // Usamos un solo SingleChildScrollView para TODO
+          child: SingleChildScrollView(
+            physics: const ClampingScrollPhysics(), // Evita rebote excesivo
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: ConstrainedBox(
+              // Aseguramos que el contenido ocupe al menos toda la pantalla si es posible
+              constraints: BoxConstraints(
+                minHeight: size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
+                maxWidth: 400,
               ),
-              
-              // ================= BODY SCROLLABLE =================
-              Expanded(
-                child: Center( // Centramos verticalmente si sobra espacio
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 400),
-                      child: ValueListenableBuilder<bool>(
-                        valueListenable: _authCtrl.isLoginView,
-                        builder: (context, isLoginView, child) {
-                          return AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),
-                            key: ValueKey<bool>(isLoginView), // Cambio de key força animación
-                            child: isLoginView
-                                ? _buildLoginFields()
-                                : _buildRegisterFields(),
-                          );
-                        },
+              child: IntrinsicHeight( // Permite que el Column use MainAxisAlignment.spaceBetween
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // ================= HEADER (Logo) =================
+                    SizedBox(
+                      height: logoHeight > 250 ? 250 : logoHeight,
+                      child: Center(
+                        child: Image.asset(
+                          'assets/images/Icon.png',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
-                  ),
+                    
+                    // ================= BODY (Campos) =================
+                    ValueListenableBuilder<bool>(
+                      valueListenable: _authCtrl.isLoginView,
+                      builder: (context, isLoginView, child) {
+                        return AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          key: ValueKey<bool>(isLoginView),
+                          child: isLoginView
+                              ? _buildLoginFields()
+                              : _buildRegisterFields(),
+                        );
+                      },
+                    ),
+                    
+                    const Spacer(), // Empuja los botones al final si hay espacio
+                    const SizedBox(height: 24),
+                    
+                    // ================= FOOTER (Botones) =================
+                    ValueListenableBuilder<bool>(
+                      valueListenable: _authCtrl.isLoginView,
+                      builder: (context, isLoginView, child) {
+                         return AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          child: isLoginView 
+                              ? _buildLoginButtons() 
+                              : _buildRegisterButtons(),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 24), // Margen inferior final
+                  ],
                 ),
               ),
-              
-              // ================= FOOTER FIJO =================
-              Container(
-                padding: const EdgeInsets.all(24.0),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 400),
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable: _authCtrl.isLoginView,
-                    builder: (context, isLoginView, child) {
-                       return AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: isLoginView 
-                            ? _buildLoginButtons() 
-                            : _buildRegisterButtons(),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
