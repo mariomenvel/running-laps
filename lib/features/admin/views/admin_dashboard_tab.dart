@@ -198,19 +198,18 @@ class AdminDashboardTab extends StatelessWidget {
 
       for (var data in sample) {
         // Intentar usar campo precalculado o calcularlo
-        int? dist = data['distanciaTotalM'];
-        dynamic tiempo = data['tiempoTotalSec']; // puede ser int o double
+        // Usamos num para ser flexibles con int/double de Firestore
+        num? dist = data['distanciaTotalM'] as num?;
+        num? tiempo = data['tiempoTotalSec'] as num?; // puede ser int o double
         
         if (dist != null && dist > 0 && tiempo != null) {
           double tiempoSec = tiempo.toDouble();
-          double km = dist / 1000.0;
+          double km = dist.toDouble() / 1000.0;
           double pace = tiempoSec / km; // sec/km
           
-          // Filtrar outliers (ritmos menores a 2:00/km o mayores a 20:00/km)
-          if (pace > 120 && pace < 1200) {
-            totalPaceSec += pace;
-            count++;
-          }
+          // Sin filtros de outliers para permitir datos de prueba extremos
+          totalPaceSec += pace;
+          count++;
         }
       }
 
