@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 // Force reload
 import '../data/admin_repository.dart';
 import '../../groups/data/models/challenge_models.dart';
@@ -8,7 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../groups/data/models/enums.dart';
 
 
-enum AdminDateFilter { week, month, year, all }
+enum AdminDateFilter { week, month, year, all, custom }
 
 class AdminController extends ChangeNotifier {
   final AdminRepository _repository;
@@ -22,13 +22,27 @@ class AdminController extends ChangeNotifier {
   AdminDateFilter _currentFilter = AdminDateFilter.all;
   AdminDateFilter get currentFilter => _currentFilter;
 
+  DateTimeRange? _customRange;
+  DateTimeRange? get customRange => _customRange;
+
   AdminController({AdminRepository? repository})
       : _repository = repository ?? AdminRepository();
 
   /// Cambiar filtro de fecha y recargar
   void setDateFilter(AdminDateFilter filter) {
-    if (_currentFilter == filter) return;
-    _currentFilter = filter;
+    if (filter != AdminDateFilter.custom) {
+      _currentFilter = filter;
+      _customRange = null; 
+      loadDashboardStats();
+    } else {
+      _currentFilter = filter;
+    }
+  }
+
+  /// Establecer rango personalizado
+  void setCustomDateRange(DateTimeRange range) {
+    _currentFilter = AdminDateFilter.custom;
+    _customRange = range;
     loadDashboardStats();
   }
 
@@ -37,6 +51,7 @@ class AdminController extends ChangeNotifier {
     _setLoading(true);
     try {
       DateTime? startDate;
+      DateTime? endDate;
       final now = DateTime.now();
       
       switch (_currentFilter) {
@@ -52,9 +67,17 @@ class AdminController extends ChangeNotifier {
         case AdminDateFilter.all:
           startDate = null;
           break;
+        case AdminDateFilter.custom:
+           if (_customRange != null) {
+             startDate = _customRange!.start;
+             endDate = _customRange!.end;
+             // Ajustar fin del día para endDate
+             endDate = DateTime(endDate!.year, endDate.month, endDate.day, 23, 59, 59);
+           }
+          break;
       }
       
-      _stats = await _repository.getGlobalStats(startDate: startDate);
+      _stats = await _repository.getGlobalStats(startDate: startDate, endDate: endDate);
     } catch (e) {
       print("Error loading admin stats: $e");
     } finally {

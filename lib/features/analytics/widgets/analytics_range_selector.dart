@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/features/analytics/viewmodels/analytics_hub_controller.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/widgets/premium_date_range_picker.dart';
 import 'dart:ui'; // For BackdropFilter
 
 class AnalyticsRangeSelector extends StatelessWidget {
@@ -152,20 +153,19 @@ class AnalyticsRangeSelector extends StatelessWidget {
                trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                onTap: () async {
                  Navigator.pop(context);
-                 final range = await showDateRangePicker(
+                 final range = await showModalBottomSheet<DateTimeRange>(
                    context: context,
-                   firstDate: DateTime(2020),
-                   lastDate: DateTime.now(),
-                   builder: (context, child) {
-                     return Theme(
-                       data: Theme.of(context).copyWith(
-                         colorScheme: const ColorScheme.light(
-                           primary: Tema.brandPurple,
-                         ),
-                       ),
-                       child: child!,
-                     );
-                   },
+                   isScrollControlled: true,
+                   backgroundColor: Colors.transparent,
+                   builder: (context) => SizedBox(
+                     height: MediaQuery.of(context).size.height * 0.75,
+                     child: PremiumDateRangePicker(
+                       firstDate: DateTime(2020),
+                       lastDate: DateTime.now(),
+                       initialDateRange: controller.customDateRange.value,
+                       onRangeSelected: (range) {},
+                     ),
+                   ),
                  );
                  
                  if (range != null) {

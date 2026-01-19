@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../viewmodels/admin_controller.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/widgets/premium_date_range_picker.dart';
 
 class AdminDashboardTab extends StatelessWidget {
   final AdminController controller;
@@ -42,6 +43,31 @@ class AdminDashboardTab extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Text(
+                "Estado de la Comunidad",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              
+              // GLOBAL DATE FILTERS
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildFilterChip(context, controller, AdminDateFilter.week, "7 Días"),
+                    const SizedBox(width: 8),
+                    _buildFilterChip(context, controller, AdminDateFilter.month, "30 Días"),
+                    const SizedBox(width: 8),
+                    _buildFilterChip(context, controller, AdminDateFilter.year, "Este Año"),
+                    const SizedBox(width: 8),
+                    _buildFilterChip(context, controller, AdminDateFilter.all, "Todo"),
+                     const SizedBox(width: 8),
+                    _buildCustomFilterChip(context, controller),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
               // --- SECCIÓN 1: USUARIOS ---
               const Text(
                 "Usuarios",
@@ -150,25 +176,8 @@ class AdminDashboardTab extends StatelessWidget {
                 "Engagement & Métricas",
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 12),
-              
-              // Filtros (solo afectan a engagement)
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildFilterChip(context, controller, AdminDateFilter.week, "7 Días"),
-                    const SizedBox(width: 8),
-                    _buildFilterChip(context, controller, AdminDateFilter.month, "30 Días"),
-                    const SizedBox(width: 8),
-                    _buildFilterChip(context, controller, AdminDateFilter.year, "Este Año"),
-                    const SizedBox(width: 8),
-                    _buildFilterChip(context, controller, AdminDateFilter.all, "Todo"),
-                  ],
-                ),
-              ),
               const SizedBox(height: 16),
-
+              
               Row(
                 children: [
                    _buildStatCard(
@@ -361,6 +370,58 @@ class AdminDashboardTab extends StatelessWidget {
       label: Text(label),
       selected: isSelected,
       onSelected: (_) => controller.setDateFilter(filter),
+      backgroundColor: Colors.white,
+      selectedColor: Colors.black87,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.white : Colors.black87,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: Colors.grey.shade300),
+      ),
+      checkmarkColor: Colors.white,
+    );
+  }
+
+  Widget _buildCustomFilterChip(BuildContext context, AdminController controller) {
+    bool isSelected = controller.currentFilter == AdminDateFilter.custom;
+    String label = "Personalizado";
+    if (isSelected && controller.customRange != null) {
+      final start = DateFormat('dd/MM').format(controller.customRange!.start);
+      final end = DateFormat('dd/MM').format(controller.customRange!.end);
+      label = "$start - $end";
+    }
+
+    return FilterChip(
+      label: Text(label),
+      avatar: isSelected ? const Icon(Icons.date_range, size: 16, color: Colors.white) : const Icon(Icons.date_range, size: 16, color: Colors.black54),
+      selected: isSelected,
+      onSelected: (_) async {
+        final DateTimeRange? picked = await showModalBottomSheet<DateTimeRange>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent, // Para ver bordes redondeados
+          builder: (context) => SizedBox(
+            height: MediaQuery.of(context).size.height * 0.85,
+            child: PremiumDateRangePicker(
+              firstDate: DateTime(2020),
+              lastDate: DateTime.now(),
+              initialDateRange: controller.customRange,
+              onRangeSelected: (range) {
+                 // El botón "Aplicar" del widget se encarga de cerrar con Navigator.pop(context, range)
+                 // Aquí solo se llama cuando se completa una selección si quisiéramos auto-cierre, 
+                 // pero el widget tiene botón explícito.
+                 // Ajuste: El widget PremiumDateRangePicker debería manejar el pop.
+              },
+            ),
+          ),
+        );
+
+        if (picked != null) {
+          controller.setCustomDateRange(picked);
+        }
+      },
       backgroundColor: Colors.white,
       selectedColor: Colors.black87,
       labelStyle: TextStyle(
