@@ -43,3 +43,85 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# ============================
+# Flutter / Dart tooling
+# ============================
+.dart_tool/
+.packages
+.pub/
+.pub-cache/
+build/
+coverage/
+
+# ============================
+# Android
+# ============================
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/.idea/
+
+# ============================
+# iOS
+# ============================
+ios/Pods/
+ios/build/
+ios/Flutter/ephemeral/
+ios/Flutter/Generated.xcconfig
+ios/.generated/
+
+# ============================
+# macOS
+# ============================
+macos/build/
+macos/Flutter/ephemeral/
+macos/Flutter/Flutter-Debug.xcconfig
+macos/Flutter/Flutter-Release.xcconfig
+macos/Flutter/GeneratedPluginRegistrant.swift
+
+# ============================
+# Linux
+# ============================
+linux/build/
+linux/flutter/ephemeral/
+
+# ============================
+# Windows
+# ============================
+windows/build/
+windows/flutter/ephemeral/
+
+# ============================
+# Web
+# ============================
+web/build/
+web/.dart_tool/
+
+# ============================
+# Test / analysis output artifacts
+# ============================
+analysis_output.txt
+analysis_results.txt
+analyze_output.txt
+test_output.txt
+test_output_utf8.txt
+test_output_v2.txt
+
+# ============================
+# IDE / Editor files
+# ============================
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# ============================
+# OS-level junk
+# ============================
+.DS_Store
+Thumbs.db
+Desktop.ini
+*~
