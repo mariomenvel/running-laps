@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:flutter/material.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:intl/intl.dart';
 
@@ -39,6 +40,195 @@ class PdfGeneratorService {
     );
 
     return pdf.save();
+  }
+
+  /// Genera un reporte administrativo global con métricas individuales
+  static Future<Uint8List> generateAdminReportPdf({
+    required Map<String, dynamic> stats,
+    required List<String> selectedMetrics, // Ahora son IDs individuales
+    required DateTimeRange range,
+  }) async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(40),
+        build: (context) => [
+          // Header del Reporte
+          _buildAdminHeader(range),
+          pw.SizedBox(height: 30),
+
+          // Agrupación visual por temas basada en lo seleccionado
+          _buildMetricGroupIfAny(
+            'USUARIOS Y COMUNIDAD',
+            [
+              if (selectedMetrics.contains('totalUsers')) _buildAdminStat('Total Usuarios', '${stats['totalUsers'] ?? 0}', 'registrados'),
+              if (selectedMetrics.contains('onboardedUsers')) _buildAdminStat('Onboarding', '${stats['onboardedUsers'] ?? 0}', 'completados'),
+              if (selectedMetrics.contains('activeUsersCount')) _buildAdminStat('Usuarios Activos', '${stats['activeUsersCount'] ?? 0}', 'este mes'),
+            ],
+          ),
+
+          _buildMetricGroupIfAny(
+            'ACTIVIDAD Y ENTRENAMIENTOS',
+            [
+              if (selectedMetrics.contains('totalKm')) _buildAdminStat('Kilómetros', '${(stats['totalKm'] as num? ?? 0).toStringAsFixed(1)}', 'km totales'),
+              if (selectedMetrics.contains('consistencyRate')) _buildAdminStat('Consistencia', '${(stats['consistencyRate'] as num? ?? 0).toStringAsFixed(1)}%', 'tasa semanal'),
+              if (selectedMetrics.contains('preferredDay')) _buildAdminStat('Día Favorito', '${stats['preferredDay'] ?? "N/A"}', 'más activo'),
+            ],
+          ),
+
+          _buildMetricGroupIfAny(
+            'RENDIMIENTO Y ESFUERZO',
+            [
+              if (selectedMetrics.contains('avgPace')) _buildAdminStat('Ritmo Medio', '${stats['avgPace'] ?? "N/A"}', '/km'),
+              if (selectedMetrics.contains('avgDistancePerTraining')) _buildAdminStat('Distancia / Entreno', '${(stats['avgDistancePerTraining'] as num? ?? 0).toStringAsFixed(1)}', 'km promedio'),
+              if (selectedMetrics.contains('avgWeeklyDistance')) _buildAdminStat('Distancia Semanal', '${(stats['avgWeeklyDistance'] as num? ?? 0).toStringAsFixed(1)}', 'km / usuario'),
+              if (selectedMetrics.contains('avgRpe')) _buildAdminStat('Esfuerzo (RPE)', '${(stats['avgRpe'] as num? ?? 0).toStringAsFixed(1)}', 'escala 1-10'),
+            ],
+          ),
+
+          pw.SizedBox(height: 10),
+          _buildAdminDisclaimer(),
+        ],
+        footer: (context) => _buildFooter(context),
+      ),
+    );
+
+    return pdf.save();
+  }
+
+  static pw.Widget _buildMetricGroupIfAny(String title, List<pw.Widget> widgets) {
+    if (widgets.isEmpty) return pw.SizedBox();
+    
+    // Organizar en filas de máximo 3
+    final List<List<pw.Widget>> rows = [];
+    for (var i = 0; i < widgets.length; i += 3) {
+      rows.add(widgets.sublist(i, i + 3 > widgets.length ? widgets.length : i + 3));
+    }
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        _buildAdminSectionTitle(title),
+        ...rows.map((row) => pw.Padding(
+          padding: const pw.EdgeInsets.only(bottom: 10),
+          child: pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.start,
+            children: row.map((w) => pw.Expanded(child: pw.Padding(
+              padding: const pw.EdgeInsets.symmetric(horizontal: 4),
+              child: w,
+            ))).toList(),
+          ),
+        )),
+        pw.SizedBox(height: 15),
+      ],
+    );
+  }
+
+  static pw.Widget _buildAdminHeader(DateTimeRange range) {
+    final dateFormat = DateFormat('d MMMM, yyyy', 'es');
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          children: [
+            pw.Text(
+              'REPORTE ADMINISTRATIVO',
+              style: pw.TextStyle(
+                fontSize: 26,
+                fontWeight: pw.FontWeight.bold,
+                color: _brandPurple,
+              ),
+            ),
+            pw.Text(
+              'Running Laps',
+              style: pw.TextStyle(
+                fontSize: 14,
+                fontWeight: pw.FontWeight.bold,
+                color: _mediumGray,
+              ),
+            ),
+          ],
+        ),
+        pw.SizedBox(height: 8),
+        pw.Text(
+          'Periodo: ${dateFormat.format(range.start)} - ${dateFormat.format(range.end)}',
+          style: const pw.TextStyle(fontSize: 12, color: _mediumGray),
+        ),
+        pw.SizedBox(height: 12),
+        pw.Container(height: 1.5, color: _lightGray),
+      ],
+    );
+  }
+
+  static pw.Widget _buildAdminSectionTitle(String title) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 15),
+      child: pw.Text(
+        title,
+        style: pw.TextStyle(
+          fontSize: 10,
+          fontWeight: pw.FontWeight.bold,
+          color: _mediumGray,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+
+  static pw.Widget _buildAdminGrid(List<pw.Widget> stats) {
+    return pw.Row(
+      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+      children: stats.map((s) => pw.Expanded(child: s)).toList(),
+    );
+  }
+
+  static pw.Widget _buildAdminStat(String label, String value, String sub) {
+    return pw.Container(
+      margin: const pw.EdgeInsets.symmetric(horizontal: 5),
+      padding: const pw.EdgeInsets.all(12),
+      decoration: pw.BoxDecoration(
+        color: _veryLightGray,
+        borderRadius: pw.BorderRadius.circular(4),
+        border: pw.Border.all(color: _lightGray, width: 0.5),
+      ),
+      child: pw.Column(
+        children: [
+          pw.Text(
+            label.toUpperCase(),
+            style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: _mediumGray),
+            textAlign: pw.TextAlign.center,
+          ),
+          pw.SizedBox(height: 8),
+          pw.Text(
+            value,
+            style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: _darkGray),
+          ),
+          pw.SizedBox(height: 4),
+          pw.Text(
+            sub,
+            style: const pw.TextStyle(fontSize: 8, color: _mediumGray),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static pw.Widget _buildAdminDisclaimer() {
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(15),
+      decoration: pw.BoxDecoration(
+        border: pw.Border.all(color: _lightGray, width: 1, style: pw.BorderStyle.dashed),
+        borderRadius: pw.BorderRadius.circular(4),
+      ),
+      child: pw.Text(
+        'Este reporte ha sido generado automaticamente desde el panel de administracion de Running Laps. Los datos reflejan la actividad de la comunidad en el rango de fechas especificado.',
+        style: const pw.TextStyle(fontSize: 9, color: _mediumGray, lineSpacing: 1.2),
+        textAlign: pw.TextAlign.center,
+      ),
+    );
   }
 
   /// HEADER: Profesional y minimalista

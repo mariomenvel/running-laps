@@ -43,9 +43,20 @@ class AdminDashboardTab extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "Estado de la Comunidad",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Estado de la Comunidad",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => _showExportDialog(context, controller),
+                    icon: const Icon(Icons.picture_as_pdf, size: 20),
+                    label: const Text("Exportar"),
+                    style: TextButton.styleFrom(foregroundColor: Colors.purple.shade700),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               
@@ -466,6 +477,232 @@ class AdminDashboardTab extends StatelessWidget {
         side: BorderSide(color: Colors.grey.shade300),
       ),
       checkmarkColor: Colors.white,
+    );
+  }
+
+  void _showExportDialog(BuildContext context, AdminController controller) {
+    final Map<String, String> availableMetrics = {
+      'totalUsers': 'Total de Usuarios',
+      'onboardedUsers': 'Usuarios con Onboarding',
+      'activeUsersCount': 'Usuarios Activos (Mes)',
+      'totalKm': 'Kilómetros Totales',
+      'consistencyRate': 'Tasa de Consistencia',
+      'preferredDay': 'Día más Activo',
+      'avgPace': 'Ritmo Medio Comunidad',
+      'avgDistancePerTraining': 'Distancia Media / Entreno',
+      'avgWeeklyDistance': 'Distancia Media Semanal',
+      'avgRpe': 'Esfuerzo Percibido (RPE)',
+    };
+
+    List<String> selectedMetrics = availableMetrics.keys.toList();
+    DateTimeRange exportRange = controller.customRange ??
+        DateTimeRange(
+          start: DateTime.now().subtract(const Duration(days: 30)),
+          end: DateTime.now(),
+        );
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Container(
+          height: MediaQuery.of(context).size.height * 0.85,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(30),
+              topRight: Radius.circular(30),
+            ),
+          ),
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                decoration: BoxDecoration(
+                  border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    const Text(
+                      "Exportar Reporte Premium",
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Content
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.all(24),
+                  children: [
+                    // Date Range Section
+                    const Text(
+                      "Rango de Fechas",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 12),
+                    InkWell(
+                      onTap: () async {
+                        final picked = await showModalBottomSheet<DateTimeRange>(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.8,
+                            child: PremiumDateRangePicker(
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime.now(),
+                              initialDateRange: exportRange,
+                              onRangeSelected: (range) {},
+                            ),
+                          ),
+                        );
+                        if (picked != null) {
+                          setState(() => exportRange = picked);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.purple.shade50,
+                          borderRadius: BorderRadius.circular(15),
+                          border: Border.all(color: Colors.purple.shade100),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_today, color: Colors.purple, size: 20),
+                            const SizedBox(width: 12),
+                            Text(
+                              "${DateFormat('dd/MM/yyyy').format(exportRange.start)} - ${DateFormat('dd/MM/yyyy').format(exportRange.end)}",
+                              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.purple),
+                            ),
+                            const Spacer(),
+                            const Icon(Icons.edit, color: Colors.purple, size: 18),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    // Metrics Section
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Métricas a incluir",
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              if (selectedMetrics.length == availableMetrics.length) {
+                                selectedMetrics.clear();
+                              } else {
+                                selectedMetrics = availableMetrics.keys.toList();
+                              }
+                            });
+                          },
+                          child: Text(selectedMetrics.length == availableMetrics.length ? "Ninguna" : "Todas"),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ...availableMetrics.entries.map((entry) {
+                      final isSelected = selectedMetrics.contains(entry.key);
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              if (isSelected) {
+                                selectedMetrics.remove(entry.key);
+                              } else {
+                                selectedMetrics.add(entry.key);
+                              }
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: isSelected ? Colors.white : Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected ? Colors.purple.shade200 : Colors.grey.shade200,
+                                width: isSelected ? 2 : 1,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  isSelected ? Icons.check_circle : Icons.circle_outlined,
+                                  color: isSelected ? Colors.purple : Colors.grey,
+                                  size: 22,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  entry.value,
+                                  style: TextStyle(
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    color: isSelected ? Colors.black : Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+
+              // Bottom Action
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 55,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple.shade700,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                        elevation: 0,
+                      ),
+                      onPressed: selectedMetrics.isEmpty
+                          ? null
+                          : () async {
+                              Navigator.pop(context);
+                              await controller.exportToPdf(
+                                selectedMetrics: selectedMetrics,
+                                range: exportRange,
+                              );
+                            },
+                      child: const Text(
+                        "Generar PDF",
+                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

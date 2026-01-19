@@ -6,6 +6,8 @@ import '../../groups/data/helpers/challenge_helpers.dart';
 import 'package:uuid/uuid.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../groups/data/models/enums.dart';
+import '../../../core/services/pdf_generator_service.dart';
+import 'package:printing/printing.dart';
 
 
 enum AdminDateFilter { week, month, year, all, custom }
@@ -137,6 +139,32 @@ class AdminController extends ChangeNotifier {
 
     Stream<List<Challenge>> get globalChallengesStream => _repository.getGlobalChallenges();
 
+
+  /// Exportar estadísticas actuales a PDF
+  Future<void> exportToPdf({
+    required List<String> selectedMetrics,
+    required DateTimeRange range,
+  }) async {
+    _setLoading(true);
+    try {
+      final pdfData = await PdfGeneratorService.generateAdminReportPdf(
+        stats: _stats,
+        selectedMetrics: selectedMetrics,
+        range: range,
+      );
+
+      final fileName = 'Reporte_Admin_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      
+      await Printing.sharePdf(
+        bytes: pdfData,
+        filename: fileName,
+      );
+    } catch (e) {
+      print("Error exporting PDF: $e");
+    } finally {
+      _setLoading(false);
+    }
+  }
 
   void _setLoading(bool value) {
     _isLoading = value;
