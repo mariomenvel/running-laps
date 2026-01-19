@@ -52,7 +52,7 @@ class GPSService {
   final ValueNotifier<TrackingState> _trackingState =
       ValueNotifier(createInitialTrackingState());
 
-  Timer? _timer;
+  StreamSubscription<Position>? _positionSubscription;
 
   int _gpsStableSeconds = 0;
 
@@ -67,7 +67,11 @@ class GPSService {
       return false;
     }
 
-    final perm = await Geolocator.checkPermission();
+    LocationPermission perm = await Geolocator.checkPermission();
+    if (perm == LocationPermission.denied) {
+      perm = await Geolocator.requestPermission();
+    }
+    
     if (perm == LocationPermission.denied ||
         perm == LocationPermission.deniedForever) {
       status.value = GpsStatus.permissionDenied;
@@ -86,52 +90,55 @@ class GPSService {
     points.clear();
     _gpsStableSeconds = 0;
 
-    _timer?.cancel();
-    _timer = Timer.periodic(
-      const Duration(seconds: 1),
-      _onTick,
+    _positionSubscription?.cancel();
+    
+    // Configuración del stream
+    const locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.bestForNavigation,
+      distanceFilter: 2, // Mínimo 2 metros para disparar evento
     );
+
+    _positionSubscription = Geolocator.getPositionStream(
+      locationSettings: locationSettings,
+    ).listen((Position position) {
+      _handlePosition(position);
+    });
   }
 
   void pause() {
     if (status.value == GpsStatus.running) {
       status.value = GpsStatus.paused;
+      _positionSubscription?.pause();
     }
   }
 
   void resume() {
     if (status.value == GpsStatus.paused) {
       status.value = GpsStatus.running;
+      _positionSubscription?.resume();
     }
   }
 
   void dispose() {
-    _timer?.cancel();
+    _positionSubscription?.cancel();
     status.dispose();
     totalDistanceMeters.dispose();
     currentPace.dispose();
     cadence.dispose();
   }
 
-  /* ================= TICK ================= */
-
-  void _onTick(Timer timer) async {
+  /* ================= HANDLERS ================= */
+  
+  void _handlePosition(Position position) {
     if (status.value != GpsStatus.running) return;
 
     final now = DateTime.now();
-    Position? gps;
-
-    try {
-      gps = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.bestForNavigation,
-      );
-    } catch (_) {}
 
     final frame = SensorFrame(
-      latitude: gps?.latitude,
-      longitude: gps?.longitude,
-      gpsAccuracy: gps?.accuracy,
-      gpsSpeed: gps?.speed,
+      latitude: position.latitude,
+      longitude: position.longitude,
+      gpsAccuracy: position.accuracy,
+      gpsSpeed: position.speed,
       stepsDelta: _sensorService.consumeStepsDelta(),
       acceleration: 0.0,
       timestamp: now,

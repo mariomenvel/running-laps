@@ -765,6 +765,11 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
     if (result == true) {
       // Confirmed
       if (widget.gpsActivo) {
+        // Sincronizar distancia final desde el servicio
+        if (_gpsService != null) {
+          _distanciaGpsMetros = _gpsService!.totalDistanceMeters.value.toDouble();
+        }
+        
         // Small delay to allow the previous sheet to close smoothly
         await Future.delayed(const Duration(milliseconds: 200));
         if (mounted) {
