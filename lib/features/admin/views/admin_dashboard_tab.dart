@@ -24,38 +24,30 @@ class AdminDashboardTab extends StatelessWidget {
         final usuarios = stats['totalUsers'] ?? 0;
         final onboarded = stats['onboardedUsers'] ?? 0;
         final retos = stats['activeChallenges'] ?? 0;
-        final totalKm = (stats['totalKm'] ?? 0) / 1000.0; // Convert to Km
+        final retosGrupo = stats['groupChallengesCount'] ?? 0; // Nueva métrica
+        final totalKm = (stats['totalKm'] ?? 0) / 1000.0;
         final recentSample = stats['recentTrainingsSample'] as List<dynamic>? ?? [];
 
         // --- CÁLCULOS DE NEGOCIO (Client-side) ---
-        
-        // 1. Tasa de Conversión
         final double conversionRate = usuarios > 0 ? (onboarded / usuarios) * 100 : 0;
-
-        // 2. Día Preferido (Tirada Larga)
+        
         String preferredDay = "N/A";
-        if (recentSample.isNotEmpty) {
-          preferredDay = _calculatePreferredDay(recentSample);
-        }
+        if (recentSample.isNotEmpty) preferredDay = _calculatePreferredDay(recentSample);
 
-        // 3. Ritmo Medio (Comunidad)
         String avgPace = "N/A";
-        if (recentSample.isNotEmpty) {
-          avgPace = _calculateAvgPace(recentSample);
-        }
+        if (recentSample.isNotEmpty) avgPace = _calculateAvgPace(recentSample);
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // --- SECCIÓN 1: USUARIOS ---
               const Text(
-                "Estado de la Comunidad",
+                "Usuarios",
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              
-              // ROW 1: Métricas de Vanity (Usuarios, Retos)
               Row(
                 children: [
                   _buildStatCard(
@@ -66,24 +58,101 @@ class AdminDashboardTab extends StatelessWidget {
                     Colors.blue,
                   ),
                   const SizedBox(width: 16),
+                  Builder(
+                    builder: (context) {
+                      final total = usuarios > 0 ? usuarios : 1;
+                      final activeCount = stats['activeUsersCount'] as int? ?? 0;
+                      final activePct = (activeCount / total) * 100;
+                      
+                      return _buildStatCard(
+                        "Usuarios Activos (30d)",
+                        "${activePct.toStringAsFixed(0)}%",
+                        "$activeCount de $total usuarios han entrenado este mes",
+                        Icons.local_fire_department,
+                        Colors.deepOrange,
+                      );
+                    }
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // --- SECCIÓN 2: RETOS ---
+               const Text(
+                "Retos",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
                   _buildStatCard(
                     "Retos Globales",
                     retos.toString(),
-                    "Desafíos activos actualmente",
+                    "Desafíos globales activos",
                     Icons.public,
                     Colors.purple,
+                  ),
+                  const SizedBox(width: 16),
+                   _buildStatCard(
+                    "Retos de Grupo",
+                    retosGrupo.toString(),
+                    "Total retos en grupos",
+                    Icons.groups,
+                    Colors.indigo,
                   ),
                 ],
               ),
               const SizedBox(height: 16),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                   _buildStatCard(
+                    "Participación Global",
+                    "${(stats['globalParticipationRate'] as double? ?? 0).toStringAsFixed(1)}%",
+                    "% Activos en retos globales",
+                    Icons.public,
+                    Colors.purpleAccent,
+                  ),
+                  const SizedBox(width: 16),
+                   _buildStatCard(
+                    "Participación Grupo",
+                    "${(stats['groupParticipationRate'] as double? ?? 0).toStringAsFixed(1)}%",
+                    "% Activos en retos de grupo",
+                    Icons.groups,
+                    Colors.indigoAccent,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                   _buildStatCard(
+                    "Finalización Global",
+                    "${(stats['globalCompletionRate'] as double? ?? 0).toStringAsFixed(1)}%",
+                    "% Aceptados que se completan",
+                    Icons.flag,
+                    Colors.green,
+                  ),
+                  const SizedBox(width: 16),
+                   _buildStatCard(
+                    "Finalización Grupo",
+                    "${(stats['groupCompletionRate'] as double? ?? 0).toStringAsFixed(1)}%",
+                    "% Aceptados que se completan",
+                    Icons.sports_score,
+                    Colors.teal,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
 
+              // --- SECCIÓN 3: ENGAGEMENT & MÉTRICAS ---
               const Text(
-                "Analíticas de Negocio",
+                "Engagement & Métricas",
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
               
-              // Date Filters
+              // Filtros (solo afectan a engagement)
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -100,9 +169,16 @@ class AdminDashboardTab extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // ROW 2: Engagement (Km, Onboarding)
               Row(
                 children: [
+                   _buildStatCard(
+                    "Tasa de Consistencia",
+                    "${(stats['consistencyRate'] as double? ?? 0).toStringAsFixed(1)} /sem",
+                    "Entrenamientos promedio por usuario (activo) semanal",
+                    Icons.repeat,
+                    Colors.blueGrey,
+                  ),
+                  const SizedBox(width: 16),
                    _buildStatCard(
                     "Kilómetros Acumulados",
                     "${totalKm.toStringAsFixed(1)}k",
@@ -110,7 +186,11 @@ class AdminDashboardTab extends StatelessWidget {
                     Icons.directions_run,
                     Colors.orange,
                   ),
-                  const SizedBox(width: 16),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
                   _buildStatCard(
                     "Conversión Onboarding",
                     "${conversionRate.toStringAsFixed(1)}%",
@@ -118,13 +198,7 @@ class AdminDashboardTab extends StatelessWidget {
                     Icons.verified_user,
                      conversionRate > 50 ? Colors.green : Colors.amber,
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // ROW 3: Insights (Día preferido, Ritmo)
-              Row(
-                children: [
+                  const SizedBox(width: 16),
                   _buildStatCard(
                     "Día Favorito",
                     preferredDay,
@@ -132,7 +206,11 @@ class AdminDashboardTab extends StatelessWidget {
                     Icons.calendar_today,
                     Colors.teal,
                   ),
-                   const SizedBox(width: 16),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
                    _buildStatCard(
                     "Ritmo Medio",
                     avgPace,
@@ -140,6 +218,7 @@ class AdminDashboardTab extends StatelessWidget {
                     Icons.speed,
                     Colors.indigo,
                   ),
+                  const Spacer(),
                 ],
               ),
 

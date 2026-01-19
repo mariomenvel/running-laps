@@ -9,8 +9,8 @@ class AdminRepository {
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// Obtiene estadísticas globales avanzadas de negocio
-  /// [startDate]: Si no es null, filtra entrenamientos desde esa fecha.
-  Future<Map<String, dynamic>> getGlobalStats({DateTime? startDate}) async {
+  /// [startDate] y [endDate] definen el rango de filtro.
+  Future<Map<String, dynamic>> getGlobalStats({DateTime? startDate, DateTime? endDate}) async {
     int totalUsers = 0;
     int onboardedUsers = 0;
     int totalChallenges = 0;
@@ -31,14 +31,12 @@ class AdminRepository {
           .get();
       onboardedUsers = onboardedSnap.count ?? 0;
 
-      // 2. Retos Activos
+      // 2. Retos Activos (Totales absolutos siempre, o filtrados? Normalmente totales)
       final challengesSnap = await _firestore.collection('global_challenges').count().get();
       totalChallenges = challengesSnap.count ?? 0;
 
       try {
-        // Traemos "todos" (limitado a 1000 para seguridad) 
-        // Intentamos ordenar por fecha para asegurar que los 1000 sean los más recientes.
-        // Si no hay índice, fallará y saltará al catch, donde intentamos sin ordenar.
+        // Traemos "todos" (limitado a 1000)
         QuerySnapshot<Map<String, dynamic>> rawSnap;
         try {
           rawSnap = await _firestore.collectionGroup('trainings')
@@ -46,59 +44,226 @@ class AdminRepository {
               .limit(1000) 
               .get();
         } catch (orderedError) {
-          print("Aviso: No hay índice para ordenar trainings. Usando fallback no ordenado.");
           rawSnap = await _firestore.collectionGroup('trainings')
               .limit(1000) 
               .get();
         }
             
-        final allDocs = rawSnap.docs.map((d) => d.data()).toList();
+        final allDocs = rawSnap.docs.map((d) {
+          final data = d.data();
+          if (data['userId'] == null && d.reference.parent.parent != null) {
+            data['userId'] = d.reference.parent.parent!.id;
+          }
+          return data;
+        }).toList();
         
-        // Procesamiento en Cliente (Dart)
-        // a. Ordenar por fecha (descendente) - Por si el fallback no ordenado devolvió datos dispersos
+        // a. Ordenar por fecha (descendente)
         allDocs.sort((a, b) {
            final da = _parseFechaRobust(a['fecha']);
            final db = _parseFechaRobust(b['fecha']);
-           return db.compareTo(da); // Descending
+           return db.compareTo(da); 
         });
 
-        // b. Filtrar por Fecha (si aplica)
+        // b. Filtrar por RANGO DE FECHA
         List<Map<String, dynamic>> filteredDocs = allDocs;
         if (startDate != null) {
           filteredDocs = allDocs.where((d) {
              final f = d['fecha'];
              if (f == null) return false;
              final date = _parseFechaRobust(f);
-             return date.isAfter(startDate) || date.isAtSameMomentAs(startDate);
+             
+             bool afterStart = date.isAfter(startDate) || date.isAtSameMomentAs(startDate);
+             bool beforeEnd = true;
+             if (endDate != null) {
+               // EndDate suele ser el final del día, aseguramos comparación
+               beforeEnd = date.isBefore(endDate) || date.isAtSameMomentAs(endDate);
+             }
+             return afterStart && beforeEnd;
           }).toList();
+        } else if (endDate != null) {
+           // Solo end date (raro pero posible)
+           filteredDocs = allDocs.where((d) {
+             final f = d['fecha'];
+             final date = _parseFechaRobust(f);
+             return date.isBefore(endDate) || date.isAtSameMomentAs(endDate);
+           }).toList();
         }
 
-        // c. Calcular Totales
+        // c. Calcular Totales (Km)
         for (var doc in filteredDocs) {
           totalKm += (doc['distanciaTotalM'] as num? ?? 0).toInt();
         }
 
-        // d. Extraer Muestra (Top 50 del periodo filtrado)
+        // d. Extraer Muestra
         recentTrainingsSample = filteredDocs.take(50).toList();
 
+        // e. Calcular "Active Users" en el periodo
+        // Definición dinámica: Usuarios que tienen al menos 1 entreno en el periodo filtrado.
+        // Si el filtro es "Todo", son usuarios activos históricos (todos los que han entrenado alguna vez).
+        int activeUsersCount = 0;
+        Set<String> activeUserIds = {};
+        
+        if (filteredDocs.isNotEmpty) {
+           activeUserIds = filteredDocs.map((d) => d['userId'] as String).toSet();
+           activeUsersCount = activeUserIds.length;
+        }
+
+        // f. Calcular Consistencia (Entrenos / Usuario / Semana)
+        double consistencyRate = 0;
+        
+        // Filtramos (ya están filtrados por fecha, y si activeUserIds sale de filteredDocs, son todos)
+        // La lógica de "Activos" vs "Churned" se unifica: En el periodo seleccionado, 
+        // la consistencia es sobre los usuarios que participaron en ese periodo.
+        
+        if (filteredDocs.isNotEmpty) {
+           double weeks = 1; 
+           if (startDate != null) {
+              final end = endDate ?? DateTime.now();
+              final diff = end.difference(startDate);
+              weeks = diff.inDays / 7;
+              if (weeks < 1) weeks = 1;
+           } else {
+              if (filteredDocs.isNotEmpty) {
+                 final oldest = _parseFechaRobust(filteredDocs.last['fecha']); 
+                 final newest = _parseFechaRobust(filteredDocs.first['fecha']);
+                 final diff = newest.difference(oldest);
+                 weeks = diff.inDays / 7;
+                 if (weeks < 1) weeks = 1;
+              }
+           }
+           
+           if (activeUsersCount > 0) {
+              consistencyRate = (filteredDocs.length / activeUsersCount) / weeks;
+           }
+        }
+
+        // g. Calcular Métricas de Retos (Global vs Grupo)
+        // Filtrar participaciones también por fecha? 
+        // Los challenges tienen startAt/endAt. Participations joinedAt.
+        // Si filtro la dashboard "Semana Pasada", ¿quiero ver quién se unió a retos esa semana?
+        // SÍ, para mantener coherencia.
+        
+        Set<String> globalUniqueParticipants = {};
+        Set<String> groupUniqueParticipants = {};
+        int globalTotalEnrollments = 0;
+        int groupTotalEnrollments = 0;
+        int globalCompletedCount = 0;
+        int groupCompletedCount = 0;
+
+        try {
+           final partSnap = await _firestore.collectionGroup('participations')
+              .limit(500) 
+              .get();
+              
+           if (partSnap.docs.isNotEmpty) {
+             for (var doc in partSnap.docs) {
+               final data = doc.data();
+               final uid = data['userId'] as String? ?? doc.id; 
+               
+               // Solo consideramos si el usuario está activo en este periodo (ha entrenado)
+               // OJO: Puede haber usuarios que se unieron a retos pero no entrenaron. 
+               // Pero para coherencia "Active Users", mantenemos el filtro de activeUserIds.
+               if (activeUserIds.contains(uid)) {
+                 final joinedAt = _parseFechaRobust(data['joinedAt']);
+                 
+                 // Aplicar filtro de fecha a la participación
+                 bool inRange = true;
+                 if (startDate != null) {
+                   inRange = joinedAt.isAfter(startDate) || joinedAt.isAtSameMomentAs(startDate);
+                   if (inRange && endDate != null) {
+                     inRange = joinedAt.isBefore(endDate) || joinedAt.isAtSameMomentAs(endDate);
+                   }
+                 }
+                 
+                 if (inRange) {
+                   final path = doc.reference.path;
+                   final isGlobal = path.contains('global_challenges');
+                   final isGroup = path.contains('groups'); 
+                   final isCompleted = data['reachedGoalAt'] != null;
+
+                   if (isGlobal) {
+                     globalUniqueParticipants.add(uid);
+                     globalTotalEnrollments++;
+                     if (isCompleted) globalCompletedCount++;
+                   } else if (isGroup) {
+                     groupUniqueParticipants.add(uid);
+                     groupTotalEnrollments++;
+                     if (isCompleted) groupCompletedCount++;
+                   }
+                 }
+               }
+             }
+           }
+        } catch (e) {
+           print("Error calculando challenge metrics: $e");
+        }
+        
+        double globalParticipationRate = 0;
+        double groupParticipationRate = 0;
+        
+        if (activeUsersCount > 0) {
+           globalParticipationRate = (globalUniqueParticipants.length / activeUsersCount) * 100;
+           groupParticipationRate = (groupUniqueParticipants.length / activeUsersCount) * 100;
+        }
+
+        double globalCompletionRate = 0;
+        double groupCompletionRate = 0;
+
+        if (globalTotalEnrollments > 0) {
+          globalCompletionRate = (globalCompletedCount / globalTotalEnrollments) * 100;
+        }
+        
+        if (groupTotalEnrollments > 0) {
+          groupCompletionRate = (groupCompletedCount / groupTotalEnrollments) * 100;
+        }
+
+        // h. Contar Retos de Grupo (Totales)
+        int groupChallengesCount = 0;
+        try {
+           final groupChallSnap = await _firestore.collectionGroup('challenges').count().get();
+           groupChallengesCount = groupChallSnap.count ?? 0;
+        } catch (e) {
+           print("Error contando group challenges: $e");
+        }
+
+        return {
+          'totalUsers': totalUsers,
+          'onboardedUsers': onboardedUsers,
+          'activeChallenges': totalChallenges, 
+          'groupChallengesCount': groupChallengesCount, 
+          'totalKm': totalKm,
+          'recentTrainingsSample': recentTrainingsSample,
+          'consistencyRate': consistencyRate,
+          'activeUsersCount': activeUsersCount,
+          'globalParticipationRate': globalParticipationRate,
+          'groupParticipationRate': groupParticipationRate,
+          'globalCompletionRate': globalCompletionRate,
+          'groupCompletionRate': groupCompletionRate,
+          'systemHealth': 'Operational',
+        };
       } catch (e) {
          print("Error crítico leyendo trainings: $e");
-         // Si falla collectionGroup, intentar fallback iterando usuarios (muy lento, último recurso)
-         // O simplemente dejar en 0.
+         return {
+          'totalUsers': totalUsers,
+          'onboardedUsers': onboardedUsers,
+          'activeChallenges': totalChallenges,
+          'groupChallengesCount': 0,
+          'totalKm': totalKm,
+          'recentTrainingsSample': [],
+          'consistencyRate': 0.0,
+          'activeUsersCount': 0,
+          'globalParticipationRate': 0.0,
+          'groupParticipationRate': 0.0,
+          'globalCompletionRate': 0.0,
+          'groupCompletionRate': 0.0,
+          'systemHealth': 'Degraded',
+        };
       }
 
     } catch (e) {
       print("Error fetching advanced stats: $e");
+      return {};
     }
-
-    return {
-      'totalUsers': totalUsers,
-      'onboardedUsers': onboardedUsers,
-      'activeChallenges': totalChallenges,
-      'totalKm': totalKm,
-      'recentTrainingsSample': recentTrainingsSample,
-      'systemHealth': 'Operational',
-    };
   }
 
   /// Crea un reto global
