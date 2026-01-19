@@ -46,12 +46,16 @@ class AppHeader extends StatelessWidget {
                 // --- LOGO FIJO (SIEMPRE VA A HOME) ---
                 GestureDetector(
                   onTap: () {
-                    // Navegación Directa al Home (Limpia stack)
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (_) => const HomeView()),
-                      (route) => false,
-                    );
+                    if (onTapLeft != null) {
+                      onTapLeft!();
+                    } else {
+                      // Navegación Directa al Home (Limpia stack)
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const HomeView()),
+                        (route) => false,
+                      );
+                    }
                   },
                   child: const CircleAvatar(
                     radius: 24.0,

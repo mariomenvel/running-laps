@@ -50,6 +50,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with SingleTick
           children: [
             // 1. Header
             AppHeader(
+              onTapLeft: () => Navigator.pop(context),
               onTapRight: () {
                 Navigator.push(
                   context,
