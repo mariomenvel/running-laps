@@ -348,14 +348,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return AppHeader(
       showBottomDivider: false,
       onTapLeft: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (BuildContext context) {
-              return const HomeView();
-            },
-          ),
-        );
+        Navigator.pop(context);
       },
       onTapRight: () {
         Navigator.push(

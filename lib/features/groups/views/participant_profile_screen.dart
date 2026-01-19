@@ -93,12 +93,8 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
           children: [
             // 1. HEADER
             AppHeader(
-              onTapLeft: () {
-                 Navigator.pushAndRemoveUntil(
-                   context,
-                   MaterialPageRoute(builder: (_) => const HomeView()),
-                   (route) => false,
-                 );
+               onTapLeft: () {
+                 Navigator.pop(context);
               },
               onTapRight: () {
                  Navigator.push(
