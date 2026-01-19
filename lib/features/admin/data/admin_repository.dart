@@ -18,6 +18,11 @@ class AdminRepository {
     // Métricas de Entrenamientos
     int totalKm = 0;
     List<Map<String, dynamic>> recentTrainingsSample = [];
+    double avgWeeklyDistance = 0;
+    double avgDistancePerTraining = 0;
+    double avgRpe = 0;
+    double totalRpe = 0;
+    int rpeCount = 0;
 
     try {
       // 1. Usuarios y Onboarding
@@ -89,9 +94,14 @@ class AdminRepository {
            }).toList();
         }
 
-        // c. Calcular Totales (Km)
+        // c. Calcular Totales (Km) y RPE
         for (var doc in filteredDocs) {
           totalKm += (doc['distanciaTotalM'] as num? ?? 0).toInt();
+          final rpe = (doc['rpePromedio'] as num? ?? 0).toDouble();
+          if (rpe > 0) {
+            totalRpe += rpe;
+            rpeCount++;
+          }
         }
 
         // d. Extraer Muestra
@@ -135,6 +145,19 @@ class AdminRepository {
            if (activeUsersCount > 0) {
               consistencyRate = (filteredDocs.length / activeUsersCount) / weeks;
            }
+
+           // i. Calcular Distancia Media Semanal (km/semana por usuario activo)
+           if (activeUsersCount > 0 && weeks > 0) {
+             avgWeeklyDistance = (totalKm / 1000.0) / activeUsersCount / weeks;
+           }
+
+           // j. Calcular Distancia Media por Entrenamiento
+           if (filteredDocs.isNotEmpty) {
+             avgDistancePerTraining = (totalKm / 1000.0) / filteredDocs.length;
+           }
+
+           // k. Calcular RPE Medio
+           avgRpe = rpeCount > 0 ? totalRpe / rpeCount : 0.0;
         }
 
         // g. Calcular Métricas de Retos (Global vs Grupo)
@@ -235,6 +258,9 @@ class AdminRepository {
           'recentTrainingsSample': recentTrainingsSample,
           'consistencyRate': consistencyRate,
           'activeUsersCount': activeUsersCount,
+          'avgWeeklyDistance': avgWeeklyDistance,
+          'avgDistancePerTraining': avgDistancePerTraining,
+          'avgRpe': avgRpe,
           'globalParticipationRate': globalParticipationRate,
           'groupParticipationRate': groupParticipationRate,
           'globalCompletionRate': globalCompletionRate,
@@ -252,6 +278,9 @@ class AdminRepository {
           'recentTrainingsSample': [],
           'consistencyRate': 0.0,
           'activeUsersCount': 0,
+          'avgWeeklyDistance': 0.0,
+          'avgDistancePerTraining': 0.0,
+          'avgRpe': 0.0,
           'globalParticipationRate': 0.0,
           'groupParticipationRate': 0.0,
           'globalCompletionRate': 0.0,

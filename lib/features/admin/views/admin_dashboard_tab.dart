@@ -101,6 +101,19 @@ class AdminDashboardTab extends StatelessWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  _buildStatCard(
+                    "Conversión Onboarding",
+                    "${conversionRate.toStringAsFixed(1)}%",
+                    "% Usuarios que completan perfil",
+                    Icons.verified_user,
+                    conversionRate > 50 ? Colors.green : Colors.amber,
+                  ),
+                  const Spacer(),
+                ],
+              ),
               const SizedBox(height: 24),
 
               // --- SECCIÓN 2: RETOS ---
@@ -201,19 +214,19 @@ class AdminDashboardTab extends StatelessWidget {
               Row(
                 children: [
                   _buildStatCard(
-                    "Conversión Onboarding",
-                    "${conversionRate.toStringAsFixed(1)}%",
-                    "% Usuarios que completan perfil",
-                    Icons.verified_user,
-                     conversionRate > 50 ? Colors.green : Colors.amber,
-                  ),
-                  const SizedBox(width: 16),
-                  _buildStatCard(
                     "Día Favorito",
                     preferredDay,
                     "Día con más actividad (Muestra reciente)",
                     Icons.calendar_today,
                     Colors.teal,
+                  ),
+                  const SizedBox(width: 16),
+                  _buildStatCard(
+                    "Ritmo Medio",
+                    avgPace,
+                    "Velocidad promedio de la comunidad",
+                    Icons.speed,
+                    Colors.indigo,
                   ),
                 ],
               ),
@@ -221,11 +234,31 @@ class AdminDashboardTab extends StatelessWidget {
               Row(
                 children: [
                    _buildStatCard(
-                    "Ritmo Medio",
-                    avgPace,
-                    "Velocidad promedio de la comunidad",
-                    Icons.speed,
-                    Colors.indigo,
+                    "Distancia Media Semanal",
+                    "${(stats['avgWeeklyDistance'] as double? ?? 0).toStringAsFixed(1)} km",
+                    "Kilómetros promedio por semana (usuarios activos)",
+                    Icons.trending_up,
+                    Colors.cyan,
+                  ),
+                  const SizedBox(width: 16),
+                   _buildStatCard(
+                    "Distancia por Entreno",
+                    "${(stats['avgDistancePerTraining'] as double? ?? 0).toStringAsFixed(1)} km",
+                    "Kilómetros promedio por sesión",
+                    Icons.route,
+                    Colors.deepPurple,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                   _buildStatCard(
+                    "Esfuerzo Medio (RPE)",
+                    (stats['avgRpe'] as double? ?? 0).toStringAsFixed(1),
+                    "Nivel de intensidad percibida (Escala 1-10)",
+                    Icons.bolt,
+                    Colors.redAccent,
                   ),
                   const Spacer(),
                 ],
