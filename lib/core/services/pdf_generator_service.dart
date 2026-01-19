@@ -88,6 +88,16 @@ class PdfGeneratorService {
             ],
           ),
 
+          _buildMetricGroupIfAny(
+            'DATOS ESTRATÉGICOS DE NEGOCIO',
+            [
+              if (selectedMetrics.contains('peakHour')) _buildAdminStat('Hora Punta', '${stats['peakHour'] ?? "N/A"}', 'máxima activ.'),
+              if (selectedMetrics.contains('gpsAdoptionRate')) _buildAdminStat('Adopción GPS', '${(stats['gpsAdoptionRate'] as num? ?? 0).toStringAsFixed(1)}%', 'tracking real'),
+              if (selectedMetrics.contains('retentionRate')) _buildAdminStat('Fidelidad', '${(stats['retentionRate'] as num? ?? 0).toStringAsFixed(1)}%', 'retención'),
+              if (selectedMetrics.contains('momGrowthKm')) _buildAdminStat('Crecimiento', '${(stats['momGrowthKm'] as num? ?? 0) >= 0 ? "+" : ""}${(stats['momGrowthKm'] as num? ?? 0).toStringAsFixed(1)}%', 'vs prev. periodo'),
+            ],
+          ),
+
           pw.SizedBox(height: 10),
           _buildAdminDisclaimer(),
         ],

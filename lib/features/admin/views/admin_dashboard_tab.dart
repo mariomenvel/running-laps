@@ -195,7 +195,54 @@ class AdminDashboardTab extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-              // --- SECCIÓN 3: ENGAGEMENT & MÉTRICAS ---
+              // --- SECCIÓN 3: ANALÍTICAS DE NEGOCIO ---
+              const Text(
+                "Analíticas de Negocio",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                   _buildStatCard(
+                    "Hora Punta",
+                    stats['peakHour'] ?? "N/A",
+                    "Franja horaria con más actividad en la comunidad",
+                    Icons.access_time_filled,
+                    Colors.amber.shade700,
+                  ),
+                  const SizedBox(width: 16),
+                   _buildStatCard(
+                    "Adopción GPS",
+                    "${(stats['gpsAdoptionRate'] as num? ?? 0).toStringAsFixed(1)}%",
+                    "% de entrenamientos rastreados con GPS",
+                    Icons.gps_fixed,
+                    Colors.indigoAccent,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                   _buildStatCard(
+                    "Fidelidad Usuarios",
+                    "${(stats['retentionRate'] as num? ?? 0).toStringAsFixed(1)}%",
+                    "% de usuarios que repiten entre periodos (Sticky)",
+                    Icons.favorite,
+                    Colors.pinkAccent,
+                  ),
+                  const SizedBox(width: 16),
+                   _buildStatCard(
+                    "Crecimiento (Distancia)",
+                    "${(stats['momGrowthKm'] as num? ?? 0) >= 0 ? "+" : ""}${(stats['momGrowthKm'] as num? ?? 0).toStringAsFixed(1)}%",
+                    "Evolución de kilómetros vs periodo anterior",
+                    Icons.trending_up,
+                    (stats['momGrowthKm'] as num? ?? 0) >= 0 ? Colors.green : Colors.red,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // --- SECCIÓN 4: ENGAGEMENT & MÉTRICAS ---
               const Text(
                 "Engagement & Métricas",
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -492,6 +539,10 @@ class AdminDashboardTab extends StatelessWidget {
       'avgDistancePerTraining': 'Distancia Media / Entreno',
       'avgWeeklyDistance': 'Distancia Media Semanal',
       'avgRpe': 'Esfuerzo Percibido (RPE)',
+      'peakHour': 'Hora Punta de Actividad',
+      'gpsAdoptionRate': 'Tasa de Adopción GPS',
+      'retentionRate': 'Fidelidad (Retención)',
+      'momGrowthKm': 'Crecimiento de kilómetros',
     };
 
     List<String> selectedMetrics = availableMetrics.keys.toList();

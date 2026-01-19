@@ -249,6 +249,73 @@ class AdminRepository {
            print("Error contando group challenges: $e");
         }
 
+        // l. Peak Hours (Franjas Horarias)
+        String peakHourLabel = "N/A";
+        if (filteredDocs.isNotEmpty) {
+          Map<int, int> hourCounts = {};
+          for (var doc in filteredDocs) {
+            final date = _parseFechaRobust(doc['fecha']);
+            final hour = date.hour;
+            hourCounts[hour] = (hourCounts[hour] ?? 0) + 1;
+          }
+          int bestHour = hourCounts.entries.first.key;
+          int maxCount = hourCounts.entries.first.value;
+          hourCounts.forEach((h, c) {
+            if (c > maxCount) {
+              maxCount = c;
+              bestHour = h;
+            }
+          });
+          
+          if (bestHour >= 6 && bestHour < 12) peakHourLabel = "Mañana ($bestHour:00)";
+          else if (bestHour >= 12 && bestHour < 16) peakHourLabel = "Mediodía ($bestHour:00)";
+          else if (bestHour >= 16 && bestHour < 21) peakHourLabel = "Tarde ($bestHour:00)";
+          else peakHourLabel = "Noche/Madrugada ($bestHour:00)";
+        }
+
+        // m. GPS Adoption Rate
+        double gpsAdoptionRate = 0;
+        if (filteredDocs.isNotEmpty) {
+           int gpsCount = filteredDocs.where((d) => d['gps'] == true).length;
+           gpsAdoptionRate = (gpsCount / filteredDocs.length) * 100;
+        }
+
+        // n. Retention & MoM Growth (Comparando con periodo anterior)
+        double retentionRate = 0;
+        double momGrowthKm = 0;
+        
+        if (startDate != null && filteredDocs.isNotEmpty) {
+           final duration = (endDate ?? DateTime.now()).difference(startDate);
+           final prevStartDate = startDate.subtract(duration);
+           final prevEndDate = startDate;
+
+           final prevPeriodDocs = allDocs.where((d) {
+             final date = _parseFechaRobust(d['fecha']);
+             return (date.isAfter(prevStartDate) || date.isAtSameMomentAs(prevStartDate)) && 
+                    date.isBefore(prevEndDate);
+           }).toList();
+
+           // Growth
+           double prevKm = 0;
+           for (var doc in prevPeriodDocs) {
+             prevKm += (doc['distanciaTotalM'] as num? ?? 0) / 1000.0;
+           }
+           double currentKm = totalKm / 1000.0;
+           if (prevKm > 0) {
+             momGrowthKm = ((currentKm - prevKm) / prevKm) * 100;
+           } else {
+             momGrowthKm = 100; // 100% growth if no previous data
+           }
+
+           // Retention (Loyalty)
+           if (prevPeriodDocs.isNotEmpty) {
+             final prevUids = prevPeriodDocs.map((d) => d['userId'] as String).toSet();
+             final currentUids = filteredDocs.map((d) => d['userId'] as String).toSet();
+             final commonUids = currentUids.intersection(prevUids);
+             retentionRate = (commonUids.length / prevUids.length) * 100;
+           }
+        }
+
         return {
           'totalUsers': totalUsers,
           'onboardedUsers': onboardedUsers,
@@ -261,6 +328,10 @@ class AdminRepository {
           'avgWeeklyDistance': avgWeeklyDistance,
           'avgDistancePerTraining': avgDistancePerTraining,
           'avgRpe': avgRpe,
+          'peakHour': peakHourLabel,
+          'gpsAdoptionRate': gpsAdoptionRate,
+          'retentionRate': retentionRate,
+          'momGrowthKm': momGrowthKm,
           'globalParticipationRate': globalParticipationRate,
           'groupParticipationRate': groupParticipationRate,
           'globalCompletionRate': globalCompletionRate,
