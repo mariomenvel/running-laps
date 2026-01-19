@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'firebase_options.dart'; // Generado por flutterfire CLI
+import 'package:firebase_auth/firebase_auth.dart';
+import 'features/home/views/home_view.dart';
 import 'features/auth/views/auth_page.dart';
 
 void main() async {
@@ -30,7 +32,36 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.purple,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: const AuthPage(),
+      home: const AuthWrapper(),
+    );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        // Esperar a que Firebase determine el estado inicial
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+        
+        // Si hay datos, el usuario está logueado
+        if (snapshot.hasData) {
+          return const HomeView();
+        }
+        
+        // Si no hay datos, mostrar página de login
+        return const AuthPage();
+      },
     );
   }
 }

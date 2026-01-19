@@ -1,0 +1,256 @@
+[33mcommit 8f2f7a67b9e625f1e4e512732d94152bfdf3bbf9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mlogin[m[33m, [m[1;31morigin/login[m[33m)[m
+Author: Alvaro Perez <alvaroperezsalvador@gmail.com>
+Date:   Mon Jan 19 11:27:08 2026 +0100
+
+    Arreglo estadisticas
+
+[33mcommit 8fb8a68f15f4a57de74a3cc54b601377c04fefec[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Sun Jan 18 22:54:06 2026 +0100
+
+    Mejoras tracking
+
+[33mcommit a1dd12d86cdf189e88299bb8c1d32f5e1d29a3e6[m
+Author: Alvaro Perez <alvaroperezsalvador@gmail.com>
+Date:   Tue Jan 13 12:59:32 2026 +0100
+
+    Editor de avatar antiguo
+    
+    Restaurado el sistema de edicion de avatares antiguo debido a diversos fallos en el nuevo junto con una corrección de errores del sistema antiguo
+
+[33mcommit 6ecf8be6c26e56e9db0df3f9f66c03e2eeb7c2bf[m
+Author: Alvaro Perez <alvaroperezsalvador@gmail.com>
+Date:   Tue Jan 13 12:43:21 2026 +0100
+
+    Notificaciones al finalizar reto
+    
+    Implementado un listener que esta pendiente a cuando el usuario acaba una meta de un reto. Cuando la acaba manda una notificación al usuario
+
+[33mcommit ef084708ea80bab95373f54e7ce6b875ca128726[m
+Author: Mario.Mendoza <mariomenvel@gmail.com>
+Date:   Mon Jan 12 14:32:46 2026 +0100
+
+    Dashboard admin
+
+[33mcommit ca66dcdd50dc87b8b9757537572beada47dd593d[m
+Author: Mario.Mendoza <mariomenvel@gmail.com>
+Date:   Mon Jan 12 13:46:11 2026 +0100
+
+    Mejoras visuales y coherencia en headers
+
+[33mcommit 463f409a4c8e972cc6d30d2945ef9be12ca5b816[m
+Author: Mario.Mendoza <mariomenvel@gmail.com>
+Date:   Mon Jan 12 12:47:53 2026 +0100
+
+    panel de administrador, retos globales parte1, rol admin + empezar a solucionar avatar maker
+
+[33mcommit f20f088acd010c3616df67bddf734a52c3dc8388[m
+Author: Mario.Mendoza <mariomenvel@gmail.com>
+Date:   Fri Jan 9 13:03:59 2026 +0100
+
+    Refactotizacion
+
+[33mcommit 50c1e1e68fa7413f78a68511f7f0d5d678cc06e9[m
+Author: alvarops11 <alvaroperezsalvador@gmail.com>
+Date:   Thu Jan 8 19:55:10 2026 +0100
+
+    Seccion de grupos actualizada
+
+[33mcommit 1b427bcb52d6aeb30e44aa4d202866f1f98669e6[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Tue Dec 30 15:27:17 2025 +0100
+
+    añadir bocadillos explicativos
+
+[33mcommit 3a0f29ba3f86987e6102c930b8397794d8693b0a[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Tue Dec 30 14:53:56 2025 +0100
+
+    cambio de visualizacion ritmo a tiempo total en patrones
+
+[33mcommit 1d1ac964d5ddb2e4874dbecee178dec3b7a72a3e[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Tue Dec 30 14:42:17 2025 +0100
+
+    Mejoras responsive
+
+[33mcommit bf35efaa0ee49c138c878223ca123fea385d9f69[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Sun Dec 28 15:13:11 2025 +0100
+
+    analytics estable version1
+
+[33mcommit ed350a55c2d81464ce4e2aba7e44139735e6ff5a[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Sun Dec 28 15:08:02 2025 +0100
+
+    Mejoras analytics casi estable
+
+[33mcommit af2535554e508e09bc912618204c107a7de5c02c[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Sun Dec 28 14:38:25 2025 +0100
+
+    Resumen analytics hub estabilizado
+
+[33mcommit 5561902775f7ec2a87bc1132b25ae6799a432642[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Sun Dec 28 14:06:55 2025 +0100
+
+    Mejoras en el historial
+
+[33mcommit 201662d39621493a2b661bbdec862466d2d2a4cd[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Sun Dec 28 11:38:58 2025 +0100
+
+    grafica home
+
+[33mcommit 9e4f9a0693c9907fe20737adea223cefeddad5d1[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Sun Dec 28 00:08:32 2025 +0100
+
+    Analiticas y home
+
+[33mcommit 666116dbae582bfc3c9a6fa030cdcf9048729f05[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Sat Dec 27 17:19:24 2025 +0100
+
+    Mejoras esteticas, correccion bug etiquetas, gps v2?
+
+[33mcommit c65ab3f764580de7b1be624f13487c550ccf88da[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Tue Dec 23 20:59:22 2025 +0100
+
+    Primera version de las etiquetas
+
+[33mcommit 98bc992265f9550f1b74d413d580abbd4aa24cdb[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Tue Dec 23 19:55:00 2025 +0100
+
+    Ahora el apk tiene nombre y logo
+
+[33mcommit 7da0e12be59bc0763e6b6af6b38af8e705e12272[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Tue Dec 23 18:50:11 2025 +0100
+
+    Mejoras en el gps y mejoras visuales, asi como prevenir series de 0m
+
+[33mcommit 6f4ce51148fb882b061a1fbecc03371bee4fa03f[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Tue Dec 23 16:35:14 2025 +0100
+
+    Primera integracion de GPS
+
+[33mcommit 3b23d053b0d6da9519fd630cd722c5389615e7b2[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Mon Dec 15 23:46:13 2025 +0100
+
+    Descartar serie intraentreno + rediseño de series
+
+[33mcommit 4f33cb03f74e67a39e39e23d398985fe47148896[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Mon Dec 15 23:11:48 2025 +0100
+
+    Verificacion de correo, requisitos contraseña, bdescartar entreno
+
+[33mcommit 0a1cfdeb5efe15aba14322a895f01d4015d9d551[m
+Author: Alvaro Perez <alvaroperezsalvador@gmail.com>
+Date:   Mon Dec 15 13:05:53 2025 +0100
+
+    Gestion de contraseñas por correo
+    
+    Añadido olvidaste tu contraseña que funciona
+
+[33mcommit d4ff661886b204d1ec3737c4cdd77f827b48b155[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Sat Dec 13 12:50:19 2025 +0100
+
+    Mejoras en el historial de entrenamiento
+
+[33mcommit fa4422688db022a180d971797e28586cd5ae9bf8[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Sat Dec 13 12:33:16 2025 +0100
+
+    Integracion de avatares en el proyecto como feature
+
+[33mcommit cbc6a94ad290ea0a9afc84fc6558cbc69f834c40[m
+Author: Mario Mendoza Velarde <mariomenvel@gmail.com>
+Date:   Fri Dec 12 16:49:18 2025 +0100
+
+    Improve formatting and update project details in README
+    
+    Updated README.md to enhance formatting and clarity, added sections for main features, installation instructions, and project structure.
+
+[33mcommit da8527d1a9051d7b570a343a03aeebd6f1b9b78f[m
+Author: Alvaro Perez <alvaroperezsalvador@gmail.com>
+Date:   Fri Dec 12 11:54:10 2025 +0100
+
+    Registro de entrenos V2 + PDF
+
+[33mcommit 771be9cabba644b7f113b7d80baf91ae80e92f91[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Thu Dec 11 20:53:07 2025 +0100
+
+    Mas mejoras visuales
+
+[33mcommit 461f80d5fcdfe846b0f3c1a46f7fd98f4fd3d59b[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Thu Dec 11 20:27:49 2025 +0100
+
+    mejoras visuales
+
+[33mcommit f069e505296b9fa946c6768f4332b6871975660c[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Thu Dec 11 19:34:28 2025 +0100
+
+    mejoras en la edicion del avatar
+
+[33mcommit 4f1b67dbe43918c6e270329afde4ab7df876943c[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Thu Dec 11 17:25:56 2025 +0100
+
+    añadir volumen a la alarma y mejorar menu del perfil
+
+[33mcommit ac3fc19557b50204da14ebe0c1277fdb25b99ebd[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Thu Dec 11 16:29:39 2025 +0100
+
+    Hacerlo responsive
+
+[33mcommit 2344e71b0dddd80bf5461707286cce235c26b385[m
+Author: Mario Mendoza <mariomenvel@gmail.com>
+Date:   Thu Dec 11 15:49:07 2025 +0100
+
+    Solucion error de compilacion Android
+
+[33mcommit 284e31becd9a40181607dc5564d826ec02d87bce[m
+Author: Alvaro Perez <alvaroperezsalvador@gmail.com>
+Date:   Thu Dec 11 14:50:01 2025 +0100
+
+    Animacion y ajusyes
+
+[33mcommit 99581ea8269efc718a0ff4573a4b89f4c028a061[m
+Author: Alvaro Perez <alvaroperezsalvador@gmail.com>
+Date:   Thu Dec 11 14:26:23 2025 +0100
+
+    Rebrand y arreglo de headers
+
+[33mcommit 974c3bdc0a5518c03dd235e9de810e7f8cf4b250[m
+Author: Alvaro Perez <alvaroperezsalvador@gmail.com>
+Date:   Thu Dec 11 13:41:13 2025 +0100
+
+    Alarmas + Rebrand Training + Perfil de grupo
+
+[33mcommit dd07c14c6c553c7c3ec5b10bf19c9aca50a24603[m
+Author: Alvaro Perez <alvaroperezsalvador@gmail.com>
+Date:   Thu Dec 11 12:44:30 2025 +0100
+
+    Perfil de grupo
+
+[33mcommit 294b339f50e0c9c6e1f6f263252258cac691964e[m
+Author: Alvaro Perez <alvaroperezsalvador@gmail.com>
+Date:   Thu Dec 11 12:32:28 2025 +0100
+
+    Grupos V2
+
+[33mcommit d943f11a3ef5eb763aceae5774c6f97e308e428d[m
+Author: Alvaro Perez <alvarope
