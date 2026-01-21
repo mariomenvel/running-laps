@@ -497,53 +497,58 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                               color: Colors.black87,
                             ),
                           ),
-                          // 2. RITMO (Solo si GPS activo - Reactivo)
-                          if (widget.gpsActivo) ...[
-                            const SizedBox(height: 8), 
-                            ValueListenableBuilder<String>(
-                              valueListenable: _gpsService?.currentPace ?? ValueNotifier("--:-- /km"),
-                              builder: (context, pace, _) {
-                                return Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                                  textBaseline: TextBaseline.alphabetic,
-                                  children: [
-                                    Text(
-                                      pace.split(' ')[0], // Solo "mm:ss"
-                                      style: TextStyle(
-                                        fontSize: 56.0,
-                                        fontWeight: FontWeight.w200,
-                                        height: 1.0,
-                                        letterSpacing: -1.0,
-                                        fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
-                                        color: _getPaceColor(pace), // Color dinámico
+                            // 2. RITMO (Solo si GPS activo - Reactivo)
+                            if (widget.gpsActivo) ...[
+                              const SizedBox(height: 8), 
+                              ValueListenableBuilder<String>(
+                                valueListenable: _gpsService?.currentPace ?? ValueNotifier("--:-- /km"),
+                                builder: (context, pace, _) {
+                                  return Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                                    textBaseline: TextBaseline.alphabetic,
+                                    children: [
+                                      Text(
+                                        pace.split(' ')[0], // Solo "mm:ss"
+                                        style: TextStyle(
+                                          fontSize: 56.0,
+                                          fontWeight: FontWeight.w200,
+                                          height: 1.0,
+                                          letterSpacing: -1.0,
+                                          fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+                                          color: _getPaceColor(pace), // Color dinámico
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    const Text(
-                                      "min/km",
-                                      style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
-                                    )
-                                  ],
-                                );
-                              }
-                            ),
-                            // Cadencia (Opcional, pequeño abajo)
-                             const SizedBox(height: 4), 
-                             ValueListenableBuilder<int>(
-                               valueListenable: _gpsService?.cadence ?? ValueNotifier(0),
-                               builder: (context, spm, _) {
-                                 if (spm < 10) return const SizedBox.shrink();
-                                 return Text(
-                                   "$spm spm",
-                                   style: TextStyle(
-                                     fontSize: 14, 
-                                     color: Colors.grey.shade400,
-                                     fontWeight: FontWeight.w500
-                                   ),
-                                 );
-                               },
-                             ),
+                                      const SizedBox(width: 4),
+                                      // Columna derecha con unidad y Ritmo Medio
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            "min/km",
+                                            style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold),
+                                          ),
+                                          // Ritmo Medio
+                                          ValueListenableBuilder<String>(
+                                             valueListenable: _gpsService?.averagePace ?? ValueNotifier("--:--"),
+                                             builder: (context, avgPace, _) {
+                                                 if (avgPace.contains("--")) return const SizedBox.shrink();
+                                                 return Text(
+                                                   "AVG: ${avgPace.split(' ')[0]}",
+                                                   style: TextStyle(
+                                                      fontSize: 12, 
+                                                      color: Colors.grey.shade400,
+                                                      fontWeight: FontWeight.bold
+                                                   ),
+                                                 );
+                                             }
+                                          )
+                                        ],
+                                      )
+                                    ],
+                                  );
+                                }
+                              ),
                           ]
                        ],
                       ),

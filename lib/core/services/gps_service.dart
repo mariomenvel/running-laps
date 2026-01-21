@@ -41,6 +41,10 @@ class GPSService {
   final ValueNotifier<int> cadence =
       ValueNotifier(0);
 
+  // New: Average pace of the entire session
+  final ValueNotifier<String> averagePace =
+      ValueNotifier("--:-- /km");
+
   final List<GpsPoint> points = [];
 
   /* ================= INTERNAL ================= */
@@ -55,6 +59,13 @@ class GPSService {
   StreamSubscription<Position>? _positionSubscription;
 
   int _gpsStableSeconds = 0;
+  
+  // Buffer for smoothing instantaneous velocity (moving average)
+  final List<double> _velocityBuffer = [];
+  static const int _velocityBufferSize = 5; // ~5-10 seconds depending on update rate
+  DateTime? _sessionStartTime;
+  int _pausedDurationMs = 0;
+  DateTime? _pauseStartTime;
 
   /* ================= LIFECYCLE ================= */
 
@@ -88,7 +99,12 @@ class GPSService {
     _trackingState.value = createInitialTrackingState();
     _sensorService.resetSession();
     points.clear();
+    points.clear();
     _gpsStableSeconds = 0;
+    _velocityBuffer.clear();
+    _sessionStartTime = DateTime.now();
+    _pausedDurationMs = 0;
+    _pauseStartTime = null;
 
     _positionSubscription?.cancel();
     
@@ -109,6 +125,7 @@ class GPSService {
     if (status.value == GpsStatus.running) {
       status.value = GpsStatus.paused;
       _positionSubscription?.pause();
+      _pauseStartTime = DateTime.now();
     }
   }
 
@@ -116,6 +133,10 @@ class GPSService {
     if (status.value == GpsStatus.paused) {
       status.value = GpsStatus.running;
       _positionSubscription?.resume();
+      if (_pauseStartTime != null) {
+        _pausedDurationMs += DateTime.now().difference(_pauseStartTime!).inMilliseconds;
+        _pauseStartTime = null;
+      }
     }
   }
 
@@ -124,6 +145,7 @@ class GPSService {
     status.dispose();
     totalDistanceMeters.dispose();
     currentPace.dispose();
+    averagePace.dispose();
     cadence.dispose();
   }
 
@@ -154,11 +176,44 @@ class GPSService {
 
     cadence.value = _sensorService.cadence.value;
 
-    if (newState.velocity > 0) {
-      currentPace.value =
-          _formatPace(1000 / newState.velocity);
+    // 1. Calculate Smoothed Instantaneous Pace
+    // Push to buffer
+    if (newState.velocity > 0.5) { // Only add significant movement to buffer
+       _velocityBuffer.add(newState.velocity);
+       if (_velocityBuffer.length > _velocityBufferSize) {
+         _velocityBuffer.removeAt(0);
+       }
+    } else {
+       // If stopped, clear buffer faster or push zeros? 
+       // Pushing zero helps decelerate smoothly
+       _velocityBuffer.add(0.0);
+       if (_velocityBuffer.length > _velocityBufferSize) {
+         _velocityBuffer.removeAt(0);
+       }
+    }
+
+    // Compute average velocity from buffer
+    double smoothedVelocity = 0.0;
+    if (_velocityBuffer.isNotEmpty) {
+      smoothedVelocity = _velocityBuffer.reduce((a, b) => a + b) / _velocityBuffer.length;
+    }
+
+    if (smoothedVelocity > 0.5) { // Threshold to show pace (< 0.5m/s is stationary)
+      currentPace.value = _formatPace(1000 / smoothedVelocity);
     } else {
       currentPace.value = "--:-- /km";
+    }
+
+    // 2. Calculate Average Pace (Session total)
+    if (_sessionStartTime != null) {
+       final sessionDurationMs = now.difference(_sessionStartTime!).inMilliseconds - _pausedDurationMs;
+       if (sessionDurationMs > 5000 && newState.distanceTotal > 10) { // Valid data > 5s and > 10m
+          final double totalSeconds = sessionDurationMs / 1000.0;
+          final double avgVel = newState.distanceTotal / totalSeconds;
+          if (avgVel > 0.1) {
+             averagePace.value = _formatPace(1000 / avgVel);
+          }
+       }
     }
 
     if (newState.latitude != null &&
