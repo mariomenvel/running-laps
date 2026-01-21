@@ -587,7 +587,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                     builder: (context, snapshot) {
                       // 1. LOADING
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const SizedBox(
+                        return SizedBox(
                           height: 40, 
                           child: Center(
                             child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))

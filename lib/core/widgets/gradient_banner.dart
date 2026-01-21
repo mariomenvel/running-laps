@@ -5,6 +5,7 @@ import 'package:running_laps/config/app_theme.dart';
 /// Ofrece una estética premium con animaciones sutiles.
 class GradientBanner extends StatefulWidget {
   final String title;
+  final Widget? titleWidget;
   final String? subtitle;
   final IconData? icon;
   final List<Color>? gradientColors;
@@ -12,10 +13,12 @@ class GradientBanner extends StatefulWidget {
   final EdgeInsets? padding;
   final Widget? trailing;
   final bool animate;
+  final VoidCallback? onTapIcon;
 
   const GradientBanner({
     Key? key,
     required this.title,
+    this.titleWidget,
     this.subtitle,
     this.icon,
     this.gradientColors,
@@ -23,6 +26,7 @@ class GradientBanner extends StatefulWidget {
     this.padding,
     this.trailing,
     this.animate = true,
+    this.onTapIcon,
   }) : super(key: key);
 
   @override
@@ -104,16 +108,19 @@ class _GradientBannerState extends State<GradientBanner>
           child: Row(
             children: [
               if (widget.icon != null) ...[
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    widget.icon,
-                    color: Colors.white,
-                    size: 28,
+                GestureDetector(
+                  onTap: widget.onTapIcon,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      widget.icon,
+                      color: Colors.white,
+                      size: 28,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -123,7 +130,7 @@ class _GradientBannerState extends State<GradientBanner>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
+                    widget.titleWidget ?? Text(
                       widget.title,
                       style: const TextStyle(
                         color: Colors.white,

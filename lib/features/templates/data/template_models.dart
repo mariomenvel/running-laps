@@ -106,6 +106,7 @@ class TrainingTemplate {
   final List<TemplateBlock> blocks;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final int colorValue;
 
   TrainingTemplate({
     required this.id,
@@ -113,6 +114,7 @@ class TrainingTemplate {
     required this.blocks,
     required this.createdAt,
     required this.updatedAt,
+    this.colorValue = 0xFF9C27B0, // Default Tema.brandPurple
   });
 
   TrainingTemplate copyWith({
@@ -121,6 +123,7 @@ class TrainingTemplate {
     List<TemplateBlock>? blocks,
     DateTime? createdAt,
     DateTime? updatedAt,
+    int? colorValue,
   }) {
     return TrainingTemplate(
       id: id ?? this.id,
@@ -128,6 +131,7 @@ class TrainingTemplate {
       blocks: blocks ?? this.blocks,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      colorValue: colorValue ?? this.colorValue,
     );
   }
 
@@ -137,6 +141,7 @@ class TrainingTemplate {
       'blocks': blocks.map((b) => b.toMap()).toList(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'colorValue': colorValue,
     };
   }
 
@@ -150,6 +155,7 @@ class TrainingTemplate {
           [],
       createdAt: DateTime.tryParse(map['createdAt'] ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse(map['updatedAt'] ?? '') ?? DateTime.now(),
+      colorValue: map['colorValue'] as int? ?? 0xFF9C27B0,
     );
   }
 }

@@ -4,7 +4,9 @@ import 'package:running_laps/core/widgets/app_header.dart'; // Using AppHeader i
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import '../data/template_models.dart';
 import '../data/templates_repository.dart';
+import 'package:running_laps/core/widgets/gradient_banner.dart';
 import 'template_editor_view.dart';
+import 'package:running_laps/features/profile/views/profile_menu_screen.dart';
 
 class TemplatesListView extends StatefulWidget {
   final bool isSelectionMode;
@@ -32,22 +34,112 @@ class _TemplatesListViewState extends State<TemplatesListView> {
 
 
   Future<void> _deleteTemplate(TrainingTemplate template) async {
-    final confirm = await showDialog<bool>(
+    final confirm = await showModalBottomSheet<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar plantilla'),
-        content: Text('¿Seguro que quieres eliminar "${template.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(32),
+            topRight: Radius.circular(32),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Eliminar'),
-          ),
-        ],
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.delete_sweep_rounded, size: 40, color: Colors.red.shade400),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              '¿Eliminar plantilla?',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: Colors.grey.shade900,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Vas a eliminar "${template.name}". Esta acción no se puede deshacer.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey.shade600,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: Text(
+                      'Cancelar',
+                      style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.red.shade400, Colors.red.shade700],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.red.shade400.withOpacity(0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: Colors.white,
+                        shadowColor: Colors.transparent,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: const Text(
+                        'Eliminar',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
 
@@ -94,167 +186,175 @@ class _TemplatesListViewState extends State<TemplatesListView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F3F7),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(70),
+      body: SafeArea(
+        child: Column(
+          children: [
+            AppHeader(
+              onTapLeft: () => Navigator.of(context).pop(),
+              onTapRight: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (c) => const ProfileMenuView()),
+                );
+              },
+            ),
+            GradientBanner(
+              title: 'Mis Plantillas',
+              subtitle: 'Sesiones personalizadas',
+              icon: Icons.description_rounded,
+              gradientColors: [Colors.teal.shade400, Colors.teal.shade700],
+              height: 85,
+            ),
+            Expanded(
+              child: FutureBuilder<List<TrainingTemplate>>(
+                future: _templatesFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator(color: Tema.brandPurple));
+                  }
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.error_outline_rounded, size: 64, color: Colors.red.shade300),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Error al cargar plantillas',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey.shade800),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '${snapshot.error}',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                            ),
+                            const SizedBox(height: 24),
+                            ElevatedButton(
+                              onPressed: _refreshTemplates,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Tema.brandPurple,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              child: const Text("Reintentar"),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  final templates = snapshot.data ?? [];
+
+                  if (templates.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(40),
+                            decoration: BoxDecoration(
+                              color: Tema.brandPurple.withOpacity(0.05),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.description_outlined, size: 80, color: Tema.brandPurple.withOpacity(0.4)),
+                          ),
+                          const SizedBox(height: 32),
+                          const Text(
+                            'No tienes plantillas guardadas',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Crea tu primera plantilla para entrenar\nde forma estructurada.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.grey.shade600,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                    itemCount: templates.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 16),
+                    itemBuilder: (context, index) {
+                      final template = templates[index];
+                      return _buildTemplateCard(template);
+                    },
+                  );
+                },
+              ),
+            ),
+            if (!widget.isSelectionMode) _buildBottomAction(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomAction() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: GestureDetector(
+        onTap: () => _navigateToEditor(),
         child: Container(
+          height: 60,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.white, const Color(0xFFFAF9FB)],
+              colors: [Colors.green.shade400, Colors.green.shade600],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
+            borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Tema.brandPurple.withOpacity(0.08),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+                color: Colors.green.shade600.withOpacity(0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
-          child: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            centerTitle: true,
-            leading: IconButton(
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  shape: BoxShape.circle,
+          child: const Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.add_rounded, color: Colors.white, size: 32),
+                SizedBox(width: 8),
+                Text(
+                  "NUEVA PLANTILLA",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                    letterSpacing: 1.1,
+                  ),
                 ),
-                child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black87, size: 18),
-              ),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            title: const Text(
-              'Mis Plantillas',
-              style: TextStyle(
-                color: Colors.black87, 
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
+              ],
             ),
           ),
         ),
-      ),
-      floatingActionButton: widget.isSelectionMode 
-          ? null 
-          : Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: const LinearGradient(
-                  colors: [Tema.brandPurple, Color(0xFF6A1B9A)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Tema.brandPurple.withOpacity(0.4),
-                    blurRadius: 16,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: FloatingActionButton.extended(
-                onPressed: () => _navigateToEditor(),
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                icon: const Icon(Icons.add_rounded, size: 24),
-                label: const Text(
-                  'Nueva Plantilla',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                ),
-              ),
-            ),
-      body: FutureBuilder<List<TrainingTemplate>>(
-        future: _templatesFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: Tema.brandPurple));
-          }
-          if (snapshot.hasError) {
-             return Center(
-               child: Padding(
-                 padding: const EdgeInsets.all(24.0),
-                 child: Column(
-                   mainAxisSize: MainAxisSize.min,
-                   children: [
-                     Icon(Icons.error_outline_rounded, size: 64, color: Colors.red.shade300),
-                     const SizedBox(height: 16),
-                     Text(
-                       'Error al cargar plantillas',
-                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey.shade800),
-                     ),
-                     const SizedBox(height: 8),
-                     Text(
-                       '${snapshot.error}',
-                       textAlign: TextAlign.center,
-                       style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-                     ),
-                     const SizedBox(height: 24),
-                     ElevatedButton(
-                       onPressed: _refreshTemplates,
-                       style: ElevatedButton.styleFrom(
-                         backgroundColor: Tema.brandPurple,
-                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                       ),
-                       child: const Text("Reintentar"),
-                     ),
-                   ],
-                 ),
-               ),
-             );
-          }
-
-          final templates = snapshot.data ?? [];
-
-          if (templates.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                   Container(
-                     padding: const EdgeInsets.all(40),
-                     decoration: BoxDecoration(
-                       color: Tema.brandPurple.withOpacity(0.05),
-                       shape: BoxShape.circle,
-                     ),
-                     child: Icon(Icons.description_outlined, size: 80, color: Tema.brandPurple.withOpacity(0.4)),
-                   ),
-                   const SizedBox(height: 32),
-                   const Text(
-                     'No tienes plantillas guardadas',
-                     style: TextStyle(
-                       fontSize: 20,
-                       fontWeight: FontWeight.bold,
-                       color: Colors.black87,
-                     ),
-                   ),
-                   const SizedBox(height: 12),
-                   Text(
-                     'Crea tu primera plantilla para entrenar\nde forma estructurada.',
-                     textAlign: TextAlign.center,
-                     style: TextStyle(
-                       fontSize: 15,
-                       color: Colors.grey.shade600,
-                       height: 1.4,
-                     ),
-                   ),
-                ],
-              ),
-            );
-          }
-
-          return ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-            itemCount: templates.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 16),
-            itemBuilder: (context, index) {
-              final template = templates[index];
-              return _buildTemplateCard(template);
-            },
-          );
-        },
       ),
     );
   }
@@ -265,6 +365,8 @@ class _TemplatesListViewState extends State<TemplatesListView> {
     for (var b in template.blocks) {
       if (b.type == TemplateBlockType.distance) totalDist += b.value;
     }
+
+    final templateColor = Color(template.colorValue);
 
     return Container(
       decoration: BoxDecoration(
@@ -278,7 +380,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
           ),
         ],
         border: widget.isSelectionMode 
-            ? Border.all(color: Tema.brandPurple.withOpacity(0.4), width: 1.5) 
+            ? Border.all(color: templateColor.withOpacity(0.4), width: 1.5) 
             : Border.all(color: Colors.white, width: 0),
       ),
       child: ClipRRect(
@@ -301,15 +403,15 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [Tema.brandPurple.withOpacity(0.2), Tema.brandPurple.withOpacity(0.1)],
+                        colors: [templateColor.withOpacity(0.2), templateColor.withOpacity(0.1)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(
-                      widget.isSelectionMode ? Icons.check_circle_rounded : Icons.fitness_center_rounded, 
-                      color: Tema.brandPurple,
+                      widget.isSelectionMode ? Icons.check_circle_rounded : Icons.description_rounded, 
+                      color: templateColor,
                       size: 24,
                     ),
                   ),

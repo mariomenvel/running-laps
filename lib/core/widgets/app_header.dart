@@ -7,12 +7,18 @@ class AppHeader extends StatelessWidget {
   final VoidCallback? onTapLeft;
   final VoidCallback? onTapRight;
   final bool showBottomDivider;
+  final Widget? title;
+  final Widget? leading;
+  final Widget? trailing;
 
   const AppHeader({
     Key? key,
-    this.onTapLeft, // Kept for backwards compatibility if needed, but Logo ignores it now
+    this.onTapLeft,
     this.onTapRight,
     this.showBottomDivider = true,
+    this.title,
+    this.leading,
+    this.trailing,
   }) : super(key: key);
 
   static const Color _bgGradientColor = Color(0xFFF9F5FB);
@@ -43,8 +49,8 @@ class AppHeader extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                // --- LOGO FIJO (SIEMPRE VA A HOME) ---
-                GestureDetector(
+                // --- LOGO / LEADING ---
+                leading ?? GestureDetector(
                   onTap: () {
                     if (onTapLeft != null) {
                       onTapLeft!();
@@ -64,8 +70,16 @@ class AppHeader extends StatelessWidget {
                   ),
                 ),
 
-                // --- AVATAR FIJO ---
-                GestureDetector(
+                // --- TITLE ---
+                if (title != null) Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Center(child: title!),
+                  ),
+                ) else const Spacer(),
+
+                // --- AVATAR / TRAILING ---
+                trailing ?? GestureDetector(
                   onTap: onTapRight,
                   child: AvatarHelper.construirImagenPerfil(radius: 24.0),
                 ),
