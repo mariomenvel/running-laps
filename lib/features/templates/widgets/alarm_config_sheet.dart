@@ -71,83 +71,97 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 600,
+      height: MediaQuery.of(context).size.height * 0.75,
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 20,
+            spreadRadius: 5,
+          ),
+        ],
       ),
       child: Column(
         children: [
           // Handle
-           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
             child: Container(
-              width: 40,
-              height: 4,
+              width: 48,
+              height: 5,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2.5),
               ),
             ),
           ),
+          
           // Header
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            padding: const EdgeInsets.fromLTRB(24, 0, 16, 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
                   "Configurar Alarma",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
                 TextButton(
                   onPressed: _save,
-                  child: const Text("Listo", style: TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold)),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Tema.brandPurple,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text(
+                    "ACEPTAR",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
                 )
               ],
             ),
           ),
-          const Divider(),
+          const Divider(height: 1),
+          
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
               child: Column(
                 children: [
-                   SizedBox(
+                   Container(
                       width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      padding: const EdgeInsets.all(4),
                       child: CupertinoSlidingSegmentedControl<String>(
                         groupValue: _mode,
-                        thumbColor: Tema.brandPurple,
-                        backgroundColor: Colors.grey.shade100,
+                        thumbColor: Colors.white,
+                        backgroundColor: Colors.transparent,
                         children: {
-                          'time': Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            child: Text(
-                              'Por Tiempo',
-                              style: TextStyle(
-                                color: _mode == 'time' ? Colors.white : Colors.black87,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          'pace': Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            child: Text(
-                              'Por Ritmo',
-                              style: TextStyle(
-                                color: _mode == 'pace' ? Colors.white : Colors.black87,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
+                          'time': _buildSegmentItem('Por Tiempo', _mode == 'time'),
+                          'pace': _buildSegmentItem('Por Ritmo', _mode == 'pace'),
                         },
                         onValueChanged: (val) {
                           if (val != null) setState(() => _mode = val);
                         },
                       ),
                     ),
-                    const SizedBox(height: 30),
-                    if (_mode == 'time') _buildTimeConfig() else _buildPaceConfig(),
+                    const SizedBox(height: 32),
+                    
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: _mode == 'time' 
+                          ? _buildTimeConfig(key: const ValueKey('time')) 
+                          : _buildPaceConfig(key: const ValueKey('pace')),
+                    ),
                 ],
               ),
             ),
@@ -157,59 +171,99 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
     );
   }
 
-  Widget _buildTimeConfig() {
-    return SizedBox(
-      height: 160,
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildCupertinoWheel(
-              label: 'min',
-              itemCount: 60,
-              initialItem: _timeMin,
-              onChanged: (val) => setState(() => _timeMin = val),
-              textBuilder: (i) => i.toString(),
-            ),
-          ),
-          Expanded(
-            child: _buildCupertinoWheel(
-              label: 'sec',
-              itemCount: 120,
-              initialItem: (_timeSec * 2).round(),
-              onChanged: (val) => setState(() => _timeSec = val * 0.5),
-              textBuilder: (i) => (i * 0.5).toStringAsFixed(1),
-            ),
-          ),
-        ],
+  Widget _buildSegmentItem(String text, bool isSelected) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: isSelected ? Tema.brandPurple : Colors.black54,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+          fontSize: 14,
+        ),
       ),
     );
   }
 
-  Widget _buildPaceConfig() {
+  Widget _buildTimeConfig({Key? key}) {
+    return Column(
+      key: key,
+      children: [
+        const Text(
+          "Elige la frecuencia del aviso",
+          style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 24),
+        Container(
+          height: 180,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF9FAFB),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.grey.shade100),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildCupertinoWheel(
+                  label: 'MINUTOS',
+                  itemCount: 60,
+                  initialItem: _timeMin,
+                  onChanged: (val) => setState(() => _timeMin = val),
+                  textBuilder: (i) => i.toString(),
+                ),
+              ),
+              VerticalDivider(width: 1, indent: 40, endIndent: 40, color: Colors.grey.shade300),
+              Expanded(
+                child: _buildCupertinoWheel(
+                  label: 'SEGUNDOS',
+                  itemCount: 120,
+                  initialItem: (_timeSec * 2).round(),
+                  onChanged: (val) => setState(() => _timeSec = val * 0.5),
+                  textBuilder: (i) => (i * 0.5).toStringAsFixed(1),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPaceConfig({Key? key}) {
     final int paceMinIndex = (_paceMin - 2).clamp(0, 28);
     final int paceSecIndex = _paceSec ~/ 5;
     final int segmentIndex = _segmentDistances.indexOf(_segmentDistance);
     
     return Column(
+      key: key,
       children: [
-        const Text("Marca tu ritmo objetivo", style: TextStyle(fontSize: 14, color: Colors.grey)),
-        const SizedBox(height: 12),
-         SizedBox(
-          height: 140,
+        const Text(
+          "Marca tu ritmo objetivo",
+          style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 20),
+        Container(
+          height: 180,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF9FAFB),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.grey.shade100),
+          ),
           child: Row(
             children: [
               Expanded(
                 child: _buildCupertinoWheel(
-                  label: 'min',
+                  label: 'MINUTOS',
                   itemCount: 30, 
                   initialItem: paceMinIndex,
                   onChanged: (val) => setState(() => _paceMin = val + 2),
                   textBuilder: (i) => (i + 2).toString(),
                 ),
               ),
+              VerticalDivider(width: 1, indent: 40, endIndent: 40, color: Colors.grey.shade300),
               Expanded(
                 child: _buildCupertinoWheel(
-                  label: 'sec',
+                  label: 'SEGUNDOS',
                   itemCount: 12,
                   initialItem: paceSecIndex,
                   onChanged: (val) => setState(() => _paceSec = val * 5),
@@ -219,17 +273,25 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
             ],
           ),
         ),
-        const SizedBox(height: 20),
-        const Text("Sonar cada:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 140,
+        const SizedBox(height: 32),
+        const Text(
+          "¿Cada cuántos metros debe sonar?",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          height: 160,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF9FAFB),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.grey.shade100),
+          ),
           child: _buildCupertinoWheel(
-            label: 'metros',
+            label: 'METROS',
             itemCount: _segmentDistances.length,
             initialItem: segmentIndex == -1 ? 3 : segmentIndex,
             onChanged: (val) => setState(() => _segmentDistance = _segmentDistances[val]),
-            textBuilder: (i) => _segmentDistances[i].toString(),
+            textBuilder: (i) => "${_segmentDistances[i]}m",
           ),
         ),
       ],
@@ -244,27 +306,41 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
     required String Function(int) textBuilder,
   }) {
      return Column(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        const SizedBox(height: 12),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: Colors.grey.shade500,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+          ),
+        ),
         Expanded(
           child: CupertinoPicker(
-            magnification: 1.22,
-            squeeze: 1.2,
+            magnification: 1.1,
+            squeeze: 1.0,
             useMagnifier: true,
-            itemExtent: 32,
+            itemExtent: 36,
             onSelectedItemChanged: onChanged,
             scrollController: FixedExtentScrollController(initialItem: initialItem),
             children: List<Widget>.generate(itemCount, (int index) {
               return Center(
                 child: Text(
                   textBuilder(index),
-                  style: const TextStyle(fontSize: 20),
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
                 ),
               );
             }),
           ),
         ),
+        const SizedBox(height: 12),
       ],
     );
   }

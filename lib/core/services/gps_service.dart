@@ -18,11 +18,32 @@ enum GpsStatus {
 class GpsPoint {
   final double latitude;
   final double longitude;
+  final double altitude; // New: Altitude support
+  final DateTime timestamp; // New: Timestamp for analysis
 
-  GpsPoint(this.latitude, this.longitude);
+  GpsPoint({
+    required this.latitude,
+    required this.longitude,
+    this.altitude = 0.0,
+    required this.timestamp,
+  });
 
   Map<String, dynamic> toMap() {
-    return {'latitude': latitude, 'longitude': longitude};
+    return {
+      'latitude': latitude,
+      'longitude': longitude,
+      'altitude': altitude,
+      'timestamp': timestamp.toIso8601String(),
+    };
+  }
+  
+  factory GpsPoint.fromMap(Map<String, dynamic> map) {
+    return GpsPoint(
+      latitude: map['latitude'] as double,
+      longitude: map['longitude'] as double,
+      altitude: (map['altitude'] as num?)?.toDouble() ?? 0.0,
+      timestamp: DateTime.tryParse(map['timestamp'] ?? '') ?? DateTime.now(),
+    );
   }
 }
 
@@ -159,6 +180,7 @@ class GPSService {
     final frame = SensorFrame(
       latitude: position.latitude,
       longitude: position.longitude,
+      altitude: position.altitude, // Capture altitude
       gpsAccuracy: position.accuracy,
       gpsSpeed: position.speed,
       stepsDelta: _sensorService.consumeStepsDelta(),
@@ -219,7 +241,12 @@ class GPSService {
     if (newState.latitude != null &&
         newState.longitude != null) {
       points.add(
-        GpsPoint(newState.latitude!, newState.longitude!),
+        GpsPoint(
+          latitude: newState.latitude!, 
+          longitude: newState.longitude!,
+          altitude: frame.altitude ?? 0.0, // Store altitude
+          timestamp: now,
+        ),
       );
     }
   }

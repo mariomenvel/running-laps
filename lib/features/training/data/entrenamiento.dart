@@ -1,5 +1,7 @@
 import 'serie.dart';
 import '../../templates/data/template_models.dart';
+import '../../../../core/services/gps_service.dart';
+import '../services/training_analysis_service.dart';
 
 class Entrenamiento {
   final String? id;  // ID del documento en Firestore (opcional para compatibilidad)
@@ -8,6 +10,7 @@ class Entrenamiento {
   final bool gps;
   final List<Serie> series;
   final List<String>? tags; // Etiquetas del entrenamiento
+  final TemplateSource? source;
   
   // Campos para analytics
   final String? weekKey;  // Semana ISO: "2025-W52"
@@ -15,8 +18,9 @@ class Entrenamiento {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   
-  // Nuevo campo para origen de la sesión (template)
-  final TemplateSource? source;
+  // Campos para persistencia de GPS y Análisis
+  final List<GpsPoint> trackPoints;
+  final AnalysisResult? analysis;
 
   Entrenamiento({
     this.id,
@@ -30,6 +34,8 @@ class Entrenamiento {
     this.createdAt,
     this.updatedAt,
     this.source,
+    this.trackPoints = const [],
+    this.analysis,
   });
 
   Entrenamiento copyWith({
@@ -44,6 +50,8 @@ class Entrenamiento {
     DateTime? createdAt,
     DateTime? updatedAt,
     TemplateSource? source,
+    List<GpsPoint>? trackPoints,
+    AnalysisResult? analysis,
   }) {
     return Entrenamiento(
       id: id ?? this.id,
@@ -57,6 +65,8 @@ class Entrenamiento {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       source: source ?? this.source,
+      trackPoints: trackPoints ?? this.trackPoints,
+      analysis: analysis ?? this.analysis,
     );
   }
 
@@ -150,6 +160,14 @@ class Entrenamiento {
       base['source'] = source!.toMap();
     }
 
+    // Guardar trackPoints y analysis
+    if (trackPoints.isNotEmpty) {
+      base['trackPoints'] = trackPoints.map((p) => p.toMap()).toList();
+    }
+    if (analysis != null) {
+      base['analysis'] = analysis!.toMap();
+    }
+
     return base;
   }
 
@@ -191,6 +209,19 @@ class Entrenamiento {
       updatedAtValue = _parseFechaFlexible(map['updatedAt']);
     }
 
+    // Parse trackPoints
+    List<GpsPoint> loadedPoints = [];
+    if (map['trackPoints'] != null) {
+      final tpList = map['trackPoints'] as List;
+      loadedPoints = tpList.map((e) => GpsPoint.fromMap(e)).toList();
+    }
+
+    // Parse analysis
+    AnalysisResult? loadedAnalysis;
+    if (map['analysis'] != null) {
+      loadedAnalysis = AnalysisResult.fromMap(map['analysis']);
+    }
+
     return Entrenamiento(
       id: id,  // Asignar el ID del documento
       titulo: map['titulo'] as String,
@@ -203,6 +234,8 @@ class Entrenamiento {
       createdAt: createdAtValue,
       updatedAt: updatedAtValue,
       source: map['source'] != null ? TemplateSource.fromMap(map['source']) : null,
+      trackPoints: loadedPoints,
+      analysis: loadedAnalysis,
     );
   }
 

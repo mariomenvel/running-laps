@@ -147,26 +147,50 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 20,
+            spreadRadius: 5,
+          ),
+        ],
       ),
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // Handle
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Container(
+              width: 48,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2.5),
+              ),
+            ),
           ),
           
           // Form
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text("Editar Serie", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-                const SizedBox(height: 24),
+                Text(
+                  widget.initialBlock == null ? "Nueva Serie" : "Editar Serie",
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 28),
                 
                 // Dials
                 Row(
@@ -175,11 +199,11 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                       child: _buildInputCard(
                         label: "Distancia",
                         value: "$_distancia m",
-                        icon: Icons.straighten,
+                        icon: Icons.straighten_rounded,
                         onTap: _showDistancePicker,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: _buildInputCard(
                         label: "Descanso",
@@ -195,52 +219,93 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                 
                 // Alarm Toggle & Config
                 Container(
-                   decoration: BoxDecoration(
-                     color: Colors.grey.shade50,
-                     borderRadius: BorderRadius.circular(16),
-                     border: Border.all(color: Colors.grey.shade200),
-                   ),
-                   child: Column(
-                     children: [
-                       ListTile(
-                         leading: Icon(
-                           _alertsEnabled ? Icons.notifications_active : Icons.notifications_off_outlined,
-                           color: _alertsEnabled ? Tema.brandPurple : Colors.grey,
-                         ),
-                         title: const Text("Alertas de Ritmo"),
-                         trailing: Switch(
-                           value: _alertsEnabled,
-                           onChanged: (v) => setState(() => _alertsEnabled = v),
-                           activeColor: Tema.brandPurple,
-                         ),
-                       ),
-                       if (_alertsEnabled)
-                         ListTile(
-                           title: Text(
-                             _alerts.mode == 'time' 
-                               ? 'Por Tiempo (${_formatMinSec((_alerts.timeMin * 60 + _alerts.timeSec).round())})'
-                               : 'Por Ritmo',
-                             style: const TextStyle(fontSize: 14, color: Colors.grey),
-                           ),
-                           trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-                           onTap: _openAlarmConfig,
-                         ),
-                     ],
-                   ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9FAFB),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        value: _alertsEnabled,
+                        onChanged: (v) => setState(() => _alertsEnabled = v),
+                        activeColor: Tema.brandPurple,
+                        secondary: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: _alertsEnabled ? Tema.brandPurple.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            _alertsEnabled ? Icons.notifications_active_rounded : Icons.notifications_none_rounded,
+                            color: _alertsEnabled ? Tema.brandPurple : Colors.grey,
+                            size: 20,
+                          ),
+                        ),
+                        title: const Text(
+                          "Alertas de Ritmo",
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                        ),
+                      ),
+                      if (_alertsEnabled) ...[
+                        const Divider(height: 1, indent: 60),
+                        ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          title: Padding(
+                            padding: const EdgeInsets.only(left: 44),
+                            child: Text(
+                              _alerts.mode == 'time' 
+                                ? 'Frecuencia: Cada ${_formatMinSec((_alerts.timeMin * 60 + _alerts.timeSec).round())}'
+                                : 'Basado en Ritmo de Carrera',
+                              style: TextStyle(fontSize: 14, color: Colors.grey.shade700, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                          trailing: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Tema.brandPurple.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.settings_suggest_rounded, size: 20, color: Tema.brandPurple),
+                          ),
+                          onTap: _openAlarmConfig,
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
                 
                 const SizedBox(height: 32),
                 
-                ElevatedButton(
-                  onPressed: _save,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Tema.brandPurple,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: const LinearGradient(
+                      colors: [Tema.brandPurple, Color(0xFF6A1B9A)],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Tema.brandPurple.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
-                  child: const Text("Guardar Serie", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                  child: ElevatedButton(
+                    onPressed: _save,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      shadowColor: Colors.transparent,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: const Text(
+                      "LISTO",
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 1),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -253,18 +318,47 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 100,
+        height: 110,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(icon, size: 16, color: Colors.grey), const SizedBox(width: 4), Text(label, style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold))]),
-            const SizedBox(height: 8),
-            Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Tema.brandPurple)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 14, color: Colors.grey.shade500),
+                const SizedBox(width: 6),
+                Text(
+                  label.toUpperCase(),
+                  style: TextStyle(
+                    color: Colors.grey.shade500,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 10,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
           ],
         ),
       ),

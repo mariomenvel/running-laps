@@ -97,6 +97,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
 
   int? _alarmIntervalMs; // intervalo final en milisegundos
+  
+  // Storage for GPS points from Continuous Run
+  List<GpsPoint>? _collectedGpsPoints;
 
   // --- Tags (Selección al guardar) ---
   final Set<String> _selectedTags = {};
@@ -497,8 +500,17 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
   void _onFinishTrainingTap() {
     if (_isSaving) return;
+    
+    // 1. Limpiamos siempre al abrir (salvo que sea un re-intento fallido, pero asumimos flujo nuevo)
     _trainingNameController.clear();
-    // Limpiar tags seleccionadas previas
+    
+    // 2. Si viene de una Plantilla, sugerimos el nombre de la plantilla
+    if (_vm.source != null && _vm.source!.templateSnapshot != null) {
+       _trainingNameController.text = _vm.source!.templateSnapshot!.name;
+    }
+    // Si no (Manual o Continua), se queda vacío para que el usuario escriba.
+
+    // 3. Limpiar tags previas (las plantillas no tienen tags predefinidas)
     _selectedTags.clear();
 
     showModalBottomSheet(
@@ -755,7 +767,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     try {
       final String newTrainingId = await _vm.guardarEntrenamiento(
         trainingName, 
-        tags: tags.isNotEmpty ? tags : null
+        tags: tags.isNotEmpty ? tags : null,
+        recordedPoints: _collectedGpsPoints,
       );
 
 
@@ -858,7 +871,6 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           children: [
             _buildHeader(),
             Expanded(child: _buildBody()),
-            _buildFooter(),
           ],
         ),
       ),
@@ -906,56 +918,218 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   }
 
 
-  Widget _buildBody() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.stretch, // Cambiado a stretch para ocupar ancho
-        children: [
-          const SizedBox(height: 20.0), // Reducido un poco el espacio superior
-          
-          if (_vm.source != null) ...[
-             _buildTemplateCard(),
-             const SizedBox(height: 16),
-          ],
-          
-          _buildFormContainer(),
-             
-          const SizedBox(height: 24.0),
-          
-          if (_vm.source == null) ...[
-            _buildAlarmSection(),
-            const SizedBox(height: 20.0), 
-          ],
+  void _startContinuousRun() async {
+    if (_vm.series.isNotEmpty) {
+       bool confirm = await showDialog(
+         context: context, 
+         builder: (_) => AlertDialog(
+           title: const Text("Iniciar nueva sesión"),
+           content: const Text("Al iniciar una carrera continua se perderán las series actuales. ¿Continuar?"),
+           actions: [
+             TextButton(onPressed: ()=>Navigator.pop(context, false), child: const Text("Cancelar")),
+             TextButton(onPressed: ()=>Navigator.pop(context, true), child: const Text("Continuar")),
+           ],
+         )
+       ) ?? false;
+       if (!confirm) return;
+    }
 
-          if (_vm.series.isEmpty) ...[
-            _buildGpsToggle(),
-            const SizedBox(height: 30.0),
-          ],
-          const Text(
-            'Series Guardadas',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
+    _vm.clearSeries();
+    _vm.startContinuousSession();
+    
+    final result = await Navigator.push(
+      context, 
+      MaterialPageRoute(
+       builder: (_) => TrainingSessionView(
+         gpsActivo: true, 
+         distancia: "Libre",
+         descanso: "0",
+       )
+      )
+    );
+
+    if (result != null && result is Serie) {
+       setState(() {
+          if (result.gpsPoints != null) {
+              _collectedGpsPoints = result.gpsPoints!.map((m) => GpsPoint.fromMap(m)).toList();
+          }
+          _vm.addSerie(result);
+       });
+       
+       if (mounted) {
+         _onFinishTrainingTap(); 
+       }
+    }
+  }
+
+  Widget _buildQuickStartTab() {
+     return Padding(
+       padding: const EdgeInsets.all(24.0),
+       child: Column(
+         mainAxisAlignment: MainAxisAlignment.center,
+         children: [
+           const Icon(Icons.directions_run_rounded, size: 80, color: Tema.brandPurple),
+           const SizedBox(height: 24),
+           const Text(
+             "Carrera Continua",
+             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+           ),
+           const SizedBox(height: 12),
+           Text(
+             "Registra tu carrera libremente con GPS. \nSin series ni pausas programadas.",
+             textAlign: TextAlign.center,
+             style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+           ),
+           const Spacer(),
+           SizedBox(
+             width: double.infinity,
+             height: 60,
+             child: ElevatedButton.icon(
+               style: ElevatedButton.styleFrom(
+                 backgroundColor: Tema.brandPurple,
+                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                 elevation: 8,
+                 shadowColor: Tema.brandPurple.withOpacity(0.5),
+               ),
+               icon: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 32),
+               label: const Text("EMPEZAR AHORA", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1)),
+               onPressed: _startContinuousRun,
+             ),
+           ),
+           const SizedBox(height: 40),
+         ]
+       ),
+     );
+  }
+
+  Widget _buildTemplatesTab() {
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 20.0),
+                  
+                  if (_vm.source != null) ...[
+                     _buildTemplateCard(),
+                     const SizedBox(height: 16),
+                  ],
+                  
+                  _buildFormContainer(),
+                     
+                  const SizedBox(height: 24.0),
+                  
+                  if (_vm.source == null) ...[
+                    _buildAlarmSection(),
+                    const SizedBox(height: 20.0), 
+                  ],
+
+                  if (_vm.series.isEmpty) ...[
+                    _buildGpsToggle(),
+                    const SizedBox(height: 30.0),
+                  ],
+                  const Text(
+                    'Series Guardadas',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  Container(
+                    height: 1.0,
+                    color: Colors.grey.shade300,
+                    margin: const EdgeInsets.symmetric(vertical: 8.0),
+                  ),
+                  
+                  // Lista de series (no scrollable here, outer scroll handles it)
+                  _buildSeriesList(),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
-          Container(
-            height: 1.0,
-            color: Colors.grey.shade300,
-            margin: const EdgeInsets.symmetric(vertical: 8.0),
-          ),
-          
-          // Área scrollable para la lista
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 20), // Padding inferior para que no quede pegado
-              child: _buildSeriesList(),
+        ),
+        _buildFooter(),
+      ],
+    );
+  }
+
+  Widget _buildBody() {
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 20.0),
+                  
+                  // Form (Distance, Rest, etc) - always visible
+                  _buildFormContainer(),
+                     
+                  const SizedBox(height: 24.0),
+                  
+                  // Alarm section (only if no template)
+                  if (_vm.source == null) ...[
+                    _buildAlarmSection(),
+                    const SizedBox(height: 20.0), 
+                  ],
+
+                  // GPS toggle (only when no series yet)
+                  if (_vm.series.isEmpty) ...[
+                    _buildGpsToggle(),
+                    const SizedBox(height: 30.0),
+                    
+                    // Template buttons (only when no template loaded)
+                    if (_vm.source == null) ...[
+                      _buildTemplateButtons(),
+                      const SizedBox(height: 30.0),
+                    ],
+                  ],
+                  
+                  // Series list header and content (only when series exist)
+                  if (_vm.series.isNotEmpty) ...[
+                    const Text(
+                      'Series Guardadas',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    Container(
+                      height: 1.0,
+                      color: Colors.grey.shade300,
+                      margin: const EdgeInsets.symmetric(vertical: 8.0),
+                    ),
+                    _buildSeriesList(),
+                    const SizedBox(height: 20),
+                  ],
+                  
+                  // Bottom section: Template summary OR Continuous run button
+                  if (_vm.source != null) ...[
+                    _buildTemplateCard(),
+                    const SizedBox(height: 20),
+                  ] else ...[
+                    _buildContinuousRunButton(),
+                    const SizedBox(height: 20),
+                  ],
+                ],
+              ),
             ),
           ),
-        ],
-      ),
+        ),
+        _buildFooter(),
+      ],
     );
   }
 
@@ -972,73 +1146,128 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Tema.brandPurple.withOpacity(0.5)),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Tema.brandPurple.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
+            color: Tema.brandPurple.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
         ],
+        border: Border.all(color: Tema.brandPurple.withOpacity(0.1)),
       ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-               Column(
-                 crossAxisAlignment: CrossAxisAlignment.start,
-                 children: [
-                   const Text("PLANTILLA ACTIVA", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Tema.brandPurple, letterSpacing: 1.2)),
-                   const SizedBox(height: 4),
-                   Text(template.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                 ],
-               ),
-            ],
-          ),
-          
-          if (_vm.source != null)
-             Align(
-               alignment: Alignment.centerRight,
-               child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.blue),
-                      onPressed: () => _editActiveTemplate(),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              color: Tema.brandPurple.withOpacity(0.05),
+              child: Row(
+                children: [
+                  const Icon(Icons.star_rounded, color: Tema.brandPurple, size: 18),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "PLANTILLA ACTIVA",
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Tema.brandPurple,
+                      letterSpacing: 1.5,
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.grey),
-                      onPressed: () {
-                        setState(() {
-                          _vm.clearTemplate();
-                        });
-                      },
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () => setState(() => _vm.clearTemplate()),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.red.withOpacity(0.2)),
+                      ),
+                      child: const Icon(Icons.close_rounded, size: 14, color: Colors.red),
                     ),
-                  ],
-               ),
-             ),
-          const SizedBox(height: 16),
-          Row(
-             children: [
-               Icon(Icons.layers_outlined, size: 16, color: Colors.grey[700]),
-               const SizedBox(width: 8),
-               Text("${template.blocks.length} series", style: const TextStyle(fontWeight: FontWeight.w600)),
-               const SizedBox(width: 24),
-               Icon(Icons.straighten, size: 16, color: Colors.grey[700]),
-               const SizedBox(width: 8),
-               Text("$totalMeters m", style: const TextStyle(fontWeight: FontWeight.w600)),
-             ],
-          ),
-        ],
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    template.name,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      _buildMiniStat(Icons.straighten_rounded, "$totalMeters m", "Distancia total"),
+                      const SizedBox(width: 24),
+                      _buildMiniStat(Icons.repeat_rounded, "${_vm.plannedBlocks.length} series", "Estructura"),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _editActiveTemplate,
+                      icon: const Icon(Icons.edit_rounded, size: 16),
+                      label: const Text("EDITAR ESTRUCTURA"),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Tema.brandPurple,
+                        side: BorderSide(color: Tema.brandPurple.withOpacity(0.3)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-
+  Widget _buildMiniStat(IconData icon, String value, String label) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 16, color: Tema.brandPurple),
+            const SizedBox(width: 6),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+        Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade500,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    );
+  }
   Widget _buildSeriesList() {
     final List<Serie> lista = _vm.series;
 
@@ -1219,62 +1448,25 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
 
   Widget _buildFormContainer() {
-    return Column(
+    return Row(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _buildInputCard(
-                label: "Distancia",
-                value: "${_distanciaSeleccionada}m",
-                icon: Icons.straighten,
-                onTap: _showDistancePicker,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildInputCard(
-                label: "Descanso",
-                value: _formatMinSec(_descansoSeleccionado),
-                icon: Icons.timer_outlined,
-                onTap: _showRestPicker,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        if (_vm.source == null)
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _createMomentaryTemplate,
-                  icon: const Icon(Icons.flash_on_rounded, size: 20),
-                  label: const Text("Plantilla Rápida"),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Tema.brandPurple,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    side: BorderSide(color: Tema.brandPurple.withOpacity(0.3)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextButton.icon(
-                  onPressed: _openTemplateSelector,
-                  icon: const Icon(Icons.list_alt_rounded),
-                  label: const Text("Cargar"),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Tema.brandPurple,
-                    backgroundColor: Tema.brandPurple.withOpacity(0.05),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ),
-            ],
+        Expanded(
+          child: _buildInputCard(
+            label: "Distancia",
+            value: "${_distanciaSeleccionada}m",
+            icon: Icons.straighten,
+            onTap: _showDistancePicker,
           ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildInputCard(
+            label: "Descanso",
+            value: _formatMinSec(_descansoSeleccionado),
+            icon: Icons.timer_outlined,
+            onTap: _showRestPicker,
+          ),
+        ),
       ],
     );
   }
@@ -2229,6 +2421,73 @@ class _TrainingStartViewState extends State<TrainingStartView> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+
+  // ===================================================================
+  // Template Buttons Section
+  // ===================================================================
+
+  Widget _buildTemplateButtons() {
+    return Column(
+      children: [
+        // Load Template Button
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: _openTemplateSelector,
+            icon: const Icon(Icons.folder_open, color: Tema.brandPurple),
+            label: const Text(
+              'Cargar Plantilla',
+              style: TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              side: const BorderSide(color: Tema.brandPurple, width: 2),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        // Quick Template Button
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: _createMomentaryTemplate,
+            icon: const Icon(Icons.flash_on, color: Tema.brandPurple),
+            label: const Text(
+              'Plantilla Rápida',
+              style: TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              side: const BorderSide(color: Tema.brandPurple, width: 2),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContinuousRunButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton.icon(
+        onPressed: _startContinuousRun,
+        icon: const Icon(Icons.directions_run, color: Colors.white, size: 24),
+        label: const Text(
+          'Carrera Continua',
+          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Tema.brandPurple,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 4,
+        ),
       ),
     );
   }

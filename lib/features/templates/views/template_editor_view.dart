@@ -212,69 +212,188 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
-      appBar: AppBar(
-        title: Text(
-          widget.isMomentary 
-              ? 'Plantilla Rápida' 
-              : (widget.template == null ? 'Nueva Plantilla' : 'Editar Plantilla'),
-          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)
+      backgroundColor: const Color(0xFFF5F3F7), // Subtle purple tint
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(70),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.white, const Color(0xFFFAF9FB)],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Tema.brandPurple.withOpacity(0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            centerTitle: true,
+            leading: IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.close, color: Colors.black87, size: 20),
+              ),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: Text(
+              widget.isMomentary 
+                  ? 'Plantilla Rápida' 
+                  : (widget.template == null ? 'Nueva Plantilla' : 'Editar Plantilla'),
+              style: const TextStyle(
+                color: Colors.black87, 
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 16, top: 12, bottom: 12),
+                child: ElevatedButton(
+                  onPressed: _isSaving ? null : _save,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Tema.brandPurple,
+                    foregroundColor: Colors.white,
+                    elevation: 4,
+                    shadowColor: Tema.brandPurple.withOpacity(0.4),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  ),
+                  child: _isSaving 
+                      ? const SizedBox(
+                          width: 16, 
+                          height: 16, 
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text(
+                          (widget.isMomentary || widget.isSelectionMode) ? "Usar" : "Guardar",
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        ),
+                ),
+              ),
+            ],
+          ),
         ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          TextButton(
-            onPressed: _isSaving ? null : _save,
-            child: _isSaving 
-               ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-               : Text(
-                   (widget.isMomentary || widget.isSelectionMode) ? "Usar" : "Guardar", 
-                   style: const TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold)
-                 ),
-          )
-        ],
       ),
       body: Column(
         children: [
-          // Name Input
+          // Premium Name Input Card
           Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: TextField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: 'Nombre de la plantilla',
-                hintText: 'Ej. Series 400m',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
-                filled: true,
-                fillColor: Colors.grey.shade50,
+            margin: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Tema.brandPurple.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Tema.brandPurple.withOpacity(0.2), Tema.brandPurple.withOpacity(0.1)],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.edit_note_rounded, color: Tema.brandPurple, size: 24),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextField(
+                      controller: _nameController,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      decoration: InputDecoration(
+                        labelText: 'Nombre de la plantilla',
+                        labelStyle: TextStyle(color: Colors.grey.shade600),
+                        hintText: 'Ej. Series 400m',
+                        hintStyle: TextStyle(color: Colors.grey.shade400),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
           
-          const Padding(
-            padding: EdgeInsets.fromLTRB(24, 24, 24, 8),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text("Series", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.grey)),
+          // Section Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+            child: Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Tema.brandPurple, Color(0xFFBA68C8)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  "Series",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.black87,
+                  ),
+                ),
+                const Spacer(),
+                if (_blocks.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Tema.brandPurple.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      "${_blocks.length} ${_blocks.length == 1 ? 'serie' : 'series'}",
+                      style: const TextStyle(
+                        color: Tema.brandPurple,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
           
+          // Series List
           Expanded(
             child: _blocks.isEmpty
-                ? Center(
-                    child: Text(
-                      "No hay series añadidas",
-                      style: TextStyle(color: Colors.grey.shade400, fontSize: 16),
-                    ),
-                  )
+                ? _buildEmptyState()
                 : ReorderableListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+                    buildDefaultDragHandles: false, // Fix overlapping handles
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
                     itemCount: _blocks.length,
                     onReorder: (oldIndex, newIndex) {
                       setState(() {
@@ -295,55 +414,234 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _addBlock,
-        backgroundColor: Tema.brandPurple,
-        icon: const Icon(Icons.add),
-        label: const Text("Añadir Serie"),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: const LinearGradient(
+            colors: [Tema.brandPurple, Color(0xFF6A1B9A)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Tema.brandPurple.withOpacity(0.4),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: _addBlock,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          icon: const Icon(Icons.add_rounded, size: 24),
+          label: const Text(
+            "Añadir Serie",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Tema.brandPurple.withOpacity(0.1), Tema.brandPurple.withOpacity(0.05)],
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.fitness_center_rounded,
+              size: 80,
+              color: Tema.brandPurple.withOpacity(0.6),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            "No hay series añadidas",
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Pulsa el botón para crear tu primera serie",
+            style: TextStyle(
+              fontSize: 15,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildBlockItem(TemplateBlock block, int index) {
     return Container(
-      key: ValueKey(block.id), // Important for reorderable list
-      margin: const EdgeInsets.symmetric(vertical: 6),
+      key: ValueKey(block.id),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white, width: 0),
         boxShadow: [
-           BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))
-        ]
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          width: 32, height: 32,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(color: Tema.brandPurple.withOpacity(0.1), shape: BoxShape.circle),
-          child: Text("${index + 1}", style: const TextStyle(fontWeight: FontWeight.bold, color: Tema.brandPurple)),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Material(
+          color: Colors.white,
+          child: InkWell(
+            onTap: () => _editBlock(index),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  // Order / Index Indicator
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Tema.brandPurple, const Color(0xFFBA68C8)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Tema.brandPurple.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        "${index + 1}",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  
+                  // Info Column
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "${block.value} metros",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 17,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(Icons.timer_outlined, size: 14, color: Colors.grey.shade600),
+                            const SizedBox(width: 4),
+                            Text(
+                              "Descanso: ${block.restSeconds}s",
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            if (block.alerts.enabled) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.shade50,
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: Colors.orange.shade100),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.notifications_active_rounded, size: 10, color: Colors.orange.shade700),
+                                    const SizedBox(width: 2),
+                                    Text(
+                                      "ALERTA",
+                                      style: TextStyle(
+                                        color: Colors.orange.shade700,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Actions Tray (Simplified/Premium)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildActionCircle(
+                        icon: Icons.copy_rounded,
+                        color: Colors.blue.shade600,
+                        onTap: () => _duplicateBlock(index),
+                      ),
+                      const SizedBox(width: 8),
+                      _buildActionCircle(
+                        icon: Icons.delete_outline_rounded,
+                        color: Colors.red.shade400,
+                        onTap: () => _deleteBlock(index),
+                      ),
+                      const SizedBox(width: 8),
+                      ReorderableDragStartListener(
+                        index: index,
+                        child: const Icon(Icons.drag_indicator_rounded, color: Colors.black26),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-        title: Text(
-          "${block.value} metros",
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+      ),
+    );
+  }
+
+  Widget _buildActionCircle({required IconData icon, required Color color, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(12),
         ),
-        subtitle: Text(
-          "Descanso: ${block.restSeconds}s" + (block.alerts.enabled ? " • Alerta Activa" : ""),
-          style: TextStyle(color: Colors.grey.shade600),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-             IconButton(
-               icon: const Icon(Icons.copy, size: 20, color: Colors.blueGrey), 
-               onPressed: () => _duplicateBlock(index),
-               tooltip: "Duplicar",
-             ),
-             IconButton(icon: const Icon(Icons.edit, size: 20), onPressed: () => _editBlock(index)),
-             IconButton(icon: const Icon(Icons.delete_outline, size: 20, color: Colors.red), onPressed: () => _deleteBlock(index)),
-             const  Icon(Icons.drag_handle, color: Colors.grey),
-          ],
-        ),
+        child: Icon(icon, size: 18, color: color),
       ),
     );
   }

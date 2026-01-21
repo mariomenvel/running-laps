@@ -2,6 +2,8 @@ import '../data/entrenamiento.dart';
 import '../data/serie.dart';
 import '../data/training_repository.dart';
 import '../../templates/data/template_models.dart';
+import '../../../../core/services/gps_service.dart';
+import '../services/training_analysis_service.dart';
 
 class TrainingViewModel {
   TrainingRepository _repo;
@@ -100,22 +102,82 @@ class TrainingViewModel {
 
   // ------- GUARDAR ENTRENAMIENTO -------
 
-  Future<String> guardarEntrenamiento(String titulo, {List<String>? tags}) async {
-    if (_series.isEmpty) {
-      throw Exception('El entrenamiento debe tener al menos una serie.');
+  // ------- CONTROL DE SESIÓN (Continuous & Structured) -------
+
+  void startContinuousSession() {
+    clearSeries();
+    clearTemplate();
+    _source = TemplateSource(type: 'continuous');
+    _gpsOn = true; 
+    // No añadimos serie inicial, se generará al finalizar
+  }
+  
+  // Wrapper para guardar con lógica de negocio adicional (análisis, GPS points)
+  Future<String> finishSession(String titulo, {
+      required double elapsedSeconds, 
+      required double totalDistanceMeters,
+      int? rpe,
+      List<GpsPoint>? recordedPoints, 
+      List<String>? tags
+  }) async {
+    
+    List<Serie> finalSeries = List.from(_series);
+    List<GpsPoint> finalPoints = recordedPoints ?? [];
+    AnalysisResult? analysisResult;
+
+    // 1. Si es carrera continua, generamos la serie única
+    if (_source?.type == 'continuous') {
+      final serie = Serie(
+        distanciaM: totalDistanceMeters.round(),
+        tiempoSec: elapsedSeconds,
+        descansoSec: 0,
+        rpe: (rpe ?? 0).toDouble(),
+      );
+      finalSeries = [serie];
+    }
+
+    // 2. Si hubo GPS y puntos, analizamos
+    if (_gpsOn && finalPoints.isNotEmpty) {
+      // Calcular Best Splits si hubo suficiente distancia
+      if (totalDistanceMeters >= 1000) {
+         analysisResult = TrainingAnalysisService.calculateBestSplits(finalPoints);
+      }
+    }
+
+    if (finalSeries.isEmpty) {
+      throw Exception('El entrenamiento debe tener al menos una serie (o ser carrera continua).');
     }
 
     final Entrenamiento entrenamiento = Entrenamiento(
       titulo: titulo,
       fecha: DateTime.now(),
       gps: _gpsOn,
-      series: List<Serie>.from(_series),
+      series: finalSeries,
       tags: tags,
       source: _source,
+      trackPoints: finalPoints,
+      analysis: analysisResult,
     );
 
     final String entrenamientoId = await _repo.createTraining(entrenamiento);
     return entrenamientoId;
   }
+
+  // ------- GUARDAR ENTRENAMIENTO (Legacy / Manual) -------
+
+  Future<String> guardarEntrenamiento(String titulo, {List<String>? tags, List<GpsPoint>? recordedPoints}) async {
+    // Redirige a finishSession con valores por defecto para mantener compatibilidad
+    return finishSession(
+        titulo, 
+        elapsedSeconds: tiempoTotalSeries(), 
+        totalDistanceMeters: distanciaTotalSeries().toDouble(),
+        tags: tags,
+        recordedPoints: recordedPoints,
+    );
+  }
+  
+  // Helpers para legacy calls
+  double tiempoTotalSeries() => _series.fold(0, (sum, s) => sum + s.tiempoSec);
+  int distanciaTotalSeries() => _series.fold(0, (sum, s) => sum + s.distanciaM);
 }
 

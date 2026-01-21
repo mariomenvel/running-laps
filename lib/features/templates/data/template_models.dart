@@ -155,7 +155,7 @@ class TrainingTemplate {
 }
 
 class TemplateSource {
-  final String type; // 'template' | 'free'
+  final String type; // 'template' | 'free' | 'continuous'
   final String? templateId;
   final TrainingTemplate? templateSnapshot;
 

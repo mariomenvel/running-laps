@@ -93,26 +93,79 @@ class _TemplatesListViewState extends State<TemplatesListView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
-      appBar: AppBar(
-        title: const Text(
-          'Mis Plantillas',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
+      backgroundColor: const Color(0xFFF5F3F7),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(70),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.white, const Color(0xFFFAF9FB)],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Tema.brandPurple.withOpacity(0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            centerTitle: true,
+            leading: IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black87, size: 18),
+              ),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            title: const Text(
+              'Mis Plantillas',
+              style: TextStyle(
+                color: Colors.black87, 
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+          ),
         ),
       ),
-      floatingActionButton: widget.isSelectionMode ? null : FloatingActionButton.extended(
-        onPressed: () => _navigateToEditor(),
-        backgroundColor: Tema.brandPurple,
-        icon: const Icon(Icons.add),
-        label: const Text('Nueva Plantilla'),
-      ),
+      floatingActionButton: widget.isSelectionMode 
+          ? null 
+          : Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: const LinearGradient(
+                  colors: [Tema.brandPurple, Color(0xFF6A1B9A)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Tema.brandPurple.withOpacity(0.4),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: FloatingActionButton.extended(
+                onPressed: () => _navigateToEditor(),
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                icon: const Icon(Icons.add_rounded, size: 24),
+                label: const Text(
+                  'Nueva Plantilla',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                ),
+              ),
+            ),
       body: FutureBuilder<List<TrainingTemplate>>(
         future: _templatesFuture,
         builder: (context, snapshot) {
@@ -126,17 +179,26 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                  child: Column(
                    mainAxisSize: MainAxisSize.min,
                    children: [
-                     Icon(Icons.error_outline, size: 48, color: Colors.grey.shade400),
+                     Icon(Icons.error_outline_rounded, size: 64, color: Colors.red.shade300),
                      const SizedBox(height: 16),
                      Text(
-                       'Error al cargar plantillas:\n${snapshot.error}',
-                       textAlign: TextAlign.center,
-                       style: TextStyle(color: Colors.grey.shade600),
+                       'Error al cargar plantillas',
+                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey.shade800),
                      ),
-                     const SizedBox(height: 16),
-                     TextButton(
+                     const SizedBox(height: 8),
+                     Text(
+                       '${snapshot.error}',
+                       textAlign: TextAlign.center,
+                       style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                     ),
+                     const SizedBox(height: 24),
+                     ElevatedButton(
                        onPressed: _refreshTemplates,
-                       child: const Text('Reintentar'),
+                       style: ElevatedButton.styleFrom(
+                         backgroundColor: Tema.brandPurple,
+                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                       ),
+                       child: const Text("Reintentar"),
                      ),
                    ],
                  ),
@@ -149,32 +211,33 @@ class _TemplatesListViewState extends State<TemplatesListView> {
           if (templates.isEmpty) {
             return Center(
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                    Container(
-                     padding: const EdgeInsets.all(24),
+                     padding: const EdgeInsets.all(40),
                      decoration: BoxDecoration(
-                       color: Tema.brandPurple.withOpacity(0.1),
+                       color: Tema.brandPurple.withOpacity(0.05),
                        shape: BoxShape.circle,
                      ),
-                     child: const Icon(Icons.description_outlined, size: 48, color: Tema.brandPurple),
+                     child: Icon(Icons.description_outlined, size: 80, color: Tema.brandPurple.withOpacity(0.4)),
                    ),
-                   const SizedBox(height: 24),
+                   const SizedBox(height: 32),
                    const Text(
                      'No tienes plantillas guardadas',
                      style: TextStyle(
-                       fontSize: 18,
+                       fontSize: 20,
                        fontWeight: FontWeight.bold,
                        color: Colors.black87,
                      ),
                    ),
-                   const SizedBox(height: 8),
+                   const SizedBox(height: 12),
                    Text(
                      'Crea tu primera plantilla para entrenar\nde forma estructurada.',
                      textAlign: TextAlign.center,
                      style: TextStyle(
-                       fontSize: 14,
+                       fontSize: 15,
                        color: Colors.grey.shade600,
+                       height: 1.4,
                      ),
                    ),
                 ],
@@ -183,9 +246,9 @@ class _TemplatesListViewState extends State<TemplatesListView> {
           }
 
           return ListView.separated(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
             itemCount: templates.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, __) => const SizedBox(height: 16),
             itemBuilder: (context, index) {
               final template = templates[index];
               return _buildTemplateCard(template);
@@ -197,7 +260,6 @@ class _TemplatesListViewState extends State<TemplatesListView> {
   }
 
   Widget _buildTemplateCard(TrainingTemplate template) {
-    // Calculate summary
     final int blockCount = template.blocks.length;
     int totalDist = 0;
     for (var b in template.blocks) {
@@ -207,75 +269,107 @@ class _TemplatesListViewState extends State<TemplatesListView> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
         border: widget.isSelectionMode 
-            ? Border.all(color: Tema.brandPurple.withOpacity(0.3)) 
-            : null,
+            ? Border.all(color: Tema.brandPurple.withOpacity(0.4), width: 1.5) 
+            : Border.all(color: Colors.white, width: 0),
       ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: () {
-            if (widget.isSelectionMode) {
-              Navigator.pop(context, template);
-            } else {
-              _navigateToEditor(template: template);
-            }
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Tema.brandPurple.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    widget.isSelectionMode ? Icons.check_circle_outline : Icons.fitness_center, 
-                    color: Tema.brandPurple
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        template.name,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              if (widget.isSelectionMode) {
+                Navigator.pop(context, template);
+              } else {
+                _navigateToEditor(template: template);
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Tema.brandPurple.withOpacity(0.2), Tema.brandPurple.withOpacity(0.1)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '$blockCount series • Total: ${totalDist}m',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      widget.isSelectionMode ? Icons.check_circle_rounded : Icons.fitness_center_rounded, 
+                      color: Tema.brandPurple,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          template.name,
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
                         ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Text(
+                              '$blockCount series',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                            Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 8),
+                              width: 3, height: 3,
+                              decoration: BoxDecoration(color: Colors.grey.shade400, shape: BoxShape.circle),
+                            ),
+                            Text(
+                              'Total: ${totalDist}m',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (!widget.isSelectionMode)
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                    ],
-                  ),
-                ),
-                if (!widget.isSelectionMode)
-                  IconButton(
-                    icon: Icon(Icons.delete_outline, color: Colors.grey.shade400),
-                    onPressed: () => _deleteTemplate(template),
-                  ),
-              ],
+                      child: IconButton(
+                        icon: Icon(Icons.delete_outline_rounded, color: Colors.red.shade400, size: 22),
+                        onPressed: () => _deleteTemplate(template),
+                      ),
+                    )
+                  else
+                    const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.black26),
+                ],
+              ),
             ),
           ),
         ),

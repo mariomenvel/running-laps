@@ -12,6 +12,7 @@ import '../../../core/widgets/app_header.dart';
 import 'package:running_laps/core/constants/app_help_content.dart';
 import 'package:running_laps/core/widgets/info_tooltip.dart';
 import '../../../core/services/gps_service.dart';
+import '../../home/views/home_view.dart';
 
 
 class TrainingSessionView extends StatefulWidget {
@@ -798,8 +799,29 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
         
         // Small delay to allow the previous sheet to close smoothly
         await Future.delayed(const Duration(milliseconds: 200));
+        
         if (mounted) {
-           _showDistanceSelectionSheet();
+           // Si es carrera Libre (Continua), usamos SIEMPRE el GPS sin preguntar
+           if (widget.distancia == "Libre") {
+              final int finalDist = _distanciaGpsMetros.round();
+              
+              if (finalDist < 30) { // Umbral mínimo razonable (30m)
+                 ModernSnackBar.showError(context, "Distancia demasiado baja para guardar (<30m). Descartando...");
+                 await Future.delayed(const Duration(seconds: 2));
+                 if (mounted) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => const HomeView()),
+                      (Route<dynamic> route) => false,
+                    );
+                 }
+                 return;
+              }
+              // Guardar directo con GPS
+              _saveWithSelectedDistance(finalDist, true);
+           } else {
+              // Si es serie Estructurada, seguimos preguntando
+              _showDistanceSelectionSheet();
+           }
         }
       } else {
         _handleSave();
