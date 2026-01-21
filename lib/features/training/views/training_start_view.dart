@@ -1087,12 +1087,12 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                   // GPS toggle (only when no series yet)
                   if (_vm.series.isEmpty) ...[
                     _buildGpsToggle(),
-                    const SizedBox(height: 30.0),
+                    const SizedBox(height: 20.0),
                     
                     // Template buttons (only when no template loaded)
                     if (_vm.source == null) ...[
                       _buildTemplateButtons(),
-                      const SizedBox(height: 30.0),
+                      const SizedBox(height: 20.0),
                     ],
                   ],
                   
@@ -1112,16 +1112,16 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                       margin: const EdgeInsets.symmetric(vertical: 8.0),
                     ),
                     _buildSeriesList(),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                   ],
                   
                   // Bottom section: Template summary OR Continuous run button
                   if (_vm.source != null) ...[
                     _buildTemplateCard(),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                   ] else ...[
                     _buildContinuousRunButton(),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                   ],
                 ],
               ),
@@ -1305,24 +1305,101 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
             ),
             confirmDismiss: (direction) async {
-              return await showDialog(
+              return await showModalBottomSheet<bool>(
                 context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: const Text("¿Borrar serie?"),
-                    content: const Text("Esta acción no se puede deshacer."),
-                    actions: <Widget>[
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        child: const Text("Cancelar", style: TextStyle(color: Colors.grey)),
+                backgroundColor: Colors.transparent,
+                builder: (ctx) => Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(32),
+                      topRight: Radius.circular(32),
+                    ),
+                  ),
+                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(true),
-                        child: const Text("Borrar", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 24),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.delete_sweep_rounded, color: Colors.red.shade600, size: 40),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "¿Borrar esta serie?",
+                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.black87),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "La serie #${i + 1} se eliminará permanentemente de esta sesión.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
+                      ),
+                      const SizedBox(height: 32),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              ),
+                              child: Text(
+                                'Cancelar',
+                                style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [Colors.red.shade400, Colors.red.shade700],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.red.shade400.withOpacity(0.3),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: ElevatedButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  foregroundColor: Colors.white,
+                                  shadowColor: Colors.transparent,
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                ),
+                                child: const Text('Sí, borrar', style: TextStyle(fontWeight: FontWeight.bold)),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
-                  );
-                },
+                  ),
+                ),
               );
             },
             onDismissed: (direction) {
@@ -2431,62 +2508,135 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   // ===================================================================
 
   Widget _buildTemplateButtons() {
-    return Column(
+    return Row(
       children: [
-        // Load Template Button
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: _openTemplateSelector,
-            icon: const Icon(Icons.folder_open, color: Tema.brandPurple),
-            label: const Text(
-              'Cargar Plantilla',
-              style: TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              side: const BorderSide(color: Tema.brandPurple, width: 2),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
+        // Load Template Card
+        Expanded(
+          child: _buildActionCard(
+            onTap: _openTemplateSelector,
+            icon: Icons.folder_open_rounded,
+            title: 'Cargar\nPlantilla',
+            color: Tema.brandPurple,
           ),
         ),
-        const SizedBox(height: 12),
-        // Quick Template Button
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: _createMomentaryTemplate,
-            icon: const Icon(Icons.flash_on, color: Tema.brandPurple),
-            label: const Text(
-              'Plantilla Rápida',
-              style: TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              side: const BorderSide(color: Tema.brandPurple, width: 2),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
+        const SizedBox(width: 12),
+        // Quick Template Card
+        Expanded(
+          child: _buildActionCard(
+            onTap: _createMomentaryTemplate,
+            icon: Icons.bolt_rounded,
+            title: 'Plantilla\nRápida',
+            color: Colors.orange.shade700,
           ),
         ),
       ],
     );
   }
 
+  Widget _buildActionCard({
+    required VoidCallback onTap,
+    required IconData icon,
+    required String title,
+    required Color color,
+  }) {
+    return StatefulBuilder(
+      builder: (context, setCardState) {
+        bool isPressed = false;
+        return GestureDetector(
+          onTapDown: (_) => setCardState(() => isPressed = true),
+          onTapUp: (_) {
+            setCardState(() => isPressed = false);
+            onTap();
+          },
+          onTapCancel: () => setCardState(() => isPressed = false),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            height: 110,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: color.withOpacity(isPressed ? 0.3 : 0.1), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(isPressed ? 0.05 : 0.08),
+                  blurRadius: isPressed ? 4 : 12,
+                  offset: Offset(0, isPressed ? 2 : 6),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: 22),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                    height: 1.1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    );
+  }
+
   Widget _buildContinuousRunButton() {
-    return SizedBox(
+    return Container(
       width: double.infinity,
-      height: 56,
-      child: ElevatedButton.icon(
-        onPressed: _startContinuousRun,
-        icon: const Icon(Icons.directions_run, color: Colors.white, size: 24),
-        label: const Text(
-          'Carrera Continua',
-          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+      height: 60,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Tema.brandPurple, Color(0xFFBA68C8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Tema.brandPurple,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          elevation: 4,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Tema.brandPurple.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _startContinuousRun,
+          borderRadius: BorderRadius.circular(20),
+          child: const Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.directions_run_rounded, color: Colors.white, size: 22),
+                SizedBox(width: 10),
+                Text(
+                  'CARRERA CONTINUA',
+                  style: TextStyle(
+                    color: Colors.white, 
+                    fontSize: 15, 
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
