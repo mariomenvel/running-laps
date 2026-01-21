@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import '../data/template_models.dart';
-import '../data/training_templates_repository.dart';
+import '../data/templates_repository.dart';
 import '../widgets/block_editor_sheet.dart';
 
 class TemplateEditorView extends StatefulWidget {

@@ -8,7 +8,9 @@ class Serie {
   final bool? usedGps;           // ¿Se activó GPS para esta serie?
   final bool? usedGpsDistance;   // ¿Se eligió la distancia GPS al guardar?
   final List<Map<String, dynamic>>? gpsPoints;  // Puntos GPS del recorrido
-
+  
+  // New: timestamp for when series finished 
+  final DateTime? finishedAt; 
 
   Serie({
     required this.tiempoSec,
@@ -18,6 +20,7 @@ class Serie {
     this.usedGps,
     this.usedGpsDistance,
     this.gpsPoints,
+    this.finishedAt,
   }):assert(tiempoSec >= 0),
      assert(distanciaM >= 0),
      assert(descansoSec >= 0),
@@ -58,6 +61,7 @@ class Serie {
       if (usedGps != null) 'usedGps': usedGps,
       if (usedGpsDistance != null) 'usedGpsDistance': usedGpsDistance,
       if (gpsPoints != null) 'gpsPoints': gpsPoints,
+      if (finishedAt != null) 'finishedAt': finishedAt!.toIso8601String(),
     };
   }
 
@@ -73,6 +77,9 @@ class Serie {
       gpsPoints: map['gpsPoints'] != null 
         ? List<Map<String, dynamic>>.from(map['gpsPoints'] as List)
         : null,
+      finishedAt: map['finishedAt'] != null 
+          ? DateTime.tryParse(map['finishedAt']) 
+          : null,
     );
   }
 }

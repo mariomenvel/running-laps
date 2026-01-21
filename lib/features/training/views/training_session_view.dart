@@ -61,6 +61,9 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
   double _distanciaGpsMetros = 0.0;
   String _ritmoActual = "--:-- /km";
   Timer? _gpsUpdateTimer;
+  
+  // NUEVO: Momento exacto en que se detuvo la serie
+  DateTime? _finishedAt;
 
   // --- Colores (coincide con TrainingStartView) ---
   static const Color _bgGradientColor = Color(0xFFF9F5FB);
@@ -196,18 +199,20 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
   // ===================================================================
 
 
-  void _handlePausePress() {
-    // Detener crono, timer y alarma
+  void _finishSeries() {
+    // 1. Detener todo INMEDIATAMENTE
     _stopwatch.stop();
     _timer?.cancel();
     _stopBeepTimer();
-    _gpsService?.pause(); // Pausar GPS
+    _gpsService?.pause();
 
     setState(() {
       _isRunning = false;
+      // 2. Guardar timestamp de finalización para calcular descanso real
+      _finishedAt = DateTime.now();
     });
 
-    // Mostrar selector de RPE
+    // 3. Mostrar selector de RPE (Bloqueante, sin reanudar)
     _showRpePicker();
   }
 
@@ -245,6 +250,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
       usedGps: false,
       usedGpsDistance: null,
       gpsPoints: null,
+      finishedAt: _finishedAt, // Pasamos el timestamp
     );
 
     // 3. Cerrar el diálogo de RPE
@@ -282,6 +288,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
       usedGps: true,
       usedGpsDistance: usedGpsDistance,
       gpsPoints: gpsPointsMaps,
+      finishedAt: _finishedAt, // Pasamos el timestamp
     );
 
     // 4. Volver a la pantalla anterior devolviendo la serie
@@ -638,34 +645,34 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
           Container(height: 1.0, color: Colors.grey.shade200),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 10.0), // Reduced from 20.0
-            child: GestureDetector(
-              onTap: _isRunning ? _handlePausePress : null,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  color: _isRunning ? Colors.white : Tema.brandPurple,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Tema.brandPurple.withOpacity(_isRunning ? 0.2 : 0.0),
-                    width: 1,
-                  ),
-                  boxShadow: <BoxShadow>[
-                    BoxShadow(
-                      color: Tema.brandPurple.withOpacity(0.2),
-                      blurRadius: 20.0,
-                      offset: const Offset(0, 10),
+              child: GestureDetector(
+                onTap: _isRunning ? _finishSeries : null, // Solo permitir parar
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 90,
+                  height: 90,
+                  decoration: BoxDecoration(
+                    color: _isRunning ? Colors.white : Colors.grey, // Grey when disabled
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Tema.brandPurple.withOpacity(_isRunning ? 0.2 : 0.0),
+                      width: 1,
                     ),
-                  ],
-                ),
-                child: Icon(
-                  _isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                  color: _isRunning ? Tema.brandPurple : Colors.white,
-                  size: 48.0,
+                    boxShadow: <BoxShadow>[
+                      BoxShadow(
+                        color: Tema.brandPurple.withOpacity(0.2),
+                        blurRadius: 20.0,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    _isRunning ? Icons.stop_rounded : Icons.check, // Icono Stop
+                    color: _isRunning ? Tema.brandPurple : Colors.white,
+                    size: 48.0,
+                  ),
                 ),
               ),
-            ),
           ),
         ],
       ),
@@ -709,12 +716,8 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Botón Cancelar (Izquierda)
-                      CupertinoButton(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text("Reanudar", style: TextStyle(color: Colors.red.shade400, fontSize: 17)),
-                        onPressed: () => Navigator.of(context).pop(false),
-                      ),
+                      // Espacio vacío para equilibrar el header (ya que quitamos el botón cancelar)
+                      const SizedBox(width: 48),
                       
                       // Título (Centro)
                       Row(
@@ -797,9 +800,10 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
         _handleSave();
       }
     } else {
-      // Cancelled
-      _rpeSeleccionado = rpeInicial;
-      _handleResume();
+      // Cancelled (should not happen with isDismissible: false and no cancel button)
+      // Enforce selection or stay
+      _handleSave(); // Fallback if they manage to close it, assume finished? 
+      // Better: prevent closing. But if they use android back system despite WillPopScope (rare): save.
     }
   }
 

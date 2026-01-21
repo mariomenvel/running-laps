@@ -1,7 +1,7 @@
 import '../data/entrenamiento.dart';
 import '../data/serie.dart';
 import '../data/training_repository.dart';
-import '../data/template_models.dart';
+import '../../templates/data/template_models.dart';
 
 class TrainingViewModel {
   TrainingRepository _repo;

@@ -1,4 +1,6 @@
 
+enum AlarmMode { bySeconds, byPace }
+
 enum TemplateBlockType {
   distance,
   time, // Future proofing

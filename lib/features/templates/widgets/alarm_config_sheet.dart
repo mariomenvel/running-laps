@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
 import '../data/template_models.dart';
-import '../views/training_start_view.dart'; // Ensure AlarmMode enum is accessible or move it
+
 
 // Reuse AlarmMode from TrainingStartView or move it to a shared file.
 // Ideally, move AlarmMode to 'enums.dart' or 'template_models.dart', but for now assume it's available.

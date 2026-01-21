@@ -3,7 +3,7 @@ import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/widgets/app_header.dart'; // Using AppHeader if appropriate, or standard AppBar
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import '../data/template_models.dart';
-import '../data/training_templates_repository.dart';
+import '../data/templates_repository.dart';
 import 'template_editor_view.dart';
 
 class TemplatesListView extends StatefulWidget {

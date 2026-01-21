@@ -1,5 +1,5 @@
 import 'serie.dart';
-import 'template_models.dart';
+import '../../templates/data/template_models.dart';
 
 class Entrenamiento {
   final String? id;  // ID del documento en Firestore (opcional para compatibilidad)

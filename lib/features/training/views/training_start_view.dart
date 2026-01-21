@@ -19,15 +19,15 @@ import '../data/tag_model.dart';
 import '../data/tag_manager.dart';
 import '../widgets/create_tag_dialog.dart';
 import 'training_session_view.dart';
-import 'templates_list_view.dart';
-import '../data/template_models.dart';
-import 'template_editor_view.dart';
+import '../../templates/views/templates_list_view.dart';
+import '../../templates/data/template_models.dart';
+import '../../templates/views/template_editor_view.dart';
 
 
 // ===============================================================
 // ENUM PARA LA ALARMA
 // ===============================================================
-enum AlarmMode { bySeconds, byPace }
+
 
 
 class TrainingStartView extends StatefulWidget {
@@ -307,6 +307,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       ),
     );
 
+    if (!mounted) return; // PROACTIVE FIX: Check if widget is still mounted
 
     if (result != null && result is Serie) {
       setState(() {
@@ -343,9 +344,16 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
 
       if (result.descansoSec > 0) {
+        // Calculate remaining rest time considering time spent in RPE/Save
+        int remainingRest = result.descansoSec;
+        if (result.finishedAt != null) {
+          final elapsed = DateTime.now().difference(result.finishedAt!);
+          remainingRest = (result.descansoSec - elapsed.inSeconds).clamp(0, result.descansoSec);
+        }
+
         setState(() {
           _restTotalSeconds = result.descansoSec;
-          _restSecondsRemaining = result.descansoSec;
+          _restSecondsRemaining = remainingRest;
           _isResting = true;
         });
         _startRestCountdown();
