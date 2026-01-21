@@ -19,6 +19,9 @@ import '../data/tag_model.dart';
 import '../data/tag_manager.dart';
 import '../widgets/create_tag_dialog.dart';
 import 'training_session_view.dart';
+import 'templates_list_view.dart';
+import '../data/template_models.dart';
+import 'template_editor_view.dart';
 
 
 // ===============================================================
@@ -246,6 +249,36 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   // Lógica de Botones del Footer
   // ===================================================================
 
+  void _applyTemplateBlock(TemplateBlock block) {
+    setState(() {
+      // 1. Basic properties
+      if (block.type == TemplateBlockType.distance) {
+         _distanciaSeleccionada = block.value;
+      }
+      _descansoSeleccionado = block.restSeconds;
+      
+      // 2. Alerts
+      final alerts = block.alerts;
+      _alarmEnabled = alerts.enabled;
+      
+      if (_alarmEnabled) {
+        _alarmMode = alerts.mode == 'time' ? AlarmMode.bySeconds : AlarmMode.byPace;
+        _timeMin = alerts.timeMin;
+        _timeSecHalfIndex = (alerts.timeSec * 2).round();
+        
+        _paceMin = alerts.paceMin;
+        _paceSecIndex = (alerts.paceSec / 5).round();
+        
+        // Find closest segment index
+        int segIndex = _segmentDistances.indexOf(alerts.segmentDistance);
+        if (segIndex == -1) segIndex = 3; // default
+        _segmentIndex = segIndex;
+      }
+    });
+    
+    // Recalculate alarm interval
+    _updateAlarmInterval();
+  }
 
   void _onStartSeriesTap() async {
     // Validamos datos (aunque con los selectores es difícil que falle,
@@ -268,6 +301,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           descanso: _descansoSeleccionado.toString(),
           gpsActivo: _vm.gpsOn,
           alarmIntervalMs: _alarmIntervalMs,
+          currentSeries: _vm.series.length + 1,
+          totalSeries: _vm.source != null ? _vm.plannedBlocks.length : null,
         ),
       ),
     );
@@ -278,13 +313,32 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         _vm.addSerie(result);
 
 
-        // Guardamos como "último valor" y lo dejamos puesto para la siguiente serie
+        // Guardamos como "último valor"
         _ultimoValorDistancia = result.distanciaM;
         _ultimoValorDescanso = result.descansoSec;
 
-
-        _distanciaSeleccionada = _ultimoValorDistancia;
-        _descansoSeleccionado = _ultimoValorDescanso;
+        // CHECK TEMPLATE PROGRESSION
+        bool appliedTemplate = false;
+        if (_vm.source != null && _vm.plannedBlocks.isNotEmpty) {
+           final int nextIndex = _vm.series.length; // series includes the one just added
+           if (nextIndex < _vm.plannedBlocks.length) {
+              _applyTemplateBlock(_vm.plannedBlocks[nextIndex]);
+              appliedTemplate = true;
+           } else {
+             // Template Finished
+             ModernSnackBar.showSuccess(context, "¡Plantilla completada!");
+             
+             // Auto-finish after a short delay
+             Future.delayed(const Duration(milliseconds: 600), () {
+               if (mounted) _onFinishTrainingTap();
+             });
+           }
+        }
+        
+        if (!appliedTemplate) {
+          _distanciaSeleccionada = _ultimoValorDistancia;
+          _descansoSeleccionado = _ultimoValorDescanso;
+        }
       });
 
 
@@ -852,10 +906,21 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         crossAxisAlignment: CrossAxisAlignment.stretch, // Cambiado a stretch para ocupar ancho
         children: [
           const SizedBox(height: 20.0), // Reducido un poco el espacio superior
+          
+          if (_vm.source != null) ...[
+             _buildTemplateCard(),
+             const SizedBox(height: 16),
+          ],
+          
           _buildFormContainer(),
+             
           const SizedBox(height: 24.0),
-          _buildAlarmSection(),
-          const SizedBox(height: 20.0), 
+          
+          if (_vm.source == null) ...[
+            _buildAlarmSection(),
+            const SizedBox(height: 20.0), 
+          ],
+
           if (_vm.series.isEmpty) ...[
             _buildGpsToggle(),
             const SizedBox(height: 30.0),
@@ -880,6 +945,85 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               padding: const EdgeInsets.only(bottom: 20), // Padding inferior para que no quede pegado
               child: _buildSeriesList(),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTemplateCard() {
+    final template = _vm.source?.templateSnapshot;
+    if (template == null) return const SizedBox.shrink();
+    
+    // Calculate total from planned blocks
+    int totalMeters = 0;
+    for(var b in _vm.plannedBlocks) {
+      if (b.type == TemplateBlockType.distance) totalMeters += b.value;
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Tema.brandPurple.withOpacity(0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Tema.brandPurple.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+               Column(
+                 crossAxisAlignment: CrossAxisAlignment.start,
+                 children: [
+                   const Text("PLANTILLA ACTIVA", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Tema.brandPurple, letterSpacing: 1.2)),
+                   const SizedBox(height: 4),
+                   Text(template.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                 ],
+               ),
+            ],
+          ),
+          
+          if (_vm.source != null)
+             Align(
+               alignment: Alignment.centerRight,
+               child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.blue),
+                      onPressed: () => _editActiveTemplate(),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.grey),
+                      onPressed: () {
+                        setState(() {
+                          _vm.clearTemplate();
+                        });
+                      },
+                    ),
+                  ],
+               ),
+             ),
+          const SizedBox(height: 16),
+          Row(
+             children: [
+               Icon(Icons.layers_outlined, size: 16, color: Colors.grey[700]),
+               const SizedBox(width: 8),
+               Text("${template.blocks.length} series", style: const TextStyle(fontWeight: FontWeight.w600)),
+               const SizedBox(width: 24),
+               Icon(Icons.straighten, size: 16, color: Colors.grey[700]),
+               const SizedBox(width: 8),
+               Text("$totalMeters m", style: const TextStyle(fontWeight: FontWeight.w600)),
+             ],
           ),
         ],
       ),
@@ -1067,27 +1211,136 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
 
   Widget _buildFormContainer() {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _buildInputCard(
-            label: "Distancia",
-            value: "${_distanciaSeleccionada}m",
-            icon: Icons.straighten,
-            onTap: _showDistancePicker,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _buildInputCard(
+                label: "Distancia",
+                value: "${_distanciaSeleccionada}m",
+                icon: Icons.straighten,
+                onTap: _showDistancePicker,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildInputCard(
+                label: "Descanso",
+                value: _formatMinSec(_descansoSeleccionado),
+                icon: Icons.timer_outlined,
+                onTap: _showRestPicker,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildInputCard(
-            label: "Descanso",
-            value: _formatMinSec(_descansoSeleccionado),
-            icon: Icons.timer_outlined,
-            onTap: _showRestPicker,
+        const SizedBox(height: 16),
+        if (_vm.source == null)
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _createMomentaryTemplate,
+                  icon: const Icon(Icons.flash_on_rounded, size: 20),
+                  label: const Text("Plantilla Rápida"),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Tema.brandPurple,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    side: BorderSide(color: Tema.brandPurple.withOpacity(0.3)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextButton.icon(
+                  onPressed: _openTemplateSelector,
+                  icon: const Icon(Icons.list_alt_rounded),
+                  label: const Text("Cargar"),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Tema.brandPurple,
+                    backgroundColor: Tema.brandPurple.withOpacity(0.05),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
       ],
     );
+  }
+
+  void _createMomentaryTemplate() async {
+    final TrainingTemplate? newTemplate = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TemplateEditorView(
+          isMomentary: true,
+        ),
+      ),
+    );
+
+    if (newTemplate != null) {
+      if (newTemplate.blocks.isEmpty) return;
+      setState(() {
+        _vm.loadTemplate(newTemplate);
+        if (_vm.plannedBlocks.isNotEmpty) {
+          _applyTemplateBlock(_vm.plannedBlocks[0]);
+        }
+      });
+      ModernSnackBar.showSuccess(context, "Plantilla rápida cargada");
+    }
+  }
+
+  void _editActiveTemplate() async {
+    final template = _vm.source?.templateSnapshot;
+    if (template == null) return;
+    
+    final bool isQuick = _vm.source?.templateId == 'temp';
+    
+    final modifiedTemplate = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TemplateEditorView(
+          template: template,
+          isSelectionMode: true, // Allows "Updated" or "Temporary" choice
+          isMomentary: isQuick,  // If it's already a quick one, don't ask to save original
+        ),
+      ),
+    );
+    
+    if (modifiedTemplate != null) {
+      setState(() {
+         _vm.loadTemplate(modifiedTemplate);
+         // Reset to first block of new template if series haven't started?
+         // Optimally we try to keep progress but safe bet is restart or just apply next.
+         // For now, let's just re-apply current index if possible or 0
+         
+         final nextIndex = _vm.series.length;
+         if (nextIndex < _vm.plannedBlocks.length) {
+            _applyTemplateBlock(_vm.plannedBlocks[nextIndex]);
+         }
+      });
+      ModernSnackBar.showSuccess(context, "Plantilla actualizada");
+    }
+  }
+
+  void _openTemplateSelector() async {
+    final TrainingTemplate? selected = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const TemplatesListView(isSelectionMode: true)),
+    );
+    
+    if (selected != null) {
+      setState(() {
+        _vm.loadTemplate(selected);
+        if (_vm.plannedBlocks.isNotEmpty) {
+          _applyTemplateBlock(_vm.plannedBlocks[0]);
+        }
+      });
+      ModernSnackBar.showSuccess(context, "Plantilla cargada");
+    }
   }
 
 

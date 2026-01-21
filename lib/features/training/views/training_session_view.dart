@@ -18,7 +18,9 @@ class TrainingSessionView extends StatefulWidget {
   final String distancia;
   final String descanso;
   final bool gpsActivo;
-  final int? alarmIntervalMs; // intervalo de pitido en milisegundos (opcional)
+  final int? alarmIntervalMs;
+  final int? currentSeries;
+  final int? totalSeries;
 
 
   const TrainingSessionView({
@@ -27,6 +29,8 @@ class TrainingSessionView extends StatefulWidget {
     required this.descanso,
     required this.gpsActivo,
     this.alarmIntervalMs,
+    this.currentSeries,
+    this.totalSeries,
   }) : super(key: key);
 
 
@@ -379,7 +383,21 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Column(
         children: <Widget>[
-          const SizedBox(height: 32.0),
+          if (widget.currentSeries != null) ...[
+            const SizedBox(height: 16.0),
+            Text(
+              widget.totalSeries != null 
+                  ? "SERIE ${widget.currentSeries} DE ${widget.totalSeries}" 
+                  : "SERIE ${widget.currentSeries}",
+              style: const TextStyle(
+                fontSize: 14, 
+                fontWeight: FontWeight.bold, 
+                color: Tema.brandPurple, 
+                letterSpacing: 1.2
+              ),
+            ),
+          ],
+          const SizedBox(height: 16.0),
           
           // Info Cards - 2 cards si no GPS, 3 cards si GPS
           if (!widget.gpsActivo)

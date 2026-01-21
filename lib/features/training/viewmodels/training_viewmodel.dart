@@ -1,6 +1,7 @@
 import '../data/entrenamiento.dart';
 import '../data/serie.dart';
 import '../data/training_repository.dart';
+import '../data/template_models.dart';
 
 class TrainingViewModel {
   TrainingRepository _repo;
@@ -8,6 +9,10 @@ class TrainingViewModel {
   // Estado de dominio
   final List<Serie> _series = <Serie>[];
   bool _gpsOn = false;
+  
+  // Template info
+  TemplateSource? _source;
+  List<TemplateBlock> _plannedBlocks = [];
 
   TrainingViewModel({TrainingRepository? repo}) : _repo = TrainingRepository() {
     if (repo != null) {
@@ -24,6 +29,9 @@ class TrainingViewModel {
   bool get gpsOn {
     return _gpsOn;
   }
+  
+  TemplateSource? get source => _source;
+  List<TemplateBlock> get plannedBlocks => List.unmodifiable(_plannedBlocks);
 
   bool get tieneSeries {
     return _series.isNotEmpty;
@@ -33,6 +41,20 @@ class TrainingViewModel {
 
   void setGpsOn(bool value) {
     _gpsOn = value;
+  }
+  
+  void loadTemplate(TrainingTemplate template) {
+    _source = TemplateSource(
+      type: 'template',
+      templateId: template.id,
+      templateSnapshot: template, // Snapshot at start
+    );
+    _plannedBlocks = List.from(template.blocks);
+  }
+  
+  void clearTemplate() {
+    _source = null;
+    _plannedBlocks = [];
   }
 
   void addSerie(Serie serie) {
@@ -89,6 +111,7 @@ class TrainingViewModel {
       gps: _gpsOn,
       series: List<Serie>.from(_series),
       tags: tags,
+      source: _source,
     );
 
     final String entrenamientoId = await _repo.createTraining(entrenamiento);

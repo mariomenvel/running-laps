@@ -1,4 +1,5 @@
 import 'serie.dart';
+import 'template_models.dart';
 
 class Entrenamiento {
   final String? id;  // ID del documento en Firestore (opcional para compatibilidad)
@@ -13,6 +14,9 @@ class Entrenamiento {
   final double? load;     // Carga de entrenamiento: RPE * duración_min
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  
+  // Nuevo campo para origen de la sesión (template)
+  final TemplateSource? source;
 
   Entrenamiento({
     this.id,
@@ -25,6 +29,7 @@ class Entrenamiento {
     this.load,
     this.createdAt,
     this.updatedAt,
+    this.source,
   });
 
   Entrenamiento copyWith({
@@ -38,6 +43,7 @@ class Entrenamiento {
     double? load,
     DateTime? createdAt,
     DateTime? updatedAt,
+    TemplateSource? source,
   }) {
     return Entrenamiento(
       id: id ?? this.id,
@@ -50,6 +56,7 @@ class Entrenamiento {
       load: load ?? this.load,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      source: source ?? this.source,
     );
   }
 
@@ -139,6 +146,9 @@ class Entrenamiento {
     if (updatedAt != null) {
       base['updatedAt'] = updatedAt!.toIso8601String();
     }
+    if (source != null) {
+      base['source'] = source!.toMap();
+    }
 
     return base;
   }
@@ -192,6 +202,7 @@ class Entrenamiento {
       load: loadValue,
       createdAt: createdAtValue,
       updatedAt: updatedAtValue,
+      source: map['source'] != null ? TemplateSource.fromMap(map['source']) : null,
     );
   }
 
