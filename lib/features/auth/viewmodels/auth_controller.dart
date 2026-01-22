@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../data/auth_repository.dart';
+import 'package:running_laps/core/services/user_service.dart';
 
 class AuthController {
   final AuthRepository _repo = AuthRepository();
+  final UserService _userService = UserService();
 
   // 1. Estados Observables
   final ValueNotifier<bool> isLoading = ValueNotifier<bool>(false);
@@ -166,6 +168,51 @@ class AuthController {
     confirmPassCtrl.clear();
 
     isLoginView.value = !isLoginView.value;
+  }
+
+  // ==========================
+  // GESTIÓN DE USUARIO (UserService delegates)
+  // ==========================
+  bool isGoogleUser() => _userService.isGoogleUser();
+
+  Future<void> updateName(String newName) async {
+    isLoading.value = true;
+    try {
+      await _userService.updateNombre(newName);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> reauthenticate(String password) async {
+    isLoading.value = true;
+    try {
+      if (isGoogleUser()) {
+        await _userService.reauthenticateWithGoogle();
+      } else {
+        await _userService.reauthenticate(password);
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> updatePassword(String newPassword) async {
+    isLoading.value = true;
+    try {
+      await _userService.updatePassword(newPassword);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> deleteAccount() async {
+    isLoading.value = true;
+    try {
+      await _userService.deleteAccount();
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   // ==========================

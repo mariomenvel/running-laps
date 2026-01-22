@@ -18,6 +18,7 @@ import '../../groups/views/groups_list_screen.dart';
 import '../../groups/views/participant_profile_screen.dart';
 import 'package:running_laps/features/analytics/views/analytics_hub_screen.dart';
 import '../../admin/views/admin_panel_screen.dart';
+import 'account_settings_view.dart';
 
 // Widgets comunes
 import 'package:running_laps/core/widgets/app_header.dart';
@@ -316,13 +317,13 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
                     // SECTION 1: SOCIAL
                     _buildSectionHeader("Social"),
                     _buildMenuTile(
-                      title: "Mis Grupos",
+                      title: "Mis grupos",
                       icon: Icons.groups_rounded,
                       color: Colors.blueAccent,
                       onTap: _openGroups,
                     ),
                     _buildMenuTile(
-                      title: "Mi Perfil Público",
+                      title: "Mi perfil público",
                       icon: Icons.person_pin_rounded,
                       color: Tema.brandPurple,
                       onTap: _openPublicProfile,
@@ -331,7 +332,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
                     // SECTION 2: PERSONAL
                     _buildSectionHeader("Personal"),
                     _buildMenuTile(
-                      title: "Analytics Hub",
+                      title: "Analytics hub",
                       icon: Icons.analytics_rounded,
                       color: Colors.purpleAccent,
                       onTap: () {
@@ -344,7 +345,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
                       },
                     ),
                     _buildMenuTile(
-                      title: "Mis Plantillas",
+                      title: "Mis plantillas",
                       icon: Icons.list_alt_rounded,
                       color: Colors.teal,
                       onTap: () {
@@ -357,13 +358,13 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
                       },
                     ),
                     _buildMenuTile(
-                      title: "Historial de Entrenamientos",
+                      title: "Historial de entrenamientos",
                       icon: Icons.history_rounded,
                       color: Colors.orangeAccent,
                       onTap: _openHistory,
                     ),
                     _buildMenuTile(
-                      title: "Editar Avatar",
+                      title: "Editar avatar",
                       icon: Icons.face_rounded,
                       color: Colors.green,
                       onTap: _openAvatarEditor,
@@ -372,7 +373,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
                     if (_isAdmin) ...[
                       _buildSectionHeader("Administración"),
                       _buildMenuTile(
-                        title: "Panel de Administrador",
+                        title: "Panel de administrador",
                         icon: Icons.admin_panel_settings,
                         color: Colors.black87,
                         onTap: () {
@@ -383,14 +384,32 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
                         },
                       ),
                     ],
-
-                    // SECTION 3: CUENTA
+                    // SECTION 4: CUENTA
                     _buildSectionHeader("Cuenta"),
+                    _buildMenuTile(
+                      title: "Configuración de cuenta",
+                      icon: Icons.manage_accounts_rounded,
+                      color: Colors.blueGrey,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AccountSettingsView(
+                              currentName: _nombreUsuario,
+                              onNameUpdated: _cargarNombre,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+
+                    // SECTION 5: SESIÓN
+                    _buildSectionHeader("Sesión"),
                     ValueListenableBuilder<bool>(
                       valueListenable: _authCtrl.isLoading,
                       builder: (context, isLoading, _) {
                         return _buildMenuTile(
-                          title: isLoading ? "Cerrando sesión..." : "Cerrar Sesión",
+                          title: isLoading ? "Cerrando sesión..." : "Cerrar sesión",
                           icon: Icons.logout_rounded,
                           color: Colors.redAccent,
                           isDestructive: true,

@@ -495,41 +495,9 @@ class _AuthPageState extends State<AuthPage> {
     return ValueListenableBuilder<bool>(
       valueListenable: _authCtrl.isLoading,
       builder: (context, isLoading, child) {
-        return Container(
-          height: 60,
-          margin: const EdgeInsets.only(top: 8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade200),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: InkWell(
-            onTap: isLoading ? null : _signInWithGoogle,
-            borderRadius: BorderRadius.circular(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.login_rounded, color: Tema.brandPurple.withOpacity(0.7), size: 18),
-                const SizedBox(width: 12),
-                const Text(
-                  'CONTINUAR CON GOOGLE',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
+        return _PremiumGoogleButton(
+          onTap: isLoading ? null : _signInWithGoogle,
+          isLoading: isLoading,
         );
       },
     );
@@ -619,6 +587,8 @@ class _AuthPageState extends State<AuthPage> {
   Widget _buildLoginButtons() {
     return Column(
       children: [
+        _buildGoogleButton(),
+        _buildGoogleDivider(),
         _buildButton(
           text: 'INICIAR SESIÓN',
           onPressed: _signIn,
@@ -630,8 +600,6 @@ class _AuthPageState extends State<AuthPage> {
           onPressed: _toggleView,
           showLoading: false,
         ),
-        _buildGoogleDivider(),
-        _buildGoogleButton(),
       ],
     );
   }
@@ -699,6 +667,8 @@ class _AuthPageState extends State<AuthPage> {
   Widget _buildRegisterButtons() {
     return Column(
       children: [
+        _buildGoogleButton(),
+        _buildGoogleDivider(),
         _buildButton(
           text: 'REGISTRARSE',
           onPressed: _signUp,
@@ -720,8 +690,6 @@ class _AuthPageState extends State<AuthPage> {
             );
           },
         ),
-        _buildGoogleDivider(),
-        _buildGoogleButton(),
       ],
     );
   }
@@ -813,6 +781,144 @@ class _AuthPageState extends State<AuthPage> {
                   ],
                 ),
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Widget interno para el botón de Google con diseño Premium y micro-animaciones
+class _PremiumGoogleButton extends StatefulWidget {
+  final VoidCallback? onTap;
+  final bool isLoading;
+
+  const _PremiumGoogleButton({this.onTap, this.isLoading = false});
+
+  @override
+  State<_PremiumGoogleButton> createState() => _PremiumGoogleButtonState();
+}
+
+class _PremiumGoogleButtonState extends State<_PremiumGoogleButton> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.96).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleTapDown(TapDownDetails details) {
+    if (widget.onTap != null) _controller.forward();
+  }
+
+  void _handleTapUp(TapUpDetails details) {
+    if (widget.onTap != null) _controller.reverse();
+  }
+
+  void _handleTapCancel() {
+    if (widget.onTap != null) _controller.reverse();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: _handleTapDown,
+      onTapUp: _handleTapUp,
+      onTapCancel: _handleTapCancel,
+      onTap: widget.onTap,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: Container(
+          height: 60,
+          margin: const EdgeInsets.only(top: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.grey.withOpacity(0.1),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+              BoxShadow(
+                color: Tema.brandPurple.withOpacity(0.03),
+                blurRadius: 30,
+                offset: const Offset(0, 15),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Stack(
+              children: [
+                Center(
+                  child: widget.isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Tema.brandPurple),
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Icono de Google estilizado
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Image.network(
+                                'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1024px-Google_%22G%22_logo.svg.png',
+                                width: 18,
+                                height: 18,
+                                errorBuilder: (context, error, stackTrace) => 
+                                    const Icon(Icons.login_rounded, color: Tema.brandPurple, size: 18),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            const Text(
+                              'CONTINUAR CON GOOGLE',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.black87,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ],
             ),
           ),
         ),

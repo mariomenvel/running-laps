@@ -357,7 +357,7 @@ class _HomeViewState extends State<HomeView> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                "Mis Comunidades",
+                "Mis comunidades",
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -522,14 +522,14 @@ class _HomeViewState extends State<HomeView> {
       childAspectRatio: 1.2,
       children: [
         KpiCardWithDelta(
-          title: 'Km Totales',
+          title: 'Km totales',
           value: totalKm.toStringAsFixed(1),
           primaryColor: const Color(0xFF4CAF50),
           icon: Icons.directions_run,
           helpText: AppHelpContent.homeKmTotales,
         ),
         KpiCardWithDelta(
-          title: 'Ritmo Medio',
+          title: 'Ritmo medio',
           value: _formatPace(avgPace),
           primaryColor: const Color(0xFF2196F3),
           icon: Icons.speed,
@@ -544,7 +544,7 @@ class _HomeViewState extends State<HomeView> {
           helpText: AppHelpContent.homeSesiones,
         ),
         KpiCardWithDelta(
-          title: 'Tiempo Total',
+          title: 'Tiempo total',
           value: _formatDuration(totalDurationSec),
           primaryColor: Colors.teal,
           icon: Icons.timer,
@@ -590,7 +590,7 @@ class _HomeViewState extends State<HomeView> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-              'Últimos Entrenamientos',
+              'Últimos entrenamientos',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
