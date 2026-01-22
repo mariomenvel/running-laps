@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:running_laps/core/widgets/info_tooltip.dart';
+import 'dart:ui';
 
-/// Card KPI premium con valor principal, delta vs periodo anterior y sparkline
-/// 
-///
-/// Diseño iOS-style con gradientes, sombras suaves y animaciones
+/// Card KPI premium con estilo Glassmorphism inspirado en diseños modernos.
+/// Versión optimizada para legibilidad y estética premium.
 class KpiCardWithDelta extends StatelessWidget {
   final String title;
   final String value;
   final String? subtitle;
-  final double? deltaPercentage; // % de cambio (positivo = mejora)
-  final List<double>? sparklineData; // Datos para mini sparkline
+  final double? deltaPercentage;
+  final List<double>? sparklineData;
   final Color primaryColor;
   final Color? gradientColor;
   final IconData? icon;
-  final bool isInverted; // true si valores bajos son mejor (ej: ritmo)
+  final bool isInverted;
   final VoidCallback? onTap;
-  final String? helpText; // Added helpText property
+  final String? helpText;
 
   const KpiCardWithDelta({
     super.key,
@@ -31,246 +30,222 @@ class KpiCardWithDelta extends StatelessWidget {
     this.icon,
     this.isInverted = false,
     this.onTap,
-    this.helpText, // Added to constructor
+    this.helpText,
   });
 
   @override
   Widget build(BuildContext context) {
-    final effectiveGradientColor = gradientColor ?? primaryColor.withOpacity(0.6);
-    final screenWidth = MediaQuery.of(context).size.width;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double width = constraints.maxWidth;
+        // Responsive scaling
+        final double titleSize = (width * 0.08).clamp(12.0, 14.0);
+        final double valueSize = (width * 0.18).clamp(24.0, 32.0);
+        final double iconBoxSize = (width * 0.3).clamp(36.0, 44.0);
 
-    // Tamaños responsivos basados en el ancho de pantalla
-    // Escalamos entre un mínimo razonable y un máximo para pantallas grandes
-    final double responsiveValueSize = (32 * (screenWidth / 375)).clamp(28.0, 42.0);
-    final double responsiveTitleSize = (14 * (screenWidth / 375)).clamp(12.0, 16.0);
-    final double responsiveSubtitleSize = (12.5 * (screenWidth / 375)).clamp(11.0, 15.0);
-
-    // Determinar si es mejora (positivo en deltas normales, negativo si inverted)
-    final bool? isImprovement = deltaPercentage == null
-        ? null
-        : isInverted
-            ? deltaPercentage! < 0
-            : deltaPercentage! > 0;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              primaryColor.withOpacity(0.1),
-              effectiveGradientColor.withOpacity(0.05),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: primaryColor.withOpacity(0.3),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: primaryColor.withOpacity(0.15),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header: título + icono
-            Row(
-              children: [
-                if (icon != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: primaryColor.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      icon,
-                      size: 18,
-                      color: primaryColor,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                ],
-                Expanded( // Modified title display
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          title,
-                           maxLines: 1, // Strictly one line to prevent overflow
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: responsiveTitleSize,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      if (helpText != null)
-                        InfoTooltip(content: helpText!),
-                    ],
-                  ),
+        return GestureDetector(
+          onTap: onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: primaryColor.withOpacity(0.12),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
-            
-            // Valor principal (grande, animado, responsive)
-            TweenAnimationBuilder<double>(
-              duration: const Duration(milliseconds: 600),
-              tween: Tween(begin: 0.0, end: 1.0),
-              curve: Curves.easeOutCubic,
-              builder: (context, animValue, child) {
-                return Opacity(
-                  opacity: animValue,
-                  child: Transform.translate(
-                    offset: Offset(0, 10 * (1 - animValue)),
-                    child: child,
-                  ),
-                );
-              },
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: responsiveValueSize,
-                    fontWeight: FontWeight.bold,
-                    color: primaryColor,
-                    height: 1.0,
-                  ),
-                ),
-              ),
-            ),
-            
-            if (subtitle != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                subtitle!,
-                style: TextStyle(
-                  fontSize: responsiveSubtitleSize,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-            
-            if (deltaPercentage != null || (sparklineData != null && sparklineData!.isNotEmpty)) ...[
-              const SizedBox(height: 4), // Reduced spacing
-              
-              // Delta y sparkline
-              Row(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Stack(
                 children: [
-                  if (deltaPercentage != null) ...[
-                    _buildDeltaChip(isImprovement, deltaPercentage!),
-                    const SizedBox(width: 12),
-                  ],
-                  
-                  if (sparklineData != null && sparklineData!.isNotEmpty)
-                    Expanded(child: _buildSparkline()),
+                  // Glass background
+                  BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.5),
+                          width: 1.5,
+                        ),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            primaryColor.withOpacity(0.08),
+                            Colors.white.withOpacity(0.4),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Background glow circle (decorative)
+                  Positioned(
+                    bottom: -30,
+                    right: -30,
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: primaryColor.withOpacity(0.05),
+                      ),
+                    ),
+                  ),
+
+                  // Content
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header: Icon Box + Sparkline/Trend
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            if (icon != null)
+                              Container(
+                                width: iconBoxSize,
+                                height: iconBoxSize,
+                                decoration: BoxDecoration(
+                                  color: primaryColor.withOpacity(0.8),
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: primaryColor.withOpacity(0.3),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    )
+                                  ],
+                                ),
+                                child: Icon(icon, color: Colors.white, size: iconBoxSize * 0.6),
+                              ),
+                            
+                            // Trend or Sparkline
+                            if (sparklineData != null && sparklineData!.isNotEmpty)
+                              SizedBox(
+                                width: width * 0.35,
+                                height: 30,
+                                child: _buildSparkline(),
+                              )
+                            else if (deltaPercentage != null)
+                              _buildSimpleTrendIcon(),
+                          ],
+                        ),
+                        
+                        const Spacer(),
+
+                        // Title
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                title,
+                                style: TextStyle(
+                                  color: Colors.blueGrey.shade700,
+                                  fontSize: titleSize,
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: -0.2,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (helpText != null)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 4),
+                                child: InfoTooltip(content: helpText!, iconSize: 14),
+                              ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        // Value + Unit
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: value.split(' ')[0], // Value
+                                  style: TextStyle(
+                                    fontSize: valueSize,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.black.withOpacity(0.75),
+                                    letterSpacing: -0.3,
+                                  ),
+                                ),
+                                if (value.contains(' ')) ...[ 
+                                  const TextSpan(text: ' '),
+                                  TextSpan(
+                                    text: value.split(' ')[1], // Unit
+                                    style: TextStyle(
+                                      fontSize: valueSize * 0.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.blueGrey.shade400,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-            ],
-          ],
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 
-  /// Chip con delta porcentual
-  Widget _buildDeltaChip(bool? isImprovement, double delta) {
-    final Color chipColor = isImprovement == null
-        ? Colors.grey
-        : isImprovement
-            ? Colors.green
-            : Colors.red;
+  Widget _buildSimpleTrendIcon() {
+    final isUp = deltaPercentage! > 0;
+    final color = isInverted 
+        ? (isUp ? Colors.red : Colors.green) 
+        : (isUp ? Colors.green : Colors.red);
+        
+    return Icon(
+      isUp ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+      color: color.withOpacity(0.8),
+      size: 20,
+    );
+  }
 
-    final IconData deltaIcon = isImprovement == null
-        ? Icons.remove
-        : isImprovement
-            ? Icons.trending_up
-            : Icons.trending_down;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: chipColor.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: chipColor.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            deltaIcon,
-            size: 16,
-            color: chipColor,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            '${delta.abs().toStringAsFixed(1)}%',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: chipColor,
+  Widget _buildSparkline() {
+    return LineChart(
+      LineChartData(
+        gridData: const FlGridData(show: false),
+        titlesData: const FlTitlesData(show: false),
+        borderData: FlBorderData(show: false),
+        lineBarsData: [
+          LineChartBarData(
+            spots: sparklineData!
+                .asMap()
+                .entries
+                .map((e) => FlSpot(e.key.toDouble(), e.value))
+                .toList(),
+            isCurved: true,
+            color: primaryColor.withOpacity(0.8),
+            barWidth: 2.5,
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              color: primaryColor.withOpacity(0.1),
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  /// Mini sparkline (últimos datos)
-  Widget _buildSparkline() {
-    if (sparklineData == null || sparklineData!.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return SizedBox(
-      height: 30,
-      child: LineChart(
-        LineChartData(
-          gridData: const FlGridData(show: false),
-          titlesData: const FlTitlesData(show: false),
-          borderData: FlBorderData(show: false),
-          minX: 0,
-          maxX: (sparklineData!.length - 1).toDouble(),
-          minY: sparklineData!.reduce((a, b) => a < b ? a : b) * 0.9,
-          maxY: sparklineData!.reduce((a, b) => a > b ? a : b) * 1.1,
-          lineBarsData: [
-            LineChartBarData(
-              spots: sparklineData!
-                  .asMap()
-                  .entries
-                  .map((e) => FlSpot(e.key.toDouble(), e.value))
-                  .toList(),
-              isCurved: true,
-              color: primaryColor.withOpacity(0.6),
-              barWidth: 2,
-              dotData: const FlDotData(show: false),
-              belowBarData: BarAreaData(
-                show: true,
-                color: primaryColor.withOpacity(0.1),
-              ),
-            ),
-          ],
-          lineTouchData: const LineTouchData(enabled: false),
-        ),
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
+        lineTouchData: const LineTouchData(enabled: false),
       ),
     );
   }
 }
-

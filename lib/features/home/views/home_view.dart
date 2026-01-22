@@ -515,22 +515,23 @@ class _HomeViewState extends State<HomeView> {
 
     return GridView.count(
       crossAxisCount: 2,
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
+      crossAxisSpacing: 16,
+      mainAxisSpacing: 16,
       shrinkWrap: true,
+      padding: EdgeInsets.zero,
       physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 1.2,
+      childAspectRatio: 1.05, // More square-ish to accommodate glassmorphism content
       children: [
         KpiCardWithDelta(
           title: 'Km totales',
-          value: totalKm.toStringAsFixed(1),
+          value: totalKm.toStringAsFixed(1) + " km", // Add unit for new layout
           primaryColor: const Color(0xFF4CAF50),
           icon: Icons.directions_run,
           helpText: AppHelpContent.homeKmTotales,
         ),
         KpiCardWithDelta(
           title: 'Ritmo medio',
-          value: _formatPace(avgPace),
+          value: _formatPace(avgPace) + " /km", // Add unit
           primaryColor: const Color(0xFF2196F3),
           icon: Icons.speed,
           isInverted: true,
@@ -538,7 +539,7 @@ class _HomeViewState extends State<HomeView> {
         ),
         KpiCardWithDelta(
           title: 'Sesiones',
-          value: totalWorkouts.toString(),
+          value: totalWorkouts.toString(), // No unit for sessions
           primaryColor: const Color(0xFFFF9800),
           icon: Icons.fitness_center,
           helpText: AppHelpContent.homeSesiones,
