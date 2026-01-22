@@ -13,6 +13,7 @@ import 'package:printing/printing.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:universal_html/html.dart' as html;
 import 'package:running_laps/features/history/views/training_detail_view.dart';
+import 'package:running_laps/features/history/views/training_no_gps_detail_view.dart';
 
 class PremiumTrainingCard extends StatefulWidget {
   final Entrenamiento training;
@@ -547,7 +548,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
             width: double.infinity,
             child: OutlinedButton.icon(
               icon: const Icon(Icons.analytics_rounded, size: 20),
-              label: const Text("Ver Análisis y Mapa"),
+              label: Text(widget.training.gps ? "Ver Análisis y Mapa" : "Ver Análisis"),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Tema.brandPurple,
                 side: BorderSide(color: Tema.brandPurple.withOpacity(0.5)),
@@ -559,7 +560,9 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                  Navigator.push(
                    context,
                    MaterialPageRoute(
-                     builder: (context) => TrainingDetailView(training: widget.training),
+                     builder: (context) => widget.training.gps 
+                      ? TrainingDetailView(training: widget.training)
+                      : TrainingNoGpsDetailView(training: widget.training),
                    ),
                  );
               },
