@@ -17,8 +17,8 @@ class AuthFailure implements Exception {
       return AuthFailure("Este usuario ha sido deshabilitado.");
     } else if (code == "user-not-found") {
       return AuthFailure("No encontramos ninguna cuenta con ese correo.");
-    } else if (code == "wrong-password" || code == "invalid-credential") {
-      return AuthFailure("El correo o la contraseña no son correctos.");
+    } else if (code == "wrong-password") {
+      return AuthFailure("Contraseña incorrecta.");
     } else if (code == "email-already-in-use") {
       return AuthFailure("Este correo ya está registrado. Prueba a iniciar sesión o recuperar contraseña.");
     } else if (code == "weak-password") {
@@ -29,10 +29,6 @@ class AuthFailure implements Exception {
       return AuthFailure('Error de conexión. Revisa tu internet.');
     } else if (code == "too-many-requests") {
       return AuthFailure('Demasiados intentos. Inténtalo más tarde.');
-    } else if (code == "channel-error") {
-      return AuthFailure('Por favor, rellena todos los campos.');
-    } else if (code == "missing-password") {
-      return AuthFailure('Por favor, introduce tu contraseña.');
     } else {
       if (rawMessage != null) {
         return AuthFailure(rawMessage);
@@ -41,4 +37,3 @@ class AuthFailure implements Exception {
     }
   }
 }
-

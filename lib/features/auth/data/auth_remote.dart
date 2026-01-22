@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/auth_failure.dart';
 
 class AuthRemote {
@@ -54,6 +55,32 @@ class AuthRemote {
 
   Future<void> signOut() async {
     await _auth.signOut();
+  }
+
+  Future<UserCredential> signInWithGoogle() async {
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      
+      if (googleUser == null) {
+        throw AuthFailure.fromCode('aborted-by-user', 'Sign in aborted by user');
+      }
+      
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      
+      return await _auth.signInWithCredential(credential);
+    } on FirebaseAuthException catch (e) {
+      throw AuthFailure.fromCode(e.code, e.message);
+    } catch (e) {
+      if (e is AuthFailure) rethrow;
+      print("DEBUG: Error en signInWithGoogle: $e");
+      throw AuthFailure(e.toString());
+    }
   }
 
   Future<void> sendPasswordResetEmail(String email) async {

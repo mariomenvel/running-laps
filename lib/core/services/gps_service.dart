@@ -121,7 +121,6 @@ class GPSService {
     _trackingState.value = createInitialTrackingState();
     _sensorService.resetSession();
     points.clear();
-    points.clear();
     _gpsStableSeconds = 0;
     _sessionStartTime = DateTime.now();
     _pausedDurationMs = 0;
@@ -191,41 +190,53 @@ class GPSService {
     final newState =
         _processTick(_trackingState.value, frame);
 
-    _trackingState.value = newState;
+    // Only update distance and points if the point was valid (moved or stable)
+    // If newState == state, then the point was discarded
+    if (newState != _trackingState.value) {
+      _trackingState.value = newState;
 
-    totalDistanceMeters.value =
-        newState.distanceTotal.round();
+      totalDistanceMeters.value =
+          newState.distanceTotal.round();
+
+      // 2. Calculate Average Pace (Session total)
+      if (_sessionStartTime != null) {
+         final sessionDurationMs = now.difference(_sessionStartTime!).inMilliseconds - _pausedDurationMs;
+         if (sessionDurationMs > 3000 && newState.distanceTotal > 5) { // Valid data > 3s and > 5m
+            final double totalSeconds = sessionDurationMs / 1000.0;
+            final double avgVel = newState.distanceTotal / totalSeconds;
+            if (avgVel > 0.1) {
+               final paceStr = _formatPace(1000 / avgVel);
+               averagePace.value = paceStr;
+               currentPace.value = paceStr; // Both now use the session average
+            }
+         }
+      }
+
+      if (newState.latitude != null &&
+          newState.longitude != null) {
+        // Only add unique or validly moved points
+        bool isNewPoint = true;
+        if (points.isNotEmpty) {
+          final last = points.last;
+          if (last.latitude == newState.latitude && last.longitude == newState.longitude) {
+            isNewPoint = false;
+          }
+        }
+
+        if (isNewPoint) {
+          points.add(
+            GpsPoint(
+              latitude: newState.latitude!, 
+              longitude: newState.longitude!,
+              altitude: frame.altitude ?? 0.0, // Store altitude
+              timestamp: now,
+            ),
+          );
+        }
+      }
+    }
 
     cadence.value = _sensorService.cadence.value;
-
-    // Simplified: No longer calculating instantaneous pace.
-    // currentPace will be updated together with averagePace below.
-
-    // 2. Calculate Average Pace (Session total)
-    if (_sessionStartTime != null) {
-       final sessionDurationMs = now.difference(_sessionStartTime!).inMilliseconds - _pausedDurationMs;
-       if (sessionDurationMs > 3000 && newState.distanceTotal > 5) { // Valid data > 3s and > 5m
-          final double totalSeconds = sessionDurationMs / 1000.0;
-          final double avgVel = newState.distanceTotal / totalSeconds;
-          if (avgVel > 0.1) {
-             final paceStr = _formatPace(1000 / avgVel);
-             averagePace.value = paceStr;
-             currentPace.value = paceStr; // Both now use the session average
-          }
-       }
-    }
-
-    if (newState.latitude != null &&
-        newState.longitude != null) {
-      points.add(
-        GpsPoint(
-          latitude: newState.latitude!, 
-          longitude: newState.longitude!,
-          altitude: frame.altitude ?? 0.0, // Store altitude
-          timestamp: now,
-        ),
-      );
-    }
   }
 
   /* ================= CORE LOGIC ================= */
@@ -306,8 +317,15 @@ if (frame.stepsDelta == 0 && !gpsStable) {
         lon,
       );
       
-      // Filtro de "salto imposible": > 10m en un tick (usualmente 1s)
-      if (distance > 10.0) distance = 0.0;
+      // 🚀 CRITICAL FILTER: Physical speed limit (10 m/s = 36 km/h)
+      // Use REAL elapsed time (dt) for speed calculation to handle signal gaps correctly
+      final double calculatedSpeed = distance / dt;
+
+      if (calculatedSpeed > 10.0) {
+        // If speed is impossible, discard this point and keep previous state
+        _gpsStableSeconds = 0; // Reset stability on invalid point
+        return state;
+      }
     }
 
     // Recalibración de zancada
@@ -355,6 +373,10 @@ if (frame.stepsDelta == 0 && !gpsStable) {
   }
 
   String _formatPace(double secPerKm) {
+    if (secPerKm > 3600 || secPerKm < 60) {
+      // Very slow (>60 min/km) or impossibly fast (<1 min/km)
+      if (secPerKm > 3600) return "--:-- /km";
+    }
     final m = (secPerKm / 60).floor();
     final s = (secPerKm % 60).round();
     return "${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')} /km";

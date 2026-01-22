@@ -29,6 +29,25 @@ class AuthRepository {
     await _remote.signIn(email, password);
   }
 
+  Future<void> signInWithGoogle() async {
+    UserCredential cred = await _remote.signInWithGoogle();
+    User? user = cred.user;
+
+    if (user != null) {
+      // Verificar si el documento ya existe
+      final name = await _remote.getUserName();
+      if (name == null) {
+        // Es la primera vez que inicia sesión con Google (o no tiene nombre en Firestore)
+        await _remote.saveUserDoc(user.uid, <String, dynamic>{
+          "nombre": user.displayName ?? "Usuario",
+          "email": user.email,
+          "createdAt": FieldValue.serverTimestamp(),
+          "photoUrl": user.photoURL,
+        });
+      }
+    }
+  }
+
   Future<void> signUp(String email, String password, String nombre) async {
     // 1) Crear usuario en Firebase Auth
     UserCredential cred = await _remote.createUser(email, password);

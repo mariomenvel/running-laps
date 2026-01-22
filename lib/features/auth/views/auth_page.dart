@@ -117,6 +117,22 @@ class _AuthPageState extends State<AuthPage> {
     }
   }
 
+  Future<void> _signInWithGoogle() async {
+    try {
+      await _authCtrl.signInWithGoogle();
+      if (!mounted) return;
+
+      ModernSnackBar.showSuccess(context, 'Sesión iniciada con Google');
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const HomeView()),
+        (Route<dynamic> route) => false,
+      );
+    } catch (e) {
+      _showError(e);
+    }
+  }
+
   void _toggleView() {
     _authCtrl.toggleView();
   }
@@ -475,6 +491,73 @@ class _AuthPageState extends State<AuthPage> {
     );
   }
 
+  Widget _buildGoogleButton() {
+    return ValueListenableBuilder<bool>(
+      valueListenable: _authCtrl.isLoading,
+      builder: (context, isLoading, child) {
+        return Container(
+          height: 60,
+          margin: const EdgeInsets.only(top: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade200),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: InkWell(
+            onTap: isLoading ? null : _signInWithGoogle,
+            borderRadius: BorderRadius.circular(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.login_rounded, color: Tema.brandPurple.withOpacity(0.7), size: 18),
+                const SizedBox(width: 12),
+                const Text(
+                  'CONTINUAR CON GOOGLE',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildGoogleDivider() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 24),
+      child: Row(
+        children: [
+          Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              'O',
+              style: TextStyle(
+                color: Colors.grey.shade400,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ),
+          Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+        ],
+      ),
+    );
+  }
+
   // ===================================================================
   // Vistas de Formulario (Login / Registro)
   // ===================================================================
@@ -547,6 +630,8 @@ class _AuthPageState extends State<AuthPage> {
           onPressed: _toggleView,
           showLoading: false,
         ),
+        _buildGoogleDivider(),
+        _buildGoogleButton(),
       ],
     );
   }
@@ -635,6 +720,8 @@ class _AuthPageState extends State<AuthPage> {
             );
           },
         ),
+        _buildGoogleDivider(),
+        _buildGoogleButton(),
       ],
     );
   }

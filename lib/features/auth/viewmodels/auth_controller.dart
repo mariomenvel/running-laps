@@ -50,6 +50,21 @@ class AuthController {
     }
   }
 
+  Future<void> signInWithGoogle() async {
+    isLoading.value = true;
+    try {
+      await _repo.signInWithGoogle();
+    } catch (e) {
+      if (e.toString().contains('aborted-by-user')) {
+        // Ignorar si el usuario simplemente canceló el diálogo
+        return;
+      }
+      rethrow;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   Future<void> resendVerificationEmail(String email, String password) async {
       isLoading.value = true;
       try {
