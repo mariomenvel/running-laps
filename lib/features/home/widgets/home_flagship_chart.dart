@@ -210,7 +210,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
       return Center(child: Text("Sin datos para este periodo", style: TextStyle(color: Colors.grey.shade400)));
     }
 
-    final maxY = groups.map((e) => e.value).reduce(math.max);
+    final maxY = groups.map((e) => e.displayValue).reduce(math.max);
     // Add 20% breathing room to top
     final targetMaxY = maxY * 1.2;
 
@@ -313,7 +313,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
             x: index,
             barRods: [
               BarChartRodData(
-                toY: data.value,
+                toY: data.displayValue,
                 gradient: _getGradient(isTouched),
                 width: groups.length > 10 ? 8 : 12, // Slightly thinner for elegance
                 borderRadius: BorderRadius.circular(50), // Maximum rounding
@@ -374,26 +374,49 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
     
     final now = DateTime.now();
     DateTime cutoff;
+    List<_ChartGroup> rawGroups = [];
     
     switch (_selectedRange) {
       case ChartFlagshipRange.oneWeek:
         cutoff = now.subtract(const Duration(days: 7));
-        return _groupByDay(cutoff, now);
+        rawGroups = _groupByDay(cutoff, now);
+        break;
       case ChartFlagshipRange.oneMonth:
         cutoff = now.subtract(const Duration(days: 30));
-        return _groupByDay(cutoff, now);
+        rawGroups = _groupByDay(cutoff, now);
+        break;
       case ChartFlagshipRange.sixMonths:
         cutoff = now.subtract(const Duration(days: 180));
-        return _groupByWeek(cutoff, now);
+        rawGroups = _groupByWeek(cutoff, now);
+        break;
       case ChartFlagshipRange.oneYear:
         cutoff = now.subtract(const Duration(days: 365));
-        return _groupByMonth(cutoff, now);
+        rawGroups = _groupByMonth(cutoff, now);
+        break;
       case ChartFlagshipRange.allTime:
-        // Use earliest workout date
-         // Avoid finding min of empty list
         final earliest = widget.workouts.map((e) => e.fecha).reduce((a, b) => a.isBefore(b) ? a : b);
         cutoff = earliest.subtract(const Duration(days: 1)); // Buffer
-        return _groupByMonth(cutoff, now);
+        rawGroups = _groupByMonth(cutoff, now);
+        break;
+    }
+
+    // Post-process to invert pace height if needed
+    if (_selectedMetric == ChartFlagshipMetric.pace) {
+      // Find the fastest and slowest to normalize? 
+      // Actually, speed logic (1/pace) is better as it handles 0 and is predictable.
+      return rawGroups.map((g) {
+        double height = 0;
+        if (g.value > 0) {
+          // Invert: higher bar for lower seconds/km
+          // 10000 / 300s (5:00) = 33.3
+          // 10000 / 240s (4:00) = 41.6
+          height = 10000 / g.value;
+        }
+        return g.copyWith(displayValue: height);
+      }).toList();
+    } else {
+      // Distance is direct
+      return rawGroups.map((g) => g.copyWith(displayValue: g.value)).toList();
     }
   }
 
@@ -554,16 +577,34 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
 }
 
 class _ChartGroup {
-  final double value;
+  final double value; // Raw metric value
+  final double displayValue; // Transformed value for chart height
   final String label;
   final String shortLabel;
   final int sortKey;
 
   _ChartGroup({
     required this.value,
+    this.displayValue = 0,
     required this.label,
     required this.shortLabel,
     required this.sortKey,
   });
+
+  _ChartGroup copyWith({
+    double? value,
+    double? displayValue,
+    String? label,
+    String? shortLabel,
+    int? sortKey,
+  }) {
+    return _ChartGroup(
+      value: value ?? this.value,
+      displayValue: displayValue ?? this.displayValue,
+      label: label ?? this.label,
+      shortLabel: shortLabel ?? this.shortLabel,
+      sortKey: sortKey ?? this.sortKey,
+    );
+  }
 }
 

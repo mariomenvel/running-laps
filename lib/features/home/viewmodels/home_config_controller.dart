@@ -9,6 +9,7 @@ class HomeConfigController {
   final ValueNotifier<HomeLayoutConfig?> config = ValueNotifier(null);
   final ValueNotifier<bool> isLoading = ValueNotifier(false);
   final ValueNotifier<bool> isSaving = ValueNotifier(false);
+  bool _isDisposed = false;
   
   HomeConfigController({
     required this.userId,
@@ -20,7 +21,7 @@ class HomeConfigController {
   }
 
   Future<void> loadConfig() async {
-    if (userId.isEmpty) return;
+    if (userId.isEmpty || _isDisposed) return;
     
     isLoading.value = true;
     try {
@@ -31,7 +32,9 @@ class HomeConfigController {
       // Fallback to default if load fails
       config.value = HomeLayoutConfig.defaultConfig(userId);
     } finally {
-      isLoading.value = false;
+      if (!_isDisposed) {
+        isLoading.value = false;
+      }
     }
   }
 
@@ -45,7 +48,7 @@ class HomeConfigController {
       debugPrint('Error saving home config: $e');
       rethrow;
     } finally {
-      isSaving.value = false;
+      if (!_isDisposed) isSaving.value = false;
     }
   }
 
@@ -108,11 +111,14 @@ class HomeConfigController {
     } catch (e) {
       debugPrint('Error resetting config: $e');
     } finally {
-      isLoading.value = false;
+      if (!_isDisposed) {
+        isLoading.value = false;
+      }
     }
   }
 
   void dispose() {
+    _isDisposed = true;
     config.dispose();
     isLoading.dispose();
     isSaving.dispose();

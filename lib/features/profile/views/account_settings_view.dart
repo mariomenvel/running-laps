@@ -901,14 +901,6 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                   children: [
                     const SizedBox(height: 12),
                     
-                    _buildSectionHeader("Perfil"),
-                    _buildMenuTile(
-                      title: "Cambiar mi nombre",
-                      icon: Icons.edit_rounded,
-                      color: Colors.blue,
-                      onTap: _showChangeNameDialog,
-                    ),
-                    
                     _buildSectionHeader("Preferencias de entrenamiento"),
                     _buildSwitchTile(
                       title: "Alarmas de ritmo",
@@ -932,6 +924,14 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                         setState(() => _gpsDefault = val);
                         SettingsService().setGpsDefault(val);
                       },
+                    ),
+                    
+                    _buildSectionHeader("Perfil"),
+                    _buildMenuTile(
+                      title: "Cambiar mi nombre",
+                      icon: Icons.edit_rounded,
+                      color: Colors.blue,
+                      onTap: _showChangeNameDialog,
                     ),
                     
                     if (!_authCtrl.isGoogleUser()) ...[
