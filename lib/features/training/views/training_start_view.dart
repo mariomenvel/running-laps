@@ -11,6 +11,7 @@ import 'package:running_laps/config/app_theme.dart';
 import '../../../core/widgets/app_header.dart';
 import '../../../core/services/gps_service.dart';
 import '../../../core/widgets/modern_snackbar.dart';
+import '../../../core/services/settings_service.dart';
 
 import '../../home/views/home_view.dart';
 import '../../profile/views/profile_menu_screen.dart';
@@ -108,6 +109,32 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   @override
   void initState() {
     super.initState();
+    _loadUserPreferences();
+  }
+
+  Future<void> _loadUserPreferences() async {
+    final settings = SettingsService();
+    final alarm = await settings.getAlarmEnabled();
+    final gps = await settings.getGpsDefault();
+    final config = await settings.getAlarmConfig();
+    
+    if (mounted) {
+      setState(() {
+        _alarmEnabled = alarm;
+        _vm.setGpsOn(gps);
+        
+        _alarmMode = config['mode'] == 'pace' ? AlarmMode.byPace : AlarmMode.bySeconds;
+        _timeMin = config['timeMin'];
+        _timeSecHalfIndex = ((config['timeSec'] as double) * 2).round();
+        _paceMin = config['paceMin'];
+        _paceSecIndex = config['paceSec'];
+        
+        int savedSegment = config['segment'];
+        int segIdx = _segmentDistances.indexOf(savedSegment);
+        if (segIdx != -1) _segmentIndex = segIdx;
+      });
+      _updateAlarmInterval();
+    }
   }
 
 
@@ -208,6 +235,17 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     setState(() {
       _alarmIntervalMs = newIntervalMs;
     });
+
+    if (_alarmEnabled) {
+      SettingsService().saveAlarmConfig(
+        mode: _alarmMode == AlarmMode.byPace ? 'pace' : 'time',
+        timeMin: _timeMin,
+        timeSec: _timeSecHalfIndex * 0.5,
+        paceMin: _paceMin,
+        paceSec: _paceSecIndex,
+        segment: _segmentDistances[_segmentIndex],
+      );
+    }
   }
 
 

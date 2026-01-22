@@ -5,7 +5,10 @@ import '../../auth/views/auth_page.dart';
 import '../../../core/widgets/modern_snackbar.dart';
 import '../../../core/widgets/app_header.dart';
 import '../../../core/widgets/gradient_banner.dart';
+import '../../../core/services/settings_service.dart';
 import '../../home/views/home_view.dart';
+import '../../templates/data/template_models.dart';
+import '../../templates/widgets/alarm_config_sheet.dart';
 
 class AccountSettingsView extends StatefulWidget {
   final String currentName;
@@ -24,11 +27,28 @@ class AccountSettingsView extends StatefulWidget {
 class _AccountSettingsViewState extends State<AccountSettingsView> {
   final AuthController _authCtrl = AuthController();
   late String _displayName;
+  
+  // Settings state
+  bool _alarmDefault = false;
+  bool _gpsDefault = false;
 
   @override
   void initState() {
     super.initState();
     _displayName = widget.currentName;
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final settings = SettingsService();
+    final alarm = await settings.getAlarmEnabled();
+    final gps = await settings.getGpsDefault();
+    if (mounted) {
+      setState(() {
+        _alarmDefault = alarm;
+        _gpsDefault = gps;
+      });
+    }
   }
 
   // =====================================================
@@ -732,6 +752,125 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
     );
   }
 
+  Widget _buildSwitchTile({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    VoidCallback? onSettingsTap,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (onSettingsTap != null && value)
+              IconButton(
+                icon: Icon(Icons.settings_suggest_rounded, color: Colors.grey.shade400, size: 20),
+                onPressed: onSettingsTap,
+              ),
+            Transform.scale(
+              scale: 0.9,
+              child: Switch(
+                value: value,
+                onChanged: onChanged,
+                activeColor: Tema.brandPurple,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showAlarmSettings() async {
+    final settings = SettingsService();
+    final config = await settings.getAlarmConfig();
+    
+    if (!mounted) return;
+
+    final initialAlerts = TemplateAlerts(
+      enabled: true,
+      mode: config['mode'],
+      timeMin: config['timeMin'],
+      timeSec: config['timeSec'],
+      paceMin: config['paceMin'],
+      paceSec: config['paceSec'],
+      segmentDistance: config['segment'],
+    );
+
+    final TemplateAlerts? result = await showModalBottomSheet<TemplateAlerts>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => AlarmConfigSheet(initialAlerts: initialAlerts),
+    );
+
+    if (result != null && mounted) {
+      await settings.saveAlarmConfig(
+        mode: result.mode,
+        timeMin: result.timeMin,
+        timeSec: result.timeSec,
+        paceMin: result.paceMin,
+        paceSec: result.paceSec,
+        segment: result.segmentDistance,
+      );
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Ajustes de alarma guardados"),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -768,6 +907,31 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                       icon: Icons.edit_rounded,
                       color: Colors.blue,
                       onTap: _showChangeNameDialog,
+                    ),
+                    
+                    _buildSectionHeader("Preferencias de entrenamiento"),
+                    _buildSwitchTile(
+                      title: "Alarmas de ritmo",
+                      subtitle: "Activar avisos por defecto al iniciar",
+                      icon: Icons.notifications_active_rounded,
+                      color: Colors.orange,
+                      value: _alarmDefault,
+                      onChanged: (val) {
+                        setState(() => _alarmDefault = val);
+                        SettingsService().setAlarmEnabled(val);
+                      },
+                      onSettingsTap: _showAlarmSettings,
+                    ),
+                    _buildSwitchTile(
+                      title: "GPS siempre activo",
+                      subtitle: "Pre-configurar registro GPS al iniciar",
+                      icon: Icons.location_on_rounded,
+                      color: Colors.green,
+                      value: _gpsDefault,
+                      onChanged: (val) {
+                        setState(() => _gpsDefault = val);
+                        SettingsService().setGpsDefault(val);
+                      },
                     ),
                     
                     if (!_authCtrl.isGoogleUser()) ...[
