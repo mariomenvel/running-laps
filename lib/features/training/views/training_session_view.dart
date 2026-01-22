@@ -521,31 +521,10 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                                         ),
                                       ),
                                       const SizedBox(width: 4),
-                                      // Columna derecha con unidad y Ritmo Medio
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            "min/km",
-                                            style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold),
-                                          ),
-                                          // Ritmo Medio
-                                          ValueListenableBuilder<String>(
-                                             valueListenable: _gpsService?.averagePace ?? ValueNotifier("--:--"),
-                                             builder: (context, avgPace, _) {
-                                                 if (avgPace.contains("--")) return const SizedBox.shrink();
-                                                 return Text(
-                                                   "AVG: ${avgPace.split(' ')[0]}",
-                                                   style: TextStyle(
-                                                      fontSize: 12, 
-                                                      color: Colors.grey.shade400,
-                                                      fontWeight: FontWeight.bold
-                                                   ),
-                                                 );
-                                             }
-                                          )
-                                        ],
-                                      )
+                                      const Text(
+                                        "min/km",
+                                        style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold),
+                                      ),
                                     ],
                                   );
                                 }

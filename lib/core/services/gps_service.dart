@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -71,8 +72,11 @@ class GPSService {
   /* ================= INTERNAL ================= */
 
   final SensorService _sensorService = SensorService();
-  final KalmanFilter _kalmanLat = KalmanFilter();
-  final KalmanFilter _kalmanLon = KalmanFilter();
+  // Kalman filters for lat/lon. 
+  // Process noise (Q): 1e-8 (~1.1m error per step)
+  // Measurement noise (R) base: 1e-7 (~3.5m error base)
+  final KalmanFilter _kalmanLat = KalmanFilter(processNoise: 1e-8, measurementNoise: 1e-7);
+  final KalmanFilter _kalmanLon = KalmanFilter(processNoise: 1e-8, measurementNoise: 1e-7);
 
   final ValueNotifier<TrackingState> _trackingState =
       ValueNotifier(createInitialTrackingState());
@@ -81,9 +85,6 @@ class GPSService {
 
   int _gpsStableSeconds = 0;
   
-  // Buffer for smoothing instantaneous velocity (moving average)
-  final List<double> _velocityBuffer = [];
-  static const int _velocityBufferSize = 5; // ~5-10 seconds depending on update rate
   DateTime? _sessionStartTime;
   int _pausedDurationMs = 0;
   DateTime? _pauseStartTime;
@@ -122,17 +123,16 @@ class GPSService {
     points.clear();
     points.clear();
     _gpsStableSeconds = 0;
-    _velocityBuffer.clear();
     _sessionStartTime = DateTime.now();
     _pausedDurationMs = 0;
     _pauseStartTime = null;
 
     _positionSubscription?.cancel();
     
-    // Configuración del stream
+    // Configuración del stream: Alta frecuencia
     const locationSettings = LocationSettings(
       accuracy: LocationAccuracy.bestForNavigation,
-      distanceFilter: 2, // Mínimo 2 metros para disparar evento
+      distanceFilter: 0, // Capturar TODO el movimiento
     );
 
     _positionSubscription = Geolocator.getPositionStream(
@@ -198,42 +198,19 @@ class GPSService {
 
     cadence.value = _sensorService.cadence.value;
 
-    // 1. Calculate Smoothed Instantaneous Pace
-    // Push to buffer
-    if (newState.velocity > 0.5) { // Only add significant movement to buffer
-       _velocityBuffer.add(newState.velocity);
-       if (_velocityBuffer.length > _velocityBufferSize) {
-         _velocityBuffer.removeAt(0);
-       }
-    } else {
-       // If stopped, clear buffer faster or push zeros? 
-       // Pushing zero helps decelerate smoothly
-       _velocityBuffer.add(0.0);
-       if (_velocityBuffer.length > _velocityBufferSize) {
-         _velocityBuffer.removeAt(0);
-       }
-    }
-
-    // Compute average velocity from buffer
-    double smoothedVelocity = 0.0;
-    if (_velocityBuffer.isNotEmpty) {
-      smoothedVelocity = _velocityBuffer.reduce((a, b) => a + b) / _velocityBuffer.length;
-    }
-
-    if (smoothedVelocity > 0.5) { // Threshold to show pace (< 0.5m/s is stationary)
-      currentPace.value = _formatPace(1000 / smoothedVelocity);
-    } else {
-      currentPace.value = "--:-- /km";
-    }
+    // Simplified: No longer calculating instantaneous pace.
+    // currentPace will be updated together with averagePace below.
 
     // 2. Calculate Average Pace (Session total)
     if (_sessionStartTime != null) {
        final sessionDurationMs = now.difference(_sessionStartTime!).inMilliseconds - _pausedDurationMs;
-       if (sessionDurationMs > 5000 && newState.distanceTotal > 10) { // Valid data > 5s and > 10m
+       if (sessionDurationMs > 3000 && newState.distanceTotal > 5) { // Valid data > 3s and > 5m
           final double totalSeconds = sessionDurationMs / 1000.0;
           final double avgVel = newState.distanceTotal / totalSeconds;
           if (avgVel > 0.1) {
-             averagePace.value = _formatPace(1000 / avgVel);
+             final paceStr = _formatPace(1000 / avgVel);
+             averagePace.value = paceStr;
+             currentPace.value = paceStr; // Both now use the session average
           }
        }
     }
@@ -266,10 +243,10 @@ class GPSService {
 
     final bool gpsStable =
         frame.gpsAccuracy != null &&
-        frame.gpsAccuracy! <= 12 &&
+        frame.gpsAccuracy! <= 30 && // Relax accuracy slightly more
         frame.gpsSpeed != null &&
-        frame.gpsSpeed! >= 0.8 &&
-        frame.gpsSpeed! <= 6.0;
+        frame.gpsSpeed! >= 0.1 && // Capture almost any movement
+        frame.gpsSpeed! <= 10.0; // Physically possible human speed limit
 
     if (gpsStable) {
       _gpsStableSeconds++;
@@ -303,23 +280,34 @@ if (frame.stepsDelta == 0 && !gpsStable) {
       velocity = 0.0;
     }
 
-    if (velocity > 6.0) velocity = 6.0;
+    if (velocity > 10.0) velocity = 10.0;
     if (velocity < 0) velocity = 0;
 
-    // Distancia
-    double distance = velocity * deltaTime;
-    if (distance < 0.3) distance = 0;
-    if (distance > 6.0) distance = 6.0;
-
-    // Posición filtrada
+    // Posición filtrada (Declarar ANTES de usar en Haversine)
     double? lat = state.latitude;
     double? lon = state.longitude;
 
     if (gpsStable &&
         frame.latitude != null &&
         frame.longitude != null) {
-      lat = _kalmanLat.filter(frame.latitude!);
-      lon = _kalmanLon.filter(frame.longitude!);
+      // Convert meter accuracy to degree accuracy approximation (1m ≈ 0.000009 deg)
+      final double accDeg = (frame.gpsAccuracy ?? 5.0) * 0.000009;
+      lat = _kalmanLat.filter(frame.latitude!, accuracy: accDeg);
+      lon = _kalmanLon.filter(frame.longitude!, accuracy: accDeg);
+    }
+
+    // Distancia: Haversine entre puntos filtrados (Usar lat/lon ya declarados)
+    double distance = 0.0;
+    if (lat != null && lon != null && state.latitude != null && state.longitude != null) {
+      distance = _calculateHaversine(
+        state.latitude!,
+        state.longitude!,
+        lat,
+        lon,
+      );
+      
+      // Filtro de "salto imposible": > 10m en un tick (usualmente 1s)
+      if (distance > 10.0) distance = 0.0;
     }
 
     // Recalibración de zancada
@@ -348,6 +336,23 @@ if (frame.stepsDelta == 0 && !gpsStable) {
   }
 
   /* ================= HELPERS ================= */
+
+  double _calculateHaversine(double lat1, double lon1, double lat2, double lon2) {
+    const double r = 6371000; // Radio de la Tierra en metros
+    final double dLat = (lat2 - lat1) * (math.pi / 180.0);
+    final double dLon = (lon2 - lon1) * (math.pi / 180.0);
+    
+    final double sinLat = math.sin(dLat / 2);
+    final double sinLon = math.sin(dLon / 2);
+    
+    final double a = sinLat * sinLat + 
+                    math.cos(lat1 * (math.pi / 180.0)) * 
+                    math.cos(lat2 * (math.pi / 180.0)) * 
+                    sinLon * sinLon;
+    
+    final double c = 2 * math.asin(math.sqrt(a));
+    return r * c;
+  }
 
   String _formatPace(double secPerKm) {
     final m = (secPerKm / 60).floor();

@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
+// fl_chart was here
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 
+import '../widgets/training_map_view.dart';
+
 class TrainingDetailView extends StatelessWidget {
   final Entrenamiento training;
 
-  const TrainingDetailView({Key? key, required this.training}) : super(key: key);
+  const TrainingDetailView({super.key, required this.training});
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +100,7 @@ class TrainingDetailView extends StatelessWidget {
           ClipRRect(
             borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
             child: SizedBox(
-              height: 250,
+              height: 300, // Slightly taller for better map view
               child: _buildRouteMap(),
             ),
           ),
@@ -108,50 +110,19 @@ class TrainingDetailView extends StatelessWidget {
   }
 
   Widget _buildRouteMap() {
-    final points = training.trackPoints
-        .map((p) => FlSpot(p.longitude, p.latitude))
-        .toList();
+    if (training.trackPoints.isEmpty) {
+      return Container(
+        color: const Color(0xFFE5E3DF),
+        child: const Center(
+          child: Text(
+            "Sin datos de mapa",
+            style: TextStyle(color: Colors.black54, fontWeight: FontWeight.bold),
+          ),
+        ),
+      );
+    }
 
-    return Container(
-      color: const Color(0xFFE5E3DF), // Google Maps-ish bg color
-      child: Stack(
-        children: [
-          LineChart(
-            LineChartData(
-              gridData: FlGridData(show: false),
-              titlesData: FlTitlesData(show: false),
-              borderData: FlBorderData(show: false),
-              lineBarsData: [
-                LineChartBarData(
-                  spots: points,
-                  isCurved: false,
-                  color: Tema.brandPurple,
-                  barWidth: 4,
-                  dotData: FlDotData(show: false),
-                  belowBarData: BarAreaData(show: false),
-                ),
-              ],
-              lineTouchData: LineTouchData(enabled: false),
-            ),
-          ),
-          Positioned(
-            bottom: 12,
-            right: 12,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Text(
-                "Ruta (Proyección)",
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black54),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    return TrainingMapView(points: training.trackPoints);
   }
 
   Widget _buildStatsGrid() {

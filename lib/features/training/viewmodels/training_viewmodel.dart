@@ -131,7 +131,7 @@ class TrainingViewModel {
         distanciaM: totalDistanceMeters.round(),
         tiempoSec: elapsedSeconds,
         descansoSec: 0,
-        rpe: (rpe ?? 0).toDouble(),
+        rpe: (rpe ?? 5.0).toDouble(), // Default to 5.0 (neutral) instead of 0
       );
       finalSeries = [serie];
     }
@@ -167,10 +167,17 @@ class TrainingViewModel {
 
   Future<String> guardarEntrenamiento(String titulo, {List<String>? tags, List<GpsPoint>? recordedPoints}) async {
     // Redirige a finishSession con valores por defecto para mantener compatibilidad
+    // For continuous runs, we often already have a serie in _series with the correct RPE
+    int? detectedRpe;
+    if (_series.isNotEmpty) {
+      detectedRpe = _series.first.rpe.round();
+    }
+
     return finishSession(
         titulo, 
         elapsedSeconds: tiempoTotalSeries(), 
         totalDistanceMeters: distanciaTotalSeries().toDouble(),
+        rpe: detectedRpe,
         tags: tags,
         recordedPoints: recordedPoints,
     );
