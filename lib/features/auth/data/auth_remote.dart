@@ -78,14 +78,14 @@ class AuthRemote {
       throw AuthFailure.fromCode(e.code, e.message);
     } catch (e) {
       if (e is AuthFailure) rethrow;
-      print("DEBUG: Error en signInWithGoogle: $e");
+
       throw AuthFailure(e.toString());
     }
   }
 
   Future<void> sendPasswordResetEmail(String email) async {
     try {
-      print("DEBUG: Verificando si el usuario existe en Firestore: $email");
+
       
       // 1. Verificar si existe en Firestore
       // Asumimos que el email es único y verificamos coincidencia exacta
@@ -100,14 +100,14 @@ class AuthRemote {
         throw AuthFailure.fromCode('user-not-found', null);
       }
 
-      print("DEBUG: Usuario encontrado. Intentando enviar correo de restablecimiento.");
+
       await _auth.sendPasswordResetEmail(email: email);
-      print("DEBUG: Correo de restablecimiento enviado correctamente.");
+
     } on FirebaseAuthException catch (e) {
       throw AuthFailure.fromCode(e.code, e.message);
     } catch (e) {
       if (e is AuthFailure) rethrow; // Si ya es AuthFailure (lanzado manualmente), lo dejamos pasar
-      print("DEBUG: Error al enviar correo de restablecimiento: $e");
+
       throw AuthFailure(e.toString());
     }
   }
@@ -116,14 +116,12 @@ class AuthRemote {
     try {
       final user = _auth.currentUser;
       if (user != null && !user.emailVerified) {
-        print("DEBUG: Enviando correo de verificación a ${user.email}");
         await user.sendEmailVerification();
-        print("DEBUG: Correo de verificación enviado.");
       }
     } on FirebaseAuthException catch (e) {
       throw AuthFailure.fromCode(e.code, e.message);
     } catch (e) {
-      print("DEBUG: Error al enviar verificación: $e");
+
       throw AuthFailure(e.toString());
     }
   }
@@ -157,7 +155,7 @@ class AuthRemote {
 
     return null; // si no existe o no tiene nombre
   } catch (e) {
-    print("Error obteniendo nombre: $e");
+
     return null;
   }
 }
@@ -174,7 +172,7 @@ Future<bool> isUserAdmin() async {
     }
     return false;
   } catch (e) {
-    print("Error checando admin: $e");
+
     return false;
   }
 }

@@ -28,7 +28,6 @@ class HomeConfigController {
       final loadedConfig = await _repository.loadConfig(userId);
       config.value = loadedConfig;
     } catch (e) {
-      debugPrint('Error loading home config: $e');
       // Fallback to default if load fails
       config.value = HomeLayoutConfig.defaultConfig(userId);
     } finally {
@@ -45,7 +44,6 @@ class HomeConfigController {
     try {
       await _repository.saveConfig(config.value!);
     } catch (e) {
-      debugPrint('Error saving home config: $e');
       rethrow;
     } finally {
       if (!_isDisposed) isSaving.value = false;
@@ -109,7 +107,7 @@ class HomeConfigController {
       final defaultConfig = HomeLayoutConfig.defaultConfig(userId);
       config.value = defaultConfig;
     } catch (e) {
-      debugPrint('Error resetting config: $e');
+      // Error resetting
     } finally {
       if (!_isDisposed) {
         isLoading.value = false;

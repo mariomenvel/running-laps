@@ -810,7 +810,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       );
 
 
-      print('Entrenamiento guardado con ID: $newTrainingId');
+
 
 
       if (!mounted) return;
@@ -847,10 +847,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       if (!mounted) return;
 
 
-      print("--- ERROR CAPTURADO ---");
-      print("runtimeType: ${e.runtimeType}");
-      print("toString(): ${e.toString()}");
-      print("-------------------------");
+
 
 
       String errorMessage = "Error desconocido";
@@ -2528,7 +2525,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 setState(() {
                   _vm.setGpsOn(value);
                 });
-                print("GPS Alternado: ${_vm.gpsOn}");
+
               },
               activeColor: Tema.brandPurple,
               inactiveThumbColor: Colors.white,

@@ -262,7 +262,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
         ModernSnackBar.showSuccess(context, "Avatar guardado en la app");
       }
     } catch (e) {
-      debugPrint("Error saving: $e");
+
     }
   }
 
@@ -279,7 +279,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
         }
       }
     } catch (e) {
-      debugPrint("Error saving to gallery: $e");
+
     }
   }
 

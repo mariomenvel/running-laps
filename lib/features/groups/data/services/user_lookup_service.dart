@@ -22,7 +22,6 @@ class UserLookupService {
       }
       return null;
     } catch (e) {
-      print("Error looking up user by email: $e");
       return null;
     }
   }

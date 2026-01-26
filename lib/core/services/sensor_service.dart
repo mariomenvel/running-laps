@@ -50,7 +50,7 @@ class SensorService {
     }
 
     if (permissionStatus.isPermanentlyDenied) {
-      debugPrint("Activity Recognition permission permanently denied");
+
       return false;
     }
 
@@ -70,14 +70,14 @@ class SensorService {
     _stepCountSubscription = _stepCountStream?.listen(
       _onStepCount,
       onError: (error) {
-        debugPrint('Step Count Error: $error');
+
       },
     );
 
     _statusSubscription = _pedestrianStatusStream?.listen(
       _onPedestrianStatusChanged,
       onError: (error) {
-        debugPrint('Pedestrian Status Error: $error');
+
         status.value = SensorStatus.unknown;
       },
     );

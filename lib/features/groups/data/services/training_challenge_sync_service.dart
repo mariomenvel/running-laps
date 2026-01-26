@@ -43,7 +43,6 @@ class TrainingChallengeSyncService {
       final groupIds = await _getUserGroupIds(uid);
 
       if (groupIds.isEmpty) {
-        debugPrint('[Sync] No groups for user $uid. Skipped.');
         return;
       }
 
@@ -58,13 +57,11 @@ class TrainingChallengeSyncService {
       }
       
       final duration = DateTime.now().difference(startTime);
-      debugPrint('[Sync] onTrainingSaved: uid=$uid, tid=$trainingId, update=$isUpdate, '
-          'groups=${groupIds.length}, challenges=$challengesProcessedCount, '
-          'duration=${duration.inMilliseconds}ms');
+
           
     } catch (e) {
       // Log error but don't fail the training save
-      debugPrint('[Sync] ERROR: $e');
+
       throw Exception('Error syncing training to challenges: $e');
     }
   }
@@ -192,22 +189,22 @@ class TrainingChallengeSyncService {
     required Challenge challenge,
   }) async {
     try {
-      debugPrint('[Sync] Recomputing for challenge ${challenge.title} (${challenge.metric})');
+
       
       // 1. Obtener todos los entrenamientos del usuario en el periodo
       final trainings = await _getTrainingsInPeriod(uid, challenge);
-      debugPrint('[Sync]   Found ${trainings.length} trainings in period ${challenge.startAt} to ${challenge.endAt}');
+
 
       // 2. Filtrar los que cumplan con los filtros del challenge
       final validTrainings = trainings.where((t) {
         final matches = trainingMatchesFilters(t, challenge.filters);
         if (!matches) {
-          debugPrint('[Sync]   Training ${t.id} (${t.fecha}) REJECTED by filters');
+
         }
         return matches;
       }).toList();
       
-      debugPrint('[Sync]   ${validTrainings.length} trainings passed filters');
+
 
       // 3. Ordenar por fecha ASC para cálculo correcto de earliestCompletion
       validTrainings.sort((a, b) => a.fecha.compareTo(b.fecha));
@@ -221,7 +218,6 @@ class TrainingChallengeSyncService {
 
       // Si no existe (raro), crearlo placeholder o return
       if (currentParticipant == null) {
-        debugPrint('[Sync]   No participant found, skipping');
         return; 
       }
 
@@ -232,7 +228,7 @@ class TrainingChallengeSyncService {
         challenge: challenge,
       );
       
-      debugPrint('[Sync]   Computed score: ${updatedParticipant.score}, sessions: ${updatedParticipant.sessions}');
+
 
       // 6. Guardar
       await _challengesRepo.upsertParticipant(
@@ -241,15 +237,15 @@ class TrainingChallengeSyncService {
         updatedParticipant,
       );
       
-      debugPrint('[Sync]   ✅ Participant updated successfully');
+
       
       // 7. Detect goal completion for notification
       if (currentParticipant.reachedGoalAt == null && updatedParticipant.reachedGoalAt != null) {
-        debugPrint('[Sync]   🎯 GOAL COMPLETED! Triggering notification...');
+
         await _createGoalMetNotification(groupId, challenge, uid);
       }
     } catch (e) {
-      debugPrint('[Sync]   ❌ ERROR: $e');
+
       throw Exception('Error recomputing participant: $e');
     }
   }
@@ -355,9 +351,9 @@ class TrainingChallengeSyncService {
       );
 
       await notifRef.set(notif.toMap());
-      debugPrint('[Sync] Notification created: ${notif.id}');
+
     } catch (e) {
-      debugPrint('[Sync] Error creating goal notification: $e');
+
     }
   }
 }

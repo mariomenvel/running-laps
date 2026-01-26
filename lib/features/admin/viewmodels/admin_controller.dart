@@ -81,7 +81,7 @@ class AdminController extends ChangeNotifier {
       
       _stats = await _repository.getGlobalStats(startDate: startDate, endDate: endDate);
     } catch (e) {
-      print("Error loading admin stats: $e");
+      // Error
     } finally {
       _setLoading(false);
     }
@@ -130,7 +130,6 @@ class AdminController extends ChangeNotifier {
       await _repository.createGlobalChallenge(challenge);
       return true;
     } catch (e) {
-      print("Error creating global challenge: $e");
       return false;
     } finally {
       _setLoading(false);
@@ -160,7 +159,7 @@ class AdminController extends ChangeNotifier {
         filename: fileName,
       );
     } catch (e) {
-      print("Error exporting PDF: $e");
+      // Error
     } finally {
       _setLoading(false);
     }

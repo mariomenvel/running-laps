@@ -139,7 +139,6 @@ class ChallengeDetailController {
 
       return await Future.wait(futures);
     } catch (e) {
-      print("Error enriching participants: $e");
       return list;
     }
   }

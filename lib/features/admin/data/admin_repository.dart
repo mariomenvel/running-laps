@@ -218,7 +218,7 @@ class AdminRepository {
              }
            }
         } catch (e) {
-           print("Error calculando challenge metrics: $e");
+           // Error metrics
         }
         
         double globalParticipationRate = 0;
@@ -246,7 +246,7 @@ class AdminRepository {
            final groupChallSnap = await _firestore.collectionGroup('challenges').count().get();
            groupChallengesCount = groupChallSnap.count ?? 0;
         } catch (e) {
-           print("Error contando group challenges: $e");
+           // Error
         }
 
         // l. Peak Hours (Franjas Horarias)
@@ -339,7 +339,7 @@ class AdminRepository {
           'systemHealth': 'Operational',
         };
       } catch (e) {
-         print("Error crítico leyendo trainings: $e");
+         // Error critical
          return {
           'totalUsers': totalUsers,
           'onboardedUsers': onboardedUsers,
@@ -361,7 +361,6 @@ class AdminRepository {
       }
 
     } catch (e) {
-      print("Error fetching advanced stats: $e");
       return {};
     }
   }

@@ -54,7 +54,7 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
         controller.updateFromJson(configData);
       }
     } catch (e) {
-      debugPrint("Error al cargar avatar: $e");
+
     }
     setState(() => _isLoading = false);
   }
@@ -89,7 +89,7 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
 
       ModernSnackBar.showSuccess(context, 'Avatar actualizado correctamente');
     } catch (e) {
-      debugPrint("Error al guardar avatar: $e");
+
       ModernSnackBar.showError(context, 'Error al actualizar avatar: $e');
     } finally {
        if (mounted) setState(() => _isLoading = false);

@@ -97,7 +97,7 @@ class GroupChallengesController {
       _finalizeService
           .finalizeExpiredChallengesForGroup(groupId)
           .catchError((e) {
-        print('Error finalizing challenges: $e');
+
       });
 
       // 5. Asegurar retos automáticos del periodo actual
@@ -264,7 +264,7 @@ class GroupChallengesController {
       final stats = await _detailRepo.fetchMemberStats(groupId, onlyThisMonth: false);
       members.value = stats;
     } catch (e) {
-      print('Error loading members: $e');
+
     }
   }
 }

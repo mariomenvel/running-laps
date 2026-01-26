@@ -90,7 +90,6 @@ class _HomeViewState extends State<HomeView> {
       }
       return groups;
     } catch (e) {
-      print("Error fetching groups: $e");
       return [];
     }
   }
@@ -121,7 +120,7 @@ class _HomeViewState extends State<HomeView> {
         });
       }
     } catch (e) {
-      print('Error loading entrenamientos: $e');
+      // Error loading
     } finally {
       setState(() => _isLoadingData = false);
     }
@@ -215,7 +214,7 @@ class _HomeViewState extends State<HomeView> {
                   .doc(notif.id)
                   .delete();
             } catch (e) {
-              debugPrint('Error deleting notification: $e');
+              // Error deleting
             }
           },
         );

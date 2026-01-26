@@ -75,7 +75,6 @@ class HistoryController {
           for (var t in tags) t.name: t.color
         };
       } catch (e) {
-        print("Error cargando tags: $e");
         // No bloqueamos la app si fallan los tags
       }
 

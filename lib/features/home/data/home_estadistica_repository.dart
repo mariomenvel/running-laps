@@ -54,7 +54,6 @@ class HomeEstadisticaRepository {
           .map((doc) => doc.data()! as Map<String, dynamic>)
           .toList();
     } on FirebaseException catch (e) {
-      debugPrint('Error Firestore: ${e.message}');
       return [];
     }
   }

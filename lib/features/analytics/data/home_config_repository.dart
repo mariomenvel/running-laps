@@ -28,7 +28,6 @@ class HomeConfigRepository {
       return HomeLayoutConfig.fromMap(doc.data()!);
     } catch (e) {
       // Error al cargar, retornar default
-      print('Error loading home config: $e');
       return HomeLayoutConfig.defaultConfig(userId);
     }
   }
@@ -43,7 +42,6 @@ class HomeConfigRepository {
           .doc('homeLayoutConfig')
           .set(config.toMap(), SetOptions(merge: true));
     } catch (e) {
-      print('Error saving home config: $e');
       throw Exception('No se pudo guardar la configuración');
     }
   }
@@ -78,7 +76,6 @@ class HomeConfigRepository {
 
       await saveConfig(updatedConfig);
     } catch (e) {
-      print('Error updating widget: $e');
       throw Exception('No se pudo actualizar el widget');
     }
   }
@@ -120,7 +117,6 @@ class HomeConfigRepository {
 
       await saveConfig(updatedConfig);
     } catch (e) {
-      print('Error reordering widgets: $e');
       throw Exception('No se pudo reordenar los widgets');
     }
   }
@@ -131,7 +127,6 @@ class HomeConfigRepository {
       final defaultConfig = HomeLayoutConfig.defaultConfig(userId);
       await saveConfig(defaultConfig);
     } catch (e) {
-      print('Error resetting config: $e');
       throw Exception('No se pudo resetear la configuración');
     }
   }
@@ -146,7 +141,6 @@ class HomeConfigRepository {
         'visible': !widget.visible,
       });
     } catch (e) {
-      print('Error toggling widget visibility: $e');
       throw Exception('No se pudo cambiar la visibilidad del widget');
     }
   }

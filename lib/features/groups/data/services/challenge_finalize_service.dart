@@ -47,19 +47,15 @@ class ChallengeFinalizeService {
             await finalizeChallenge(groupId, challenge, now);
             challengesClosed++;
           } catch (e) {
-            debugPrint('[Finalize] ERROR finalizing challenge ${challenge.id} in group $groupId: $e');
             // Continue with next challenge instead of aborting the whole group
           }
         }
       }
       
-      if (challengesClosed > 0) {
-         final duration = DateTime.now().difference(startTime);
-         debugPrint('[Finalize] Group $groupId: Closed=$challengesClosed challenges in ${duration.inMilliseconds}ms');
-      }
+
       
     } catch (e) {
-      debugPrint('[Finalize] ERROR in group $groupId: $e');
+
       // Rethrow to let caller know.
       rethrow;
     }
@@ -91,7 +87,7 @@ class ChallengeFinalizeService {
         groupName = groupDoc.data()?['name'] ?? "Grupo";
       }
     } catch (e) {
-      debugPrint('Error fetching group name: $e');
+
     }
 
     // 2. Award Medals (if configured)
@@ -140,7 +136,7 @@ class ChallengeFinalizeService {
         return false; // Draft or other status
       });
     } catch (e) {
-      print('Error closing challenge $challengeId: $e');
+
       return false;
     }
   }
@@ -232,7 +228,7 @@ class ChallengeFinalizeService {
       });
 
     } catch (e) {
-      print('Error awarding medals for ${challenge.id}: $e');
+
     }
   }
 
@@ -322,7 +318,7 @@ class ChallengeFinalizeService {
       });
 
     } catch (e) {
-      print('Error awarding badges for ${challenge.id}: $e');
+
     }
   }
 

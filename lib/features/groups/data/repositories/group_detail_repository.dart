@@ -42,7 +42,7 @@ class GroupDetailRepository {
       return validStats;
 
     } catch (e) {
-      print("Error fetching details: $e");
+
       return [];
     }
   }
@@ -143,7 +143,7 @@ class GroupDetailRepository {
       }
       return totalM / 1000.0; // Return KM
     } catch (e) {
-      print("Error calculating progress: $e");
+
       return 0.0;
     }
   }
@@ -154,7 +154,7 @@ class GroupDetailRepository {
       final snap = await _db.collection('users').doc(uid).collection('trainings').orderBy('fecha', descending: true).get();
       return snap.docs.map((d) => Entrenamiento.fromMap(d.data())).toList();
     } catch (e) {
-      print("Error fetching user history: $e");
+
       return [];
     }
   }
@@ -205,7 +205,7 @@ class GroupDetailRepository {
     final snap = await ref.get();
     
     if (snap.docs.isEmpty) {
-      print("SEEDING: Creando retos por defecto...");
+
       final now = DateTime.now();
       
       // Reto 1: Mensual

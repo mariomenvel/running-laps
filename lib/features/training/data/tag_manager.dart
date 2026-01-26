@@ -44,7 +44,6 @@ class TagManager {
     } catch (e) {
       // En caso de error (timeout, sin conexión, permisos), devolver lista vacía
       // Esto evita que la UI se congele
-      print('Error al cargar etiquetas: $e');
       return [];
     }
   }

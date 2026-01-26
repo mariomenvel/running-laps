@@ -54,7 +54,7 @@ class AnalyticsHubController {
       // Ordenar por fecha desc
       _allData.sort((a, b) => b.fecha.compareTo(a.fecha));
     } catch (e) {
-      debugPrint("Error loading analytics data: $e");
+      // Error
     } finally {
       isLoading.value = false;
     }
