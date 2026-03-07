@@ -87,21 +87,37 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
     _startTimer();
     _startBeepTimerIfNeeded();
 
-    // Iniciar GPS si está activo
+    // Iniciar GPS (o solo la notificación foreground) según configuración
     if (widget.gpsActivo) {
       _initializeGPS();
+    } else {
+      _initializeNotificationService();
     }
   }
 
   /// Inicializa el GPS service
   Future<void> _initializeGPS() async {
     _gpsService = GPSService();
+
+    // Register the notification-button listener immediately after construction
+    // so we never miss an event, even before startTracking() is called.
+    _gpsService!.notificationAction.addListener(_onNotificationAction);
+
     final bool initialized = await _gpsService!.initialize();
-    
+
     if (initialized) {
-      await _gpsService!.startTracking();
-      // Ya no necesitamos timer, la UI es reactiva con ValueListenableBuilder
-      setState(() {}); // Rebuild para que los builders tengan acceso a _gpsService inicializado
+      // "Libre" means a continuous free run; any integer distance is an interval.
+      final mode = widget.distancia == 'Libre'
+          ? TrackingMode.continuous
+          : TrackingMode.intervals;
+
+      await _gpsService!.startTracking(
+        mode: mode,
+        serieNumber: widget.currentSeries ?? 1,
+      );
+      // UI is reactive via ValueListenableBuilder; a single rebuild gives
+      // builders access to the now-initialised _gpsService.
+      setState(() {});
     } else {
       // Mostrar error específico según el estado del GPS
       if (mounted) {
@@ -129,11 +145,32 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
   }
 
 
+  /// Starts the foreground notification service without GPS tracking.
+  ///
+  /// Creates a [GPSService] purely for its foreground-service machinery.
+  /// The notification will show the serie number and the stopwatch elapsed
+  /// time, updated every ~30 ms by [_startTimer].
+  Future<void> _initializeNotificationService() async {
+    _gpsService = GPSService();
+    _gpsService!.notificationAction.addListener(_onNotificationAction);
+
+    final mode = widget.distancia == 'Libre'
+        ? TrackingMode.continuous
+        : TrackingMode.intervals;
+
+    await _gpsService!.startNotificationOnly(
+      mode: mode,
+      serieNumber: widget.currentSeries ?? 1,
+    );
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
     _beepTimer?.cancel();
-    _gpsUpdateTimer?.cancel(); // Se mantiene por seguridad si existe instancia previa
+    _gpsUpdateTimer?.cancel();
+    // Remove listener BEFORE dispose() so we never call into a disposed notifier.
+    _gpsService?.notificationAction.removeListener(_onNotificationAction);
     _gpsService?.dispose();
     _stopwatch.stop();
     super.dispose();
@@ -151,8 +188,21 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
         setState(() {
           _tiempoMostrado = _formatTiempo(_stopwatch.elapsed);
         });
+        // When GPS is off, keep the foreground notification elapsed in sync.
+        if (!widget.gpsActivo) {
+          _gpsService?.setExternalElapsed(
+            _formatNotificationElapsed(_stopwatch.elapsed),
+          );
+        }
       }
     });
+  }
+
+  /// Formats a [Duration] as "MM:SS" for the foreground notification.
+  String _formatNotificationElapsed(Duration d) {
+    final m = d.inMinutes.remainder(60);
+    final s = d.inSeconds.remainder(60);
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
 
@@ -200,6 +250,17 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
   // ACCIONES: PAUSAR / REANUDAR / GUARDAR
   // ===================================================================
 
+
+  /// Handles taps on the persistent notification action button (lock screen /
+  /// background). Both 'end_serie' and 'finish_run' delegate to [_finishSeries],
+  /// which already handles both interval and continuous sessions correctly.
+  void _onNotificationAction() {
+    final action = _gpsService?.notificationAction.value;
+    if (action == null || !_isRunning) return;
+    if (action == 'end_serie' || action == 'finish_run') {
+      _finishSeries();
+    }
+  }
 
   void _finishSeries() {
     // 1. Detener todo INMEDIATAMENTE

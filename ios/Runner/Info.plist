@@ -47,7 +47,15 @@
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Running Laps necesita acceso a tu ubicación para rastrear tu ruta y calcular tu ritmo durante el entrenamiento.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Running Laps necesita acceso a tu ubicación en segundo plano para seguir registrando tu ruta cuando bloqueas la pantalla.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Running Laps necesita acceso continuo a tu ubicación para registrar tu entrenamiento aunque la pantalla esté bloqueada.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>Running Laps utiliza el podómetro para mejorar la precisión del GPS y calcular tu cadencia al correr.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
 </dict>
 </plist>
