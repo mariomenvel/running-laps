@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart'; // Para SystemSound
+import 'dart:math' show pi;
 import 'dart:ui' show FontFeature;
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import '../../../core/widgets/modern_snackbar.dart';
@@ -9,7 +10,6 @@ import '../../../core/services/settings_service.dart';
 
 import '../data/serie.dart';
 import 'package:running_laps/config/app_theme.dart';
-import '../../../core/widgets/app_header.dart';
 import 'package:running_laps/core/constants/app_help_content.dart';
 import 'package:running_laps/core/widgets/info_tooltip.dart';
 import '../../../core/services/gps_service.dart';
@@ -41,7 +41,8 @@ class TrainingSessionView extends StatefulWidget {
 }
 
 
-class _TrainingSessionViewState extends State<TrainingSessionView> {
+class _TrainingSessionViewState extends State<TrainingSessionView>
+    with TickerProviderStateMixin {
   // --- Estado del Cronómetro ---
   final Stopwatch _stopwatch = Stopwatch();
   Timer? _timer;
@@ -63,17 +64,48 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
   double _distanciaGpsMetros = 0.0;
   String _ritmoActual = "--:-- /km";
   Timer? _gpsUpdateTimer;
-  
+
   // NUEVO: Momento exacto en que se detuvo la serie
   DateTime? _finishedAt;
 
-  // --- Colores (coincide con TrainingStartView) ---
+  // --- Demo mode (set to false for production) ---
+  static const bool _demoMode = false;
+
+  // --- Colores ---
   static const Color _bgGradientColor = Color(0xFFF9F5FB);
+  static const Color _scaffoldBg = Color(0xFFFAFAFA);
+
+  // --- Fade animation ---
+  late final AnimationController _fadeController;
+  late final Animation<double> _fadeAnimation;
+
+  // --- Pulse animation (status dot for Libre mode) ---
+  late final AnimationController _pulseController;
+  late final Animation<double> _pulseAnimation;
 
 
   @override
   void initState() {
     super.initState();
+
+    // Fade-in animation
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeIn,
+    );
+    _fadeController.forward();
+
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 0.3).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
 
     // Parsear los valores de la serie
     _distanciaInt = int.tryParse(widget.distancia) ?? 0;
@@ -123,7 +155,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
       if (mounted) {
         String errorMessage = 'No se pudo activar el GPS.';
         String actionMessage = '';
-        
+
         if (_gpsService!.status.value == GpsStatus.disabled) {
           errorMessage = '📍 GPS desactivado';
           actionMessage = 'Activa la ubicación en los ajustes de tu móvil';
@@ -134,7 +166,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
           errorMessage = '❌ Error al iniciar GPS';
           actionMessage = 'Verifica que el GPS esté activo y los permisos estén dados';
         }
-        
+
         ModernSnackBar.showError(
           context,
           '$errorMessage${actionMessage.isNotEmpty ? '\n$actionMessage' : ''}',
@@ -166,6 +198,8 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
 
   @override
   void dispose() {
+    _pulseController.dispose();
+    _fadeController.dispose();
     _timer?.cancel();
     _beepTimer?.cancel();
     _gpsUpdateTimer?.cancel();
@@ -225,7 +259,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
           setState(() {
             _isAlarmActive = true;
           });
-         
+
           // Apagar el efecto después de 500ms
           Future.delayed(const Duration(milliseconds: 500), () {
             if (mounted && _isAlarmActive) {
@@ -318,7 +352,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
 
     // 3. Cerrar el diálogo de RPE
     // El diálogo ya está cerrado porque awaiting por el resultado en _showRpePicker
-    
+
     // 4. Volver a la pantalla anterior devolviendo la serie
     Navigator.of(context).pop(serieTerminada);
   }
@@ -375,7 +409,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
     String hundredths = (duration.inMilliseconds.remainder(1000) ~/ 10)
         .toString()
         .padLeft(2, '0');
-    return "$twoDigitMinutes:$twoDigitSeconds:$hundredths";
+    return "$twoDigitMinutes:$twoDigitSeconds.$hundredths";
   }
 
 
@@ -427,181 +461,608 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isLibre = widget.distancia == 'Libre';
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: <Widget>[
-            _buildHeader(),
-            Expanded(child: _buildBody()),
-            _buildFooter(),
-          ],
+      backgroundColor: _scaffoldBg,
+      body: Stack(
+        children: [
+          FadeTransition(
+            opacity: _fadeAnimation,
+            child: SafeArea(
+              child: Column(
+                children: [
+                  _buildHeader(),
+                  Expanded(child: _buildBody()),
+                  _buildFooter(),
+                ],
+              ),
+            ),
+          ),
+          // 3px purple gradient accent line at the very top of the screen
+          if (isLibre)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 3,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF7C3AED), Tema.brandPurple, Color(0xFF7C3AED)],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+
+  // Libre: status pill + tiempo. Interval: serie label.
+  Widget _buildHeader() {
+    if (widget.distancia == 'Libre') return _buildLibreStatusBar();
+
+    String serieLabel = '';
+    if (widget.currentSeries != null) {
+      serieLabel = widget.totalSeries != null
+          ? "Serie ${widget.currentSeries} de ${widget.totalSeries}"
+          : "Serie ${widget.currentSeries}";
+    }
+    if (serieLabel.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+      child: Text(
+        serieLabel,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+          color: Colors.black87,
+          letterSpacing: 0.2,
         ),
       ),
     );
   }
 
 
-  Widget _buildHeader() {
-    // Deshabilito las acciones para que no se puedan ir sin terminar
-    return AppHeader(onTapLeft: () {}, onTapRight: () {});
+  Widget _buildBody() {
+    final bool isLibre = widget.distancia == 'Libre';
+    final bool intervalNoGps = !isLibre && !widget.gpsActivo;
+
+    if (isLibre) return _buildLibreBody();
+
+    if (intervalNoGps) {
+      // No GPS: large hero timer + 2 small cards below
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          children: [
+            const Spacer(flex: 2),
+            _buildHeroTimer(),
+            const Spacer(flex: 2),
+            _buildMetricsGrid(),
+            const Spacer(flex: 1),
+          ],
+        ),
+      );
+    }
+
+    // Interval + GPS: small timer at top, 2×2 grid in center
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: 24),
+          Center(child: _buildSmallTimer()),
+          const Spacer(),
+          _buildMetricsGrid(),
+          const Spacer(),
+        ],
+      ),
+    );
   }
 
 
-  Widget _buildBody() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+  // ===================================================================
+  // LIBRE MODE — UI
+  // ===================================================================
+
+  // Top bar: pulsing status pill only (tiempo moved below ritmo card).
+  Widget _buildLibreStatusBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: Row(
+        children: [
+          // Status pill
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            decoration: BoxDecoration(
+              color: _isRunning
+                  ? Tema.brandPurple.withOpacity(0.08)
+                  : Colors.red.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildPulseDot(),
+                const SizedBox(width: 6),
+                Text(
+                  _isRunning ? 'En carrera' : 'Pausado',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _isRunning ? Tema.brandPurple : Colors.red.shade600,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Animated dot for the status pill — fades in/out while running.
+  Widget _buildPulseDot() {
+    return AnimatedBuilder(
+      animation: _pulseAnimation,
+      builder: (_, __) => Opacity(
+        opacity: _isRunning ? _pulseAnimation.value : 1.0,
+        child: Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: _isRunning ? Tema.brandPurple : Colors.red.shade600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Body for Libre/continuous run: top half = distance hero, bottom = pace card.
+  Widget _buildLibreBody() {
+    // Demo values — only active when _demoMode is true.
+    const int _demoDist = 3470;        // 3.47 km
+    const String _demoPace = '5:12';   // moderado / amber
+
+    return Column(
+      children: [
+        // Top half — DISTANCIA is the protagonist
+        Expanded(
+          flex: 5,
+          child: _demoMode
+              ? Center(child: _buildDistanciaHero(_demoDist))
+              : ValueListenableBuilder<int>(
+                  valueListenable: _gpsService?.totalDistanceMeters ?? ValueNotifier(0),
+                  builder: (ctx, dist, _) => Center(
+                    child: _buildDistanciaHero(dist),
+                  ),
+                ),
+        ),
+        // Bottom half — RITMO speedometer card + TIEMPO below it
+        Expanded(
+          flex: 5,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _demoMode
+                    ? _buildRitmoSpeedometer(_demoPace)
+                    : ValueListenableBuilder<String>(
+                        valueListenable: _gpsService?.currentPace ?? ValueNotifier("--:--"),
+                        builder: (ctx, pace, _) => _buildRitmoSpeedometer(pace),
+                      ),
+                const SizedBox(height: 14),
+                // TIEMPO — centered, small, unobtrusive
+                Text(
+                  _tiempoMostrado,
+                  style: TextStyle(
+                    fontSize: 50,
+                    fontWeight: FontWeight.w300,
+                    color: Colors.grey.shade400,
+                    height: 1.0,
+                    fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // DISTANCIA — the achievement. Huge number, bold, black. "km" suffix small and gray.
+  Widget _buildDistanciaHero(int distanceMeters) {
+    final double km = distanceMeters / 1000.0;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
-        children: <Widget>[
-          if (widget.currentSeries != null) ...[
-            const SizedBox(height: 16.0),
-            Text(
-              widget.totalSeries != null 
-                  ? "SERIE ${widget.currentSeries} DE ${widget.totalSeries}" 
-                  : "SERIE ${widget.currentSeries}",
-              style: const TextStyle(
-                fontSize: 14, 
-                fontWeight: FontWeight.bold, 
-                color: Tema.brandPurple, 
-                letterSpacing: 1.2
-              ),
-            ),
-          ],
-          const SizedBox(height: 16.0),
-          
-          // Info Cards - 2 cards si no GPS, 3 cards si GPS
-          if (!widget.gpsActivo)
-            // SIN GPS: solo Distancia Manual y Descanso
-            Row(
-              children: [
-                Expanded(
-                  child: _buildMetricCard(
-                    label: "Distancia",
-                    value: "${_distanciaInt}m",
-                    icon: Icons.route_outlined,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildMetricCard(
-                    label: "Descanso",
-                    value: _formatDescanso(_descansoInt),
-                    icon: Icons.snooze_rounded,
-                  ),
-                ),
-              ],
-            )
-          else
-            // CON GPS: Distancia GPS (Reactiva) y Descanso
-            Row(
-              children: [
-                Expanded(
-                  child: ValueListenableBuilder<int>(
-                    valueListenable: _gpsService?.totalDistanceMeters ?? ValueNotifier(0),
-                    builder: (context, distance, _) {
-                      return _buildMetricCard(
-                        label: "Distancia GPS",
-                        value: "${distance}m",
-                        icon: Icons.location_on,
-                        color: Tema.brandPurple,
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildMetricCard(
-                    label: "Descanso",
-                    value: _formatDescanso(_descansoInt),
-                    icon: Icons.snooze_rounded,
-                    color: Colors.grey.shade700,
-                  ),
-                ),
-              ],
-            ),
-         
-          // Cronómetro Central
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: RichText(
+              text: TextSpan(
                 children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24.0),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: _isAlarmActive ? Tema.brandPurple : Tema.brandPurple.withOpacity(0.3),
-                        width: _isAlarmActive ? 8.0 : 4.0
-                      ),
-                      borderRadius: BorderRadius.circular(100.0),
-                      boxShadow: _isAlarmActive ? [
-                        BoxShadow(
-                          color: Tema.brandPurple.withOpacity(0.4),
-                          blurRadius: 20,
-                          spreadRadius: 5,
-                        )
-                      ] : [],
+                  TextSpan(
+                    text: km.toStringAsFixed(2),
+                    style: TextStyle(
+                      fontSize: 96,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                      letterSpacing: -4,
+                      height: 1.0,
+                      fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+                      shadows: _isAlarmActive
+                          ? [Shadow(color: Tema.brandPurple.withOpacity(0.4), blurRadius: 24)]
+                          : null,
                     ),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Column(
-                       mainAxisAlignment: MainAxisAlignment.center,
-                       children: [
-                          // 1. TIEMPO
-                          Text(
-                            _tiempoMostrado,
-                            style: const TextStyle(
-                              fontSize: 56.0, // Reducido para caber
-                              fontWeight: FontWeight.w200,
-                              height: 1.0,
-                              letterSpacing: -1.0,
-                              fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
-                              color: Colors.black87,
-                            ),
-                          ),
-                            // 2. RITMO (Solo si GPS activo - Reactivo)
-                            if (widget.gpsActivo) ...[
-                              const SizedBox(height: 8), 
-                              ValueListenableBuilder<String>(
-                                valueListenable: _gpsService?.currentPace ?? ValueNotifier("--:-- /km"),
-                                builder: (context, pace, _) {
-                                  return Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                                    textBaseline: TextBaseline.alphabetic,
-                                    children: [
-                                      Text(
-                                        pace.split(' ')[0], // Solo "mm:ss"
-                                        style: TextStyle(
-                                          fontSize: 56.0,
-                                          fontWeight: FontWeight.w200,
-                                          height: 1.0,
-                                          letterSpacing: -1.0,
-                                          fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
-                                          color: _getPaceColor(pace), // Color dinámico
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      const Text(
-                                        "min/km",
-                                        style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold),
-                                      ),
-                                    ],
-                                  );
-                                }
-                              ),
-                          ]
-                       ],
-                      ),
+                  ),
+                  const TextSpan(
+                    text: ' km',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFFBDBDBD),
                     ),
                   ),
                 ],
               ),
             ),
           ),
+          const SizedBox(height: 8),
+          Text(
+            'DISTANCIA',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade400,
+              letterSpacing: 2.0,
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  // RITMO — the live engine. White card with circular speedometer arc.
+  Widget _buildRitmoSpeedometer(String paceString) {
+    final Color arcColor = _getArcPaceColor(paceString);
+    final double fraction = _computeArcFraction(paceString);
+    final String paceDisplay = paceString.split(' ')[0];
+    final String zoneLabel = _getPaceZoneLabel(paceString);
+    final String hint = _getRitmoHint(paceString);
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: Tema.brandPurple.withOpacity(0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+            spreadRadius: 4,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Speedometer arc with pace value inside
+          SizedBox(
+            width: 140,
+            height: 140,
+            child: CustomPaint(
+              painter: _SpeedometerPainter(
+                fraction: fraction,
+                arcColor: arcColor,
+                trackColor: Colors.grey.shade100,
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      paceDisplay,
+                      style: const TextStyle(
+                        fontSize: 44,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black87,
+                        letterSpacing: -1,
+                        height: 1.0,
+                        fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'min/km',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey.shade400,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 20),
+          // Right: label + zone badge + contextual hint
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'RITMO',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade400,
+                    letterSpacing: 2.0,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: arcColor.withOpacity(0.10),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: arcColor,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        zoneLabel,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: arcColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  hint,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey.shade400,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Green <4:30 · Amber 4:30-6:00 · Red >6:00
+  Color _getArcPaceColor(String paceString) {
+    if (paceString.contains('--')) return Colors.grey.shade200;
+    try {
+      final parts = paceString.split(' ')[0].split(':');
+      if (parts.length != 2) return Colors.grey.shade200;
+      final int totalSeconds = (int.tryParse(parts[0]) ?? 0) * 60 + (int.tryParse(parts[1]) ?? 0);
+      if (totalSeconds < 270) return const Color(0xFF22C55E);  // < 4:30
+      if (totalSeconds <= 360) return const Color(0xFFF59E0B); // 4:30–6:00
+      return const Color(0xFFEF4444);                          // > 6:00
+    } catch (_) {
+      return Colors.grey.shade200;
+    }
+  }
+
+  // 2:00/km = 1.0 (full) · 8:00/km = 0.0 (empty)
+  double _computeArcFraction(String paceString) {
+    if (paceString.contains('--')) return 0.0;
+    try {
+      final parts = paceString.split(' ')[0].split(':');
+      if (parts.length != 2) return 0.0;
+      final int totalSeconds = (int.tryParse(parts[0]) ?? 0) * 60 + (int.tryParse(parts[1]) ?? 0);
+      const int fastest = 120; // 2:00/km
+      const int slowest = 480; // 8:00/km
+      return (1.0 - (totalSeconds - fastest) / (slowest - fastest)).clamp(0.0, 1.0);
+    } catch (_) {
+      return 0.0;
+    }
+  }
+
+  String _getPaceZoneLabel(String paceString) {
+    if (paceString.contains('--')) return 'Calculando';
+    try {
+      final parts = paceString.split(' ')[0].split(':');
+      if (parts.length != 2) return 'Calculando';
+      final int totalSeconds = (int.tryParse(parts[0]) ?? 0) * 60 + (int.tryParse(parts[1]) ?? 0);
+      if (totalSeconds < 270) return 'Rápido';
+      if (totalSeconds <= 360) return 'Moderado';
+      return 'Intenso';
+    } catch (_) {
+      return 'Calculando';
+    }
+  }
+
+  String _getRitmoHint(String paceString) {
+    if (paceString.contains('--')) return 'Calculando ritmo...';
+    try {
+      final parts = paceString.split(' ')[0].split(':');
+      if (parts.length != 2) return '';
+      final int secPerKm = (int.tryParse(parts[0]) ?? 0) * 60 + (int.tryParse(parts[1]) ?? 0);
+      final int tenKmMin = (secPerKm * 10 / 60).round();
+      return 'A este ritmo, 10 km en $tenKmMin min';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  // Small gray timer — used at the top for libre and interval+GPS modes.
+  Widget _buildSmallTimer() {
+    return Text(
+      _tiempoMostrado,
+      style: TextStyle(
+        fontSize: 30,
+        fontWeight: FontWeight.w500,
+        color: Colors.grey.shade400,
+        letterSpacing: 0.5,
+        height: 1.0,
+        fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+      ),
+    );
+  }
+
+
+  // Large hero timer — used only for interval+noGPS mode (timer is protagonist).
+  Widget _buildHeroTimer() {
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              _tiempoMostrado,
+              style: TextStyle(
+                fontSize: 88,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+                letterSpacing: -3,
+                height: 1.0,
+                fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+                shadows: _isAlarmActive
+                    ? [
+                        Shadow(
+                          color: Tema.brandPurple.withOpacity(0.5),
+                          blurRadius: 30,
+                        ),
+                      ]
+                    : [],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'TIEMPO',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade400,
+            letterSpacing: 2.0,
+          ),
+        ),
+      ],
+    );
+  }
+
+
+  Widget _buildMetricsGrid() {
+    // ── Interval mode only (Libre is handled by _buildLibreBody) ────
+    final String serieValue = widget.currentSeries != null
+        ? (widget.totalSeries != null
+            ? "${widget.currentSeries}/${widget.totalSeries}"
+            : "${widget.currentSeries}")
+        : "--";
+
+    if (!widget.gpsActivo) {
+      // No GPS: only DESCANSO + SERIE (DISTANCIA and RITMO require GPS)
+      return Row(
+        children: [
+          Expanded(
+            child: _buildMetricCard(
+              label: "DESCANSO",
+              value: _formatDescanso(_descansoInt),
+              icon: Icons.timer_rounded,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: _buildMetricCard(
+              label: "SERIE",
+              value: serieValue,
+              icon: Icons.repeat_rounded,
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Interval + GPS: symmetric 2×2 grid
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: ValueListenableBuilder<int>(
+                valueListenable:
+                    _gpsService?.totalDistanceMeters ?? ValueNotifier(0),
+                builder: (ctx, dist, _) => _buildMetricCard(
+                  label: "DISTANCIA",
+                  value: "${dist}m",
+                  icon: Icons.gps_fixed_rounded,
+                ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: ValueListenableBuilder<String>(
+                valueListenable:
+                    _gpsService?.currentPace ?? ValueNotifier("--:--"),
+                builder: (ctx, pace, _) => _buildMetricCard(
+                  label: "RITMO",
+                  value: pace.split(' ')[0],
+                  icon: Icons.speed_rounded,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            Expanded(
+              child: _buildMetricCard(
+                label: "DESCANSO",
+                value: _formatDescanso(_descansoInt),
+                icon: Icons.timer_rounded,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: _buildMetricCard(
+                label: "SERIE",
+                value: serieValue,
+                icon: Icons.repeat_rounded,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -611,117 +1072,104 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
     required String value,
     required IconData icon,
     Color? color,
+    bool large = false,
   }) {
-    final cardColor = color ?? Tema.brandPurple;
-    
     return Container(
-      constraints: const BoxConstraints(minHeight: 110),
+      padding: EdgeInsets.symmetric(
+        vertical: large ? 28 : 18,
+        horizontal: 14,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20.0),
-        border: Border.all(color: Colors.grey.shade200, width: 1.0),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 15.0,
-            offset: const Offset(0, 8),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 16, color: cardColor.withOpacity(0.8)),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    label.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 10.0,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                      color: Colors.grey[600],
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 22.0,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: Tema.brandPurple,
+            size: large ? 24 : 18,
+          ),
+          SizedBox(height: large ? 14 : 8),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: large ? 52 : 24,
+                fontWeight: FontWeight.bold,
+                color: large ? Tema.brandPurple : Colors.black87,
+                letterSpacing: large ? -2.0 : -0.5,
+                height: 1.0,
               ),
             ),
-          ],
-        ),
+          ),
+          SizedBox(height: large ? 10 : 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: large
+                  ? Tema.brandPurple.withOpacity(0.55)
+                  : Colors.grey.shade500,
+              letterSpacing: 0.8,
+            ),
+          ),
+        ],
       ),
     );
   }
 
 
   Widget _buildFooter() {
+    final isLibre = widget.distancia == "Libre";
+    final label = isLibre ? "Finalizar carrera" : "Finalizar serie";
+
     return Container(
-      decoration: BoxDecoration(
-        gradient: const RadialGradient(
-          center: Alignment.bottomCenter,
-          radius: 1.2,
-          colors: <Color>[_bgGradientColor, Colors.white],
-          stops: <double>[0.0, 1.0],
-        ),
-        image: const DecorationImage(
-          image: AssetImage('assets/images/fondo.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Column(
-        children: <Widget>[
-          Container(height: 1.0, color: Colors.grey.shade200),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10.0), // Reduced from 20.0
-              child: GestureDetector(
-                onTap: _isRunning ? _finishSeries : null, // Solo permitir parar
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 90,
-                  height: 90,
-                  decoration: BoxDecoration(
-                    color: _isRunning ? Colors.white : Colors.grey, // Grey when disabled
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Tema.brandPurple.withOpacity(_isRunning ? 0.2 : 0.0),
-                      width: 1,
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+      child: GestureDetector(
+        onTap: _isRunning ? _finishSeries : null,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: double.infinity,
+          height: 58,
+          decoration: BoxDecoration(
+            color: _isRunning
+                ? Tema.brandPurple
+                : Tema.brandPurple.withOpacity(0.35),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: _isRunning
+                ? [
+                    BoxShadow(
+                      color: Tema.brandPurple.withOpacity(0.35),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
                     ),
-                    boxShadow: <BoxShadow>[
-                      BoxShadow(
-                        color: Tema.brandPurple.withOpacity(0.2),
-                        blurRadius: 20.0,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    _isRunning ? Icons.stop_rounded : Icons.check, // Icono Stop
-                    color: _isRunning ? Tema.brandPurple : Colors.white,
-                    size: 48.0,
-                  ),
-                ),
-              ),
+                  ]
+                : [],
           ),
-        ],
+          child: Center(
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -765,7 +1213,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                     children: [
                       // Espacio vacío para equilibrar el header (ya que quitamos el botón cancelar)
                       const SizedBox(width: 48),
-                      
+
                       // Título (Centro)
                       Row(
                         mainAxisSize: MainAxisSize.min,
@@ -778,7 +1226,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                           const InfoTooltip(content: AppHelpContent.trainingRPE),
                         ],
                       ),
-                      
+
                       // Botón Guardar (Derecha)
                       CupertinoButton(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -789,7 +1237,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                   ),
                 ),
                 const Divider(height: 1, thickness: 0.5),
-                
+
                 // Picker
                 Expanded(
                   child: CupertinoPicker(
@@ -813,7 +1261,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                     }),
                   ),
                 ),
-                
+
                 // Nota informativa abajo
                 Padding(
                   padding: const EdgeInsets.only(bottom: 30.0, top: 4),
@@ -837,15 +1285,15 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
         if (_gpsService != null) {
           _distanciaGpsMetros = _gpsService!.totalDistanceMeters.value.toDouble();
         }
-        
+
         // Small delay to allow the previous sheet to close smoothly
         await Future.delayed(const Duration(milliseconds: 200));
-        
+
         if (mounted) {
            // Si es carrera Libre (Continua), usamos SIEMPRE el GPS sin preguntar
            if (widget.distancia == "Libre") {
               final int finalDist = _distanciaGpsMetros.round();
-              
+
               if (finalDist < 30) { // Umbral mínimo razonable (30m)
                  ModernSnackBar.showError(context, "Distancia demasiado baja para guardar (<30m). Descartando...");
                  await Future.delayed(const Duration(seconds: 2));
@@ -870,7 +1318,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
     } else {
       // Cancelled (should not happen with isDismissible: false and no cancel button)
       // Enforce selection or stay
-      _handleSave(); // Fallback if they manage to close it, assume finished? 
+      _handleSave(); // Fallback if they manage to close it, assume finished?
       // Better: prevent closing. But if they use android back system despite WillPopScope (rare): save.
     }
   }
@@ -915,7 +1363,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                   )
                  ),
                ),
-               
+
                const Text(
                  'Confirma la Distancia',
                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
@@ -928,7 +1376,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                  textAlign: TextAlign.center,
                ),
                const SizedBox(height: 24),
-               
+
                // Botones de selección grandes
                Row(
                  children: [
@@ -961,9 +1409,9 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                        ),
                      ),
                    ),
-                   
+
                    const SizedBox(width: 16),
-                   
+
                    // OPCIÓN GPS
                    Expanded(
                      child: GestureDetector(
@@ -978,7 +1426,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                            decoration: BoxDecoration(
                              color: Colors.white,
                              borderRadius: BorderRadius.circular(16),
-                             border: Border.all(color: Colors.grey.shade300, width: 2), // Borde neutro
+                             border: Border.all(color: Colors.grey.shade300, width: 2),
                               boxShadow: [
                                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
                              ]
@@ -998,9 +1446,9 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
                    ),
                  ],
                ),
-               
+
                const SizedBox(height: 24),
-               
+
                // Diferencia info
                if (diferencia > 0)
                 Container(
@@ -1029,4 +1477,48 @@ class _TrainingSessionViewState extends State<TrainingSessionView> {
   }
 }
 
+// Speedometer arc painter for RITMO card.
+// Draws a 270° gauge track + active arc, starting at bottom-left (225°).
+class _SpeedometerPainter extends CustomPainter {
+  final double fraction; // 0.0 = empty · 1.0 = full
+  final Color arcColor;
+  final Color trackColor;
 
+  const _SpeedometerPainter({
+    required this.fraction,
+    required this.arcColor,
+    required this.trackColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 10.0;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+
+    // Start at 225° (7 o'clock), sweep 270° clockwise to 135° (5 o'clock).
+    const double startAngle = pi * 5 / 4;
+    const double sweepTotal = pi * 3 / 2;
+
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 9.0
+      ..strokeCap = StrokeCap.round;
+
+    // Track
+    paint.color = trackColor;
+    canvas.drawArc(rect, startAngle, sweepTotal, false, paint);
+
+    // Active arc
+    if (fraction > 0.01) {
+      paint.color = arcColor;
+      canvas.drawArc(rect, startAngle, sweepTotal * fraction, false, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SpeedometerPainter old) =>
+      old.fraction != fraction ||
+      old.arcColor != arcColor ||
+      old.trackColor != trackColor;
+}

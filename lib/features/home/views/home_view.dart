@@ -45,14 +45,10 @@ class _HomeViewState extends State<HomeView> {
   final CoachInsightService _coachService = CoachInsightService();
   
   List<Entrenamiento> _entrenamientos = [];
-  List<Entrenamiento> _allEntrenamientos = []; // Full history for Flagship Chart
   bool _isLoadingData = true;
 
   // Groups State
   Future<List<Group>>? _userGroupsFuture;
-  
-  // Selector de rango temporal
-  TimeRange _selectedRange = TimeRange.thirtyDays;
 
   StreamSubscription? _notifSubscription;
   String? _currentUserId;
@@ -101,39 +97,19 @@ class _HomeViewState extends State<HomeView> {
 
   Future<void> _loadEntrenamientos() async {
     setState(() => _isLoadingData = true);
-    
+
     try {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       if (userId != null) {
         final allData = await _trainingRepository.getAllEntrenamientos(userId);
-        
-        // Filtrar por rango
-        final now = DateTime.now();
-        final cutoffDate = _getCutoffDate(now, _selectedRange);
-        
         setState(() {
-          _allEntrenamientos = allData; // Store full history
-          _entrenamientos = allData
-              .where((e) => e.fecha.isAfter(cutoffDate))
-              .toList()
-            ..sort((a, b) => b.fecha.compareTo(a.fecha));
+          _entrenamientos = allData..sort((a, b) => b.fecha.compareTo(a.fecha));
         });
       }
     } catch (e) {
       // Error loading
     } finally {
       setState(() => _isLoadingData = false);
-    }
-  }
-
-  DateTime _getCutoffDate(DateTime now, TimeRange range) {
-    switch (range) {
-      case TimeRange.sevenDays:
-        return now.subtract(const Duration(days: 7));
-      case TimeRange.thirtyDays:
-        return now.subtract(const Duration(days: 30));
-      case TimeRange.ninetyDays:
-        return now.subtract(const Duration(days: 90));
     }
   }
 
@@ -317,13 +293,13 @@ class _HomeViewState extends State<HomeView> {
               children: [
                 _buildWelcomeHeader(),
                 const SizedBox(height: 12),
-                CoachInsightWidget(insight: _coachService.generateInsight(_allEntrenamientos)),
+                CoachInsightWidget(insight: _coachService.generateInsight(_entrenamientos)),
                 const SizedBox(height: 24),
                 _buildKPICards(),
                 const SizedBox(height: 32),
                 
                 // --- FLAGSHIP CHART ---
-                HomeFlagshipChart(workouts: _allEntrenamientos),
+                HomeFlagshipChart(workouts: _entrenamientos),
                 const SizedBox(height: 32),
                 // ----------------------
 
@@ -911,13 +887,6 @@ class _HomeViewState extends State<HomeView> {
       MaterialPageRoute(builder: (context) => TrainingStartView()),
     );
   }
-}
-
-/// Enum para rangos temporales
-enum TimeRange {
-  sevenDays,
-  thirtyDays,
-  ninetyDays,
 }
 
 // ===================================================================

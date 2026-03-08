@@ -135,9 +135,9 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/images/logo.png"
+  image_path: "assets/images/icono_launcher.png"
   adaptive_icon_background: "#8E24AA"  # Color morado de la marca
-  adaptive_icon_foreground: "assets/images/logo.png"
+  adaptive_icon_foreground: "assets/images/icono_launcher.png"
   web:
     generate: true
     image_path: "assets/images/logo.png"

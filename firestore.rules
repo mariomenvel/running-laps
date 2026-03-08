@@ -1,0 +1,258 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ────────────────────────────────────────────────────────────────────────
+    // HELPERS
+    // ────────────────────────────────────────────────────────────────────────
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // True when the requesting user is the document owner.
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // True when the requesting user has isAdmin: true on their profile.
+    // Only the Firebase console or Admin SDK should ever set this field.
+    function isAdmin() {
+      return request.auth != null &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid))
+               .data.isAdmin == true;
+    }
+
+    // True when the requesting user has a member document in the group.
+    // Uses exists() which is billed as a read but avoids fetching the full doc.
+    function isGroupMember(groupId) {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
+    }
+
+    // True when the requesting user's member document has role admin or owner.
+    function isGroupAdmin(groupId) {
+      return request.auth != null &&
+             get(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid))
+               .data.role in ['admin', 'owner'];
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // users/{uid}
+    // ────────────────────────────────────────────────────────────────────────
+    match /users/{uid} {
+
+      // Any signed-in user can read any profile document or run a query.
+      // Required for:
+      //   (a) Group ranking UI reads name / photoUrl / avatarConfig of other members.
+      //   (b) UserLookupService queries users by email field when sending invites.
+      allow read: if isSignedIn();
+
+      // A user can create their own profile on first register / Google login.
+      allow create: if isOwner(uid);
+
+      // A user can update their own profile, but CANNOT set isAdmin on themselves.
+      // Privilege escalation via the client must be impossible.
+      allow update: if isOwner(uid) &&
+                       !request.resource.data.diff(resource.data)
+                         .affectedKeys().hasAny(['isAdmin']);
+
+      // A user can delete their own account document (account deletion flow).
+      allow delete: if isOwner(uid);
+
+      // ── users/{uid}/trainings/{id} ─────────────────────────────────────────
+      match /trainings/{trainingId} {
+        // Writes are strictly owner-only. No one can forge another user's stats.
+        allow write: if isOwner(uid);
+
+        // Reads allow any signed-in user.
+        // WHY: GroupDetailRepository fetches members' training documents to
+        //   compute group leaderboard rankings (cross-user read by design).
+        // LIMITATION: Ideally reads should require shared-group membership, but
+        //   Firestore rules have no way to query "does a group exist where both
+        //   request.auth.uid and uid are members?" without a known groupId.
+        //   PRODUCTION RECOMMENDATION: move ranking computation to a Cloud
+        //   Function (Admin SDK) and restrict this rule to isOwner(uid) only.
+        allow read: if isSignedIn();
+      }
+
+      // ── users/{uid}/tags/{id} ──────────────────────────────────────────────
+      match /tags/{tagId} {
+        // Training tags are strictly private. No cross-user access.
+        allow read, write: if isOwner(uid);
+      }
+
+      // ── users/{uid}/groups/{groupId} ───────────────────────────────────────
+      match /groups/{groupId} {
+        // Personal record of which groups the user belongs to.
+        // InvitesRepository.acceptInvite() is called by the invitee themselves,
+        // so isOwner(uid) is always satisfied during invite acceptance.
+        allow read, write: if isOwner(uid);
+      }
+
+      // ── users/{uid}/settings/{id} ──────────────────────────────────────────
+      match /settings/{settingId} {
+        // HomeConfigRepository reads and writes users/{uid}/settings/homeLayoutConfig
+        // to persist the home dashboard widget layout (visibility, order, config).
+        // Strictly private — only the owner can read or modify their own layout.
+        allow read, write: if isOwner(uid);
+      }
+
+      // ── users/{uid}/result_notifications/{id} ──────────────────────────────
+      match /result_notifications/{notifId} {
+        // The owner reads and deletes their own reward notifications.
+        allow read, delete: if isOwner(uid);
+
+        // Updates (e.g. mark-as-read) are owner-only.
+        allow update: if isOwner(uid);
+
+        // ChallengeFinalizationService writes award notifications for winners
+        // whose uid differs from the authenticated caller (cross-user create).
+        // Content is non-sensitive (medal / badge award info).
+        // PRODUCTION RECOMMENDATION: Move finalization to a Cloud Function
+        //   (Admin SDK) and restrict this to isOwner(uid) only.
+        allow create: if isSignedIn();
+      }
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // groups/{groupId}
+    // ────────────────────────────────────────────────────────────────────────
+    match /groups/{groupId} {
+
+      // Any signed-in user can read group documents.
+      // Required to: discover groups, preview before joining, validate invites.
+      allow read: if isSignedIn();
+
+      // Any signed-in user can create a group (they become its owner).
+      allow create: if isSignedIn();
+
+      // Only group admins / owners can rename, configure, or delete the group.
+      allow update, delete: if isGroupAdmin(groupId);
+
+      // ── groups/{groupId}/members/{uid} ─────────────────────────────────────
+      match /members/{uid} {
+        // All current group members can read the full roster (ranking, UI).
+        allow read: if isGroupMember(groupId);
+
+        // A user can write their own member document: join, accept invite, leave.
+        // A group admin can write any member document: kick, change role.
+        allow write: if isOwner(uid) || isGroupAdmin(groupId);
+      }
+
+      // ── groups/{groupId}/challenges/{id} ───────────────────────────────────
+      match /challenges/{challengeId} {
+        // Group members see all challenges in their group.
+        // App-level admins also need read access to run:
+        //   AdminRepository.collectionGroup('challenges').count()
+        //   which spans ALL groups regardless of membership.
+        allow read: if isGroupMember(groupId) || isAdmin();
+
+        // Only group admins create, modify (finalize, award medals), or delete.
+        // ChallengeFinalizationService is always invoked in an admin's context.
+        allow create, update, delete: if isGroupAdmin(groupId);
+
+        // ── groups/{groupId}/challenges/{id}/participants/{uid} ─────────────
+        match /participants/{uid} {
+          // All group members can read participant records (leaderboard display).
+          // Admin collectionGroup query on 'participations' is also covered here
+          // because isAdmin() implies the admin is authenticated.
+          allow read: if isGroupMember(groupId) || isAdmin();
+
+          // Each user writes and updates only their own participation record.
+          // TrainingChallengeSyncService and AutoJoinService run in user context.
+          allow write: if isOwner(uid);
+        }
+      }
+
+      // ── groups/{groupId}/invites/{inviteId} ────────────────────────────────
+      match /invites/{inviteId} {
+        // Any signed-in user can read invites to validate a token before joining.
+        // The user is not yet a member when they first open the invite link.
+        allow read: if isSignedIn();
+
+        // Only group admins can create, update, or revoke invites.
+        allow write: if isGroupAdmin(groupId);
+      }
+
+      // ── groups/{groupId}/medals/{uid} ──────────────────────────────────────
+      match /medals/{uid} {
+        // Group members see each other's medal counts (gamification / social).
+        allow read: if isGroupMember(groupId);
+
+        // ChallengeFinalizationService (called by a group admin) writes medal
+        // counts for winners. The recipient uid differs from the admin caller,
+        // but isGroupAdmin() checks the caller's role, not uid.
+        allow write: if isGroupAdmin(groupId);
+      }
+
+      // ── groups/{groupId}/medal_history/{id} ────────────────────────────────
+      match /medal_history/{historyId} {
+        // Medal history is visible to all group members (group social feed).
+        allow read: if isGroupMember(groupId);
+
+        // Written by ChallengeFinalizationService in admin context.
+        allow write: if isGroupAdmin(groupId);
+      }
+
+      // ── groups/{groupId}/badges/{uid} ──────────────────────────────────────
+      match /badges/{uid} {
+        // Group members see each other's badge counts.
+        allow read: if isGroupMember(groupId);
+
+        // Written by ChallengeFinalizationService in admin context.
+        allow write: if isGroupAdmin(groupId);
+      }
+
+      // ── groups/{groupId}/badge_history/{id} ────────────────────────────────
+      match /badge_history/{historyId} {
+        // Badge history is visible to all group members.
+        allow read: if isGroupMember(groupId);
+
+        // Written by ChallengeFinalizationService in admin context.
+        allow write: if isGroupAdmin(groupId);
+      }
+
+      // ── groups/{groupId}/prefs/{uid} ───────────────────────────────────────
+      match /prefs/{uid} {
+        // Notification and display preferences are strictly private.
+        // Even group admins cannot read or write other members' prefs.
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // challenge_templates/{id}
+    // ────────────────────────────────────────────────────────────────────────
+    match /challenge_templates/{templateId} {
+      // All signed-in users can browse templates when creating a challenge.
+      allow read: if isSignedIn();
+
+      // Only app-level admins (isAdmin: true) can create, update, or delete.
+      allow write: if isAdmin();
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // global_challenges/{id}
+    // ────────────────────────────────────────────────────────────────────────
+    match /global_challenges/{challengeId} {
+      // All signed-in users can read global challenges.
+      allow read: if isSignedIn();
+
+      // Only app-level admins can manage global challenges.
+      allow write: if isAdmin();
+
+      // ── global_challenges/{id}/participations/{uid} ───────────────────────
+      match /participations/{uid} {
+        // AdminRepository queries collectionGroup('participations') and checks
+        // path.contains('global_challenges') to count global-challenge enrollment.
+        // Global challenge participation is visible to all signed-in users
+        // (consistent with global challenges themselves being public).
+        allow read: if isSignedIn();
+
+        // Each user writes and manages only their own participation record.
+        allow write: if isOwner(uid);
+      }
+    }
+  }
+}
