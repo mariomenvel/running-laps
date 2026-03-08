@@ -499,72 +499,195 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
   }
 
 
-  // Libre: status pill + tiempo. Interval: serie label.
+  // Libre: status pill. Interval: editorial serie header.
   Widget _buildHeader() {
     if (widget.distancia == 'Libre') return _buildLibreStatusBar();
-
-    String serieLabel = '';
-    if (widget.currentSeries != null) {
-      serieLabel = widget.totalSeries != null
-          ? "Serie ${widget.currentSeries} de ${widget.totalSeries}"
-          : "Serie ${widget.currentSeries}";
-    }
-    if (serieLabel.isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-      child: Text(
-        serieLabel,
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w700,
-          color: Colors.black87,
-          letterSpacing: 0.2,
-        ),
-      ),
-    );
+    return _buildSerieHeader();
   }
 
 
   Widget _buildBody() {
-    final bool isLibre = widget.distancia == 'Libre';
-    final bool intervalNoGps = !isLibre && !widget.gpsActivo;
+    if (widget.distancia == 'Libre') return _buildLibreBody();
+    return _buildIntervalBody();
+  }
 
-    if (isLibre) return _buildLibreBody();
 
-    if (intervalNoGps) {
-      // No GPS: large hero timer + 2 small cards below
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          children: [
-            const Spacer(flex: 2),
-            _buildHeroTimer(),
-            const Spacer(flex: 2),
-            _buildMetricsGrid(),
-            const Spacer(flex: 1),
-          ],
-        ),
-      );
-    }
+  // ===================================================================
+  // INTERVAL/SERIES MODE — UI
+  // ===================================================================
 
-    // Interval + GPS: small timer at top, 2×2 grid in center
+  // Editorial serie header: number + purple accent bar + subtext.
+  Widget _buildSerieHeader() {
+    final int serieNum = _demoMode ? 3 : (widget.currentSeries ?? 1);
+    final int? totalNum = _demoMode ? 5 : widget.totalSeries;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: 24),
-          Center(child: _buildSmallTimer()),
-          const Spacer(),
-          _buildMetricsGrid(),
-          const Spacer(),
+          IntrinsicWidth(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.repeat_rounded, color: Tema.brandPurple, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Serie $serieNum',
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.black87,
+                        letterSpacing: -0.5,
+                        height: 1.0,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Tema.brandPurple,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (totalNum != null) ...[
+            const SizedBox(height: 5),
+            Text(
+              'de $totalNum series',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: Colors.grey.shade500,
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
+  // Body for interval/series mode: TIEMPO hero → RITMO (GPS) → inline stats.
+  Widget _buildIntervalBody() {
+    final bool showRitmo = widget.gpsActivo || _demoMode;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        children: [
+          const Spacer(flex: 2),
+          _buildHeroTimer(),
+          const Spacer(flex: 2),
+          if (showRitmo) ...[
+            _buildIntervalRitmo(),
+            const Spacer(flex: 1),
+          ],
+          _buildInlineStats(),
+          const Spacer(flex: 2),
+        ],
+      ),
+    );
+  }
+
+  // RITMO speedometer for interval mode — reuses the same card as Libre.
+  Widget _buildIntervalRitmo() {
+    if (_demoMode) return _buildRitmoSpeedometer('4:45');
+    return ValueListenableBuilder<String>(
+      valueListenable: _gpsService?.currentPace ?? ValueNotifier("--:--"),
+      builder: (ctx, pace, _) => _buildRitmoSpeedometer(pace),
+    );
+  }
+
+  // DISTANCIA (target) + DESCANSO inline, no card background, separated by a divider.
+  // DISTANCIA always shows the target distance from widget.distancia, not GPS.
+  Widget _buildInlineStats() {
+    final String descansoStr = _demoMode ? '1m30s' : _formatDescanso(_descansoInt);
+    final Widget descansoStat = _buildInlineStat(
+      icon: Icons.timer_rounded,
+      value: descansoStr,
+      label: 'DESCANSO',
+    );
+
+    final String targetDist = _demoMode ? '400m' : _formatTargetDistancia(_distanciaInt);
+    final Widget distStat = _buildInlineStat(
+      icon: Icons.flag_rounded,
+      value: targetDist,
+      label: 'DISTANCIA',
+    );
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        distStat,
+        Container(
+          width: 1,
+          height: 40,
+          color: Colors.grey.shade200,
+          margin: const EdgeInsets.symmetric(horizontal: 28),
+        ),
+        descansoStat,
+      ],
+    );
+  }
+
+  String _formatTargetDistancia(int meters) {
+    if (meters < 1000) return '${meters}m';
+    final double km = meters / 1000.0;
+    if (meters % 1000 == 0) return '${meters ~/ 1000}km';
+    return '${km.toStringAsFixed(1)}km';
+  }
+
+  // Single inline stat: icon + value + label, no card background.
+  Widget _buildInlineStat({
+    required IconData icon,
+    required String value,
+    required String label,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(icon, size: 14, color: Colors.grey.shade400),
+            const SizedBox(width: 5),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+                letterSpacing: -0.3,
+                fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade400,
+            letterSpacing: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
 
   // ===================================================================
   // LIBRE MODE — UI

@@ -1151,10 +1151,12 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                   ],
                   
                   // Bottom section: Template summary OR Continuous run button
+                  // Continuous run button is hidden when interval series are in progress
+                  // to prevent accidentally launching a Libre session mid-interval.
                   if (_vm.source != null) ...[
                     _buildTemplateCard(),
                     const SizedBox(height: 16),
-                  ] else ...[
+                  ] else if (_vm.series.isEmpty) ...[
                     _buildContinuousRunButton(),
                     const SizedBox(height: 16),
                   ],
