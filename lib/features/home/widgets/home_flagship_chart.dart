@@ -180,10 +180,10 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
-                color: isSelected ? Tema.brandPurple : Colors.transparent,
+                color: isSelected ? _metricColor : Colors.transparent,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isSelected ? Tema.brandPurple : Colors.grey.shade300,
+                  color: isSelected ? _metricColor : Colors.grey.shade300,
                 ),
               ),
               child: Text(
@@ -332,6 +332,10 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
     );
   }
   
+  Color get _metricColor => _selectedMetric == ChartFlagshipMetric.distance
+      ? Tema.brandPurple
+      : const Color(0xFF2196F3);
+
   LinearGradient _getGradient(bool isTouched) {
     if (_selectedMetric == ChartFlagshipMetric.distance) {
        return LinearGradient(

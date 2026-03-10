@@ -15,6 +15,7 @@ import '../../training/widgets/tag_chip.dart';
 import '../../training/widgets/tag_selector_sheet.dart';
 import '../../../core/widgets/app_footer.dart';
 import '../../../core/widgets/app_header.dart';
+import '../../../core/widgets/empty_state_widget.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/core/services/pdf_generator_service.dart';
@@ -593,30 +594,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     Widget? child,
                   ) {
                     if (trainings.isEmpty && !isLoading) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.directions_run, size: 64, color: Colors.grey.shade300),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Aún no hay entrenos.',
-                              style: TextStyle(
-                                color: Colors.grey.shade500,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              '¡Sal y conquista tus metas!',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
+                      return const EmptyStateWidget(
+                        icon: Icons.calendar_today_rounded,
+                        title: 'Sin entrenamientos',
+                        description:
+                            'Tu historial aparecerá aquí cuando completes tu primera sesión',
                       );
                     }
 

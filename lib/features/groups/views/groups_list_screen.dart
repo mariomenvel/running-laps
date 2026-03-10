@@ -17,6 +17,7 @@ import '../../../../core/widgets/modern_snackbar.dart';
 // Widgets
 import '../../../core/widgets/app_header.dart';
 import '../../../core/widgets/app_footer.dart';
+import '../../../core/widgets/empty_state_widget.dart';
 import '../../../core/widgets/gradient_banner.dart';
 import 'package:running_laps/config/app_theme.dart';
 
@@ -255,126 +256,13 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40.0),
-        child: TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: const Duration(milliseconds: 800),
-          curve: Curves.easeOutBack,
-          builder: (context, value, child) {
-            return Transform.scale(
-              scale: value,
-              child: Opacity(opacity: value.clamp(0.0, 1.0), child: child),
-            );
-          },
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Icono animado
-              Container(
-                padding: const EdgeInsets.all(32),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Tema.brandPurple.withOpacity(0.1),
-                      Tema.brandPurple.withOpacity(0.05),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Tema.brandPurple.withOpacity(0.1),
-                      blurRadius: 30,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  Icons.groups_3_rounded,
-                  size: 64,
-                  color: Tema.brandPurple.withOpacity(0.6),
-                ),
-              ),
-              const SizedBox(height: 32),
-              const Text(
-                'Sin grupos activos',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.black87,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Únete a una comunidad de corredores\no crea la tuya propia para competir.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.grey.shade500,
-                  fontSize: 15,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 32),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Botón explorar
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text("Próximamente: Navegador de grupos públicos"),
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.search_rounded, size: 18),
-                    label: const Text("Explorar"),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Tema.brandPurple,
-                      side: const BorderSide(color: Tema.brandPurple),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Botón crear
-                  ElevatedButton.icon(
-                    onPressed: _handleCreateGroup,
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text("Crear Grupo"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Tema.brandPurple,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      elevation: 4,
-                      shadowColor: Tema.brandPurple.withOpacity(0.4),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
+    return EmptyStateWidget(
+      icon: Icons.people_outline_rounded,
+      title: 'Sin grupos',
+      description:
+          'Únete o crea un grupo para competir con otros corredores',
+      ctaLabel: 'Explorar grupos',
+      onCta: _handleCreateGroup,
     );
   }
 

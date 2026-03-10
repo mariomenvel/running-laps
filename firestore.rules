@@ -90,6 +90,13 @@ service cloud.firestore {
         allow read, write: if isOwner(uid);
       }
 
+      // ── users/{uid}/templates/{id} ────────────────────────────────────────
+      match /templates/{templateId} {
+        // Personal training templates (features/templates). Strictly private.
+        // TrainingTemplatesRepository always reads/writes the current user's own templates.
+        allow read, write: if isOwner(uid);
+      }
+
       // ── users/{uid}/settings/{id} ──────────────────────────────────────────
       match /settings/{settingId} {
         // HomeConfigRepository reads and writes users/{uid}/settings/homeLayoutConfig
@@ -135,9 +142,14 @@ service cloud.firestore {
         // All current group members can read the full roster (ranking, UI).
         allow read: if isGroupMember(groupId);
 
-        // A user can write their own member document: join, accept invite, leave.
-        // A group admin can write any member document: kick, change role.
-        allow write: if isOwner(uid) || isGroupAdmin(groupId);
+        // A user can create their own member doc (join / accept invite) or delete
+        // it (leave). A group admin can do either for any member (kick / invite).
+        allow create, delete: if isOwner(uid) || isGroupAdmin(groupId);
+
+        // Only admins may update member docs (set status=kicked, change role).
+        // Prevents privilege escalation: without this restriction a member could
+        // directly set role='owner' on their own doc and gain admin powers.
+        allow update: if isGroupAdmin(groupId);
       }
 
       // ── groups/{groupId}/challenges/{id} ───────────────────────────────────
@@ -148,9 +160,16 @@ service cloud.firestore {
         //   which spans ALL groups regardless of membership.
         allow read: if isGroupMember(groupId) || isAdmin();
 
-        // Only group admins create, modify (finalize, award medals), or delete.
-        // ChallengeFinalizationService is always invoked in an admin's context.
-        allow create, update, delete: if isGroupAdmin(groupId);
+        // Group admins can create any challenge.
+        // Group members can also create auto-challenges seeded from system templates:
+        // EnsureAutoChallengesService runs in member context and always sets
+        // origin='template' + createdBy='system' — unblocks template challenge loading.
+        allow create: if isGroupAdmin(groupId) ||
+                         (isGroupMember(groupId) &&
+                          request.resource.data.get('origin', '') == 'template' &&
+                          request.resource.data.get('createdBy', '') == 'system');
+        // Only admins may modify or remove challenges (finalization, medal awarding, deletion).
+        allow update, delete: if isGroupAdmin(groupId);
 
         // ── groups/{groupId}/challenges/{id}/participants/{uid} ─────────────
         match /participants/{uid} {

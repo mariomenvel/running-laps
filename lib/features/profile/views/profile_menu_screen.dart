@@ -20,6 +20,8 @@ import 'package:running_laps/features/analytics/views/analytics_hub_screen.dart'
 import '../../admin/views/admin_panel_screen.dart';
 import 'account_settings_view.dart';
 
+import 'package:running_laps/core/services/settings_service.dart';
+
 // Widgets comunes
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/app_footer.dart';
@@ -36,16 +38,20 @@ class ProfileMenuView extends StatefulWidget {
 
 class _ProfileMenuViewState extends State<ProfileMenuView> {
   late final AuthController _authCtrl;
+  final SettingsService _settingsService = SettingsService();
 
-  // Nuevo: aquí guardaremos el nombre
   String _nombreUsuario = "";
   bool _isAdmin = false;
+  bool _useWhiteCards = true;
 
   @override
   void initState() {
     super.initState();
     _authCtrl = AuthController();
     _cargarNombre();
+    _settingsService.getCardStyle().then((v) {
+      if (mounted) setState(() => _useWhiteCards = v);
+    });
   }
 
   // Cargar nombre desde Firebase
@@ -256,6 +262,90 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
     );
   }
 
+  Widget _buildCardStyleSetting() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Tema.brandPurple.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.style_rounded, color: Tema.brandPurple, size: 22),
+            ),
+            const SizedBox(width: 16),
+            const Expanded(
+              child: Text(
+                'Estilo de tarjetas',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+            // Segmented control
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  _buildStyleOption('Clásico', !_useWhiteCards),
+                  _buildStyleOption('Moderno', _useWhiteCards),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStyleOption(String label, bool isSelected) {
+    return GestureDetector(
+      onTap: () async {
+        final newValue = label == 'Moderno';
+        await _settingsService.setCardStyle(newValue);
+        if (mounted) setState(() => _useWhiteCards = newValue);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? Tema.brandPurple : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isSelected ? Colors.white : Colors.grey.shade600,
+          ),
+        ),
+      ),
+    );
+  }
+
   // =====================================================
   // Build
   // =====================================================
@@ -384,6 +474,10 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
                         },
                       ),
                     ],
+                    // SECTION: APARIENCIA
+                    _buildSectionHeader("Apariencia"),
+                    _buildCardStyleSetting(),
+
                     // SECTION 4: CUENTA
                     _buildSectionHeader("Cuenta"),
                     _buildMenuTile(

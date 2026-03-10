@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:running_laps/core/widgets/info_tooltip.dart';
-import 'dart:ui';
 
 /// Card KPI premium con estilo Glassmorphism inspirado en diseños modernos.
 /// Versión optimizada para legibilidad y estética premium.
@@ -17,6 +16,10 @@ class KpiCardWithDelta extends StatelessWidget {
   final bool isInverted;
   final VoidCallback? onTap;
   final String? helpText;
+  // compact: reduces vertical padding by ~19% (16 → 13 px)
+  final bool compact;
+  // coloredBackground: use gradient background with primaryColor instead of white card
+  final bool coloredBackground;
 
   const KpiCardWithDelta({
     super.key,
@@ -31,6 +34,8 @@ class KpiCardWithDelta extends StatelessWidget {
     this.isInverted = false,
     this.onTap,
     this.helpText,
+    this.compact = false,
+    this.coloredBackground = false,
   });
 
   @override
@@ -43,63 +48,70 @@ class KpiCardWithDelta extends StatelessWidget {
         final double valueSize = (width * 0.18).clamp(24.0, 32.0);
         final double iconBoxSize = (width * 0.3).clamp(36.0, 44.0);
 
+        final Color titleColor = coloredBackground
+            ? Colors.white.withOpacity(0.85)
+            : Colors.blueGrey.shade700;
+        final Color valueColor = coloredBackground
+            ? Colors.white
+            : Colors.black.withOpacity(0.75);
+        final Color unitColor = coloredBackground
+            ? Colors.white.withOpacity(0.75)
+            : Colors.blueGrey.shade400;
+
         return GestureDetector(
           onTap: onTap,
           child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: primaryColor.withOpacity(0.12),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
+            decoration: coloredBackground
+                ? BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [primaryColor, gradientColor ?? primaryColor.withOpacity(0.7)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: primaryColor.withOpacity(0.35),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  )
+                : BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x14000000), // rgba(0,0,0,0.08)
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(24),
               child: Stack(
                 children: [
-                  // Glass background
-                  BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.5),
-                          width: 1.5,
-                        ),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            primaryColor.withOpacity(0.08),
-                            Colors.white.withOpacity(0.4),
-                          ],
+                  // Glow circle decoration (colored mode only)
+                  if (coloredBackground)
+                    Positioned(
+                      top: -20,
+                      right: -20,
+                      child: Container(
+                        width: 80,
+                        height: 80,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color(0x1AFFFFFF),
                         ),
                       ),
                     ),
-                  ),
-
-                  // Background glow circle (decorative)
-                  Positioned(
-                    bottom: -30,
-                    right: -30,
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: primaryColor.withOpacity(0.05),
-                      ),
-                    ),
-                  ),
 
                   // Content
                   Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: compact
+                        ? const EdgeInsets.symmetric(horizontal: 16, vertical: 13)
+                        : const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -112,15 +124,19 @@ class KpiCardWithDelta extends StatelessWidget {
                                 width: iconBoxSize,
                                 height: iconBoxSize,
                                 decoration: BoxDecoration(
-                                  color: primaryColor.withOpacity(0.8),
+                                  color: coloredBackground
+                                      ? Colors.white.withOpacity(0.2)
+                                      : primaryColor.withOpacity(0.8),
                                   borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: primaryColor.withOpacity(0.3),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 4),
-                                    )
-                                  ],
+                                  boxShadow: coloredBackground
+                                      ? null
+                                      : [
+                                          BoxShadow(
+                                            color: primaryColor.withOpacity(0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 4),
+                                          )
+                                        ],
                                 ),
                                 child: Icon(icon, color: Colors.white, size: iconBoxSize * 0.6),
                               ),
@@ -146,7 +162,7 @@ class KpiCardWithDelta extends StatelessWidget {
                               child: Text(
                                 title,
                                 style: TextStyle(
-                                  color: Colors.blueGrey.shade700,
+                                  color: titleColor,
                                   fontSize: titleSize,
                                   fontWeight: FontWeight.w500,
                                   letterSpacing: -0.2,
@@ -177,7 +193,7 @@ class KpiCardWithDelta extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: valueSize,
                                     fontWeight: FontWeight.w500,
-                                    color: Colors.black.withOpacity(0.75),
+                                    color: valueColor,
                                     letterSpacing: -0.3,
                                   ),
                                 ),
@@ -188,7 +204,7 @@ class KpiCardWithDelta extends StatelessWidget {
                                     style: TextStyle(
                                       fontSize: valueSize * 0.5,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.blueGrey.shade400,
+                                      color: unitColor,
                                     ),
                                   ),
                                 ],

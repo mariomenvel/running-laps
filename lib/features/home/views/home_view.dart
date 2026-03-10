@@ -13,6 +13,7 @@ import 'package:running_laps/core/widgets/app_footer.dart';
 import 'package:running_laps/core/widgets/kpi_card_with_delta.dart';
 import 'package:running_laps/core/constants/app_help_content.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/services/settings_service.dart';
 
 // GROUPS IMPORTS
 import 'package:running_laps/features/groups/data/repositories/groups_repository.dart';
@@ -91,6 +92,7 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _initializeHome() async {
+    await SettingsService().initCardStyle();
     await _configController.initialize();
     await _loadEntrenamientos();
   }
@@ -293,19 +295,27 @@ class _HomeViewState extends State<HomeView> {
               children: [
                 _buildWelcomeHeader(),
                 const SizedBox(height: 12),
-                CoachInsightWidget(insight: _coachService.generateInsight(_entrenamientos)),
-                const SizedBox(height: 24),
-                _buildKPICards(),
-                const SizedBox(height: 32),
-                
-                // --- FLAGSHIP CHART ---
-                HomeFlagshipChart(workouts: _entrenamientos),
-                const SizedBox(height: 32),
-                // ----------------------
+                if (_entrenamientos.isEmpty) ...[
+                  const SizedBox(height: 8),
+                  _buildEmptyHomeState(),
+                ] else ...[
+                  CoachInsightWidget(insight: _coachService.generateInsight(_entrenamientos)),
+                  const SizedBox(height: 24),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: SettingsService.cardStyleNotifier,
+                    builder: (_, __, ___) => _buildKPICards(),
+                  ),
+                  const SizedBox(height: 32),
 
-                _buildRecentWorkoutsSection(),
-                const SizedBox(height: 32),
-                _buildGroupsPreview(), // Added Groups Preview
+                  // --- FLAGSHIP CHART ---
+                  HomeFlagshipChart(workouts: _entrenamientos),
+                  const SizedBox(height: 32),
+                  // ----------------------
+
+                  _buildRecentWorkoutsSection(),
+                  const SizedBox(height: 32),
+                ],
+                _buildGroupsPreview(),
                 const SizedBox(height: 100), // Bottom padding
               ],
             ),
@@ -317,6 +327,117 @@ class _HomeViewState extends State<HomeView> {
 
 
 
+
+  // --- EMPTY HOME STATE (no trainings yet) ---
+
+  Widget _buildEmptyHomeState() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Skeleton 2×2 preview of the stats grid
+        GridView.count(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          shrinkWrap: true,
+          padding: EdgeInsets.zero,
+          physics: const NeverScrollableScrollPhysics(),
+          childAspectRatio: 1.05,
+          children: [
+            _buildSkeletonKPICard(Icons.directions_run, 'Km totales'),
+            _buildSkeletonKPICard(Icons.speed, 'Ritmo medio'),
+            _buildSkeletonKPICard(Icons.fitness_center, 'Sesiones'),
+            _buildSkeletonKPICard(Icons.timer, 'Tiempo total'),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'Aquí verás tus km, ritmo y progreso',
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey.shade500,
+            height: 1.4,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 20),
+        SizedBox(
+          height: 52,
+          child: ElevatedButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const TrainingStartView()),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Tema.brandPurple,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: const Text(
+              'Entrenar ahora',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSkeletonKPICard(IconData icon, String label) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Grayed-out icon box
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: Colors.grey.shade300, size: 22),
+          ),
+          const Spacer(),
+          // Label
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade400,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 3),
+          // Value placeholder
+          Text(
+            '—',
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w700,
+              color: Colors.grey.shade300,
+              height: 1.0,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   // --- GROUPS PREVIEW SECTION ---
   Widget _buildGroupsPreview() {
@@ -368,7 +489,7 @@ class _HomeViewState extends State<HomeView> {
           builder: (context, snapshot) {
              if (snapshot.connectionState == ConnectionState.waiting) {
               return SizedBox(
-                height: 180,
+                height: 210,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: 3,
@@ -385,7 +506,7 @@ class _HomeViewState extends State<HomeView> {
             }
 
             return SizedBox(
-              height: 180,
+              height: 210,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: groups.length,
@@ -499,31 +620,39 @@ class _HomeViewState extends State<HomeView> {
       children: [
         KpiCardWithDelta(
           title: 'Km totales',
-          value: totalKm.toStringAsFixed(1) + " km", // Add unit for new layout
-          primaryColor: const Color(0xFF4CAF50),
+          value: totalKm.toStringAsFixed(1) + " km",
+          primaryColor: SettingsService.cardStyleNotifier.value ? Tema.brandPurple : const Color(0xFF4CAF50),
           icon: Icons.directions_run,
+          compact: true,
+          coloredBackground: !SettingsService.cardStyleNotifier.value,
           helpText: AppHelpContent.homeKmTotales,
         ),
         KpiCardWithDelta(
           title: 'Ritmo medio',
-          value: _formatPace(avgPace) + " /km", // Add unit
-          primaryColor: const Color(0xFF2196F3),
+          value: _formatPace(avgPace) + " /km",
+          primaryColor: SettingsService.cardStyleNotifier.value ? Tema.brandPurple : const Color(0xFF2196F3),
           icon: Icons.speed,
           isInverted: true,
+          compact: true,
+          coloredBackground: !SettingsService.cardStyleNotifier.value,
           helpText: AppHelpContent.homeRitmoMedio,
         ),
         KpiCardWithDelta(
           title: 'Sesiones',
-          value: totalWorkouts.toString(), // No unit for sessions
-          primaryColor: const Color(0xFFFF9800),
+          value: totalWorkouts.toString(),
+          primaryColor: SettingsService.cardStyleNotifier.value ? Tema.brandPurple : const Color(0xFFFF9800),
           icon: Icons.fitness_center,
+          compact: true,
+          coloredBackground: !SettingsService.cardStyleNotifier.value,
           helpText: AppHelpContent.homeSesiones,
         ),
         KpiCardWithDelta(
           title: 'Tiempo total',
           value: _formatDuration(totalDurationSec),
-          primaryColor: Colors.teal,
+          primaryColor: SettingsService.cardStyleNotifier.value ? Tema.brandPurple : const Color(0xFF009688),
           icon: Icons.timer,
+          compact: true,
+          coloredBackground: !SettingsService.cardStyleNotifier.value,
           helpText: AppHelpContent.homeTiempoTotal,
         ),
       ],
@@ -894,8 +1023,11 @@ class _HomeViewState extends State<HomeView> {
 // ===================================================================
 class _GroupHighlightCard extends StatelessWidget {
   final Group group;
+  // userRank: current user's position in the group leaderboard (1-indexed).
+  // Hidden when null — shown as "# N" when available.
+  final int? userRank;
 
-  const _GroupHighlightCard({required this.group});
+  const _GroupHighlightCard({required this.group, this.userRank});
 
   @override
   Widget build(BuildContext context) {
@@ -909,7 +1041,7 @@ class _GroupHighlightCard extends StatelessWidget {
         );
       },
       child: Container(
-        width: 160,
+        width: 190,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -969,14 +1101,32 @@ class _GroupHighlightCard extends StatelessWidget {
                     Text(
                       "${group.memberCount} ${group.memberCount == 1 ? 'miembro' : 'miembros'}",
                       style: TextStyle(
-                        fontSize: 12, 
-                        color: Colors.grey.shade600, 
-                        fontWeight: FontWeight.w500
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                // Ranking position (hidden when not available)
+                if (userRank != null) ...[
+                  const SizedBox(height: 5),
+                  Row(
+                    children: [
+                      Icon(Icons.emoji_events_rounded, size: 13, color: Tema.brandPurple),
+                      const SizedBox(width: 4),
+                      Text(
+                        '# $userRank',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Tema.brandPurple,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 10),
 
                 // Botón Entrar Minimalista
                 Container(

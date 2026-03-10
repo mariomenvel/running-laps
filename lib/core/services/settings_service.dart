@@ -1,8 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsService {
   static const String _keyAlarmEnabled = 'pref_alarm_enabled';
   static const String _keyGpsDefault = 'pref_gps_default';
+  static const String _keyCardStyle = 'home_card_style';
+
+  // Reactive notifier: true = white/Moderno, false = colored/Clásico.
+  // Initialized to true (white) until initCardStyle() loads the saved value.
+  static final ValueNotifier<bool> cardStyleNotifier = ValueNotifier<bool>(true);
   
   // Alarm Details
   static const String _keyAlarmMode = 'pref_alarm_mode'; // 'time' or 'pace'
@@ -44,6 +50,32 @@ class SettingsService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_keyGpsDefault, value);
     } catch (e) {}
+  }
+
+  // --- Card Style ---
+
+  /// Returns true when the user prefers the white/Moderno style (default).
+  Future<bool> getCardStyle() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return (prefs.getString(_keyCardStyle) ?? 'white') == 'white';
+    } catch (e) {
+      return true;
+    }
+  }
+
+  /// Persists the choice and updates [cardStyleNotifier] so listeners rebuild.
+  Future<void> setCardStyle(bool isWhite) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_keyCardStyle, isWhite ? 'white' : 'colored');
+      cardStyleNotifier.value = isWhite;
+    } catch (e) {}
+  }
+
+  /// Loads the saved value into [cardStyleNotifier]. Call once on app start.
+  Future<void> initCardStyle() async {
+    cardStyleNotifier.value = await getCardStyle();
   }
 
   // --- Alarm Configuration ---

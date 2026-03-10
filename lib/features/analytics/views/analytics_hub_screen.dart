@@ -9,6 +9,7 @@ import 'package:running_laps/features/analytics/views/tabs/overview_tab.dart';
 import 'package:running_laps/features/analytics/views/tabs/patterns_tab.dart';
 
 import '../../../../core/widgets/app_header.dart';
+import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/gradient_banner.dart';
 import '../../profile/views/profile_menu_screen.dart';
 
@@ -117,17 +118,31 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with SingleTick
             Expanded(
               child: ValueListenableBuilder<bool>(
                 valueListenable: _controller.isLoading,
-                builder: (context, isLoading, child) {
+                builder: (context, isLoading, _) {
                   if (isLoading) {
                     return const Center(child: CircularProgressIndicator(color: Tema.brandPurple));
                   }
-                  
-                  return TabBarView(
-                    controller: _tabController,
-                    children: [
-                      OverviewTab(controller: _controller),
-                      PatternsTab(controller: _controller),
-                    ],
+
+                  return ValueListenableBuilder<List<Entrenamiento>>(
+                    valueListenable: _controller.filteredData,
+                    builder: (context, data, _) {
+                      if (data.isEmpty) {
+                        return const EmptyStateWidget(
+                          icon: Icons.bar_chart_rounded,
+                          title: 'Sin datos todavía',
+                          description:
+                              'Completa algunos entrenamientos para ver tus estadísticas y tendencias',
+                        );
+                      }
+
+                      return TabBarView(
+                        controller: _tabController,
+                        children: [
+                          OverviewTab(controller: _controller),
+                          PatternsTab(controller: _controller),
+                        ],
+                      );
+                    },
                   );
                 },
               ),
