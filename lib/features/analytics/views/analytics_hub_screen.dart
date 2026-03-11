@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/features/analytics/viewmodels/analytics_hub_controller.dart';
 import 'package:running_laps/features/analytics/widgets/analytics_range_selector.dart';
@@ -55,7 +56,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with SingleTick
               onTapRight: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ProfileMenuView()),
+                  AppRoute(page: const ProfileMenuView()),
                 );
               },
               showBottomDivider: false,

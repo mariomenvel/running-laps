@@ -12,6 +12,7 @@ import '../../../core/widgets/app_header.dart';
 import '../../../core/services/gps_service.dart';
 import '../../../core/widgets/modern_snackbar.dart';
 import '../../../core/services/settings_service.dart';
+import '../../../core/utils/app_transitions.dart';
 
 import '../../home/views/home_view.dart';
 import '../../profile/views/profile_menu_screen.dart';
@@ -336,8 +337,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => TrainingSessionView(
+      AppRoute(
+        page: TrainingSessionView(
           distancia: _distanciaSeleccionada.toString(),
           descanso: _descansoSeleccionado.toString(),
           gpsActivo: _vm.gpsOn,
@@ -840,7 +841,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const HomeView()),
+        AppRoute(page: const HomeView()),
         (route) => false,
       );
     } catch (e) {
@@ -919,11 +920,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         if (_vm.series.isEmpty) {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (BuildContext context) {
-                return const HomeView();
-              },
-            ),
+            AppRoute(page: const HomeView()),
           );
         } else {
           ModernSnackBar.showWarning(
@@ -936,11 +933,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         if (_vm.series.isEmpty) {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (BuildContext context) {
-                return ProfileMenuView();
-              },
-            ),
+            AppRoute(page: ProfileMenuView()),
           );
         } else {
           ModernSnackBar.showWarning(
@@ -973,14 +966,14 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     _vm.startContinuousSession();
     
     final result = await Navigator.push(
-      context, 
-      MaterialPageRoute(
-       builder: (_) => TrainingSessionView(
-         gpsActivo: true, 
-         distancia: "Libre",
-         descanso: "0",
-       )
-      )
+      context,
+      AppRoute(
+        page: TrainingSessionView(
+          gpsActivo: true,
+          distancia: "Libre",
+          descanso: "0",
+        ),
+      ),
     );
 
     if (result != null && result is Serie) {
@@ -1588,8 +1581,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   void _createMomentaryTemplate() async {
     final TrainingTemplate? newTemplate = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => TemplateEditorView(
+      AppModalRoute(
+        page: TemplateEditorView(
           isMomentary: true,
         ),
       ),
@@ -1615,8 +1608,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     
     final modifiedTemplate = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => TemplateEditorView(
+      AppModalRoute(
+        page: TemplateEditorView(
           template: template,
           isSelectionMode: true, // Allows "Updated" or "Temporary" choice
           isMomentary: isQuick,  // If it's already a quick one, don't ask to save original
@@ -1643,7 +1636,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   void _openTemplateSelector() async {
     final TrainingTemplate? selected = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const TemplatesListView(isSelectionMode: true)),
+      AppModalRoute(page: const TemplatesListView(isSelectionMode: true)),
     );
     
     if (selected != null) {

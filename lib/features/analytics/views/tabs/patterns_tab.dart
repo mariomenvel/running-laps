@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/features/analytics/viewmodels/analytics_hub_controller.dart';
 import 'package:running_laps/features/analytics/data/pattern_detector.dart';
 import 'package:running_laps/config/app_theme.dart';
@@ -121,8 +122,8 @@ class SeriesPatternCard extends StatelessWidget {
         final index = allPatterns.indexOf(pattern);
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => SeriesPatternCarouselView(
+          AppRoute(
+            page: SeriesPatternCarouselView(
               patterns: allPatterns,
               initialIndex: index >= 0 ? index : 0,
             ),
@@ -281,8 +282,8 @@ class WorkoutPatternCard extends StatelessWidget {
         final index = allPatterns.indexOf(pattern);
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => WorkoutPatternCarouselView(
+          AppRoute(
+            page: WorkoutPatternCarouselView(
               patterns: allPatterns,
               initialIndex: index >= 0 ? index : 0,
             ),

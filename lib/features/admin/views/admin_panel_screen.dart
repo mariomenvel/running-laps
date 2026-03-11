@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 import '../viewmodels/admin_controller.dart';
 import 'admin_dashboard_tab.dart';
 import 'admin_challenges_tab.dart';
@@ -44,7 +45,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> with SingleTickerPr
               showBottomDivider: false,
               onTapRight: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const ProfileMenuView()),
+                AppRoute(page: const ProfileMenuView()),
               ),
             ),
 

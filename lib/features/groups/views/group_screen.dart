@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:confetti/confetti.dart';
 
@@ -123,7 +124,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                   onTapRight: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const ProfileMenuView()),
+                      AppRoute(page: const ProfileMenuView()),
                     );
                   },
                 ),
@@ -142,8 +143,8 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                         trailing: IconButton(
                           onPressed: () {
                             Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => GroupRewardsScreen(groupId: widget.groupId),
+                              AppModalRoute(
+                                page: GroupRewardsScreen(groupId: widget.groupId),
                               ),
                             );
                           },
@@ -208,7 +209,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
               child: AppFooter(
                 onTap: () {
                    Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => TrainingStartView()),
+                    AppRoute(page: TrainingStartView()),
                   );
                 },
               ),
@@ -357,8 +358,8 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                               [Tema.brandPurple, Tema.brandPurple.withOpacity(0.7)],
                           onTap: () {
                             Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => ChallengeDetailScreen(
+                              AppModalRoute(
+                                page: ChallengeDetailScreen(
                                   groupId: widget.groupId,
                                   challengeId: challenge.id,
                                 ),
@@ -452,8 +453,8 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                builder: (_) => ParticipantProfileScreen(
+                              AppModalRoute(
+                                page: ParticipantProfileScreen(
                                   uid: member.uid,
                                   name: member.name,
                                   photoUrl: member.photoUrl,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 // RUTA CORREGIDA:
 import 'package:running_laps/features/auth/viewmodels/auth_controller.dart'; // CAMBIO: Usamos el Controller
 import 'package:running_laps/features/home/views/home_view.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/config/app_theme.dart';
 
@@ -64,7 +65,7 @@ class _AuthPageState extends State<AuthPage> {
       ModernSnackBar.showSuccess(context, 'Sesión iniciada');
 
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const HomeView()),
+        AppRoute(page: const HomeView()),
         (Route<dynamic> route) => false,
       );
     } catch (e) {
@@ -125,7 +126,7 @@ class _AuthPageState extends State<AuthPage> {
       ModernSnackBar.showSuccess(context, 'Sesión iniciada con Google');
 
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const HomeView()),
+        AppRoute(page: const HomeView()),
         (Route<dynamic> route) => false,
       );
     } catch (e) {

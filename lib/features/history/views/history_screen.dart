@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 // import 'package:running_laps/features/profile/views/avatar_editor_wrapper_view.dart';
 import 'package:running_laps/features/history/viewmodels/history_controller.dart';
 
@@ -305,11 +306,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (BuildContext context) {
-                      return const TrainingStartView();
-                    },
-                  ),
+                  AppRoute(page: const TrainingStartView()),
                 );
               },
               isLoading: false,
@@ -354,11 +351,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       onTapRight: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (BuildContext context) {
-              return const ProfileMenuView();
-            },
-          ),
+          AppRoute(page: const ProfileMenuView()),
         );
       },
     );
@@ -654,9 +647,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => AnalyticsHubScreen(preFilteredData: filteredData),
-      ),
+      AppRoute(page: AnalyticsHubScreen(preFilteredData: filteredData)),
     );
   }
 }

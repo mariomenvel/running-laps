@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 import '../../../config/app_theme.dart';
 import '../../../core/widgets/app_header.dart';
 import '../../../core/widgets/app_footer.dart';
@@ -99,7 +100,7 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
               onTapRight: () {
                  Navigator.push(
                    context,
-                   MaterialPageRoute(builder: (_) => const ProfileMenuView()),
+                   AppRoute(page: const ProfileMenuView()),
                  );
               },
               showBottomDivider: false,

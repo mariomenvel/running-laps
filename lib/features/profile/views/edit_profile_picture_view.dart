@@ -1,6 +1,7 @@
 // lib/features/profile/views/edit_profile_picture_view.dart
 
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:get/get.dart'; // Asumo que usas GetX para navegar
 import 'package:image_picker/image_picker.dart';
 // Importa tus otras vistas y viewmodels
@@ -47,7 +48,7 @@ class EditProfilePictureView extends StatelessWidget {
     // Navegamos a la pantalla de edición de avatar
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const AvatarEditorWrapperView()),
+      AppModalRoute(page: const AvatarEditorWrapperView()),
     );
   }
 

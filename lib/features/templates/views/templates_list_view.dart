@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/app_header.dart'; // Using AppHeader if appropriate, or standard AppBar
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import '../data/template_models.dart';
@@ -161,8 +162,8 @@ class _TemplatesListViewState extends State<TemplatesListView> {
   void _navigateToEditor({TrainingTemplate? template}) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => TemplateEditorView(
+      AppModalRoute(
+        page: TemplateEditorView(
           template: template,
           isSelectionMode: widget.isSelectionMode, // Pass selection mode
         ),
@@ -194,7 +195,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
               onTapRight: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (c) => const ProfileMenuView()),
+                  AppRoute(page: const ProfileMenuView()),
                 );
               },
             ),

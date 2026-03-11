@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/features/home/viewmodels/home_config_controller.dart';
@@ -38,13 +39,13 @@ class HomeView extends StatefulWidget {
   State<HomeView> createState() => _HomeViewState();
 }
 
-class _HomeViewState extends State<HomeView> {
+class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   late final HomeConfigController _configController;
   final TrainingRepository _trainingRepository = TrainingRepository();
   final GroupsRepository _groupsRepository = GroupsRepository();
   final UserGroupsRepository _userGroupsRepository = UserGroupsRepository();
   final CoachInsightService _coachService = CoachInsightService();
-  
+
   List<Entrenamiento> _entrenamientos = [];
   bool _isLoadingData = true;
 
@@ -56,9 +57,38 @@ class _HomeViewState extends State<HomeView> {
   final Set<String> _showingNotifIds = {};
   bool _isShowingDialog = false;
 
+  // ── Entrance animation ──────────────────────────────────────────
+  // Single controller, 900ms. Each element gets a Interval slice.
+  // Played once on first load; pull-to-refresh does NOT re-trigger.
+  late final AnimationController _entranceController;
+  bool _entranceAnimationPlayed = false;
+  late final Animation<double> _aGreeting; // delay   0ms
+  late final Animation<double> _aCoach;    // delay  80ms
+  late final Animation<double> _aKpi0;     // delay 160ms  (Km totales)
+  late final Animation<double> _aKpi1;     // delay 220ms  (Ritmo medio)
+  late final Animation<double> _aKpi2;     // delay 280ms  (Sesiones)
+  late final Animation<double> _aKpi3;     // delay 340ms  (Tiempo total)
+  late final Animation<double> _aChart;    // delay 420ms
+  late final Animation<double> _aRecent;   // delay 500ms
+  late final Animation<double> _aGroups;   // delay 580ms
+  // ────────────────────────────────────────────────────────────────
+
   @override
   void initState() {
     super.initState();
+    _entranceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    _aGreeting = CurvedAnimation(parent: _entranceController, curve: const Interval(0.000, 0.517, curve: Curves.easeOutQuart));
+    _aCoach    = CurvedAnimation(parent: _entranceController, curve: const Interval(0.067, 0.583, curve: Curves.easeOutQuart));
+    _aKpi0     = CurvedAnimation(parent: _entranceController, curve: const Interval(0.133, 0.650, curve: Curves.easeOutQuart));
+    _aKpi1     = CurvedAnimation(parent: _entranceController, curve: const Interval(0.183, 0.700, curve: Curves.easeOutQuart));
+    _aKpi2     = CurvedAnimation(parent: _entranceController, curve: const Interval(0.233, 0.750, curve: Curves.easeOutQuart));
+    _aKpi3     = CurvedAnimation(parent: _entranceController, curve: const Interval(0.283, 0.800, curve: Curves.easeOutQuart));
+    _aChart    = CurvedAnimation(parent: _entranceController, curve: const Interval(0.350, 0.867, curve: Curves.easeOutQuart));
+    _aRecent   = CurvedAnimation(parent: _entranceController, curve: const Interval(0.417, 0.933, curve: Curves.easeOutQuart));
+    _aGroups   = CurvedAnimation(parent: _entranceController, curve: const Interval(0.483, 1.000, curve: Curves.easeOutQuart));
     _currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
     _configController = HomeConfigController(userId: _currentUserId!);
     _initializeHome();
@@ -112,11 +142,16 @@ class _HomeViewState extends State<HomeView> {
       // Error loading
     } finally {
       setState(() => _isLoadingData = false);
+      if (mounted && !_entranceAnimationPlayed) {
+        _entranceAnimationPlayed = true;
+        _entranceController.forward();
+      }
     }
   }
 
   @override
   void dispose() {
+    _entranceController.dispose();
     _configController.dispose();
     _notifSubscription?.cancel();
     super.dispose();
@@ -256,9 +291,7 @@ class _HomeViewState extends State<HomeView> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => const ProfileMenuView(),
-                      ),
+                      AppRoute(page: const ProfileMenuView()),
                     );
                   },
                   child: Hero(
@@ -293,13 +326,13 @@ class _HomeViewState extends State<HomeView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildWelcomeHeader(),
+                _slideFromLeft(_aGreeting, _buildWelcomeHeader()),
                 const SizedBox(height: 12),
                 if (_entrenamientos.isEmpty) ...[
                   const SizedBox(height: 8),
                   _buildEmptyHomeState(),
                 ] else ...[
-                  CoachInsightWidget(insight: _coachService.generateInsight(_entrenamientos)),
+                  _slideFromLeft(_aCoach, CoachInsightWidget(insight: _coachService.generateInsight(_entrenamientos))),
                   const SizedBox(height: 24),
                   ValueListenableBuilder<bool>(
                     valueListenable: SettingsService.cardStyleNotifier,
@@ -308,14 +341,14 @@ class _HomeViewState extends State<HomeView> {
                   const SizedBox(height: 32),
 
                   // --- FLAGSHIP CHART ---
-                  HomeFlagshipChart(workouts: _entrenamientos),
+                  _slideFromBottom(_aChart, HomeFlagshipChart(workouts: _entrenamientos)),
                   const SizedBox(height: 32),
                   // ----------------------
 
-                  _buildRecentWorkoutsSection(),
+                  _slideFromBottom(_aRecent, _buildRecentWorkoutsSection()),
                   const SizedBox(height: 32),
                 ],
-                _buildGroupsPreview(),
+                _slideFromBottom(_aGroups, _buildGroupsPreview()),
                 const SizedBox(height: 100), // Bottom padding
               ],
             ),
@@ -366,7 +399,7 @@ class _HomeViewState extends State<HomeView> {
           child: ElevatedButton(
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const TrainingStartView()),
+              AppRoute(page: const TrainingStartView()),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Tema.brandPurple,
@@ -464,7 +497,7 @@ class _HomeViewState extends State<HomeView> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const GroupsListScreen()),
+                    AppRoute(page: const GroupsListScreen()),
                   ).then((_) {
                      setState(() {
                        _loadGroups();
@@ -560,7 +593,7 @@ class _HomeViewState extends State<HomeView> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const GroupsListScreen()),
+                AppRoute(page: const GroupsListScreen()),
               );
             },
             style: ElevatedButton.styleFrom(
@@ -574,6 +607,47 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+
+  // ── Entrance animation helpers ───────────────────────────────────
+  Widget _slideFromLeft(Animation<double> anim, Widget child) {
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (_, __) => Opacity(
+        opacity: anim.value,
+        child: Transform.translate(
+          offset: Offset(-24 * (1 - anim.value), 0),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  Widget _slideFromBottom(Animation<double> anim, Widget child) {
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (_, __) => Opacity(
+        opacity: anim.value,
+        child: Transform.translate(
+          offset: Offset(0, 24 * (1 - anim.value)),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  Widget _scaleIn(Animation<double> anim, Widget child) {
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (_, __) => Opacity(
+        opacity: anim.value,
+        child: Transform.scale(
+          scale: 0.85 + 0.15 * anim.value,
+          child: child,
+        ),
+      ),
+    );
+  }
+  // ────────────────────────────────────────────────────────────────
 
   Widget _buildWelcomeHeader() {
     final hour = DateTime.now().hour;
@@ -618,7 +692,7 @@ class _HomeViewState extends State<HomeView> {
       physics: const NeverScrollableScrollPhysics(),
       childAspectRatio: 1.05, // More square-ish to accommodate glassmorphism content
       children: [
-        KpiCardWithDelta(
+        _scaleIn(_aKpi0, KpiCardWithDelta(
           title: 'Km totales',
           value: totalKm.toStringAsFixed(1) + " km",
           primaryColor: SettingsService.cardStyleNotifier.value ? Tema.brandPurple : const Color(0xFF4CAF50),
@@ -626,8 +700,8 @@ class _HomeViewState extends State<HomeView> {
           compact: true,
           coloredBackground: !SettingsService.cardStyleNotifier.value,
           helpText: AppHelpContent.homeKmTotales,
-        ),
-        KpiCardWithDelta(
+        )),
+        _scaleIn(_aKpi1, KpiCardWithDelta(
           title: 'Ritmo medio',
           value: _formatPace(avgPace) + " /km",
           primaryColor: SettingsService.cardStyleNotifier.value ? Tema.brandPurple : const Color(0xFF2196F3),
@@ -636,8 +710,8 @@ class _HomeViewState extends State<HomeView> {
           compact: true,
           coloredBackground: !SettingsService.cardStyleNotifier.value,
           helpText: AppHelpContent.homeRitmoMedio,
-        ),
-        KpiCardWithDelta(
+        )),
+        _scaleIn(_aKpi2, KpiCardWithDelta(
           title: 'Sesiones',
           value: totalWorkouts.toString(),
           primaryColor: SettingsService.cardStyleNotifier.value ? Tema.brandPurple : const Color(0xFFFF9800),
@@ -645,8 +719,8 @@ class _HomeViewState extends State<HomeView> {
           compact: true,
           coloredBackground: !SettingsService.cardStyleNotifier.value,
           helpText: AppHelpContent.homeSesiones,
-        ),
-        KpiCardWithDelta(
+        )),
+        _scaleIn(_aKpi3, KpiCardWithDelta(
           title: 'Tiempo total',
           value: _formatDuration(totalDurationSec),
           primaryColor: SettingsService.cardStyleNotifier.value ? Tema.brandPurple : const Color(0xFF009688),
@@ -654,7 +728,7 @@ class _HomeViewState extends State<HomeView> {
           compact: true,
           coloredBackground: !SettingsService.cardStyleNotifier.value,
           helpText: AppHelpContent.homeTiempoTotal,
-        ),
+        )),
       ],
     );
   }
@@ -707,9 +781,7 @@ class _HomeViewState extends State<HomeView> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const ProfileMenuView(),
-                  ),
+                  AppRoute(page: const ProfileMenuView()),
                 );
               },
               child: const Text(
@@ -1013,7 +1085,7 @@ class _HomeViewState extends State<HomeView> {
   void _onPlayButtonTap() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => TrainingStartView()),
+      AppRoute(page: TrainingStartView()),
     );
   }
 }
@@ -1035,9 +1107,7 @@ class _GroupHighlightCard extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => GroupScreen(groupId: group.id),
-          ),
+          AppRoute(page: GroupScreen(groupId: group.id)),
         );
       },
       child: Container(

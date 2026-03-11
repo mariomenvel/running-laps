@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
@@ -68,7 +69,7 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
               onTapRight: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ProfileMenuView()),
+                  AppRoute(page: const ProfileMenuView()),
                 );
               },
               showBottomDivider: false,
@@ -172,7 +173,7 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
             AppFooter(
               onTap: () {
                  Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => TrainingStartView()),
+                  AppRoute(page: TrainingStartView()),
                 );
               },
             ),
@@ -588,9 +589,7 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => GroupScreen(groupId: widget.groupId),
-              ),
+              AppRoute(page: GroupScreen(groupId: widget.groupId)),
             );
           },
           child: ScaleTransition(

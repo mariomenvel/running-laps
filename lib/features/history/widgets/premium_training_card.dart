@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
@@ -559,10 +560,10 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                  if (widget.selectionMode) return;
                  Navigator.push(
                    context,
-                   MaterialPageRoute(
-                     builder: (context) => widget.training.gps 
-                      ? TrainingDetailView(training: widget.training)
-                      : TrainingNoGpsDetailView(training: widget.training),
+                   AppModalRoute(
+                     page: widget.training.gps
+                         ? TrainingDetailView(training: widget.training)
+                         : TrainingNoGpsDetailView(training: widget.training),
                    ),
                  );
               },

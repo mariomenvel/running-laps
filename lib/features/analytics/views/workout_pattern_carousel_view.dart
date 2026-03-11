@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:running_laps/features/analytics/data/workout_pattern.dart';
 import 'package:running_laps/features/analytics/widgets/pattern_carousel.dart';
@@ -183,8 +184,8 @@ class _ComparisonSelectorSheetState extends State<_ComparisonSelectorSheet> {
                       Navigator.pop(context);
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => PatternComparisonView(
+                        AppRoute(
+                          page: PatternComparisonView(
                             instanceA: _selectedA!,
                             instanceB: _selectedB!,
                           ),

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart'; // Para SystemSound
 import 'dart:math' show pi;
@@ -1422,7 +1423,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                  await Future.delayed(const Duration(seconds: 2));
                  if (mounted) {
                     Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (context) => const HomeView()),
+                      AppRoute(page: const HomeView()),
                       (Route<dynamic> route) => false,
                     );
                  }

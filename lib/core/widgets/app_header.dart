@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 
 import 'package:running_laps/features/home/views/home_view.dart';
 
@@ -58,7 +59,7 @@ class AppHeader extends StatelessWidget {
                       // Navegación Directa al Home (Limpia stack)
                       Navigator.pushAndRemoveUntil(
                         context,
-                        MaterialPageRoute(builder: (_) => const HomeView()),
+                        AppRoute(page: const HomeView()),
                         (route) => false,
                       );
                     }

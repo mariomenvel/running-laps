@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 
 // Auth
 import 'package:firebase_auth/firebase_auth.dart';
@@ -84,22 +85,14 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
   void _openHistory() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (BuildContext context) {
-          return const HistoryScreen();
-        },
-      ),
+      AppRoute(page: const HistoryScreen()),
     );
   }
 
   void _openAvatarEditor() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (BuildContext context) {
-          return const AvatarEditorWrapperView();
-        },
-      ),
+      AppModalRoute(page: const AvatarEditorWrapperView()),
     );
   }
 
@@ -107,7 +100,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
   void _openGroups() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const GroupsListScreen()),
+      AppRoute(page: const GroupsListScreen()),
     );
   }
 
@@ -132,7 +125,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
          
          Navigator.push(
            context,
-           MaterialPageRoute(builder: (context) => ParticipantProfileScreen(
+           AppModalRoute(page: ParticipantProfileScreen(
              uid: user.uid,
              name: data['nombre'] ?? data['username'] ?? "Usuario", // Fallback a nombre, luego username
              photoUrl: data['profileImageUrl'],
@@ -156,11 +149,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
       }
 
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (BuildContext context) {
-            return const AuthPage();
-          },
-        ),
+        AppRoute(page: const AuthPage()),
         (Route<dynamic> route) {
           return false;
         },
@@ -362,7 +351,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
               onTapLeft: () {
                 Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (c) => const HomeView()),
+                  AppRoute(page: const HomeView()),
                   (route) => false,
                 );
               },
@@ -428,9 +417,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => const AnalyticsHubScreen(),
-                          ),
+                          AppRoute(page: const AnalyticsHubScreen()),
                         );
                       },
                     ),
@@ -441,9 +428,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => const TemplatesListView(),
-                          ),
+                          AppRoute(page: const TemplatesListView()),
                         );
                       },
                     ),
@@ -469,7 +454,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (c) => const AdminPanelScreen()),
+                            AppRoute(page: const AdminPanelScreen()),
                           );
                         },
                       ),
@@ -487,12 +472,10 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => AccountSettingsView(
+                          AppRoute(page: AccountSettingsView(
                               currentName: _nombreUsuario,
                               onNameUpdated: _cargarNombre,
-                            ),
-                          ),
+                            )),
                         );
                       },
                     ),
@@ -523,7 +506,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const TrainingStartView()),
+                  AppRoute(page: const TrainingStartView()),
                 );
               },
               isLoading: false,

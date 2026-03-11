@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/config/app_theme.dart';
 import '../../auth/viewmodels/auth_controller.dart';
 import '../../auth/views/auth_page.dart';
@@ -640,7 +641,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                                 Navigator.pop(context);
                                 Navigator.pushAndRemoveUntil(
                                   context, 
-                                  MaterialPageRoute(builder: (c) => const AuthPage()), 
+                                  AppRoute(page: const AuthPage()),
                                   (r) => false
                                 );
                                 ModernSnackBar.showSuccess(context, 'Cuenta eliminada con éxito.');

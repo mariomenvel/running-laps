@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/config/app_theme.dart';
@@ -51,7 +52,7 @@ class _GroupRewardsScreenState extends State<GroupRewardsScreen>
               onTapRight: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ProfileMenuView()),
+                  AppRoute(page: const ProfileMenuView()),
                 );
               },
               showBottomDivider: false,

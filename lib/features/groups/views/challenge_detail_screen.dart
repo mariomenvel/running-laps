@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 import '../viewmodels/challenge_detail_controller.dart';
 import '../data/models/challenge_models.dart';
 import '../data/helpers/challenge_helpers.dart';
@@ -76,7 +77,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
               onTapRight: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ProfileMenuView()),
+                  AppRoute(page: const ProfileMenuView()),
                 );
               },
               showBottomDivider: false,
