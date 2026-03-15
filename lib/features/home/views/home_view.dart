@@ -23,6 +23,7 @@ import 'package:running_laps/features/groups/data/models/group_models.dart';
 import 'package:running_laps/features/groups/views/groups_list_screen.dart';
 import 'package:running_laps/features/groups/views/group_screen.dart';
 import 'package:running_laps/core/widgets/group_skeleton_card.dart';
+import 'package:running_laps/core/widgets/skeleton_shimmer.dart';
 import 'package:running_laps/features/analytics/data/coach_insight_service.dart';
 import 'package:running_laps/features/analytics/widgets/coach_insight_widget.dart';
 import 'package:running_laps/features/groups/data/models/result_notification_model.dart';
@@ -312,49 +313,91 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     return ValueListenableBuilder<bool>(
       valueListenable: _configController.isLoading,
       builder: (context, configLoading, _) {
-        if (configLoading || _isLoadingData) {
-          return const Center(
-            child: CircularProgressIndicator(color: Tema.brandPurple),
-          );
-        }
-
-        return RefreshIndicator(
-          onRefresh: _loadEntrenamientos,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _slideFromLeft(_aGreeting, _buildWelcomeHeader()),
-                const SizedBox(height: 12),
-                if (_entrenamientos.isEmpty) ...[
-                  const SizedBox(height: 8),
-                  _buildEmptyHomeState(),
-                ] else ...[
-                  _slideFromLeft(_aCoach, CoachInsightWidget(insight: _coachService.generateInsight(_entrenamientos))),
-                  const SizedBox(height: 24),
-                  ValueListenableBuilder<bool>(
-                    valueListenable: SettingsService.cardStyleNotifier,
-                    builder: (_, __, ___) => _buildKPICards(),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // --- FLAGSHIP CHART ---
-                  _slideFromBottom(_aChart, HomeFlagshipChart(workouts: _entrenamientos)),
-                  const SizedBox(height: 32),
-                  // ----------------------
-
-                  _slideFromBottom(_aRecent, _buildRecentWorkoutsSection()),
-                  const SizedBox(height: 32),
-                ],
-                _slideFromBottom(_aGroups, _buildGroupsPreview()),
-                const SizedBox(height: 100), // Bottom padding
-              ],
-            ),
-          ),
+        final loading = configLoading || _isLoadingData;
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: loading
+              ? _buildHomeLoadingSkeleton()
+              : _buildHomeContent(),
         );
       },
+    );
+  }
+
+  Widget _buildHomeContent() {
+    return RefreshIndicator(
+      key: const ValueKey('home_content'),
+      onRefresh: _loadEntrenamientos,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _slideFromLeft(_aGreeting, _buildWelcomeHeader()),
+            const SizedBox(height: 12),
+            if (_entrenamientos.isEmpty) ...[
+              const SizedBox(height: 8),
+              _buildEmptyHomeState(),
+            ] else ...[
+              _slideFromLeft(_aCoach, CoachInsightWidget(insight: _coachService.generateInsight(_entrenamientos))),
+              const SizedBox(height: 24),
+              ValueListenableBuilder<bool>(
+                valueListenable: SettingsService.cardStyleNotifier,
+                builder: (_, __, ___) => _buildKPICards(),
+              ),
+              const SizedBox(height: 32),
+
+              // --- FLAGSHIP CHART ---
+              _slideFromBottom(_aChart, HomeFlagshipChart(workouts: _entrenamientos)),
+              const SizedBox(height: 32),
+              // ----------------------
+
+              _slideFromBottom(_aRecent, _buildRecentWorkoutsSection()),
+              const SizedBox(height: 32),
+            ],
+            _slideFromBottom(_aGroups, _buildGroupsPreview()),
+            const SizedBox(height: 100), // Bottom padding
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHomeLoadingSkeleton() {
+    return SkeletonShimmer(
+      key: const ValueKey('home_loading'),
+      builder: (sv) => SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SkeletonLine(width: 160, shimmerValue: sv),
+            const SizedBox(height: 20),
+            SkeletonBox(height: 80, shimmerValue: sv, borderRadius: 16),
+            const SizedBox(height: 24),
+            GridView.count(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              childAspectRatio: 1.05,
+              children: List.generate(4, (_) => Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  gradient: LinearGradient(
+                    colors: [Colors.grey.shade200, Colors.grey.shade100, Colors.grey.shade200],
+                    stops: const [0.0, 0.5, 1.0],
+                    begin: Alignment(-1.0 - sv * 2, 0.0),
+                    end: Alignment(1.0 - sv * 2, 0.0),
+                  ),
+                ),
+              )),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

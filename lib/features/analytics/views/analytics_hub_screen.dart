@@ -12,6 +12,7 @@ import 'package:running_laps/features/analytics/views/tabs/patterns_tab.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/gradient_banner.dart';
+import '../../../../core/widgets/skeleton_shimmer.dart';
 import '../../profile/views/profile_menu_screen.dart';
 
 class AnalyticsHubScreen extends StatefulWidget {
@@ -22,9 +23,17 @@ class AnalyticsHubScreen extends StatefulWidget {
   State<AnalyticsHubScreen> createState() => _AnalyticsHubScreenState();
 }
 
-class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with SingleTickerProviderStateMixin {
+class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with TickerProviderStateMixin {
   late final AnalyticsHubController _controller;
   late final TabController _tabController;
+
+  // ── Entrance animation ──────────────────────────────────────────
+  late final AnimationController _entranceCtrl;
+  bool _entrancePlayed = false;
+  late final Animation<double> _aBanner;   // 0ms  – fade + slide left
+  late final Animation<double> _aTabs;     // 80ms – fade + slide left
+  late final Animation<double> _aContent;  // 400ms – fade + slide bottom
+  // ────────────────────────────────────────────────────────────────
 
   @override
   void initState() {
@@ -34,10 +43,19 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with SingleTick
     _controller.initialize(initialData: widget.preFilteredData);
     
     _tabController = TabController(length: 2, vsync: this);
+    _entranceCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
+    _aBanner  = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.000, 0.517, curve: Curves.easeOutQuart));
+    _aTabs    = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.067, 0.583, curve: Curves.easeOutQuart));
+    _aContent = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.333, 0.850, curve: Curves.easeOutQuart));
+    if (!_entrancePlayed) {
+      _entrancePlayed = true;
+      _entranceCtrl.forward();
+    }
   }
 
   @override
   void dispose() {
+    _entranceCtrl.dispose();
     _controller.dispose();
     _tabController.dispose();
     super.dispose();
@@ -63,7 +81,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with SingleTick
             ),
 
             // 2. Banner
-            GradientBanner(
+            _slideFromLeft(_aBanner, GradientBanner(
               title: widget.preFilteredData != null ? 'Resultados Filtrados' : 'Analytics Hub',
               subtitle: "Tu rendimiento en detalle",
               icon: Icons.analytics_rounded,
@@ -73,10 +91,10 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with SingleTick
                 width: 140, // Limit width for the selector
                 child: AnalyticsRangeSelector(controller: _controller),
               ),
-            ),
+            )),
 
             // 3. Tabs
-            Container(
+            _slideFromLeft(_aTabs, Container(
               margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
@@ -113,15 +131,18 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with SingleTick
                   Tab(text: 'Patrones'),
                 ],
               ),
-            ),
+            )),
 
             // 4. Content
             Expanded(
-              child: ValueListenableBuilder<bool>(
+              child: _slideFromBottom(_aContent, ValueListenableBuilder<bool>(
                 valueListenable: _controller.isLoading,
                 builder: (context, isLoading, _) {
                   if (isLoading) {
-                    return const Center(child: CircularProgressIndicator(color: Tema.brandPurple));
+                    return AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: _buildAnalyticsLoadingSkeleton(),
+                    );
                   }
 
                   return ValueListenableBuilder<List<Entrenamiento>>(
@@ -146,13 +167,85 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with SingleTick
                     },
                   );
                 },
-              ),
+              )),
             ),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildAnalyticsLoadingSkeleton() {
+    return SkeletonShimmer(
+      key: const ValueKey('analytics_loading'),
+      builder: (sv) => SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 3 KPI boxes row
+            Row(
+              children: List.generate(3, (i) => Expanded(
+                child: Container(
+                  margin: EdgeInsets.only(left: i == 0 ? 0 : 12),
+                  height: 90,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SkeletonBox(width: 32, height: 32, borderRadius: 10, shimmerValue: sv),
+                      const Spacer(),
+                      SkeletonLine(shimmerValue: sv),
+                    ],
+                  ),
+                ),
+              )),
+            ),
+            const SizedBox(height: 24),
+            // Chart area skeleton
+            SkeletonBox(height: 220, shimmerValue: sv, borderRadius: 20),
+            const SizedBox(height: 24),
+            SkeletonBox(height: 160, shimmerValue: sv, borderRadius: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Entrance animation helpers ────────────────────────────────────
+  Widget _slideFromLeft(Animation<double> anim, Widget child) {
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (_, __) => Opacity(
+        opacity: anim.value,
+        child: Transform.translate(
+          offset: Offset(-24 * (1 - anim.value), 0),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  Widget _slideFromBottom(Animation<double> anim, Widget child) {
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (_, __) => Opacity(
+        opacity: anim.value,
+        child: Transform.translate(
+          offset: Offset(0, 24 * (1 - anim.value)),
+          child: child,
+        ),
+      ),
+    );
+  }
+  // ─────────────────────────────────────────────────────────────────
 
   Widget _buildPlaceholderTab(String title, IconData icon) {
     return Center(

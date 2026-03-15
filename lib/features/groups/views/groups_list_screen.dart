@@ -20,6 +20,7 @@ import '../../../core/widgets/app_header.dart';
 import '../../../core/widgets/app_footer.dart';
 import '../../../core/widgets/empty_state_widget.dart';
 import '../../../core/widgets/gradient_banner.dart';
+import '../../../core/widgets/skeleton_shimmer.dart';
 import 'package:running_laps/config/app_theme.dart';
 
 // Navigation
@@ -238,20 +239,47 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
   }
 
   Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(
-            color: Tema.brandPurple,
-            strokeWidth: 3,
+    return SkeletonShimmer(
+      builder: (sv) => ListView.builder(
+        padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 120),
+        itemCount: 3,
+        itemBuilder: (_, __) => Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Container(
+            height: 108,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, 6)),
+              ],
+            ),
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                SkeletonBox(width: 68, height: 68, borderRadius: 22, shimmerValue: sv),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SkeletonLine(width: 140, shimmerValue: sv),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          SkeletonBox(width: 56, height: 24, borderRadius: 10, shimmerValue: sv),
+                          const SizedBox(width: 8),
+                          SkeletonBox(width: 60, height: 24, borderRadius: 10, shimmerValue: sv),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          Text(
-            'Cargando grupos...',
-            style: TextStyle(color: Colors.grey.shade500),
-          ),
-        ],
+        ),
       ),
     );
   }

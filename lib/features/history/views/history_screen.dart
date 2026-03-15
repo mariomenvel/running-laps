@@ -31,6 +31,7 @@ import 'package:running_laps/features/history/widgets/premium_training_card.dart
 import 'package:running_laps/features/history/widgets/history_bottom_bar.dart';
 import 'package:running_laps/features/history/widgets/history_search_bar.dart';
 import 'package:running_laps/features/history/widgets/filter_badge_button.dart';
+import 'package:running_laps/core/widgets/skeleton_shimmer.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({Key? key}) : super(key: key);
@@ -41,12 +42,24 @@ class HistoryScreen extends StatefulWidget {
   }
 }
 
-class _HistoryScreenState extends State<HistoryScreen> {
+class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProviderStateMixin {
   // Colores de la vista (Actualizados para estética premium)
   static const Color _bgCustomGrey = Color(0xFFF4F6F8);
   static const Color _brandDark = Color(0xFF2C3E50);
 
   late final HistoryController _controller;
+
+  // ── Entrance animation ──────────────────────────────────────────
+  late final AnimationController _entranceCtrl;
+  bool _entrancePlayed = false;
+  late final Animation<double> _aBanner;  // 0ms  – fade + slide left
+  late final Animation<double> _aSearch;  // 80ms – fade + slide left
+  late final Animation<double> _aItem0;   // 160ms – fade + slide bottom
+  late final Animation<double> _aItem1;   // 220ms
+  late final Animation<double> _aItem2;   // 280ms
+  late final Animation<double> _aItem3;   // 340ms
+  late final Animation<double> _aItem4;   // 400ms
+  // ────────────────────────────────────────────────────────────────
   
   // VIEW MODE: List vs Calendar
   bool _isCalendarView = false;
@@ -61,10 +74,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
     super.initState();
     _controller = HistoryController();
     _controller.loadTrainings();
+    _entranceCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
+    _aBanner = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.000, 0.517, curve: Curves.easeOutQuart));
+    _aSearch = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.067, 0.583, curve: Curves.easeOutQuart));
+    _aItem0  = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.133, 0.650, curve: Curves.easeOutQuart));
+    _aItem1  = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.183, 0.700, curve: Curves.easeOutQuart));
+    _aItem2  = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.233, 0.750, curve: Curves.easeOutQuart));
+    _aItem3  = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.283, 0.800, curve: Curves.easeOutQuart));
+    _aItem4  = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.333, 0.850, curve: Curves.easeOutQuart));
+    if (!_entrancePlayed) {
+      _entrancePlayed = true;
+      _entranceCtrl.forward();
+    }
   }
 
   @override
   void dispose() {
+    _entranceCtrl.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -98,7 +124,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             _buildHeader(),
 
             // 2. Gradient Banner
-            GradientBanner(
+            _slideFromLeft(_aBanner, GradientBanner(
               title: 'Historial',
               subtitle: 'Todos tus entrenamientos',
               icon: Icons.history_rounded,
@@ -112,7 +138,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                  ),
                  tooltip: 'Ver estadísticas',
               ),
-            ),
+            )),
 
             // 3. CONTENIDO PRINCIPAL
             Expanded(
@@ -121,7 +147,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 children: [
 
                   // SEARCH BAR & CONTROLS
-                  Padding(
+                  _slideFromLeft(_aSearch, Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
                     child: ValueListenableBuilder<String>(
                       valueListenable: _controller.searchQuery,
@@ -180,7 +206,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         );
                       }
                     ),
-                  ),
+                  )),
 
                   // CALENDAR WIDGET (Expandible/Colapsable)
                   if (_isCalendarView)
@@ -338,6 +364,34 @@ class _HistoryScreenState extends State<HistoryScreen> {
   ), 
 );
   }
+
+  // ── Entrance animation helpers ────────────────────────────────────
+  Widget _slideFromLeft(Animation<double> anim, Widget child) {
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (_, __) => Opacity(
+        opacity: anim.value,
+        child: Transform.translate(
+          offset: Offset(-24 * (1 - anim.value), 0),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  Widget _slideFromBottom(Animation<double> anim, Widget child) {
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (_, __) => Opacity(
+        opacity: anim.value,
+        child: Transform.translate(
+          offset: Offset(0, 24 * (1 - anim.value)),
+          child: child,
+        ),
+      ),
+    );
+  }
+  // ─────────────────────────────────────────────────────────────────
 
   // ============================
   // HEADER
@@ -535,15 +589,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return ValueListenableBuilder<bool>(
       valueListenable: _controller.isLoading,
       builder: (BuildContext context, bool isLoading, Widget? child) {
-        if (isLoading && _controller.trainings.value.isEmpty) {
-          return const Center(
-            child: CircularProgressIndicator(color: Tema.brandPurple),
-          );
-        }
-
-        return ValueListenableBuilder<String?>(
-          valueListenable: _controller.error,
-          builder: (BuildContext context, String? error, Widget? child) {
+        final showSkeleton = isLoading && _controller.trainings.value.isEmpty;
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: showSkeleton
+              ? _buildHistoryLoadingSkeleton()
+              : ValueListenableBuilder<String?>(
+                  key: const ValueKey('history_content'),
+                  valueListenable: _controller.error,
+                  builder: (BuildContext context, String? error, Widget? child) {
             if (error != null) {
               return Center(
                 child: Padding(
@@ -595,14 +649,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       );
                     }
 
+                    final List<Animation<double>> _itemAnims = [_aItem0, _aItem1, _aItem2, _aItem3, _aItem4];
                     return ListView.builder(
                       padding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 100.0), // Padding extra bottom para la barra
                       itemCount: trainings.length,
                       itemBuilder: (BuildContext context, int index) {
                         final Entrenamiento training = trainings[index];
                         final isSelected = _selectedTrainingIds.contains(training.id);
-                        
-                        return Padding(
+
+                        final Widget card = Padding(
                           padding: const EdgeInsets.only(bottom: 16.0),
                           child: PremiumTrainingCard(
                             training: training,
@@ -616,16 +671,65 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             onUpdate: _controller.loadTrainings,
                           ),
                         );
+                        if (index < 5) return _slideFromBottom(_itemAnims[index], card);
+                        return card;
                       },
                     );
                       },
                     );
                   },
-            );
-          },
+            ),
         );
+      },
+    );
 
   }
+  Widget _buildHistoryLoadingSkeleton() {
+    return SkeletonShimmer(
+      key: const ValueKey('history_loading'),
+      builder: (sv) => ListView.builder(
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
+        itemCount: 4,
+        itemBuilder: (_, __) => Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Container(
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+              ],
+            ),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SkeletonLine(width: 140, shimmerValue: sv),
+                    SkeletonBox(width: 60, height: 12, borderRadius: 6, shimmerValue: sv),
+                  ],
+                ),
+                const Spacer(),
+                Row(
+                  children: [
+                    SkeletonBox(width: 50, height: 12, borderRadius: 6, shimmerValue: sv),
+                    const SizedBox(width: 16),
+                    SkeletonBox(width: 50, height: 12, borderRadius: 6, shimmerValue: sv),
+                    const SizedBox(width: 16),
+                    SkeletonBox(width: 50, height: 12, borderRadius: 6, shimmerValue: sv),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   String _formatDateShort(DateTime date) {
     return '${date.day}/${date.month}';
   }

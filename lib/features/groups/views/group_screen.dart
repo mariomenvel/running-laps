@@ -45,7 +45,15 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
   late TabController _tabController;
   late AnimationController _headerAnimController;
   late Animation<double> _headerFadeAnimation;
-  
+
+  // ── Entrance animation ──────────────────────────────────────────
+  late final AnimationController _entranceCtrl;
+  bool _entrancePlayed = false;
+  late final Animation<double> _aBanner;   // 0ms   – fade + slide left
+  late final Animation<double> _aTabBar;   // 120ms – scale in
+  late final Animation<double> _aContent;  // 200ms – fade + slide bottom
+  // ────────────────────────────────────────────────────────────────
+
   final ScrollController _scrollController = ScrollController();
   bool _isOwner = false;
 
@@ -74,6 +82,15 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
     );
     _headerAnimController.forward();
 
+    _entranceCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
+    _aBanner  = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.000, 0.517, curve: Curves.easeOutQuart));
+    _aTabBar  = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.100, 0.617, curve: Curves.easeOutQuart));
+    _aContent = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.167, 0.683, curve: Curves.easeOutQuart));
+    if (!_entrancePlayed) {
+      _entrancePlayed = true;
+      _entranceCtrl.forward();
+    }
+
     _controller.showAutoJoinPrompt.addListener(_checkAutoJoinPrompt);
     _controller.group.addListener(_checkOwnership);
   }
@@ -98,6 +115,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
 
   @override
   void dispose() {
+    _entranceCtrl.dispose();
     _confettiController.dispose();
     _tabController.dispose();
     _scrollController.dispose();
@@ -130,41 +148,38 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                 ),
 
                 // 2. Banner del grupo con gradiente
-                FadeTransition(
-                  opacity: _headerFadeAnimation,
-                  child: ValueListenableBuilder(
-                    valueListenable: _controller.group,
-                    builder: (context, group, _) {
-                      return GradientBanner(
-                        title: group?.name ?? 'Cargando...',
-                        subtitle: '${group?.memberCount ?? 0} miembros activos',
-                        icon: Icons.groups_rounded,
-                        height: 85,
-                        trailing: IconButton(
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              AppModalRoute(
-                                page: GroupRewardsScreen(groupId: widget.groupId),
-                              ),
-                            );
-                          },
-                          icon: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
+                _slideFromLeft(_aBanner, ValueListenableBuilder(
+                  valueListenable: _controller.group,
+                  builder: (context, group, _) {
+                    return GradientBanner(
+                      title: group?.name ?? 'Cargando...',
+                      subtitle: '${group?.memberCount ?? 0} miembros activos',
+                      icon: Icons.groups_rounded,
+                      height: 85,
+                      trailing: IconButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            AppModalRoute(
+                              page: GroupRewardsScreen(groupId: widget.groupId),
                             ),
-                            child: Icon(
-                              Icons.emoji_events_outlined,
-                              color: Colors.amber.shade200,
-                              size: 22,
-                            ),
+                          );
+                        },
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.emoji_events_outlined,
+                            color: Colors.amber.shade200,
+                            size: 22,
                           ),
                         ),
-                      );
-                    },
-                  ),
-                ),
+                      ),
+                    );
+                  },
+                )),
 
                 // 3. Botón volver
                 Padding(
@@ -177,17 +192,17 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                 ),
 
                 // 4. Tab Bar Premium
-                _buildAnimatedTabBar(),
+                _scaleIn(_aTabBar, _buildAnimatedTabBar()),
 
                 // 5. Contenido
                 Expanded(
-                  child: TabBarView(
+                  child: _slideFromBottom(_aContent, TabBarView(
                     controller: _tabController,
                     children: [
                       _buildChallengesTab(),
                       _buildMembersTab(),
                     ],
-                  ),
+                  )),
                 ),
 
               ],
@@ -257,6 +272,47 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
+
+  // ── Entrance animation helpers ────────────────────────────────────
+  Widget _slideFromLeft(Animation<double> anim, Widget child) {
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (_, __) => Opacity(
+        opacity: anim.value,
+        child: Transform.translate(
+          offset: Offset(-24 * (1 - anim.value), 0),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  Widget _slideFromBottom(Animation<double> anim, Widget child) {
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (_, __) => Opacity(
+        opacity: anim.value,
+        child: Transform.translate(
+          offset: Offset(0, 24 * (1 - anim.value)),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  Widget _scaleIn(Animation<double> anim, Widget child) {
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (_, __) => Opacity(
+        opacity: anim.value,
+        child: Transform.scale(
+          scale: 0.85 + 0.15 * anim.value,
+          child: child,
+        ),
+      ),
+    );
+  }
+  // ─────────────────────────────────────────────────────────────────
 
   // --- Custom Animated Tab Bar ---
   Widget _buildAnimatedTabBar() {

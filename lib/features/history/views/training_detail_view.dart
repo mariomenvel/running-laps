@@ -7,10 +7,46 @@ import 'package:running_laps/core/widgets/app_header.dart';
 
 import '../widgets/training_map_view.dart';
 
-class TrainingDetailView extends StatelessWidget {
+class TrainingDetailView extends StatefulWidget {
   final Entrenamiento training;
 
   const TrainingDetailView({super.key, required this.training});
+
+  @override
+  State<TrainingDetailView> createState() => _TrainingDetailViewState();
+}
+
+class _TrainingDetailViewState extends State<TrainingDetailView>
+    with SingleTickerProviderStateMixin {
+  Entrenamiento get training => widget.training;
+
+  // ── Entrance animation ──────────────────────────────────────────
+  late final AnimationController _entranceCtrl;
+  late final Animation<double> _aBanner;  // 0ms   – fade + slide left
+  late final Animation<double> _aStats;   // 100ms – scale in
+  late final Animation<double> _aMap;     // 200ms – fade + slide bottom
+  late final Animation<double> _aSeries;  // 350ms – fade + slide bottom
+  // ────────────────────────────────────────────────────────────────
+
+  @override
+  void initState() {
+    super.initState();
+    _entranceCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    _aBanner = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.000, 0.517, curve: Curves.easeOutQuart));
+    _aStats  = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.083, 0.600, curve: Curves.easeOutQuart));
+    _aMap    = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.167, 0.683, curve: Curves.easeOutQuart));
+    _aSeries = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.292, 0.808, curve: Curves.easeOutQuart));
+    _entranceCtrl.forward();
+  }
+
+  @override
+  void dispose() {
+    _entranceCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,13 +59,13 @@ class TrainingDetailView extends StatelessWidget {
               showBottomDivider: false,
               onTapLeft: () => Navigator.pop(context),
             ),
-            GradientBanner(
+            _slideFromLeft(_aBanner, GradientBanner(
               title: training.titulo,
               subtitle: "Análisis con Mapa GPS",
               icon: Icons.map_rounded,
               gradientColors: const [Tema.brandPurple, Color(0xFF6A1B9A)],
               height: 100,
-            ),
+            )),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               child: Row(
@@ -45,11 +81,11 @@ class TrainingDetailView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildStatsGrid(),
+                    _scaleIn(_aStats, _buildStatsGrid()),
                     const SizedBox(height: 24),
-                    _buildMapCard(),
+                    _slideFromBottom(_aMap, _buildMapCard()),
                     const SizedBox(height: 32),
-                    _buildSeriesSection(),
+                    _slideFromBottom(_aSeries, _buildSeriesSection()),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -60,6 +96,47 @@ class TrainingDetailView extends StatelessWidget {
       ),
     );
   }
+
+  // ── Entrance animation helpers ────────────────────────────────────
+  Widget _slideFromLeft(Animation<double> anim, Widget child) {
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (_, __) => Opacity(
+        opacity: anim.value,
+        child: Transform.translate(
+          offset: Offset(-24 * (1 - anim.value), 0),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  Widget _slideFromBottom(Animation<double> anim, Widget child) {
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (_, __) => Opacity(
+        opacity: anim.value,
+        child: Transform.translate(
+          offset: Offset(0, 24 * (1 - anim.value)),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  Widget _scaleIn(Animation<double> anim, Widget child) {
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (_, __) => Opacity(
+        opacity: anim.value,
+        child: Transform.scale(
+          scale: 0.85 + 0.15 * anim.value,
+          child: child,
+        ),
+      ),
+    );
+  }
+  // ─────────────────────────────────────────────────────────────────
 
   Widget _buildMapCard() {
     return Container(

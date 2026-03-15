@@ -37,13 +37,25 @@ class ProfileMenuView extends StatefulWidget {
   }
 }
 
-class _ProfileMenuViewState extends State<ProfileMenuView> {
+class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProviderStateMixin {
   late final AuthController _authCtrl;
   final SettingsService _settingsService = SettingsService();
 
   String _nombreUsuario = "";
   bool _isAdmin = false;
   bool _useWhiteCards = true;
+
+  // ── Entrance animation ──────────────────────────────────────────
+  late final AnimationController _entranceCtrl;
+  bool _entrancePlayed = false;
+  late final Animation<double> _aName;       // 0ms   – fade + slide left
+  late final Animation<double> _aSocial;     // 200ms – fade + slide bottom
+  late final Animation<double> _aPersonal;   // 260ms – fade + slide bottom
+  late final Animation<double> _aAdmin;      // 320ms – fade + slide bottom
+  late final Animation<double> _aApariencia; // 380ms – fade + slide bottom
+  late final Animation<double> _aCuenta;     // 440ms – fade + slide bottom
+  late final Animation<double> _aSesion;     // 500ms – fade + slide bottom
+  // ────────────────────────────────────────────────────────────────
 
   @override
   void initState() {
@@ -53,6 +65,18 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
     _settingsService.getCardStyle().then((v) {
       if (mounted) setState(() => _useWhiteCards = v);
     });
+    _entranceCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
+    _aName       = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.000, 0.517, curve: Curves.easeOutQuart));
+    _aSocial     = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.167, 0.683, curve: Curves.easeOutQuart));
+    _aPersonal   = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.217, 0.733, curve: Curves.easeOutQuart));
+    _aAdmin      = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.267, 0.783, curve: Curves.easeOutQuart));
+    _aApariencia = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.317, 0.833, curve: Curves.easeOutQuart));
+    _aCuenta     = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.367, 0.883, curve: Curves.easeOutQuart));
+    _aSesion     = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.417, 0.933, curve: Curves.easeOutQuart));
+    if (!_entrancePlayed) {
+      _entrancePlayed = true;
+      _entranceCtrl.forward();
+    }
   }
 
   // Cargar nombre desde Firebase
@@ -74,6 +98,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
 
   @override
   void dispose() {
+    _entranceCtrl.dispose();
     _authCtrl.dispose();
     super.dispose();
   }
@@ -169,6 +194,34 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
   // =====================================================
   // Widgets auxiliares (REDESIGN)
   // =====================================================
+
+  // ── Entrance animation helpers ────────────────────────────────────
+  Widget _slideFromLeft(Animation<double> anim, Widget child) {
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (_, __) => Opacity(
+        opacity: anim.value,
+        child: Transform.translate(
+          offset: Offset(-24 * (1 - anim.value), 0),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  Widget _slideFromBottom(Animation<double> anim, Widget child) {
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (_, __) => Opacity(
+        opacity: anim.value,
+        child: Transform.translate(
+          offset: Offset(0, 24 * (1 - anim.value)),
+          child: child,
+        ),
+      ),
+    );
+  }
+  // ─────────────────────────────────────────────────────────────────
 
   Widget _buildSectionHeader(String title) {
     return Padding(
@@ -368,13 +421,13 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
                     const SizedBox(height: 30),
 
                     // NOMBRE DE USUARIO
-                    Center(
+                    _slideFromLeft(_aName, Center(
                       child: Column(
                         children: [
                            Text(
                             _nombreUsuario == ""
                                 ? "Perfil"
-                                : _nombreUsuario, // Mostramos tal cual viene (ya hicimos fallback)
+                                : _nombreUsuario,
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.black87,
@@ -389,113 +442,142 @@ class _ProfileMenuViewState extends State<ProfileMenuView> {
                            )
                         ],
                       ),
-                    ),
+                    )),
 
                     const SizedBox(height: 30),
 
                     // SECTION 1: SOCIAL
-                    _buildSectionHeader("Social"),
-                    _buildMenuTile(
-                      title: "Mis grupos",
-                      icon: Icons.groups_rounded,
-                      color: Colors.blueAccent,
-                      onTap: _openGroups,
-                    ),
-                    _buildMenuTile(
-                      title: "Mi perfil público",
-                      icon: Icons.person_pin_rounded,
-                      color: Tema.brandPurple,
-                      onTap: _openPublicProfile,
-                    ),
+                    _slideFromBottom(_aSocial, Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader("Social"),
+                        _buildMenuTile(
+                          title: "Mis grupos",
+                          icon: Icons.groups_rounded,
+                          color: Colors.blueAccent,
+                          onTap: _openGroups,
+                        ),
+                        _buildMenuTile(
+                          title: "Mi perfil público",
+                          icon: Icons.person_pin_rounded,
+                          color: Tema.brandPurple,
+                          onTap: _openPublicProfile,
+                        ),
+                      ],
+                    )),
 
                     // SECTION 2: PERSONAL
-                    _buildSectionHeader("Personal"),
-                    _buildMenuTile(
-                      title: "Analytics hub",
-                      icon: Icons.analytics_rounded,
-                      color: Colors.purpleAccent,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          AppRoute(page: const AnalyticsHubScreen()),
-                        );
-                      },
-                    ),
-                    _buildMenuTile(
-                      title: "Mis plantillas",
-                      icon: Icons.list_alt_rounded,
-                      color: Colors.teal,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          AppRoute(page: const TemplatesListView()),
-                        );
-                      },
-                    ),
-                    _buildMenuTile(
-                      title: "Historial de entrenamientos",
-                      icon: Icons.history_rounded,
-                      color: Colors.orangeAccent,
-                      onTap: _openHistory,
-                    ),
-                    _buildMenuTile(
-                      title: "Editar avatar",
-                      icon: Icons.face_rounded,
-                      color: Colors.green,
-                      onTap: _openAvatarEditor,
-                    ),
+                    _slideFromBottom(_aPersonal, Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader("Personal"),
+                        _buildMenuTile(
+                          title: "Analytics hub",
+                          icon: Icons.analytics_rounded,
+                          color: Colors.purpleAccent,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              AppRoute(page: const AnalyticsHubScreen()),
+                            );
+                          },
+                        ),
+                        _buildMenuTile(
+                          title: "Mis plantillas",
+                          icon: Icons.list_alt_rounded,
+                          color: Colors.teal,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              AppRoute(page: const TemplatesListView()),
+                            );
+                          },
+                        ),
+                        _buildMenuTile(
+                          title: "Historial de entrenamientos",
+                          icon: Icons.history_rounded,
+                          color: Colors.orangeAccent,
+                          onTap: _openHistory,
+                        ),
+                        _buildMenuTile(
+                          title: "Editar avatar",
+                          icon: Icons.face_rounded,
+                          color: Colors.green,
+                          onTap: _openAvatarEditor,
+                        ),
+                      ],
+                    )),
 
-                    if (_isAdmin) ...[
-                      _buildSectionHeader("Administración"),
-                      _buildMenuTile(
-                        title: "Panel de administrador",
-                        icon: Icons.admin_panel_settings,
-                        color: Colors.black87,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            AppRoute(page: const AdminPanelScreen()),
-                          );
-                        },
-                      ),
-                    ],
+                    if (_isAdmin)
+                      _slideFromBottom(_aAdmin, Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSectionHeader("Administración"),
+                          _buildMenuTile(
+                            title: "Panel de administrador",
+                            icon: Icons.admin_panel_settings,
+                            color: Colors.black87,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                AppRoute(page: const AdminPanelScreen()),
+                              );
+                            },
+                          ),
+                        ],
+                      )),
+
                     // SECTION: APARIENCIA
-                    _buildSectionHeader("Apariencia"),
-                    _buildCardStyleSetting(),
+                    _slideFromBottom(_aApariencia, Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader("Apariencia"),
+                        _buildCardStyleSetting(),
+                      ],
+                    )),
 
                     // SECTION 4: CUENTA
-                    _buildSectionHeader("Cuenta"),
-                    _buildMenuTile(
-                      title: "Configuración de cuenta",
-                      icon: Icons.manage_accounts_rounded,
-                      color: Colors.blueGrey,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          AppRoute(page: AccountSettingsView(
-                              currentName: _nombreUsuario,
-                              onNameUpdated: _cargarNombre,
-                            )),
-                        );
-                      },
-                    ),
+                    _slideFromBottom(_aCuenta, Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader("Cuenta"),
+                        _buildMenuTile(
+                          title: "Configuración de cuenta",
+                          icon: Icons.manage_accounts_rounded,
+                          color: Colors.blueGrey,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              AppRoute(page: AccountSettingsView(
+                                  currentName: _nombreUsuario,
+                                  onNameUpdated: _cargarNombre,
+                                )),
+                            );
+                          },
+                        ),
+                      ],
+                    )),
 
                     // SECTION 5: SESIÓN
-                    _buildSectionHeader("Sesión"),
-                    ValueListenableBuilder<bool>(
-                      valueListenable: _authCtrl.isLoading,
-                      builder: (context, isLoading, _) {
-                        return _buildMenuTile(
-                          title: isLoading ? "Cerrando sesión..." : "Cerrar sesión",
-                          icon: Icons.logout_rounded,
-                          color: Colors.redAccent,
-                          isDestructive: true,
-                          onTap: isLoading ? () {} : () => _logout(),
-                        );
-                      },
-                    ),
-                    
-                    const SizedBox(height: 40),
+                    _slideFromBottom(_aSesion, Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader("Sesión"),
+                        ValueListenableBuilder<bool>(
+                          valueListenable: _authCtrl.isLoading,
+                          builder: (context, isLoading, _) {
+                            return _buildMenuTile(
+                              title: isLoading ? "Cerrando sesión..." : "Cerrar sesión",
+                              icon: Icons.logout_rounded,
+                              color: Colors.redAccent,
+                              isDestructive: true,
+                              onTap: isLoading ? () {} : () => _logout(),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 40),
+                      ],
+                    )),
                   ],
                 ),
               ),
