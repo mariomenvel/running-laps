@@ -31,10 +31,12 @@ class HistoryBottomBar extends StatelessWidget {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.black.withOpacity(0.1),
             blurRadius: 16,
             offset: const Offset(0, -4),
           ),

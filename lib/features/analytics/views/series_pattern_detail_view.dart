@@ -15,18 +15,13 @@ class SeriesPatternDetailView extends StatelessWidget {
       ..sort((a, b) => a.fecha.compareTo(b.fecha));
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7),
       appBar: AppBar(
         title: Text('${pattern.distanceFormatted} Series'),
-        backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: Tema.brandPurple),
           onPressed: () => Navigator.pop(context),
-        ),
-        titleTextStyle: const TextStyle(
-             color: Colors.black, fontSize: 17, fontWeight: FontWeight.w600
         ),
       ),
       body: SingleChildScrollView(
@@ -36,11 +31,11 @@ class SeriesPatternDetailView extends StatelessWidget {
             // KPI Header
             Row(
               children: [
-                Expanded(child: _buildKpiCard("Mejor Tiempo", pattern.bestTimeFormatted, Icons.emoji_events, Colors.amber, subValue: pattern.bestPaceFormatted)),
+                Expanded(child: _buildKpiCard(context, "Mejor Tiempo", pattern.bestTimeFormatted, Icons.emoji_events, Colors.amber, subValue: pattern.bestPaceFormatted)),
                 const SizedBox(width: 12),
-                Expanded(child: _buildKpiCard("Tiempo Medio", pattern.averageTimeFormatted, Icons.speed, Colors.blue, subValue: pattern.averagePaceFormatted)),
+                Expanded(child: _buildKpiCard(context, "Tiempo Medio", pattern.averageTimeFormatted, Icons.speed, Colors.blue, subValue: pattern.averagePaceFormatted)),
                 const SizedBox(width: 12),
-                Expanded(child: _buildKpiCard("Total Veces", "${pattern.count}", Icons.repeat, Colors.purple)),
+                Expanded(child: _buildKpiCard(context, "Total Veces", "${pattern.count}", Icons.repeat, Colors.purple)),
               ],
             ),
             
@@ -50,7 +45,7 @@ class SeriesPatternDetailView extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Column(
@@ -69,9 +64,9 @@ class SeriesPatternDetailView extends StatelessWidget {
             const SizedBox(height: 24),
 
             // History List
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
-              child: Text("Historial", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.grey)),
+              child: Text("Historial", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
             ),
             const SizedBox(height: 12),
             
@@ -83,7 +78,7 @@ class SeriesPatternDetailView extends StatelessWidget {
               itemBuilder: (context, index) {
                 // Show newest first in list
                 final instance = sortedInstances[sortedInstances.length - 1 - index];
-                return _buildHistoryItem(instance);
+                return _buildHistoryItem(context, instance);
               },
             ),
           ],
@@ -92,14 +87,20 @@ class SeriesPatternDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildKpiCard(String title, String value, IconData icon, Color color, {String? subValue}) {
+  Widget _buildKpiCard(BuildContext context, String title, String value, IconData icon, Color color, {String? subValue}) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
@@ -108,16 +109,16 @@ class SeriesPatternDetailView extends StatelessWidget {
           const SizedBox(height: 8),
           FittedBox(fit: BoxFit.scaleDown, child: Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16))),
           if (subValue != null) ...[
-            Text(subValue, style: TextStyle(color: Colors.grey.shade400, fontSize: 10)),
+            Text(subValue, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35), fontSize: 10)),
           ],
           const SizedBox(height: 4),
-          Text(title, style: TextStyle(color: Colors.grey.shade500, fontSize: 11), textAlign: TextAlign.center),
+          Text(title, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 11), textAlign: TextAlign.center),
         ],
       ),
     );
   }
 
-  Widget _buildHistoryItem(SerieInstance instance) {
+  Widget _buildHistoryItem(BuildContext context, SerieInstance instance) {
     // Calculate formatted pace for this instance
     final m = instance.paceSecKm ~/ 60;
     final s = (instance.paceSecKm % 60).toInt();
@@ -126,7 +127,7 @@ class SeriesPatternDetailView extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -142,7 +143,7 @@ class SeriesPatternDetailView extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 "Serie #${instance.serieIndex + 1}",
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 12),
               ),
             ],
           ),
@@ -194,7 +195,7 @@ class _PaceProgressionChart extends StatelessWidget {
         gridData: FlGridData(
           show: true, 
           drawVerticalLine: false,
-          getDrawingHorizontalLine: (_) => FlLine(color: Colors.grey.shade100),
+          getDrawingHorizontalLine: (_) => FlLine(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06)),
         ),
         titlesData: FlTitlesData(show: false),
         borderData: FlBorderData(show: false),

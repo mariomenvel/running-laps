@@ -71,15 +71,17 @@ class _AppFooterState extends State<AppFooter>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      decoration: const BoxDecoration(
-        gradient: RadialGradient(
+      decoration: BoxDecoration(
+        gradient: isDark ? null : const RadialGradient(
           center: Alignment.bottomCenter,
           radius: 1.2,
           colors: <Color>[_bgGradientColor, Colors.white],
           stops: <double>[0.0, 1.0],
         ),
-        image: DecorationImage(
+        color: isDark ? Theme.of(context).colorScheme.surface : null,
+        image: isDark ? null : const DecorationImage(
           image: AssetImage('assets/images/fondo.png'),
           fit: BoxFit.cover,
         ),
@@ -87,7 +89,7 @@ class _AppFooterState extends State<AppFooter>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Container(height: 0.3, color: Colors.grey),
+          Container(height: 0.3, color: Theme.of(context).colorScheme.outline),
           Padding(
             padding: const EdgeInsets.symmetric(
               vertical: 10.0,
@@ -115,8 +117,8 @@ class _AppFooterState extends State<AppFooter>
               decoration: BoxDecoration(
                 gradient: RadialGradient(
                   colors: [
-                    Colors.white,
-                    Colors.grey.shade50,
+                    Theme.of(context).colorScheme.surface,
+                    Theme.of(context).colorScheme.surface,
                   ],
                   stops: const [0.0, 1.0],
                 ),
@@ -129,7 +131,9 @@ class _AppFooterState extends State<AppFooter>
                     spreadRadius: 2,
                   ),
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.transparent
+                        : Colors.black.withOpacity(0.08),
                     blurRadius: 15.0,
                     offset: const Offset(0, 5),
                   ),

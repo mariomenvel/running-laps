@@ -34,10 +34,8 @@ class _WorkoutPatternCarouselViewState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7),
       appBar: AppBar(
         title: const Text('Patrones de Entrenamientos'),
-        backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
@@ -45,18 +43,12 @@ class _WorkoutPatternCarouselViewState
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          // Compare button
           if (widget.patterns[_currentPatternIndex].instances.length >= 2)
             IconButton(
               icon: const Icon(Icons.compare_arrows, color: Tema.brandPurple),
               onPressed: () => _showComparisonSelector(),
             ),
         ],
-        titleTextStyle: const TextStyle(
-          color: Colors.black,
-          fontSize: 17,
-          fontWeight: FontWeight.w600,
-        ),
       ),
       body: PatternCarousel<WorkoutPattern>(
         items: widget.patterns,
@@ -77,7 +69,7 @@ class _WorkoutPatternCarouselViewState
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -126,7 +118,7 @@ class _ComparisonSelectorSheetState extends State<_ComparisonSelectorSheet> {
                 return ListTile(
                   tileColor: isSelected
                       ? Tema.brandPurple.withOpacity(0.1)
-                      : Colors.grey.shade50,
+                      : Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                     side: BorderSide(
@@ -136,11 +128,11 @@ class _ComparisonSelectorSheetState extends State<_ComparisonSelectorSheet> {
                   ),
                   leading: CircleAvatar(
                     backgroundColor:
-                        isSelected ? Tema.brandPurple : Colors.grey.shade300,
+                        isSelected ? Tema.brandPurple : Theme.of(context).colorScheme.onSurface.withOpacity(0.25),
                     child: Text(
                       isSelectedA ? 'A' : isSelectedB ? 'B' : '${index + 1}',
                       style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.black,
+                        color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -264,7 +256,7 @@ class _WorkoutPatternContent extends StatelessWidget {
                   pattern.description,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey.shade600,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                     fontWeight: FontWeight.w500,
                   ),
                   textAlign: TextAlign.center,
@@ -279,6 +271,7 @@ class _WorkoutPatternContent extends StatelessWidget {
             children: [
               Expanded(
                 child: _buildKpiCard(
+                  context,
                   "Ritmo Medio",
                   pattern.averagePaceFormatted,
                   Icons.speed,
@@ -288,6 +281,7 @@ class _WorkoutPatternContent extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildKpiCard(
+                  context,
                   "Consistencia",
                   "${(pattern.averageConsistency * 100).toInt()}%",
                   Icons.track_changes,
@@ -297,6 +291,7 @@ class _WorkoutPatternContent extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildKpiCard(
+                  context,
                   "Sesiones",
                   "${pattern.count}",
                   Icons.calendar_today,
@@ -312,13 +307,9 @@ class _WorkoutPatternContent extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.white, Colors.grey.shade50],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
               boxShadow: [
                 BoxShadow(
                   color: Tema.brandPurple.withOpacity(0.08),
@@ -327,7 +318,9 @@ class _WorkoutPatternContent extends StatelessWidget {
                   spreadRadius: -4,
                 ),
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.transparent
+                      : Colors.black.withOpacity(0.04),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -352,14 +345,14 @@ class _WorkoutPatternContent extends StatelessWidget {
           const SizedBox(height: 24),
 
           // History List
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
             child: Text(
               "Sesiones Realizadas",
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                color: Colors.grey,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
               ),
             ),
           ),
@@ -373,7 +366,7 @@ class _WorkoutPatternContent extends StatelessWidget {
             itemBuilder: (context, index) {
               final instance =
                   sortedInstances[sortedInstances.length - 1 - index];
-              return _buildHistoryItem(instance);
+              return _buildHistoryItem(context, instance);
             },
           ),
         ],
@@ -381,15 +374,11 @@ class _WorkoutPatternContent extends StatelessWidget {
     );
   }
 
-  Widget _buildKpiCard(String title, String value, IconData icon, Color color) {
+  Widget _buildKpiCard(BuildContext context, String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.white, color.withOpacity(0.05)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withOpacity(0.2), width: 1.5),
         boxShadow: [
@@ -400,7 +389,9 @@ class _WorkoutPatternContent extends StatelessWidget {
             spreadRadius: -3,
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.black.withOpacity(0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -440,7 +431,7 @@ class _WorkoutPatternContent extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-              color: Colors.grey.shade600,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
               fontSize: 11,
               fontWeight: FontWeight.w500,
               letterSpacing: 0.3,
@@ -452,7 +443,7 @@ class _WorkoutPatternContent extends StatelessWidget {
     );
   }
 
-  Widget _buildHistoryItem(WorkoutInstance instance) {
+  Widget _buildHistoryItem(BuildContext context, WorkoutInstance instance) {
     final paceSec = instance.averagePace.round();
     final m = paceSec ~/ 60;
     final s = (paceSec % 60).toInt();
@@ -461,16 +452,14 @@ class _WorkoutPatternContent extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.white, Colors.grey.shade50.withOpacity(0.5)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.black.withOpacity(0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -515,7 +504,7 @@ class _WorkoutPatternContent extends StatelessWidget {
                   Text(
                     "Consistencia: ${(instance.consistency * 100).toInt()}%",
                     style: TextStyle(
-                      color: Colors.grey.shade600,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -573,7 +562,7 @@ class _PerformanceChart extends StatelessWidget {
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          getDrawingHorizontalLine: (_) => FlLine(color: Colors.grey.shade100),
+          getDrawingHorizontalLine: (_) => FlLine(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06)),
         ),
         titlesData: FlTitlesData(show: false),
         borderData: FlBorderData(show: false),

@@ -88,15 +88,11 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F8),
       body: SafeArea(
         child: Column(
           children: [
             // 1. HEADER
             AppHeader(
-               onTapLeft: () {
-                 Navigator.pop(context);
-              },
               onTapRight: () {
                  Navigator.push(
                    context,
@@ -133,12 +129,14 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
                               padding: const EdgeInsets.only(top: 60, bottom: 20, left: 20, right: 20),
                               width: double.infinity,
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: Theme.of(context).colorScheme.surface,
                                 borderRadius: BorderRadius.circular(25),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 10, offset: const Offset(0, 5)
+                                    color: Theme.of(context).brightness == Brightness.dark
+                                        ? Colors.transparent
+                                        : Colors.black.withOpacity(0.05),
+                                    blurRadius: 10, offset: const Offset(0, 5),
                                   )
                                 ],
                               ),
@@ -146,16 +144,16 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
                                 children: [
                                   Text(
                                     widget.name,
-                                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.black87),
+                                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.onSurface),
                                   ),
                                   const SizedBox(height: 5),
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: Colors.purple.shade50,
+                                      color: Tema.brandPurple.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    child: const Text("Corredor/a", style: TextStyle(color: Colors.purple, fontWeight: FontWeight.bold, fontSize: 12)),
+                                    child: const Text("Corredor/a", style: TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold, fontSize: 12)),
                                   ),
                                   const SizedBox(height: 20),
                                   // STATS ROW
@@ -163,9 +161,9 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
                                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                                     children: [
                                       _StatItem(label: "Carreras", value: "$_totalRuns"),
-                                      Container(width: 1, height: 30, color: Colors.grey.shade200),
+                                      Container(width: 1, height: 30, color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
                                       _StatItem(label: "Km Totales", value: _totalKm.toStringAsFixed(1)),
-                                      Container(width: 1, height: 30, color: Colors.grey.shade200),
+                                      Container(width: 1, height: 30, color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
                                       _StatItem(label: "Mejor Ritmo", value: _bestPace),
                                     ],
                                   )
@@ -177,8 +175,8 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
                               top: 0,
                               child: Container(
                                 padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.surface,
                                   shape: BoxShape.circle,
                                 ),
                                 child: AvatarHelper.construirAvatar(
@@ -241,7 +239,7 @@ class _StatItem extends StatelessWidget {
     return Column(
       children: [
         Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+        Text(label, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
       ],
     );
   }
@@ -254,13 +252,14 @@ class _AchievementCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool unlocked = item.isUnlocked;
-    
+    final cs = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: unlocked ? Colors.white : Colors.grey.shade100,
+        color: unlocked ? cs.surface : cs.onSurface.withOpacity(0.04),
         borderRadius: BorderRadius.circular(20),
-        border: unlocked ? null : Border.all(color: Colors.grey.shade300),
+        border: unlocked ? null : Border.all(color: cs.outline.withOpacity(0.3)),
         boxShadow: unlocked ? [
           BoxShadow(
             color: item.color.withOpacity(0.2),
@@ -274,12 +273,12 @@ class _AchievementCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: unlocked ? item.color.withOpacity(0.1) : Colors.grey.shade300,
+              color: unlocked ? item.color.withOpacity(0.1) : cs.onSurface.withOpacity(0.12),
               shape: BoxShape.circle,
             ),
             child: Icon(
               item.icon,
-              color: unlocked ? item.color : Colors.grey,
+              color: unlocked ? item.color : cs.onSurface.withOpacity(0.4),
               size: 28,
             ),
           ),
@@ -290,7 +289,7 @@ class _AchievementCard extends StatelessWidget {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 14,
-              color: unlocked ? Colors.black87 : Colors.grey
+              color: unlocked ? cs.onSurface : cs.onSurface.withOpacity(0.4)
             ),
           ),
           const SizedBox(height: 4),
@@ -299,7 +298,7 @@ class _AchievementCard extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 10, color: Colors.grey),
+            style: TextStyle(fontSize: 10, color: cs.onSurface.withOpacity(0.5)),
           )
         ],
       ),

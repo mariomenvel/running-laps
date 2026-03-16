@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 
 /// Provides a single shimmer AnimationController to all [SkeletonBox] children
 /// via [builder]. Use ONE SkeletonShimmer per loading area — never nest them.
@@ -56,6 +57,7 @@ class SkeletonBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: width,
       height: height,
@@ -63,9 +65,9 @@ class SkeletonBox extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         gradient: LinearGradient(
           colors: [
-            Colors.grey.shade200,
-            Colors.grey.shade100,
-            Colors.grey.shade200,
+            isDark ? AppColors.skeletonBaseDark  : AppColors.skeletonBaseLight,
+            isDark ? AppColors.skeletonShineDark : AppColors.skeletonShineLight,
+            isDark ? AppColors.skeletonBaseDark  : AppColors.skeletonBaseLight,
           ],
           stops: const [0.0, 0.5, 1.0],
           begin: Alignment(-1.0 - shimmerValue * 2, 0.0),

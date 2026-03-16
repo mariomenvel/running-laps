@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/theme_service.dart';
 import '../../auth/viewmodels/auth_controller.dart';
 import '../../auth/views/auth_page.dart';
 import '../../../core/widgets/modern_snackbar.dart';
@@ -66,9 +67,9 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(32),
             topRight: Radius.circular(32),
           ),
@@ -86,7 +87,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -100,22 +101,22 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               child: const Icon(Icons.person_outline_rounded, size: 40, color: Tema.brandPurple),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'Cambiar nombre',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w900,
-                color: Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
                 letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              isGoogle 
+              isGoogle
                 ? 'Deberás identificarte con Google para confirmar el cambio.'
                 : 'Introduce tu contraseña para confirmar el cambio.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 14),
             ),
             const SizedBox(height: 24),
             TextField(
@@ -125,7 +126,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               decoration: InputDecoration(
                 labelText: 'Nuevo nombre',
                 filled: true,
-                fillColor: Colors.grey.shade50,
+                fillColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -142,7 +143,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                 decoration: InputDecoration(
                   labelText: 'Contraseña de confirmación',
                   filled: true,
-                  fillColor: Colors.grey.shade50,
+                  fillColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
@@ -163,7 +164,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     ),
                     child: Text(
                       'Cancelar',
-                      style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -252,9 +253,9 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(32),
             topRight: Radius.circular(32),
           ),
@@ -272,7 +273,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -286,12 +287,12 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               child: const Icon(Icons.key_rounded, size: 40, color: Colors.amber),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'Cambiar contraseña',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w900,
-                color: Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
                 letterSpacing: -0.5,
               ),
             ),
@@ -299,7 +300,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
             Text(
               'Introduce tu contraseña actual y la nueva dos veces.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 14),
             ),
             const SizedBox(height: 24),
             TextField(
@@ -309,7 +310,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               decoration: InputDecoration(
                 labelText: 'Contraseña actual',
                 filled: true,
-                fillColor: Colors.grey.shade50,
+                fillColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -325,7 +326,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               decoration: InputDecoration(
                 labelText: 'Contraseña nueva',
                 filled: true,
-                fillColor: Colors.grey.shade50,
+                fillColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -341,7 +342,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               decoration: InputDecoration(
                 labelText: 'Confirmar contraseña nueva',
                 filled: true,
-                fillColor: Colors.grey.shade50,
+                fillColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -384,7 +385,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                             ),
                             child: Text(
                               'Cancelar',
-                              style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold),
+                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
@@ -469,7 +470,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
           decoration: BoxDecoration(
             color: isMet ? Colors.green : Colors.transparent,
             border: Border.all(
-              color: isMet ? Colors.green : Colors.grey.shade400,
+              color: isMet ? Colors.green : Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
             ),
             shape: BoxShape.circle,
           ),
@@ -485,7 +486,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
         Text(
           text,
           style: TextStyle(
-            color: isMet ? Colors.green : Colors.grey.shade600,
+            color: isMet ? Colors.green : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
             fontSize: 13,
             fontWeight: isMet ? FontWeight.w600 : FontWeight.normal,
           ),
@@ -503,9 +504,9 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(32),
             topRight: Radius.circular(32),
           ),
@@ -523,7 +524,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -537,12 +538,12 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               child: Icon(Icons.delete_sweep_rounded, size: 40, color: Colors.red.shade400),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               '¿Borrar cuenta?',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w900,
-                color: Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
                 letterSpacing: -0.5,
               ),
             ),
@@ -550,7 +551,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
             Text(
               'Esta acción es IRREVERSIBLE. Se borrarán todos tus datos y entrenamientos permanentemente.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 16),
             ),
             const SizedBox(height: 24),
             if (!isGoogle) ...[
@@ -561,7 +562,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                 decoration: InputDecoration(
                   labelText: 'Introduce tu contraseña',
                   filled: true,
-                  fillColor: Colors.grey.shade50,
+                  fillColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
@@ -602,7 +603,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     ),
                     child: Text(
                       'Cancelar',
-                      style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -683,7 +684,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
       child: Text(
         title.toUpperCase(),
         style: TextStyle(
-          color: Colors.grey.shade500,
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
           fontSize: 12,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
@@ -702,11 +703,13 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.black.withOpacity(0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -736,14 +739,14 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: isDestructive ? Colors.red : Colors.black87,
+                      color: isDestructive ? Colors.red : Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ),
                 Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 16,
-                  color: Colors.grey.shade400,
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
                 ),
               ],
             ),
@@ -765,11 +768,13 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.black.withOpacity(0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -794,17 +799,17 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   Text(
                     subtitle,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey.shade500,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                     ),
                   ),
                 ],
@@ -812,7 +817,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
             ),
             if (onSettingsTap != null && value)
               IconButton(
-                icon: Icon(Icons.settings_suggest_rounded, color: Colors.grey.shade400, size: 20),
+                icon: Icon(Icons.settings_suggest_rounded, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35), size: 20),
                 onPressed: onSettingsTap,
               ),
             Transform.scale(
@@ -824,6 +829,108 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThemeSelector() {
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeService.themeMode,
+      builder: (context, current, _) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.transparent
+                    : Colors.black.withOpacity(0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Tema.brandPurple.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.brightness_4_rounded,
+                          color: Tema.brandPurple, size: 22),
+                    ),
+                    const SizedBox(width: 16),
+                    Text(
+                      'Tema de la app',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    _buildThemeOption(ThemeMode.system,
+                        Icons.phone_android_rounded, 'Sistema', current),
+                    const SizedBox(width: 8),
+                    _buildThemeOption(ThemeMode.light,
+                        Icons.light_mode_rounded, 'Claro', current),
+                    const SizedBox(width: 8),
+                    _buildThemeOption(ThemeMode.dark,
+                        Icons.dark_mode_rounded, 'Oscuro', current),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildThemeOption(
+      ThemeMode mode, IconData icon, String label, ThemeMode current) {
+    final bool selected = current == mode;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => ThemeService.setTheme(mode),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: selected ? Tema.brandPurple : Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Icon(icon,
+                  size: 20,
+                  color: selected ? Colors.white : Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight:
+                      selected ? FontWeight.bold : FontWeight.normal,
+                  color: selected ? Colors.white : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -875,12 +982,10 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
       body: SafeArea(
         child: Column(
           children: [
             AppHeader(
-              onTapLeft: () => Navigator.pop(context),
               onTapRight: () {},
             ),
             GradientBanner(
@@ -927,6 +1032,9 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                       },
                     ),
                     
+                    _buildSectionHeader("Apariencia"),
+                    _buildThemeSelector(),
+
                     _buildSectionHeader("Perfil"),
                     _buildMenuTile(
                       title: "Cambiar mi nombre",

@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 // import 'package:running_laps/features/profile/views/avatar_editor_wrapper_view.dart';
 import 'package:running_laps/features/history/viewmodels/history_controller.dart';
@@ -114,7 +115,6 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bgCustomGrey,
       body: Stack(
         children: [
           SafeArea(
@@ -256,10 +256,12 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                             const SizedBox(width: 8),
                             Text(
                               'Filtrando: ${_formatDateLong(_selectedCalendarDate!)}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: Tema.brandPurple,
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? AppColors.brandPurpleLight
+                                    : Tema.brandPurple,
                               ),
                             ),
                             const Spacer(),
@@ -399,9 +401,6 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
   Widget _buildHeader() {
     return AppHeader(
       showBottomDivider: false,
-      onTapLeft: () {
-        Navigator.pop(context);
-      },
       onTapRight: () {
         Navigator.push(
           context,
@@ -570,7 +569,13 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 12, color: Tema.brandPurple, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.brandPurpleLight
+                  : Tema.brandPurple,
+            ),
           ),
           const SizedBox(width: 4),
           GestureDetector(
@@ -612,7 +617,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                         Text(
                           error,
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.grey.shade700),
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                         ),
                         const SizedBox(height: 24),
                         ElevatedButton.icon(
@@ -641,6 +646,45 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                     Widget? child,
                   ) {
                     if (trainings.isEmpty && !isLoading) {
+                      final hasSearch = _controller.searchQuery.value.isNotEmpty;
+                      if (hasSearch) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.search_off_rounded,
+                                  size: 56,
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                                ),
+                                const SizedBox(height: 20),
+                                Text(
+                                  'Sin resultados',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                    letterSpacing: -0.3,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'No hay entrenamientos que coincidan con tu búsqueda',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.55),
+                                    height: 1.5,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
                       return const EmptyStateWidget(
                         icon: Icons.calendar_today_rounded,
                         title: 'Sin entrenamientos',
@@ -685,6 +729,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
 
   }
   Widget _buildHistoryLoadingSkeleton() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SkeletonShimmer(
       key: const ValueKey('history_loading'),
       builder: (sv) => ListView.builder(
@@ -695,10 +740,14 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
           child: Container(
             height: 100,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+                BoxShadow(
+                  color: isDark ? Colors.transparent : Colors.black.withOpacity(0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
               ],
             ),
             padding: const EdgeInsets.all(20),

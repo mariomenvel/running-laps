@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/avatar/views/avatar_maker_screen.dart';
@@ -101,20 +102,23 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
   // HEADER (Adaptado del primer código)
   // ===================================================================
   Widget _buildHeader() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
     return Container(
-      decoration: const BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment.topCenter,
-          radius: 1.2,
-          colors: [_bgGradientColor, Colors.white],
-          stops: [0.0, 1.0],
-        ),
-        // Asegúrate de tener esta imagen en tus assets o quita esta línea si no la tienes en este módulo
-        image: DecorationImage(
-          image: AssetImage('assets/images/fondo.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
+      decoration: isDark
+          ? BoxDecoration(color: AppColors.surfaceVariantDark)
+          : const BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment.topCenter,
+                radius: 1.2,
+                colors: [_bgGradientColor, Colors.white],
+                stops: [0.0, 1.0],
+              ),
+              image: DecorationImage(
+                image: AssetImage('assets/images/fondo.png'),
+                fit: BoxFit.cover,
+              ),
+            ),
       child: Column(
         children: [
           Padding(
@@ -125,7 +129,7 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // --- BOTÓN IZQUIERDO: VOLVER (Icono Logo) ---
+                // --- BOTÓN IZQUIERDO: VOLVER ---
                 GestureDetector(
                   onTap: () {
                     Navigator.pop(context);
@@ -133,26 +137,23 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
                   child: const CircleAvatar(
                     radius: 24.0,
                     backgroundColor: Tema.brandPurple,
-                    // Si tienes el logo, úsalo. Si no, un icono de flecha atrás servirá.
                     backgroundImage: AssetImage('assets/images/logo.png'),
                     child: null,
                   ),
                 ),
 
-
-                // Título Central (Opcional, para que sepa qué está haciendo)
-                const Text(
+                // Título Central
+                Text(
                   "EDITOR DE AVATAR",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
-                    color: Color(0xFF333333),
+                    color: cs.onSurface,
                     letterSpacing: 1.2,
                   ),
                 ),
 
-
-                // --- BOTÓN DERECHO: GUARDAR (Reemplaza al Avatar del perfil) ---
+                // --- BOTÓN DERECHO: GUARDAR ---
                 GestureDetector(
                   onTap: _saveAvatarToFirebase,
                   child: CircleAvatar(
@@ -176,7 +177,7 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
             ),
           ),
           // Línea divisoria
-          Container(height: 1.0, color: Colors.grey.shade200),
+          Container(height: 1.0, color: cs.outline.withOpacity(0.3)),
         ],
       ),
     );
@@ -186,8 +187,6 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      // Usamos SafeArea para evitar conflicto con la barra de estado
       body: SafeArea(
         child: Column(
           children: [

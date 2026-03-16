@@ -21,12 +21,9 @@ class PatternComparisonView extends StatelessWidget {
     // Pero mejor izquierda: A, derecha: B tal cual se pasaron.
     
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text('Comparar Entrenamientos'),
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -36,16 +33,14 @@ class PatternComparisonView extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.white, Colors.grey.shade50],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.transparent
+                        : Colors.black.withOpacity(0.05),
                     blurRadius: 15,
                     offset: const Offset(0, 6),
                   ),
@@ -53,7 +48,7 @@ class PatternComparisonView extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Expanded(child: _buildHeaderColumn(instanceA, Colors.blue)),
+                  Expanded(child: _buildHeaderColumn(context, instanceA, Colors.blue)),
                   const SizedBox(width: 20),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -66,7 +61,7 @@ class PatternComparisonView extends StatelessWidget {
                     child: const Icon(Icons.compare_arrows, size: 28, color: Tema.brandPurple),
                   ),
                   const SizedBox(width: 20),
-                  Expanded(child: _buildHeaderColumn(instanceB, Colors.purple)),
+                  Expanded(child: _buildHeaderColumn(context, instanceB, Colors.purple)),
                 ],
               ),
             ),
@@ -74,6 +69,7 @@ class PatternComparisonView extends StatelessWidget {
             
             // STATS COMPARISONS
             _buildComparisonRow(
+              context,
               "Ritmo Medio",
               _formatPace(instanceA.averagePace.toInt()),
               _formatPace(instanceB.averagePace.toInt()),
@@ -81,6 +77,7 @@ class PatternComparisonView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _buildComparisonRow(
+              context,
               "Consistencia (Var)",
               instanceA.consistency.toStringAsFixed(1),
               instanceB.consistency.toStringAsFixed(1),
@@ -88,6 +85,7 @@ class PatternComparisonView extends StatelessWidget {
             ),
              const SizedBox(height: 16),
              _buildComparisonRow(
+               context,
                "Top Serie",
                _formatPace(_getBestSeriesPace(instanceA)),
                _formatPace(_getBestSeriesPace(instanceB)),
@@ -109,13 +107,9 @@ class PatternComparisonView extends StatelessWidget {
               height: 300,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.white, Colors.grey.shade50],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
                 boxShadow: [
                   BoxShadow(
                     color: Tema.brandPurple.withOpacity(0.08),
@@ -124,7 +118,9 @@ class PatternComparisonView extends StatelessWidget {
                     spreadRadius: -4,
                   ),
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.transparent
+                        : Colors.black.withOpacity(0.04),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -176,7 +172,7 @@ class PatternComparisonView extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderColumn(WorkoutInstance instance, Color color) {
+  Widget _buildHeaderColumn(BuildContext context, WorkoutInstance instance, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -238,21 +234,20 @@ class PatternComparisonView extends StatelessWidget {
     );
   }
 
-  Widget _buildComparisonRow(String label, String valA, String valB, int winner) {
+  Widget _buildComparisonRow(BuildContext context, String label, String valA, String valB, int winner) {
+    final cs = Theme.of(context).colorScheme;
     // winner: -1 (A), 1 (B), 0 (Empate)
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.white, Colors.grey.shade50.withOpacity(0.5)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: cs.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: cs.outline.withOpacity(0.15)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.black.withOpacity(0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -263,7 +258,7 @@ class PatternComparisonView extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: Colors.grey.shade600,
+              color: cs.onSurface.withOpacity(0.6),
               fontSize: 12,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5,
@@ -282,10 +277,10 @@ class PatternComparisonView extends StatelessWidget {
                             colors: [Colors.green.shade50, Colors.green.shade100],
                           )
                         : null,
-                    color: winner == -1 ? null : Colors.grey.shade50,
+                    color: winner == -1 ? null : cs.onSurface.withOpacity(0.04),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: winner == -1 ? Colors.green : Colors.grey.shade300,
+                      color: winner == -1 ? Colors.green : cs.outline.withOpacity(0.2),
                       width: winner == -1 ? 2 : 1,
                     ),
                   ),
@@ -293,7 +288,7 @@ class PatternComparisonView extends StatelessWidget {
                     valA,
                     style: TextStyle(
                       fontWeight: winner == -1 ? FontWeight.bold : FontWeight.w600,
-                      color: winner == -1 ? Colors.green.shade700 : Colors.black87,
+                      color: winner == -1 ? Colors.green.shade700 : cs.onSurface,
                       fontSize: 18,
                       letterSpacing: -0.3,
                     ),
@@ -304,7 +299,7 @@ class PatternComparisonView extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: winner == 0
-                    ? Icon(Icons.remove, size: 20, color: Colors.grey.shade400)
+                    ? Icon(Icons.remove, size: 20, color: cs.onSurface.withOpacity(0.35))
                     : Icon(
                         winner == -1 ? Icons.arrow_back : Icons.arrow_forward,
                         color: Colors.green.shade600,
@@ -320,10 +315,10 @@ class PatternComparisonView extends StatelessWidget {
                             colors: [Colors.green.shade50, Colors.green.shade100],
                           )
                         : null,
-                    color: winner == 1 ? null : Colors.grey.shade50,
+                    color: winner == 1 ? null : cs.onSurface.withOpacity(0.04),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: winner == 1 ? Colors.green : Colors.grey.shade300,
+                      color: winner == 1 ? Colors.green : cs.outline.withOpacity(0.2),
                       width: winner == 1 ? 2 : 1,
                     ),
                   ),
@@ -331,7 +326,7 @@ class PatternComparisonView extends StatelessWidget {
                     valB,
                     style: TextStyle(
                       fontWeight: winner == 1 ? FontWeight.bold : FontWeight.w600,
-                      color: winner == 1 ? Colors.green.shade700 : Colors.black87,
+                      color: winner == 1 ? Colors.green.shade700 : cs.onSurface,
                       fontSize: 18,
                       letterSpacing: -0.3,
                     ),

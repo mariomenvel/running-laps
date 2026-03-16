@@ -29,11 +29,11 @@ class TrendsTab extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildBestPerformancesSection(data),
+              _buildBestPerformancesSection(context, data),
               const SizedBox(height: 32),
-              _buildWeeklyProgressSection(data),
+              _buildWeeklyProgressSection(context, data),
               const SizedBox(height: 32),
-              _buildPaceEvolutionSection(data),
+              _buildPaceEvolutionSection(context, data),
               const SizedBox(height: 40),
             ],
           ),
@@ -43,7 +43,7 @@ class TrendsTab extends StatelessWidget {
   }
 
   /// Sección de mejores marcas - Estilo premium
-  Widget _buildBestPerformancesSection(List<Entrenamiento> data) {
+  Widget _buildBestPerformancesSection(BuildContext context, List<Entrenamiento> data) {
     final best400m = _findBestPaceForDistance(data, 400);
     final best1km = _findBestPaceForDistance(data, 1000);
     final best5km = _findBestPaceForDistance(data, 5000);
@@ -51,12 +51,12 @@ class TrendsTab extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Mejores Marcas',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: Theme.of(context).colorScheme.onSurface,
             letterSpacing: -0.5,
           ),
         ),
@@ -65,6 +65,7 @@ class TrendsTab extends StatelessWidget {
           children: [
             Expanded(
               child: _buildBestMarkCard(
+                context,
                 '400m',
                 best400m,
                 Icons.bolt,
@@ -74,6 +75,7 @@ class TrendsTab extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _buildBestMarkCard(
+                context,
                 '1km',
                 best1km,
                 Icons.speed,
@@ -83,6 +85,7 @@ class TrendsTab extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _buildBestMarkCard(
+                context,
                 '5km',
                 best5km,
                 Icons.emoji_events,
@@ -96,18 +99,11 @@ class TrendsTab extends StatelessWidget {
   }
 
   /// Card de mejor marca - Super premium
-  Widget _buildBestMarkCard(String distance, String? pace, IconData icon, Color color) {
+  Widget _buildBestMarkCard(BuildContext context, String distance, String? pace, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.white,
-            color.withOpacity(0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: color.withOpacity(0.3),
@@ -121,7 +117,9 @@ class TrendsTab extends StatelessWidget {
             spreadRadius: -5,
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.black.withOpacity(0.05),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -152,7 +150,7 @@ class TrendsTab extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade600,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
               letterSpacing: 0.5,
             ),
           ),
@@ -172,16 +170,16 @@ class TrendsTab extends StatelessWidget {
   }
 
   /// Sección de progreso semanal
-  Widget _buildWeeklyProgressSection(List<Entrenamiento> data) {
+  Widget _buildWeeklyProgressSection(BuildContext context, List<Entrenamiento> data) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Volumen Semanal',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: Theme.of(context).colorScheme.onSurface,
             letterSpacing: -0.5,
           ),
         ),
@@ -189,13 +187,9 @@ class TrendsTab extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.white, Colors.blue.shade50.withOpacity(0.3)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
             boxShadow: [
               BoxShadow(
                 color: Colors.blue.withOpacity(0.1),
@@ -204,7 +198,9 @@ class TrendsTab extends StatelessWidget {
                 spreadRadius: -5,
               ),
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.transparent
+                    : Colors.black.withOpacity(0.05),
                 blurRadius: 15,
                 offset: const Offset(0, 5),
               ),
@@ -220,16 +216,16 @@ class TrendsTab extends StatelessWidget {
   }
 
   /// Sección de evolución de ritmo
-  Widget _buildPaceEvolutionSection(List<Entrenamiento> data) {
+  Widget _buildPaceEvolutionSection(BuildContext context, List<Entrenamiento> data) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Evolución de Ritmo',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: Theme.of(context).colorScheme.onSurface,
             letterSpacing: -0.5,
           ),
         ),
@@ -237,13 +233,9 @@ class TrendsTab extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.white, Colors.purple.shade50.withOpacity(0.3)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
             boxShadow: [
               BoxShadow(
                 color: Tema.brandPurple.withOpacity(0.1),
@@ -252,7 +244,9 @@ class TrendsTab extends StatelessWidget {
                 spreadRadius: -5,
               ),
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.transparent
+                    : Colors.black.withOpacity(0.05),
                 blurRadius: 15,
                 offset: const Offset(0, 5),
               ),
@@ -356,7 +350,7 @@ class _WeeklyVolumeChart extends StatelessWidget {
           show: true,
           drawVerticalLine: false,
           getDrawingHorizontalLine: (value) => FlLine(
-            color: Colors.grey.shade200,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
             strokeWidth: 1,
           ),
         ),
@@ -435,7 +429,7 @@ class _PaceEvolutionChart extends StatelessWidget {
           show: true,
           drawVerticalLine: false,
           getDrawingHorizontalLine: (value) => FlLine(
-            color: Colors.grey.shade200,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
             strokeWidth: 1,
           ),
         ),

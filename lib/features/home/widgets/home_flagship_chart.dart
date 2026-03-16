@@ -45,11 +45,13 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
       margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.black.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -79,23 +81,23 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               "Rendimiento",
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
                 letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              _selectedMetric == ChartFlagshipMetric.distance 
-                  ? "Distancia acumulada" 
+              _selectedMetric == ChartFlagshipMetric.distance
+                  ? "Distancia acumulada"
                   : "Ritmo medio",
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey.shade600,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -110,7 +112,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -130,12 +132,14 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
+          color: isSelected ? Theme.of(context).colorScheme.surface : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.transparent
+                        : Colors.black.withOpacity(0.05),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   )
@@ -145,7 +149,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
         child: Icon(
           icon,
           size: 20,
-          color: isSelected ? Tema.brandPurple : Colors.grey.shade400,
+          color: isSelected ? Tema.brandPurple : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
         ),
       ),
     );
@@ -183,13 +187,13 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
                 color: isSelected ? _metricColor : Colors.transparent,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isSelected ? _metricColor : Colors.grey.shade300,
+                  color: isSelected ? _metricColor : Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
                 ),
               ),
               child: Text(
                 label,
                 style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.grey.shade600,
+                  color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
                 ),
@@ -207,7 +211,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
     final groups = _processData();
 
     if (groups.isEmpty) {
-      return Center(child: Text("Sin datos para este periodo", style: TextStyle(color: Colors.grey.shade400)));
+      return Center(child: Text("Sin datos para este periodo", style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4))));
     }
 
     final maxY = groups.map((e) => e.displayValue).reduce(math.max);
@@ -220,14 +224,14 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
         maxY: targetMaxY == 0 ? 1 : targetMaxY,
         barTouchData: BarTouchData(
           touchTooltipData: BarTouchTooltipData(
-            getTooltipColor: (group) => Colors.white,
+            getTooltipColor: (group) => Theme.of(context).colorScheme.surface,
             tooltipPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               final data = groups[groupIndex];
               return BarTooltipItem(
                 '${data.label}\n',
-                const TextStyle(
-                  color: Colors.black87,
+                TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
@@ -280,7 +284,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
                   child: Text(
                     groups[index].shortLabel,
                     style: TextStyle(
-                      color: Colors.grey.shade400,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                       fontFamily: "Roboto", 
@@ -299,7 +303,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
           drawVerticalLine: false,
           horizontalInterval: targetMaxY / 4 == 0 ? 1.0 : targetMaxY / 4, 
           getDrawingHorizontalLine: (value) => FlLine(
-             color: Colors.grey.withOpacity(0.05), // Extremely subtle grid
+             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
              strokeWidth: 1,
              dashArray: [10, 10],
           ),
@@ -450,8 +454,6 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
         final key = entry.key;
         final day = key % 100;
         final month = (key ~/ 100) % 100;
-        final year = key ~/ 10000; // not really used for label unless needed
-        
         final workouts = entry.value;
         double value = _calculateMetricValue(workouts);
         

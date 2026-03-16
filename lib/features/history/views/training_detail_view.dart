@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 // fl_chart was here
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
@@ -51,13 +52,11 @@ class _TrainingDetailViewState extends State<TrainingDetailView>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F8),
       body: SafeArea(
         child: Column(
           children: [
             AppHeader(
               showBottomDivider: false,
-              onTapLeft: () => Navigator.pop(context),
             ),
             _slideFromLeft(_aBanner, GradientBanner(
               title: training.titulo,
@@ -141,11 +140,13 @@ class _TrainingDetailViewState extends State<TrainingDetailView>
   Widget _buildMapCard() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.black.withOpacity(0.04),
             offset: const Offset(0, 6),
             blurRadius: 16,
           ),
@@ -167,9 +168,9 @@ class _TrainingDetailViewState extends State<TrainingDetailView>
                   child: const Icon(Icons.route_rounded, color: Tema.brandPurple, size: 18),
                 ),
                 const SizedBox(width: 12),
-                const Text(
+                Text(
                   "Mapa de Ruta",
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
                 ),
               ],
             ),
@@ -233,11 +234,13 @@ class _TrainingDetailViewState extends State<TrainingDetailView>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.black.withOpacity(0.04),
             offset: const Offset(0, 6),
             blurRadius: 16,
           ),
@@ -260,17 +263,17 @@ class _TrainingDetailViewState extends State<TrainingDetailView>
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
-              color: Colors.grey.shade500,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
               letterSpacing: 0.8,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ],
@@ -293,9 +296,9 @@ class _TrainingDetailViewState extends State<TrainingDetailView>
               child: const Icon(Icons.list_alt_rounded, color: Tema.brandPurple, size: 20),
             ),
             const SizedBox(width: 12),
-            const Text(
+            Text(
               "Desglose de Series",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
             ),
           ],
         ),
@@ -307,10 +310,16 @@ class _TrainingDetailViewState extends State<TrainingDetailView>
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+                BoxShadow(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.transparent
+                      : Colors.black.withOpacity(0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
               ],
             ),
             child: Row(
@@ -419,11 +428,15 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: _isPressed ? Colors.grey.shade100 : Colors.white,
+          color: _isPressed
+              ? Theme.of(context).colorScheme.onSurface.withOpacity(0.08)
+              : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(_isPressed ? 0.03 : 0.06),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.transparent
+                  : Colors.black.withOpacity(_isPressed ? 0.03 : 0.06),
               blurRadius: _isPressed ? 4 : 12,
               offset: Offset(0, _isPressed ? 2 : 4),
             ),
@@ -433,16 +446,20 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.arrow_back_ios_new_rounded,
               size: 16,
-              color: Tema.brandPurple,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.brandPurpleLight
+                  : Tema.brandPurple,
             ),
             const SizedBox(width: 6),
-            const Text(
+            Text(
               "Volver",
               style: TextStyle(
-                color: Tema.brandPurple,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.brandPurpleLight
+                    : Tema.brandPurple,
                 fontWeight: FontWeight.w700,
                 fontSize: 13,
               ),

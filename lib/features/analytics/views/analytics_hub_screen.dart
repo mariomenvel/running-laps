@@ -9,11 +9,13 @@ import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/features/analytics/views/tabs/overview_tab.dart';
 import 'package:running_laps/features/analytics/views/tabs/patterns_tab.dart';
 
+import '../../../../core/widgets/app_footer.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/gradient_banner.dart';
 import '../../../../core/widgets/skeleton_shimmer.dart';
 import '../../profile/views/profile_menu_screen.dart';
+import '../../training/views/training_start_view.dart';
 
 class AnalyticsHubScreen extends StatefulWidget {
   final List<Entrenamiento>? preFilteredData;
@@ -64,13 +66,11 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with TickerProv
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F8),
       body: SafeArea(
         child: Column(
           children: [
             // 1. Header
             AppHeader(
-              onTapLeft: () => Navigator.pop(context),
               onTapRight: () {
                 Navigator.push(
                   context,
@@ -94,43 +94,48 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with TickerProv
             )),
 
             // 3. Tabs
-            _slideFromLeft(_aTabs, Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+            _slideFromLeft(_aTabs, Builder(
+              builder: (context) {
+                final isDark = Theme.of(context).brightness == Brightness.dark;
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark ? Colors.transparent : Colors.black.withOpacity(0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: TabBar(
-                controller: _tabController,
-                indicator: BoxDecoration(
-                  color: Tema.brandPurple,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Tema.brandPurple.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
+                  child: TabBar(
+                    controller: _tabController,
+                    indicator: BoxDecoration(
+                      color: Tema.brandPurple,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Tema.brandPurple.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.grey.shade600,
+                    labelColor: Colors.white,
+                    unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                 dividerColor: Colors.transparent,
                 indicatorSize: TabBarIndicatorSize.tab,
                 splashBorderRadius: BorderRadius.circular(16),
-                tabs: const [
-                  Tab(text: 'Resumen'),
-                  Tab(text: 'Patrones'),
-                ],
-              ),
+                    tabs: const [
+                      Tab(text: 'Resumen'),
+                      Tab(text: 'Patrones'),
+                    ],
+                  ),
+                );
+              },
             )),
 
             // 4. Content
@@ -169,6 +174,14 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with TickerProv
                 },
               )),
             ),
+
+            // 5. Footer
+            AppFooter(
+              onTap: () => Navigator.push(
+                context,
+                AppRoute(page: TrainingStartView()),
+              ),
+            ),
           ],
         ),
       ),
@@ -176,6 +189,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with TickerProv
   }
 
   Widget _buildAnalyticsLoadingSkeleton() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SkeletonShimmer(
       key: const ValueKey('analytics_loading'),
       builder: (sv) => SingleChildScrollView(
@@ -190,10 +204,14 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with TickerProv
                   margin: EdgeInsets.only(left: i == 0 ? 0 : 12),
                   height: 90,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+                      BoxShadow(
+                        color: isDark ? Colors.transparent : Colors.black.withOpacity(0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
                     ],
                   ),
                   padding: const EdgeInsets.all(16),
@@ -252,16 +270,16 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with TickerProv
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 60, color: Colors.grey.withOpacity(0.5)),
+          Icon(icon, size: 60, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
           const SizedBox(height: 16),
           Text(
             title,
-            style: TextStyle(fontSize: 18, color: Colors.grey, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 18, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             "Se implementará en la siguiente fase",
-            style: TextStyle(color: Colors.grey),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
           ),
         ],
       ),

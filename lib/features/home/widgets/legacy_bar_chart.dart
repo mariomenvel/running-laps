@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
-import 'package:running_laps/config/app_theme.dart';
 
 // Enum definitions if they aren't available globally
 enum HomeMetric { distancia, tiempoTotal, ritmoMedio, calorias }
@@ -69,15 +68,16 @@ class _LegacyBarChartState extends State<LegacyBarChart>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       height: 250,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: isDark ? Colors.transparent : Colors.black.withOpacity(0.04),
               blurRadius: 16,
               offset: const Offset(0, 8))
         ],
@@ -90,6 +90,8 @@ class _LegacyBarChartState extends State<LegacyBarChart>
           range: widget.range,
           brandColor: widget.brandColor,
           animationValue: _animation.value,
+          gridColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
+          labelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
         ),
       ),
     );
@@ -102,6 +104,8 @@ class _BarChartPainter extends CustomPainter {
   final TimeRange range;
   final Color brandColor;
   final double animationValue;
+  final Color gridColor;
+  final Color labelColor;
 
   _BarChartPainter({
     required this.data,
@@ -109,6 +113,8 @@ class _BarChartPainter extends CustomPainter {
     required this.range,
     required this.brandColor,
     required this.animationValue,
+    required this.gridColor,
+    required this.labelColor,
   });
 
   @override
@@ -121,7 +127,7 @@ class _BarChartPainter extends CustomPainter {
     final double chartHeight = size.height - marginBottom - marginTop;
 
     final Paint gridPaint = Paint()
-      ..color = Colors.grey.shade200
+      ..color = gridColor
       ..strokeWidth = 1.0;
 
     final Paint barPaint = Paint()
@@ -169,7 +175,7 @@ class _BarChartPainter extends CustomPainter {
       final textSpan = TextSpan(
         text: yLabel,
         style: TextStyle(
-            color: Colors.grey.shade400,
+            color: labelColor,
             fontSize: 10,
             fontWeight: FontWeight.w500),
       );
@@ -242,7 +248,7 @@ class _BarChartPainter extends CustomPainter {
        if (shouldDrawLabel) {
          final textSpan = TextSpan(
             text: label,
-            style: TextStyle(color: Colors.grey.shade400, fontSize: 10),
+            style: TextStyle(color: labelColor, fontSize: 10),
          );
          final tp = TextPainter(text: textSpan, textDirection: ui.TextDirection.ltr);
          tp.layout();
@@ -256,7 +262,9 @@ class _BarChartPainter extends CustomPainter {
     return oldDelegate.animationValue != animationValue ||
         oldDelegate.data != data ||
         oldDelegate.metric != metric ||
-        oldDelegate.range != range;
+        oldDelegate.range != range ||
+        oldDelegate.gridColor != gridColor ||
+        oldDelegate.labelColor != labelColor;
   }
 }
 

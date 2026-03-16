@@ -26,10 +26,10 @@ class OverviewTab extends StatelessWidget {
         }
 
         if (data.isEmpty) {
-          return const Center(
+          return Center(
             child: Text(
               "No hay datos para el periodo seleccionado",
-              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontWeight: FontWeight.bold),
             ),
           );
         }
@@ -102,19 +102,19 @@ class OverviewTab extends StatelessWidget {
                   const SizedBox(height: 40),
     
                   // 3. TENDENCIAS (Trends)
-                  _buildBestPerformancesSection(data),
+                  _buildBestPerformancesSection(context, data),
                   const SizedBox(height: 32),
-                  _buildWeeklyProgressSection(data),
+                  _buildWeeklyProgressSection(context, data),
                   const SizedBox(height: 32),
-                  _buildPaceEvolutionSection(data),
+                  _buildPaceEvolutionSection(context, data),
                   const SizedBox(height: 40),
-    
+
                   // 4. DISTRIBUCIÓN (Distribution)
-                  _buildTrainingBalanceSection(data),
+                  _buildTrainingBalanceSection(context, data),
                   const SizedBox(height: 32),
-                  _buildConsistencySection(data),
+                  _buildConsistencySection(context, data),
                   const SizedBox(height: 32),
-                  _buildNextMilestoneSection(data),
+                  _buildNextMilestoneSection(context, data),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -127,7 +127,7 @@ class OverviewTab extends StatelessWidget {
 
   // --- TRENDS BUILDERS ---
 
-  Widget _buildBestPerformancesSection(List<Entrenamiento> data) {
+  Widget _buildBestPerformancesSection(BuildContext context, List<Entrenamiento> data) {
     final best400m = _findBestPaceForDistance(data, 400);
     final best1km = _findBestPaceForDistance(data, 1000);
     final best5km = _findBestPaceForDistance(data, 5000);
@@ -135,34 +135,40 @@ class OverviewTab extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Mejores Marcas',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87, letterSpacing: -0.5),
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface, letterSpacing: -0.5),
         ),
         const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(child: _buildBestMarkCard('400m', best400m, Icons.bolt, Colors.amber)),
+            Expanded(child: _buildBestMarkCard(context, '400m', best400m, Icons.bolt, Colors.amber)),
             const SizedBox(width: 12),
-            Expanded(child: _buildBestMarkCard('1km', best1km, Icons.speed, Colors.blue)),
+            Expanded(child: _buildBestMarkCard(context, '1km', best1km, Icons.speed, Colors.blue)),
             const SizedBox(width: 12),
-            Expanded(child: _buildBestMarkCard('5km', best5km, Icons.emoji_events, Colors.purple)),
+            Expanded(child: _buildBestMarkCard(context, '5km', best5km, Icons.emoji_events, Colors.purple)),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildBestMarkCard(String distance, String? pace, IconData icon, Color color) {
+  Widget _buildBestMarkCard(BuildContext context, String distance, String? pace, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [Colors.white, color.withOpacity(0.05)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: color.withOpacity(0.3), width: 2),
         boxShadow: [
           BoxShadow(color: color.withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 10), spreadRadius: -5),
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 5)),
+          BoxShadow(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.black.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
         ],
       ),
       child: Column(
@@ -177,7 +183,7 @@ class OverviewTab extends StatelessWidget {
             child: Icon(icon, color: Colors.white, size: 28),
           ),
           const SizedBox(height: 16),
-          Text(distance, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade600, letterSpacing: 0.5)),
+          Text(distance, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), letterSpacing: 0.5)),
           const SizedBox(height: 8),
           Text(pace ?? '-', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: color, letterSpacing: -0.5)),
         ],
@@ -185,28 +191,30 @@ class OverviewTab extends StatelessWidget {
     );
   }
 
-  Widget _buildWeeklyProgressSection(List<Entrenamiento> data) {
+  Widget _buildWeeklyProgressSection(BuildContext context, List<Entrenamiento> data) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Volumen Semanal',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87, letterSpacing: -0.5),
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface, letterSpacing: -0.5),
         ),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.white, Colors.blue.shade50.withOpacity(0.3)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
             boxShadow: [
               BoxShadow(color: Colors.blue.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10), spreadRadius: -5),
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 5)),
+              BoxShadow(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.transparent
+                    : Colors.black.withOpacity(0.05),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
             ],
           ),
           child: SizedBox(height: 200, child: _WeeklyVolumeChart(workouts: data)),
@@ -215,28 +223,30 @@ class OverviewTab extends StatelessWidget {
     );
   }
 
-  Widget _buildPaceEvolutionSection(List<Entrenamiento> data) {
+  Widget _buildPaceEvolutionSection(BuildContext context, List<Entrenamiento> data) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Evolución de Ritmo',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87, letterSpacing: -0.5),
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface, letterSpacing: -0.5),
         ),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.white, Colors.purple.shade50.withOpacity(0.3)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
             boxShadow: [
               BoxShadow(color: Tema.brandPurple.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10), spreadRadius: -5),
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 5)),
+              BoxShadow(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.transparent
+                    : Colors.black.withOpacity(0.05),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
             ],
           ),
           child: SizedBox(height: 200, child: _PaceEvolutionChart(workouts: data)),
@@ -265,28 +275,30 @@ class OverviewTab extends StatelessWidget {
 
   // --- DISTRIBUTION BUILDERS ---
 
-  Widget _buildTrainingBalanceSection(List<Entrenamiento> data) {
+  Widget _buildTrainingBalanceSection(BuildContext context, List<Entrenamiento> data) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Balance de Entrenamiento',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87, letterSpacing: -0.5),
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface, letterSpacing: -0.5),
         ),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.white, Colors.purple.shade50.withOpacity(0.3)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
             boxShadow: [
               BoxShadow(color: Tema.brandPurple.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10), spreadRadius: -5),
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 5)),
+              BoxShadow(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.transparent
+                    : Colors.black.withOpacity(0.05),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
             ],
           ),
           child: _TagDistributionContent(workouts: data),
@@ -295,26 +307,27 @@ class OverviewTab extends StatelessWidget {
     );
   }
 
-  Widget _buildConsistencySection(List<Entrenamiento> data) {
+  Widget _buildConsistencySection(BuildContext context, List<Entrenamiento> data) {
     final score = _calculateConsistencyScore(data);
     final color = _getConsistencyColor(score);
     final label = _getConsistencyLabel(score);
-    
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Consistencia',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87, letterSpacing: -0.5),
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: onSurface, letterSpacing: -0.5),
         ),
         const SizedBox(height: 16),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
           decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [Colors.white, color.withOpacity(0.05)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
             boxShadow: [BoxShadow(color: color.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10), spreadRadius: -5)],
           ),
           child: Column(
@@ -326,13 +339,13 @@ class OverviewTab extends StatelessWidget {
                   alignment: Alignment.center,
                   children: [
                     Container(width: 140, height: 140, decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [BoxShadow(color: color.withOpacity(0.2), blurRadius: 30, spreadRadius: 5)])),
-                    SizedBox(width: 160, height: 160, child: CircularProgressIndicator(value: 1.0, strokeWidth: 14, strokeCap: StrokeCap.round, valueColor: AlwaysStoppedAnimation<Color>(Colors.grey.shade100))),
+                    SizedBox(width: 160, height: 160, child: CircularProgressIndicator(value: 1.0, strokeWidth: 14, strokeCap: StrokeCap.round, valueColor: AlwaysStoppedAnimation<Color>(onSurface.withOpacity(0.08)))),
                     SizedBox(width: 160, height: 160, child: CircularProgressIndicator(value: score / 100, strokeWidth: 14, strokeCap: StrokeCap.round, valueColor: AlwaysStoppedAnimation<Color>(color))),
                     Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text('${score.toInt()}', style: TextStyle(fontSize: 56, fontWeight: FontWeight.w900, color: color, letterSpacing: -2, height: 1.0)),
-                        Text('PUNTOS', style: TextStyle(fontSize: 10, color: Colors.grey.shade500, fontWeight: FontWeight.w800, letterSpacing: 2)),
+                        Text('PUNTOS', style: TextStyle(fontSize: 10, color: onSurface.withOpacity(0.5), fontWeight: FontWeight.w800, letterSpacing: 2)),
                       ],
                     ),
                   ],
@@ -345,7 +358,7 @@ class OverviewTab extends StatelessWidget {
                 child: Text(label.toUpperCase(), style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
               ),
               const SizedBox(height: 16),
-              Text(_getConsistencyMessage(score), textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: Colors.grey.shade700, fontWeight: FontWeight.w500, height: 1.4)),
+              Text(_getConsistencyMessage(score), textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: onSurface.withOpacity(0.7), fontWeight: FontWeight.w500, height: 1.4)),
             ],
           ),
         ),
@@ -353,28 +366,35 @@ class OverviewTab extends StatelessWidget {
     );
   }
 
-  Widget _buildNextMilestoneSection(List<Entrenamiento> data) {
+  Widget _buildNextMilestoneSection(BuildContext context, List<Entrenamiento> data) {
     final totalKm = data.fold<double>(0, (sum, e) => sum + (e.distanciaTotalM() / 1000));
     final nextMilestone = ((totalKm ~/ 50) + 1) * 50;
     final remaining = nextMilestone - totalKm;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Próximo Hito',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87, letterSpacing: -0.5),
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: onSurface, letterSpacing: -0.5),
         ),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(28),
           decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [Colors.white, Colors.amber.shade50.withOpacity(0.3)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
             boxShadow: [
               BoxShadow(color: Colors.amber.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10), spreadRadius: -5),
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 5)),
+              BoxShadow(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.transparent
+                    : Colors.black.withOpacity(0.05),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
             ],
           ),
           child: Column(
@@ -391,9 +411,9 @@ class OverviewTab extends StatelessWidget {
               const SizedBox(height: 20),
               Text('${remaining.toStringAsFixed(1)} km', style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.amber, letterSpacing: -1)),
               const SizedBox(height: 8),
-              Text('para alcanzar $nextMilestone km', style: TextStyle(fontSize: 16, color: Colors.grey.shade700, fontWeight: FontWeight.w600)),
+              Text('para alcanzar $nextMilestone km', style: TextStyle(fontSize: 16, color: onSurface.withOpacity(0.7), fontWeight: FontWeight.w600)),
               const SizedBox(height: 20),
-              LinearProgressIndicator(value: totalKm / nextMilestone, backgroundColor: Colors.grey.shade200, valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber), minHeight: 8, borderRadius: BorderRadius.circular(4)),
+              LinearProgressIndicator(value: totalKm / nextMilestone, backgroundColor: onSurface.withOpacity(0.12), valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber), minHeight: 8, borderRadius: BorderRadius.circular(4)),
             ],
           ),
         ),
@@ -448,7 +468,7 @@ class _WeeklyVolumeChart extends StatelessWidget {
       final workout = displayData[groupIndex];
       final date = "${workout.fecha.day}/${workout.fecha.month}";
       return BarTooltipItem("$date\n", const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold), children: [TextSpan(text: "${rod.toY.toStringAsFixed(1)} km", style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold))]);
-    })), gridData: FlGridData(show: true, drawVerticalLine: false, getDrawingHorizontalLine: (value) => FlLine(color: Colors.grey.shade200, strokeWidth: 1)), titlesData: const FlTitlesData(show: false), borderData: FlBorderData(show: false), barGroups: barGroups));
+    })), gridData: FlGridData(show: true, drawVerticalLine: false, getDrawingHorizontalLine: (value) => FlLine(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1), strokeWidth: 1)), titlesData: const FlTitlesData(show: false), borderData: FlBorderData(show: false), barGroups: barGroups));
   }
 }
 
@@ -479,7 +499,7 @@ class _PaceEvolutionChart extends StatelessWidget {
         final s = (totalSeconds % 60).toString().padLeft(2, '0');
         return LineTooltipItem("$date\n", const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold), children: [TextSpan(text: "$m:$s /km", style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold))]);
       }).toList();
-    })), gridData: FlGridData(show: true, drawVerticalLine: false, getDrawingHorizontalLine: (value) => FlLine(color: Colors.grey.shade200, strokeWidth: 1)), titlesData: const FlTitlesData(show: false), borderData: FlBorderData(show: false), minY: targetMinY > 0 ? targetMinY : 0, lineBarsData: [LineChartBarData(spots: spots, isCurved: true, curveSmoothness: 0.4, gradient: LinearGradient(colors: [Tema.brandPurple, Colors.purple.shade300]), barWidth: 4, isStrokeCapRound: true, dotData: const FlDotData(show: false), belowBarData: BarAreaData(show: true, gradient: LinearGradient(colors: [Tema.brandPurple.withOpacity(0.3), Tema.brandPurple.withOpacity(0.0)], begin: Alignment.topCenter, end: Alignment.bottomCenter))) ]));
+    })), gridData: FlGridData(show: true, drawVerticalLine: false, getDrawingHorizontalLine: (value) => FlLine(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1), strokeWidth: 1)), titlesData: const FlTitlesData(show: false), borderData: FlBorderData(show: false), minY: targetMinY > 0 ? targetMinY : 0, lineBarsData: [LineChartBarData(spots: spots, isCurved: true, curveSmoothness: 0.4, gradient: LinearGradient(colors: [Tema.brandPurple, Colors.purple.shade300]), barWidth: 4, isStrokeCapRound: true, dotData: const FlDotData(show: false), belowBarData: BarAreaData(show: true, gradient: LinearGradient(colors: [Tema.brandPurple.withOpacity(0.3), Tema.brandPurple.withOpacity(0.0)], begin: Alignment.topCenter, end: Alignment.bottomCenter))) ]));
   }
 }
 
@@ -504,7 +524,8 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
     if (distribution.isEmpty) return const SizedBox.shrink();
     final sortedEntries = distribution.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
     final top3 = sortedEntries.take(3).toList();
-    return Column(children: [SizedBox(height: 220, child: Row(children: [Expanded(flex: 3, child: Stack(alignment: Alignment.center, children: [PieChart(PieChartData(pieTouchData: PieTouchData(touchCallback: (FlTouchEvent event, pieTouchResponse) { setState(() { if (!event.isInterestedForInteractions || pieTouchResponse == null || pieTouchResponse.touchedSection == null) { touchedIndex = -1; return; } touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex; }); }), sections: sortedEntries.asMap().entries.map((e) { final index = e.key; final entry = e.value; final isTouched = index == touchedIndex; final color = _getTagColor(index); final fontSize = isTouched ? 16.0 : 12.0; final radius = isTouched ? 60.0 : 50.0; return PieChartSectionData(color: color, value: entry.value, title: isTouched ? '${entry.value.toStringAsFixed(0)}km' : '', radius: radius, titleStyle: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold, color: Colors.white, shadows: const [Shadow(color: Colors.black26, blurRadius: 4)])); }).toList(), centerSpaceRadius: 55, sectionsSpace: 3, borderData: FlBorderData(show: false))), Column(mainAxisSize: MainAxisSize.min, children: [Text(totalKm >= 100 ? totalKm.toStringAsFixed(0) : totalKm.toStringAsFixed(1), style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Tema.brandPurple, letterSpacing: -1, height: 1.0)), Text('KM TOTALES', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Colors.grey.shade500, letterSpacing: 1.2))])])), const SizedBox(width: 16), Expanded(flex: 2, child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: sortedEntries.take(5).toList().asMap().entries.map((e) { final index = e.key; final entry = e.value; final isTouched = index == touchedIndex; final color = _getTagColor(index); final percent = (entry.value / totalKm * 100).toInt(); return AnimatedContainer(duration: const Duration(milliseconds: 200), padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8), decoration: BoxDecoration(color: isTouched ? color.withOpacity(0.1) : Colors.transparent, borderRadius: BorderRadius.circular(8)), child: Row(children: [Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle, boxShadow: [BoxShadow(color: color.withOpacity(0.3), blurRadius: 4, spreadRadius: 1)])), const SizedBox(width: 8), Expanded(child: Text(entry.key, style: TextStyle(fontSize: 13, fontWeight: isTouched ? FontWeight.bold : FontWeight.w600, color: isTouched ? color : Colors.black87), overflow: TextOverflow.ellipsis)), Text('$percent%', style: TextStyle(fontSize: 12, color: isTouched ? color : Colors.grey.shade600, fontWeight: isTouched ? FontWeight.w800 : FontWeight.w500))])); }).toList()))])), const SizedBox(height: 24), Wrap(spacing: 12, runSpacing: 12, alignment: WrapAlignment.center, children: top3.asMap().entries.map((e) { final index = e.key; final entry = e.value; final color = _getTagColor(index); final percent = (entry.value / totalKm * 100).toInt(); return Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: color.withOpacity(0.15), blurRadius: 10, offset: const Offset(0, 4))], border: Border.all(color: color.withOpacity(0.2))), child: IntrinsicWidth(child: Row(children: [Icon(Icons.stars_rounded, color: color, size: 18), const SizedBox(width: 6), Text(entry.key, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87)), const SizedBox(width: 6), Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)), child: Text('$percent%', style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w900)))]))); }).toList())]);
+    final cs = Theme.of(context).colorScheme;
+    return Column(children: [SizedBox(height: 220, child: Row(children: [Expanded(flex: 3, child: Stack(alignment: Alignment.center, children: [PieChart(PieChartData(pieTouchData: PieTouchData(touchCallback: (FlTouchEvent event, pieTouchResponse) { setState(() { if (!event.isInterestedForInteractions || pieTouchResponse == null || pieTouchResponse.touchedSection == null) { touchedIndex = -1; return; } touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex; }); }), sections: sortedEntries.asMap().entries.map((e) { final index = e.key; final entry = e.value; final isTouched = index == touchedIndex; final color = _getTagColor(index); final fontSize = isTouched ? 16.0 : 12.0; final radius = isTouched ? 60.0 : 50.0; return PieChartSectionData(color: color, value: entry.value, title: isTouched ? '${entry.value.toStringAsFixed(0)}km' : '', radius: radius, titleStyle: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold, color: Colors.white, shadows: const [Shadow(color: Colors.black26, blurRadius: 4)])); }).toList(), centerSpaceRadius: 55, sectionsSpace: 3, borderData: FlBorderData(show: false))), Column(mainAxisSize: MainAxisSize.min, children: [Text(totalKm >= 100 ? totalKm.toStringAsFixed(0) : totalKm.toStringAsFixed(1), style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Tema.brandPurple, letterSpacing: -1, height: 1.0)), Text('KM TOTALES', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: cs.onSurface.withOpacity(0.5), letterSpacing: 1.2))])])), const SizedBox(width: 16), Expanded(flex: 2, child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: sortedEntries.take(5).toList().asMap().entries.map((e) { final index = e.key; final entry = e.value; final isTouched = index == touchedIndex; final color = _getTagColor(index); final percent = (entry.value / totalKm * 100).toInt(); return AnimatedContainer(duration: const Duration(milliseconds: 200), padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8), decoration: BoxDecoration(color: isTouched ? color.withOpacity(0.1) : Colors.transparent, borderRadius: BorderRadius.circular(8)), child: Row(children: [Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle, boxShadow: [BoxShadow(color: color.withOpacity(0.3), blurRadius: 4, spreadRadius: 1)])), const SizedBox(width: 8), Expanded(child: Text(entry.key, style: TextStyle(fontSize: 13, fontWeight: isTouched ? FontWeight.bold : FontWeight.w600, color: isTouched ? color : cs.onSurface), overflow: TextOverflow.ellipsis)), Text('$percent%', style: TextStyle(fontSize: 12, color: isTouched ? color : cs.onSurface.withOpacity(0.6), fontWeight: isTouched ? FontWeight.w800 : FontWeight.w500))])); }).toList()))])), const SizedBox(height: 24), Wrap(spacing: 12, runSpacing: 12, alignment: WrapAlignment.center, children: top3.asMap().entries.map((e) { final index = e.key; final entry = e.value; final color = _getTagColor(index); final percent = (entry.value / totalKm * 100).toInt(); return Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), decoration: BoxDecoration(color: cs.surface, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: color.withOpacity(0.15), blurRadius: 10, offset: const Offset(0, 4))], border: Border.all(color: color.withOpacity(0.2))), child: IntrinsicWidth(child: Row(children: [Icon(Icons.stars_rounded, color: color, size: 18), const SizedBox(width: 6), Text(entry.key, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: cs.onSurface)), const SizedBox(width: 6), Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)), child: Text('$percent%', style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w900)))]))); }).toList())]);
   }
 
   Color _getTagColor(int index) {

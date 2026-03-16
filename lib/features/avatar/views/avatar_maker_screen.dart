@@ -13,6 +13,7 @@ import 'package:get/get.dart';
 import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:flutter/gestures.dart';
 
 class AvatarMakerScreen extends StatefulWidget {
@@ -35,7 +36,18 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
   // ===========================================================================
 
   Widget _buildHeader() {
-    return Padding(
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceVariantDark : Colors.white,
+        border: Border(
+          bottom: BorderSide(
+            color: cs.outline.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -43,18 +55,18 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
           // Botón Atrás
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black87),
+            icon: Icon(Icons.arrow_back_ios_new_rounded, color: cs.onSurface),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.white,
+              backgroundColor: cs.surface,
               elevation: 2,
-              shadowColor: Colors.black12,
+              shadowColor: Theme.of(context).brightness == Brightness.dark ? Colors.transparent : Colors.black12,
             ),
           ),
-          
-          const Text(
+
+          Text(
             "EDITOR DE AVATAR",
             style: TextStyle(
-              color: Colors.black87,
+              color: cs.onSurface,
               fontWeight: FontWeight.bold,
               fontSize: 16,
               letterSpacing: 1.2,
@@ -66,9 +78,9 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
             onPressed: _buildSaveAvatarOptions,
             icon: const Icon(Icons.save_alt_rounded, color: _brandPurple),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.white,
+              backgroundColor: cs.surface,
               elevation: 2,
-              shadowColor: Colors.black12,
+              shadowColor: Theme.of(context).brightness == Brightness.dark ? Colors.transparent : Colors.black12,
             ),
           ),
         ],
@@ -77,7 +89,9 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
   }
 
   Widget _buildCategoryTabs(AvatarMakerController controller) {
-    return Padding(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      color: isDark ? AppColors.surfaceVariantDark : null,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Wrap(
         spacing: 12,
@@ -93,7 +107,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: isSelected ? _brandPurple : Colors.white,
+                color: isSelected ? _brandPurple : (isDark ? AppColors.surfaceVariantDark : Theme.of(context).colorScheme.surface),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   if (isSelected)
@@ -104,7 +118,9 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                     )
                   else
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.transparent
+                          : Colors.black.withOpacity(0.05),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     )
@@ -113,7 +129,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
               child: Text(
                 category[index],
                 style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.grey[700],
+                  color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
                 ),
@@ -213,13 +229,13 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
         width: 50,
         height: 50,
         decoration: BoxDecoration(
-          color: Colors.grey.shade300,
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
           shape: component == BackgroundShape.circle ? BoxShape.circle : BoxShape.rectangle,
           borderRadius: component == BackgroundShape.roundedSquare ? BorderRadius.circular(12) : null,
         ),
       );
     }
-    return const Icon(Icons.block, color: Colors.grey);
+    return Icon(Icons.block, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4));
   }
 
   // ===========================================================================
@@ -286,7 +302,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
   void _buildSaveAvatarOptions() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) {
         return SafeArea(
@@ -294,7 +310,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 10),
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2), borderRadius: BorderRadius.circular(2))),
               const SizedBox(height: 20),
               ListTile(
                 onTap: () {
@@ -342,17 +358,20 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
       : Get.put(AvatarMakerController());
     final double screenHeight = MediaQuery.of(context).size.height;
     // Ajustar altura del avatar basado en la pantalla disponible
-    final double avatarAreaHeight = screenHeight * 0.55; 
+    final double avatarAreaHeight = screenHeight * 0.55;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: RadialGradient(
-            center: Alignment(0, -0.5),
-            radius: 1.5,
-            colors: [_bgGradientStart, _bgGradientEnd],
-          ),
-        ),
+        decoration: isDark
+            ? BoxDecoration(color: Theme.of(context).colorScheme.surface)
+            : const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment(0, -0.5),
+                  radius: 1.5,
+                  colors: [_bgGradientStart, _bgGradientEnd],
+                ),
+              ),
         child: SafeArea(
           bottom: false, // Permitir que el sheet baje hasta el fondo
           child: Stack(
@@ -424,16 +443,30 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                       },
                     ),
                     child: Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 20,
-                            offset: Offset(0, -5),
-                          )
-                        ]
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+                        border: Border(
+                          top: BorderSide(
+                            color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                            width: 1.5,
+                          ),
+                        ),
+                        boxShadow: Theme.of(context).brightness == Brightness.dark
+                            ? [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.4),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, -4),
+                                )
+                              ]
+                            : [
+                                const BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 20,
+                                  offset: Offset(0, -5),
+                                )
+                              ]
                       ),
                       child: CustomScrollView(
                         controller: scrollController,
@@ -447,10 +480,10 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                                   margin: const EdgeInsets.symmetric(vertical: 12),
                                   padding: const EdgeInsets.symmetric(vertical: 8), // Larger hit area
                                   child: Container(
-                                    width: 60, 
-                                    height: 5, 
+                                    width: 60,
+                                    height: 5,
                                     decoration: BoxDecoration(
-                                      color: Colors.grey[400], 
+                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
                                       borderRadius: BorderRadius.circular(2.5)
                                     ),
                                   ),
@@ -586,15 +619,19 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.surfaceVariantDark
+                          : Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: selected ? _brandPurple : Colors.grey.shade200,
+                        color: selected ? _brandPurple : Theme.of(context).colorScheme.outline.withOpacity(0.3),
                         width: selected ? 3 : 1,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.transparent
+                              : Colors.black.withOpacity(0.03),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         )

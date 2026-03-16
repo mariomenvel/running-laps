@@ -15,6 +15,7 @@ import 'package:running_laps/core/widgets/kpi_card_with_delta.dart';
 import 'package:running_laps/core/constants/app_help_content.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/services/settings_service.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 
 // GROUPS IMPORTS
 import 'package:running_laps/features/groups/data/repositories/groups_repository.dart';
@@ -246,7 +247,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F8),
       body: SafeArea(
         child: Column(
           children: [
@@ -260,19 +260,22 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   }
 
   Widget _buildHeader() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      decoration: BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment.topCenter,
-          radius: 1.2,
-          colors: [const Color(0xFFF9F5FB), Colors.white], // Fixed typo
-          stops: const [0.0, 1.0],
-        ),
-        image: const DecorationImage(
-          image: AssetImage('assets/images/fondo.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
+      decoration: isDark
+          ? BoxDecoration(color: Theme.of(context).colorScheme.surface)
+          : const BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment.topCenter,
+                radius: 1.2,
+                colors: [Color(0xFFF9F5FB), Colors.white],
+                stops: [0.0, 1.0],
+              ),
+              image: DecorationImage(
+                image: AssetImage('assets/images/fondo.png'),
+                fit: BoxFit.cover,
+              ),
+            ),
       child: Column(
         children: [
           Padding(
@@ -303,7 +306,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               ],
             ),
           ),
-          Container(height: 1, color: Colors.grey.shade200),
+          Container(height: 1, color: Theme.of(context).colorScheme.outline.withOpacity(0.5)),
         ],
       ),
     );
@@ -365,6 +368,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   }
 
   Widget _buildHomeLoadingSkeleton() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SkeletonShimmer(
       key: const ValueKey('home_loading'),
       builder: (sv) => SingleChildScrollView(
@@ -387,7 +391,11 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
                   gradient: LinearGradient(
-                    colors: [Colors.grey.shade200, Colors.grey.shade100, Colors.grey.shade200],
+                    colors: [
+                      isDark ? AppColors.skeletonBaseDark  : AppColors.skeletonBaseLight,
+                      isDark ? AppColors.skeletonShineDark : AppColors.skeletonShineLight,
+                      isDark ? AppColors.skeletonBaseDark  : AppColors.skeletonBaseLight,
+                    ],
                     stops: const [0.0, 0.5, 1.0],
                     begin: Alignment(-1.0 - sv * 2, 0.0),
                     end: Alignment(1.0 - sv * 2, 0.0),
@@ -431,7 +439,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           'Aquí verás tus km, ritmo y progreso',
           style: TextStyle(
             fontSize: 14,
-            color: Colors.grey.shade500,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
             height: 1.4,
           ),
           textAlign: TextAlign.center,
@@ -463,13 +471,14 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   }
 
   Widget _buildSkeletonKPICard(IconData icon, String label) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: isDark ? Colors.transparent : Colors.black.withOpacity(0.04),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -484,10 +493,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: Colors.grey.shade300, size: 22),
+            child: Icon(icon, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3), size: 22),
           ),
           const Spacer(),
           // Label
@@ -495,7 +504,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey.shade400,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -506,7 +515,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             style: TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w700,
-              color: Colors.grey.shade300,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
               height: 1.0,
             ),
           ),
@@ -528,12 +537,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 "Mis comunidades",
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               GestureDetector(
@@ -599,14 +608,19 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   }
 
   Widget _buildEmptyGroupsState() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 10))
+          BoxShadow(
+            color: isDark ? Colors.transparent : Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          )
         ],
       ),
       child: Column(
@@ -622,12 +636,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             child: const Icon(Icons.groups_outlined, size: 48, color: Tema.brandPurple),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             "¡Únete a tu primera comunidad!",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
             textAlign: TextAlign.center,
           ),
@@ -702,10 +716,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
     return Text(
       greeting,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 28,
         fontWeight: FontWeight.bold,
-        color: Colors.black87,
+        color: Theme.of(context).colorScheme.onSurface,
       ),
     );
   }
@@ -811,12 +825,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Últimos entrenamientos',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
                 letterSpacing: -0.5,
               ),
             ),
@@ -1157,16 +1171,18 @@ class _GroupHighlightCard extends StatelessWidget {
         width: 190,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.transparent
+                  : Colors.black.withOpacity(0.06),
               blurRadius: 16,
               offset: const Offset(0, 8),
             )
           ],
-          border: Border.all(color: Colors.grey.shade100),
+          border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.5)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1209,13 +1225,13 @@ class _GroupHighlightCard extends StatelessWidget {
                 // Member Count
                 Row(
                   children: [
-                    Icon(Icons.person_outline_rounded, size: 14, color: Colors.grey.shade500),
+                    Icon(Icons.person_outline_rounded, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
                     const SizedBox(width: 4),
                     Text(
                       "${group.memberCount} ${group.memberCount == 1 ? 'miembro' : 'miembros'}",
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey.shade600,
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                         fontWeight: FontWeight.w500,
                       ),
                     ),

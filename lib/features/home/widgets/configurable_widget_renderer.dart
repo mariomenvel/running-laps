@@ -20,14 +20,14 @@ class ConfigurableWidgetRenderer extends StatelessWidget {
     if (!config.visible) return const SizedBox.shrink();
 
     final title = config.config['title'] as String? ?? 'Widget';
-    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: isDark ? Colors.transparent : Colors.black.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -39,10 +39,10 @@ class ConfigurableWidgetRenderer extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 20),
@@ -238,7 +238,7 @@ class ConfigurableWidgetRenderer extends StatelessWidget {
                 width: 140,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                   color: Colors.grey[100],
+                   color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
                    borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -246,7 +246,7 @@ class ConfigurableWidgetRenderer extends StatelessWidget {
                    children: [
                        Text(
                            "${e.fecha.day}/${e.fecha.month}",
-                           style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                           style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 12),
                        ),
                        const SizedBox(height: 8),
                        Text(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 
 /// Skeleton loader card for groups list
 /// Shows animated shimmer effect while groups are loading
@@ -30,6 +31,7 @@ class _GroupSkeletonCardState extends State<GroupSkeletonCard>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return AnimatedBuilder(
       animation: _shimmerController,
       builder: (context, child) {
@@ -37,16 +39,20 @@ class _GroupSkeletonCardState extends State<GroupSkeletonCard>
           width: 160,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: isDark
+                    ? Colors.transparent
+                    : Colors.black.withOpacity(0.04),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               )
             ],
-            border: Border.all(color: Colors.grey.shade100),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,30 +60,30 @@ class _GroupSkeletonCardState extends State<GroupSkeletonCard>
               // Icon and Name skeleton
               Row(
                 children: [
-                  _buildShimmerBox(36, 36, isCircle: true),
+                  _buildShimmerBox(context, 36, 36, isCircle: true),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: _buildShimmerBox(80, 12, borderRadius: 6),
+                    child: _buildShimmerBox(context, 80, 12, borderRadius: 6),
                   ),
                 ],
               ),
-              
+
               const Spacer(),
-              
+
               // Leader section skeleton
-              _buildShimmerBox(60, 8, borderRadius: 4),
+              _buildShimmerBox(context, 60, 8, borderRadius: 4),
               const SizedBox(height: 4),
               Row(
                 children: [
-                  _buildShimmerBox(24, 24, isCircle: true),
+                  _buildShimmerBox(context, 24, 24, isCircle: true),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildShimmerBox(70, 10, borderRadius: 4),
+                        _buildShimmerBox(context, 70, 10, borderRadius: 4),
                         const SizedBox(height: 2),
-                        _buildShimmerBox(40, 8, borderRadius: 4),
+                        _buildShimmerBox(context, 40, 8, borderRadius: 4),
                       ],
                     ),
                   ),
@@ -87,7 +93,7 @@ class _GroupSkeletonCardState extends State<GroupSkeletonCard>
               const Spacer(),
 
               // Button skeleton
-              _buildShimmerBox(double.infinity, 28, borderRadius: 8),
+              _buildShimmerBox(context, double.infinity, 28, borderRadius: 8),
             ],
           ),
         );
@@ -95,13 +101,14 @@ class _GroupSkeletonCardState extends State<GroupSkeletonCard>
     );
   }
 
-  Widget _buildShimmerBox(double width, double height,
+  Widget _buildShimmerBox(BuildContext context, double width, double height,
       {bool isCircle = false, double borderRadius = 0}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final shimmerGradient = LinearGradient(
       colors: [
-        Colors.grey.shade200,
-        Colors.grey.shade100,
-        Colors.grey.shade200,
+        isDark ? AppColors.skeletonBaseDark  : AppColors.skeletonBaseLight,
+        isDark ? AppColors.skeletonShineDark : AppColors.skeletonShineLight,
+        isDark ? AppColors.skeletonBaseDark  : AppColors.skeletonBaseLight,
       ],
       stops: const [0.0, 0.5, 1.0],
       begin: Alignment(-1.0 - _shimmerController.value * 2, 0.0),
@@ -119,4 +126,3 @@ class _GroupSkeletonCardState extends State<GroupSkeletonCard>
     );
   }
 }
-

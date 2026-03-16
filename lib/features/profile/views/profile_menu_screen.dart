@@ -229,7 +229,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
       child: Text(
         title.toUpperCase(),
         style: TextStyle(
-          color: Colors.grey.shade500,
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
           fontSize: 12,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
@@ -245,19 +245,20 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
     required VoidCallback onTap,
     bool isDestructive = false,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: isDark ? Colors.transparent : Colors.black.withOpacity(0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.5)),
       ),
       child: Material(
         color: Colors.transparent,
@@ -286,7 +287,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: isDestructive ? Colors.red : Colors.black87,
+                      color: isDestructive ? Colors.red : Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -294,7 +295,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                 Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 16,
-                  color: Colors.grey.shade400,
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
                 ),
               ],
             ),
@@ -305,19 +306,20 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
   }
 
   Widget _buildCardStyleSetting() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: isDark ? Colors.transparent : Colors.black.withOpacity(0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.5)),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -332,13 +334,13 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
               child: const Icon(Icons.style_rounded, color: Tema.brandPurple, size: 22),
             ),
             const SizedBox(width: 16),
-            const Expanded(
+            Expanded(
               child: Text(
                 'Estilo de tarjetas',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ),
@@ -346,7 +348,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
             Container(
               padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
@@ -381,7 +383,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : Colors.grey.shade600,
+            color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
           ),
         ),
       ),
@@ -395,19 +397,11 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB), // Fondo ligeramente gris
       body: SafeArea(
         child: Column(
           children: <Widget>[
             // HEADER
             AppHeader(
-              onTapLeft: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  AppRoute(page: const HomeView()),
-                  (route) => false,
-                );
-              },
               onTapRight: () {},
             ),
 
@@ -429,8 +423,8 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                                 ? "Perfil"
                                 : _nombreUsuario,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.black87,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                             ),
@@ -438,7 +432,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                            const SizedBox(height: 4),
                            Text(
                              "Gestiona tu cuenta y actividad",
-                             style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+                             style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 13),
                            )
                         ],
                       ),

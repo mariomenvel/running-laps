@@ -56,16 +56,16 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
+      builder: (ctx) => Container(
          height: 350,
-         decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24))
+         decoration: BoxDecoration(
+            color: Theme.of(ctx).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24))
          ),
          child: Column(
            children: [
              const SizedBox(height: 12),
-             Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+             Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.2), borderRadius: BorderRadius.circular(2))),
              const Padding(padding: EdgeInsets.all(16), child: Text("Distancia (m)", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
              Expanded(
                child: CupertinoPicker(
@@ -90,16 +90,16 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
+      builder: (ctx) => Container(
          height: 350,
-         decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24))
+         decoration: BoxDecoration(
+            color: Theme.of(ctx).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24))
          ),
          child: Column(
            children: [
              const SizedBox(height: 12),
-             Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+             Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.2), borderRadius: BorderRadius.circular(2))),
              const Padding(padding: EdgeInsets.all(16), child: Text("Descanso", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
              Expanded(
                child: CupertinoPicker(
@@ -144,13 +144,15 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black12,
+            color: isDark ? Colors.transparent : Colors.black12,
             blurRadius: 20,
             spreadRadius: 5,
           ),
@@ -169,7 +171,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
               width: 48,
               height: 5,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: cs.onSurface.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(2.5),
               ),
             ),
@@ -183,10 +185,10 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
               children: [
                 Text(
                   widget.initialBlock == null ? "Nueva Serie" : "Editar Serie",
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: cs.onSurface,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -220,9 +222,9 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                 // Alarm Toggle & Config
                 Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF9FAFB),
+                    color: cs.onSurface.withOpacity(0.04),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(color: cs.outline.withOpacity(0.3)),
                   ),
                   child: Column(
                     children: [
@@ -233,12 +235,12 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                         secondary: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: _alertsEnabled ? Tema.brandPurple.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                            color: _alertsEnabled ? Tema.brandPurple.withOpacity(0.1) : cs.onSurface.withOpacity(0.08),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             _alertsEnabled ? Icons.notifications_active_rounded : Icons.notifications_none_rounded,
-                            color: _alertsEnabled ? Tema.brandPurple : Colors.grey,
+                            color: _alertsEnabled ? Tema.brandPurple : cs.onSurface.withOpacity(0.4),
                             size: 20,
                           ),
                         ),
@@ -257,7 +259,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                               _alerts.mode == 'time' 
                                 ? 'Frecuencia: Cada ${_formatMinSec((_alerts.timeMin * 60 + _alerts.timeSec).round())}'
                                 : 'Basado en Ritmo de Carrera',
-                              style: TextStyle(fontSize: 14, color: Colors.grey.shade700, fontWeight: FontWeight.w500),
+                              style: TextStyle(fontSize: 14, color: cs.onSurface.withOpacity(0.6), fontWeight: FontWeight.w500),
                             ),
                           ),
                           trailing: Container(
@@ -320,12 +322,14 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
       child: Container(
         height: 110,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.transparent
+                  : Colors.black.withOpacity(0.03),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -337,12 +341,12 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, size: 14, color: Colors.grey.shade500),
+                Icon(icon, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
                 const SizedBox(width: 6),
                 Text(
                   label.toUpperCase(),
                   style: TextStyle(
-                    color: Colors.grey.shade500,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                     fontWeight: FontWeight.bold,
                     fontSize: 10,
                     letterSpacing: 0.5,
@@ -353,10 +357,10 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
             const SizedBox(height: 10),
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],

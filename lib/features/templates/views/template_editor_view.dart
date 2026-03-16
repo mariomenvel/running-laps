@@ -179,9 +179,9 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
             context: context,
             backgroundColor: Colors.transparent,
             builder: (ctx) => Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: Theme.of(ctx).colorScheme.surface,
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(32),
                   topRight: Radius.circular(32),
                 ),
@@ -194,7 +194,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
+                      color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -208,15 +208,15 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                     child: const Icon(Icons.info_outline_rounded, color: Tema.brandPurple, size: 40),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     "Confirmar cambios",
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.black87),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Theme.of(ctx).colorScheme.onSurface),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     "Has modificado la plantilla. ¿Quieres actualizar la original o usar estos cambios solo para este entrenamiento?",
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
+                    style: TextStyle(fontSize: 15, color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.6)),
                   ),
                   const SizedBox(height: 32),
                   Row(
@@ -230,7 +230,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                           ),
                           child: Text(
                             'Solo esta vez',
-                            style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold),
+                            style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),
@@ -311,9 +311,9 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: Theme.of(ctx).colorScheme.surface,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(32),
             topRight: Radius.circular(32),
           ),
@@ -326,7 +326,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -340,15 +340,15 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
               child: Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700, size: 40),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               "¿Descartar cambios?",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.black87),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Theme.of(ctx).colorScheme.onSurface),
             ),
             const SizedBox(height: 8),
             Text(
               "Tienes cambios sin guardar en esta plantilla. Si sales ahora, se perderán para siempre.",
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 15, color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.6)),
             ),
             const SizedBox(height: 32),
             Row(
@@ -362,7 +362,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                     ),
                     child: Text(
                       'Seguir editando',
-                      style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -414,7 +414,6 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
     final templateColor = Color(_selectedColor);
     
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F3F7),
       body: SafeArea(
         child: Column(
           children: [
@@ -498,12 +497,12 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Text(
+                  Text(
                     "Series del Entrenamiento",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: Colors.black87,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const Spacer(),
@@ -556,7 +555,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                           builder: (BuildContext context, Widget? child) {
                             return Material(
                               elevation: 8,
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.surface,
                               borderRadius: BorderRadius.circular(20),
                               shadowColor: Colors.black.withOpacity(0.3),
                               child: child,
@@ -596,12 +595,12 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               "No hay series añadidas",
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
@@ -610,7 +609,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 15,
-                color: Colors.grey.shade600,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
             const SizedBox(height: 32),
@@ -639,12 +638,14 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white, width: 0),
+          border: Border.all(color: Theme.of(context).colorScheme.surface, width: 0),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.transparent
+                  : Colors.black.withOpacity(0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -653,7 +654,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: Material(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             child: InkWell(
               onTap: () => _editBlock(index),
               child: Padding(
@@ -699,21 +700,21 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                         children: [
                           Text(
                             "${block.value} metros",
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 17,
-                              color: Colors.black87,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              Icon(Icons.timer_outlined, size: 14, color: Colors.grey.shade600),
+                              Icon(Icons.timer_outlined, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                               const SizedBox(width: 4),
                               Text(
                                 "Descanso: ${block.restSeconds}s",
                                 style: TextStyle(
-                                  color: Colors.grey.shade600,
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -761,7 +762,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                         const SizedBox(width: 8),
                         ReorderableDragStartListener(
                           index: index,
-                          child: const Icon(Icons.drag_indicator_rounded, color: Colors.black26),
+                          child: Icon(Icons.drag_indicator_rounded, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.25)),
                         ),
                       ],
                     ),
@@ -796,9 +797,9 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -807,12 +808,12 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   "Color de la Plantilla",
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 IconButton(
@@ -824,7 +825,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
             const SizedBox(height: 8),
             Text(
               "Elige un color para identificar rápidamente este entrenamiento en tu historial.",
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 14),
             ),
             const SizedBox(height: 24),
             Center(
@@ -946,11 +947,15 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: _isPressed ? Colors.grey.shade100 : Colors.white,
+          color: _isPressed
+              ? Theme.of(context).colorScheme.onSurface.withOpacity(0.08)
+              : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(_isPressed ? 0.03 : 0.06),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.transparent
+                  : Colors.black.withOpacity(_isPressed ? 0.03 : 0.06),
               blurRadius: _isPressed ? 4 : 12,
               offset: Offset(0, _isPressed ? 2 : 4),
             ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/data/serie.dart';
 import 'package:running_laps/features/training/data/tag_model.dart';
@@ -104,7 +105,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
           decoration: BoxDecoration(
-            color: widget.isSelected ? Tema.brandPurple.withOpacity(0.05) : Colors.white,
+            color: widget.isSelected ? Tema.brandPurple.withOpacity(0.05) : Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(20.0),
             border: widget.isSelected 
                 ? Border.all(color: Tema.brandPurple, width: 2)
@@ -135,11 +136,11 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                      _buildStatItem(Icons.straighten_rounded, distanciaTexto, 'km', Colors.blue.shade400),
-                     Container(width: 1, height: 24, color: Colors.grey.shade200),
+                     Container(width: 1, height: 24, color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
                      _buildStatItem(Icons.timer_outlined, tiempoTexto, '', Colors.orange.shade400),
-                     Container(width: 1, height: 24, color: Colors.grey.shade200),
+                     Container(width: 1, height: 24, color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
                      _buildStatItem(Icons.speed_rounded, ritmoTexto, '/km', Colors.green.shade400),
-                     Container(width: 1, height: 24, color: Colors.grey.shade200),
+                     Container(width: 1, height: 24, color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
                      _buildStatItem(Icons.bolt_rounded, rpeTexto, 'RPE', Colors.red.shade400),
                   ],
                 ),
@@ -147,7 +148,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
 
               // --- SEPARADOR DISCRETO ---
               if (_expanded)
-                 Divider(height: 1, thickness: 1, color: Colors.grey.shade100),
+                 Divider(height: 1, thickness: 1, color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
 
               // --- DETALLES DESPLEGABLES ---
               AnimatedCrossFade(
@@ -176,8 +177,8 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                      width: double.infinity,
                      padding: const EdgeInsets.symmetric(vertical: 12),
                      decoration: BoxDecoration(
-                       color: Colors.grey.shade50,
-                       border: Border(top: BorderSide(color: Colors.grey.shade100)),
+                       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.03),
+                       border: Border(top: BorderSide(color: Theme.of(context).colorScheme.outline.withOpacity(0.15))),
                        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
                      ),
                      child: Row(
@@ -188,14 +189,14 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                            style: TextStyle(
                              fontSize: 12,
                              fontWeight: FontWeight.w600,
-                             color: Colors.grey.shade600,
+                             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                            ),
                          ),
                          const SizedBox(width: 6),
                          Icon(
                            _expanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
                            size: 18,
-                           color: Colors.grey.shade600,
+                           color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                          ),
                        ],
                      ),
@@ -241,10 +242,10 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                children: [
                  Text(
                    widget.training.titulo,
-                   style: const TextStyle(
+                   style: TextStyle(
                      fontWeight: FontWeight.bold,
                      fontSize: 16,
-                     color: Colors.black87,
+                     color: Theme.of(context).colorScheme.onSurface,
                    ),
                    maxLines: 1,
                    overflow: TextOverflow.ellipsis,
@@ -255,7 +256,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                    style: TextStyle(
                      fontSize: 12,
                      fontWeight: FontWeight.w500,
-                     color: Colors.grey.shade500,
+                     color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                    ),
                  ),
                  // Mostrar etiquetas si existen
@@ -308,7 +309,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
         color: widget.isSelected ? Tema.brandPurple : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: widget.isSelected ? Tema.brandPurple : Colors.grey.shade300,
+          color: widget.isSelected ? Tema.brandPurple : Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
           width: 2,
         ),
       ),
@@ -326,10 +327,10 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
           children: [
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
                 letterSpacing: -0.5,
               ),
             ),
@@ -342,7 +343,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade500,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                   ),
                              ),
                ),
@@ -361,8 +362,8 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
         popupMenuTheme: PopupMenuThemeData(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 6,
-          color: Colors.white,
-          surfaceTintColor: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
+          surfaceTintColor: Theme.of(context).colorScheme.surface,
         ),
       ),
       child: PopupMenuButton<String>(
@@ -372,7 +373,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
             color: Colors.transparent,
             borderRadius: BorderRadius.circular(50),
           ),
-          child: Icon(Icons.more_horiz_rounded, color: Colors.grey.shade400),
+          child: Icon(Icons.more_horiz_rounded, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
         ),
         splashRadius: 24,
         tooltip: 'Opciones',
@@ -468,12 +469,12 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                   child: const Icon(Icons.label_rounded, size: 18, color: Tema.brandPurple),
                 ),
                 const SizedBox(width: 12),
-                const Text(
+                Text(
                   'Editar etiquetas',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ],
@@ -495,7 +496,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                   child: const Icon(Icons.picture_as_pdf_rounded, size: 18, color: Colors.red),
                 ),
                 const SizedBox(width: 12),
-                const Column(
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -504,14 +505,14 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     Text(
                       'Guardar reporte',
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.grey
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                       ),
                     ),
                   ],
@@ -526,17 +527,17 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
 
   Widget _buildExpandedContent() {
     return Container(
-      color: Colors.grey.shade50,
+      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.02),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             "Detalle de Series",
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,
-              color: Colors.black54,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
               letterSpacing: 0.5,
             ),
           ),
@@ -594,13 +595,13 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.timer_off_outlined, size: 14, color: Colors.grey.shade400),
+          Icon(Icons.timer_off_outlined, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
           const SizedBox(width: 4),
           Text(
             "Descanso: ${_formatSeconds(seconds)}",
             style: TextStyle(
-              fontSize: 12, 
-              color: Colors.grey.shade500, 
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
               fontStyle: FontStyle.italic
             ),
           ),
@@ -625,10 +626,12 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
             ),
             child: Text(
               num.toString(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
-                color: Tema.brandPurple,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.brandPurpleLight
+                    : Tema.brandPurple,
               ),
             ),
           ),
@@ -639,10 +642,10 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                 _buildSerieDetail('${serie.distanciaM}m', Icons.straighten, Colors.grey.shade800),
-                 _buildSerieDetail(_formatSeconds(serie.tiempoSec.round()), Icons.timer_outlined, Colors.grey.shade800),
-                 _buildSerieDetail(serie.ritmoTexto(), Icons.speed, Colors.grey.shade800),
-                 _buildSerieDetail('RPE ${serie.rpe}', Icons.bolt, Colors.grey.shade600),
+                 _buildSerieDetail('${serie.distanciaM}m', Icons.straighten, Theme.of(context).colorScheme.onSurface),
+                 _buildSerieDetail(_formatSeconds(serie.tiempoSec.round()), Icons.timer_outlined, Theme.of(context).colorScheme.onSurface),
+                 _buildSerieDetail(serie.ritmoTexto(), Icons.speed, Theme.of(context).colorScheme.onSurface),
+                 _buildSerieDetail('RPE ${serie.rpe}', Icons.bolt, Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
               ],
             ),
           )

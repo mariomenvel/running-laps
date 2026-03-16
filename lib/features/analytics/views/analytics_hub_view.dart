@@ -41,10 +41,8 @@ class _AnalyticsHubViewState extends State<AnalyticsHubView> with SingleTickerPr
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F8),
       appBar: AppBar(
         title: const Text('Analytics Hub', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
         actions: [
@@ -59,7 +57,7 @@ class _AnalyticsHubViewState extends State<AnalyticsHubView> with SingleTickerPr
           controller: _tabController,
           isScrollable: true, // Allow scrolling if needed on small screens
           labelColor: Tema.brandPurple,
-          unselectedLabelColor: Colors.grey,
+          unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
           indicatorColor: Tema.brandPurple,
           indicatorWeight: 3,
           labelStyle: const TextStyle(fontWeight: FontWeight.bold),
@@ -94,21 +92,23 @@ class _AnalyticsHubViewState extends State<AnalyticsHubView> with SingleTickerPr
 
   Widget _buildPlaceholderTab(String title) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.bar_chart, size: 48, color: Colors.grey),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: const TextStyle(fontSize: 18, color: Colors.grey, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            "Se implementará en la siguiente fase",
-            style: TextStyle(color: Colors.grey),
-          ),
-        ],
+      child: Builder(
+        builder: (context) => Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.bar_chart, size: 48, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: TextStyle(fontSize: 18, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Se implementará en la siguiente fase",
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+            ),
+          ],
+        ),
       ),
     );
   }

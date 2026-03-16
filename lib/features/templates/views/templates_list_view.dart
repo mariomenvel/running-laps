@@ -39,9 +39,9 @@ class _TemplatesListViewState extends State<TemplatesListView> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(32),
             topRight: Radius.circular(32),
           ),
@@ -54,7 +54,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -73,7 +73,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w900,
-                color: Colors.grey.shade900,
+                color: Theme.of(context).colorScheme.onSurface,
                 letterSpacing: -0.5,
               ),
             ),
@@ -83,7 +83,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey.shade600,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                 height: 1.4,
               ),
             ),
@@ -99,7 +99,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                     ),
                     child: Text(
                       'Cancelar',
-                      style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                   ),
                 ),
@@ -186,12 +186,10 @@ class _TemplatesListViewState extends State<TemplatesListView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F3F7),
       body: SafeArea(
         child: Column(
           children: [
             AppHeader(
-              onTapLeft: () => Navigator.of(context).pop(),
               onTapRight: () {
                 Navigator.push(
                   context,
@@ -224,13 +222,13 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                             const SizedBox(height: 16),
                             Text(
                               'Error al cargar plantillas',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey.shade800),
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
                             ),
                             const SizedBox(height: 8),
                             Text(
                               '${snapshot.error}',
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 14),
                             ),
                             const SizedBox(height: 24),
                             ElevatedButton(
@@ -263,12 +261,12 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                             child: Icon(Icons.description_outlined, size: 80, color: Tema.brandPurple.withOpacity(0.4)),
                           ),
                           const SizedBox(height: 32),
-                          const Text(
+                          Text(
                             'No tienes plantillas guardadas',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -277,7 +275,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 15,
-                              color: Colors.grey.shade600,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                               height: 1.4,
                             ),
                           ),
@@ -309,10 +307,12 @@ class _TemplatesListViewState extends State<TemplatesListView> {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),
@@ -371,18 +371,20 @@ class _TemplatesListViewState extends State<TemplatesListView> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.black.withOpacity(0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
-        border: widget.isSelectionMode 
-            ? Border.all(color: templateColor.withOpacity(0.4), width: 1.5) 
-            : Border.all(color: Colors.white, width: 0),
+        border: widget.isSelectionMode
+            ? Border.all(color: templateColor.withOpacity(0.4), width: 1.5)
+            : Border.all(color: Theme.of(context).colorScheme.surface, width: 0),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
@@ -423,10 +425,10 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                       children: [
                         Text(
                           template.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -437,20 +439,20 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.grey.shade700,
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                               ),
                             ),
                             Container(
                               margin: const EdgeInsets.symmetric(horizontal: 8),
                               width: 3, height: 3,
-                              decoration: BoxDecoration(color: Colors.grey.shade400, shape: BoxShape.circle),
+                              decoration: BoxDecoration(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35), shape: BoxShape.circle),
                             ),
                             Text(
                               'Total: ${totalDist}m',
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.grey.shade600,
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                               ),
                             ),
                           ],
@@ -470,7 +472,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                       ),
                     )
                   else
-                    const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.black26),
+                    Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.25)),
                 ],
               ),
             ),

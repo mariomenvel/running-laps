@@ -85,14 +85,16 @@ class AnalyticsRangeSelector extends StatelessWidget {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black12,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.transparent
+                  : Colors.black.withOpacity(0.08),
               blurRadius: 20,
-              offset: Offset(0, -5),
+              offset: const Offset(0, -5),
             ),
           ],
         ),
@@ -106,17 +108,17 @@ class AnalyticsRangeSelector extends StatelessWidget {
                height: 4,
                margin: const EdgeInsets.only(bottom: 20),
                decoration: BoxDecoration(
-                 color: Colors.grey[300],
+                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
                  borderRadius: BorderRadius.circular(2),
                ),
              ),
-             
-             const Text(
+
+             Text(
                "Seleccionar Periodo",
                style: TextStyle(
-                 fontSize: 20, 
+                 fontSize: 20,
                  fontWeight: FontWeight.bold,
-                 color: Colors.black87,
+                 color: Theme.of(context).colorScheme.onSurface,
                ),
              ),
              const SizedBox(height: 24),
@@ -137,7 +139,7 @@ class AnalyticsRangeSelector extends StatelessWidget {
              ListTile(
                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-               tileColor: Colors.grey[50],
+               tileColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
                leading: Container(
                  padding: const EdgeInsets.all(8),
                  decoration: BoxDecoration(
@@ -150,7 +152,7 @@ class AnalyticsRangeSelector extends StatelessWidget {
                  "Rango Personalizado",
                  style: TextStyle(fontWeight: FontWeight.w600),
                ),
-               trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+               trailing: Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
                onTap: () async {
                  Navigator.pop(context);
                  final range = await showModalBottomSheet<DateTimeRange>(
@@ -182,7 +184,7 @@ class AnalyticsRangeSelector extends StatelessWidget {
                  style: TextButton.styleFrom(
                    padding: const EdgeInsets.symmetric(vertical: 16),
                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                   foregroundColor: Colors.grey[600],
+                   foregroundColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                  ),
                  child: const Text("Cancelar", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                ),
@@ -209,13 +211,13 @@ class AnalyticsRangeSelector extends StatelessWidget {
             decoration: BoxDecoration(
               color: isSelected ? Tema.brandPurple.withOpacity(0.08) : Colors.transparent,
               borderRadius: BorderRadius.circular(16),
-              border: isSelected ? Border.all(color: Tema.brandPurple, width: 1.5) : Border.all(color: Colors.grey.withOpacity(0.2)),
+              border: isSelected ? Border.all(color: Tema.brandPurple, width: 1.5) : Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
             ),
             child: Row(
               children: [
                 Icon(
                   icon,
-                  color: isSelected ? Tema.brandPurple : Colors.grey[600],
+                  color: isSelected ? Tema.brandPurple : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                   size: 22,
                 ),
                 const SizedBox(width: 16),
@@ -225,7 +227,7 @@ class AnalyticsRangeSelector extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                      color: isSelected ? Tema.brandPurple : Colors.black87,
+                      color: isSelected ? Tema.brandPurple : Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ),

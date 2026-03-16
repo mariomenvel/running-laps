@@ -29,11 +29,11 @@ class DistributionTab extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildTrainingBalanceSection(data),
+              _buildTrainingBalanceSection(context, data),
               const SizedBox(height: 32),
-              _buildConsistencySection(data),
+              _buildConsistencySection(context, data),
               const SizedBox(height: 32),
-              _buildNextMilestoneSection(data),
+              _buildNextMilestoneSection(context, data),
               const SizedBox(height: 40),
             ],
           ),
@@ -43,16 +43,16 @@ class DistributionTab extends StatelessWidget {
   }
 
   /// Sección de balance de entrenamiento
-  Widget _buildTrainingBalanceSection(List<Entrenamiento> data) {
+  Widget _buildTrainingBalanceSection(BuildContext context, List<Entrenamiento> data) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Balance de Entrenamiento',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: Theme.of(context).colorScheme.onSurface,
             letterSpacing: -0.5,
           ),
         ),
@@ -60,13 +60,9 @@ class DistributionTab extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.white, Colors.purple.shade50.withOpacity(0.3)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
             boxShadow: [
               BoxShadow(
                 color: Tema.brandPurple.withOpacity(0.1),
@@ -75,7 +71,9 @@ class DistributionTab extends StatelessWidget {
                 spreadRadius: -5,
               ),
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.transparent
+                    : Colors.black.withOpacity(0.05),
                 blurRadius: 15,
                 offset: const Offset(0, 5),
               ),
@@ -88,20 +86,21 @@ class DistributionTab extends StatelessWidget {
   }
 
   /// Sección de consistencia
-  Widget _buildConsistencySection(List<Entrenamiento> data) {
+  Widget _buildConsistencySection(BuildContext context, List<Entrenamiento> data) {
     final score = _calculateConsistencyScore(data);
     final color = _getConsistencyColor(score);
     final label = _getConsistencyLabel(score);
-    
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Consistencia',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: onSurface,
             letterSpacing: -0.5,
           ),
         ),
@@ -110,13 +109,9 @@ class DistributionTab extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.white, color.withOpacity(0.05)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
             boxShadow: [
               BoxShadow(
                 color: color.withOpacity(0.1),
@@ -159,7 +154,7 @@ class DistributionTab extends StatelessWidget {
                         value: 1.0,
                         strokeWidth: 14,
                         strokeCap: StrokeCap.round,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.grey.shade100),
+                        valueColor: AlwaysStoppedAnimation<Color>(onSurface.withOpacity(0.08)),
                       ),
                     ),
                     // Progreso real
@@ -190,7 +185,7 @@ class DistributionTab extends StatelessWidget {
                           'PUNTOS',
                           style: TextStyle(
                             fontSize: 10,
-                            color: Colors.grey.shade500,
+                            color: onSurface.withOpacity(0.5),
                             fontWeight: FontWeight.w800,
                             letterSpacing: 2,
                           ),
@@ -225,7 +220,7 @@ class DistributionTab extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey.shade700,
+                  color: onSurface.withOpacity(0.7),
                   fontWeight: FontWeight.w500,
                   height: 1.4,
                 ),
@@ -238,20 +233,21 @@ class DistributionTab extends StatelessWidget {
   }
 
   /// Sección de próximo hito
-  Widget _buildNextMilestoneSection(List<Entrenamiento> data) {
+  Widget _buildNextMilestoneSection(BuildContext context, List<Entrenamiento> data) {
     final totalKm = data.fold<double>(0, (sum, e) => sum + (e.distanciaTotalM() / 1000));
     final nextMilestone = ((totalKm ~/ 50) + 1) * 50;
     final remaining = nextMilestone - totalKm;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Próximo Hito',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: onSurface,
             letterSpacing: -0.5,
           ),
         ),
@@ -259,13 +255,9 @@ class DistributionTab extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(28),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.white, Colors.amber.shade50.withOpacity(0.3)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
             boxShadow: [
               BoxShadow(
                 color: Colors.amber.withOpacity(0.1),
@@ -274,7 +266,9 @@ class DistributionTab extends StatelessWidget {
                 spreadRadius: -5,
               ),
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.transparent
+                    : Colors.black.withOpacity(0.05),
                 blurRadius: 15,
                 offset: const Offset(0, 5),
               ),
@@ -314,14 +308,14 @@ class DistributionTab extends StatelessWidget {
                 'para alcanzar $nextMilestone km',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey.shade700,
+                  color: onSurface.withOpacity(0.7),
                   fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 20),
               LinearProgressIndicator(
                 value: totalKm / nextMilestone,
-                backgroundColor: Colors.grey.shade200,
+                backgroundColor: onSurface.withOpacity(0.12),
                 valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber),
                 minHeight: 8,
                 borderRadius: BorderRadius.circular(4),
@@ -472,7 +466,7 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w800,
-                            color: Colors.grey.shade500,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                             letterSpacing: 1.2,
                           ),
                         ),
@@ -522,7 +516,7 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: isTouched ? FontWeight.bold : FontWeight.w600,
-                                color: isTouched ? color : Colors.black87,
+                                color: isTouched ? color : Theme.of(context).colorScheme.onSurface,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -531,7 +525,7 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
                             '$percent%',
                             style: TextStyle(
                               fontSize: 12,
-                              color: isTouched ? color : Colors.grey.shade600,
+                              color: isTouched ? color : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                               fontWeight: isTouched ? FontWeight.w800 : FontWeight.w500,
                             ),
                           ),
@@ -559,7 +553,7 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
@@ -580,7 +574,7 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(width: 6),

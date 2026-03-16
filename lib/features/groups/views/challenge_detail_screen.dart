@@ -67,7 +67,6 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F8),
       body: SafeArea(
         child: Column(
           children: [
@@ -260,11 +259,13 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
           return Container(
             padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.transparent
+                      : Colors.black.withOpacity(0.05),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -275,13 +276,13 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                 Icon(
                   Icons.person_add_rounded,
                   size: 48,
-                  color: Colors.grey.shade300,
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'No estás participando',
                   style: TextStyle(
-                    color: Colors.grey.shade600,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -290,7 +291,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                 Text(
                   'Únete al reto desde la pantalla del grupo',
                   style: TextStyle(
-                    color: Colors.grey.shade400,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
                     fontSize: 13,
                   ),
                 ),
@@ -305,7 +306,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
         return Container(
           padding: const EdgeInsets.all(28),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
@@ -338,7 +339,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                           child: CircularProgressIndicator(
                             value: 1.0,
                             strokeWidth: 14,
-                            color: Colors.grey.shade100,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
                             backgroundColor: Colors.transparent,
                           ),
                         ),
@@ -404,12 +405,12 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                   Container(
                     width: 1,
                     height: 45,
-                    color: Colors.grey.shade200,
+                    color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
                   ),
                   _buildStatColumn(
                     "META",
                     _formatGoal(challenge.goal),
-                    Colors.grey.shade700,
+                    Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                   ),
                 ],
               ),
@@ -471,7 +472,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
           label,
           style: TextStyle(
             fontSize: 11,
-            color: Colors.grey.shade500,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
             fontWeight: FontWeight.w600,
             letterSpacing: 0.8,
           ),
@@ -496,12 +497,12 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
           ),
         ),
         const SizedBox(width: 14),
-        const Text(
+        Text(
           'Ranking',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
-            color: Colors.black87,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],
@@ -516,16 +517,16 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
           return Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Column(
               children: [
-                Icon(Icons.people_outline, size: 48, color: Colors.grey.shade300),
+                Icon(Icons.people_outline, size: 48, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2)),
                 const SizedBox(height: 12),
                 Text(
                   'Sin participantes',
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 15),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 15),
                 ),
               ],
             ),
@@ -580,7 +581,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
       rankWidget = Text(
         '$rank',
         style: TextStyle(
-          color: Colors.grey.shade600,
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
           fontWeight: FontWeight.bold,
           fontSize: 16,
         ),
@@ -591,19 +592,21 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: isMe ? gradientColors.first.withOpacity(0.08) : Colors.white,
+        color: isMe ? gradientColors.first.withOpacity(0.08) : Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: isMe
               ? gradientColors.first.withOpacity(0.3)
-              : Colors.grey.shade100,
+              : Theme.of(context).colorScheme.outline.withOpacity(0.1),
           width: isMe ? 2 : 1,
         ),
         boxShadow: [
           BoxShadow(
             color: isMe
                 ? gradientColors.first.withOpacity(0.1)
-                : Colors.black.withOpacity(0.03),
+                : Theme.of(context).brightness == Brightness.dark
+                    ? Colors.transparent
+                    : Colors.black.withOpacity(0.03),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -635,7 +638,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                 Text(
                   isMe ? 'Tú' : (participant.displayName ?? 'Usuario ${participant.uid.substring(0, 4)}'),
                   style: TextStyle(
-                    color: Colors.black87,
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontWeight: isMe ? FontWeight.w800 : FontWeight.w600,
                     fontSize: 15,
                   ),
@@ -658,16 +661,16 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
               gradient: isMe
                   ? LinearGradient(colors: gradientColors)
                   : null,
-              color: isMe ? null : Colors.grey.shade50,
+              color: isMe ? null : Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
               borderRadius: BorderRadius.circular(12),
               border: isMe
                   ? null
-                  : Border.all(color: Colors.grey.shade200),
+                  : Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
             ),
             child: Text(
               _formatScore(participant.score, challenge.metric),
               style: TextStyle(
-                color: isMe ? Colors.white : Colors.black87,
+                color: isMe ? Colors.white : Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
               ),
@@ -727,11 +730,13 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: _isPressed ? Colors.grey.shade100 : Colors.white,
+          color: _isPressed ? Theme.of(context).colorScheme.onSurface.withOpacity(0.08) : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(_isPressed ? 0.03 : 0.06),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.transparent
+                  : Colors.black.withOpacity(_isPressed ? 0.03 : 0.06),
               blurRadius: _isPressed ? 4 : 12,
               offset: Offset(0, _isPressed ? 2 : 4),
             ),

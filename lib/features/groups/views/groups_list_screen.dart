@@ -59,14 +59,12 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F8),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // 1. Header Premium
             AppHeader(
-              onTapLeft: () => Navigator.pop(context),
               onTapRight: () {
                 Navigator.push(
                   context,
@@ -143,7 +141,7 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
                                   child: Text(
                                     "Acepta una invitación o crea un grupo",
                                     style: TextStyle(
-                                      color: Colors.grey.shade400,
+                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
                                       fontStyle: FontStyle.italic,
                                     ),
                                   ),
@@ -182,21 +180,24 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
         ),
       ),
       
-      floatingActionButton: Container(
-        height: 56,
-        width: 56,
-        margin: const EdgeInsets.only(bottom: 130, right: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
+      floatingActionButton: Builder(
+        builder: (context) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          return Container(
+            height: 56,
+            width: 56,
+            margin: const EdgeInsets.only(bottom: 130, right: 8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: isDark ? Colors.transparent : Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
-          ],
-        ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
@@ -217,8 +218,10 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
             ),
           ),
         ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      );
+      },
+    ),
+    floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
@@ -227,11 +230,11 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.login_rounded, size: 64, color: Colors.grey.shade300),
+          Icon(Icons.login_rounded, size: 64, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
           const SizedBox(height: 16),
           Text(
             'Inicia sesión para ver tus grupos',
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 16),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 16),
           ),
         ],
       ),
@@ -239,6 +242,7 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
   }
 
   Widget _buildLoadingState() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SkeletonShimmer(
       builder: (sv) => ListView.builder(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 120),
@@ -248,10 +252,14 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
           child: Container(
             height: 108,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(28),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, 6)),
+                BoxShadow(
+                  color: isDark ? Colors.transparent : Colors.black.withOpacity(0.04),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
               ],
             ),
             padding: const EdgeInsets.all(20),
@@ -370,7 +378,7 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
           fontSize: 12,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
-          color: Colors.grey.shade500,
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
         ),
       ),
     );
@@ -390,9 +398,9 @@ class _CreateGroupModal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(32),
           topRight: Radius.circular(32),
         ),
@@ -413,7 +421,7 @@ class _CreateGroupModal extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: Theme.of(context).colorScheme.outline,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -468,9 +476,9 @@ class _CreateGroupModal extends StatelessWidget {
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             decoration: InputDecoration(
               hintText: "Ej. Corredores Nocturnos",
-              hintStyle: TextStyle(color: Colors.grey.shade400),
+              hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
               filled: true,
-              fillColor: Colors.grey.shade50,
+              fillColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide: BorderSide.none,
@@ -485,7 +493,7 @@ class _CreateGroupModal extends StatelessWidget {
               ),
               prefixIcon: Padding(
                 padding: const EdgeInsets.only(left: 16, right: 8),
-                child: Icon(Icons.edit_rounded, color: Colors.grey.shade400),
+                child: Icon(Icons.edit_rounded, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
               ),
             ),
           ),
@@ -624,7 +632,7 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
             scale: _scaleAnimation,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
@@ -706,10 +714,10 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
                                   group.name,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w800,
-                                    color: Colors.black87,
+                                    color: Theme.of(context).colorScheme.onSurface,
                                     letterSpacing: -0.5,
                                   ),
                                 ),
@@ -743,13 +751,13 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               Icons.arrow_forward_ios_rounded,
                               size: 14,
-                              color: Colors.grey.shade400,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
                             ),
                           ),
                         ],
@@ -769,7 +777,7 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
     return Container(
       height: 108,
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(28),
       ),
       child: const Center(
@@ -846,7 +854,7 @@ class _InvitationCardState extends State<_InvitationCard> {
           padding: const EdgeInsets.all(16),
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Tema.brandPurple.withOpacity(0.3), width: 1.5),
             boxShadow: [
@@ -877,7 +885,7 @@ class _InvitationCardState extends State<_InvitationCard> {
                       children: [
                         Text(
                           "Te han invitado a unirte a",
-                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                         ),
                         Text(
                           groupName,

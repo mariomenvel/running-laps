@@ -50,13 +50,13 @@ class KpiCardWithDelta extends StatelessWidget {
 
         final Color titleColor = coloredBackground
             ? Colors.white.withOpacity(0.85)
-            : Colors.blueGrey.shade700;
+            : Theme.of(context).colorScheme.onSurface;
         final Color valueColor = coloredBackground
             ? Colors.white
-            : Colors.black.withOpacity(0.75);
+            : Theme.of(context).colorScheme.onSurface.withOpacity(0.85);
         final Color unitColor = coloredBackground
             ? Colors.white.withOpacity(0.75)
-            : Colors.blueGrey.shade400;
+            : Theme.of(context).colorScheme.onSurface.withOpacity(0.5);
 
         return GestureDetector(
           onTap: onTap,
@@ -78,13 +78,15 @@ class KpiCardWithDelta extends StatelessWidget {
                     ],
                   )
                 : BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(24),
-                    boxShadow: const [
+                    boxShadow: [
                       BoxShadow(
-                        color: Color(0x14000000), // rgba(0,0,0,0.08)
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.transparent
+                            : const Color(0x14000000),
                         blurRadius: 8,
-                        offset: Offset(0, 2),
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),

@@ -18,18 +18,13 @@ class WorkoutPatternDetailView extends StatelessWidget {
     final title = pattern.patternKey;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7),
       appBar: AppBar(
         title: Text(title, overflow: TextOverflow.ellipsis),
-        backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: Tema.brandPurple),
           onPressed: () => Navigator.pop(context),
-        ),
-        titleTextStyle: const TextStyle(
-             color: Colors.black, fontSize: 16, fontWeight: FontWeight.w600
         ),
       ),
       body: SingleChildScrollView(
@@ -39,11 +34,11 @@ class WorkoutPatternDetailView extends StatelessWidget {
             // KPI Header
             Row(
               children: [
-                Expanded(child: _buildKpiCard("Ritmo Medio", pattern.averagePaceFormatted, Icons.speed, Colors.blue)),
+                Expanded(child: _buildKpiCard(context, "Ritmo Medio", pattern.averagePaceFormatted, Icons.speed, Colors.blue)),
                 const SizedBox(width: 12),
-                Expanded(child: _buildKpiCard("Tiempo Medio", pattern.averageTotalTimeFormatted, Icons.timer, Colors.green)),
+                Expanded(child: _buildKpiCard(context, "Tiempo Medio", pattern.averageTotalTimeFormatted, Icons.timer, Colors.green)),
                 const SizedBox(width: 12),
-                Expanded(child: _buildKpiCard("Sesiones", "${pattern.count}", Icons.calendar_today, Colors.orange)),
+                Expanded(child: _buildKpiCard(context, "Sesiones", "${pattern.count}", Icons.calendar_today, Colors.orange)),
               ],
             ),
             
@@ -53,7 +48,7 @@ class WorkoutPatternDetailView extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Column(
@@ -72,9 +67,9 @@ class WorkoutPatternDetailView extends StatelessWidget {
             const SizedBox(height: 24),
 
             // History List
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
-              child: Text("Sesiones Realizadas", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.grey)),
+              child: Text("Sesiones Realizadas", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
             ),
             const SizedBox(height: 12),
             
@@ -85,7 +80,7 @@ class WorkoutPatternDetailView extends StatelessWidget {
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final instance = sortedInstances[sortedInstances.length - 1 - index];
-                return _buildHistoryItem(instance);
+                return _buildHistoryItem(context, instance);
               },
             ),
           ],
@@ -94,14 +89,20 @@ class WorkoutPatternDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildKpiCard(String title, String value, IconData icon, Color color) {
+  Widget _buildKpiCard(BuildContext context, String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
@@ -110,13 +111,13 @@ class WorkoutPatternDetailView extends StatelessWidget {
           const SizedBox(height: 8),
           Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
           const SizedBox(height: 4),
-          Text(title, style: TextStyle(color: Colors.grey.shade500, fontSize: 11), textAlign: TextAlign.center),
+          Text(title, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 11), textAlign: TextAlign.center),
         ],
       ),
     );
   }
 
-  Widget _buildHistoryItem(WorkoutInstance instance) {
+  Widget _buildHistoryItem(BuildContext context, WorkoutInstance instance) {
     // Format pace
     final paceSec = instance.averagePace.round();
     final m = paceSec ~/ 60;
@@ -126,7 +127,7 @@ class WorkoutPatternDetailView extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -137,10 +138,10 @@ class WorkoutPatternDetailView extends StatelessWidget {
                Container(
                  padding: const EdgeInsets.all(8),
                  decoration: BoxDecoration(
-                   color: Colors.grey.shade100,
+                   color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
                    shape: BoxShape.circle,
                  ),
-                 child: Icon(Icons.fitness_center, color: Colors.grey.shade600, size: 16),
+                 child: Icon(Icons.fitness_center, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), size: 16),
                ),
                const SizedBox(width: 12),
                Column(
@@ -153,7 +154,7 @@ class WorkoutPatternDetailView extends StatelessWidget {
                    const SizedBox(height: 4),
                    Text(
                      "Consistencia: ${(instance.consistency * 100).toInt()}%",
-                     style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                     style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 12),
                    ),
                  ],
                ),
@@ -207,7 +208,7 @@ class _PerformanceChart extends StatelessWidget {
         gridData: FlGridData(
           show: true, 
           drawVerticalLine: false,
-          getDrawingHorizontalLine: (_) => FlLine(color: Colors.grey.shade100),
+          getDrawingHorizontalLine: (_) => FlLine(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06)),
         ),
         titlesData: FlTitlesData(show: false),
         borderData: FlBorderData(show: false),

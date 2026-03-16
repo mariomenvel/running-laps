@@ -71,7 +71,7 @@ class _StatsCarouselState extends State<StatsCarousel> {
               width: _currentPage == index ? 24 : 8,
               height: 8,
               decoration: BoxDecoration(
-                color: _currentPage == index ? Tema.brandPurple : Colors.grey.shade300,
+                color: _currentPage == index ? Tema.brandPurple : Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(4),
               ),
             );
@@ -86,7 +86,7 @@ class _StatsCarouselState extends State<StatsCarousel> {
       height: 180,
       margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
       ),
       child: const Center(
@@ -209,14 +209,15 @@ class _StatsCarouselState extends State<StatsCarousel> {
     final frequentDist = widget.viewModel.getMostFrequentSeriesDistances();
     final frequentWorkouts = widget.viewModel.getMostFrequentSignatures();
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
          boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: isDark ? Colors.transparent : Colors.black.withOpacity(0.04),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -270,14 +271,15 @@ class _StatsCarouselState extends State<StatsCarousel> {
     required IconData icon,
     required Widget child,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: isDark ? Colors.transparent : Colors.black.withOpacity(0.04),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -292,17 +294,17 @@ class _StatsCarouselState extends State<StatsCarousel> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                   Text(subtitle, style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                   Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
+                   Text(subtitle, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 12)),
                 ],
               ),
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 20, color: Colors.grey.shade800),
+                child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8)),
               ),
             ],
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../viewmodels/admin_controller.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/widgets/premium_date_range_picker.dart';
+import '../../../../config/app_theme.dart';
 
 class AdminDashboardTab extends StatelessWidget {
   final AdminController controller;
@@ -54,7 +55,7 @@ class AdminDashboardTab extends StatelessWidget {
                     onPressed: () => _showExportDialog(context, controller),
                     icon: const Icon(Icons.picture_as_pdf, size: 20),
                     label: const Text("Exportar"),
-                    style: TextButton.styleFrom(foregroundColor: Colors.purple.shade700),
+                    style: TextButton.styleFrom(foregroundColor: Tema.brandPurple),
                   ),
                 ],
               ),
@@ -404,74 +405,81 @@ class AdminDashboardTab extends StatelessWidget {
   }
 
   Widget _buildStatCard(String title, String value, String description, IconData icon, Color color) {
-    return Expanded(
-      child: Container(
-        height: 180, // Fixed height for alignment
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+    return Builder(
+      builder: (context) {
+        final cs = Theme.of(context).colorScheme;
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Expanded(
+          child: Container(
+            height: 180,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: isDark ? Colors.transparent : Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: 24),
+                ),
+                const Spacer(),
+                Text(
+                  value,
+                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -1),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  title,
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: cs.onSurface),
+                ),
+                const SizedBox(height: 4),
+                Expanded(
+                  child: Text(
+                    description,
+                    style: TextStyle(fontSize: 11, color: cs.onSurface.withOpacity(0.5), height: 1.2),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
-            const Spacer(),
-            Text(
-              value,
-              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -1),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
-            ),
-            const SizedBox(height: 4),
-            Expanded(
-              child: Text(
-                description,
-                style: TextStyle(fontSize: 11, color: Colors.grey.shade500, height: 1.2),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
   
   Widget _buildFilterChip(BuildContext context, AdminController controller, AdminDateFilter filter, String label) {
     final bool isSelected = controller.currentFilter == filter;
+    final cs = Theme.of(context).colorScheme;
     return FilterChip(
       label: Text(label),
       selected: isSelected,
       onSelected: (_) => controller.setDateFilter(filter),
-      backgroundColor: Colors.white,
-      selectedColor: Colors.black87,
+      backgroundColor: cs.surface,
+      selectedColor: cs.onSurface,
       labelStyle: TextStyle(
-        color: isSelected ? Colors.white : Colors.black87,
+        color: isSelected ? cs.surface : cs.onSurface,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: Colors.grey.shade300),
+        side: BorderSide(color: cs.outline.withOpacity(0.2)),
       ),
-      checkmarkColor: Colors.white,
+      checkmarkColor: cs.surface,
     );
   }
 
@@ -483,10 +491,13 @@ class AdminDashboardTab extends StatelessWidget {
       final end = DateFormat('dd/MM').format(controller.customRange!.end);
       label = "$start - $end";
     }
+    final cs = Theme.of(context).colorScheme;
 
     return FilterChip(
       label: Text(label),
-      avatar: isSelected ? const Icon(Icons.date_range, size: 16, color: Colors.white) : const Icon(Icons.date_range, size: 16, color: Colors.black54),
+      avatar: isSelected
+          ? Icon(Icons.date_range, size: 16, color: cs.surface)
+          : Icon(Icons.date_range, size: 16, color: cs.onSurface.withOpacity(0.6)),
       selected: isSelected,
       onSelected: (_) async {
         final DateTimeRange? picked = await showModalBottomSheet<DateTimeRange>(
@@ -513,17 +524,17 @@ class AdminDashboardTab extends StatelessWidget {
           controller.setCustomDateRange(picked);
         }
       },
-      backgroundColor: Colors.white,
-      selectedColor: Colors.black87,
+      backgroundColor: cs.surface,
+      selectedColor: cs.onSurface,
       labelStyle: TextStyle(
-        color: isSelected ? Colors.white : Colors.black87,
+        color: isSelected ? cs.surface : cs.onSurface,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: Colors.grey.shade300),
+        side: BorderSide(color: cs.outline.withOpacity(0.2)),
       ),
-      checkmarkColor: Colors.white,
+      checkmarkColor: cs.surface,
     );
   }
 
@@ -557,22 +568,24 @@ class AdminDashboardTab extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => Container(
-          height: MediaQuery.of(context).size.height * 0.85,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(30),
-              topRight: Radius.circular(30),
+        builder: (context, setState) {
+          final cs = Theme.of(context).colorScheme;
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.85,
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(30),
+                topRight: Radius.circular(30),
+              ),
             ),
-          ),
           child: Column(
             children: [
               // Header
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 decoration: BoxDecoration(
-                  border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
+                  border: Border(bottom: BorderSide(color: cs.outline.withOpacity(0.1))),
                 ),
                 child: Column(
                   children: [
@@ -580,7 +593,7 @@ class AdminDashboardTab extends StatelessWidget {
                       width: 40,
                       height: 5,
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
+                        color: cs.onSurface.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
@@ -599,9 +612,9 @@ class AdminDashboardTab extends StatelessWidget {
                   padding: const EdgeInsets.all(24),
                   children: [
                     // Date Range Section
-                    const Text(
+                    Text(
                       "Rango de Fechas",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface.withOpacity(0.5)),
                     ),
                     const SizedBox(height: 12),
                     InkWell(
@@ -627,20 +640,20 @@ class AdminDashboardTab extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.purple.shade50,
+                          color: Tema.brandPurple.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(15),
-                          border: Border.all(color: Colors.purple.shade100),
+                          border: Border.all(color: Tema.brandPurple.withOpacity(0.2)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.calendar_today, color: Colors.purple, size: 20),
+                            const Icon(Icons.calendar_today, color: Tema.brandPurple, size: 20),
                             const SizedBox(width: 12),
                             Text(
                               "${DateFormat('dd/MM/yyyy').format(exportRange.start)} - ${DateFormat('dd/MM/yyyy').format(exportRange.end)}",
-                              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.purple),
+                              style: const TextStyle(fontWeight: FontWeight.bold, color: Tema.brandPurple),
                             ),
                             const Spacer(),
-                            const Icon(Icons.edit, color: Colors.purple, size: 18),
+                            const Icon(Icons.edit, color: Tema.brandPurple, size: 18),
                           ],
                         ),
                       ),
@@ -652,9 +665,9 @@ class AdminDashboardTab extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           "Métricas a incluir",
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface.withOpacity(0.5)),
                         ),
                         TextButton(
                           onPressed: () {
@@ -688,10 +701,10 @@ class AdminDashboardTab extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
-                              color: isSelected ? Colors.white : Colors.grey.shade50,
+                              color: isSelected ? cs.surface : cs.onSurface.withOpacity(0.04),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: isSelected ? Colors.purple.shade200 : Colors.grey.shade200,
+                                color: isSelected ? Tema.brandPurple.withOpacity(0.3) : cs.outline.withOpacity(0.2),
                                 width: isSelected ? 2 : 1,
                               ),
                             ),
@@ -699,7 +712,7 @@ class AdminDashboardTab extends StatelessWidget {
                               children: [
                                 Icon(
                                   isSelected ? Icons.check_circle : Icons.circle_outlined,
-                                  color: isSelected ? Colors.purple : Colors.grey,
+                                  color: isSelected ? Tema.brandPurple : cs.onSurface.withOpacity(0.4),
                                   size: 22,
                                 ),
                                 const SizedBox(width: 12),
@@ -707,7 +720,7 @@ class AdminDashboardTab extends StatelessWidget {
                                   entry.value,
                                   style: TextStyle(
                                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                    color: isSelected ? Colors.black : Colors.grey,
+                                    color: isSelected ? cs.onSurface : cs.onSurface.withOpacity(0.5),
                                   ),
                                 ),
                               ],
@@ -729,7 +742,7 @@ class AdminDashboardTab extends StatelessWidget {
                     height: 55,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.purple.shade700,
+                        backgroundColor: Tema.brandPurple,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                         elevation: 0,
                       ),
@@ -752,7 +765,8 @@ class AdminDashboardTab extends StatelessWidget {
               ),
             ],
           ),
-        ),
+          );
+        },
       ),
     );
   }

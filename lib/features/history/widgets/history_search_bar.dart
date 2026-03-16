@@ -45,7 +45,7 @@ class _HistorySearchBarState extends State<HistorySearchBar> {
     return Container(
       height: 44,
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -55,7 +55,7 @@ class _HistorySearchBarState extends State<HistorySearchBar> {
             padding: const EdgeInsets.only(left: 12, right: 8),
             child: Icon(
               Icons.search_rounded,
-              color: Colors.grey.shade500,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
               size: 20,
             ),
           ),
@@ -66,14 +66,14 @@ class _HistorySearchBarState extends State<HistorySearchBar> {
               controller: _controller,
               focusNode: _focusNode,
               onChanged: widget.onChanged,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
-                color: Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
               decoration: InputDecoration(
                 hintText: widget.hintText,
                 hintStyle: TextStyle(
-                  color: Colors.grey.shade500,
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                   fontSize: 15,
                 ),
                 border: InputBorder.none,
@@ -95,7 +95,7 @@ class _HistorySearchBarState extends State<HistorySearchBar> {
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade400,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(

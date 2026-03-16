@@ -19,14 +19,12 @@ class _EditHomeViewState extends State<EditHomeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7), // iOS grouped background style
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Personalizar Inicio',
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.black),
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: Tema.brandPurple),
@@ -52,12 +50,12 @@ class _EditHomeViewState extends State<EditHomeView> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
                 child: Text(
                   "ORDEN Y VISIBILIDAD",
                   style: TextStyle(
-                    color: Colors.grey,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
@@ -75,7 +73,7 @@ class _EditHomeViewState extends State<EditHomeView> {
                      return Material(
                        elevation: 10,
                        color: Colors.transparent,
-                       shadowColor: Colors.black26,
+                       shadowColor: Theme.of(context).brightness == Brightness.dark ? Colors.transparent : Colors.black26,
                        child: child,
                      );
                   },
@@ -96,7 +94,7 @@ class _EditHomeViewState extends State<EditHomeView> {
   Widget _buildRowItem(BuildContext context, HomeWidget widgetItem, int index, bool isLast) {
     return Container(
       key: ValueKey(widgetItem.id),
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       child: Column(
         children: [
           Padding(
@@ -114,7 +112,7 @@ class _EditHomeViewState extends State<EditHomeView> {
                       shape: BoxShape.circle,
                       color: widgetItem.visible ? Tema.brandPurple : Colors.transparent,
                       border: Border.all(
-                        color: widgetItem.visible ? Tema.brandPurple : Colors.grey.shade400,
+                        color: widgetItem.visible ? Tema.brandPurple : Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
                         width: 2,
                       ),
                     ),
@@ -131,7 +129,7 @@ class _EditHomeViewState extends State<EditHomeView> {
                   height: 36,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -148,7 +146,7 @@ class _EditHomeViewState extends State<EditHomeView> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      color: widgetItem.visible ? Colors.black87 : Colors.grey,
+                      color: widgetItem.visible ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
                       decoration: widgetItem.visible ? null : TextDecoration.lineThrough,
                     ),
                   ),
@@ -159,14 +157,14 @@ class _EditHomeViewState extends State<EditHomeView> {
                   index: index,
                   child: Container(
                     padding: const EdgeInsets.all(8),
-                    child: Icon(Icons.drag_handle_rounded, color: Colors.grey.shade400),
+                    child: Icon(Icons.drag_handle_rounded, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
                   ),
                 ),
               ],
             ),
           ),
           if (!isLast)
-             const Divider(height: 1, indent: 56, color: Color(0xFFE5E5EA)),
+             Divider(height: 1, indent: 56, color: Theme.of(context).colorScheme.outline),
         ],
       ),
     );

@@ -49,10 +49,12 @@ class _PatternCarouselState<T> extends State<PatternCarousel<T>> {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.transparent
+                      : Colors.black.withOpacity(0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),
@@ -66,7 +68,7 @@ class _PatternCarouselState<T> extends State<PatternCarousel<T>> {
                     Icons.chevron_left,
                     color: _currentPage > 0
                         ? Theme.of(context).primaryColor
-                        : Colors.grey.shade300,
+                        : Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
                   ),
                   onPressed: _currentPage > 0
                       ? () => _pageController.previousPage(
@@ -95,7 +97,7 @@ class _PatternCarouselState<T> extends State<PatternCarousel<T>> {
                           : null,
                       color: _currentPage == index
                           ? null
-                          : Colors.grey.shade300,
+                          : Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(4),
                       boxShadow: _currentPage == index
                           ? [
@@ -117,7 +119,7 @@ class _PatternCarouselState<T> extends State<PatternCarousel<T>> {
                     Icons.chevron_right,
                     color: _currentPage < widget.items.length - 1
                         ? Theme.of(context).primaryColor
-                        : Colors.grey.shade300,
+                        : Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
                   ),
                   onPressed: _currentPage < widget.items.length - 1
                       ? () => _pageController.nextPage(

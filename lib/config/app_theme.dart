@@ -6,6 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/features/avatar/data/assets.dart'; 
 
 class Tema {
+  /// @deprecated Use [AppColors.brandPurple] from
+  /// `package:running_laps/core/theme/app_colors.dart` instead.
   static const Color brandPurple = Color(0xFF8E24AA);
 }
 

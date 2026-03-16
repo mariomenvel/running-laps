@@ -52,17 +52,17 @@ class _HistoryCarouselState extends State<HistoryCarousel> {
        margin: const EdgeInsets.symmetric(horizontal: 20),
        decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
-          color: Colors.grey.shade100,
-          border: Border.all(color: Colors.grey.shade300, style: BorderStyle.solid),
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
+          border: Border.all(color: Theme.of(context).colorScheme.outline, style: BorderStyle.solid),
        ),
        child: Column(
          mainAxisAlignment: MainAxisAlignment.center,
          children: [
-           Icon(Icons.history_toggle_off, size: 40, color: Colors.grey.shade400),
+           Icon(Icons.history_toggle_off, size: 40, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
            const SizedBox(height: 12),
            Text(
              "Sin historial reciente",
-             style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+             style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.w600),
            )
          ],
        ),
@@ -80,11 +80,13 @@ class _HistoryCarouselState extends State<HistoryCarousel> {
       onTap: () => widget.onTapTraining(training),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.transparent
+                  : Colors.black.withOpacity(0.06),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -101,10 +103,9 @@ class _HistoryCarouselState extends State<HistoryCarousel> {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        const Color(0xFFF8F4FF), // Muy clarito
-                        Colors.white,
-                      ],
+                      colors: Theme.of(context).brightness == Brightness.dark
+                          ? [const Color(0xFF3A2A40), const Color(0xFF2C2C2E)]
+                          : [const Color(0xFFF8F4FF), Colors.white],
                     ),
                   ),
                 ),
@@ -158,10 +159,10 @@ class _HistoryCarouselState extends State<HistoryCarousel> {
                       training.titulo.isNotEmpty ? training.titulo : "Entrenamiento",
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -193,10 +194,10 @@ class _HistoryCarouselState extends State<HistoryCarousel> {
       children: [
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 22,
-            fontWeight: FontWeight.w800, // Black
-            color: Colors.black87,
+            fontWeight: FontWeight.w800,
+            color: Theme.of(context).colorScheme.onSurface,
             letterSpacing: -0.5,
           ),
         ),
@@ -204,7 +205,7 @@ class _HistoryCarouselState extends State<HistoryCarousel> {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.grey.shade500,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -216,7 +217,7 @@ class _HistoryCarouselState extends State<HistoryCarousel> {
     return Container(
       height: 30,
       width: 1,
-      color: Colors.grey.shade200,
+      color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
     );
   }
 
