@@ -59,15 +59,28 @@ class ChallengesRepository {
   // READ
   // ============================================
 
-  /// Obtiene un reto específico
+  /// Sentinel groupId used for global challenges.
+  /// When passed as groupId, operations route to the top-level
+  /// `global_challenges` collection instead of `groups/{groupId}/challenges`.
+  static const String globalSentinel = 'global';
+
+  /// Obtiene un reto específico (soporta retos globales con groupId = 'global')
   Future<Challenge?> getChallenge(String groupId, String challengeId) async {
     try {
-      final doc = await _firestore
-          .collection('groups')
-          .doc(groupId)
-          .collection('challenges')
-          .doc(challengeId)
-          .get();
+      final DocumentSnapshot<Map<String, dynamic>> doc;
+      if (groupId == globalSentinel) {
+        doc = await _firestore
+            .collection('global_challenges')
+            .doc(challengeId)
+            .get();
+      } else {
+        doc = await _firestore
+            .collection('groups')
+            .doc(groupId)
+            .collection('challenges')
+            .doc(challengeId)
+            .get();
+      }
 
       if (!doc.exists) return null;
 
@@ -190,40 +203,58 @@ class ChallengesRepository {
     }
   }
 
-  /// Stream de todos los participantes de un reto
+  /// Stream de todos los participantes de un reto.
+  /// Soporta retos globales con groupId = 'global'.
   Stream<List<ChallengeParticipant>> streamChallengeParticipants(
     String groupId,
     String challengeId,
   ) {
-    return _firestore
-        .collection('groups')
-        .doc(groupId)
-        .collection('challenges')
-        .doc(challengeId)
-        .collection('participants')
-        .snapshots()
-        .map((snapshot) {
+    final colStream = groupId == globalSentinel
+        ? _firestore
+            .collection('global_challenges')
+            .doc(challengeId)
+            .collection('participations')
+            .snapshots()
+        : _firestore
+            .collection('groups')
+            .doc(groupId)
+            .collection('challenges')
+            .doc(challengeId)
+            .collection('participants')
+            .snapshots();
+
+    return colStream.map((snapshot) {
       return snapshot.docs
           .map((doc) => ChallengeParticipant.fromMap(doc.data(), uid: doc.id))
           .toList();
     });
   }
 
-  /// Stream del participante específico (el usuario actual)
+  /// Stream del participante específico (el usuario actual).
+  /// Soporta retos globales con groupId = 'global' — en ese caso lee de
+  /// global_challenges/{challengeId}/participations/{uid}.
   Stream<ChallengeParticipant?> streamMyParticipant(
     String groupId,
     String challengeId,
     String uid,
   ) {
-    return _firestore
-        .collection('groups')
-        .doc(groupId)
-        .collection('challenges')
-        .doc(challengeId)
-        .collection('participants')
-        .doc(uid)
-        .snapshots()
-        .map((snapshot) {
+    final docStream = groupId == globalSentinel
+        ? _firestore
+            .collection('global_challenges')
+            .doc(challengeId)
+            .collection('participations')
+            .doc(uid)
+            .snapshots()
+        : _firestore
+            .collection('groups')
+            .doc(groupId)
+            .collection('challenges')
+            .doc(challengeId)
+            .collection('participants')
+            .doc(uid)
+            .snapshots();
+
+    return docStream.map((snapshot) {
       if (!snapshot.exists) return null;
       return ChallengeParticipant.fromMap(snapshot.data()!, uid: snapshot.id);
     });

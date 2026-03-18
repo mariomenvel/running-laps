@@ -3,6 +3,7 @@ import 'package:running_laps/core/utils/app_transitions.dart';
 import '../viewmodels/challenge_detail_controller.dart';
 import '../data/models/challenge_models.dart';
 import '../data/helpers/challenge_helpers.dart';
+import '../data/helpers/challenge_color_helper.dart';
 import '../data/models/enums.dart';
 
 import 'package:intl/intl.dart';
@@ -30,13 +31,6 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
   late ChallengeDetailController _controller;
   late AnimationController _heroAnimController;
   late Animation<double> _heroScaleAnimation;
-
-  // Gradient colors by metric type
-  static const Map<ChallengeMetric, List<Color>> _metricGradients = {
-    ChallengeMetric.distance: [Color(0xFF1E88E5), Color(0xFF42A5F5)],
-    ChallengeMetric.time: [Color(0xFFFB8C00), Color(0xFFFFA726)],
-    ChallengeMetric.sessions: [Color(0xFFE91E63), Color(0xFFF48FB1)],
-  };
 
   @override
   void initState() {
@@ -150,8 +144,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
   }
 
   Widget _buildContent(Challenge challenge) {
-    final gradientColors = _metricGradients[challenge.metric] ??
-        [Tema.brandPurple, Tema.brandPurple.withOpacity(0.7)];
+    final accent = ChallengeColorHelper.accentForMetric(challenge.metric);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -159,14 +152,14 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Challenge Header Banner
-          _buildChallengeBanner(challenge, gradientColors),
+          _buildChallengeBanner(challenge, accent),
 
           const SizedBox(height: 24),
 
           // Hero Progress Section
           ScaleTransition(
             scale: _heroScaleAnimation,
-            child: _buildHeroSection(challenge, gradientColors),
+            child: _buildHeroSection(challenge, accent),
           ),
 
           const SizedBox(height: 32),
@@ -174,7 +167,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
           // Leaderboard Section
           _buildLeaderboardHeader(),
           const SizedBox(height: 16),
-          _buildLeaderboardList(challenge, gradientColors),
+          _buildLeaderboardList(challenge, accent),
 
           const SizedBox(height: 40),
         ],
@@ -182,19 +175,15 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
     );
   }
 
-  Widget _buildChallengeBanner(Challenge challenge, List<Color> gradientColors) {
+  Widget _buildChallengeBanner(Challenge challenge, Color accent) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: gradientColors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: ChallengeColorHelper.gradientForMetric(challenge.metric),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: gradientColors.first.withOpacity(0.35),
+            color: accent.withOpacity(0.35),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -251,7 +240,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
     );
   }
 
-  Widget _buildHeroSection(Challenge challenge, List<Color> gradientColors) {
+  Widget _buildHeroSection(Challenge challenge, Color accent) {
     return ValueListenableBuilder<ChallengeParticipant?>(
       valueListenable: _controller.myParticipant,
       builder: (context, me, _) {
@@ -310,7 +299,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: gradientColors.first.withOpacity(0.12),
+                color: accent.withOpacity(0.12),
                 blurRadius: 30,
                 offset: const Offset(0, 12),
               ),
@@ -351,9 +340,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                             value: animatedProgress,
                             strokeWidth: 14,
                             strokeCap: StrokeCap.round,
-                            color: isCompleted
-                                ? Colors.green
-                                : gradientColors.first,
+                            color: isCompleted ? Colors.green : accent,
                             backgroundColor: Colors.transparent,
                           ),
                         ),
@@ -365,9 +352,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                               "$percentage%",
                               style: TextStyle(
                                 fontWeight: FontWeight.w900,
-                                color: isCompleted
-                                    ? Colors.green
-                                    : gradientColors.first,
+                                color: isCompleted ? Colors.green : accent,
                                 fontSize: 44,
                                 letterSpacing: -2,
                               ),
@@ -378,7 +363,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                                 fontWeight: FontWeight.bold,
                                 color: isCompleted
                                     ? Colors.green.withOpacity(0.7)
-                                    : gradientColors.first.withOpacity(0.6),
+                                    : accent.withOpacity(0.6),
                                 fontSize: 11,
                                 letterSpacing: 1.2,
                               ),
@@ -400,7 +385,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                   _buildStatColumn(
                     "ACTUAL",
                     _formatScore(me.score, challenge.metric),
-                    gradientColors.first,
+                    accent,
                   ),
                   Container(
                     width: 1,
@@ -509,7 +494,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
     );
   }
 
-  Widget _buildLeaderboardList(Challenge challenge, List<Color> gradientColors) {
+  Widget _buildLeaderboardList(Challenge challenge, Color accent) {
     return ValueListenableBuilder<List<ChallengeParticipant>>(
       valueListenable: _controller.participants,
       builder: (context, participants, _) {
@@ -554,7 +539,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                 rank: rank,
                 isMe: isMe,
                 challenge: challenge,
-                gradientColors: gradientColors,
+                accent: accent,
               ),
             );
           }),
@@ -568,7 +553,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
     required int rank,
     required bool isMe,
     required Challenge challenge,
-    required List<Color> gradientColors,
+    required Color accent,
   }) {
     Widget rankWidget;
     if (rank == 1) {
@@ -592,18 +577,18 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: isMe ? gradientColors.first.withOpacity(0.08) : Theme.of(context).colorScheme.surface,
+        color: isMe ? accent.withOpacity(0.08) : Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: isMe
-              ? gradientColors.first.withOpacity(0.3)
+              ? accent.withOpacity(0.3)
               : Theme.of(context).colorScheme.outline.withOpacity(0.1),
           width: isMe ? 2 : 1,
         ),
         boxShadow: [
           BoxShadow(
             color: isMe
-                ? gradientColors.first.withOpacity(0.1)
+                ? accent.withOpacity(0.1)
                 : Theme.of(context).brightness == Brightness.dark
                     ? Colors.transparent
                     : Colors.black.withOpacity(0.03),
@@ -647,7 +632,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                   Text(
                     "¡Sigue así!",
                     style: TextStyle(
-                      color: gradientColors.first,
+                      color: accent,
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                     ),
@@ -659,7 +644,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
               gradient: isMe
-                  ? LinearGradient(colors: gradientColors)
+                  ? LinearGradient(colors: [Tema.brandPurple, accent])
                   : null,
               color: isMe ? null : Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
               borderRadius: BorderRadius.circular(12),

@@ -27,6 +27,9 @@ import 'package:running_laps/core/widgets/group_skeleton_card.dart';
 import 'package:running_laps/core/widgets/skeleton_shimmer.dart';
 import 'package:running_laps/features/analytics/data/coach_insight_service.dart';
 import 'package:running_laps/features/analytics/widgets/coach_insight_widget.dart';
+import 'package:running_laps/features/home/data/global_challenges_repository.dart';
+import 'package:running_laps/features/home/widgets/global_challenge_card.dart';
+import 'package:running_laps/features/groups/data/models/challenge_models.dart';
 import 'package:running_laps/features/groups/data/models/result_notification_model.dart';
 import 'package:running_laps/features/groups/views/widgets/challenge_result_dialog.dart';
 import 'dart:async';
@@ -47,6 +50,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   final GroupsRepository _groupsRepository = GroupsRepository();
   final UserGroupsRepository _userGroupsRepository = UserGroupsRepository();
   final CoachInsightService _coachService = CoachInsightService();
+  final GlobalChallengesRepository _globalChallengesRepo =
+      GlobalChallengesRepository();
+  final PageController _challengesPageController = PageController();
+  int _challengesPage = 0;
 
   List<Entrenamiento> _entrenamientos = [];
   bool _isLoadingData = true;
@@ -64,9 +71,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   // Played once on first load; pull-to-refresh does NOT re-trigger.
   late final AnimationController _entranceController;
   bool _entranceAnimationPlayed = false;
-  late final Animation<double> _aGreeting; // delay   0ms
-  late final Animation<double> _aCoach;    // delay  80ms
-  late final Animation<double> _aKpi0;     // delay 160ms  (Km totales)
+  late final Animation<double> _aGreeting;    // delay   0ms
+  late final Animation<double> _aCoach;       // delay  80ms
+  late final Animation<double> _aChallenges;  // delay 120ms
+  late final Animation<double> _aKpi0;        // delay 160ms  (Km totales)
   late final Animation<double> _aKpi1;     // delay 220ms  (Ritmo medio)
   late final Animation<double> _aKpi2;     // delay 280ms  (Sesiones)
   late final Animation<double> _aKpi3;     // delay 340ms  (Tiempo total)
@@ -82,9 +90,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
-    _aGreeting = CurvedAnimation(parent: _entranceController, curve: const Interval(0.000, 0.517, curve: Curves.easeOutQuart));
-    _aCoach    = CurvedAnimation(parent: _entranceController, curve: const Interval(0.067, 0.583, curve: Curves.easeOutQuart));
-    _aKpi0     = CurvedAnimation(parent: _entranceController, curve: const Interval(0.133, 0.650, curve: Curves.easeOutQuart));
+    _aGreeting    = CurvedAnimation(parent: _entranceController, curve: const Interval(0.000, 0.517, curve: Curves.easeOutQuart));
+    _aCoach       = CurvedAnimation(parent: _entranceController, curve: const Interval(0.067, 0.583, curve: Curves.easeOutQuart));
+    _aChallenges  = CurvedAnimation(parent: _entranceController, curve: const Interval(0.100, 0.617, curve: Curves.easeOutQuart));
+    _aKpi0        = CurvedAnimation(parent: _entranceController, curve: const Interval(0.133, 0.650, curve: Curves.easeOutQuart));
     _aKpi1     = CurvedAnimation(parent: _entranceController, curve: const Interval(0.183, 0.700, curve: Curves.easeOutQuart));
     _aKpi2     = CurvedAnimation(parent: _entranceController, curve: const Interval(0.233, 0.750, curve: Curves.easeOutQuart));
     _aKpi3     = CurvedAnimation(parent: _entranceController, curve: const Interval(0.283, 0.800, curve: Curves.easeOutQuart));
@@ -155,6 +164,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   void dispose() {
     _entranceController.dispose();
     _configController.dispose();
+    _challengesPageController.dispose();
     _notifSubscription?.cancel();
     super.dispose();
   }
@@ -345,6 +355,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             ] else ...[
               _slideFromLeft(_aCoach, CoachInsightWidget(insight: _coachService.generateInsight(_entrenamientos))),
               const SizedBox(height: 24),
+              _slideFromBottom(_aChallenges, _buildGlobalChallengesSection()),
               ValueListenableBuilder<bool>(
                 valueListenable: SettingsService.cardStyleNotifier,
                 builder: (_, __, ___) => _buildKPICards(),
@@ -521,6 +532,101 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           ),
         ],
       ),
+    );
+  }
+
+  // --- GLOBAL CHALLENGES SECTION ---
+  Widget _buildGlobalChallengesSection() {
+    return StreamBuilder<List<Challenge>>(
+      stream: _globalChallengesRepo.streamActiveChallenges(),
+      builder: (context, snap) {
+        final challenges = snap.data ?? [];
+        if (challenges.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Row(
+                children: [
+                  Text(
+                    'Retos Activos',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Tema.brandPurple.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${challenges.length}',
+                      style: const TextStyle(
+                        color: Tema.brandPurple,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (challenges.length == 1)
+              GlobalChallengeCard(
+                challenge: challenges[0],
+                userId: _currentUserId!,
+                repository: _globalChallengesRepo,
+              )
+            else ...[
+              SizedBox(
+                height: 190,
+                child: PageView.builder(
+                  controller: _challengesPageController,
+                  onPageChanged: (i) => setState(() => _challengesPage = i),
+                  itemCount: challenges.length,
+                  itemBuilder: (_, i) => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: GlobalChallengeCard(
+                      challenge: challenges[i],
+                      userId: _currentUserId!,
+                      repository: _globalChallengesRepo,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(challenges.length, (i) {
+                  final active = _challengesPage.clamp(0, challenges.length - 1) == i;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: active ? 16 : 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: active
+                          ? Tema.brandPurple
+                          : Theme.of(context).colorScheme.outline.withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  );
+                }),
+              ),
+            ],
+            const SizedBox(height: 24),
+          ],
+        );
+      },
     );
   }
 

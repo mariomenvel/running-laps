@@ -23,6 +23,8 @@ class TrainingMapView extends StatelessWidget {
       );
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final List<LatLng> polylinePoints = points
         .map((p) => LatLng(p.latitude, p.longitude))
         .toList();
@@ -30,26 +32,60 @@ class TrainingMapView extends StatelessWidget {
     // Calculate bounds for auto-framing
     final bounds = LatLngBounds.fromPoints(polylinePoints);
 
-    return FlutterMap(
-      options: MapOptions(
-        initialCameraFit: CameraFit.bounds(
-          bounds: bounds,
-          padding: const EdgeInsets.all(40.0),
-        ),
-      ),
+    final tileUrl = isDark
+        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+        : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+
+    final borderColor = isDark
+        ? Colors.black.withOpacity(0.5)
+        : Colors.white.withOpacity(0.5);
+
+    return Stack(
       children: [
-        TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'com.runninglaps.app',
-        ),
-        PolylineLayer(
-          polylines: [
-            Polyline(
-              points: polylinePoints,
-              strokeWidth: 4.0,
-              color: Tema.brandPurple,
+        FlutterMap(
+          options: MapOptions(
+            initialCameraFit: CameraFit.bounds(
+              bounds: bounds,
+              padding: const EdgeInsets.all(40.0),
+            ),
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: tileUrl,
+              subdomains: const ['a', 'b', 'c', 'd'],
+              userAgentPackageName: 'com.runninglaps.app',
+            ),
+            PolylineLayer(
+              polylines: [
+                // Border polyline (underneath)
+                Polyline(
+                  points: polylinePoints,
+                  strokeWidth: 6.0,
+                  color: borderColor,
+                ),
+                // Route polyline (on top)
+                Polyline(
+                  points: polylinePoints,
+                  strokeWidth: 4.0,
+                  color: Tema.brandPurple,
+                ),
+              ],
             ),
           ],
+        ),
+        // CartoDB attribution
+        Positioned(
+          bottom: 4,
+          right: 6,
+          child: Text(
+            '© CartoDB © OpenStreetMap contributors',
+            style: TextStyle(
+              fontSize: 9,
+              color: isDark
+                  ? Colors.white.withOpacity(0.5)
+                  : Colors.black.withOpacity(0.45),
+            ),
+          ),
         ),
       ],
     );

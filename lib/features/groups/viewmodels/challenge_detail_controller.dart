@@ -71,10 +71,13 @@ class ChallengeDetailController {
         participants.value = sorted;
       });
 
-      // 4. Stream Badge Status
-      _rewardsRepo.streamHasGoalCompletedBadge(groupId, uid, challengeId).listen((hasBadge) {
-        hasGoalBadge.value = hasBadge;
-      });
+      // 4. Stream Badge Status (not applicable for global challenges —
+      // they have no badge_history under the groups collection)
+      if (groupId != ChallengesRepository.globalSentinel) {
+        _rewardsRepo.streamHasGoalCompletedBadge(groupId, uid, challengeId).listen((hasBadge) {
+          hasGoalBadge.value = hasBadge;
+        });
+      }
 
     } catch (e) {
       error.value = e.toString();

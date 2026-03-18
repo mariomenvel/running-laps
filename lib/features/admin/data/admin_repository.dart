@@ -386,6 +386,14 @@ class AdminRepository {
     });
   }
 
+  /// Publica un reto global (cambia estado de draft a active)
+  Future<void> publishChallenge(String challengeId) async {
+    await _firestore
+        .collection('global_challenges')
+        .doc(challengeId)
+        .update({'status': ChallengeStatus.active.toFirestore()});
+  }
+
   /// Elimina un reto global
   Future<void> deleteGlobalChallenge(String challengeId) async {
     await _firestore.collection('global_challenges').doc(challengeId).delete();

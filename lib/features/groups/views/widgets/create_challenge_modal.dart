@@ -26,7 +26,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
     with TickerProviderStateMixin {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _valueController = TextEditingController();
-  
+
   GoalKind _selectedKind = GoalKind.distance;
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now().add(const Duration(days: 7));
@@ -35,11 +35,11 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
-  // Gradient colors for each metric type
+  // Gradient colors: brandPurple → metric accent (consistent with ChallengeColorHelper)
   static const Map<GoalKind, List<Color>> _kindGradients = {
-    GoalKind.distance: [Color(0xFF1E88E5), Color(0xFF42A5F5)],
-    GoalKind.time: [Color(0xFFFB8C00), Color(0xFFFFA726)],
-    GoalKind.sessions: [Color(0xFFE91E63), Color(0xFFF48FB1)],
+    GoalKind.distance: [Tema.brandPurple, Color(0xFF10B981)],
+    GoalKind.time: [Tema.brandPurple, Color(0xFFF59E0B)],
+    GoalKind.sessions: [Tema.brandPurple, Color(0xFF3B82F6)],
   };
 
   static const Map<GoalKind, IconData> _kindIcons = {
@@ -72,14 +72,15 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final selectedGradient = _kindGradients[_selectedKind]!;
 
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(32),
             topRight: Radius.circular(32),
           ),
@@ -100,14 +101,14 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
                   width: 42,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: cs.outline.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
               ),
               const SizedBox(height: 24),
 
-              // Header con gradiente
+              // Header
               _buildHeader(selectedGradient),
               const SizedBox(height: 28),
 
@@ -126,7 +127,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
               // Valor del Objetivo
               _buildSectionTitle(_getGoalLabel()),
               const SizedBox(height: 10),
-              _buildValueInput(),
+              _buildValueInput(selectedGradient),
               const SizedBox(height: 24),
 
               // Fechas
@@ -145,6 +146,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
   }
 
   Widget _buildHeader(List<Color> gradient) {
+    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
         AnimatedContainer(
@@ -173,13 +175,13 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 "Crear Nuevo Reto",
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,
-                  color: Colors.black87,
+                  color: cs.onSurface,
                 ),
               ),
               const SizedBox(height: 4),
@@ -187,7 +189,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
                 "Desafía a tu grupo 🔥",
                 style: TextStyle(
                   fontSize: 13,
-                  color: Colors.grey.shade500,
+                  color: cs.onSurface.withOpacity(0.5),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -199,10 +201,10 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: cs.onSurface.withOpacity(0.08),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.close, size: 18, color: Colors.grey.shade600),
+            child: Icon(Icons.close, size: 18, color: cs.onSurface.withOpacity(0.6)),
           ),
         ),
       ],
@@ -210,29 +212,35 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
   }
 
   Widget _buildSectionTitle(String title) {
+    final cs = Theme.of(context).colorScheme;
     return Text(
       title,
       style: TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w900,
-        color: Colors.grey.shade500,
+        color: cs.onSurface.withOpacity(0.5),
         letterSpacing: 1.2,
       ),
     );
   }
 
   Widget _buildTitleInput() {
+    final cs = Theme.of(context).colorScheme;
     return TextField(
       controller: _titleController,
-      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: cs.onSurface),
       decoration: InputDecoration(
         hintText: "Ej: Semana de Runner 🏃",
-        hintStyle: TextStyle(color: Colors.grey.shade400, fontWeight: FontWeight.normal),
+        hintStyle: TextStyle(color: cs.onSurface.withOpacity(0.4), fontWeight: FontWeight.normal),
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor: cs.onSurface.withOpacity(0.05),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(color: cs.outline.withOpacity(0.2)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide(color: cs.outline.withOpacity(0.2)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
@@ -241,21 +249,22 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         prefixIcon: Padding(
           padding: const EdgeInsets.only(left: 16, right: 10),
-          child: Icon(Icons.edit_rounded, color: Colors.grey.shade400),
+          child: Icon(Icons.edit_rounded, color: cs.onSurface.withOpacity(0.4)),
         ),
       ),
     );
   }
 
   Widget _buildMetricSelector() {
+    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [GoalKind.distance, GoalKind.time, GoalKind.sessions].map((kind) {
         final bool isSelected = _selectedKind == kind;
         final gradient = _kindGradients[kind]!;
-        
+
         return Expanded(
           child: Padding(
-            padding: EdgeInsets.only(right: kind != GoalKind.values.last ? 10 : 0),
+            padding: EdgeInsets.only(right: kind != GoalKind.sessions ? 10 : 0),
             child: GestureDetector(
               onTap: () => setState(() => _selectedKind = kind),
               child: AnimatedContainer(
@@ -264,11 +273,11 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 decoration: BoxDecoration(
                   gradient: isSelected ? LinearGradient(colors: gradient) : null,
-                  color: isSelected ? null : Colors.grey.shade50,
+                  color: isSelected ? null : cs.onSurface.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(18),
                   border: isSelected
                       ? null
-                      : Border.all(color: Colors.grey.shade200),
+                      : Border.all(color: cs.outline.withOpacity(0.3)),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
@@ -283,14 +292,14 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
                   children: [
                     Icon(
                       _kindIcons[kind],
-                      color: isSelected ? Colors.white : Colors.grey.shade500,
+                      color: isSelected ? Colors.white : cs.onSurface.withOpacity(0.5),
                       size: 26,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       _getKindLabel(kind),
                       style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.grey.shade600,
+                        color: isSelected ? Colors.white : cs.onSurface.withOpacity(0.6),
                         fontSize: 12,
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                       ),
@@ -305,9 +314,8 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
     );
   }
 
-  Widget _buildValueInput() {
-    final selectedGradient = _kindGradients[_selectedKind]!;
-
+  Widget _buildValueInput(List<Color> selectedGradient) {
+    final cs = Theme.of(context).colorScheme;
     return TextField(
       controller: _valueController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -320,15 +328,19 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
       decoration: InputDecoration(
         hintText: _getValueHint(),
         hintStyle: TextStyle(
-          color: Colors.grey.shade400,
+          color: cs.onSurface.withOpacity(0.4),
           fontWeight: FontWeight.normal,
           fontSize: 18,
         ),
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor: cs.onSurface.withOpacity(0.05),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(color: cs.outline.withOpacity(0.2)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide(color: cs.outline.withOpacity(0.2)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
@@ -346,6 +358,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
   }
 
   Widget _buildDatePickers() {
+    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
         Expanded(child: _buildDateCard("Inicio", _startDate, true)),
@@ -353,10 +366,10 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.grey.shade100,
+            color: cs.onSurface.withOpacity(0.08),
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.arrow_forward, color: Colors.grey.shade400, size: 16),
+          child: Icon(Icons.arrow_forward, color: cs.onSurface.withOpacity(0.4), size: 16),
         ),
         const SizedBox(width: 12),
         Expanded(child: _buildDateCard("Fin", _endDate, false)),
@@ -365,6 +378,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
   }
 
   Widget _buildDateCard(String label, DateTime date, bool isStart) {
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: () async {
         final picked = await showDatePicker(
@@ -402,9 +416,9 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.grey.shade50,
+          color: cs.onSurface.withOpacity(0.05),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(color: cs.outline.withOpacity(0.3)),
         ),
         child: Column(
           children: [
@@ -412,7 +426,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
               label,
               style: TextStyle(
                 fontSize: 11,
-                color: Colors.grey.shade500,
+                color: cs.onSurface.withOpacity(0.5),
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
               ),
@@ -420,16 +434,16 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
             const SizedBox(height: 6),
             Text(
               DateFormat('dd MMM').format(date),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
-                color: Colors.black87,
+                color: cs.onSurface,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               DateFormat('yyyy').format(date),
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+              style: TextStyle(fontSize: 12, color: cs.onSurface.withOpacity(0.4)),
             ),
           ],
         ),
@@ -446,7 +460,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: _isCreating
-                ? [Colors.grey.shade300, Colors.grey.shade400]
+                ? [Colors.grey.shade400, Colors.grey.shade500]
                 : [Colors.black, Colors.grey.shade800],
           ),
           borderRadius: BorderRadius.circular(20),
@@ -511,7 +525,6 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
 
     setState(() => _isCreating = true);
 
-    // Pop first then call callback
     Navigator.pop(context);
     widget.onCreate(title, _selectedKind, value, _startDate, _endDate);
   }
@@ -535,55 +548,37 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
 
   String _getKindLabel(GoalKind kind) {
     switch (kind) {
-      case GoalKind.distance:
-        return "Distancia";
-      case GoalKind.time:
-        return "Tiempo";
-      case GoalKind.sessions:
-        return "Sesiones";
-      default:
-        return "";
+      case GoalKind.distance: return "Distancia";
+      case GoalKind.time: return "Tiempo";
+      case GoalKind.sessions: return "Sesiones";
+      default: return "";
     }
   }
 
   String _getGoalLabel() {
     switch (_selectedKind) {
-      case GoalKind.distance:
-        return "OBJETIVO EN KILÓMETROS";
-      case GoalKind.time:
-        return "OBJETIVO EN MINUTOS";
-      case GoalKind.sessions:
-        return "OBJETIVO EN SESIONES";
-      default:
-        return "OBJETIVO";
+      case GoalKind.distance: return "OBJETIVO EN KILÓMETROS";
+      case GoalKind.time: return "OBJETIVO EN MINUTOS";
+      case GoalKind.sessions: return "OBJETIVO EN SESIONES";
+      default: return "OBJETIVO";
     }
   }
 
   String _getValueHint() {
     switch (_selectedKind) {
-      case GoalKind.distance:
-        return "Ej: 50";
-      case GoalKind.time:
-        return "Ej: 120";
-      case GoalKind.sessions:
-        return "Ej: 5";
-      default:
-        return "";
+      case GoalKind.distance: return "Ej: 50";
+      case GoalKind.time: return "Ej: 120";
+      case GoalKind.sessions: return "Ej: 5";
+      default: return "";
     }
   }
 
   String _getValueSuffix() {
     switch (_selectedKind) {
-      case GoalKind.distance:
-        return "km";
-      case GoalKind.time:
-        return "min";
-      case GoalKind.sessions:
-        return "sesiones";
-      default:
-        return "";
+      case GoalKind.distance: return "km";
+      case GoalKind.time: return "min";
+      case GoalKind.sessions: return "sesiones";
+      default: return "";
     }
   }
 }
-
-

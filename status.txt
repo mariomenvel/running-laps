@@ -1,0 +1,25 @@
+﻿On branch login
+Your branch is up to date with 'origin/login'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   lib/features/admin/data/admin_repository.dart
+	modified:   lib/features/admin/viewmodels/admin_controller.dart
+	modified:   lib/features/admin/views/admin_challenges_tab.dart
+	modified:   lib/features/groups/data/repositories/challenges_repository.dart
+	modified:   lib/features/groups/viewmodels/challenge_detail_controller.dart
+	modified:   lib/features/groups/views/challenge_detail_screen.dart
+	modified:   lib/features/groups/views/widgets/create_challenge_modal.dart
+	modified:   lib/features/history/widgets/training_map_view.dart
+	modified:   lib/features/home/views/home_view.dart
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	diff.txt
+	lib/features/groups/data/helpers/challenge_color_helper.dart
+	lib/features/home/data/global_challenges_repository.dart
+	lib/features/home/widgets/global_challenge_card.dart
+	status.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")

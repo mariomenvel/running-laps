@@ -115,7 +115,7 @@ class AdminController extends ChangeNotifier {
         status: ChallengeStatus.draft, // Inicia como draft o active según lógica, pongamos draft
         metric: metric,
         aggregation: _getDefaultAggregationForMetric(metric),
-        filters: ChallengeFilters(minDistanceM: 0), // Sin filtros extra
+        filters: const ChallengeFilters(requireGps: true),
         goal: ChallengeGoal(
           kind: _getGoalKindForMetric(metric),
           value: goalValue,
@@ -137,6 +137,26 @@ class AdminController extends ChangeNotifier {
   }
 
     Stream<List<Challenge>> get globalChallengesStream => _repository.getGlobalChallenges();
+
+  /// Publica un reto (draft → active)
+  Future<bool> publishGlobalChallenge(String challengeId) async {
+    try {
+      await _repository.publishChallenge(challengeId);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Elimina un reto global
+  Future<bool> deleteChallenge(String challengeId) async {
+    try {
+      await _repository.deleteGlobalChallenge(challengeId);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
 
 
   /// Exportar estadísticas actuales a PDF
