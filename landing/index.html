@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Running Laps — La app de entrenamiento por intervalos con RPE, GPS por serie, grupos, retos y analíticas avanzadas. Disponible próximamente en iOS y Android.">
+  <title>Running Laps — Entrena por series. Mejora de verdad.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --purple:       #8E24AA;
+      --purple-light: #CE93D8;
+      --purple-mid:   #AB47BC;
+      --purple-dark:  #6A1B9A;
+      --purple-glow:  rgba(142, 36, 170, 0.35);
+      --bg:           #0D0D0D;
+      --bg-card:      rgba(255,255,255,0.03);
+      --bg-card-h:    rgba(255,255,255,0.055);
+      --border:       rgba(255,255,255,0.07);
+      --border-p:     rgba(142,36,170,0.28);
+      --text:         #F0F0F0;
+      --muted:        rgba(240,240,240,0.5);
+      --subtle:       rgba(240,240,240,0.28);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ── Scrollbar ─────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+    /* ── Noise texture ─────────────────────────────────────────────── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* ── Gradient text ─────────────────────────────────────────────── */
+    .gt {
+      background: linear-gradient(130deg, var(--purple-light) 0%, var(--purple) 55%, var(--purple-dark) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── Scroll animations ─────────────────────────────────────────── */
+    .fu {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.65s ease, transform 0.65s ease;
+    }
+    .fu.in { opacity: 1; transform: translateY(0); }
+    .fu.d1 { transition-delay: 0.08s; }
+    .fu.d2 { transition-delay: 0.16s; }
+    .fu.d3 { transition-delay: 0.24s; }
+    .fu.d4 { transition-delay: 0.32s; }
+    .fu.d5 { transition-delay: 0.40s; }
+    .fu.d6 { transition-delay: 0.48s; }
+
+    /* ── Nav ───────────────────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 18px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(to bottom, rgba(13,13,13,0.9) 0%, transparent 100%);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .nav-logo {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .nav-chip {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--purple-mid);
+      background: rgba(142,36,170,0.12);
+      border: 1px solid var(--border-p);
+      padding: 5px 14px;
+      border-radius: 100px;
+    }
+
+    /* ── Hero ──────────────────────────────────────────────────────── */
+    #hero {
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 130px 24px 90px;
+      position: relative;
+      overflow: hidden;
+    }
+    #hero .glow {
+      position: absolute;
+      top: 15%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(142,36,170,0.13) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: var(--purple-mid);
+      background: rgba(142,36,170,0.1);
+      border: 1px solid var(--border-p);
+      padding: 6px 16px;
+      border-radius: 100px;
+      margin-bottom: 36px;
+      position: relative;
+      z-index: 1;
+    }
+    .eyebrow .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--purple-mid);
+      animation: blink 2.4s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .hero-h1 {
+      font-size: clamp(52px, 9vw, 100px);
+      font-weight: 900;
+      line-height: 1.0;
+      letter-spacing: clamp(-2px, -0.03em, -4px);
+      margin-bottom: 28px;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-sub {
+      font-size: clamp(16px, 2.2vw, 20px);
+      font-weight: 400;
+      color: var(--muted);
+      max-width: 580px;
+      margin: 0 auto 52px;
+      line-height: 1.75;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-sub strong { color: var(--text); font-weight: 600; }
+
+    /* ── Waitlist form ─────────────────────────────────────────────── */
+    .wl-wrap {
+      max-width: 460px;
+      width: 100%;
+      margin: 0 auto 14px;
+      position: relative;
+      z-index: 1;
+    }
+    .wl-form {
+      display: flex;
+      gap: 0;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 5px;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .wl-form:focus-within {
+      border-color: var(--border-p);
+      box-shadow: 0 0 0 3px rgba(142,36,170,0.1);
+    }
+    .wl-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      padding: 10px 16px;
+      min-width: 0;
+    }
+    .wl-input::placeholder { color: var(--subtle); }
+    .wl-btn {
+      background: linear-gradient(135deg, var(--purple) 0%, var(--purple-dark) 100%);
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      padding: 10px 22px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.1px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.2s, transform 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+    .wl-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .wl-btn:hover::after { opacity: 1; }
+    .wl-btn:hover { transform: translateY(-1px); }
+    .wl-btn:active { transform: translateY(0); }
+    .wl-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    .wl-msg {
+      font-size: 13px;
+      height: 22px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    .wl-msg.ok  { color: #81C784; }
+    .wl-msg.err { color: #EF9A9A; }
+
+    .stores {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 36px;
+      position: relative;
+      z-index: 1;
+    }
+    .stores-note { font-size: 12px; color: var(--subtle); }
+    .store-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.025);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--subtle);
+      filter: grayscale(1);
+    }
+    .store-pill svg { width: 14px; height: 14px; fill: currentColor; flex-shrink: 0; }
+
+    /* ── Divider ───────────────────────────────────────────────────── */
+    .div {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(to right, transparent 0%, var(--border) 30%, var(--border) 70%, transparent 100%);
+    }
+
+    /* ── Section shell ─────────────────────────────────────────────── */
+    .sec { position: relative; z-index: 1; }
+    .inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 96px 24px;
+    }
+    .sec-label {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--purple-mid);
+      margin-bottom: 14px;
+    }
+    .sec-title {
+      font-size: clamp(32px, 5vw, 54px);
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1.08;
+      margin-bottom: 16px;
+    }
+    .sec-sub {
+      font-size: 17px;
+      color: var(--muted);
+      max-width: 500px;
+      line-height: 1.75;
+      margin-bottom: 60px;
+    }
+
+    /* ── Pillars ────────────────────────────────────────────────────── */
+    .pillar-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .pillar-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 36px 32px;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s, border-color 0.3s, transform 0.25s, box-shadow 0.3s;
+    }
+    .pillar-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(142,36,170,0.55), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .pillar-card:hover {
+      background: var(--bg-card-h);
+      border-color: var(--border-p);
+      transform: translateY(-3px);
+      box-shadow: 0 20px 56px rgba(0,0,0,0.45), 0 0 0 1px rgba(142,36,170,0.1);
+    }
+    .pillar-card:hover::before { opacity: 1; }
+    .pillar-icon {
+      width: 52px; height: 52px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(142,36,170,0.1);
+      border: 1px solid rgba(142,36,170,0.18);
+      border-radius: 14px;
+      color: var(--purple);
+    }
+    .pillar-icon svg {
+      width: 26px; height: 26px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .pillar-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 10px;
+      color: var(--text);
+      line-height: 1.2;
+    }
+    .pillar-desc {
+      font-size: 14.5px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 22px;
+    }
+    .pillar-subs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+    .pillar-sub {
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(240,240,240,0.6);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 100px;
+      padding: 4px 12px;
+    }
+    .soon-tag {
+      display: inline-block;
+      margin-top: 12px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--purple-mid);
+      background: rgba(142,36,170,0.1);
+      border: 1px solid rgba(142,36,170,0.22);
+      padding: 3px 9px;
+      border-radius: 6px;
+    }
+
+    /* ── Phones ────────────────────────────────────────────────────── */
+    #screenshots { overflow: hidden; }
+    #screenshots .inner { padding-bottom: 32px; }
+    .phones-track {
+      overflow-x: auto;
+      display: flex;
+      gap: 20px;
+      padding: 16px max(24px, calc((100vw - 1148px) / 2)) 44px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: #222 transparent;
+    }
+    .phones-track::-webkit-scrollbar { height: 4px; }
+    .phones-track::-webkit-scrollbar-thumb { background: #222; border-radius: 2px; }
+
+    .ph-wrap { flex-shrink: 0; scroll-snap-align: start; }
+    .ph {
+      width: 214px;
+      height: 430px;
+      background: #0f0f0f;
+      border-radius: 38px;
+      border: 1.5px solid rgba(255,255,255,0.1);
+      box-shadow:
+        0 48px 80px rgba(0,0,0,0.7),
+        0 0 0 1px rgba(255,255,255,0.03),
+        inset 0 1px 0 rgba(255,255,255,0.07);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    /* notch */
+    .ph::before {
+      content: '';
+      position: absolute;
+      top: 11px; left: 50%;
+      transform: translateX(-50%);
+      width: 76px; height: 20px;
+      background: #000;
+      border-radius: 0 0 12px 12px;
+      z-index: 3;
+    }
+    .ph-screen {
+      flex: 1;
+      padding: 44px 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .ph-screen.t-p { background: linear-gradient(150deg, rgba(142,36,170,0.1) 0%, transparent 55%); }
+    .ph-screen.t-g { background: linear-gradient(150deg, rgba(56,142,60,0.08) 0%, transparent 55%); }
+    .ph-screen.t-b { background: linear-gradient(150deg, rgba(21,101,192,0.1) 0%, transparent 55%); }
+    .ph-screen.t-d { background: linear-gradient(150deg, rgba(74,20,140,0.14) 0%, transparent 55%); }
+
+    .ph-lbl { font-size: 9.5px; font-weight: 700; letter-spacing: 1px; color: rgba(255,255,255,0.85); padding: 0 2px 2px; }
+    .ph-box {
+      background: rgba(142,36,170,0.12);
+      border: 1px solid rgba(142,36,170,0.22);
+      border-radius: 11px;
+      padding: 9px 11px;
+    }
+    .ph-box.dim { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.07); }
+    .ph-box.acc { background: rgba(142,36,170,0.2); border-color: rgba(142,36,170,0.4); }
+    .ph-tag { font-size: 8px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--purple-mid); }
+    .ph-val { font-size: 22px; font-weight: 900; color: #fff; letter-spacing: -1px; line-height: 1.15; }
+    .ph-val.sm { font-size: 17px; }
+    .ph-tiny { font-size: 8.5px; color: rgba(255,255,255,0.38); margin-top: 1px; }
+    .ph-row { display: flex; gap: 7px; }
+    .ph-row .ph-box { flex: 1; }
+    .ph-txt { font-size: 9.5px; color: rgba(255,255,255,0.38); padding: 0 2px; }
+    .ph-btn {
+      background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+      border-radius: 9px;
+      padding: 9px 10px;
+      text-align: center;
+      font-size: 9.5px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.4px;
+      margin-top: auto;
+    }
+    .ph-label {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-top: 12px;
+    }
+
+    /* ── CTA section ───────────────────────────────────────────────── */
+    #cta {
+      background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(142,36,170,0.06) 0%, transparent 70%);
+    }
+    #cta .inner {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── Footer ────────────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 24px;
+    }
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .footer-logo { font-size: 15px; font-weight: 800; letter-spacing: -0.5px; }
+    .footer-links { display: flex; gap: 24px; flex-wrap: wrap; align-items: center; }
+    footer a { color: var(--muted); text-decoration: none; font-size: 13px; transition: color 0.2s; }
+    footer a:hover { color: var(--text); }
+    .footer-copy { font-size: 12px; color: var(--subtle); }
+
+    /* ── Responsive ────────────────────────────────────────────────── */
+    @media (max-width: 680px) {
+      .pillar-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      nav { padding: 14px 20px; }
+      .wl-form { flex-direction: column; gap: 6px; padding: 8px; }
+      .wl-btn { border-radius: 9px; padding: 12px; text-align: center; }
+      .inner { padding: 72px 20px; }
+      .footer-inner { flex-direction: column; text-align: center; }
+      .footer-links { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ─────────────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-logo"><img src="../assets/images/logo.png" alt="Running Laps" style="height:30px;display:block;"></div>
+  <div class="nav-chip">Próximamente</div>
+</nav>
+
+
+<!-- ── HERO ────────────────────────────────────────────────────────── -->
+<section id="hero">
+  <div class="glow"></div>
+
+  <img src="../assets/images/logo.png" alt="Running Laps" style="height:80px;margin-bottom:32px;position:relative;z-index:1;">
+
+  <div class="eyebrow fu">
+    <span class="dot"></span>
+    Entrenamiento por intervalos
+  </div>
+
+  <h1 class="hero-h1 fu d1">
+    <span class="gt">El running</span><br>
+    de verdad<br>
+    se entrena<br>
+    por series.
+  </h1>
+
+  <p class="hero-sub fu d2">
+    La única app diseñada para corredores que entrenan en intervalos,
+    <strong>controlan su esfuerzo</strong> y quieren mejorar de verdad.
+  </p>
+
+  <div class="wl-wrap fu d3">
+    <div class="wl-form">
+      <input
+        type="email"
+        class="wl-input"
+        id="h-email"
+        placeholder="tu@email.com"
+        autocomplete="email"
+        aria-label="Tu email"
+      >
+      <button class="wl-btn" id="h-btn" onclick="submit('h')">
+        Unirme a la lista
+      </button>
+    </div>
+  </div>
+  <div class="wl-msg fu d3" id="h-msg"></div>
+
+  <div class="stores fu d4">
+    <span class="stores-note">Disponible próximamente en</span>
+    <span class="store-pill">
+      <svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      App Store
+    </span>
+    <span class="store-pill">
+      <svg viewBox="0 0 24 24"><path d="M3.18 23.76c.3.16.64.22.97.16L16.2 16.9l-2.52-2.52-10.5 9.38zm17.32-13.15L17.97 9.1l-2.77 2.77 2.77 2.77 2.54-1.5c.74-.43.74-1.49-.01-2.53zM2.3.35A1.3 1.3 0 002 1.17v21.67c0 .33.12.6.3.78l.08.08L13.9 12 2.38.26 2.3.35zm14.24 8.75L4.48 2.12a1.3 1.3 0 00-.97-.17L16.04 14.1l.5-.5z"/></svg>
+      Google Play
+    </span>
+  </div>
+</section>
+
+<div class="div"></div>
+
+
+<!-- ── FEATURES ─────────────────────────────────────────────────────── -->
+<section class="sec" id="features">
+  <div class="inner">
+    <span class="sec-label fu">Funcionalidades</span>
+    <h2 class="sec-title fu d1">Todo lo que necesita<br><span class="gt">un corredor serio.</span></h2>
+    <p class="sec-sub fu d2">Diseñado desde cero para el entrenamiento fraccionado. Sin compromisos.</p>
+
+    <div class="pillar-grid">
+
+      <!-- Pillar 1 — Entrena por series -->
+      <div class="pillar-card fu d1">
+        <div class="pillar-icon">
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div class="pillar-title">Entrena por series</div>
+        <div class="pillar-desc">La única app pensada para el entrenamiento fraccionado de verdad</div>
+        <div class="pillar-subs">
+          <span class="pillar-sub">Intervalos con tiempo y distancia</span>
+          <span class="pillar-sub">Tiempos de descanso precisos</span>
+          <span class="pillar-sub">Plantillas reutilizables</span>
+          <span class="pillar-sub">RPE por serie</span>
+        </div>
+      </div>
+
+      <!-- Pillar 2 — En tu muñeca -->
+      <div class="pillar-card fu d2">
+        <div class="pillar-icon">
+          <svg viewBox="0 0 24 24"><rect x="7" y="5" width="10" height="14" rx="3"/><line x1="9" y1="2" x2="9" y2="5"/><line x1="15" y1="2" x2="15" y2="5"/><line x1="9" y1="19" x2="9" y2="22"/><line x1="15" y1="19" x2="15" y2="22"/><line x1="12" y1="9" x2="12" y2="12"/><line x1="12" y1="12" x2="14" y2="13.2"/></svg>
+        </div>
+        <div class="pillar-title">En tu muñeca</div>
+        <div class="pillar-desc">Disponible para Apple Watch y Wear OS. Controla tu entrenamiento sin tocar el móvil</div>
+        <div class="pillar-subs">
+          <span class="pillar-sub">Métricas en tiempo real</span>
+          <span class="pillar-sub">Avanzar de serie desde el reloj</span>
+          <span class="pillar-sub">GPS sincronizado</span>
+          <span class="pillar-sub">Notificaciones de descanso</span>
+        </div>
+        <span class="soon-tag">Próximamente</span>
+      </div>
+
+      <!-- Pillar 3 — Social y competitivo -->
+      <div class="pillar-card fu d3">
+        <div class="pillar-icon">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
+        <div class="pillar-title">Social y competitivo</div>
+        <div class="pillar-desc">Grupos privados, retos globales y rankings para que entrenar sea más que correr solo</div>
+        <div class="pillar-subs">
+          <span class="pillar-sub">Grupos con código de invitación</span>
+          <span class="pillar-sub">Retos semanales y mensuales</span>
+          <span class="pillar-sub">Medallas y rankings</span>
+          <span class="pillar-sub">Compite con tu comunidad</span>
+        </div>
+      </div>
+
+      <!-- Pillar 4 — Análisis real -->
+      <div class="pillar-card fu d4">
+        <div class="pillar-icon">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+        </div>
+        <div class="pillar-title">Análisis real</div>
+        <div class="pillar-desc">Datos que importan, no ruido. Entiende cómo progresas de verdad</div>
+        <div class="pillar-subs">
+          <span class="pillar-sub">RPE histórico por serie</span>
+          <span class="pillar-sub">Análisis de ritmo y tendencias</span>
+          <span class="pillar-sub">Comparativa de patrones</span>
+          <span class="pillar-sub">Exporta tus sesiones en PDF</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="div"></div>
+
+
+<!-- ── SCREENSHOTS ──────────────────────────────────────────────────── -->
+<section class="sec" id="screenshots">
+  <div class="inner">
+    <span class="sec-label fu">La app</span>
+    <h2 class="sec-title fu d1">Diseñada para<br><span class="gt">no distraerte.</span></h2>
+    <p class="sec-sub fu d2">Todo lo que necesitas mientras corres, a golpe de vista.</p>
+  </div>
+
+  <div class="phones-track fu">
+
+    <!-- Phone 1 — Tracking activo -->
+    <div class="ph-wrap">
+      <div class="ph">
+        <div class="ph-screen t-p">
+          <div class="ph-lbl">ENTRENAMIENTO ACTIVO</div>
+          <div class="ph-box">
+            <div class="ph-tag">Serie 3 / 6 · En marcha</div>
+            <div class="ph-val">4:32</div>
+            <div class="ph-tiny">tiempo de serie transcurrido</div>
+          </div>
+          <div class="ph-row">
+            <div class="ph-box">
+              <div class="ph-tag">Ritmo</div>
+              <div class="ph-val sm">4:18</div>
+              <div class="ph-tiny">min/km</div>
+            </div>
+            <div class="ph-box">
+              <div class="ph-tag">Dist.</div>
+              <div class="ph-val sm">312m</div>
+              <div class="ph-tiny">obj. 400m</div>
+            </div>
+          </div>
+          <div class="ph-box dim">
+            <div class="ph-tag">Progreso</div>
+            <div class="ph-txt" style="color:rgba(255,255,255,0.7);font-size:11px;">▓▓▓▓▓▓▓░░░  78%</div>
+          </div>
+          <div class="ph-btn">⏸  PAUSAR SERIE</div>
+        </div>
+      </div>
+      <div class="ph-label">Tracking en vivo</div>
+    </div>
+
+    <!-- Phone 2 — RPE + resumen -->
+    <div class="ph-wrap">
+      <div class="ph">
+        <div class="ph-screen t-g">
+          <div class="ph-lbl">FIN DE SERIE · ¿CÓMO FUE?</div>
+          <div class="ph-box" style="background:rgba(56,142,60,0.12);border-color:rgba(56,142,60,0.25);">
+            <div class="ph-tag" style="color:#81C784;">Distancia</div>
+            <div class="ph-val">401m</div>
+            <div class="ph-tiny">objetivo 400m ✓</div>
+          </div>
+          <div class="ph-row">
+            <div class="ph-box">
+              <div class="ph-tag">Ritmo</div>
+              <div class="ph-val sm">4:21</div>
+              <div class="ph-tiny">min/km</div>
+            </div>
+            <div class="ph-box acc">
+              <div class="ph-tag">RPE</div>
+              <div class="ph-val sm">8/10</div>
+              <div class="ph-tiny">esfuerzo</div>
+            </div>
+          </div>
+          <div class="ph-box dim">
+            <div class="ph-tag">Sesión · series completadas</div>
+            <div class="ph-txt" style="font-size:14px;color:rgba(255,255,255,0.55);">✅ ✅ ✅ ⬜ ⬜ ⬜</div>
+          </div>
+          <div class="ph-btn">→  INICIAR DESCANSO</div>
+        </div>
+      </div>
+      <div class="ph-label">RPE por intervalo</div>
+    </div>
+
+    <!-- Phone 3 — Analíticas -->
+    <div class="ph-wrap">
+      <div class="ph">
+        <div class="ph-screen t-b">
+          <div class="ph-lbl">ANALÍTICAS · 30 DÍAS</div>
+          <div class="ph-box" style="background:rgba(21,101,192,0.12);border-color:rgba(21,101,192,0.25);">
+            <div class="ph-tag" style="color:#90CAF9;">Volumen total</div>
+            <div class="ph-val">147 km</div>
+            <div class="ph-tiny">↑ +12% vs mes anterior</div>
+          </div>
+          <div class="ph-row">
+            <div class="ph-box">
+              <div class="ph-tag">RPE medio</div>
+              <div class="ph-val sm">7.2</div>
+              <div class="ph-tiny">de 10</div>
+            </div>
+            <div class="ph-box">
+              <div class="ph-tag">Ritmo 5k</div>
+              <div class="ph-val sm">4:05</div>
+              <div class="ph-tiny">↓ mejora</div>
+            </div>
+          </div>
+          <div class="ph-box dim">
+            <div class="ph-tag">Tendencia ritmo</div>
+            <div class="ph-txt" style="font-size:10px;color:rgba(255,255,255,0.5);">↘ ↘ ↘ ↘ ↗ ↘ ↘ ↘</div>
+          </div>
+          <div class="ph-box dim">
+            <div class="ph-tag">🔥 Racha</div>
+            <div class="ph-txt" style="color:rgba(255,255,255,0.6);">6 semanas activo</div>
+          </div>
+        </div>
+      </div>
+      <div class="ph-label">Analíticas avanzadas</div>
+    </div>
+
+    <!-- Phone 4 — Grupos -->
+    <div class="ph-wrap">
+      <div class="ph">
+        <div class="ph-screen t-d">
+          <div class="ph-lbl">GRUPO · PACEMAKERS</div>
+          <div class="ph-box">
+            <div class="ph-tag">Reto activo · 5 días restantes</div>
+            <div class="ph-val sm">Mayor volumen</div>
+            <div class="ph-tiny">8 participantes</div>
+          </div>
+          <div class="ph-box dim" style="border-left:3px solid gold;">
+            <div class="ph-txt" style="color:rgba(255,255,255,0.7);">🥇 Carlos · 82 km</div>
+          </div>
+          <div class="ph-box acc">
+            <div class="ph-txt" style="color:rgba(255,255,255,0.85);">🥈 Tú · 71 km  ←</div>
+          </div>
+          <div class="ph-box dim">
+            <div class="ph-txt" style="color:rgba(255,255,255,0.5);">🥉 María · 68 km</div>
+          </div>
+          <div class="ph-box dim">
+            <div class="ph-txt" style="color:rgba(255,255,255,0.35);">4.  Andrés · 61 km</div>
+          </div>
+        </div>
+      </div>
+      <div class="ph-label">Grupos y retos</div>
+    </div>
+
+  </div>
+</section>
+
+<div class="div"></div>
+
+
+<!-- ── CTA ──────────────────────────────────────────────────────────── -->
+<section class="sec" id="cta">
+  <div class="inner">
+    <span class="sec-label fu">Lista de espera</span>
+    <h2 class="sec-title fu d1">Sé el primero en<br><span class="gt">entrenar diferente.</span></h2>
+    <p class="sec-sub fu d2" style="margin-bottom:40px;">Apúntate y tendrás acceso anticipado cuando lancemos. Sin spam, sin compromisos.</p>
+
+    <div class="wl-wrap fu d3" style="max-width:440px;">
+      <div class="wl-form">
+        <input
+          type="email"
+          class="wl-input"
+          id="c-email"
+          placeholder="tu@email.com"
+          autocomplete="email"
+          aria-label="Tu email"
+        >
+        <button class="wl-btn" id="c-btn" onclick="submit('c')">
+          Unirme a la lista
+        </button>
+      </div>
+    </div>
+    <div class="wl-msg fu d3" id="c-msg"></div>
+
+    <p class="fu d4" style="font-size:12px;color:var(--subtle);margin-top:18px;">
+      Solo te avisamos cuando lancemos. Nada más.
+    </p>
+  </div>
+</section>
+
+
+<!-- ── FOOTER ───────────────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo"><span class="gt">Running Laps</span></div>
+    <div class="footer-links">
+      <a href="mailto:runninglapsapp@gmail.com">runninglapsapp@gmail.com</a>
+      <a href="#">Política de Privacidad</a>
+    </div>
+    <div class="footer-copy">© 2025 Running Laps</div>
+  </div>
+</footer>
+
+
+<script>
+  // ── Intersection Observer ─────────────────────────────────────────
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -32px 0px' });
+
+  document.querySelectorAll('.fu').forEach(el => io.observe(el));
+
+  // ── Waitlist submission ───────────────────────────────────────────
+  async function submit(prefix) {
+    const emailEl = document.getElementById(`${prefix}-email`);
+    const btnEl   = document.getElementById(`${prefix}-btn`);
+    const msgEl   = document.getElementById(`${prefix}-msg`);
+
+    const email = emailEl.value.trim();
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      msgEl.textContent = 'Por favor, introduce un email válido.';
+      msgEl.className = 'wl-msg err';
+      emailEl.focus();
+      return;
+    }
+
+    btnEl.disabled = true;
+    btnEl.textContent = 'Enviando…';
+    msgEl.textContent = '';
+    msgEl.className = 'wl-msg';
+
+    try {
+      /* REPLACE YOUR_PROJECT_ID with your Firebase project ID */
+      /* Also add this rule to Firestore:
+         match /waitlist/{doc} { allow create: if true; }       */
+      const PROJECT_ID = 'YOUR_PROJECT_ID';
+      const res = await fetch(
+        `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/waitlist`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fields: {
+              email:     { stringValue: email },
+              timestamp: { stringValue: new Date().toISOString() },
+              source:    { stringValue: prefix === 'h' ? 'landing_hero' : 'landing_cta' }
+            }
+          })
+        }
+      );
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      msgEl.textContent = '¡Apuntado! Te avisaremos cuando lancemos 🚀';
+      msgEl.className = 'wl-msg ok';
+      emailEl.value = '';
+      btnEl.textContent = '✓ Apuntado';
+      btnEl.style.background = 'linear-gradient(135deg, #2E7D32, #388E3C)';
+
+    } catch (err) {
+      console.error(err);
+      msgEl.textContent = 'Algo salió mal. Escríbenos a runninglapsapp@gmail.com';
+      msgEl.className = 'wl-msg err';
+      btnEl.disabled = false;
+      btnEl.textContent = 'Unirme a la lista';
+    }
+  }
+
+  // Enter key on inputs
+  ['h-email', 'c-email'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') submit(id[0]);
+    });
+  });
+</script>
+
+</body>
+</html>
