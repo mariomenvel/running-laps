@@ -1046,7 +1046,7 @@ flutter test --coverage
 
 ---
 
-## 🚀 Mejoras Futuras
+##  Mejoras Futuras
 
 ### Prioridad Alta
 

@@ -21,6 +21,13 @@ class GroupRewardsController {
   final ValueNotifier<List<GroupBadges>> badgesTable = ValueNotifier([]);
   final ValueNotifier<List<MedalHistoryEntry>> myMedalHistory = ValueNotifier([]);
   final ValueNotifier<List<BadgeHistoryEntry>> myBadgeHistory = ValueNotifier([]);
+  final ValueNotifier<List<GroupHistoryItem>> groupHistory = ValueNotifier([]);
+
+  // Raw lists used to rebuild the merged group timeline
+  List<MedalHistoryEntry> _groupMedalHistory = [];
+  List<BadgeHistoryEntry> _groupBadgeHistory = [];
+  // Cache of user profile data keyed by uid to avoid repeated Firestore reads
+  final Map<String, Map<String, dynamic>?> _userCache = {};
 
   GroupRewardsController({
     required this.groupId,
@@ -60,6 +67,17 @@ class GroupRewardsController {
 
       _rewardsRepo.streamMyBadgeHistory(groupId, uid).listen((list) {
         myBadgeHistory.value = list;
+      });
+
+      // 5. Stream Group History (all members combined, latest 50)
+      _rewardsRepo.streamGroupMedalHistory(groupId).listen((list) async {
+        _groupMedalHistory = list;
+        await _rebuildGroupHistory();
+      });
+
+      _rewardsRepo.streamGroupBadgeHistory(groupId).listen((list) async {
+        _groupBadgeHistory = list;
+        await _rebuildGroupHistory();
       });
 
     } catch (e) {
@@ -111,6 +129,64 @@ class GroupRewardsController {
     return await Future.wait(futures);
   }
 
+  /// Merges medal and badge history for all members, enriches with user data,
+  /// sorts by awardedAt descending, and caps at 50 entries.
+  Future<void> _rebuildGroupHistory() async {
+    // Collect uids not yet in cache
+    final uids = {
+      ..._groupMedalHistory.map((e) => e.uid),
+      ..._groupBadgeHistory.map((e) => e.uid),
+    };
+    for (final uid in uids) {
+      if (!_userCache.containsKey(uid)) {
+        try {
+          final doc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .get();
+          _userCache[uid] = doc.exists ? doc.data() : null;
+        } catch (_) {
+          _userCache[uid] = null;
+        }
+      }
+    }
+
+    final items = <GroupHistoryItem>[];
+
+    for (final m in _groupMedalHistory) {
+      final data = _userCache[m.uid];
+      items.add(GroupHistoryItem(
+        uid: m.uid,
+        awardedAt: m.awardedAt,
+        medal: m,
+        displayName:
+            data?['nombre'] as String? ?? data?['displayName'] as String?,
+        photoUrl:
+            data?['photoUrl'] as String? ?? data?['profileImageUrl'] as String?,
+        profilePicType: data?['profilePicType'] as String?,
+        avatarConfig: data?['avatarConfig'] as Map<String, dynamic>?,
+      ));
+    }
+
+    for (final b in _groupBadgeHistory) {
+      final data = _userCache[b.uid];
+      items.add(GroupHistoryItem(
+        uid: b.uid,
+        awardedAt: b.awardedAt,
+        badge: b,
+        displayName:
+            data?['nombre'] as String? ?? data?['displayName'] as String?,
+        photoUrl:
+            data?['photoUrl'] as String? ?? data?['profileImageUrl'] as String?,
+        profilePicType: data?['profilePicType'] as String?,
+        avatarConfig: data?['avatarConfig'] as Map<String, dynamic>?,
+      ));
+    }
+
+    items.sort((a, b) => b.awardedAt.compareTo(a.awardedAt));
+    groupHistory.value = items.take(50).toList();
+  }
+
   void dispose() {
     isLoading.dispose();
     error.dispose();
@@ -118,6 +194,7 @@ class GroupRewardsController {
     badgesTable.dispose();
     myMedalHistory.dispose();
     myBadgeHistory.dispose();
+    groupHistory.dispose();
   }
 }
 

@@ -350,4 +350,51 @@ class BadgeHistoryEntry {
   }
 }
 
+/// Unified history item combining medals and badges for the group-wide timeline.
+/// Exactly one of [medal] or [badge] is non-null.
+class GroupHistoryItem {
+  final String uid;
+  final DateTime awardedAt;
+  final MedalHistoryEntry? medal;
+  final BadgeHistoryEntry? badge;
 
+  // UI enrichment fields
+  final String? displayName;
+  final String? photoUrl;
+  final String? profilePicType;
+  final Map<String, dynamic>? avatarConfig;
+
+  GroupHistoryItem({
+    required this.uid,
+    required this.awardedAt,
+    this.medal,
+    this.badge,
+    this.displayName,
+    this.photoUrl,
+    this.profilePicType,
+    this.avatarConfig,
+  });
+
+  bool get isMedal => medal != null;
+
+  String get challengeTitle =>
+      medal?.challengeTitle ?? badge?.challengeTitle ?? '';
+
+  GroupHistoryItem copyWith({
+    String? displayName,
+    String? photoUrl,
+    String? profilePicType,
+    Map<String, dynamic>? avatarConfig,
+  }) {
+    return GroupHistoryItem(
+      uid: uid,
+      awardedAt: awardedAt,
+      medal: medal,
+      badge: badge,
+      displayName: displayName ?? this.displayName,
+      photoUrl: photoUrl ?? this.photoUrl,
+      profilePicType: profilePicType ?? this.profilePicType,
+      avatarConfig: avatarConfig ?? this.avatarConfig,
+    );
+  }
+}

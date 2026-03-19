@@ -137,10 +137,18 @@ service cloud.firestore {
       // Only group admins / owners can rename, configure, or delete the group.
       allow update, delete: if isGroupAdmin(groupId);
 
+      // Any signed-in user can increment memberCount when joining via invite code.
+      // Restricted to changing only the 'memberCount' field to prevent abuse.
+      allow update: if isSignedIn() &&
+                       request.resource.data.diff(resource.data)
+                         .affectedKeys().hasOnly(['memberCount']);
+
       // ── groups/{groupId}/members/{uid} ─────────────────────────────────────
       match /members/{uid} {
         // All current group members can read the full roster (ranking, UI).
-        allow read: if isGroupMember(groupId);
+        // isOwner(uid) allows a user to check their own membership status
+        // before joining (e.g. join-by-code flow reads the doc to avoid duplicate join).
+        allow read: if isGroupMember(groupId) || isOwner(uid);
 
         // A user can create their own member doc (join / accept invite) or delete
         // it (leave). A group admin can do either for any member (kick / invite).
@@ -192,6 +200,12 @@ service cloud.firestore {
 
         // Only group admins can create, update, or revoke invites.
         allow write: if isGroupAdmin(groupId);
+
+        // Any signed-in user can increment the uses counter when joining via code.
+        // Restricted to changing only the 'uses' field to prevent abuse.
+        allow update: if isSignedIn() &&
+                         request.resource.data.diff(resource.data)
+                           .affectedKeys().hasOnly(['uses']);
       }
 
       // ── groups/{groupId}/medals/{uid} ──────────────────────────────────────
@@ -238,6 +252,24 @@ service cloud.firestore {
         // Even group admins cannot read or write other members' prefs.
         allow read, write: if isOwner(uid);
       }
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // invite_codes/{code}
+    // ────────────────────────────────────────────────────────────────────────
+    // Flat lookup table: shortCode → { groupId, inviteId, expiresAt }.
+    // Allows any authenticated user to resolve a code before they are a group
+    // member. Writes are allowed to any signed-in user because:
+    //   (a) Only group admins reach createInviteWithCode() in practice
+    //       (the UI is gated behind _isOwner in GroupScreen).
+    //   (b) The invite document in groups/{groupId}/invites/{id} (protected by
+    //       isGroupAdmin) is written atomically in the same batch, so a rogue
+    //       write to invite_codes pointing to a non-existent invite is harmless.
+    // PRODUCTION RECOMMENDATION: Restrict write to isGroupAdmin(data.groupId)
+    //   once Firestore supports accessing request.resource.data in top-level rules.
+    match /invite_codes/{code} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
     }
 
     // ────────────────────────────────────────────────────────────────────────

@@ -53,7 +53,7 @@ El proyecto está construido sobre una arquitectura escalable y moderna:
 
 ---
 
-## 🚀 Instalación y Uso
+##  Instalación y Uso
 
 ### Requisitos Previos
 - Flutter SDK (3.x o superior)

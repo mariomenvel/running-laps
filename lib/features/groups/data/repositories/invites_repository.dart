@@ -3,6 +3,7 @@ import '../models/group_models.dart';
 import '../models/enums.dart';
 import '../repositories/user_groups_repository.dart';
 import '../services/user_lookup_service.dart';
+import '../helpers/invite_token_helper.dart';
 
 /// Repository para gestión de invitaciones a grupos
 class InvitesRepository {
@@ -34,6 +35,138 @@ class InvitesRepository {
     } catch (e) {
       throw Exception('Error creating invite: $e');
     }
+  }
+
+  // ============================================
+  // CODE-BASED INVITES
+  // ============================================
+
+  /// Creates a new invite with a [shortCode] + token, stores the invite under
+  /// `groups/{groupId}/invites/{id}` AND writes a lookup entry to
+  /// `invite_codes/{shortCode}` so it can be resolved without knowing the groupId.
+  ///
+  /// Returns a record with [inviteId], [shortCode], and the raw [token] (the
+  /// token is NOT stored — only its hash is). The caller should present the
+  /// shortCode/token to the user.
+  Future<({String inviteId, String shortCode, String token})> createInviteWithCode(
+    String groupId,
+    String createdBy, {
+    int maxUses = 50,
+    Duration validity = const Duration(days: 7),
+  }) async {
+    try {
+      final token = InviteTokenHelper.generateToken();
+      final tokenHash = InviteTokenHelper.hashToken(token);
+      final shortCode = InviteTokenHelper.generateShortCode();
+      final now = DateTime.now();
+      final expiresAt = now.add(validity);
+
+      final inviteRef = _firestore
+          .collection('groups')
+          .doc(groupId)
+          .collection('invites')
+          .doc();
+
+      final codeRef = _firestore.collection('invite_codes').doc(shortCode);
+
+      final invite = Invite(
+        inviteId: inviteRef.id,
+        createdAt: now,
+        createdBy: createdBy,
+        expiresAt: expiresAt,
+        maxUses: maxUses,
+        uses: 0,
+        revoked: false,
+        tokenHash: tokenHash,
+        shortCode: shortCode,
+      );
+
+      // Atomic write: invite doc + shortCode lookup
+      final batch = _firestore.batch();
+      batch.set(inviteRef, invite.toMap());
+      batch.set(codeRef, {
+        'groupId': groupId,
+        'inviteId': inviteRef.id,
+        'createdAt': now.toIso8601String(),
+        'expiresAt': expiresAt.toIso8601String(),
+      });
+      await batch.commit();
+
+      return (inviteId: inviteRef.id, shortCode: shortCode, token: token);
+    } catch (e) {
+      throw Exception('Error creating invite with code: $e');
+    }
+  }
+
+  /// Resolves a [shortCode] → fetches the corresponding [Invite] and its groupId.
+  /// Returns null if the code doesn't exist.
+  Future<({Invite invite, String groupId})?> getInviteByShortCode(
+      String shortCode) async {
+    try {
+      final codeDoc = await _firestore
+          .collection('invite_codes')
+          .doc(shortCode.toUpperCase().trim())
+          .get();
+
+      if (!codeDoc.exists) return null;
+
+      final data = codeDoc.data()!;
+      final groupId = data['groupId'] as String;
+      final inviteId = data['inviteId'] as String;
+
+      final inviteDoc = await _firestore
+          .collection('groups')
+          .doc(groupId)
+          .collection('invites')
+          .doc(inviteId)
+          .get();
+
+      if (!inviteDoc.exists) return null;
+
+      final invite = Invite.fromMap(inviteDoc.data()!, inviteId: inviteDoc.id);
+      return (invite: invite, groupId: groupId);
+    } catch (e) {
+      throw Exception('Error fetching invite by short code: $e');
+    }
+  }
+
+  /// Validates [shortCode] and joins [uid] to the group.
+  /// Throws descriptive exceptions on validation failure.
+  Future<GroupMember?> joinByShortCode(
+    String shortCode,
+    String uid, {
+    String? email,
+  }) async {
+    print('[InvitesRepo] joinByShortCode — code=$shortCode uid=$uid');
+    final result = await getInviteByShortCode(shortCode);
+
+    if (result == null) {
+      print('[InvitesRepo] joinByShortCode — invite_codes/$shortCode not found');
+      throw Exception('Código de invitación no encontrado');
+    }
+
+    print('[InvitesRepo] joinByShortCode — resolved groupId=${result.groupId} inviteId=${result.invite.inviteId}');
+    print('[InvitesRepo] joinByShortCode — invite state: revoked=${result.invite.revoked} uses=${result.invite.uses}/${result.invite.maxUses} expiresAt=${result.invite.expiresAt}');
+
+    if (result.invite.revoked) {
+      throw Exception('Este código ha sido revocado');
+    }
+
+    if (result.invite.uses >= result.invite.maxUses) {
+      throw Exception('Este código ha alcanzado el límite de usos');
+    }
+
+    if (DateTime.now().isAfter(result.invite.expiresAt)) {
+      throw Exception('Este código ha caducado');
+    }
+
+    // Reuse the existing acceptInvite transaction (validates + increments uses)
+    return acceptInvite(
+      result.groupId,
+      result.invite.tokenHash,
+      uid,
+      email: email,
+    );
   }
 
   /// Invita un usuario por email (lo añade como pendiente directamente)
@@ -159,13 +292,17 @@ class InvitesRepository {
     String uid, {
     String? email,
   }) async {
+    print('[InvitesRepo] acceptInvite — groupId=$groupId uid=$uid');
     try {
       // 1. Buscar invitación por tokenHash
       final invite = await getInviteByTokenHash(groupId, tokenHash);
-      
+
       if (invite == null) {
+        print('[InvitesRepo] acceptInvite — invite not found by tokenHash');
         throw Exception('Invite not found');
       }
+
+      print('[InvitesRepo] acceptInvite — found invite inviteId=${invite.inviteId}');
 
       // 2. Validaciones
       if (invite.revoked) {
@@ -198,7 +335,7 @@ class InvitesRepository {
       if (memberDoc.exists) {
         final existingMember = GroupMember.fromMap(memberDoc.data()!, uid: uid);
         if (existingMember.status == MemberStatus.active) {
-          // Ya es miembro activo, no hacer nada
+          print('[InvitesRepo] acceptInvite — user already active member, skipping');
           return existingMember;
         }
       }
@@ -213,7 +350,7 @@ class InvitesRepository {
             .doc(groupId)
             .collection('invites')
             .doc(invite.inviteId);
-        
+        print('[InvitesRepo] acceptInvite — writing: groups/$groupId/invites/${invite.inviteId} (update uses)');
         transaction.update(inviteRef, {
           'uses': FieldValue.increment(1),
         });
@@ -224,6 +361,7 @@ class InvitesRepository {
             .doc(groupId)
             .collection('members')
             .doc(uid);
+        print('[InvitesRepo] acceptInvite — writing: groups/$groupId/members/$uid (set member)');
 
         newMember = GroupMember(
           uid: uid,
@@ -235,6 +373,7 @@ class InvitesRepository {
 
         // Incrementar memberCount
         final groupRef = _firestore.collection('groups').doc(groupId);
+        print('[InvitesRepo] acceptInvite — writing: groups/$groupId (update memberCount)');
         transaction.update(groupRef, {
           'memberCount': FieldValue.increment(1),
         });
@@ -245,14 +384,16 @@ class InvitesRepository {
             .doc(uid)
             .collection('groups')
             .doc(groupId);
-        
+        print('[InvitesRepo] acceptInvite — writing: users/$uid/groups/$groupId (set userGroup)');
         transaction.set(userGroupRef, {
           'joinedAt': DateTime.now().toIso8601String(),
         });
       });
 
+      print('[InvitesRepo] acceptInvite — transaction committed successfully');
       return newMember;
     } catch (e) {
+      print('[InvitesRepo] acceptInvite — ERROR: $e');
       throw Exception('Error accepting invite: $e');
     }
   }

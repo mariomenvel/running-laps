@@ -103,7 +103,35 @@ class RewardsRepository {
   // HISTORY - READ
   // ============================================
 
+  /// Stream of ALL medal history entries for the group (all members),
+  /// ordered by awardedAt descending, limited to the last 50 documents.
+  Stream<List<MedalHistoryEntry>> streamGroupMedalHistory(String groupId) {
+    return _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('medal_history')
+        .orderBy('awardedAt', descending: true)
+        .limit(50)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => MedalHistoryEntry.fromMap(doc.data(), id: doc.id))
+            .toList());
+  }
 
+  /// Stream of ALL badge history entries for the group (all members),
+  /// ordered by awardedAt descending, limited to the last 50 documents.
+  Stream<List<BadgeHistoryEntry>> streamGroupBadgeHistory(String groupId) {
+    return _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('badge_history')
+        .orderBy('awardedAt', descending: true)
+        .limit(50)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => BadgeHistoryEntry.fromMap(doc.data(), id: doc.id))
+            .toList());
+  }
 
   // ============================================
   // SPECIFIC QUERIES (UI Helpers)

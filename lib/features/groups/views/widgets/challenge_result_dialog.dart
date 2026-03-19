@@ -97,7 +97,7 @@ class _ChallengeResultDialogState extends State<ChallengeResultDialog> {
                         const SizedBox(height: 12),
                         Text(
                           widget.notification.type == GroupNotificationType.goalMet
-                            ? "Has completado el objetivo de este reto. ¡Sigue así! 🚀"
+                            ? "Has completado el objetivo de este reto. ¡Sigue así!"
                             : (widget.notification.hasBadge 
                               ? "Has completado el objetivo del reto y ganado un logro."
                               : "Has finalizado el reto en el podio."),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -119,6 +120,10 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
                             bottom: 120,
                           ),
                           children: [
+                            // SECTION: JOIN BY CODE
+                            _JoinByCodeBanner(currentUserId: _currentUserId!),
+                            const SizedBox(height: 16),
+
                             // SECTION: INVITATIONS
                             if (pending.isNotEmpty) ...[
                               _buildSectionTitle("Invitaciones Pendientes 📩"),
@@ -293,13 +298,23 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
   }
 
   Widget _buildEmptyState() {
-    return EmptyStateWidget(
-      icon: Icons.people_outline_rounded,
-      title: 'Sin grupos',
-      description:
-          'Únete o crea un grupo para competir con otros corredores',
-      ctaLabel: 'Explorar grupos',
-      onCta: _handleCreateGroup,
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20, top: 16),
+          child: _JoinByCodeBanner(currentUserId: _currentUserId!),
+        ),
+        Expanded(
+          child: EmptyStateWidget(
+            icon: Icons.people_outline_rounded,
+            title: 'Sin grupos',
+            description:
+                'Únete o crea un grupo para competir con otros corredores',
+            ctaLabel: 'Crear grupo',
+            onCta: _handleCreateGroup,
+          ),
+        ),
+      ],
     );
   }
 
@@ -329,6 +344,7 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
               final groupId = await _groupsRepo.createGroup(newGroup);
               final ownerMember = GroupMember(
                 uid: _currentUserId!,
+                role: 'owner',
                 status: MemberStatus.active,
                 joinedAt: DateTime.now(),
               );
@@ -343,7 +359,7 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
                       children: [
                         Icon(Icons.check_circle, color: Colors.white),
                         SizedBox(width: 12),
-                        Text("¡Grupo creado! 🚀"),
+                        Text("¡Grupo creado!"),
                       ],
                     ),
                     behavior: SnackBarBehavior.floating,
@@ -789,6 +805,284 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
 
 
   // ... (Rest of existing methods)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Join-by-code banner (tap to open sheet)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _JoinByCodeBanner extends StatelessWidget {
+  final String currentUserId;
+  const _JoinByCodeBanner({required this.currentUserId});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: () => showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => _JoinByCodeSheet(currentUserId: currentUserId),
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          color: cs.onSurface.withOpacity(0.04),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Tema.brandPurple.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Tema.brandPurple.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.tag_rounded,
+                  color: Tema.brandPurple, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '¿Tienes un código de invitación?',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: cs.onSurface,
+                    ),
+                  ),
+                  Text(
+                    'Únete directamente con un código de 6 letras',
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: cs.onSurface.withOpacity(0.5)),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios_rounded,
+                size: 14, color: cs.onSurface.withOpacity(0.35)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Join-by-code bottom sheet
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _JoinByCodeSheet extends StatefulWidget {
+  final String currentUserId;
+  const _JoinByCodeSheet({required this.currentUserId});
+
+  @override
+  State<_JoinByCodeSheet> createState() => _JoinByCodeSheetState();
+}
+
+class _JoinByCodeSheetState extends State<_JoinByCodeSheet> {
+  final _invitesRepo = InvitesRepository();
+  final _codeController = TextEditingController();
+  bool _isJoining = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _join() async {
+    final code = _codeController.text.trim().toUpperCase();
+    if (code.length != 6) {
+      setState(() => _error = 'El código debe tener 6 caracteres');
+      return;
+    }
+    setState(() { _isJoining = true; _error = null; });
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      await _invitesRepo.joinByShortCode(
+        code,
+        widget.currentUserId,
+        email: currentUser?.email,
+      );
+      if (!mounted) return;
+      Navigator.pop(context);
+      ModernSnackBar.showSuccess(context, '¡Bienvenid@ al grupo!');
+    } catch (e) {
+      if (!mounted) return;
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      setState(() { _error = msg; _isJoining = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom + 32,
+        top: 16,
+        left: 24,
+        right: 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: cs.outline.withOpacity(0.4),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Title
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Tema.brandPurple.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.tag_rounded,
+                    color: Tema.brandPurple, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Unirse con código',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: cs.onSurface,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  Text(
+                    'Introduce el código de 6 caracteres',
+                    style: TextStyle(
+                        fontSize: 13, color: cs.onSurface.withOpacity(0.5)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 28),
+
+          // Code input
+          TextField(
+            controller: _codeController,
+            autofocus: true,
+            textCapitalization: TextCapitalization.characters,
+            maxLength: 6,
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 10,
+              color: Tema.brandPurple,
+            ),
+            textAlign: TextAlign.center,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')),
+            ],
+            decoration: InputDecoration(
+              counterText: '',
+              hintText: 'XXXXXX',
+              hintStyle: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 10,
+                color: cs.onSurface.withOpacity(0.18),
+              ),
+              filled: true,
+              fillColor: Tema.brandPurple.withOpacity(0.05),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide:
+                    const BorderSide(color: Tema.brandPurple, width: 2),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            ),
+            onSubmitted: (_) => _join(),
+          ),
+
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(Icons.error_outline_rounded,
+                    size: 16, color: cs.error),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    _error!,
+                    style: TextStyle(color: cs.error, fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          const SizedBox(height: 20),
+
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: ElevatedButton(
+              onPressed: _isJoining ? null : _join,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Tema.brandPurple,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18)),
+                elevation: 0,
+              ),
+              child: _isJoining
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 2.5),
+                    )
+                  : const Text(
+                      'Unirse al grupo',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// Tarjeta de invitación pendiente

@@ -80,12 +80,16 @@ class GroupMember {
   final MemberStatus status;
   final DateTime joinedAt;
   final DateTime? kickedAt;
+  /// Role in the group. 'owner' for the creator, 'admin' for promoted members,
+  /// null for regular members. Checked by Firestore isGroupAdmin() rule.
+  final String? role;
 
   const GroupMember({
     required this.uid,
     required this.status,
     required this.joinedAt,
     this.kickedAt,
+    this.role,
   });
 
   Map<String, dynamic> toMap() {
@@ -93,6 +97,7 @@ class GroupMember {
       'status': status.toFirestore(),
       'joinedAt': joinedAt.toIso8601String(),
       if (kickedAt != null) 'kickedAt': kickedAt!.toIso8601String(),
+      if (role != null) 'role': role,
     };
   }
 
@@ -102,6 +107,7 @@ class GroupMember {
       status: MemberStatus.fromFirestore(map['status'] as String? ?? 'active'),
       joinedAt: _parseDateTime(map['joinedAt']),
       kickedAt: map['kickedAt'] != null ? _parseDateTime(map['kickedAt']) : null,
+      role: map['role'] as String?,
     );
   }
 
@@ -110,12 +116,14 @@ class GroupMember {
     MemberStatus? status,
     DateTime? joinedAt,
     DateTime? kickedAt,
+    String? role,
   }) {
     return GroupMember(
       uid: uid ?? this.uid,
       status: status ?? this.status,
       joinedAt: joinedAt ?? this.joinedAt,
       kickedAt: kickedAt ?? this.kickedAt,
+      role: role ?? this.role,
     );
   }
 
@@ -141,6 +149,8 @@ class Invite {
   final bool revoked;
   final String tokenHash;
   final String? targetEmail;
+  /// 6-char human-readable code (e.g. "X7K2PQ"). Present on code-based invites.
+  final String? shortCode;
 
   const Invite({
     required this.inviteId,
@@ -152,6 +162,7 @@ class Invite {
     required this.revoked,
     required this.tokenHash,
     this.targetEmail,
+    this.shortCode,
   });
 
   Map<String, dynamic> toMap() {
@@ -164,6 +175,7 @@ class Invite {
       'revoked': revoked,
       'tokenHash': tokenHash,
       if (targetEmail != null) 'targetEmail': targetEmail,
+      if (shortCode != null) 'shortCode': shortCode,
     };
   }
 
@@ -178,6 +190,7 @@ class Invite {
       revoked: map['revoked'] as bool? ?? false,
       tokenHash: map['tokenHash'] as String,
       targetEmail: map['targetEmail'] as String?,
+      shortCode: map['shortCode'] as String?,
     );
   }
 
@@ -191,6 +204,7 @@ class Invite {
     bool? revoked,
     String? tokenHash,
     String? targetEmail,
+    String? shortCode,
   }) {
     return Invite(
       inviteId: inviteId ?? this.inviteId,
@@ -202,6 +216,7 @@ class Invite {
       revoked: revoked ?? this.revoked,
       tokenHash: tokenHash ?? this.tokenHash,
       targetEmail: targetEmail ?? this.targetEmail,
+      shortCode: shortCode ?? this.shortCode,
     );
   }
 

@@ -10,16 +10,67 @@ import '../viewmodels/group_rewards_controller.dart';
 import '../data/models/rewards_models.dart';
 import '../data/models/enums.dart';
 
-class GroupRewardsScreen extends StatefulWidget {
+/// Standalone screen wrapper — kept for backward compatibility.
+/// Embeds [GroupRewardsBody] with its own Scaffold + AppHeader + GradientBanner.
+class GroupRewardsScreen extends StatelessWidget {
   final String groupId;
 
   const GroupRewardsScreen({Key? key, required this.groupId}) : super(key: key);
 
   @override
-  State<GroupRewardsScreen> createState() => _GroupRewardsScreenState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            AppHeader(
+              onTapLeft: null,
+              onTapRight: () {
+                Navigator.push(
+                  context,
+                  AppRoute(page: const ProfileMenuView()),
+                );
+              },
+              showBottomDivider: false,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Row(
+                children: [
+                  _AnimatedBackButton(onTap: () => Navigator.pop(context)),
+                ],
+              ),
+            ),
+            GradientBanner(
+              title: "Recompensas",
+              subtitle: "Medallero y logros del grupo",
+              icon: Icons.emoji_events_rounded,
+              height: 85,
+              gradientColors: [
+                Tema.brandPurple,
+                Tema.brandPurple.withOpacity(0.7),
+              ],
+            ),
+            Expanded(child: GroupRewardsBody(groupId: groupId)),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-class _GroupRewardsScreenState extends State<GroupRewardsScreen>
+/// Embeddable rewards body — sub-tabs: Medallero / Logros / Historial.
+/// Use this directly inside a parent TabBarView to avoid nested Scaffolds.
+class GroupRewardsBody extends StatefulWidget {
+  final String groupId;
+
+  const GroupRewardsBody({Key? key, required this.groupId}) : super(key: key);
+
+  @override
+  State<GroupRewardsBody> createState() => _GroupRewardsBodyState();
+}
+
+class _GroupRewardsBodyState extends State<GroupRewardsBody>
     with SingleTickerProviderStateMixin {
   late GroupRewardsController _controller;
   late TabController _tabController;
@@ -41,119 +92,75 @@ class _GroupRewardsScreenState extends State<GroupRewardsScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            // 1. HEADER
-            AppHeader(
-              onTapLeft: null,
-              onTapRight: () {
-                Navigator.push(
-                  context,
-                  AppRoute(page: const ProfileMenuView()),
-                );
-              },
-              showBottomDivider: false,
-            ),
-
-            // 2. Back Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Row(
-                children: [
-                  _AnimatedBackButton(onTap: () => Navigator.pop(context)),
+    return Column(
+      children: [
+        // Sub-Tab Bar
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: TabBar(
+            controller: _tabController,
+            indicatorSize: TabBarIndicatorSize.tab,
+            indicator: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Tema.brandPurple,
+                  Tema.brandPurple.withOpacity(0.8),
                 ],
               ),
-            ),
-
-            // 3. TITLE BANNER
-            GradientBanner(
-              title: "Recompensas",
-              subtitle: "Medallero y logros del grupo",
-              icon: Icons.emoji_events_rounded,
-              height: 85,
-              gradientColors: [
-                Colors.amber.shade600,
-                Colors.orange.shade400,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Tema.brandPurple.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
               ],
             ),
-
-            // 4. TABS
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: TabBar(
-                controller: _tabController,
-                indicatorSize: TabBarIndicatorSize.tab, // Same size for all
-                indicator: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.amber.shade600,
-                      Colors.orange.shade500,
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.amber.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                labelColor: Colors.white,
-                unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
-                dividerColor: Colors.transparent,
-                labelPadding: EdgeInsets.zero, // Remove extra padding to maximize space
-                tabs: const [
-                  Tab(
-                    height: 36,
-                    child: Center(child: Text("Medallero")),
-                  ),
-                  Tab(
-                    height: 36,
-                    child: Center(child: Text("Logros")),
-                  ),
-                  Tab(
-                    height: 36,
-                    child: Center(child: Text("Mi Historial")),
-                  ),
-                ],
-              ),
-            ),
-
-            // 5. CONTENT
-            Expanded(
-              child: ValueListenableBuilder<bool>(
-                valueListenable: _controller.isLoading,
-                builder: (context, loading, _) {
-                  if (loading) {
-                    return const Center(
-                      child: CircularProgressIndicator(color: Tema.brandPurple),
-                    );
-                  }
-
-                  return TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildMedalsTab(),
-                      _buildBadgesTab(),
-                      _buildHistoryTab(),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ],
+            labelColor: Colors.white,
+            unselectedLabelColor:
+                Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            labelStyle:
+                const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            unselectedLabelStyle:
+                const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+            dividerColor: Colors.transparent,
+            labelPadding: EdgeInsets.zero,
+            tabs: const [
+              Tab(height: 36, child: Center(child: Text("Medallero"))),
+              Tab(height: 36, child: Center(child: Text("Logros"))),
+              Tab(height: 36, child: Center(child: Text("Historial"))),
+            ],
+          ),
         ),
-      ),
+
+        // Content
+        Expanded(
+          child: ValueListenableBuilder<bool>(
+            valueListenable: _controller.isLoading,
+            builder: (context, loading, _) {
+              if (loading) {
+                return const Center(
+                  child: CircularProgressIndicator(color: Tema.brandPurple),
+                );
+              }
+
+              return TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildMedalsTab(),
+                  _buildBadgesTab(),
+                  _buildHistoryTab(),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -217,20 +224,45 @@ class _GroupRewardsScreenState extends State<GroupRewardsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionHeader("MIS MEDALLAS RECIENTES", Icons.emoji_events_rounded),
+          // ── Group-wide timeline ────────────────────────────────────
+          _buildSectionHeader("HISTORIAL DEL GRUPO", Icons.history_rounded),
+          const SizedBox(height: 12),
+          ValueListenableBuilder<List<GroupHistoryItem>>(
+            valueListenable: _controller.groupHistory,
+            builder: (context, list, _) {
+              if (list.isEmpty) return _buildMiniEmptyState("Sin actividad aún");
+              return Column(
+                children: list.asMap().entries.map((entry) {
+                  return _StaggeredItem(
+                    index: entry.key,
+                    child: _buildGroupHistoryItem(entry.value),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+
+          const SizedBox(height: 28),
+          Divider(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+            height: 1,
+          ),
+          const SizedBox(height: 24),
+
+          // ── My medals ─────────────────────────────────────────────
+          _buildSectionHeader("MIS MEDALLAS", Icons.emoji_events_rounded),
           const SizedBox(height: 12),
           ValueListenableBuilder<List<MedalHistoryEntry>>(
             valueListenable: _controller.myMedalHistory,
             builder: (context, list, _) {
               if (list.isEmpty) return _buildMiniEmptyState("Sin medallas aún");
-
               return Column(
                 children: list.asMap().entries.map((entry) {
                   return _StaggeredItem(
                     index: entry.key,
                     child: _buildHistoryItem(
-                      icon: Icons.emoji_events,
-                      iconColor: _getMedalColor(entry.value.medal),
+                      iconWidget: _MedalIcon(type: entry.value.medal),
+                      accentColor: _getMedalColor(entry.value.medal),
                       title: entry.value.challengeTitle,
                       date: entry.value.awardedAt,
                       trailing: "Rank #${entry.value.rank}",
@@ -243,20 +275,20 @@ class _GroupRewardsScreenState extends State<GroupRewardsScreen>
 
           const SizedBox(height: 32),
 
-          _buildSectionHeader("MIS LOGROS RECIENTES", Icons.verified_rounded),
+          // ── My badges ─────────────────────────────────────────────
+          _buildSectionHeader("MIS LOGROS", Icons.verified_rounded),
           const SizedBox(height: 12),
           ValueListenableBuilder<List<BadgeHistoryEntry>>(
             valueListenable: _controller.myBadgeHistory,
             builder: (context, list, _) {
               if (list.isEmpty) return _buildMiniEmptyState("Sin logros aún");
-
               return Column(
                 children: list.asMap().entries.map((entry) {
                   return _StaggeredItem(
                     index: entry.key,
                     child: _buildHistoryItem(
-                      icon: Icons.verified_rounded,
-                      iconColor: Colors.green,
+                      iconWidget: const _BadgeIcon(),
+                      accentColor: Tema.brandPurple,
                       title: entry.value.challengeTitle,
                       date: entry.value.awardedAt,
                       trailing: entry.value.periodKey,
@@ -265,6 +297,100 @@ class _GroupRewardsScreenState extends State<GroupRewardsScreen>
                 }).toList(),
               );
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGroupHistoryItem(GroupHistoryItem item) {
+    final String? myUid = FirebaseAuth.instance.currentUser?.uid;
+    final bool isMe = item.uid == myUid;
+    final Color accentColor =
+        item.isMedal ? _getMedalColor(item.medal!.medal) : Tema.brandPurple;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.black.withOpacity(0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Medal / badge icon
+          item.isMedal
+              ? _MedalIcon(type: item.medal!.medal)
+              : const _BadgeIcon(),
+          const SizedBox(width: 10),
+          // Member avatar (radius 16 = 32px diameter)
+          AvatarHelper.construirAvatar(
+            radius: 16,
+            type: item.profilePicType ?? 'none',
+            config: item.avatarConfig,
+            url: item.photoUrl,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isMe ? 'Tú' : (item.displayName ?? 'Usuario'),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: isMe
+                        ? Tema.brandPurple
+                        : Theme.of(context).colorScheme.onSurface,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  item.challengeTitle,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  DateFormat('d MMM yyyy', 'es_ES').format(item.awardedAt),
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Trailing chip
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+            decoration: BoxDecoration(
+              color: accentColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              item.isMedal ? '#${item.medal!.rank}' : 'Objetivo',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: accentColor,
+              ),
+            ),
           ),
         ],
       ),
@@ -319,13 +445,13 @@ class _GroupRewardsScreenState extends State<GroupRewardsScreen>
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.amber.withOpacity(0.1),
-                    Colors.orange.withOpacity(0.05),
+                    Tema.brandPurple.withOpacity(0.1),
+                    Tema.brandPurple.withOpacity(0.05),
                   ],
                 ),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 56, color: Colors.amber.shade300),
+              child: Icon(icon, size: 56, color: Tema.brandPurple.withOpacity(0.5)),
             ),
             const SizedBox(height: 20),
             Text(
@@ -349,16 +475,22 @@ class _GroupRewardsScreenState extends State<GroupRewardsScreen>
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
+        border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.inbox_rounded, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2), size: 20),
+          Icon(Icons.inbox_rounded,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+              size: 20),
           const SizedBox(width: 10),
           Text(
             msg,
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35), fontWeight: FontWeight.w500),
+            style: TextStyle(
+                color:
+                    Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -366,8 +498,8 @@ class _GroupRewardsScreenState extends State<GroupRewardsScreen>
   }
 
   Widget _buildHistoryItem({
-    required IconData icon,
-    required Color iconColor,
+    required Widget iconWidget,
+    required Color accentColor,
     required String title,
     required DateTime date,
     required String trailing,
@@ -390,16 +522,7 @@ class _GroupRewardsScreenState extends State<GroupRewardsScreen>
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [iconColor.withOpacity(0.2), iconColor.withOpacity(0.1)],
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: iconColor, size: 20),
-          ),
+          iconWidget,
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -407,20 +530,28 @@ class _GroupRewardsScreenState extends State<GroupRewardsScreen>
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 14),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   DateFormat('d MMM yyyy', 'es_ES').format(date),
-                  style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.5),
+                  ),
                 ),
               ],
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: accentColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
@@ -428,7 +559,7 @@ class _GroupRewardsScreenState extends State<GroupRewardsScreen>
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
-                color: iconColor,
+                color: accentColor,
               ),
             ),
           ),
@@ -437,16 +568,7 @@ class _GroupRewardsScreenState extends State<GroupRewardsScreen>
     );
   }
 
-  Color _getMedalColor(MedalType type) {
-    switch (type) {
-      case MedalType.gold:
-        return const Color(0xFFFFD700);
-      case MedalType.silver:
-        return const Color(0xFFC0C0C0);
-      case MedalType.bronze:
-        return const Color(0xFFCD7F32);
-    }
-  }
+  Color _getMedalColor(MedalType type) => _MedalIcon._color(type);
 }
 
 /// Card de medallas premium
@@ -498,7 +620,9 @@ class _PremiumMedalCard extends StatelessWidget {
                       end: Alignment.bottomRight,
                     )
                   : null,
-              color: isTop3 ? null : Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+              color: isTop3
+                  ? null
+                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
               shape: BoxShape.circle,
               boxShadow: isTop3
                   ? [
@@ -514,7 +638,12 @@ class _PremiumMedalCard extends StatelessWidget {
               child: Text(
                 "#$rank",
                 style: TextStyle(
-                  color: isTop3 ? Colors.white : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  color: isTop3
+                      ? Colors.white
+                      : Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.6),
                   fontWeight: FontWeight.w900,
                   fontSize: 15,
                 ),
@@ -539,11 +668,17 @@ class _PremiumMedalCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isMe ? "Tú" : (item.displayName ?? "Usuario ${item.uid.substring(0, 4)}"),
+                        isMe
+                            ? "Tú"
+                            : (item.displayName ??
+                                "Usuario ${item.uid.substring(0, 4)}"),
                         style: TextStyle(
-                          fontWeight: isMe ? FontWeight.w900 : FontWeight.bold,
+                          fontWeight:
+                              isMe ? FontWeight.w900 : FontWeight.bold,
                           fontSize: 16,
-                          color: isMe ? Tema.brandPurple : Theme.of(context).colorScheme.onSurface,
+                          color: isMe
+                              ? Tema.brandPurple
+                              : Theme.of(context).colorScheme.onSurface,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -552,15 +687,18 @@ class _PremiumMedalCard extends StatelessWidget {
                       Row(
                         children: [
                           if (item.gold > 0) ...[
-                            _MedalCounter(type: MedalType.gold, count: item.gold),
+                            _MedalCounter(
+                                type: MedalType.gold, count: item.gold),
                             const SizedBox(width: 8),
                           ],
                           if (item.silver > 0) ...[
-                            _MedalCounter(type: MedalType.silver, count: item.silver),
+                            _MedalCounter(
+                                type: MedalType.silver, count: item.silver),
                             const SizedBox(width: 8),
                           ],
                           if (item.bronze > 0) ...[
-                            _MedalCounter(type: MedalType.bronze, count: item.bronze),
+                            _MedalCounter(
+                                type: MedalType.bronze, count: item.bronze),
                           ],
                         ],
                       ),
@@ -575,10 +713,14 @@ class _PremiumMedalCard extends StatelessWidget {
           Column(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Tema.brandPurple, Tema.brandPurple.withOpacity(0.7)],
+                    colors: [
+                      Tema.brandPurple,
+                      Tema.brandPurple.withOpacity(0.7)
+                    ],
                   ),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
@@ -601,7 +743,12 @@ class _PremiumMedalCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 "Total",
-                style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+                style: TextStyle(
+                    fontSize: 10,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.5)),
               ),
             ],
           ),
@@ -611,9 +758,9 @@ class _PremiumMedalCard extends StatelessWidget {
   }
 
   Color _getRankColor(int rank) {
-    if (rank == 1) return const Color(0xFFFFD700);
-    if (rank == 2) return const Color(0xFFC0C0C0);
-    if (rank == 3) return const Color(0xFFCD7F32);
+    if (rank == 1) return _MedalIcon._color(MedalType.gold);
+    if (rank == 2) return _MedalIcon._color(MedalType.silver);
+    if (rank == 3) return _MedalIcon._color(MedalType.bronze);
     return Colors.grey.shade400;
   }
 }
@@ -637,7 +784,7 @@ class _PremiumBadgeCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withOpacity(0.08),
+            color: Tema.brandPurple.withOpacity(0.08),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -645,23 +792,24 @@ class _PremiumBadgeCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Icon
+          // Badge icon
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.green.shade400, Colors.green.shade600],
+                colors: [Tema.brandPurple, Tema.brandPurple.withOpacity(0.7)],
               ),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.green.withOpacity(0.3),
+                  color: Tema.brandPurple.withOpacity(0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
               ],
             ),
-            child: const Icon(Icons.verified_rounded, color: Colors.white, size: 26),
+            child:
+                const Icon(Icons.verified_rounded, color: Colors.white, size: 26),
           ),
           const SizedBox(width: 16),
 
@@ -681,11 +829,17 @@ class _PremiumBadgeCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isMe ? "Tú" : (item.displayName ?? "Usuario ${item.uid.substring(0, 4)}"),
+                        isMe
+                            ? "Tú"
+                            : (item.displayName ??
+                                "Usuario ${item.uid.substring(0, 4)}"),
                         style: TextStyle(
-                          fontWeight: isMe ? FontWeight.w900 : FontWeight.bold,
+                          fontWeight:
+                              isMe ? FontWeight.w900 : FontWeight.bold,
                           fontSize: 16,
-                          color: isMe ? Colors.green.shade700 : Theme.of(context).colorScheme.onSurface,
+                          color: isMe
+                              ? Tema.brandPurple
+                              : Theme.of(context).colorScheme.onSurface,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -695,7 +849,8 @@ class _PremiumBadgeCard extends StatelessWidget {
                         children: [
                           _buildBadgeStat("${item.weeklyCompleted}", "Sem."),
                           const SizedBox(width: 12),
-                          _buildBadgeStat("${item.monthlyCompleted}", "Mens."),
+                          _buildBadgeStat(
+                              "${item.monthlyCompleted}", "Mens."),
                         ],
                       ),
                     ],
@@ -707,15 +862,19 @@ class _PremiumBadgeCard extends StatelessWidget {
 
           // Total badge
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.green.shade500, Colors.green.shade700],
+                colors: [
+                  Tema.brandPurple,
+                  Tema.brandPurple.withOpacity(0.7)
+                ],
               ),
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.green.withOpacity(0.3),
+                  color: Tema.brandPurple.withOpacity(0.3),
                   blurRadius: 8,
                 ),
               ],
@@ -738,16 +897,16 @@ class _PremiumBadgeCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.green.shade50,
+        color: Tema.brandPurple.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
-              color: Colors.green.shade700,
+              color: Tema.brandPurple,
               fontSize: 13,
             ),
           ),
@@ -755,7 +914,7 @@ class _PremiumBadgeCard extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: Colors.green.shade500,
+              color: Tema.brandPurple.withOpacity(0.7),
               fontSize: 11,
             ),
           ),
@@ -765,7 +924,7 @@ class _PremiumBadgeCard extends StatelessWidget {
   }
 }
 
-/// Medal counter chip
+/// Medal counter chip used in _PremiumMedalCard
 class _MedalCounter extends StatelessWidget {
   final MedalType type;
   final int count;
@@ -774,7 +933,7 @@ class _MedalCounter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _getMedalColor(type);
+    final color = _MedalIcon._color(type);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
@@ -784,10 +943,19 @@ class _MedalCounter extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: color.withOpacity(0.3)),
+        boxShadow: type == MedalType.gold
+            ? [
+                BoxShadow(
+                  color: color.withOpacity(0.3),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                )
+              ]
+            : null,
       ),
       child: Row(
         children: [
-          Icon(Icons.emoji_events, size: 14, color: color),
+          Icon(Icons.emoji_events_rounded, size: 14, color: color),
           const SizedBox(width: 4),
           Text(
             "$count",
@@ -801,16 +969,72 @@ class _MedalCounter extends StatelessWidget {
       ),
     );
   }
+}
 
-  Color _getMedalColor(MedalType type) {
+/// Styled medal icon: 24px trophy in a circular container with matching tint.
+/// Gold gets a subtle glow shadow.
+class _MedalIcon extends StatelessWidget {
+  final MedalType type;
+  final double size;
+
+  const _MedalIcon({required this.type, this.size = 24});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _color(type);
+    return Container(
+      width: size + 16,
+      height: size + 16,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        shape: BoxShape.circle,
+        boxShadow: type == MedalType.gold
+            ? [
+                BoxShadow(
+                  color: color.withOpacity(0.35),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                )
+              ]
+            : null,
+      ),
+      child: Center(
+        child: Icon(Icons.emoji_events_rounded, color: color, size: size),
+      ),
+    );
+  }
+
+  static Color _color(MedalType type) {
     switch (type) {
       case MedalType.gold:
         return const Color(0xFFFFD700);
       case MedalType.silver:
-        return const Color(0xFFC0C0C0);
+        return const Color(0xFFB0BEC5);
       case MedalType.bronze:
         return const Color(0xFFCD7F32);
     }
+  }
+}
+
+/// Styled badge icon: 24px verified check in a circular brandPurple container.
+class _BadgeIcon extends StatelessWidget {
+  final double size;
+
+  const _BadgeIcon({this.size = 24});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size + 16,
+      height: size + 16,
+      decoration: BoxDecoration(
+        color: Tema.brandPurple.withOpacity(0.12),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Icon(Icons.verified_rounded, color: Tema.brandPurple, size: size),
+      ),
+    );
   }
 }
 
@@ -837,7 +1061,8 @@ class _StaggeredItemState extends State<_StaggeredItem>
       vsync: this,
       duration: const Duration(milliseconds: 450),
     );
-    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
+    _animation =
+        CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
 
     Future.delayed(Duration(milliseconds: widget.index * 70), () {
       if (mounted) _controller.forward();
@@ -890,7 +1115,9 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: _isPressed ? Theme.of(context).colorScheme.onSurface.withOpacity(0.08) : Theme.of(context).colorScheme.surface,
+          color: _isPressed
+              ? Theme.of(context).colorScheme.onSurface.withOpacity(0.08)
+              : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -926,6 +1153,3 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
     );
   }
 }
-
-
-

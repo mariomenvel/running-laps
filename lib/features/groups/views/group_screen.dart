@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:confetti/confetti.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:intl/intl.dart';
 
 import '../viewmodels/group_challenges_controller.dart';
 import '../data/models/enums.dart';
@@ -24,6 +28,7 @@ import '../../../../features/groups/data/helpers/challenge_helpers.dart';
 import '../../training/views/training_start_view.dart';
 import '../../profile/views/profile_menu_screen.dart';
 import '../data/repositories/invites_repository.dart';
+import '../data/helpers/invite_token_helper.dart';
 import '../../../../core/widgets/modern_snackbar.dart';
 
 /// Pantalla de Grupo Rediseñada: Premium, moderna con animaciones fluidas
@@ -68,7 +73,8 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
   void initState() {
     super.initState();
     _confettiController = ConfettiController(duration: const Duration(seconds: 3));
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(_onTabChanged);
     _controller = GroupChallengesController(groupId: widget.groupId);
     _controller.init();
 
@@ -95,6 +101,10 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
     _controller.group.addListener(_checkOwnership);
   }
 
+  void _onTabChanged() {
+    if (mounted) setState(() {});
+  }
+
   void _checkOwnership() {
     final currentUser = FirebaseAuth.instance.currentUser;
     final group = _controller.group.value;
@@ -117,6 +127,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
   void dispose() {
     _entranceCtrl.dispose();
     _confettiController.dispose();
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _scrollController.dispose();
     _headerAnimController.dispose();
@@ -155,27 +166,6 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                       subtitle: '${group?.memberCount ?? 0} miembros activos',
                       icon: Icons.groups_rounded,
                       height: 85,
-                      trailing: IconButton(
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            AppModalRoute(
-                              page: GroupRewardsScreen(groupId: widget.groupId),
-                            ),
-                          );
-                        },
-                        icon: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            Icons.emoji_events_outlined,
-                            color: Colors.amber.shade200,
-                            size: 22,
-                          ),
-                        ),
-                      ),
                     );
                   },
                 )),
@@ -200,6 +190,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                     children: [
                       _buildChallengesTab(),
                       _buildMembersTab(),
+                      GroupRewardsBody(groupId: widget.groupId),
                     ],
                   )),
                 ),
@@ -230,7 +221,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
             ),
         ],
       ),
-      floatingActionButton: _isOwner
+      floatingActionButton: _isOwner && _tabController.index == 0
           ? Builder(builder: (context) {
               final isDark = Theme.of(context).brightness == Brightness.dark;
               return Container(
@@ -323,7 +314,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -336,43 +327,25 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+          color: Tema.brandPurple,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Tema.brandPurple.withOpacity(0.15),
+              color: Tema.brandPurple.withOpacity(0.3),
               blurRadius: 8,
-              offset: const Offset(0, 2),
+              offset: const Offset(0, 3),
             ),
           ],
         ),
-        labelColor: Tema.brandPurple,
-        unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-        labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        indicatorSize: TabBarIndicatorSize.tab,
+        labelColor: Colors.white,
+        unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
         dividerColor: Colors.transparent,
         splashBorderRadius: BorderRadius.circular(16),
         tabs: const [
-          Tab(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.flag_rounded, size: 18),
-                SizedBox(width: 8),
-                Text("Retos"),
-              ],
-            ),
-          ),
-          Tab(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.people_alt_rounded, size: 18),
-                SizedBox(width: 8),
-                Text("Miembros"),
-              ],
-            ),
-          ),
+          Tab(text: "Retos"),
+          Tab(text: "Miembros"),
+          Tab(text: "Premios"),
         ],
       ),
     );
@@ -428,14 +401,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                           onJoin: () async {
                             await _controller.joinChallenge(challenge.id);
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: const Text("¡Te has unido al reto! 🚀"),
-                                  backgroundColor: Colors.green,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                ),
-                              );
+                              ModernSnackBar.showSuccess(context, '¡Te has unido al reto! 🚀');
                               _confettiController.play();
                             }
                           },
@@ -483,7 +449,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                         onPressed: _showInviteDialog,
                         icon: const Icon(Icons.person_add_rounded, size: 20, color: Colors.white),
                         label: const Text(
-                          "Invitar Miembro por Email",
+                          "Invitar Miembro",
                           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                         style: ElevatedButton.styleFrom(
@@ -536,96 +502,17 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
   }
 
   void _showInviteDialog() {
-    final emailController = TextEditingController();
-    bool isLoading = false;
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              title: const Row(
-                children: [
-                  Icon(Icons.mail_outline_rounded, color: Tema.brandPurple),
-                  SizedBox(width: 12),
-                  Text("Invitar Miembro"),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    "Introduce el correo electrónico del usuario. Debe estar registrado en la app.",
-                    style: TextStyle(color: Colors.grey, fontSize: 13),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: emailController,
-                    decoration: InputDecoration(
-                      labelText: "Email del usuario",
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      filled: true,
-                      fillColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  if (isLoading)
-                     const Padding(
-                       padding: EdgeInsets.only(top: 16.0),
-                       child: CircularProgressIndicator(),
-                     ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: isLoading ? null : () => Navigator.pop(context),
-                  child: const Text("Cancelar", style: TextStyle(color: Colors.grey)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Tema.brandPurple,
-                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onPressed: isLoading ? null : () async {
-                    final email = emailController.text.trim();
-                    if (email.isEmpty) return;
-
-                    setState(() => isLoading = true);
-                    final repo = InvitesRepository();
-                    try {
-                      final uid = await repo.inviteUserByEmail(widget.groupId, email);
-                      if (uid != null) {
-                        if (mounted) {
-                          Navigator.pop(context); // Close dialog
-                          ModernSnackBar.showSuccess(context, "Invitación enviada correctamente 🚀");
-                        }
-                      } else {
-                        setState(() => isLoading = false);
-                        if (mounted) {
-                          ModernSnackBar.showError(context, "Usuario no encontrado con ese email.");
-                        }
-                      }
-                    } catch (e) {
-                      setState(() => isLoading = false);
-                      if (mounted) {
-                         // Check specific error messages
-                         if (e.toString().contains("already a member")) {
-                            ModernSnackBar.showError(context, "El usuario ya es miembro o está invitado.");
-                         } else {
-                            ModernSnackBar.showError(context, "Error al invitar: $e");
-                         }
-                      }
-                    }
-                  },
-                  child: const Text("Invitar", style: TextStyle(color: Colors.white)),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _InviteSheet(
+        groupId: widget.groupId,
+        currentUserUid: currentUser.uid,
+      ),
     );
   }
 
@@ -857,7 +744,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => CreateChallengeModal(
+      builder: (_) => CreateChallengeModal(
         onCreate: (title, kind, value, start, end) async {
           final currentUser = FirebaseAuth.instance.currentUser;
           if (currentUser == null) return;
@@ -907,26 +794,11 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
 
             if (mounted) {
               _confettiController.play();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Row(
-                    children: [
-                      const Icon(Icons.check_circle, color: Colors.white),
-                      const SizedBox(width: 12),
-                      Text('Reto "$title" creado 🚀'),
-                    ],
-                  ),
-                  backgroundColor: Colors.green.shade600,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              );
+              ModernSnackBar.showSuccess(context, 'Reto "$title" creado ');
             }
           } catch (e) {
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-              );
+              ModernSnackBar.showError(context, 'Error al crear el reto: $e');
             }
           }
         },
@@ -1590,6 +1462,409 @@ class _StaggeredMemberItemState extends State<_StaggeredMemberItem>
           end: Offset.zero,
         ).animate(_animation),
         child: widget.child,
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Invite bottom sheet: code + QR + share + email invite
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _InviteSheet extends StatefulWidget {
+  final String groupId;
+  final String currentUserUid;
+
+  const _InviteSheet({
+    required this.groupId,
+    required this.currentUserUid,
+  });
+
+  @override
+  State<_InviteSheet> createState() => _InviteSheetState();
+}
+
+class _InviteSheetState extends State<_InviteSheet> {
+  final _invitesRepo = InvitesRepository();
+  final _emailController = TextEditingController();
+
+  String? _shortCode;
+  DateTime? _expiresAt;
+  bool _isGenerating = false;
+  bool _isSendingEmail = false;
+  String? _generateError;
+
+  @override
+  void initState() {
+    super.initState();
+    _generateCode();
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _generateCode() async {
+    setState(() {
+      _isGenerating = true;
+      _generateError = null;
+    });
+    try {
+      final result = await _invitesRepo.createInviteWithCode(
+        widget.groupId,
+        widget.currentUserUid,
+      );
+      if (!mounted) return;
+      setState(() {
+        _shortCode = result.shortCode;
+        _expiresAt = DateTime.now().add(const Duration(days: 7));
+        _isGenerating = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _generateError = 'No se pudo generar el código: $e';
+        _isGenerating = false;
+      });
+    }
+  }
+
+  Future<void> _sendEmailInvite() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) return;
+    setState(() => _isSendingEmail = true);
+    try {
+      final uid = await _invitesRepo.inviteUserByEmail(widget.groupId, email);
+      if (!mounted) return;
+      if (uid != null) {
+        _emailController.clear();
+        ModernSnackBar.showSuccess(context, 'Invitación enviada a $email');
+      } else {
+        ModernSnackBar.showError(context, 'Usuario no encontrado con ese email');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      final msg = e.toString().contains('already a member')
+          ? 'El usuario ya es miembro o está invitado'
+          : 'Error al invitar: $e';
+      ModernSnackBar.showError(context, msg);
+    } finally {
+      if (mounted) setState(() => _isSendingEmail = false);
+    }
+  }
+
+  void _copyCode() {
+    if (_shortCode == null) return;
+    Clipboard.setData(ClipboardData(text: _shortCode!));
+    ModernSnackBar.showSuccess(context, 'Código copiado');
+  }
+
+  void _shareLink() {
+    if (_shortCode == null) return;
+    final url = InviteTokenHelper.buildInviteUrl(_shortCode!);
+    Share.share(
+      'Únete a mi grupo en Running Laps con el código $_shortCode '
+      'o este enlace: $url',
+      subject: 'Invitación a Running Laps',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        top: 16,
+        left: 24,
+        right: 24,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: cs.outline.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Title
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Tema.brandPurple.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Icons.link_rounded,
+                      color: Tema.brandPurple, size: 22),
+                ),
+                const SizedBox(width: 14),
+                Text(
+                  'Invitar al grupo',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: cs.onSurface,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // ── Code section ────────────────────────────────────────────────
+            Text(
+              'CÓDIGO DE INVITACIÓN',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.2,
+                color: cs.onSurface.withOpacity(0.45),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            if (_isGenerating)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 32),
+                  child: CircularProgressIndicator(color: Tema.brandPurple),
+                ),
+              )
+            else if (_generateError != null)
+              Center(
+                child: Column(
+                  children: [
+                    Text(_generateError!,
+                        style: TextStyle(
+                            color: cs.error, fontSize: 13),
+                        textAlign: TextAlign.center),
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: _generateCode,
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Reintentar'),
+                    ),
+                  ],
+                ),
+              )
+            else if (_shortCode != null) ...[
+              // Code card
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: cs.onSurface.withOpacity(isDark ? 0.06 : 0.04),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                      color: Tema.brandPurple.withOpacity(0.2), width: 1.5),
+                ),
+                child: Column(
+                  children: [
+                    // Large code display + copy tap
+                    GestureDetector(
+                      onTap: _copyCode,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            _shortCode!,
+                            style: const TextStyle(
+                              fontSize: 40,
+                              fontWeight: FontWeight.w900,
+                              color: Tema.brandPurple,
+                              letterSpacing: 8,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Icon(Icons.copy_rounded,
+                              color: Tema.brandPurple.withOpacity(0.7),
+                              size: 22),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (_expiresAt != null)
+                      Text(
+                        'Válido hasta ${DateFormat("d MMM yyyy", "es_ES").format(_expiresAt!)}',
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: cs.onSurface.withOpacity(0.45)),
+                      ),
+                    const SizedBox(height: 20),
+
+                    // QR Code
+                    Center(
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: QrImageView(
+                          data: InviteTokenHelper.buildInviteUrl(_shortCode!),
+                          version: QrVersions.auto,
+                          size: 160,
+                          backgroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Action buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _copyCode,
+                            icon: const Icon(Icons.copy_rounded, size: 18),
+                            label: const Text('Copiar código'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Tema.brandPurple,
+                              side: BorderSide(
+                                  color: Tema.brandPurple.withOpacity(0.4)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14)),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _shareLink,
+                            icon: const Icon(Icons.share_rounded,
+                                size: 18, color: Colors.white),
+                            label: const Text('Compartir',
+                                style: TextStyle(color: Colors.white)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Tema.brandPurple,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14)),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Regenerate button
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton.icon(
+                        onPressed: _isGenerating ? null : _generateCode,
+                        icon: Icon(Icons.refresh_rounded,
+                            size: 16,
+                            color: cs.onSurface.withOpacity(0.5)),
+                        label: Text(
+                          'Generar nuevo código',
+                          style: TextStyle(
+                              color: cs.onSurface.withOpacity(0.5),
+                              fontSize: 13),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 28),
+
+            // ── Email invite section ─────────────────────────────────────────
+            Text(
+              'INVITAR POR EMAIL',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.2,
+                color: cs.onSurface.withOpacity(0.45),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    style: const TextStyle(fontSize: 15),
+                    decoration: InputDecoration(
+                      hintText: 'correo@ejemplo.com',
+                      hintStyle:
+                          TextStyle(color: cs.onSurface.withOpacity(0.35)),
+                      filled: true,
+                      fillColor: cs.onSurface.withOpacity(0.04),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide:
+                            const BorderSide(color: Tema.brandPurple, width: 2),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                SizedBox(
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: _isSendingEmail ? null : _sendEmailInvite,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Tema.brandPurple,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                    ),
+                    child: _isSendingEmail
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2),
+                          )
+                        : const Icon(Icons.send_rounded,
+                            color: Colors.white, size: 20),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'El usuario debe estar registrado en la app.',
+              style: TextStyle(
+                  fontSize: 12, color: cs.onSurface.withOpacity(0.4)),
+            ),
+          ],
+        ),
       ),
     );
   }
