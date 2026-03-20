@@ -7,6 +7,7 @@ import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:firebase_core/firebase_core.dart'; // Para FirebaseException
 
 import '../data/serie.dart';
+import '../data/entrenamiento.dart';
 import 'package:running_laps/config/app_theme.dart';
 import '../../../core/widgets/app_header.dart';
 import '../../../core/services/gps_service.dart';
@@ -15,6 +16,7 @@ import '../../../core/services/settings_service.dart';
 import '../../../core/utils/app_transitions.dart';
 
 import '../../home/views/home_view.dart';
+import 'training_summary_screen.dart';
 import '../../profile/views/profile_menu_screen.dart';
 import '../viewmodels/training_viewmodel.dart';
 import '../data/tag_model.dart';
@@ -761,10 +763,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                     onPressed: () {
                       final String trainingName = _trainingNameController.text;
                       if (trainingName.isEmpty) return;
-                     
-                      // Close sheet first
+
+                      // Close sheet then save → summary screen on success
                       Navigator.of(ctx).pop();
-                     
                       _saveTrainingToFirebase(trainingName, _selectedTags.toList());
                     },
                   ),
@@ -802,12 +803,18 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       _isSaving = true;
     });
 
+    // Capture before clearing state
+    final List<Serie> seriesSnapshot = List<Serie>.from(_vm.series);
+    final List<GpsPoint>? gpsSnapshot = _collectedGpsPoints != null
+        ? List<GpsPoint>.from(_collectedGpsPoints!)
+        : null;
+    final bool gpsOn = _vm.gpsOn;
 
     try {
       final String newTrainingId = await _vm.guardarEntrenamiento(
-        trainingName, 
+        trainingName,
         tags: tags.isNotEmpty ? tags : null,
-        recordedPoints: _collectedGpsPoints,
+        recordedPoints: gpsSnapshot,
       );
 
 
@@ -816,6 +823,23 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
       if (!mounted) return;
 
+      final Entrenamiento savedEntrenamiento = Entrenamiento(
+        id: newTrainingId,
+        titulo: trainingName,
+        fecha: DateTime.now(),
+        gps: gpsOn,
+        series: seriesSnapshot,
+        tags: tags.isNotEmpty ? tags : null,
+        trackPoints: gpsSnapshot ?? [],
+      );
+
+      setState(() {
+        _vm.clearSeries();
+        _restTimer?.cancel();
+        _isResting = false;
+        _restSecondsRemaining = 0;
+        _selectedTags.clear();
+      });
 
       ModernSnackBar.showSuccess(
         context,
@@ -823,25 +847,13 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         duration: const Duration(seconds: 2),
       );
 
-
-      setState(() {
-        _vm.clearSeries();
-        _restTimer?.cancel();
-        _isResting = false;
-        _restSecondsRemaining = 0;
-        _selectedTags.clear(); // Limpiar tags
-      });
-
-
-      await Future.delayed(const Duration(seconds: 2));
-
-
       if (!mounted) return;
-
 
       Navigator.pushAndRemoveUntil(
         context,
-        AppRoute(page: const HomeView()),
+        AppModalRoute(
+          page: TrainingSummaryScreen(entrenamiento: savedEntrenamiento),
+        ),
         (route) => false,
       );
     } catch (e) {
