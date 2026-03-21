@@ -3,6 +3,7 @@ import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
 import '../../profile/views/profile_menu_screen.dart';
@@ -408,7 +409,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
             color: Tema.brandPurple.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, size: 18, color: Tema.brandPurple),
+          child: Icon(icon, size: 18, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
         ),
         const SizedBox(width: 12),
         Text(
@@ -451,7 +452,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
                 ),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 56, color: Tema.brandPurple.withOpacity(0.5)),
+              child: Icon(icon, size: 56, color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple).withOpacity(0.5)),
             ),
             const SizedBox(height: 20),
             Text(
@@ -847,10 +848,10 @@ class _PremiumBadgeCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          _buildBadgeStat("${item.weeklyCompleted}", "Sem."),
+                          _buildBadgeStat(context, "${item.weeklyCompleted}", "Sem."),
                           const SizedBox(width: 12),
                           _buildBadgeStat(
-                              "${item.monthlyCompleted}", "Mens."),
+                              context, "${item.monthlyCompleted}", "Mens."),
                         ],
                       ),
                     ],
@@ -893,7 +894,7 @@ class _PremiumBadgeCard extends StatelessWidget {
     );
   }
 
-  Widget _buildBadgeStat(String value, String label) {
+  Widget _buildBadgeStat(BuildContext context, String value, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -904,9 +905,9 @@ class _PremiumBadgeCard extends StatelessWidget {
         children: [
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Tema.brandPurple,
+              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
               fontSize: 13,
             ),
           ),
@@ -914,7 +915,7 @@ class _PremiumBadgeCard extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: Tema.brandPurple.withOpacity(0.7),
+              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple).withOpacity(0.7),
               fontSize: 11,
             ),
           ),
@@ -1032,7 +1033,7 @@ class _BadgeIcon extends StatelessWidget {
         shape: BoxShape.circle,
       ),
       child: Center(
-        child: Icon(Icons.verified_rounded, color: Tema.brandPurple, size: size),
+        child: Icon(Icons.verified_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: size),
       ),
     );
   }
@@ -1136,13 +1137,13 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
             Icon(
               Icons.arrow_back_ios_new_rounded,
               size: 16,
-              color: Tema.brandPurple,
+              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
             ),
             const SizedBox(width: 6),
-            const Text(
+            Text(
               "Volver",
               style: TextStyle(
-                color: Tema.brandPurple,
+                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                 fontWeight: FontWeight.w700,
                 fontSize: 13,
               ),

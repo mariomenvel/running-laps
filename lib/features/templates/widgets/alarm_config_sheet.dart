@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import '../data/template_models.dart';
 
 
@@ -115,7 +116,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
                 TextButton(
                   onPressed: _save,
                   style: TextButton.styleFrom(
-                    foregroundColor: Tema.brandPurple,
+                    foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
@@ -177,7 +178,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
       child: Text(
         text,
         style: TextStyle(
-          color: isSelected ? Tema.brandPurple : Colors.black54,
+          color: isSelected ? (Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple) : Colors.black54,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
           fontSize: 14,
         ),

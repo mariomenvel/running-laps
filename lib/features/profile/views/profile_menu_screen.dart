@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 
 // Auth
@@ -331,7 +332,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                 color: Tema.brandPurple.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.style_rounded, color: Tema.brandPurple, size: 22),
+              child: Icon(Icons.style_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 22),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -454,7 +455,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                         _buildMenuTile(
                           title: "Mi perfil público",
                           icon: Icons.person_pin_rounded,
-                          color: Tema.brandPurple,
+                          color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                           onTap: _openPublicProfile,
                         ),
                       ],

@@ -14,6 +14,7 @@ import '../data/repositories/invites_repository.dart';
 import '../data/models/group_models.dart';
 import '../data/models/enums.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import '../../../../core/widgets/modern_snackbar.dart';
 
 // Widgets
@@ -1170,7 +1171,7 @@ class _InvitationCardState extends State<_InvitationCard> {
                       color: Tema.brandPurple.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.mark_email_unread_rounded, size: 20, color: Tema.brandPurple),
+                    child: Icon(Icons.mark_email_unread_rounded, size: 20, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
                   ),
                   const SizedBox(width: 12),
                   Expanded(

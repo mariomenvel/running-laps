@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import '../data/tag_model.dart';
 import '../data/tag_manager.dart';
 import '../data/training_repository.dart';
@@ -248,19 +249,19 @@ class _TagSelectorSheetState extends State<TagSelectorSheet> {
                         style: BorderStyle.solid,
                       ),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           Icons.add_circle_outline,
                           size: 16,
-                          color: Tema.brandPurple,
+                          color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                         ),
-                        SizedBox(width: 6),
+                        const SizedBox(width: 6),
                         Text(
                           'Nueva etiqueta',
                           style: TextStyle(
-                            color: Tema.brandPurple,
+                            color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
                           ),

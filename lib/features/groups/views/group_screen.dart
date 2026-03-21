@@ -12,6 +12,7 @@ import '../data/models/enums.dart';
 import '../data/models/challenge_models.dart';
 import '../data/repositories/challenges_repository.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_footer.dart';
 import '../../../../core/widgets/gradient_banner.dart';
@@ -701,11 +702,11 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.auto_awesome, color: Tema.brandPurple),
-            SizedBox(width: 12),
-            Text('Unión Automática'),
+            Icon(Icons.auto_awesome, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+            const SizedBox(width: 12),
+            const Text('Unión Automática'),
           ],
         ),
         content: const Text(
@@ -853,13 +854,13 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
             Icon(
               Icons.arrow_back_ios_new_rounded,
               size: 16,
-              color: Tema.brandPurple,
+              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
             ),
             const SizedBox(width: 6),
-            const Text(
+            Text(
               "Volver",
               style: TextStyle(
-                color: Tema.brandPurple,
+                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                 fontWeight: FontWeight.w700,
                 fontSize: 13,
               ),
@@ -1319,8 +1320,8 @@ class _PremiumMemberCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             "${member.totalKm.toStringAsFixed(1)} km",
-                            style: const TextStyle(
-                              color: Tema.brandPurple,
+                            style: TextStyle(
+                              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                             ),
@@ -1739,7 +1740,7 @@ class _InviteSheetState extends State<_InviteSheet> {
                             icon: const Icon(Icons.copy_rounded, size: 18),
                             label: const Text('Copiar código'),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: Tema.brandPurple,
+                              foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                               side: BorderSide(
                                   color: Tema.brandPurple.withOpacity(0.4)),
                               shape: RoundedRectangleBorder(

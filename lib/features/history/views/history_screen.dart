@@ -198,7 +198,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                               },
                               icon: Icon(
                                 _isCalendarView ? Icons.list_rounded : Icons.calendar_month_rounded,
-                                color: Tema.brandPurple,
+                                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                               ),
                               tooltip: _isCalendarView ? 'Ver lista' : 'Ver calendario',
                             ),
@@ -251,7 +251,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                             Icon(
                               Icons.calendar_today_rounded,
                               size: 18,
-                              color: Tema.brandPurple,
+                              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                             ),
                             const SizedBox(width: 8),
                             Text(
@@ -276,10 +276,10 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                               borderRadius: BorderRadius.circular(12),
                               child: Container(
                                 padding: const EdgeInsets.all(4),
-                                child: const Icon(
+                                child: Icon(
                                   Icons.close_rounded,
                                   size: 18,
-                                  color: Tema.brandPurple,
+                                  color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                                 ),
                               ),
                             ),
@@ -439,7 +439,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.tune_rounded, size: 18, color: Tema.brandPurple),
+                Icon(Icons.tune_rounded, size: 18, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
                 const SizedBox(width: 6),
                 ValueListenableBuilder<int>( // Escuchar cambios en profile_controller para mostrar badge
                   valueListenable: ValueNotifier<int>(0), // TODO: Esto debería ser reactivo real, ver abajo
@@ -462,7 +462,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                         
                         return Text(
                           'Filtros ($count)', 
-                          style: const TextStyle(fontWeight: FontWeight.bold, color: Tema.brandPurple, fontSize: 13)
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontSize: 13)
                         );
                       },
                     );
@@ -580,7 +580,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
           const SizedBox(width: 4),
           GestureDetector(
             onTap: onRemove,
-            child: const Icon(Icons.close, size: 14, color: Tema.brandPurple),
+            child: Icon(Icons.close, size: 14, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
           ),
         ],
       ),

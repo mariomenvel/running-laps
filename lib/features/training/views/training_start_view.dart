@@ -9,6 +9,7 @@ import 'package:firebase_core/firebase_core.dart'; // Para FirebaseException
 import '../data/serie.dart';
 import '../data/entrenamiento.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import '../../../core/widgets/app_header.dart';
 import '../../../core/services/gps_service.dart';
 import '../../../core/widgets/modern_snackbar.dart';
@@ -670,14 +671,14 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                                 icon: const Icon(Icons.refresh, size: 18),
                                 label: const Text('Reintentar'),
                                 style: TextButton.styleFrom(
-                                  foregroundColor: Tema.brandPurple,
+                                  foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                                 ),
                               ),
                             ],
                           ),
                         );
                       }
-                      
+
                       // 3. SUCCESS
                       final tags = snapshot.data ?? [];
                       
@@ -687,8 +688,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                         children: [
                           // Botón nueva etiqueta
                           ActionChip(
-                            avatar: const Icon(Icons.add, size: 16, color: Tema.brandPurple),
-                            label: const Text('Nueva', style: TextStyle(color: Tema.brandPurple)),
+                            avatar: Icon(Icons.add, size: 16, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+                            label: Text('Nueva', style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple)),
                             backgroundColor: Tema.brandPurple.withOpacity(0.1),
                             side: BorderSide.none,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -1008,7 +1009,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
        child: Column(
          mainAxisAlignment: MainAxisAlignment.center,
          children: [
-           const Icon(Icons.directions_run_rounded, size: 80, color: Tema.brandPurple),
+           Icon(Icons.directions_run_rounded, size: 80, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
            const SizedBox(height: 24),
            const Text(
              "Carrera Continua",
@@ -1207,14 +1208,14 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               color: Tema.brandPurple.withOpacity(0.05),
               child: Row(
                 children: [
-                  const Icon(Icons.star_rounded, color: Tema.brandPurple, size: 18),
+                  Icon(Icons.star_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 18),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     "PLANTILLA ACTIVA",
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: Tema.brandPurple,
+                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                       letterSpacing: 1.5,
                     ),
                   ),
@@ -1263,7 +1264,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                       icon: const Icon(Icons.edit_rounded, size: 16),
                       label: const Text("EDITAR ESTRUCTURA"),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Tema.brandPurple,
+                        foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                         side: BorderSide(color: Tema.brandPurple.withOpacity(0.3)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1286,7 +1287,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       children: [
         Row(
           children: [
-            Icon(icon, size: 16, color: Tema.brandPurple),
+            Icon(icon, size: 16, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
             const SizedBox(width: 6),
             Text(
               value,
@@ -1710,10 +1711,10 @@ class _TrainingStartViewState extends State<TrainingStartView> {
             const SizedBox(height: 8),
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 28.0,
                 fontWeight: FontWeight.bold,
-                color: Tema.brandPurple,
+                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
               ),
             ),
           ],
@@ -1744,7 +1745,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 children: [
                   const Text("Distancia de la serie", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   IconButton(
-                    icon: const Icon(Icons.keyboard, color: Tema.brandPurple),
+                    icon: Icon(Icons.keyboard, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
                     onPressed: () {
                       Navigator.pop(context);
                       _showManualInputDialog(isDistance: true);
@@ -1771,7 +1772,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 },
                 children: [
                   ...List.generate(100, (index) => Center(child: Text("${(index + 1) * 50}m"))),
-                  const Center(child: Text("Otro...", style: TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold))),
+                  Center(child: Text("Otro...", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.bold))),
                 ],
               ),
             ),
@@ -1826,7 +1827,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 children: [
                   const Text("Tiempo de descanso", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   IconButton(
-                    icon: const Icon(Icons.keyboard, color: Tema.brandPurple),
+                    icon: Icon(Icons.keyboard, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
                     onPressed: () {
                       Navigator.pop(context);
                       _showManualInputDialog(isDistance: false);
@@ -1852,7 +1853,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 },
                 children: [
                   ...List.generate(61, (index) => Center(child: Text(_formatMinSec(index * 5)))),
-                  const Center(child: Text("Otro...", style: TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold))),
+                  Center(child: Text("Otro...", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.bold))),
                 ],
               ),
             ),
@@ -2164,10 +2165,10 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                         padding: const EdgeInsets.only(top: 4.0),
                         child: Text(
                           summary,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14.0,
                             fontWeight: FontWeight.w600,
-                            color: Tema.brandPurple,
+                            color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                           ),
                         ),
                       )
@@ -2184,7 +2185,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               ),
               if (_alarmEnabled)
                  IconButton(
-                   icon: const Icon(Icons.edit, color: Tema.brandPurple),
+                   icon: Icon(Icons.edit, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
                    onPressed: () => _showAlarmConfigSheet(context),
                  ),
               Transform.scale(
@@ -2267,7 +2268,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text("Listo", style: TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold)),
+                          child: Text("Listo", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.bold)),
                         )
                       ],
                     ),
@@ -2523,14 +2524,14 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                     ),
                   ),
                    if (_vm.gpsOn)
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.only(top: 4.0),
                       child: Text(
                         "Ubicación activa",
                         style: TextStyle(
                           fontSize: 12.0,
                           fontWeight: FontWeight.w600,
-                          color: Tema.brandPurple,
+                          color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                         ),
                       ),
                     ),
@@ -2574,7 +2575,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
             onTap: _openTemplateSelector,
             icon: Icons.folder_open_rounded,
             title: 'Cargar\nPlantilla',
-            color: Tema.brandPurple,
+            color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
           ),
         ),
         const SizedBox(width: 12),
@@ -2768,11 +2769,11 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                           onTap: _skipRest,
                           child: Text(
                             _formatRestTime(),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 22, // Tamaño ajustado
                               fontWeight: FontWeight.bold,
-                              color: Tema.brandPurple,
-                              fontFeatures: <FontFeature>[
+                              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                              fontFeatures: const <FontFeature>[
                                 FontFeature.tabularFigures(),
                               ],
                             ),

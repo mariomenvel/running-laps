@@ -233,7 +233,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                 color: Tema.brandPurple.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.directions_run_rounded, color: Tema.brandPurple, size: 24),
+              child: Icon(Icons.directions_run_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 24),
              ),
 
            Expanded(
@@ -466,7 +466,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                     color: Tema.brandPurple.withOpacity(0.1),
                     borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
-                  child: const Icon(Icons.label_rounded, size: 18, color: Tema.brandPurple),
+                  child: Icon(Icons.label_rounded, size: 18, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -552,7 +552,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
               icon: const Icon(Icons.analytics_rounded, size: 20),
               label: Text(widget.training.gps ? "Ver Análisis y Mapa" : "Ver Análisis"),
               style: OutlinedButton.styleFrom(
-                foregroundColor: Tema.brandPurple,
+                foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                 side: BorderSide(color: Tema.brandPurple.withOpacity(0.5)),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

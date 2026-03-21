@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/features/home/viewmodels/home_config_controller.dart';
 import 'package:running_laps/features/analytics/data/home_layout_config.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 
 class EditHomeView extends StatefulWidget {
   final HomeConfigController controller;
@@ -27,13 +28,13 @@ class _EditHomeViewState extends State<EditHomeView> {
         centerTitle: true,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Tema.brandPurple),
+          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           TextButton(
             onPressed: () => _confirmReset(context),
-            child: const Text('Reset', style: TextStyle(color: Tema.brandPurple)),
+            child: Text('Reset', style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple)),
           ),
         ],
       ),

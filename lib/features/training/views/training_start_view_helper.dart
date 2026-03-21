@@ -55,7 +55,7 @@
        child: Column(
          mainAxisAlignment: MainAxisAlignment.center,
          children: [
-           const Icon(Icons.directions_run_rounded, size: 80, color: Tema.brandPurple),
+           Icon(Icons.directions_run_rounded, size: 80, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
            const SizedBox(height: 24),
            const Text(
              "Carrera Continua",

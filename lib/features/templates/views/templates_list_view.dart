@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/app_header.dart'; // Using AppHeader if appropriate, or standard AppBar
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
@@ -258,7 +259,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                               color: Tema.brandPurple.withOpacity(0.05),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(Icons.description_outlined, size: 80, color: Tema.brandPurple.withOpacity(0.4)),
+                            child: Icon(Icons.description_outlined, size: 80, color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple).withOpacity(0.4)),
                           ),
                           const SizedBox(height: 32),
                           Text(

@@ -8,6 +8,7 @@ import '../data/models/enums.dart';
 
 import 'package:intl/intl.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/gradient_banner.dart';
 import '../../profile/views/profile_menu_screen.dart';
@@ -734,13 +735,13 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
             Icon(
               Icons.arrow_back_ios_new_rounded,
               size: 16,
-              color: Tema.brandPurple,
+              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
             ),
             const SizedBox(width: 6),
-            const Text(
+            Text(
               "Volver",
               style: TextStyle(
-                color: Tema.brandPurple,
+                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                 fontWeight: FontWeight.w700,
                 fontSize: 13,
               ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../config/app_theme.dart';
+import '../../core/theme/app_colors.dart';
 
 class PremiumDateRangePicker extends StatefulWidget {
   final DateTimeRange? initialDateRange;
@@ -77,9 +78,9 @@ class _PremiumDateRangePickerState extends State<PremiumDateRangePicker> {
                       const SizedBox(height: 4),
                       Text(
                         _getRangeText(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
-                          color: Tema.brandPurple,
+                          color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -125,16 +126,16 @@ class _PremiumDateRangePickerState extends State<PremiumDateRangePicker> {
                     },
                     
                     // ESTILOS
-                    headerStyle: const HeaderStyle(
+                    headerStyle: HeaderStyle(
                       formatButtonVisible: false,
                       titleCentered: true,
                       titleTextStyle: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
-                        color: Tema.brandPurple,
+                        color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                       ),
-                      leftChevronIcon: Icon(Icons.chevron_left, color: Tema.brandPurple),
-                      rightChevronIcon: Icon(Icons.chevron_right, color: Tema.brandPurple),
+                      leftChevronIcon: Icon(Icons.chevron_left, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+                      rightChevronIcon: Icon(Icons.chevron_right, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
                     ),
 
                     calendarStyle: CalendarStyle(
@@ -164,7 +165,7 @@ class _PremiumDateRangePickerState extends State<PremiumDateRangePicker> {
                         border: Border.all(color: Tema.brandPurple, width: 2),
                         shape: BoxShape.circle,
                       ),
-                      todayTextStyle: const TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold),
+                      todayTextStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),

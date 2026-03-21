@@ -165,7 +165,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView>
                     color: Colors.purple.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.route_rounded, color: Tema.brandPurple, size: 18),
+                  child: Icon(Icons.route_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 18),
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -293,7 +293,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView>
                 color: Tema.brandPurple.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.list_alt_rounded, color: Tema.brandPurple, size: 20),
+              child: Icon(Icons.list_alt_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 20),
             ),
             const SizedBox(width: 12),
             Text(
@@ -334,9 +334,9 @@ class _TrainingDetailViewState extends State<TrainingDetailView>
                   ),
                   child: Text(
                     "${index + 1}",
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Tema.brandPurple,
+                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                       fontSize: 13,
                     ),
                   ),

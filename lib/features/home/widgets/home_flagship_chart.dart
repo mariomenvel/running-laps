@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'dart:math' as math;
 
@@ -149,7 +150,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
         child: Icon(
           icon,
           size: 20,
-          color: isSelected ? Tema.brandPurple : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+          color: isSelected ? (Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple) : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
         ),
       ),
     );
@@ -238,8 +239,8 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
                 children: [
                   TextSpan(
                     text: _formatValue(data.value),
-                    style: const TextStyle(
-                      color: Tema.brandPurple, 
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
                     ),

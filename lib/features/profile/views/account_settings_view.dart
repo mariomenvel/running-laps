@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/theme_service.dart';
 import '../../auth/viewmodels/auth_controller.dart';
 import '../../auth/views/auth_page.dart';
@@ -98,7 +99,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                 color: Tema.brandPurple.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.person_outline_rounded, size: 40, color: Tema.brandPurple),
+              child: Icon(Icons.person_outline_rounded, size: 40, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
             ),
             const SizedBox(height: 24),
             Text(
@@ -131,7 +132,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
                 ),
-                prefixIcon: const Icon(Icons.edit_rounded, color: Tema.brandPurple),
+                prefixIcon: Icon(Icons.edit_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
               ),
             ),
             if (!isGoogle) ...[
@@ -148,7 +149,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
                   ),
-                  prefixIcon: const Icon(Icons.lock_outline, color: Tema.brandPurple),
+                  prefixIcon: Icon(Icons.lock_outline, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
                 ),
               ),
             ],

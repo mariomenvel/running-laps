@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import '../data/template_models.dart';
 import 'alarm_config_sheet.dart';
 
@@ -240,7 +241,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                           ),
                           child: Icon(
                             _alertsEnabled ? Icons.notifications_active_rounded : Icons.notifications_none_rounded,
-                            color: _alertsEnabled ? Tema.brandPurple : cs.onSurface.withOpacity(0.4),
+                            color: _alertsEnabled ? (Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple) : cs.onSurface.withOpacity(0.4),
                             size: 20,
                           ),
                         ),
@@ -268,7 +269,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                               color: Tema.brandPurple.withOpacity(0.05),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Icon(Icons.settings_suggest_rounded, size: 20, color: Tema.brandPurple),
+                            child: Icon(Icons.settings_suggest_rounded, size: 20, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
                           ),
                           onTap: _openAlarmConfig,
                         ),

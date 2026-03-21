@@ -5,6 +5,7 @@ import 'package:running_laps/features/analytics/data/workout_pattern.dart';
 import 'package:running_laps/features/analytics/widgets/pattern_carousel.dart';
 import 'package:running_laps/features/analytics/views/pattern_comparison_view.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 
 class WorkoutPatternCarouselView extends StatefulWidget {
   final List<WorkoutPattern> patterns;
@@ -39,13 +40,13 @@ class _WorkoutPatternCarouselViewState
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Tema.brandPurple),
+          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           if (widget.patterns[_currentPatternIndex].instances.length >= 2)
             IconButton(
-              icon: const Icon(Icons.compare_arrows, color: Tema.brandPurple),
+              icon: Icon(Icons.compare_arrows, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
               onPressed: () => _showComparisonSelector(),
             ),
         ],
@@ -527,8 +528,8 @@ class _WorkoutPatternContent extends StatelessWidget {
             ),
             child: Text(
               "$pace /km",
-              style: const TextStyle(
-                color: Tema.brandPurple,
+              style: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
                 letterSpacing: -0.3,

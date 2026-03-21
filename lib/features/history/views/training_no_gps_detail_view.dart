@@ -220,7 +220,7 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
                 color: Tema.brandPurple.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.list_alt_rounded, color: Tema.brandPurple, size: 20),
+              child: Icon(Icons.list_alt_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 20),
             ),
             const SizedBox(width: 12),
             Text(
@@ -261,9 +261,9 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
                   ),
                   child: Text(
                     "${index + 1}",
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Tema.brandPurple,
+                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                       fontSize: 13,
                     ),
                   ),

@@ -623,7 +623,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
               Row(
                 children: [
                   Icon(Icons.analytics_outlined,
-                      color: Tema.brandPurple.withOpacity(0.7), size: 16),
+                      color: _adaptivePurple.withOpacity(0.7), size: 16),
                   const SizedBox(width: 8),
                   const Text(
                     'Comparativa con sesión similar',

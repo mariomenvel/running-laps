@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:running_laps/features/analytics/data/series_pattern.dart';
 import 'package:running_laps/features/analytics/widgets/pattern_carousel.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 
 class SeriesPatternCarouselView extends StatelessWidget {
   final List<SeriesPattern> patterns;
@@ -22,7 +23,7 @@ class SeriesPatternCarouselView extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Tema.brandPurple),
+          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
           onPressed: () => Navigator.pop(context),
         ),
         titleTextStyle: TextStyle(

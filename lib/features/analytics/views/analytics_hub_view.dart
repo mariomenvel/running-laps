@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/features/analytics/viewmodels/analytics_hub_controller.dart';
 import 'package:running_laps/features/analytics/widgets/analytics_range_selector.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 
 // Placeholder imports for tabs (Phase 4)
 // import 'package:running_laps/features/analytics/views/tabs/overview_tab.dart';
@@ -56,7 +57,7 @@ class _AnalyticsHubViewState extends State<AnalyticsHubView> with SingleTickerPr
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true, // Allow scrolling if needed on small screens
-          labelColor: Tema.brandPurple,
+          labelColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
           unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
           indicatorColor: Tema.brandPurple,
           indicatorWeight: 3,

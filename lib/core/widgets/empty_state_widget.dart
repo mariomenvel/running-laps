@@ -1,6 +1,7 @@
 import 'dart:math' show pi;
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 
 /// Reusable empty-state component consistent with the app's light+purple style.
 ///
@@ -131,7 +132,7 @@ class _EmptyIllustration extends StatelessWidget {
             child: Icon(
               icon,
               size: 34,
-              color: Tema.brandPurple.withOpacity(0.75),
+              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple).withOpacity(0.75),
             ),
           ),
         ),

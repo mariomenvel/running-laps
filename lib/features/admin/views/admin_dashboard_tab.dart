@@ -3,6 +3,7 @@ import '../viewmodels/admin_controller.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/widgets/premium_date_range_picker.dart';
 import '../../../../config/app_theme.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class AdminDashboardTab extends StatelessWidget {
   final AdminController controller;
@@ -55,7 +56,7 @@ class AdminDashboardTab extends StatelessWidget {
                     onPressed: () => _showExportDialog(context, controller),
                     icon: const Icon(Icons.picture_as_pdf, size: 20),
                     label: const Text("Exportar"),
-                    style: TextButton.styleFrom(foregroundColor: Tema.brandPurple),
+                    style: TextButton.styleFrom(foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
                   ),
                 ],
               ),
@@ -646,14 +647,14 @@ class AdminDashboardTab extends StatelessWidget {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.calendar_today, color: Tema.brandPurple, size: 20),
+                            Icon(Icons.calendar_today, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 20),
                             const SizedBox(width: 12),
                             Text(
                               "${DateFormat('dd/MM/yyyy').format(exportRange.start)} - ${DateFormat('dd/MM/yyyy').format(exportRange.end)}",
-                              style: const TextStyle(fontWeight: FontWeight.bold, color: Tema.brandPurple),
+                              style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
                             ),
                             const Spacer(),
-                            const Icon(Icons.edit, color: Tema.brandPurple, size: 18),
+                            Icon(Icons.edit, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 18),
                           ],
                         ),
                       ),

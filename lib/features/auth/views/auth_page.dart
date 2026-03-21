@@ -5,6 +5,7 @@ import 'package:running_laps/features/home/views/home_view.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 
 // CAMBIO: La vista ahora usa el Controller
 class AuthPage extends StatefulWidget {
@@ -222,12 +223,12 @@ class _AuthPageState extends State<AuthPage> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Text(
+                  Text(
                     'Recuperar contraseña',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Tema.brandPurple,
+                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -566,15 +567,15 @@ class _AuthPageState extends State<AuthPage> {
           alignment: Alignment.centerRight,
           child: TextButton(
             onPressed: _showForgotPasswordDialog,
-            child: const Text(
+            child: Builder(builder: (context) => Text(
               '¿Olvidaste tu contraseña?',
               style: TextStyle(
-                color: Tema.brandPurple,
+                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                 fontWeight: FontWeight.bold,
                 decoration: TextDecoration.underline,
-                decorationColor: Tema.brandPurple,
+                decorationColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
               ),
-            ),
+            )),
           ),
         ),
       ],
@@ -681,10 +682,10 @@ class _AuthPageState extends State<AuthPage> {
           builder: (context, isLoading, child) {
             return TextButton(
               onPressed: isLoading ? null : _toggleView,
-              child: const Text(
+              child: Text(
                 '¿Ya tienes cuenta? Iniciar sesión',
                 style: TextStyle(
-                  color: Tema.brandPurple,
+                  color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -903,7 +904,7 @@ class _PremiumGoogleButtonState extends State<_PremiumGoogleButton> with SingleT
                                 width: 18,
                                 height: 18,
                                 errorBuilder: (context, error, stackTrace) => 
-                                    const Icon(Icons.login_rounded, color: Tema.brandPurple, size: 18),
+                                    Icon(Icons.login_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 18),
                               ),
                             ),
                             const SizedBox(width: 16),

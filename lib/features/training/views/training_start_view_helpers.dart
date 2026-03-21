@@ -1,6 +1,7 @@
 // Helper widgets for TrainingStartView
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 
 Widget buildTemplateButtons(BuildContext context, VoidCallback onLoadTemplate, VoidCallback onQuickTemplate) {
   return Column(
@@ -10,10 +11,10 @@ Widget buildTemplateButtons(BuildContext context, VoidCallback onLoadTemplate, V
         width: double.infinity,
         child: OutlinedButton.icon(
           onPressed: onLoadTemplate,
-          icon: const Icon(Icons.folder_open, color: Tema.brandPurple),
-          label: const Text(
+          icon: Icon(Icons.folder_open, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+          label: Text(
             'Cargar Plantilla',
-            style: TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold),
+            style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.bold),
           ),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -28,10 +29,10 @@ Widget buildTemplateButtons(BuildContext context, VoidCallback onLoadTemplate, V
         width: double.infinity,
         child: OutlinedButton.icon(
           onPressed: onQuickTemplate,
-          icon: const Icon(Icons.flash_on, color: Tema.brandPurple),
-          label: const Text(
+          icon: Icon(Icons.flash_on, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+          label: Text(
             'Plantilla Rápida',
-            style: TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold),
+            style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.bold),
           ),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),

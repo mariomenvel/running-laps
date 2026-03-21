@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import '../../../config/app_theme.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_header.dart';
 import '../../../core/widgets/app_footer.dart';
 import '../../../core/widgets/gradient_banner.dart';
@@ -153,7 +154,7 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
                                       color: Tema.brandPurple.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    child: const Text("Corredor/a", style: TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold, fontSize: 12)),
+                                    child: Text("Corredor/a", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.bold, fontSize: 12)),
                                   ),
                                   const SizedBox(height: 20),
                                   // STATS ROW

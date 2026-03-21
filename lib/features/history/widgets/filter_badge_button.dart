@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 
 /// Botón de filtros con badge mostrando número de filtros activos
 class FilterBadgeButton extends StatelessWidget {
@@ -20,9 +21,9 @@ class FilterBadgeButton extends StatelessWidget {
         // Botón principal
         IconButton(
           onPressed: onTap,
-          icon: const Icon(
+          icon: Icon(
             Icons.tune_rounded,
-            color: Tema.brandPurple,
+            color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
           ),
           tooltip: 'Filtros avanzados',
         ),

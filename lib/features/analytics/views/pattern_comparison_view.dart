@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/features/analytics/data/workout_pattern.dart';
 import 'package:running_laps/features/training/data/serie.dart';
 
@@ -58,7 +59,7 @@ class PatternComparisonView extends StatelessWidget {
                       ),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.compare_arrows, size: 28, color: Tema.brandPurple),
+                    child: Icon(Icons.compare_arrows, size: 28, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
                   ),
                   const SizedBox(width: 20),
                   Expanded(child: _buildHeaderColumn(context, instanceB, Colors.purple)),

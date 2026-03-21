@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:running_laps/features/analytics/data/workout_pattern.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 
 class WorkoutPatternDetailView extends StatelessWidget {
   final WorkoutPattern pattern;
@@ -23,7 +24,7 @@ class WorkoutPatternDetailView extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Tema.brandPurple),
+          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -172,11 +173,11 @@ class WorkoutPatternDetailView extends StatelessWidget {
                 children: [
                   Text(
                     WorkoutPattern.formatDuration(instance.entrenamiento.tiempoTotalSec()),
-                    style: const TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold, fontSize: 16),
+                    style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   Text(
                     "$pace /km",
-                    style: TextStyle(color: Tema.brandPurple.withOpacity(0.6), fontSize: 11, fontWeight: FontWeight.w500),
+                    style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple).withOpacity(0.6), fontSize: 11, fontWeight: FontWeight.w500),
                   ),
                 ],
               ),

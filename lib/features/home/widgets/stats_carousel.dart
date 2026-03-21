@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/features/history/viewmodels/history_analytics_view_model.dart';
 // import 'package:running_laps/features/profile/views/analytics_detail_screen.dart'; // Deleted/Moved
 
@@ -243,7 +244,7 @@ class _StatsCarouselState extends State<StatsCarousel> {
                 ActionChip(
                   label: Text("${dist}m"),
                   backgroundColor: Tema.brandPurple.withOpacity(0.1),
-                  labelStyle: const TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.bold),
+                  labelStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.bold),
                   onPressed: () {
                     // TODO: Navegar a Detalle Distancia
                     // Callback(type: distance, val: dist)

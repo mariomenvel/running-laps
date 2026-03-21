@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:running_laps/features/analytics/data/home_layout_config.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 
 /// Renderiza un widget configurable según su tipo y configuración
 class ConfigurableWidgetRenderer extends StatelessWidget {
@@ -255,7 +256,7 @@ class ConfigurableWidgetRenderer extends StatelessWidget {
                        ),
                        Text(
                            e.ritmoMedioTexto(),
-                           style: const TextStyle(color: Tema.brandPurple, fontWeight: FontWeight.w600),
+                           style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.w600),
                        ),
                    ],
                 ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
@@ -205,7 +206,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                       color: Tema.brandPurple.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.info_outline_rounded, color: Tema.brandPurple, size: 40),
+                    child: Icon(Icons.info_outline_rounded, color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 40),
                   ),
                   const SizedBox(height: 16),
                   Text(

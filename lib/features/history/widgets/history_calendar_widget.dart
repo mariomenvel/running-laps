@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 
@@ -94,14 +95,14 @@ class _HistoryCalendarWidgetState extends State<HistoryCalendarWidget> {
             headerStyle: HeaderStyle(
               formatButtonVisible: false,
               titleCentered: true,
-              titleTextStyle: const TextStyle(
+              titleTextStyle: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
-                color: Tema.brandPurple,
+                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                 letterSpacing: 0.3,
               ),
-              leftChevronIcon: const Icon(Icons.chevron_left, color: Tema.brandPurple, size: 28),
-              rightChevronIcon: const Icon(Icons.chevron_right, color: Tema.brandPurple, size: 28),
+              leftChevronIcon: Icon(Icons.chevron_left, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 28),
+              rightChevronIcon: Icon(Icons.chevron_right, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 28),
               headerPadding: const EdgeInsets.symmetric(vertical: 16),
             ),
             
@@ -111,8 +112,8 @@ class _HistoryCalendarWidgetState extends State<HistoryCalendarWidget> {
                 border: Border.all(color: Tema.brandPurple, width: 2),
                 shape: BoxShape.circle,
               ),
-              todayTextStyle: const TextStyle(
-                color: Tema.brandPurple, 
+              todayTextStyle: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                 fontWeight: FontWeight.bold,
                 fontSize: 15,
               ),
@@ -266,7 +267,7 @@ class _HistoryCalendarWidgetState extends State<HistoryCalendarWidget> {
             style: TextStyle(
               fontSize: 8,
               fontWeight: FontWeight.bold,
-              color: Tema.brandPurple.withOpacity(0.8),
+              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple).withOpacity(0.8),
             ),
           ),
         ),

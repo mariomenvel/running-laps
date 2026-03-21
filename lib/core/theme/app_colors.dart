@@ -16,7 +16,7 @@ class AppColors {
   static const Color brandPurple = Color(0xFF8E24AA);
 
   /// Softer variant for dark mode primary (better contrast on dark surfaces).
-  static const Color brandPurpleLight = Color(0xFFD48DE7);
+  static const Color brandPurpleLight = Color(0xFFB455CC);
 
   // ── Backgrounds (Scaffold / page fill) ───────────────────────────
   static const Color backgroundLight = Color(0xFFF4F6F8);

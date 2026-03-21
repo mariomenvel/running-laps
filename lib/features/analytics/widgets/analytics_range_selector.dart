@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/features/analytics/viewmodels/analytics_hub_controller.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/widgets/premium_date_range_picker.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'dart:ui'; // For BackdropFilter
 
 class AnalyticsRangeSelector extends StatelessWidget {
@@ -232,7 +233,7 @@ class AnalyticsRangeSelector extends StatelessWidget {
                   ),
                 ),
                 if (isSelected)
-                  const Icon(Icons.check_circle_rounded, color: Tema.brandPurple, size: 24),
+                  Icon(Icons.check_circle_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 24),
               ],
             ),
           ),

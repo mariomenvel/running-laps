@@ -569,8 +569,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     ),
                     child: Text(
                       '${challenges.length}',
-                      style: const TextStyle(
-                        color: Tema.brandPurple,
+                      style: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
@@ -662,10 +662,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                      });
                   });
                 },
-                child: const Text(
+                child: Text(
                   "Ver todos",
                   style: TextStyle(
-                    color: Tema.brandPurple,
+                    color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -739,7 +739,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               ),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.groups_outlined, size: 48, color: Tema.brandPurple),
+            child: Icon(Icons.groups_outlined, size: 48, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
           ),
           const SizedBox(height: 16),
           Text(
@@ -947,10 +947,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                   AppRoute(page: const ProfileMenuView()),
                 );
               },
-              child: const Text(
+              child: Text(
                 'Ver todos',
                 style: TextStyle(
-                  color: Tema.brandPurple,
+                  color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
@@ -1308,7 +1308,7 @@ class _GroupHighlightCard extends StatelessWidget {
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.groups_rounded, size: 22, color: Tema.brandPurple),
+                  child: Icon(Icons.groups_rounded, size: 22, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -1348,13 +1348,13 @@ class _GroupHighlightCard extends StatelessWidget {
                   const SizedBox(height: 5),
                   Row(
                     children: [
-                      Icon(Icons.emoji_events_rounded, size: 13, color: Tema.brandPurple),
+                      Icon(Icons.emoji_events_rounded, size: 13, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
                       const SizedBox(width: 4),
                       Text(
                         '# $userRank',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: Tema.brandPurple,
+                          color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
                           fontWeight: FontWeight.w700,
                         ),
                       ),

@@ -11,6 +11,7 @@ import '../../../core/services/settings_service.dart';
 
 import '../data/serie.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/constants/app_help_content.dart';
 import 'package:running_laps/core/widgets/info_tooltip.dart';
 import '../../../core/services/gps_service.dart';
@@ -535,7 +536,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Icon(Icons.repeat_rounded, color: Tema.brandPurple, size: 20),
+                    Icon(Icons.repeat_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 20),
                     const SizedBox(width: 8),
                     Text(
                       'Serie $serieNum',
@@ -1221,7 +1222,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
         children: [
           Icon(
             icon,
-            color: Tema.brandPurple,
+            color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
             size: large ? 24 : 18,
           ),
           SizedBox(height: large ? 14 : 8),
@@ -1356,7 +1357,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                       // Botón Guardar (Derecha)
                       CupertinoButton(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: const Text("Listo", style: TextStyle(color: Tema.brandPurple, fontSize: 17, fontWeight: FontWeight.bold)),
+                        child: Text("Listo", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontSize: 17, fontWeight: FontWeight.bold)),
                         onPressed: () => Navigator.of(context).pop(true),
                       ),
                     ],
@@ -1559,9 +1560,9 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                            ),
                            child: Column(
                              children: [
-                               const Icon(Icons.gps_fixed, size: 32, color: Tema.brandPurple),
+                               Icon(Icons.gps_fixed, size: 32, color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
                                const SizedBox(height: 12),
-                               const Text("GPS", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Tema.brandPurple, letterSpacing: 1)),
+                               Text("GPS", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, letterSpacing: 1)),
                                const SizedBox(height: 4),
                                Text("$distanciaGps m", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(ctx).colorScheme.onSurface)),
                              ],
