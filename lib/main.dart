@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'firebase_options.dart'; // Generado por flutterfire CLI
-import 'package:firebase_auth/firebase_auth.dart';
-import 'features/home/views/home_view.dart';
-import 'features/auth/views/auth_page.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_service.dart';
+import 'features/auth/views/auth_wrapper.dart';
+import 'features/auth/views/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,39 +37,11 @@ class MyApp extends StatelessWidget {
           theme: AppTheme.light(),
           darkTheme: AppTheme.dark(),
           themeMode: themeMode,
-          home: const AuthWrapper(),
+          home: const SplashScreen(),
         );
       },
     );
   }
 }
 
-class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        // Esperar a que Firebase determine el estado inicial
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
-        
-        // Si hay datos, el usuario está logueado
-        if (snapshot.hasData) {
-          return const HomeView();
-        }
-        
-        // Si no hay datos, mostrar página de login
-        return const AuthPage();
-      },
-    );
-  }
-}
 

@@ -195,9 +195,9 @@ class _AuthPageState extends State<AuthPage> {
             }
 
             return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(25),
                   topRight: Radius.circular(25),
                 ),
@@ -217,7 +217,7 @@ class _AuthPageState extends State<AuthPage> {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.grey[300],
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -235,7 +235,10 @@ class _AuthPageState extends State<AuthPage> {
                   const SizedBox(height: 12),
                   Text(
                     'Introduce tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),
@@ -315,7 +318,10 @@ class _AuthPageState extends State<AuthPage> {
                     onPressed: () => Navigator.of(context).pop(),
                     child: Text(
                       'Cancelar',
-                      style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      fontWeight: FontWeight.bold,
+                    ),
                     ),
                   ),
                 ],
@@ -403,18 +409,21 @@ class _AuthPageState extends State<AuthPage> {
     Widget? suffixIcon,
     Widget? prefixIcon,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       height: 60,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        boxShadow: isDark
+            ? []
+            : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
       ),
       child: TextField(
         controller: controller,
@@ -423,10 +432,17 @@ class _AuthPageState extends State<AuthPage> {
         keyboardType: hintText.contains('Correo')
             ? TextInputType.emailAddress
             : TextInputType.text,
-        style: const TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.w500),
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: TextStyle(color: Colors.grey[400], letterSpacing: 0.0),
+          hintStyle: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+            letterSpacing: 0.0,
+          ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
           prefixIcon: prefixIcon,
@@ -510,19 +526,19 @@ class _AuthPageState extends State<AuthPage> {
       margin: const EdgeInsets.symmetric(vertical: 24),
       child: Row(
         children: [
-          Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+          Expanded(child: Divider(color: Theme.of(context).colorScheme.outline, thickness: 1)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
               'O',
               style: TextStyle(
-                color: Colors.grey.shade400,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
               ),
             ),
           ),
-          Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+          Expanded(child: Divider(color: Theme.of(context).colorScheme.outline, thickness: 1)),
         ],
       ),
     );
@@ -705,25 +721,26 @@ class _AuthPageState extends State<AuthPage> {
     final size = MediaQuery.of(context).size;
     final double logoHeight = size.height * 0.30; // Un poco menos para dar espacio
 
-    // Color de fondo para el gradiente (coincide con HomeView)
-    const Color _bgGradientColor = Color(0xFFF9F5FB);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       resizeToAvoidBottomInset: true, // Crucial para que el teclado desplace el contenido
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: RadialGradient(
-            center: Alignment.center,
-            radius: 1.5,
-            colors: [_bgGradientColor, Colors.white],
-            stops: [0.0, 1.0],
-          ),
-          image: DecorationImage(
-            image: AssetImage('assets/images/fondo.png'),
-            fit: BoxFit.cover,
-            opacity: 0.6, 
-          ),
-        ),
+        decoration: isDark
+            ? const BoxDecoration(color: AppColors.backgroundDark)
+            : const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.center,
+                  radius: 1.5,
+                  colors: [Color(0xFFF9F5FB), Colors.white],
+                  stops: [0.0, 1.0],
+                ),
+                image: DecorationImage(
+                  image: AssetImage('assets/images/fondo.png'),
+                  fit: BoxFit.cover,
+                  opacity: 0.6,
+                ),
+              ),
         child: SafeArea(
           // Usamos un solo SingleChildScrollView para TODO
           child: SingleChildScrollView(
@@ -849,10 +866,10 @@ class _PremiumGoogleButtonState extends State<_PremiumGoogleButton> with SingleT
           height: 60,
           margin: const EdgeInsets.only(top: 8),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: Colors.grey.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.outline,
               width: 1.5,
             ),
             boxShadow: [
@@ -908,12 +925,12 @@ class _PremiumGoogleButtonState extends State<_PremiumGoogleButton> with SingleT
                               ),
                             ),
                             const SizedBox(width: 16),
-                            const Text(
+                            Text(
                               'CONTINUAR CON GOOGLE',
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w800,
-                                color: Colors.black87,
+                                color: Theme.of(context).colorScheme.onSurface,
                                 letterSpacing: 1.2,
                               ),
                             ),
