@@ -5,6 +5,8 @@
 
 package com.runninglaps.wear
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -36,8 +39,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.Picker
@@ -86,32 +89,27 @@ fun AlarmConfigScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             // ── 1. Mode selector ──────────────────────────────────────────────
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                AlarmModeChip(label = "Tiempo", selected = mode == "time", onClick = { mode = "time" })
-                AlarmModeChip(label = "Ritmo", selected = mode == "pace", onClick = { mode = "pace" })
-            }
+            SlidingModeToggle(mode = mode, onModeChange = { mode = it })
 
             Spacer(Modifier.height(8.dp))
 
             // ── 2. Pickers row ────────────────────────────────────────────────
             Row(
                 modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (mode == "time") {
                     PickerColumn(
                         label = "MIN",
                         state = timeMinState,
-                        width = 52.dp,
-                        fontSize = 13.sp,
+                        width = 60.dp,
                         display = { i -> i.toString().padStart(2, '0') },
                     )
                     PickerColumn(
                         label = "SEG",
                         state = timeSecState,
-                        width = 52.dp,
-                        fontSize = 13.sp,
+                        width = 60.dp,
                         display = { i ->
                             val whole = i / 2
                             val frac = if (i % 2 == 0) "0" else "5"
@@ -122,22 +120,19 @@ fun AlarmConfigScreen(
                     PickerColumn(
                         label = "MIN",
                         state = paceMinState,
-                        width = 38.dp,
-                        fontSize = 11.sp,
+                        width = 46.dp,
                         display = { i -> (i + 2).toString().padStart(2, '0') },
                     )
                     PickerColumn(
                         label = "SEG",
                         state = paceSecState,
-                        width = 38.dp,
-                        fontSize = 11.sp,
+                        width = 46.dp,
                         display = { i -> (i * 5).toString().padStart(2, '0') },
                     )
                     PickerColumn(
                         label = "M",
                         state = segmentState,
-                        width = 38.dp,
-                        fontSize = 11.sp,
+                        width = 46.dp,
                         display = { i ->
                             val v = segmentOptions[i]
                             if (v >= 1000) "${v / 1000}km" else "${v}m"
@@ -183,58 +178,104 @@ fun AlarmConfigScreen(
 // ── Private helpers ───────────────────────────────────────────────────────────
 
 @Composable
+private fun SlidingModeToggle(
+    mode: String,
+    onModeChange: (String) -> Unit,
+) {
+    val isTime = mode == "time"
+
+    val pillOffsetX by animateFloatAsState(
+        targetValue = if (isTime) 2f else 65f,
+        animationSpec = tween(durationMillis = 200),
+        label = "pillOffset",
+    )
+    val tiempoAlpha by animateFloatAsState(
+        targetValue = if (isTime) 1f else 0.45f,
+        animationSpec = tween(durationMillis = 200),
+        label = "tiempoAlpha",
+    )
+    val ritmoAlpha by animateFloatAsState(
+        targetValue = if (!isTime) 1f else 0.45f,
+        animationSpec = tween(durationMillis = 200),
+        label = "ritmoAlpha",
+    )
+
+    Box(
+        modifier = Modifier
+            .size(width = 130.dp, height = 26.dp)
+            .clip(RoundedCornerShape(13.dp))
+            .background(Color.White.copy(alpha = 0.08f))
+            .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(13.dp)),
+    ) {
+        // Animated sliding pill
+        Box(
+            modifier = Modifier
+                .offset(x = pillOffsetX.dp, y = 2.dp)
+                .shadow(elevation = 6.dp, shape = RoundedCornerShape(11.dp), spotColor = WearColors.brandPurple)
+                .size(width = 63.dp, height = 22.dp)
+                .background(WearColors.brandPurple, RoundedCornerShape(11.dp)),
+        )
+        // Labels overlay — each half is independently clickable
+        Row(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxSize()
+                    .clickable { onModeChange("time") },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "Tiempo",
+                    color = Color.White.copy(alpha = tiempoAlpha),
+                    fontSize = 10.sp,
+                    fontWeight = if (isTime) FontWeight.SemiBold else FontWeight.Normal,
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxSize()
+                    .clickable { onModeChange("pace") },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "Ritmo",
+                    color = Color.White.copy(alpha = ritmoAlpha),
+                    fontSize = 10.sp,
+                    fontWeight = if (!isTime) FontWeight.SemiBold else FontWeight.Normal,
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun PickerColumn(
     label: String,
     state: PickerState,
     width: Dp,
-    fontSize: TextUnit,
     display: (Int) -> String,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = label,
-            color = Color.White.copy(alpha = 0.5f),
-            fontSize = 7.sp,
+            color = Color.White.copy(alpha = 0.4f),
+            fontSize = 8.sp,
+            letterSpacing = 0.05.em,
         )
         Picker(
             state = state,
-            modifier = Modifier.size(width = width, height = 72.dp),
+            modifier = Modifier.size(width = width, height = 80.dp),
             gradientColor = Color(0xFF0D0D0D),
         ) { i ->
             Text(
                 text = display(i),
                 color = if (i == state.selectedOption) Color.White
                 else Color.White.copy(alpha = 0.35f),
-                fontWeight = if (i == state.selectedOption) FontWeight.Medium
+                fontWeight = if (i == state.selectedOption) FontWeight.Bold
                 else FontWeight.Normal,
-                fontSize = fontSize,
+                fontSize = if (i == state.selectedOption) 18.sp else 13.sp,
             )
         }
-    }
-}
-
-@Composable
-private fun AlarmModeChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .size(width = 58.dp, height = 22.dp)
-            .clip(RoundedCornerShape(11.dp))
-            .background(if (selected) WearColors.brandPurple else Color.White.copy(alpha = 0.08f))
-            .then(
-                if (!selected) Modifier.border(
-                    0.5.dp,
-                    Color.White.copy(alpha = 0.15f),
-                    RoundedCornerShape(11.dp),
-                ) else Modifier
-            )
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = label,
-            color = if (selected) Color.White else Color.White.copy(alpha = 0.5f),
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 10.sp,
-        )
     }
 }

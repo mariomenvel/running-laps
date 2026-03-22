@@ -1,6 +1,9 @@
 package com.runninglaps.wear
 
-import android.util.Log
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -22,6 +25,11 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,23 +38,48 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.Text
 import com.runninglaps.wear.theme.WearColors
+import kotlinx.coroutines.delay
 
 @Composable
 fun ContinuaConfigScreen(
     onBack: () -> Unit,
     onOpenAlarmConfig: () -> Unit,
+    onStartTraining: () -> Unit,
     fcEnabled: Boolean,
     onFcToggle: (Boolean) -> Unit,
     alarmEnabled: Boolean,
     onAlarmToggle: (Boolean) -> Unit,
 ) {
+    val context = LocalContext.current
+    var showPermissionError by remember { mutableStateOf(false) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+    ) { results ->
+        if (results.values.all { it }) {
+            onStartTraining()
+        } else {
+            showPermissionError = true
+        }
+    }
+
+    // Auto-hide error after 3 seconds
+    LaunchedEffect(showPermissionError) {
+        if (showPermissionError) {
+            delay(3000L)
+            showPermissionError = false
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -96,14 +129,26 @@ fun ContinuaConfigScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Play button
+            // Play button — checks permissions before starting
             Box(
                 modifier = Modifier
                     .shadow(12.dp, CircleShape, spotColor = WearColors.brandPurple)
                     .size(44.dp)
                     .background(WearColors.brandPurple, CircleShape)
                     .clickable {
-                        Log.d("RunningLaps", "start continua — fc=$fcEnabled alarmEnabled=$alarmEnabled")
+                        val permsNeeded = buildList {
+                            add(Manifest.permission.ACCESS_FINE_LOCATION)
+                            if (fcEnabled) add(Manifest.permission.BODY_SENSORS)
+                        }
+                        val allGranted = permsNeeded.all {
+                            ContextCompat.checkSelfPermission(context, it) ==
+                                PackageManager.PERMISSION_GRANTED
+                        }
+                        if (allGranted) {
+                            onStartTraining()
+                        } else {
+                            permissionLauncher.launch(permsNeeded.toTypedArray())
+                        }
                     },
                 contentAlignment = Alignment.Center,
             ) {
@@ -112,6 +157,16 @@ fun ContinuaConfigScreen(
                     contentDescription = null,
                     tint = Color.White,
                     modifier = Modifier.size(22.dp),
+                )
+            }
+
+            // Permission error — auto-hidden after 3 s
+            if (showPermissionError) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = "Permiso requerido",
+                    fontSize = 11.sp,
+                    color = Color(0xFFFF6B6B),
                 )
             }
         }
@@ -127,7 +182,7 @@ private fun ConfigToggleRow(
 ) {
     Row(
         modifier = Modifier
-            .size(width = 140.dp, height = 36.dp)
+            .size(width = 155.dp, height = 36.dp)
             .clip(RoundedCornerShape(18.dp))
             .background(Color.White.copy(alpha = 0.07f))
             .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(18.dp))
@@ -156,10 +211,11 @@ private fun ConfigToggleRow(
             text = label,
             color = Color.White,
             fontWeight = FontWeight.Medium,
-            fontSize = 11.sp,
+            fontSize = 10.sp,
             modifier = Modifier.weight(1f),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            softWrap = false,
+            overflow = TextOverflow.Clip,
         )
 
         // Right: toggle indicator circle

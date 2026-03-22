@@ -49,4 +49,7 @@ dependencies {
 
     // QR Code generation
     implementation("io.github.g0dkar:qrcode-kotlin-android:4.1.1")
+
+    // FusedLocationProviderClient (GPS for ContinuaTrainingService)
+    implementation("com.google.android.gms:play-services-location:21.3.0")
 }

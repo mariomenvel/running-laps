@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Serie {
   final double tiempoSec;   // tiempo activo de la serie (Secundos)
   final int distanciaM;     // distancia recorrida en metros (>= 1 para ritmo)
@@ -77,9 +79,18 @@ class Serie {
       gpsPoints: map['gpsPoints'] != null 
         ? List<Map<String, dynamic>>.from(map['gpsPoints'] as List)
         : null,
-      finishedAt: map['finishedAt'] != null 
-          ? DateTime.tryParse(map['finishedAt']) 
-          : null,
+      finishedAt: () {
+        final rawFinished = map['finishedAt'];
+        DateTime? finishedAt;
+        if (rawFinished is String) {
+          finishedAt = DateTime.tryParse(rawFinished);
+        } else if (rawFinished is Timestamp) {
+          finishedAt = rawFinished.toDate();
+        } else if (rawFinished is int) {
+          finishedAt = DateTime.fromMillisecondsSinceEpoch(rawFinished);
+        }
+        return finishedAt;
+      }(),
     );
   }
 }

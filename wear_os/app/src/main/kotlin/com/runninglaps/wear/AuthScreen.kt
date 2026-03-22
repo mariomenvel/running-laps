@@ -1,7 +1,10 @@
 package com.runninglaps.wear
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -10,8 +13,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -21,10 +26,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import android.content.Context
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -35,11 +46,12 @@ import androidx.wear.compose.material.Text
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import qrcode.QRCode
+import com.runninglaps.wear.theme.WearColors
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import qrcode.QRCode
 
 private const val TAG = "AuthScreen"
-private const val BRAND_PURPLE = 0xFF8E24AA
 
 @Composable
 fun AuthScreen(onAuthenticated: () -> Unit) {
@@ -52,8 +64,31 @@ fun AuthScreen(onAuthenticated: () -> Unit) {
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    // Splash animation state
+    val logoScale = remember { Animatable(0.6f) }
+    val logoAlpha = remember { Animatable(0f) }
+    val logoOffsetY = remember { Animatable(0f) }
+    val contentAlpha = remember { Animatable(0f) }
+
     // Step 1: Create session document and generate QR on launch
     LaunchedEffect(Unit) {
+        // Phase 1: Fade + scale in (600ms)
+        launch {
+            launch { logoAlpha.animateTo(1f, animationSpec = tween(600)) }
+            logoScale.animateTo(1f, animationSpec = tween(600))
+        }
+
+        // Phase 2: Hold (300ms)
+        kotlinx.coroutines.delay(900L)
+
+        // Phase 3: Scale down + move up (500ms)
+        launch { logoScale.animateTo(0.45f, animationSpec = tween(500)) }
+        logoOffsetY.animateTo(-80f, animationSpec = tween(500))
+
+        // Phase 4: Fade in content (400ms)
+        contentAlpha.animateTo(1f, animationSpec = tween(400))
+
+        // Now create the session in the background
         try {
             val code = generateSessionCode()
             sessionCode = code
@@ -128,51 +163,93 @@ fun AuthScreen(onAuthenticated: () -> Unit) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black),
+                .clip(CircleShape)
+                .background(Color(0xFF0D0D0D))
+                .drawBehind {
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                WearColors.brandPurple.copy(alpha = 0.22f),
+                                Color.Transparent,
+                            ),
+                            center = Offset(size.width / 2f, size.height / 2f),
+                            radius = size.minDimension * 0.55f,
+                        ),
+                    )
+                },
             contentAlignment = Alignment.Center,
         ) {
-            when {
-                errorMessage != null -> Text(
-                    text = errorMessage!!,
-                    color = Color.Red,
-                    fontSize = 11.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                )
+            // Logo — always visible, animates upward after splash
+            Image(
+                painter = painterResource(id = R.drawable.ic_logo),
+                contentDescription = "Running Laps",
+                modifier = Modifier
+                    .size(190.dp)
+                    .offset(y = logoOffsetY.value.dp)
+                    .scale(logoScale.value)
+                    .alpha(logoAlpha.value),
+            )
 
-                isLoading -> CircularProgressIndicator(
-                    indicatorColor = Color(BRAND_PURPLE),
-                )
-
-                else -> Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(6.dp),
-                ) {
-                    qrBitmap?.let { bmp ->
-                        Image(
-                            bitmap = bmp.asImageBitmap(),
-                            contentDescription = "QR de emparejamiento",
-                            modifier = Modifier.size(120.dp),
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "Escanea con tu móvil",
-                        color = Color.White,
+            // Content — fades in after logo moves up
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(contentAlpha.value),
+                contentAlignment = Alignment.Center,
+            ) {
+                when {
+                    errorMessage != null -> Text(
+                        text = errorMessage!!,
+                        color = Color(0xFFFF6B6B),
                         fontSize = 11.sp,
                         textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 12.dp),
                     )
-                    sessionCode?.let { code ->
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = code,
-                            color = Color(BRAND_PURPLE),
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold,
+
+                    isLoading -> Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 48.dp), // leave room for logo above
+                    ) {
+                        CircularProgressIndicator(
+                            indicatorColor = WearColors.brandPurple,
+                            modifier = Modifier.size(24.dp),
                         )
+                    }
+
+                    else -> Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 48.dp), // leave room for logo above
+                    ) {
+                        qrBitmap?.let { bmp ->
+                            Image(
+                                bitmap = bmp.asImageBitmap(),
+                                contentDescription = "QR de emparejamiento",
+                                modifier = Modifier.size(100.dp),
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Escanea con tu móvil",
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 10.sp,
+                            textAlign = TextAlign.Center,
+                        )
+                        sessionCode?.let { code ->
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Text(
+                                text = code,
+                                color = WearColors.brandPurple,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.12.sp,
+                            )
+                        }
                     }
                 }
             }
@@ -188,6 +265,8 @@ private fun generateSessionCode(): String {
 
 private fun generateQrBitmap(content: String): Bitmap {
     return QRCode.ofSquares()
+        .withColor(0xFF8E24AA.toInt())
+        .withBackgroundColor(0xFF0D0D0D.toInt())
         .build(content)
         .render()
         .nativeImage() as Bitmap

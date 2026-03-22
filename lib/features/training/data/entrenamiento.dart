@@ -233,7 +233,7 @@ class Entrenamiento {
       load: loadValue,
       createdAt: createdAtValue,
       updatedAt: updatedAtValue,
-      source: map['source'] != null ? TemplateSource.fromMap(map['source']) : null,
+      source: map['source'] is Map ? TemplateSource.fromMap(map['source'] as Map<String, dynamic>) : null,
       trackPoints: loadedPoints,
       analysis: loadedAnalysis,
     );

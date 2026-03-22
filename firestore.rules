@@ -62,9 +62,6 @@ service cloud.firestore {
 
       // ── users/{uid}/trainings/{id} ─────────────────────────────────────────
       match /trainings/{trainingId} {
-        // Writes are strictly owner-only. No one can forge another user's stats.
-        allow write: if isOwner(uid);
-
         // Reads allow any signed-in user.
         // WHY: GroupDetailRepository fetches members' training documents to
         //   compute group leaderboard rankings (cross-user read by design).
@@ -74,12 +71,35 @@ service cloud.firestore {
         //   PRODUCTION RECOMMENDATION: move ranking computation to a Cloud
         //   Function (Admin SDK) and restrict this rule to isOwner(uid) only.
         allow read: if isSignedIn();
+
+        // Authenticated owner can delete their own trainings.
+        allow delete: if isOwner(uid);
+
+        // Authenticated owner can update their own trainings.
+        // Wear OS watch (no Firebase Auth) may update only the 'tags' field on a
+        // training it created, identified by source == "wear_os" and wear_uid == uid.
+        allow update: if isOwner(uid)
+            || (request.resource.data.source == "wear_os"
+                && request.resource.data.get("wear_uid", "") == uid
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['tags']));
+
+        // Authenticated owner can create normally.
+        // Wear OS watch has no real Firebase Auth session — it stores the uid
+        // in SharedPreferences and sends it as a document field. Allow create
+        // when the document self-identifies as wear_os and declares the uid.
+        allow create: if isOwner(uid)
+            || (request.resource.data.source == "wear_os"
+                && request.resource.data.get("wear_uid", "") == uid);
       }
 
       // ── users/{uid}/tags/{id} ──────────────────────────────────────────────
       match /tags/{tagId} {
-        // Training tags are strictly private. No cross-user access.
-        allow read, write: if isOwner(uid);
+        // Owner can read and write their own tags.
+        // Wear OS watch has no Firebase Auth session — allow unauthenticated read
+        // so the tag selector screen can load the user's tags on the watch.
+        // Tag names are non-sensitive data.
+        allow read: if isOwner(uid) || request.auth == null;
+        allow write: if isOwner(uid);
       }
 
       // ── users/{uid}/groups/{groupId} ───────────────────────────────────────
