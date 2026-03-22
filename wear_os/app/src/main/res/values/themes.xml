@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="@android:style/Theme.DeviceDefault">
+        <item name="android:colorPrimary">#8E24AA</item>
+        <item name="android:colorPrimaryDark">#6A1B9A</item>
+        <item name="android:colorAccent">#8E24AA</item>
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+</resources>

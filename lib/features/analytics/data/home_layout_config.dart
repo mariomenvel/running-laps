@@ -139,6 +139,7 @@ class HomeLayoutConfig {
             'count': 5,
           },
         ),
+
       ],
     );
   }

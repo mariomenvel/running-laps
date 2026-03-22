@@ -4,6 +4,7 @@ import 'package:running_laps/features/analytics/data/home_layout_config.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/kpi_card_with_delta.dart';
 
 /// Renderiza un widget configurable según su tipo y configuración
 class ConfigurableWidgetRenderer extends StatelessWidget {
@@ -73,6 +74,8 @@ class ConfigurableWidgetRenderer extends StatelessWidget {
         // TODO: Implement Github-style heatmap in Phase 6
       case WidgetType.carousel:
          return _buildCarousel();
+      case WidgetType.kpiCard:
+        return _buildKpiCardPlaceholder(context);
       default:
         return const Center(child: Text("Widget no implementado"));
     }
@@ -263,6 +266,18 @@ class ConfigurableWidgetRenderer extends StatelessWidget {
             );
         },
       );
+  }
+
+  Widget _buildKpiCardPlaceholder(BuildContext context) {
+    // KPI cards are rendered directly in HomeView with full metric computation.
+    // This placeholder is shown if a kpiCard widget appears outside the home grid.
+    return KpiCardWithDelta(
+      title: config.config['title'] as String? ?? 'KPI',
+      value: '-',
+      primaryColor: Tema.brandPurple,
+      icon: Icons.bar_chart_rounded,
+      compact: true,
+    );
   }
 }
 

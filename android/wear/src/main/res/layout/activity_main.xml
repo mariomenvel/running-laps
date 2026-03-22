@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Minimal Wear OS layout.
+    BoxInsetLayout ensures content stays inside the round-display safe area.
+-->
+<androidx.wear.widget.BoxInsetLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black"
+    android:padding="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        app:boxedEdges="all">
+
+        <!-- Serie number -->
+        <TextView
+            android:id="@+id/tv_serie"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_serie_placeholder"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <!-- Elapsed time (hero element) -->
+        <TextView
+            android:id="@+id/tv_elapsed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="00:00"
+            android:textColor="@android:color/white"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:layout_marginTop="2dp" />
+
+        <!-- Distance -->
+        <TextView
+            android:id="@+id/tv_distance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0m"
+            android:textColor="#CCCCCC"
+            android:textSize="14sp"
+            android:layout_marginTop="2dp" />
+
+        <!-- Pace -->
+        <TextView
+            android:id="@+id/tv_pace"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--:-- /km"
+            android:textColor="#AAAAAA"
+            android:textSize="12sp"
+            android:layout_marginTop="2dp" />
+
+        <!-- Fin de Serie -->
+        <Button
+            android:id="@+id/btn_end_serie"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_end_serie"
+            android:textSize="11sp"
+            android:layout_marginTop="14dp" />
+
+        <!-- Parar -->
+        <Button
+            android:id="@+id/btn_stop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_stop"
+            android:textSize="11sp"
+            android:layout_marginTop="6dp" />
+
+    </LinearLayout>
+
+</androidx.wear.widget.BoxInsetLayout>

@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:running_laps/features/home/viewmodels/home_config_controller.dart';
-import 'package:running_laps/features/home/widgets/configurable_widget_renderer.dart';
-import 'package:running_laps/features/home/views/edit_home_view.dart';
+
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/data/training_repository.dart';
 import 'package:running_laps/features/home/widgets/home_flagship_chart.dart'; // Added Chart Import
@@ -45,7 +43,6 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
-  late final HomeConfigController _configController;
   final TrainingRepository _trainingRepository = TrainingRepository();
   final GroupsRepository _groupsRepository = GroupsRepository();
   final UserGroupsRepository _userGroupsRepository = UserGroupsRepository();
@@ -57,6 +54,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
   List<Entrenamiento> _entrenamientos = [];
   bool _isLoadingData = true;
+  int _bestMarkDistanceM = 400;
 
   // Groups State
   Future<List<Group>>? _userGroupsFuture;
@@ -101,7 +99,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     _aRecent   = CurvedAnimation(parent: _entranceController, curve: const Interval(0.417, 0.933, curve: Curves.easeOutQuart));
     _aGroups   = CurvedAnimation(parent: _entranceController, curve: const Interval(0.483, 1.000, curve: Curves.easeOutQuart));
     _currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
-    _configController = HomeConfigController(userId: _currentUserId!);
     _initializeHome();
     _loadGroups();
     _initNotificationListener();
@@ -134,8 +131,26 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
   Future<void> _initializeHome() async {
     await SettingsService().initCardStyle();
-    await _configController.initialize();
+    await _loadBestMarkDistance();
     await _loadEntrenamientos();
+  }
+
+  Future<void> _loadBestMarkDistance() async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('settings')
+          .doc('bestMarkDistance')
+          .get();
+      if (doc.exists && doc.data()?['distanceM'] != null && mounted) {
+        setState(() {
+          _bestMarkDistanceM = (doc.data()!['distanceM'] as num).toInt();
+        });
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadEntrenamientos() async {
@@ -163,7 +178,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   @override
   void dispose() {
     _entranceController.dispose();
-    _configController.dispose();
     _challengesPageController.dispose();
     _notifSubscription?.cancel();
     super.dispose();
@@ -323,17 +337,11 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   }
 
   Widget _buildBody() {
-    return ValueListenableBuilder<bool>(
-      valueListenable: _configController.isLoading,
-      builder: (context, configLoading, _) {
-        final loading = configLoading || _isLoadingData;
-        return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: loading
-              ? _buildHomeLoadingSkeleton()
-              : _buildHomeContent(),
-        );
-      },
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      child: _isLoadingData
+          ? _buildHomeLoadingSkeleton()
+          : _buildHomeContent(),
     );
   }
 
@@ -442,7 +450,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             _buildSkeletonKPICard(Icons.directions_run, 'Km totales'),
             _buildSkeletonKPICard(Icons.speed, 'Ritmo medio'),
             _buildSkeletonKPICard(Icons.fitness_center, 'Sesiones'),
-            _buildSkeletonKPICard(Icons.timer, 'Tiempo total'),
+            _buildSkeletonKPICard(Icons.emoji_events_outlined, 'Mejor marca'),
           ],
         ),
         const SizedBox(height: 20),
@@ -833,18 +841,57 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
 
   Widget _buildKPICards() {
-    // Calcular KPIs del periodo
-    final totalKm = _entrenamientos.fold<double>(
-      0,
-      (sum, e) => sum + (e.distanciaTotalM() / 1000.0),
-    );
+    final isMonochrome = SettingsService.cardStyleNotifier.value;
+    Color c(Color vivid) => isMonochrome ? Tema.brandPurple : vivid;
+    final colored = !isMonochrome;
 
+    final totalKm = _entrenamientos.fold<double>(
+        0, (s, e) => s + e.distanciaTotalM() / 1000.0);
     final avgPace = _calculateAveragePace();
-    final totalWorkouts = _entrenamientos.length;
-    final totalDurationSec = _entrenamientos.fold<double>(
-      0,
-      (sum, e) => sum + e.tiempoTotalSec(),
-    );
+    final best = _calcBestMarkTime(_bestMarkDistanceM);
+    final distLabel = _bestMarkDistanceM >= 1000
+        ? '${_bestMarkDistanceM ~/ 1000}k'
+        : '${_bestMarkDistanceM}m';
+
+    final cards = <Widget>[
+      KpiCardWithDelta(
+        title: 'Km totales',
+        value: '${totalKm.toStringAsFixed(1)} km',
+        primaryColor: c(const Color(0xFF4CAF50)),
+        icon: Icons.directions_run,
+        compact: true,
+        coloredBackground: colored,
+        helpText: AppHelpContent.homeKmTotales,
+      ),
+      KpiCardWithDelta(
+        title: 'Ritmo medio',
+        value: '${_formatPace(avgPace)} /km',
+        primaryColor: c(const Color(0xFF2196F3)),
+        icon: Icons.speed,
+        isInverted: true,
+        compact: true,
+        coloredBackground: colored,
+        helpText: AppHelpContent.homeRitmoMedio,
+      ),
+      KpiCardWithDelta(
+        title: 'Sesiones',
+        value: '${_entrenamientos.length}',
+        primaryColor: c(const Color(0xFFFF9800)),
+        icon: Icons.fitness_center,
+        compact: true,
+        coloredBackground: colored,
+        helpText: AppHelpContent.homeSesiones,
+      ),
+      KpiCardWithDelta(
+        title: 'Mejor $distLabel',
+        value: best != null ? _formatTime(best) : '-',
+        primaryColor: c(const Color(0xFF7B1FA2)),
+        icon: Icons.emoji_events_outlined,
+        isInverted: true,
+        compact: true,
+        coloredBackground: colored,
+      ),
+    ];
 
     return GridView.count(
       crossAxisCount: 2,
@@ -853,47 +900,37 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       shrinkWrap: true,
       padding: EdgeInsets.zero,
       physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 1.05, // More square-ish to accommodate glassmorphism content
+      childAspectRatio: 1.05,
       children: [
-        _scaleIn(_aKpi0, KpiCardWithDelta(
-          title: 'Km totales',
-          value: totalKm.toStringAsFixed(1) + " km",
-          primaryColor: SettingsService.cardStyleNotifier.value ? Tema.brandPurple : const Color(0xFF4CAF50),
-          icon: Icons.directions_run,
-          compact: true,
-          coloredBackground: !SettingsService.cardStyleNotifier.value,
-          helpText: AppHelpContent.homeKmTotales,
-        )),
-        _scaleIn(_aKpi1, KpiCardWithDelta(
-          title: 'Ritmo medio',
-          value: _formatPace(avgPace) + " /km",
-          primaryColor: SettingsService.cardStyleNotifier.value ? Tema.brandPurple : const Color(0xFF2196F3),
-          icon: Icons.speed,
-          isInverted: true,
-          compact: true,
-          coloredBackground: !SettingsService.cardStyleNotifier.value,
-          helpText: AppHelpContent.homeRitmoMedio,
-        )),
-        _scaleIn(_aKpi2, KpiCardWithDelta(
-          title: 'Sesiones',
-          value: totalWorkouts.toString(),
-          primaryColor: SettingsService.cardStyleNotifier.value ? Tema.brandPurple : const Color(0xFFFF9800),
-          icon: Icons.fitness_center,
-          compact: true,
-          coloredBackground: !SettingsService.cardStyleNotifier.value,
-          helpText: AppHelpContent.homeSesiones,
-        )),
-        _scaleIn(_aKpi3, KpiCardWithDelta(
-          title: 'Tiempo total',
-          value: _formatDuration(totalDurationSec),
-          primaryColor: SettingsService.cardStyleNotifier.value ? Tema.brandPurple : const Color(0xFF009688),
-          icon: Icons.timer,
-          compact: true,
-          coloredBackground: !SettingsService.cardStyleNotifier.value,
-          helpText: AppHelpContent.homeTiempoTotal,
-        )),
+        _scaleIn(_aKpi0, cards[0]),
+        _scaleIn(_aKpi1, cards[1]),
+        _scaleIn(_aKpi2, cards[2]),
+        _scaleIn(_aKpi3, cards[3]),
       ],
     );
+  }
+
+  // Returns the minimum tiempoSec from series matching targetDistM (±10%)
+  double? _calcBestMarkTime(int targetDistM) {
+    double? best;
+    for (final e in _entrenamientos) {
+      for (final s in e.series) {
+        if (s.distanciaM <= 0) continue;
+        final minD = targetDistM * 0.9;
+        final maxD = targetDistM * 1.1;
+        if (s.distanciaM < minD || s.distanciaM > maxD) continue;
+        if (best == null || s.tiempoSec < best) best = s.tiempoSec;
+      }
+    }
+    return best;
+  }
+
+  // Formats seconds as m:ss or mm:ss (e.g. 92s → "1:32", 605s → "10:05")
+  String _formatTime(double totalSec) {
+    final t = totalSec.round();
+    final m = t ~/ 60;
+    final s = t % 60;
+    return '$m:${s.toString().padLeft(2, '0')}';
   }
 
   double _calculateAveragePace() {

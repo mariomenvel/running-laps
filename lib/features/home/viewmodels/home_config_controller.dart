@@ -22,11 +22,11 @@ class HomeConfigController {
 
   Future<void> loadConfig() async {
     if (userId.isEmpty || _isDisposed) return;
-    
+
     isLoading.value = true;
     try {
       final loadedConfig = await _repository.loadConfig(userId);
-      config.value = loadedConfig;
+      config.value = _mergeWithDefaults(loadedConfig);
     } catch (e) {
       // Fallback to default if load fails
       config.value = HomeLayoutConfig.defaultConfig(userId);
@@ -35,6 +35,30 @@ class HomeConfigController {
         isLoading.value = false;
       }
     }
+  }
+
+  /// Adds any widgets present in defaultConfig but missing from [loaded].
+  /// This handles app updates that introduce new widget IDs: existing users
+  /// whose Firestore configs were saved before the new widgets were added will
+  /// automatically get the new entries appended at the end (hidden by default).
+  HomeLayoutConfig _mergeWithDefaults(HomeLayoutConfig loaded) {
+    final defaultWidgets = HomeLayoutConfig.defaultConfig(userId).widgets;
+    final existingIds = {for (final w in loaded.widgets) w.id};
+
+    final missing = defaultWidgets
+        .where((w) => !existingIds.contains(w.id))
+        .toList();
+
+    if (missing.isEmpty) return loaded;
+
+    int maxOrder = loaded.widgets.fold(
+        0, (max, w) => w.order > max ? w.order : max);
+    final appended =
+        missing.map((w) => w.copyWith(order: ++maxOrder)).toList();
+
+    return loaded.copyWith(
+      widgets: [...loaded.widgets, ...appended],
+    );
   }
 
   Future<void> saveConfig() async {
@@ -78,6 +102,24 @@ class HomeConfigController {
     );
     
     // Save to backend (optionally debounce this)
+    saveConfig();
+  }
+
+  void updateWidgetConfig(String widgetId, Map<String, dynamic> updatedConfig) {
+    if (config.value == null) return;
+
+    final updatedWidgets = config.value!.widgets.map((w) {
+      if (w.id == widgetId) {
+        return w.copyWith(config: {...w.config, ...updatedConfig});
+      }
+      return w;
+    }).toList();
+
+    config.value = config.value!.copyWith(
+      widgets: updatedWidgets,
+      lastUpdated: DateTime.now(),
+    );
+
     saveConfig();
   }
 

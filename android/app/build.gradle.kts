@@ -32,7 +32,7 @@ android {
 
     defaultConfig {
         applicationId = "com.runninglaps.running_laps"
-        minSdk = flutter.minSdkVersion
+        minSdk = 26  // Wear OS Data Layer requires API 26; was flutter.minSdkVersion (24)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -58,4 +58,9 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Wearable Data Layer API — phone side
+    implementation("com.google.android.gms:play-services-wearable:18.1.0")
 }

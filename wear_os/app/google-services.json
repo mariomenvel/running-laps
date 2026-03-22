@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "461355077893",
+    "project_id": "running-laps-mario-2025",
+    "storage_bucket": "running-laps-mario-2025.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:461355077893:android:ff9a05022ee4fa36bca76c",
+        "android_client_info": {
+          "package_name": "com.runninglaps.running_laps"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "461355077893-udsn82f5078ci5bt3m5kfgnm6v31t2m5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.runninglaps.running_laps",
+            "certificate_hash": "2def9c20c85a678369a14062b99f2fac6999da82"
+          }
+        },
+        {
+          "client_id": "461355077893-2qht12brtrrc63b1a4ppobc2uk175s8r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAXKK7zt-4QIB8wVJ1ripcIxptj5yTG7H4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "461355077893-2qht12brtrrc63b1a4ppobc2uk175s8r.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "461355077893-89jpebvlhjf1cbuu43hc89kfk5kpsenn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.runninglaps.runningLaps"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:461355077893:android:46015cdb77b81d1cbca76c",
+        "android_client_info": {
+          "package_name": "com.runninglaps.wear"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "461355077893-2qht12brtrrc63b1a4ppobc2uk175s8r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAXKK7zt-4QIB8wVJ1ripcIxptj5yTG7H4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "461355077893-2qht12brtrrc63b1a4ppobc2uk175s8r.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "461355077893-89jpebvlhjf1cbuu43hc89kfk5kpsenn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.runninglaps.runningLaps"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

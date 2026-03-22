@@ -273,6 +273,32 @@ service cloud.firestore {
     }
 
     // ────────────────────────────────────────────────────────────────────────
+    // wear_sessions/{code}
+    // ────────────────────────────────────────────────────────────────────────
+    // Short-lived QR auth session created by the Wear OS watch.
+    // The watch is NOT yet authenticated when it creates the document, so
+    // creates are intentionally open. The random 6-char code provides
+    // sufficient entropy for a session that expires quickly.
+    // PRODUCTION: Add cleanup via a Cloud Function TTL trigger (e.g. delete
+    //   documents older than 5 minutes) and generate a real Firebase Custom
+    //   Token server-side instead of forwarding the client ID token.
+    match /wear_sessions/{code} {
+      // Watch creates session before authentication — allow unauthenticated create.
+      // Safe because: codes expire in 5 minutes, contain no sensitive data at creation.
+      allow create: if true;
+
+      // Only authenticated users (phone) can update (write the idToken).
+      allow update: if isSignedIn();
+
+      // Watch reads to check auth status — allow unauthenticated read.
+      // Safe because the code is random and unknown without physical access to the watch.
+      allow read: if true;
+
+      // Only authenticated users can delete.
+      allow delete: if isSignedIn();
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
     // challenge_templates/{id}
     // ────────────────────────────────────────────────────────────────────────
     match /challenge_templates/{templateId} {

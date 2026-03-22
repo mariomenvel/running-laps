@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Running Laps Wear</string>
+    <string name="btn_end_serie">Fin de Serie</string>
+    <string name="btn_stop">Parar</string>
+    <string name="label_serie_n">Serie %d</string>
+    <string name="label_serie_placeholder">Serie 1</string>
+</resources>

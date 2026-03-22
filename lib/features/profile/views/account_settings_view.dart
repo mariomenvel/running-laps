@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/theme_service.dart';
@@ -9,7 +12,8 @@ import '../../../core/widgets/modern_snackbar.dart';
 import '../../../core/widgets/app_header.dart';
 import '../../../core/widgets/gradient_banner.dart';
 import '../../../core/services/settings_service.dart';
-import '../../home/views/home_view.dart';
+import '../../../core/services/wear_auth_service.dart';
+
 import '../../templates/data/template_models.dart';
 import '../../templates/widgets/alarm_config_sheet.dart';
 
@@ -34,6 +38,8 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
   // Settings state
   bool _alarmDefault = false;
   bool _gpsDefault = false;
+  bool _watchConnected = false;
+  int _bestMarkDistanceM = 400;
 
   @override
   void initState() {
@@ -46,10 +52,30 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
     final settings = SettingsService();
     final alarm = await settings.getAlarmEnabled();
     final gps = await settings.getGpsDefault();
+    final prefs = await SharedPreferences.getInstance();
+
+    int bestDist = 400;
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .collection('settings')
+            .doc('bestMarkDistance')
+            .get();
+        if (doc.exists && doc.data()?['distanceM'] != null) {
+          bestDist = (doc.data()!['distanceM'] as num).toInt();
+        }
+      }
+    } catch (_) {}
+
     if (mounted) {
       setState(() {
         _alarmDefault = alarm;
         _gpsDefault = gps;
+        _watchConnected = prefs.getBool('watch_connected') ?? false;
+        _bestMarkDistanceM = bestDist;
       });
     }
   }
@@ -835,6 +861,79 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
     );
   }
 
+  Widget _buildBestMarkTile() {
+    final distLabel = _bestMarkDistanceM >= 1000
+        ? '${_bestMarkDistanceM ~/ 1000}k'
+        : '${_bestMarkDistanceM}m';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _showBestMarkPicker,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF7B1FA2).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.emoji_events_outlined, color: Color(0xFF7B1FA2), size: 22),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Mejor marca en',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                      Text(
+                        distLabel,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildThemeSelector() {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: ThemeService.themeMode,
@@ -937,6 +1036,112 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
     );
   }
 
+  Future<void> _saveBestMarkDistance(int distanceM) async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('settings')
+          .doc('bestMarkDistance')
+          .set({'distanceM': distanceM}, SetOptions(merge: true));
+      if (mounted) setState(() => _bestMarkDistanceM = distanceM);
+    } catch (e) {
+      if (mounted) ModernSnackBar.showError(context, 'No se pudo guardar');
+    }
+  }
+
+  void _showBestMarkPicker() {
+    const distances = [100, 200, 400, 800, 1000, 1500, 5000, 10000];
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(32),
+            topRight: Radius.circular(32),
+          ),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 36),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Distancia para mejor marca',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: Theme.of(context).colorScheme.onSurface,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Se usará para calcular tu mejor ritmo en esa distancia.',
+              style: TextStyle(
+                fontSize: 13,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              ),
+            ),
+            const SizedBox(height: 20),
+            StatefulBuilder(
+              builder: (ctx, setSheet) => Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: distances.map((d) {
+                  final isSel = d == _bestMarkDistanceM;
+                  final label = d >= 1000 ? '${d ~/ 1000}k' : '${d}m';
+                  return GestureDetector(
+                    onTap: () {
+                      setSheet(() {});
+                      _saveBestMarkDistance(d);
+                      Navigator.pop(ctx);
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isSel
+                            ? Tema.brandPurple
+                            : Theme.of(context).colorScheme.onSurface.withOpacity(0.07),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: isSel
+                              ? Colors.white
+                              : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _showAlarmSettings() async {
     final settings = SettingsService();
     final config = await settings.getAlarmConfig();
@@ -977,6 +1182,22 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
           duration: Duration(seconds: 2),
         ),
       );
+    }
+  }
+
+  Future<void> _connectWatch() async {
+    try {
+      final connected = await WearAuthService().scanAndAuthenticateWatch(context);
+      if (!mounted) return;
+      if (connected) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('watch_connected', true);
+        setState(() => _watchConnected = true);
+        ModernSnackBar.showSuccess(context, 'Reloj conectado correctamente');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ModernSnackBar.showError(context, e.toString());
     }
   }
 
@@ -1036,6 +1257,9 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     _buildSectionHeader("Apariencia"),
                     _buildThemeSelector(),
 
+                    _buildSectionHeader("Estadísticas"),
+                    _buildBestMarkTile(),
+
                     _buildSectionHeader("Perfil"),
                     _buildMenuTile(
                       title: "Cambiar mi nombre",
@@ -1053,6 +1277,14 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                         onTap: _showChangePasswordDialog,
                       ),
                     ],
+
+                    _buildSectionHeader("Dispositivos"),
+                    _buildMenuTile(
+                      title: _watchConnected ? "Reloj conectado ✓" : "Conectar reloj",
+                      icon: _watchConnected ? Icons.check_circle_rounded : Icons.watch_rounded,
+                      color: _watchConnected ? Colors.green : Colors.teal,
+                      onTap: _connectWatch,
+                    ),
 
                     _buildSectionHeader("Zona peligrosa"),
                     _buildMenuTile(
