@@ -36,6 +36,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
   late String _displayName;
   
   // Settings state
+  bool _useWhiteCards = true;
   bool _alarmDefault = false;
   bool _gpsDefault = false;
   bool _watchConnected = false;
@@ -50,6 +51,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
 
   Future<void> _loadSettings() async {
     final settings = SettingsService();
+    final cardStyle = await settings.getCardStyle();
     final alarm = await settings.getAlarmEnabled();
     final gps = await settings.getGpsDefault();
     final prefs = await SharedPreferences.getInstance();
@@ -72,6 +74,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
 
     if (mounted) {
       setState(() {
+        _useWhiteCards = cardStyle;
         _alarmDefault = alarm;
         _gpsDefault = gps;
         _watchConnected = prefs.getBool('watch_connected') ?? false;
@@ -861,6 +864,91 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
     );
   }
 
+  Widget _buildCardStyleSetting() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.transparent : Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.5)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Tema.brandPurple.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.style_rounded, color: isDark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 22),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                'Estilo de tarjetas',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ),
+            // Segmented control
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  _buildStyleOption('Clásico', !_useWhiteCards),
+                  _buildStyleOption('Moderno', _useWhiteCards),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStyleOption(String label, bool isSelected) {
+    return GestureDetector(
+      onTap: () async {
+        final newValue = label == 'Moderno';
+        await SettingsService().setCardStyle(newValue);
+        if (mounted) setState(() => _useWhiteCards = newValue);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? Tema.brandPurple : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildBestMarkTile() {
     final distLabel = _bestMarkDistanceM >= 1000
         ? '${_bestMarkDistanceM ~/ 1000}k'
@@ -1255,7 +1343,9 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     ),
                     
                     _buildSectionHeader("Apariencia"),
+                    _buildSectionHeader("Apariencia"),
                     _buildThemeSelector(),
+                    _buildCardStyleSetting(),
 
                     _buildSectionHeader("Estadísticas"),
                     _buildBestMarkTile(),

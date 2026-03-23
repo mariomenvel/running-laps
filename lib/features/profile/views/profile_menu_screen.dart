@@ -8,10 +8,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:running_laps/features/auth/viewmodels/auth_controller.dart';
 import 'package:running_laps/features/auth/views/auth_page.dart';
-import 'package:running_laps/features/home/views/home_view.dart';
-
-// Vistas de perfil / entrenos
-// Vistas de perfil / entrenos
 import 'package:running_laps/features/history/views/history_screen.dart';
 import '../../templates/views/templates_list_view.dart';
 import 'avatar_editor_wraper_view.dart';
@@ -21,8 +17,6 @@ import '../../groups/views/participant_profile_screen.dart';
 import 'package:running_laps/features/analytics/views/analytics_hub_screen.dart';
 import '../../admin/views/admin_panel_screen.dart';
 import 'account_settings_view.dart';
-
-import 'package:running_laps/core/services/settings_service.dart';
 
 // Widgets comunes
 import 'package:running_laps/core/widgets/app_header.dart';
@@ -40,11 +34,9 @@ class ProfileMenuView extends StatefulWidget {
 
 class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProviderStateMixin {
   late final AuthController _authCtrl;
-  final SettingsService _settingsService = SettingsService();
 
   String _nombreUsuario = "";
   bool _isAdmin = false;
-  bool _useWhiteCards = true;
 
   // ── Entrance animation ──────────────────────────────────────────
   late final AnimationController _entranceCtrl;
@@ -53,7 +45,6 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
   late final Animation<double> _aSocial;     // 200ms – fade + slide bottom
   late final Animation<double> _aPersonal;   // 260ms – fade + slide bottom
   late final Animation<double> _aAdmin;      // 320ms – fade + slide bottom
-  late final Animation<double> _aApariencia; // 380ms – fade + slide bottom
   late final Animation<double> _aCuenta;     // 440ms – fade + slide bottom
   late final Animation<double> _aSesion;     // 500ms – fade + slide bottom
   // ────────────────────────────────────────────────────────────────
@@ -63,15 +54,11 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
     super.initState();
     _authCtrl = AuthController();
     _cargarNombre();
-    _settingsService.getCardStyle().then((v) {
-      if (mounted) setState(() => _useWhiteCards = v);
-    });
     _entranceCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
     _aName       = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.000, 0.517, curve: Curves.easeOutQuart));
     _aSocial     = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.167, 0.683, curve: Curves.easeOutQuart));
     _aPersonal   = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.217, 0.733, curve: Curves.easeOutQuart));
     _aAdmin      = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.267, 0.783, curve: Curves.easeOutQuart));
-    _aApariencia = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.317, 0.833, curve: Curves.easeOutQuart));
     _aCuenta     = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.367, 0.883, curve: Curves.easeOutQuart));
     _aSesion     = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.417, 0.933, curve: Curves.easeOutQuart));
     if (!_entrancePlayed) {
@@ -306,91 +293,6 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
     );
   }
 
-  Widget _buildCardStyleSetting() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: isDark ? Colors.transparent : Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.5)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Tema.brandPurple.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(Icons.style_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 22),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                'Estilo de tarjetas',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-            ),
-            // Segmented control
-            Container(
-              padding: const EdgeInsets.all(3),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                children: [
-                  _buildStyleOption('Clásico', !_useWhiteCards),
-                  _buildStyleOption('Moderno', _useWhiteCards),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStyleOption(String label, bool isSelected) {
-    return GestureDetector(
-      onTap: () async {
-        final newValue = label == 'Moderno';
-        await _settingsService.setCardStyle(newValue);
-        if (mounted) setState(() => _useWhiteCards = newValue);
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? Tema.brandPurple : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-          ),
-        ),
-      ),
-    );
-  }
-
   // =====================================================
   // Build
   // =====================================================
@@ -521,15 +423,6 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                           ),
                         ],
                       )),
-
-                    // SECTION: APARIENCIA
-                    _slideFromBottom(_aApariencia, Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSectionHeader("Apariencia"),
-                        _buildCardStyleSetting(),
-                      ],
-                    )),
 
                     // SECTION 4: CUENTA
                     _slideFromBottom(_aCuenta, Column(
