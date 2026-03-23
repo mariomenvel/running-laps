@@ -31,6 +31,7 @@ import 'package:running_laps/features/groups/data/models/challenge_models.dart';
 import 'package:running_laps/features/groups/data/models/result_notification_model.dart';
 import 'package:running_laps/features/groups/views/widgets/challenge_result_dialog.dart';
 import 'dart:async';
+import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Home View rediseñado con widgets configurables
@@ -1295,14 +1296,21 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 // ===================================================================
 class _GroupHighlightCard extends StatelessWidget {
   final Group group;
-  // userRank: current user's position in the group leaderboard (1-indexed).
-  // Hidden when null — shown as "# N" when available.
   final int? userRank;
 
   const _GroupHighlightCard({required this.group, this.userRank});
 
   @override
   Widget build(BuildContext context) {
+    // Paleta de colores para Liquid Glass
+    final List<List<Color>> palettes = [
+      [const Color(0xFF6A11CB), const Color(0xFF2575FC)], // Purple Blue
+      [const Color(0xFFFF5F6D), const Color(0xFFFFC371)], // Sunset
+      [const Color(0xFF11998E), const Color(0xFF38EF7D)], // Emerald
+      [const Color(0xFFFC466B), const Color(0xFF3F5EFB)], // Pink Blue
+    ];
+    final backgroundGradient = palettes[group.name.length % palettes.length];
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -1311,128 +1319,189 @@ class _GroupHighlightCard extends StatelessWidget {
         );
       },
       child: Container(
-        width: 190,
-        padding: const EdgeInsets.all(16),
+        width: 220,
+        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.transparent
-                  : Colors.black.withOpacity(0.06),
-              blurRadius: 16,
+              color: backgroundGradient.first.withOpacity(0.35),
+              blurRadius: 15,
               offset: const Offset(0, 8),
+              spreadRadius: -2,
             )
           ],
-          border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.5)),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Icono y Nombre
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            children: [
+              // 1. LIQUID GRADIENT BACKGROUND
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: backgroundGradient,
+                  ),
+                ),
+              ),
+              
+              // 2. LAYERED ARTISTIC WATERMARKS
+              Positioned(
+                top: -20,
+                right: -20,
+                child: Container(
+                  width: 130,
+                  height: 130,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Tema.brandPurple.withOpacity(0.15), Tema.brandPurple.withOpacity(0.05)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.12),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: -30,
+                left: -10,
+                child: Container(
+                  width: 90,
+                  height: 90,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.08),
+                  ),
+                ),
+              ),
+
+              // 3. GLASS INTERACTION LAYER (Subtle Blur)
+              Positioned.fill(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 0.5, sigmaY: 0.5),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(24),
                     ),
-                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(Icons.groups_rounded, size: 22, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  group.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700, 
-                    fontSize: 14,
-                    height: 1.2,
-                    letterSpacing: -0.3,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-            
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Member Count
-                Row(
+              ),
+
+              // 4. MAIN CONTENT
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.person_outline_rounded, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
-                    const SizedBox(width: 4),
+                    // Ranking/Type Badge
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.25),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          child: const Icon(
+                            Icons.groups_rounded, 
+                            size: 16, 
+                            color: Colors.white,
+                          ),
+                        ),
+                        if (userRank != null)
+                          _GlassBadge(
+                            label: "#$userRank",
+                            color: Colors.white,
+                          ),
+                      ],
+                    ),
+                    
+                    const Spacer(),
+                    
+                    // Group Name
                     Text(
-                      "${group.memberCount} ${group.memberCount == 1 ? 'miembro' : 'miembros'}",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                        fontWeight: FontWeight.w500,
+                      group.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900, 
+                        fontSize: 19,
+                        height: 1.1,
+                        letterSpacing: -0.6,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(color: Colors.black38, offset: Offset(0, 1), blurRadius: 4)
+                        ]
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    
+                    const SizedBox(height: 14),
+                    
+                    // Stats Panel (Frosted Glass)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.white.withOpacity(0.2)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.person_outline_rounded, size: 12, color: Colors.white70),
+                          const SizedBox(width: 4),
+                          Text(
+                            "${group.memberCount}",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                // Ranking position (hidden when not available)
-                if (userRank != null) ...[
-                  const SizedBox(height: 5),
-                  Row(
-                    children: [
-                      Icon(Icons.emoji_events_rounded, size: 13, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
-                      const SizedBox(width: 4),
-                      Text(
-                        '# $userRank',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: 10),
-
-                // Botón Entrar Minimalista
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Tema.brandPurple,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Tema.brandPurple.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: const Center(
-                    child: Text(
-                      "Entrar",
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
+/// Badge con efecto cristal para el Home
+class _GlassBadge extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _GlassBadge({
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.25),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+}
+
 

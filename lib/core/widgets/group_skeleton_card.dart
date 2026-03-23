@@ -36,22 +36,13 @@ class _GroupSkeletonCardState extends State<GroupSkeletonCard>
       animation: _shimmerController,
       builder: (context, child) {
         return Container(
-          width: 160,
-          padding: const EdgeInsets.all(12),
+          width: 195,
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: isDark
-                    ? Colors.transparent
-                    : Colors.black.withOpacity(0.04),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              )
-            ],
+            color: Theme.of(context).colorScheme.surface.withOpacity(isDark ? 0.2 : 0.4),
+            borderRadius: BorderRadius.circular(28),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
             ),
           ),
           child: Column(

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
+import 'dart:ui';
 
 // Repositories
 import '../data/repositories/user_groups_repository.dart';
@@ -14,7 +14,6 @@ import '../data/repositories/invites_repository.dart';
 import '../data/models/group_models.dart';
 import '../data/models/enums.dart';
 import 'package:running_laps/config/app_theme.dart';
-import 'package:running_laps/core/theme/app_colors.dart';
 import '../../../../core/widgets/modern_snackbar.dart';
 
 // Widgets
@@ -23,14 +22,11 @@ import '../../../core/widgets/app_footer.dart';
 import '../../../core/widgets/empty_state_widget.dart';
 import '../../../core/widgets/gradient_banner.dart';
 import '../../../core/widgets/skeleton_shimmer.dart';
-import 'package:running_laps/config/app_theme.dart';
 
 // Navigation
 import 'group_screen.dart';
 import '../../training/views/training_start_view.dart';
 import '../../profile/views/profile_menu_screen.dart';
-import '../data/models/result_notification_model.dart';
-import 'widgets/challenge_result_dialog.dart';
 
 /// Pantalla profesional y moderna que lista todos los grupos del usuario
 /// Diseño premium con gradientes vibrantes y animaciones fluidas
@@ -634,7 +630,7 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
 
         final group = snapshot.data;
         if (group == null) return const SizedBox.shrink();
-
+        
         return GestureDetector(
           onTapDown: _onTapDown,
           onTapUp: _onTapUp,
@@ -648,133 +644,169 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
           child: ScaleTransition(
             scale: _scaleAnimation,
             child: Container(
+              margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: _gradientColors.first.withOpacity(_isPressed ? 0.2 : 0.12),
-                    blurRadius: _isPressed ? 16 : 24,
+                    color: _gradientColors.first.withOpacity(_isPressed ? 0.2 : 0.3),
+                    blurRadius: _isPressed ? 8 : 12,
                     offset: Offset(0, _isPressed ? 4 : 8),
-                    spreadRadius: _isPressed ? -2 : 0,
+                    spreadRadius: -2,
                   ),
                 ],
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(24),
                 child: Stack(
                   children: [
-                    // Decoración de fondo
+                    // 1. VIVID DYNAMIC BACKGROUND
+                    Container(
+                      height: 100,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: _gradientColors,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                    ),
+
+                    // 2. LAYERED WATERMARKS (Dynamic based on index)
                     Positioned(
                       top: -30,
-                      right: -30,
+                      right: -20,
                       child: Container(
                         width: 120,
                         height: 120,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [
-                              _gradientColors.first.withOpacity(0.08),
-                              _gradientColors.last.withOpacity(0.04),
-                            ],
-                          ),
+                          color: Colors.white.withOpacity(0.1),
                         ),
                       ),
                     ),
-                    
-                    // Contenido principal
+                    Positioned(
+                      bottom: -40,
+                      left: 40,
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.06),
+                        ),
+                      ),
+                    ),
+
+                    // 3. CONTENT
                     Padding(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(16),
                       child: Row(
                         children: [
-                          // Avatar con gradiente
-                          Container(
-                            width: 68,
-                            height: 68,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: _gradientColors,
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(22),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: _gradientColors.first.withOpacity(0.35),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 6),
+                          // Avatar Area
+                          Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.25),
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(color: Colors.white.withOpacity(0.4)),
                                 ),
-                              ],
-                            ),
-                            child: Center(
-                              child: Text(
-                                group.name.isNotEmpty
-                                    ? group.name.substring(0, 1).toUpperCase()
-                                    : '?',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w800,
+                                child: Center(
+                                  child: Text(
+                                    group.name.isNotEmpty
+                                        ? group.name.substring(0, 1).toUpperCase()
+                                        : '?',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
+                              // Floating Member Count Badge
+                              Positioned(
+                                bottom: -4,
+                                right: -4,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.people_rounded, size: 10, color: _gradientColors.first),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        "${group.memberCount}",
+                                        style: TextStyle(
+                                          color: _gradientColors.first,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(width: 20),
 
-                          // Información Principal
+                          // INFO
                           Expanded(
                             child: Column(
+                              mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   group.name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: -0.4,
+                                  ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800,
-                                    color: Theme.of(context).colorScheme.onSurface,
-                                    letterSpacing: -0.5,
-                                  ),
                                 ),
-                                const SizedBox(height: 10),
-                                Row(
-                                  children: [
-                                    // Badge de Miembros
-                                    _GlassBadge(
-                                      icon: Icons.person_outline,
-                                      label: '${group.memberCount}',
-                                      color: _gradientColors.first,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    // Badge de Privacidad
-                                    _GlassBadge(
-                                      icon: group.type == GroupType.private
-                                          ? Icons.lock_outline
-                                          : Icons.public,
-                                      label: group.type == GroupType.private
-                                          ? 'Privado'
-                                          : 'Público',
-                                      color: Colors.blue.shade600,
-                                    ),
-                                  ],
+                                const SizedBox(height: 4),
+                                // Subtitle / Status
+                                Text(
+                                  group.type == GroupType.private ? "Grupo Privado" : "Comunidad Pública",
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.7),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-
-                          // Flecha con animación
+                          
+                          // Subtle Action Icon
                           Container(
-                            padding: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
+                              color: Colors.white.withOpacity(0.15),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(
-                              Icons.arrow_forward_ios_rounded,
-                              size: 14,
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                            child: const Icon(
+                              Icons.arrow_forward_rounded,
+                              color: Colors.white,
+                              size: 18,
                             ),
                           ),
                         ],
@@ -792,20 +824,24 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
 
   Widget _buildSkeleton() {
     return Container(
-      height: 108,
+      height: 110,
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(28),
+        color: Theme.of(context).colorScheme.surface.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(24),
       ),
-      child: const Center(
-        child: CircularProgressIndicator(strokeWidth: 2, color: Tema.brandPurple),
+      child: Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            strokeWidth: 2, 
+            color: Tema.brandPurple.withOpacity(0.5)
+          ),
+        ),
       ),
     );
   }
-
-
-
-  // ... (Rest of existing methods)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -819,6 +855,8 @@ class _JoinByCodeBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: () => showModalBottomSheet(
         context: context,
@@ -826,49 +864,58 @@ class _JoinByCodeBanner extends StatelessWidget {
         backgroundColor: Colors.transparent,
         builder: (_) => _JoinByCodeSheet(currentUserId: currentUserId),
       ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        decoration: BoxDecoration(
-          color: cs.onSurface.withOpacity(0.04),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Tema.brandPurple.withOpacity(0.2)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Tema.brandPurple.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.tag_rounded,
-                  color: Tema.brandPurple, size: 20),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '¿Tienes un código de invitación?',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                      color: cs.onSurface,
-                    ),
-                  ),
-                  Text(
-                    'Únete directamente con un código de 6 letras',
-                    style: TextStyle(
-                        fontSize: 12,
-                        color: cs.onSurface.withOpacity(0.5)),
-                  ),
-                ],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: isDark ? Colors.white.withOpacity(0.1) : Tema.brandPurple.withOpacity(0.15),
               ),
             ),
-            Icon(Icons.arrow_forward_ios_rounded,
-                size: 14, color: cs.onSurface.withOpacity(0.35)),
-          ],
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Tema.brandPurple.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Icons.tag_rounded,
+                      color: Tema.brandPurple, size: 20),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '¿Tienes un código?',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
+                          color: cs.onSurface,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      Text(
+                        'Únete directamente a un grupo',
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: cs.onSurface.withOpacity(0.5)),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.arrow_forward_ios_rounded,
+                    size: 14, color: cs.onSurface.withOpacity(0.35)),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -1144,89 +1191,128 @@ class _InvitationCardState extends State<_InvitationCard> {
       stream: widget.groupsRepo.streamGroup(widget.membership.groupId),
       builder: (context, snapshot) {
         final groupName = snapshot.data?.name ?? "Cargando grupo...";
-        
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final brandColor = Tema.brandPurple;
+
         return Container(
-          padding: const EdgeInsets.all(16),
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Tema.brandPurple.withOpacity(0.3), width: 1.5),
+            borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Tema.brandPurple.withOpacity(0.08),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+                color: brandColor.withOpacity(0.25),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+                spreadRadius: -4,
               ),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Tema.brandPurple.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.mark_email_unread_rounded, size: 20, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Te han invitado a unirte a",
-                          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
-                        ),
-                        Text(
-                          groupName,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Stack(
+              children: [
+                // 1. VIVID BACKGROUND (Different direction)
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomLeft,
+                      end: Alignment.topRight,
+                      colors: [
+                        brandColor,
+                        isDark ? const Color(0xFF311B92) : const Color(0xFF512DA8),
                       ],
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              if (_isProcessing)
-                const Center(child: Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ))
-              else
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _handleDecline,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red.shade400,
-                          side: BorderSide(color: Colors.red.shade200),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: const Text("Rechazar"),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _handleAccept,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Tema.brandPurple,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          elevation: 0,
-                        ),
-                        child: const Text("Aceptar"),
-                      ),
-                    ),
-                  ],
                 ),
-            ],
+
+                // 2. SPARKLE WATERMARK (Multiple Small Circles)
+                ...List.generate(3, (i) => Positioned(
+                  top: 10.0 + (i * 30),
+                  right: 20.0 + (i * 15),
+                  child: Container(
+                    width: 40.0 - (i * 10),
+                    height: 40.0 - (i * 10),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.08 + (i * 0.02)),
+                    ),
+                  ),
+                )),
+
+                // 3. CONTENT
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      // Invite Icon in a Glass Circle
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white.withOpacity(0.3)),
+                        ),
+                        child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 22),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        "TE HAN INVITADO A",
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2.0,
+                          color: Colors.white70,
+                        ),
+                      ),
+                      Text(
+                        groupName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 20,
+                          letterSpacing: -0.5,
+                          color: Colors.white,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 20),
+                      
+                      if (_isProcessing)
+                        const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                      else
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextButton(
+                                onPressed: _handleDecline,
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.white.withOpacity(0.8),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                                child: const Text("Declinar", style: TextStyle(fontWeight: FontWeight.w700)),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: _handleAccept,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                    foregroundColor: brandColor,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                                child: const Text("Unirme", style: TextStyle(fontWeight: FontWeight.w900)),
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -1251,9 +1337,9 @@ class _GlassBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.15)),
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
