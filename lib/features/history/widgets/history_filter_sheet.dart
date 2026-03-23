@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/features/history/viewmodels/history_controller.dart';
 import 'package:running_laps/features/training/data/tag_manager.dart';
 import 'package:running_laps/features/training/data/tag_model.dart';
@@ -8,49 +8,41 @@ import 'package:running_laps/features/training/data/tag_model.dart';
 class HistoryFilterSheet extends StatefulWidget {
   final HistoryController controller;
 
-  const HistoryFilterSheet({Key? key, required this.controller}) : super(key: key);
+  const HistoryFilterSheet({super.key, required this.controller});
 
   @override
-  _HistoryFilterSheetState createState() => _HistoryFilterSheetState();
+  State<HistoryFilterSheet> createState() => _HistoryFilterSheetState();
 }
 
 class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
-  // Local state for the form before applying
   late DateTime? _startDate;
   late DateTime? _endDate;
   late TextEditingController _minDistController;
   late TextEditingController _maxDistController;
   late TextEditingController _seriesDistController;
   late Set<String> _selectedTags;
-
-  // Future for loading tags
   late Future<List<TrainingTag>> _tagsFuture;
 
   @override
   void initState() {
     super.initState();
-    // Initialize with current controller values
     _startDate = widget.controller.filterStartDate.value;
     _endDate = widget.controller.filterEndDate.value;
-    
+
     _minDistController = TextEditingController(
-      text: widget.controller.filterMinDist.value != null 
-          ? (widget.controller.filterMinDist.value! / 1000).toStringAsFixed(1) // Show in KM
-          : ''
+      text: widget.controller.filterMinDist.value != null
+          ? (widget.controller.filterMinDist.value! / 1000).toStringAsFixed(1)
+          : '',
     );
-    
     _maxDistController = TextEditingController(
-      text: widget.controller.filterMaxDist.value != null 
-          ? (widget.controller.filterMaxDist.value! / 1000).toStringAsFixed(1) 
-          : ''
+      text: widget.controller.filterMaxDist.value != null
+          ? (widget.controller.filterMaxDist.value! / 1000).toStringAsFixed(1)
+          : '',
     );
-
     _seriesDistController = TextEditingController(
-      text: widget.controller.filterSeriesDistance.value?.toString() ?? ''
+      text: widget.controller.filterSeriesDistance.value?.toString() ?? '',
     );
-
     _selectedTags = Set.from(widget.controller.selectedTags.value);
-
     _tagsFuture = TagManager().getUserTags();
   }
 
@@ -63,32 +55,29 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
   }
 
   void _applyFilters() {
-    // Parse distances to meters
     double? minM;
     if (_minDistController.text.isNotEmpty) {
-      final val = double.tryParse(_minDistController.text.replaceAll(',', '.'));
+      final val =
+          double.tryParse(_minDistController.text.replaceAll(',', '.'));
       if (val != null) minM = val * 1000;
     }
-
     double? maxM;
     if (_maxDistController.text.isNotEmpty) {
-      final val = double.tryParse(_maxDistController.text.replaceAll(',', '.'));
+      final val =
+          double.tryParse(_maxDistController.text.replaceAll(',', '.'));
       if (val != null) maxM = val * 1000;
     }
-
     int? seriesM;
     if (_seriesDistController.text.isNotEmpty) {
       seriesM = int.tryParse(_seriesDistController.text);
     }
 
-    // Apply to controller
     widget.controller.setDateRange(_startDate, _endDate);
     widget.controller.setDistanceRange(minM, maxM);
     widget.controller.setSeriesDistanceFilter(seriesM);
     widget.controller.selectedTags.value = _selectedTags;
-    // Trigger filter update in controller
-    widget.controller.setFilter(TrainingFilter.all); // Reset quick filter to custom effectively, or just apply
-    
+    widget.controller.setFilter(TrainingFilter.all);
+
     Navigator.pop(context);
   }
 
@@ -101,30 +90,44 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
       _seriesDistController.clear();
       _selectedTags.clear();
     });
-    // Optional: apply immediately or wait for user to hit "Apply"?
-    // Usually "Clear" in a sheet resets the form. 
-    // To clear ACTUAL filters, user taps "Apply" with empty form, OR we provide a "Reset & Apply" button.
-    // Let's make this button just reset local state.
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final brandColor =
+        isDark ? AppColors.brandPurpleLight : AppColors.brandPurple;
+
     return Container(
       padding: EdgeInsets.only(
-        top: 20, 
-        left: 20, 
-        right: 20, 
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20
+        top: 20,
+        left: 20,
+        right: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min, // Wrap content
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header
+          // ── Handle bar ─────────────────────────────────────────────
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+
+          // ── Header ─────────────────────────────────────────────────
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -133,25 +136,30 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
+                  color: isDark
+                      ? AppColors.textPrimaryDark
+                      : AppColors.textPrimaryLight,
                 ),
               ),
               TextButton(
                 onPressed: _clearFilters,
-                child: const Text('Limpiar', style: TextStyle(color: Colors.redAccent)),
+                child: const Text(
+                  'Limpiar',
+                  style: TextStyle(color: Colors.redAccent),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 20),
 
-          // Scrollable content
+          // ── Scrollable content ──────────────────────────────────────
           Flexible(
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // 1. FECHAS
-                  _sectionTitle('Rango de Fechas'),
+                  _sectionTitle('Rango de Fechas', isDark),
                   const SizedBox(height: 10),
                   Row(
                     children: [
@@ -159,6 +167,8 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
                         child: _dateButton(
                           label: 'Desde',
                           date: _startDate,
+                          isDark: isDark,
+                          brandColor: brandColor,
                           onTap: () async {
                             final d = await showDatePicker(
                               context: context,
@@ -175,6 +185,8 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
                         child: _dateButton(
                           label: 'Hasta',
                           date: _endDate,
+                          isDark: isDark,
+                          brandColor: brandColor,
                           onTap: () async {
                             final d = await showDatePicker(
                               context: context,
@@ -188,19 +200,36 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
-                  // 2. TAGS
-                  _sectionTitle('Etiquetas'),
+
+                  // 2. ETIQUETAS
+                  _sectionTitle('Etiquetas', isDark),
                   const SizedBox(height: 10),
                   FutureBuilder<List<TrainingTag>>(
                     future: _tagsFuture,
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData) return const LinearProgressIndicator(minHeight: 2);
+                      if (!snapshot.hasData) {
+                        return LinearProgressIndicator(
+                          minHeight: 2,
+                          color: brandColor,
+                          backgroundColor: isDark
+                              ? AppColors.surfaceVariantDark
+                              : AppColors.surfaceVariantLight,
+                        );
+                      }
                       final tags = snapshot.data!;
-                      if (tags.isEmpty) return const Text('No tienes etiquetas creadas.', style: TextStyle(color: Colors.grey));
-                      
+                      if (tags.isEmpty) {
+                        return Text(
+                          'No tienes etiquetas creadas.',
+                          style: TextStyle(
+                            color: isDark
+                                ? AppColors.textSecondaryDark
+                                : AppColors.textSecondaryLight,
+                          ),
+                        );
+                      }
+
                       return Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -218,15 +247,31 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
                                 }
                               });
                             },
-                            backgroundColor: Colors.grey.shade100,
-                            selectedColor: Tema.brandPurple.withOpacity(0.2),
+                            backgroundColor: isDark
+                                ? AppColors.surfaceVariantDark
+                                : AppColors.surfaceVariantLight,
+                            selectedColor: brandColor.withValues(alpha: 0.22),
                             labelStyle: TextStyle(
-                              color: isSelected ? Tema.brandPurple : Colors.grey.shade700,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected
+                                  ? brandColor
+                                  : (isDark
+                                      ? AppColors.textSecondaryDark
+                                      : AppColors.textSecondaryLight),
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
-                            checkmarkColor: Tema.brandPurple,
-                            side: BorderSide.none,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            checkmarkColor: brandColor,
+                            side: BorderSide(
+                              color: isSelected
+                                  ? brandColor.withValues(alpha: 0.5)
+                                  : (isDark
+                                      ? AppColors.borderDark
+                                      : AppColors.borderLight),
+                              width: 1,
+                            ),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8)),
                           );
                         }).toList(),
                       );
@@ -235,11 +280,10 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
 
                   const SizedBox(height: 24),
 
-                  // 3. DATOS DE ENTRENAMIENTO
-                  _sectionTitle('Detalles'),
+                  // 3. DETALLES
+                  _sectionTitle('Detalles', isDark),
                   const SizedBox(height: 10),
-                  
-                  // Distancia Total Row
+
                   Row(
                     children: [
                       Expanded(
@@ -247,6 +291,8 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
                           controller: _minDistController,
                           label: 'Min Km',
                           icon: Icons.map_outlined,
+                          isDark: isDark,
+                          brandColor: brandColor,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -255,24 +301,31 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
                           controller: _maxDistController,
                           label: 'Max Km',
                           icon: Icons.map_outlined,
+                          isDark: isDark,
+                          brandColor: brandColor,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  // Series Distance
                   _buildTextField(
                     controller: _seriesDistController,
                     label: 'Series de (metros)',
                     hint: 'Ej: 400',
                     icon: Icons.repeat_rounded,
+                    isDark: isDark,
+                    brandColor: brandColor,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     'Busca entrenos con al menos una serie de esta distancia.',
-                    style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark
+                          ? AppColors.textTertiaryDark
+                          : AppColors.textTertiaryLight,
+                    ),
                   ),
-
                 ],
               ),
             ),
@@ -280,17 +333,21 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
 
           const SizedBox(height: 24),
 
-          // Action Buttons
+          // ── Apply button ────────────────────────────────────────────
           ElevatedButton(
             onPressed: _applyFilters,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Tema.brandPurple,
+              backgroundColor: brandColor,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 2,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
             ),
-            child: const Text('Aplicar Filtros', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Aplicar Filtros',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
           ),
           const SizedBox(height: 10),
         ],
@@ -298,21 +355,45 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
     );
   }
 
-  Widget _sectionTitle(String title) {
+  // ── Helpers ─────────────────────────────────────────────────────────
+
+  Widget _sectionTitle(String title, bool isDark) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.bold,
-        color: Colors.black54,
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
         letterSpacing: 0.5,
+        color: isDark
+            ? AppColors.textSecondaryDark
+            : AppColors.textSecondaryLight,
       ),
     );
   }
 
-  Widget _dateButton({required String label, DateTime? date, required VoidCallback onTap}) {
-    final text = date != null ? DateFormat('dd/MM/yyyy').format(date) : '-----';
+  Widget _dateButton({
+    required String label,
+    required DateTime? date,
+    required bool isDark,
+    required Color brandColor,
+    required VoidCallback onTap,
+  }) {
+    final text =
+        date != null ? DateFormat('dd/MM/yyyy').format(date) : '-----';
     final isSet = date != null;
+
+    final containerBg = isDark
+        ? AppColors.surfaceVariantDark
+        : AppColors.surfaceVariantLight;
+    final borderColor = isSet
+        ? brandColor
+        : (isDark ? AppColors.borderDark : AppColors.borderLight);
+    final labelColor = isDark
+        ? AppColors.textTertiaryDark
+        : AppColors.textTertiaryLight;
+    final valueColor = isSet
+        ? (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight)
+        : (isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight);
 
     return InkWell(
       onTap: onTap,
@@ -320,14 +401,15 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
-          color: Colors.grey.shade50,
-          border: Border.all(color: isSet ? Tema.brandPurple : Colors.grey.shade300),
+          color: containerBg,
+          border: Border.all(color: borderColor),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+            Text(label,
+                style: TextStyle(fontSize: 11, color: labelColor)),
             const SizedBox(height: 4),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -335,12 +417,14 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
                 Text(
                   text,
                   style: TextStyle(
-                    fontSize: 15, 
+                    fontSize: 15,
                     fontWeight: isSet ? FontWeight.bold : FontWeight.normal,
-                    color: isSet ? Colors.black87 : Colors.grey.shade400
+                    color: valueColor,
                   ),
                 ),
-                Icon(Icons.calendar_today_rounded, size: 16, color: isSet ? Tema.brandPurple : Colors.grey.shade400),
+                Icon(Icons.calendar_today_rounded,
+                    size: 16,
+                    color: isSet ? brandColor : labelColor),
               ],
             ),
           ],
@@ -354,31 +438,55 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
     required String label,
     String? hint,
     required IconData icon,
+    required bool isDark,
+    required Color brandColor,
   }) {
+    final fillColor =
+        isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight;
+    final enabledBorderColor =
+        isDark ? AppColors.borderDark : AppColors.borderLight;
+
     return TextField(
       controller: controller,
       keyboardType: TextInputType.number,
+      style: TextStyle(
+        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+      ),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        prefixIcon: Icon(icon, color: Colors.grey.shade400, size: 20),
+        labelStyle: TextStyle(
+          color: isDark
+              ? AppColors.textSecondaryDark
+              : AppColors.textSecondaryLight,
+        ),
+        hintStyle: TextStyle(
+          color: isDark
+              ? AppColors.textTertiaryDark
+              : AppColors.textTertiaryLight,
+        ),
+        prefixIcon: Icon(icon,
+            color: isDark
+                ? AppColors.textTertiaryDark
+                : AppColors.textTertiaryLight,
+            size: 20),
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor: fillColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade200),
+          borderSide: BorderSide(color: enabledBorderColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Tema.brandPurple),
+          borderSide: BorderSide(color: brandColor, width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
       ),
     );
   }
 }
-
