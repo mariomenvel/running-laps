@@ -48,6 +48,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   // --- ViewModel ---
   final TrainingViewModel _vm = TrainingViewModel();
 
+  Color get _brandAccentColor => Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple;
 
   // --- Estado UI ---
   bool _isSaving = false;
@@ -610,7 +611,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                       ),
                       focusedBorder: OutlineInputBorder(
                          borderRadius: BorderRadius.circular(12),
-                         borderSide: const BorderSide(color: Tema.brandPurple, width: 2),
+                         borderSide: BorderSide(color: _brandAccentColor, width: 2),
                       ),
                       filled: true,
                       fillColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
@@ -749,8 +750,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                   const SizedBox(height: 24),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Tema.brandPurple,
-                      foregroundColor: Colors.white,
+                      backgroundColor: _brandAccentColor,
+                      foregroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).colorScheme.surface : Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -1192,12 +1193,12 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Tema.brandPurple.withOpacity(0.08),
+            color: _brandAccentColor.withOpacity(0.08),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
         ],
-        border: Border.all(color: Tema.brandPurple.withOpacity(0.1)),
+        border: Border.all(color: _brandAccentColor.withOpacity(0.1)),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
@@ -1205,7 +1206,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              color: Tema.brandPurple.withOpacity(0.05),
+              color: _brandAccentColor.withOpacity(0.05),
               child: Row(
                 children: [
                   Icon(Icons.star_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 18),
@@ -1265,7 +1266,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                       label: const Text("EDITAR ESTRUCTURA"),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
-                        side: BorderSide(color: Tema.brandPurple.withOpacity(0.3)),
+                        side: BorderSide(color: _brandAccentColor.withOpacity(0.3)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5),
@@ -1475,15 +1476,18 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                     height: 32,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Tema.brandPurple, Color(0xFF9C27B0)],
+                      gradient: LinearGradient(
+                        colors: [
+                          _brandAccentColor,
+                          Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight.withOpacity(0.8) : const Color(0xFF9C27B0)
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Tema.brandPurple.withOpacity(0.4),
+                          color: _brandAccentColor.withOpacity(0.4),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -1780,7 +1784,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Tema.brandPurple,
+                  backgroundColor: _brandAccentColor,
+                  foregroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).colorScheme.surface : Colors.white,
                   minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
                 ),
@@ -1861,7 +1866,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                padding: const EdgeInsets.all(16.0),
                child: ElevatedButton(
                  style: ElevatedButton.styleFrom(
-                   backgroundColor: Tema.brandPurple,
+                   backgroundColor: _brandAccentColor,
+                   foregroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).colorScheme.surface : Colors.white,
                    minimumSize: const Size(double.infinity, 48),
                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
                  ),
@@ -2072,14 +2078,14 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                                   Navigator.pop(context);
                                 },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Tema.brandPurple,
-                            foregroundColor: Colors.white,
+                            backgroundColor: _brandAccentColor,
+                            foregroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).colorScheme.surface : Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
                             elevation: isValid ? 4 : 0,
-                            shadowColor: Tema.brandPurple.withOpacity(0.4),
+                            shadowColor: _brandAccentColor.withOpacity(0.4),
                           ),
                           child: const Text(
                             'Aceptar',
@@ -2144,7 +2150,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
             children: [
                Icon(
                 _alarmEnabled ? Icons.notifications_active : Icons.notifications_off_outlined,
-                color: _alarmEnabled ? Tema.brandPurple : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                color: _alarmEnabled ? _brandAccentColor : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
                 size: 28,
               ),
               const SizedBox(width: 16),
@@ -2284,7 +2290,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                               width: double.infinity,
                               child: CupertinoSlidingSegmentedControl<AlarmMode>(
                                 groupValue: _alarmMode,
-                                thumbColor: Tema.brandPurple,
+                                thumbColor: _brandAccentColor,
                                 backgroundColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
                                 children: {
                                   AlarmMode.bySeconds: Padding(
@@ -2485,13 +2491,13 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16.0),
         border: Border.all(
-          color: _vm.gpsOn ? Tema.brandPurple.withOpacity(0.5) : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color: _vm.gpsOn ? _brandAccentColor.withOpacity(0.5) : Theme.of(context).colorScheme.outline.withOpacity(0.2),
           width: _vm.gpsOn ? 2.0 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
             color: _vm.gpsOn
-                ? Tema.brandPurple.withOpacity(0.1)
+                ? _brandAccentColor.withOpacity(0.1)
                 : Theme.of(context).brightness == Brightness.dark
                     ? Colors.transparent
                     : Colors.black.withOpacity(0.05),
@@ -2508,7 +2514,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
             children: [
               Icon(
                 _vm.gpsOn ? Icons.location_on : Icons.location_off_outlined,
-                color: _vm.gpsOn ? Tema.brandPurple : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                color: _vm.gpsOn ? _brandAccentColor : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
                 size: 28,
               ),
               const SizedBox(width: 16),
@@ -2659,15 +2665,18 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       width: double.infinity,
       height: 60,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Tema.brandPurple, Color(0xFFBA68C8)],
+        gradient: LinearGradient(
+          colors: [
+            _brandAccentColor,
+            Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight.withOpacity(0.8) : const Color(0xFFBA68C8)
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Tema.brandPurple.withOpacity(0.3),
+            color: _brandAccentColor.withOpacity(0.3),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -2757,9 +2766,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                         value: progress,
                         strokeWidth: 6.0, // Grosor original
                         backgroundColor: Theme.of(context).colorScheme.outline.withOpacity(0.15),
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          Tema.brandPurple,
-                        ),
+                        valueColor: AlwaysStoppedAnimation<Color>(_brandAccentColor),
                       ),
                     ),
                     Column(
