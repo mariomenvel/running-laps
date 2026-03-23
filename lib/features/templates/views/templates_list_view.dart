@@ -462,22 +462,59 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                     ),
                   ),
                   if (!widget.isSelectionMode)
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade50,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: IconButton(
-                        icon: Icon(Icons.delete_outline_rounded, color: Colors.red.shade400, size: 22),
-                        onPressed: () => _deleteTemplate(template),
-                      ),
-                    )
+                    _DeleteButton(onDelete: () => _deleteTemplate(template))
                   else
                     Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.25)),
                 ],
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Brightness-aware delete button for template cards.
+///
+/// - Light mode: subtle red-tinted badge background with a muted icon.
+/// - Dark mode: no container background; icon uses [ColorScheme.error] for
+///   guaranteed legibility on dark card surfaces.
+class _DeleteButton extends StatelessWidget {
+  final VoidCallback onDelete;
+
+  const _DeleteButton({required this.onDelete});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final errorColor = Theme.of(context).colorScheme.error;
+
+    if (isDark) {
+      // Bare icon button — error color is already legible on dark surfaces.
+      return Tooltip(
+        message: 'Eliminar plantilla',
+        child: IconButton(
+          icon: Icon(Icons.delete_outline_rounded, color: errorColor, size: 22),
+          onPressed: onDelete,
+          splashRadius: 22,
+        ),
+      );
+    }
+
+    // Light mode: keep the subtle tinted container, but honour the error token.
+    return Tooltip(
+      message: 'Eliminar plantilla',
+      child: Container(
+        decoration: BoxDecoration(
+          color: errorColor.withValues(alpha: 0.04), // reduced from .shade50's ~10% for subtlety
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: IconButton(
+          icon: Icon(Icons.delete_outline_rounded, color: errorColor, size: 22),
+          onPressed: onDelete,
+          splashRadius: 22,
+          splashColor: errorColor.withValues(alpha: 0.12),
         ),
       ),
     );
