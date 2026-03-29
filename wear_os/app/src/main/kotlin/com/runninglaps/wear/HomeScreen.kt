@@ -110,10 +110,13 @@ fun formatPace(secPerKm: Double): String {
 // ── HomeScreen ────────────────────────────────────────────────────────────────
 
 @Composable
-fun HomeScreen(onStartContinua: () -> Unit = {}) {
+fun HomeScreen(
+    onStartContinua: () -> Unit = {},
+    onOpenSeries: () -> Unit = {},
+) {
     val context = LocalContext.current
     val colors = WearTheme.colors
-    val pagerState = rememberPagerState(initialPage = 0, pageCount = { 3 })
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { 2 })
 
     var stats by remember { mutableStateOf<StatsData?>(null) }
 
@@ -184,13 +187,12 @@ fun HomeScreen(onStartContinua: () -> Unit = {}) {
         ) { page ->
             when (page) {
                 0 -> StatsPage(stats)
-                1 -> ModeSelectorPage(onStartContinua = onStartContinua)
-                2 -> SeriesPage()
+                1 -> ModeSelectorPage(onStartContinua = onStartContinua, onOpenSeries = onOpenSeries)
             }
         }
 
         PageDots(
-            pageCount = 3,
+            pageCount = 2,
             currentPage = pagerState.currentPage,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -331,7 +333,7 @@ fun QuadrantCell(modifier: Modifier, label: String, value: String, icon: ImageVe
 // ── Page 1 — Mode selector ────────────────────────────────────────────────────
 
 @Composable
-fun ModeSelectorPage(onStartContinua: () -> Unit) {
+fun ModeSelectorPage(onStartContinua: () -> Unit, onOpenSeries: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -358,7 +360,7 @@ fun ModeSelectorPage(onStartContinua: () -> Unit) {
             ModeCard(
                 label = "Por Series",
                 icon = Icons.Default.Repeat,
-                onClick = { Log.d("RunningLaps", "mode: por_series") },
+                onClick = onOpenSeries,
             )
             Spacer(Modifier.height(12.dp))
             ModeCard(
@@ -420,163 +422,6 @@ fun ModeCard(label: String, icon: ImageVector, onClick: () -> Unit) {
                 modifier = Modifier.size(12.dp),
             )
         }
-    }
-}
-
-// ── Page 2 — Por series ───────────────────────────────────────────────────────
-
-private val distOptions = listOf("100m", "200m", "400m", "800m", "1km", "2km", "3km", "5km", "10km", "21km", "42km")
-private val descOptions = listOf("30s", "1:00", "1:30", "2:00", "2:30", "3:00", "4:00", "5:00", "10:00")
-
-@Composable
-fun SeriesPage() {
-    val colors = WearTheme.colors
-
-    val distState = rememberPickerState(
-        initialNumberOfOptions = distOptions.size,
-        initiallySelectedOption = 2, // 400m
-    )
-    val descState = rememberPickerState(
-        initialNumberOfOptions = descOptions.size,
-        initiallySelectedOption = 1, // 1:00
-    )
-
-    var gpsEnabled by remember { mutableStateOf(true) }
-    var fcEnabled by remember { mutableStateOf(false) }
-    var alarmsEnabled by remember { mutableStateOf(true) }
-
-    ScalingLazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        // Pickers row: DIST | DESC
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                // DIST picker
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        text = "DIST",
-                        color = colors.brandPurpleLight,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Picker(
-                        state = distState,
-                        modifier = Modifier.weight(1f),
-                        gradientColor = colors.background,
-                    ) { index ->
-                        Text(
-                            text = distOptions[index],
-                            color = if (index == distState.selectedOption) colors.onSurface
-                            else colors.onSurface.copy(alpha = 0.35f),
-                            fontWeight = if (index == distState.selectedOption) FontWeight.Bold
-                            else FontWeight.Normal,
-                            fontSize = 14.sp,
-                        )
-                    }
-                }
-
-                // Divider
-                Box(
-                    modifier = Modifier
-                        .width(1.dp)
-                        .fillMaxHeight(0.7f)
-                        .background(colors.onSurface.copy(alpha = 0.2f)),
-                )
-
-                // DESC picker
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        text = "DESC",
-                        color = colors.brandPurpleLight,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Picker(
-                        state = descState,
-                        modifier = Modifier.weight(1f),
-                        gradientColor = colors.background,
-                    ) { index ->
-                        Text(
-                            text = descOptions[index],
-                            color = if (index == descState.selectedOption) colors.onSurface
-                            else colors.onSurface.copy(alpha = 0.35f),
-                            fontWeight = if (index == descState.selectedOption) FontWeight.Bold
-                            else FontWeight.Normal,
-                            fontSize = 14.sp,
-                        )
-                    }
-                }
-            }
-        }
-
-        // Toggle row: GPS / FC / ALA
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-            ) {
-                ToggleIconButton(label = "GPS", active = gpsEnabled) { gpsEnabled = !gpsEnabled }
-                ToggleIconButton(label = "FC", active = fcEnabled) { fcEnabled = !fcEnabled }
-                ToggleIconButton(label = "ALA", active = alarmsEnabled) { alarmsEnabled = !alarmsEnabled }
-            }
-        }
-
-        // Plantilla chip
-        item {
-            Chip(
-                onClick = { /* TODO: open template picker */ },
-                colors = ChipDefaults.chipColors(backgroundColor = colors.surface),
-                modifier = Modifier.fillMaxWidth(0.75f),
-                label = {
-                    Text(
-                        text = "Plantilla",
-                        color = colors.brandPurpleLight,
-                        fontSize = 12.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                },
-            )
-        }
-
-        // Iniciar button
-        item {
-            Chip(
-                onClick = { /* TODO: navigate to TrainingConfigScreen(mode=series) */ },
-                colors = ChipDefaults.chipColors(backgroundColor = colors.brandPurple),
-                modifier = Modifier.fillMaxWidth(),
-                label = {
-                    Text(
-                        text = "▶  Iniciar",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                },
-            )
-        }
-
-        item { Spacer(Modifier.height(16.dp)) }
     }
 }
 

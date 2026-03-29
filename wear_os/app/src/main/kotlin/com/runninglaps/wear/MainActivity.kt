@@ -38,8 +38,13 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun WearApp() {
-    val auth = remember { FirebaseAuth.getInstance() }
-    var isAuthenticated by remember { mutableStateOf(auth.currentUser != null) }
+    // TEMP: bypass QR auth for testing — restore AuthScreen check before release
+    val context = LocalContext.current
+    val testUid = "KtgNewIEWQYFIq5nm2tx9RDK31h1" // TODO: remove before production
+    remember {
+        context.getSharedPreferences("wear_prefs", Context.MODE_PRIVATE)
+            .edit().putString("uid", testUid).apply()
+    }
 
     val themeMode by ThemePreference.themeMode.collectAsState()
     val darkTheme = when (themeMode) {
@@ -49,11 +54,7 @@ fun WearApp() {
     }
 
     WearAppTheme(darkTheme = darkTheme) {
-        if (isAuthenticated) {
-            AppNavHost()
-        } else {
-            AuthScreen(onAuthenticated = { isAuthenticated = true })
-        }
+        AppNavHost()
     }
 }
 
@@ -68,6 +69,12 @@ fun AppNavHost() {
     var alarmMode by remember { mutableStateOf("time") }
     var alarmIntervalMs by remember { mutableStateOf<Long?>(null) }
 
+    // Series config state
+    var seriesDistancia by remember { mutableStateOf("400m") }
+    var seriesDescanso by remember { mutableStateOf("1:00") }
+    var seriesGpsEnabled by remember { mutableStateOf(true) }
+    var seriesFcEnabled by remember { mutableStateOf(false) }
+
     // State captured at stop time, passed to rpe_picker → tag_selector → continua_summary
     var trainingSnapshot by remember { mutableStateOf<TrainingSnapshot?>(null) }
     var savedRpe by remember { mutableStateOf(5.0f) }
@@ -78,7 +85,25 @@ fun AppNavHost() {
         startDestination = "home",
     ) {
         composable("home") {
-            HomeScreen(onStartContinua = { navController.navigate("continua_config") })
+            HomeScreen(
+                onStartContinua = { navController.navigate("continua_config") },
+                onOpenSeries = { navController.navigate("series_page") },
+            )
+        }
+        composable("series_page") {
+            SeriesPage(
+                onOpenAlarmConfig = { navController.navigate("alarm_config") },
+                onOpenTemplates = { navController.navigate("template_picker") },
+                onStartSeries = { dist, desc, gps, fc, alarm ->
+                    Log.d("RunningLaps", "onStartSeries called — navigating to series_config")
+                    seriesDistancia = dist
+                    seriesDescanso = desc
+                    seriesGpsEnabled = gps
+                    seriesFcEnabled = fc
+                    alarmEnabled = alarm
+                    navController.navigate("series_config")
+                },
+            )
         }
         composable("continua_config") {
             ContinuaConfigScreen(
@@ -108,6 +133,23 @@ fun AppNavHost() {
                     navController.popBackStack()
                 },
             )
+        }
+        composable("series_config") {
+            SeriesActiveScreen(
+                distancia = seriesDistancia,
+                descanso = seriesDescanso,
+                gpsEnabled = seriesGpsEnabled,
+                fcEnabled = seriesFcEnabled,
+                alarmIntervalMs = alarmIntervalMs ?: 0L,
+                onStop = {
+                    navController.navigate("home") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                },
+            )
+        }
+        composable("template_picker") {
+            Log.d("RunningLaps", "template_picker: placeholder")
         }
         composable("continua_active") {
             ContinuaActiveScreen(
