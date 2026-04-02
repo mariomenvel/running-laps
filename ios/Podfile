@@ -1,3 +1,5 @@
+# Podfile para Flutter + iOS 16+, Firebase y Mobile Scanner
+
 platform :ios, '16.0'
 
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -30,7 +32,19 @@ target 'Runner' do
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
-  # Usar versión compatible con mobile_scanner
-  pod 'GoogleUtilities/Environment', '~> 7.13'
-  pod 'GoogleUtilities/UserDefaults', '~> 7.13'
+  # Firebase + ML Kit ya resuelven sus versiones automáticamente
+  # Evitar forzar versiones de GoogleUtilities, dejar que CocoaPods gestione dependencias
+
+  # Si quieres, aquí puedes añadir otros pods específicos:
+  # pod 'Firebase/Auth'
+  # pod 'mobile_scanner'
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      # Habilitar uso de frameworks dinámicos para Swift
+      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
+    end
+  end
 end
