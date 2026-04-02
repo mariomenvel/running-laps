@@ -30,3 +30,5 @@ target 'Runner' do
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
+
+pod 'GoogleUtilities/Environment', '8.1.0'
