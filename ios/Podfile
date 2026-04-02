@@ -30,7 +30,7 @@ target 'Runner' do
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
-  # Forzar versión de GoogleUtilities si hay conflictos
-  pod 'GoogleUtilities/Environment', '8.1.0'
-  pod 'GoogleUtilities/UserDefaults', '8.1.0'
+  # Usar versión compatible con mobile_scanner
+  pod 'GoogleUtilities/Environment', '~> 7.13'
+  pod 'GoogleUtilities/UserDefaults', '~> 7.13'
 end
