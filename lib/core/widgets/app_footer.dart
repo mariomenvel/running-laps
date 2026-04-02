@@ -73,6 +73,7 @@ class _AppFooterState extends State<AppFooter>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
     return Container(
       decoration: BoxDecoration(
         gradient: isDark ? null : const RadialGradient(
@@ -98,10 +99,13 @@ class _AppFooterState extends State<AppFooter>
             ),
             child: _buildButton(),
           ),
+          // Cubre la zona del home indicator con el color del footer
+          SizedBox(height: bottomPadding),
         ],
       ),
     );
   }
+
 
   Widget _buildButton() {
     return GestureDetector(
