@@ -32,16 +32,14 @@ target 'Runner' do
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
-  # Firebase + ML Kit ya resuelven sus versiones automáticamente
-  # Evitar forzar versiones de GoogleUtilities, dejar que CocoaPods gestione dependencias
-
-  # Si quieres, aquí puedes añadir otros pods específicos:
-  # pod 'Firebase/Auth'
-  # pod 'mobile_scanner'
+  # Force GoogleUtilities to 8.x to resolve conflict between firebase_auth (~> 8.1)
+  # and mobile_scanner's transitive dependency MLKitCommon (~> 7.7 via GoogleDataTransport)
+  pod 'GoogleUtilities', '~> 8.1'
 end
 
 post_install do |installer|
   installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
     target.build_configurations.each do |config|
       # Habilitar uso de frameworks dinámicos para Swift
       config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
