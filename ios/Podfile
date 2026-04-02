@@ -29,6 +29,8 @@ target 'Runner' do
   use_modular_headers!
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
-end
 
-pod 'GoogleUtilities/Environment', '8.1.0'
+  # Forzar versión de GoogleUtilities si hay conflictos
+  pod 'GoogleUtilities/Environment', '8.1.0'
+  pod 'GoogleUtilities/UserDefaults', '8.1.0'
+end
