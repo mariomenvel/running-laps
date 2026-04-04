@@ -30,6 +30,11 @@
             android:foregroundServiceType="location|health"
             android:exported="false" />
 
+        <service
+            android:name=".SeriesTrainingService"
+            android:foregroundServiceType="location|health"
+            android:exported="false" />
+
     </application>
 
 </manifest>

@@ -133,25 +133,41 @@ fun HomeScreen(
             // Load best mark distance preference
             val settingsDoc = db.collection("users").document(uid)
                 .collection("settings").document("bestMarkDistance")
-                .get().await()
+                .get()
+                .addOnFailureListener { e ->
+                    Log.e("RunningLaps", "HomeScreen bestMark load failed: ${e.message}")
+                }
+                .await()
             val bestDistM = (settingsDoc.get("distanceM") as? Number)?.toInt() ?: 400
 
-            // Load entrenamientos
+            // Load trainings
             val snap = db.collection("users").document(uid)
-                .collection("entrenamientos")
-                .get().await()
+                .collection("trainings")
+                .get()
+                .addOnFailureListener { e ->
+                    Log.e("RunningLaps", "HomeScreen stats load failed: ${e.message}")
+                }
+                .await()
 
             var totalDist = 0.0
             var totalTime = 0.0
             var bestMarkSec: Double? = null
 
             for (doc in snap.documents) {
-                val dist = (doc.get("distanciaTotalM") as? Number)?.toDouble() ?: 0.0
-                val time = (doc.get("tiempoTotalSec") as? Number)?.toDouble() ?: 0.0
+                val seriesList = doc.get("series") as? List<*> ?: emptyList<Any>()
+
+                // Use top-level aggregate if present (mobile), otherwise sum series
+                val dist = (doc.get("distanciaTotalM") as? Number)?.toDouble()
+                    ?: seriesList.sumOf { raw ->
+                        (raw as? Map<*, *>)?.let { (it["distanciaM"] as? Number)?.toDouble() } ?: 0.0
+                    }
+                val time = (doc.get("tiempoTotalSec") as? Number)?.toDouble()
+                    ?: seriesList.sumOf { raw ->
+                        (raw as? Map<*, *>)?.let { (it["tiempoSec"] as? Number)?.toDouble() } ?: 0.0
+                    }
                 totalDist += dist
                 totalTime += time
 
-                val seriesList = doc.get("series") as? List<*> ?: continue
                 for (raw in seriesList) {
                     val serie = raw as? Map<*, *> ?: continue
                     val sDistM = (serie["distanciaM"] as? Number)?.toDouble() ?: 0.0

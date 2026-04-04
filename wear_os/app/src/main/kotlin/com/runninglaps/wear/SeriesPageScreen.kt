@@ -56,24 +56,69 @@ import androidx.wear.compose.material.rememberPickerState
 import com.runninglaps.wear.theme.WearColors
 import com.runninglaps.wear.theme.WearTheme
 
-private val distOptions = listOf("100m","200m","300m","400m","500m","600m","800m","1km","1.2km","1.5km","2km","3km","4km","5km","8km","10km","15km","21km","42km")
-private val descOptions = listOf("0s","15s","30s","45s","1:00","1:15","1:30","1:45","2:00","2:30","3:00","3:30","4:00","5:00","6:00","7:00","8:00","10:00")
+internal val distOptions = (1..100).map { i ->
+    val meters = i * 50
+    if (meters >= 1000) {
+        val km = meters / 1000f
+        if (km == km.toLong().toFloat()) "${km.toLong()}km" else "${km}km"
+    } else "${meters}m"
+}
+internal val descOptions = (0..60).map { i ->
+    val secs = i * 5
+    if (secs == 0) "0s"
+    else if (secs < 60) "${secs}s"
+    else {
+        val min = secs / 60
+        val sec = secs % 60
+        if (sec == 0) "${min}:00" else "${min}:${sec.toString().padStart(2, '0')}"
+    }
+}
+
+internal fun metersToDistStr(meters: Int): String {
+    val rounded = ((meters / 50) * 50).coerceIn(50, 5000)
+    return if (rounded >= 1000) {
+        val km = rounded / 1000f
+        if (km == km.toLong().toFloat()) "${km.toLong()}km" else "${km}km"
+    } else "${rounded}m"
+}
+
+internal fun secondsToDescStr(secs: Int): String {
+    val rounded = (secs / 5) * 5
+    return if (rounded == 0) "0s"
+    else if (rounded < 60) "${rounded}s"
+    else {
+        val min = rounded / 60
+        val sec = rounded % 60
+        if (sec == 0) "$min:00" else "$min:${sec.toString().padStart(2, '0')}"
+    }
+}
 
 @Composable
 fun SeriesPage(
     onOpenAlarmConfig: () -> Unit,
     onOpenTemplates: () -> Unit,
     onStartSeries: (distancia: String, descanso: String, gpsEnabled: Boolean, fcEnabled: Boolean, alarmEnabled: Boolean) -> Unit,
+    initialTemplate: WearTemplate? = null,
 ) {
     val colors = WearTheme.colors
 
+    val block0 = initialTemplate?.blocks?.firstOrNull()
+    val distInitial = if (block0 != null && block0.type == "distance") {
+        distOptions.indexOf(metersToDistStr(block0.value)).takeIf { it >= 0 }
+            ?: distOptions.indexOf("400m")
+    } else distOptions.indexOf("400m")
+    val descInitial = if (block0 != null) {
+        descOptions.indexOf(secondsToDescStr(block0.restSeconds)).takeIf { it >= 0 }
+            ?: descOptions.indexOf("1:00")
+    } else descOptions.indexOf("1:00")
+
     val distState = rememberPickerState(
         initialNumberOfOptions = distOptions.size,
-        initiallySelectedOption = 3, // 400m
+        initiallySelectedOption = distInitial,
     )
     val descState = rememberPickerState(
         initialNumberOfOptions = descOptions.size,
-        initiallySelectedOption = 4, // 1:00
+        initiallySelectedOption = descInitial,
     )
 
     var gpsEnabled by remember { mutableStateOf(true) }
@@ -106,6 +151,17 @@ fun SeriesPage(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically),
         ) {
+            // ── Template label ─────────────────────────────────────────────────
+            if (initialTemplate != null) {
+                Text(
+                    text = "📋 ${initialTemplate.name}",
+                    color = colors.brandPurpleLight,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 0.05.em,
+                )
+            }
+
             // ── Section 1: Pickers row ─────────────────────────────────────────
             Row(
                 modifier = Modifier

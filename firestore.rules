@@ -70,7 +70,9 @@ service cloud.firestore {
         //   request.auth.uid and uid are members?" without a known groupId.
         //   PRODUCTION RECOMMENDATION: move ranking computation to a Cloud
         //   Function (Admin SDK) and restrict this rule to isOwner(uid) only.
-        allow read: if isSignedIn();
+        // Wear OS watch has no Firebase Auth session — allow unauthenticated read
+        // so HomeScreen can load training stats on the watch.
+        allow read: if isSignedIn() || request.auth == null;
 
         // Authenticated owner can delete their own trainings.
         allow delete: if isOwner(uid);
@@ -114,15 +116,19 @@ service cloud.firestore {
       match /templates/{templateId} {
         // Personal training templates (features/templates). Strictly private.
         // TrainingTemplatesRepository always reads/writes the current user's own templates.
-        allow read, write: if isOwner(uid);
+        // Wear OS watch has no Firebase Auth session — allow unauthenticated read
+        // so TemplatePickerScreen can load the user's templates on the watch.
+        allow read: if isOwner(uid) || request.auth == null;
+        allow write: if isOwner(uid);
       }
 
       // ── users/{uid}/settings/{id} ──────────────────────────────────────────
       match /settings/{settingId} {
         // HomeConfigRepository reads and writes users/{uid}/settings/homeLayoutConfig
         // to persist the home dashboard widget layout (visibility, order, config).
-        // Strictly private — only the owner can read or modify their own layout.
-        allow read, write: if isOwner(uid);
+        // Wear OS watch reads settings/bestMarkDistance without a Firebase Auth session.
+        allow read: if isOwner(uid) || request.auth == null;
+        allow write: if isOwner(uid);
       }
 
       // ── users/{uid}/result_notifications/{id} ──────────────────────────────
