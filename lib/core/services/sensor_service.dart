@@ -44,23 +44,20 @@ class SensorService {
   Future<bool> initialize() async {
     if (_isInitialized) return true;
 
+    // Pedómetro es opcional: si el permiso está denegado o no disponible en
+    // este dispositivo, continuamos sin él (el GPS sigue funcionando).
     var permissionStatus = await Permission.activityRecognition.status;
     if (permissionStatus.isDenied) {
       permissionStatus = await Permission.activityRecognition.request();
     }
 
-    if (permissionStatus.isPermanentlyDenied) {
-
-      return false;
-    }
-
     if (permissionStatus.isGranted) {
       _initStreams();
-      _isInitialized = true;
-      return true;
     }
-
-    return false;
+    // Aunque el pedómetro no esté disponible devolvemos true para no
+    // bloquear la solicitud de permiso de ubicación en GPSService.
+    _isInitialized = true;
+    return true;
   }
 
   void _initStreams() {

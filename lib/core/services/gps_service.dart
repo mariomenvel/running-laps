@@ -106,12 +106,17 @@ class GPSService {
   }
 
   Future<bool> initialize() async {
-    final ok = await _sensorService.initialize();
-    if (!ok) {
-      status.value = GpsStatus.permissionDenied;
+    // El pedómetro es opcional: lo inicializamos pero no bloqueamos si falla.
+    await _sensorService.initialize();
+
+    // Comprueba que el GPS del sistema esté activado.
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      status.value = GpsStatus.disabled;
       return false;
     }
 
+    // Solicita el permiso de ubicación (muestra el diálogo del sistema).
     LocationPermission perm = await Geolocator.checkPermission();
     if (perm == LocationPermission.denied) {
       perm = await Geolocator.requestPermission();

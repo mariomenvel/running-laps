@@ -272,20 +272,23 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(child: _buildBody()),
-            AppFooter(onTap: _onPlayButtonTap),
-          ],
-        ),
+      // extendBody permite que el footer llegue hasta el borde inferior de la pantalla
+      body: Column(
+        children: [
+          // El header cubre TAMBIÉN la zona del status bar (safe area superior)
+          _buildHeader(),
+          // El body solo ocupa el espacio seguro central
+          Expanded(child: _buildBody()),
+          // El footer cubre TAMBIÉN la zona del home indicator (safe area inferior)
+          AppFooter(onTap: _onPlayButtonTap),
+        ],
       ),
     );
   }
 
   Widget _buildHeader() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final topPadding = MediaQuery.of(context).padding.top;
     return Container(
       decoration: isDark
           ? BoxDecoration(color: Theme.of(context).colorScheme.surface)
@@ -303,6 +306,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             ),
       child: Column(
         children: [
+          // Ocupa la zona del status bar con el color del header
+          SizedBox(height: topPadding),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             child: Row(
@@ -336,6 +341,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       ),
     );
   }
+
 
   Widget _buildBody() {
     return AnimatedSwitcher(
