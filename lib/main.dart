@@ -20,14 +20,15 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Inicializar App Check — Android y Web activos. iOS en monitor mode (sin credenciales Apple Developer).
+  // Inicializar App Check — Android y Web activos. iOS omitido (sin credenciales Apple Developer).
   if (!kIsWeb) {
-    await FirebaseAppCheck.instance.activate(
-      androidProvider: kDebugMode
-          ? AndroidProvider.debug
-          : AndroidProvider.playIntegrity,
-      appleProvider: AppleProvider.deviceCheck,
-    );
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      await FirebaseAppCheck.instance.activate(
+        androidProvider: kDebugMode
+            ? AndroidProvider.debug
+            : AndroidProvider.playIntegrity,
+      );
+    }
   } else {
     await FirebaseAppCheck.instance.activate(
       webProvider: ReCaptchaV3Provider('6LcH2acsAAAAAGdH2Wi1X39xnD3EB6o40ZsVjnIo'),

@@ -1,0 +1,4 @@
+﻿ M lib/features/auth/views/auth_page.dart
+ M lib/main.dart
+?? final_status.txt
+?? ios/Runner/GoogleService-Info.plist

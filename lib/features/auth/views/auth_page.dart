@@ -408,6 +408,8 @@ class _AuthPageState extends State<AuthPage> {
     bool obscureText = false,
     Widget? suffixIcon,
     Widget? prefixIcon,
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onSubmitted,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
@@ -432,6 +434,8 @@ class _AuthPageState extends State<AuthPage> {
         keyboardType: hintText.contains('Correo')
             ? TextInputType.emailAddress
             : TextInputType.text,
+        textInputAction: textInputAction,
+        onSubmitted: onSubmitted,
         style: TextStyle(
           color: Theme.of(context).colorScheme.onSurface,
           fontSize: 16,
@@ -560,6 +564,8 @@ class _AuthPageState extends State<AuthPage> {
           controller: _authCtrl.emailCtrl,
           hintText: 'Correo electrónico',
           prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[400]),
+          textInputAction: TextInputAction.next,
+          onSubmitted: (_) => FocusScope.of(context).nextFocus(),
         ),
         const SizedBox(height: 16),
         _buildTextField(
@@ -567,6 +573,8 @@ class _AuthPageState extends State<AuthPage> {
           hintText: 'Contraseña',
           obscureText: !_showLoginPassword,
           prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[400]),
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => FocusScope.of(context).unfocus(),
           suffixIcon: IconButton(
             icon: Icon(
               _showLoginPassword ? Icons.visibility_off : Icons.visibility,
@@ -630,12 +638,16 @@ class _AuthPageState extends State<AuthPage> {
           controller: _authCtrl.usernameCtrl,
           hintText: 'Nombre de usuario',
           prefixIcon: Icon(Icons.person_outline, color: Colors.grey[400]),
+          textInputAction: TextInputAction.next,
+          onSubmitted: (_) => FocusScope.of(context).nextFocus(),
         ),
         const SizedBox(height: 16),
         _buildTextField(
           controller: _authCtrl.emailCtrl,
           hintText: 'Correo electrónico',
           prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[400]),
+          textInputAction: TextInputAction.next,
+          onSubmitted: (_) => FocusScope.of(context).nextFocus(),
         ),
         const SizedBox(height: 16),
         _buildTextField(
@@ -643,6 +655,8 @@ class _AuthPageState extends State<AuthPage> {
           hintText: 'Contraseña',
           obscureText: !_showRegisterPassword,
           prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[400]),
+          textInputAction: TextInputAction.next,
+          onSubmitted: (_) => FocusScope.of(context).nextFocus(),
           suffixIcon: IconButton(
             icon: Icon(
               _showRegisterPassword ? Icons.visibility_off : Icons.visibility,
@@ -661,6 +675,8 @@ class _AuthPageState extends State<AuthPage> {
           hintText: 'Confirmar contraseña',
           obscureText: !_showRegisterConfirmPassword,
           prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[400]),
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => FocusScope.of(context).unfocus(),
           suffixIcon: IconButton(
             icon: Icon(
               _showRegisterConfirmPassword
