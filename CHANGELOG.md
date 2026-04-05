@@ -33,6 +33,12 @@
 - Botones de control (Terminar / Fin de serie) no disponibles en notificación iOS — `NotificationButtons` son Android-only
 - Workaround: control desde la app o desde Wear OS
 
+### iOS — Pendiente con logs
+- Google Sign In: app se cierra al pulsar el botón.
+  Cambios aplicados: `REVERSED_CLIENT_ID` en `Info.plist`, `GoogleService-Info.plist` añadido,
+  `GIDSignIn.sharedInstance.handle(url)` en `AppDelegate.swift`.
+  Requiere logs para diagnosticar el crash. Pendiente para cuando haya acceso a Xcode/Mac.
+
 ### Documentación
 - Creados `CHANGELOG.md`, `ARCHITECTURE.md` y `CLAUDE.md` en raíz del proyecto
 
