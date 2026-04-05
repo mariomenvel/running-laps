@@ -5,6 +5,10 @@ import Flutter
 import ActivityKit
 #endif
 
+enum RunningLapsLiveActivityError: Error {
+  case invalidArguments
+}
+
 final class RunningLapsLiveActivityManager {
   static let shared = RunningLapsLiveActivityManager()
 
@@ -24,13 +28,13 @@ final class RunningLapsLiveActivityManager {
 
     let state = try contentState(from: arguments)
     for activity in Activity<RunningLapsActivityAttributes>.activities {
-      await activity.end(nil, dismissalPolicy: .immediate)
+      await activity.end(using: nil, dismissalPolicy: .immediate)
     }
 
     let attributes = RunningLapsActivityAttributes(sessionId: UUID().uuidString)
     _ = try Activity.request(
       attributes: attributes,
-      content: .init(state: state, staleDate: nil),
+      contentState: state,
       pushType: nil
     )
     #endif
@@ -42,7 +46,7 @@ final class RunningLapsLiveActivityManager {
     guard let activity = currentActivity else { return }
 
     let state = try contentState(from: arguments)
-    await activity.update(.init(state: state, staleDate: nil))
+    await activity.update(using: state)
     #endif
   }
 
@@ -51,20 +55,18 @@ final class RunningLapsLiveActivityManager {
     guard #available(iOS 16.1, *) else { return }
 
     for activity in Activity<RunningLapsActivityAttributes>.activities {
-      await activity.end(nil, dismissalPolicy: .immediate)
+      await activity.end(using: nil, dismissalPolicy: .immediate)
     }
     #endif
   }
 
   #if canImport(ActivityKit)
   @available(iOS 16.1, *)
-  private func contentState(from arguments: Any?) throws -> RunningLapsActivityAttributes.ContentState {
+  private func contentState(
+    from arguments: Any?
+  ) throws -> RunningLapsActivityAttributes.ContentState {
     guard let map = arguments as? [String: Any] else {
-      throw FlutterError(
-        code: "invalid_args",
-        message: "Live Activity payload missing.",
-        details: nil
-      )
+      throw RunningLapsLiveActivityError.invalidArguments
     }
 
     let title = map["title"] as? String ?? "Running Laps \u{00B7} En carrera"
