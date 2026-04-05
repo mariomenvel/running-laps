@@ -97,6 +97,7 @@ class ChallengesRepository {
         .doc(groupId)
         .collection('challenges')
         .where('status', isEqualTo: ChallengeStatus.active.toFirestore())
+        .limit(20)
         .snapshots()
         .map((snapshot) {
       return snapshot.docs
@@ -113,6 +114,7 @@ class ChallengesRepository {
           .doc(groupId)
           .collection('challenges')
           .where('status', isEqualTo: ChallengeStatus.active.toFirestore())
+          .limit(50)
           .get();
 
       return snapshot.docs
@@ -214,6 +216,7 @@ class ChallengesRepository {
             .collection('global_challenges')
             .doc(challengeId)
             .collection('participations')
+            .limit(500)
             .snapshots()
         : _firestore
             .collection('groups')
@@ -221,6 +224,7 @@ class ChallengesRepository {
             .collection('challenges')
             .doc(challengeId)
             .collection('participants')
+            .limit(500)
             .snapshots();
 
     return colStream.map((snapshot) {
@@ -295,6 +299,7 @@ class ChallengesRepository {
           .collection('challenges')
           .doc(challengeId)
           .collection('participants')
+          .limit(500)
           .get();
 
       return snapshot.docs

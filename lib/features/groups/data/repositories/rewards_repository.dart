@@ -19,6 +19,7 @@ class RewardsRepository {
         .collection('groups')
         .doc(groupId)
         .collection('medals')
+        .limit(200)
         .snapshots()
         .map((snapshot) {
       final medals = snapshot.docs
@@ -66,6 +67,7 @@ class RewardsRepository {
         .collection('groups')
         .doc(groupId)
         .collection('badges')
+        .limit(200)
         .snapshots()
         .map((snapshot) {
       final badges = snapshot.docs

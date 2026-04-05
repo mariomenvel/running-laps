@@ -104,6 +104,7 @@ class UserGroupsRepository {
         .collection('users')
         .doc(uid)
         .collection('groups')
+        .limit(50)
         .snapshots()
         .map((snapshot) => snapshot.docs.map((doc) => doc.id).toList());
   }
@@ -114,6 +115,7 @@ class UserGroupsRepository {
         .collection('users')
         .doc(uid)
         .collection('groups')
+        .limit(50)
         .snapshots()
         .map((snapshot) {
           return snapshot.docs.map((doc) {

@@ -17,6 +17,7 @@ class GroupDetailRepository {
           .collection('groups')
           .doc(groupId)
           .collection('members')
+          .limit(500)
           .get();
       
       if (membersSnap.docs.isEmpty) return [];
@@ -129,6 +130,7 @@ class GroupDetailRepository {
           .doc(uid)
           .collection('trainings')
           .where('fecha', isGreaterThanOrEqualTo: startOfDay.toIso8601String())
+          .limit(200)
           .get();
 
       double totalM = 0;

@@ -265,6 +265,7 @@ class TrainingChallengeSyncService {
           .collection('users')
           .doc(uid)
           .collection('groups')
+          .limit(50)
           .get();
 
       return snapshot.docs.map((doc) => doc.id).toList();
@@ -281,6 +282,7 @@ class TrainingChallengeSyncService {
           .doc(groupId)
           .collection('challenges')
           .where('status', isEqualTo: ChallengeStatus.active.toFirestore())
+          .limit(50)
           .get();
 
       return snapshot.docs
@@ -308,6 +310,7 @@ class TrainingChallengeSyncService {
           .collection('trainings')
           .where('fecha', isGreaterThanOrEqualTo: startStr)
           .where('fecha', isLessThan: endStr)
+          .limit(200)
           .get();
 
       return snapshot.docs

@@ -63,14 +63,11 @@ class AuthRemote {
       if (kIsWeb) {
         final result = await _auth.signInWithPopup(GoogleAuthProvider());
         final user = result.user;
-        print('WEB LOGIN: user=${user?.uid}, email=${user?.email}');
         if (user != null) {
           // Force token refresh so Firestore rules can verify request.auth
           await user.getIdToken(true);
-          print('WEB LOGIN: token refreshed');
           try {
             final doc = await _db.collection("users").doc(user.uid).get();
-            print('WEB LOGIN: doc.exists=${doc.exists}');
             if (!doc.exists) {
               await _db.collection("users").doc(user.uid).set({
                 "nombre": user.displayName ?? "Usuario",
@@ -82,10 +79,9 @@ class AuthRemote {
                 "totalTimeMinutes": 0.0,
                 "lastTrainingDate": null,
               });
-              print('WEB LOGIN: document created successfully');
             }
           } catch (e) {
-            print('WEB LOGIN ERROR: $e');
+            // Firestore doc creation failed silently — user is still authenticated
           }
         }
         return result;
