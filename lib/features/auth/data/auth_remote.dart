@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/auth_failure.dart';
 
@@ -59,26 +60,52 @@ class AuthRemote {
 
   Future<UserCredential> signInWithGoogle() async {
     try {
+      if (kIsWeb) {
+        final result = await _auth.signInWithPopup(GoogleAuthProvider());
+        final user = result.user;
+        print('WEB LOGIN: user=${user?.uid}, email=${user?.email}');
+        if (user != null) {
+          // Force token refresh so Firestore rules can verify request.auth
+          await user.getIdToken(true);
+          print('WEB LOGIN: token refreshed');
+          try {
+            final doc = await _db.collection("users").doc(user.uid).get();
+            print('WEB LOGIN: doc.exists=${doc.exists}');
+            if (!doc.exists) {
+              await _db.collection("users").doc(user.uid).set({
+                "nombre": user.displayName ?? "Usuario",
+                "email": user.email,
+                "createdAt": FieldValue.serverTimestamp(),
+                "photoUrl": user.photoURL,
+              });
+              print('WEB LOGIN: document created successfully');
+            }
+          } catch (e) {
+            print('WEB LOGIN ERROR: $e');
+          }
+        }
+        return result;
+      }
+
       final GoogleSignIn googleSignIn = GoogleSignIn();
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      
+
       if (googleUser == null) {
         throw AuthFailure.fromCode('aborted-by-user', 'Sign in aborted by user');
       }
-      
+
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      
+
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-      
+
       return await _auth.signInWithCredential(credential);
     } on FirebaseAuthException catch (e) {
       throw AuthFailure.fromCode(e.code, e.message);
     } catch (e) {
       if (e is AuthFailure) rethrow;
-
       throw AuthFailure(e.toString());
     }
   }

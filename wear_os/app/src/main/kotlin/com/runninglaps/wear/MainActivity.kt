@@ -21,6 +21,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
+import com.google.firebase.appcheck.FirebaseAppCheck
+import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
+import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -31,6 +34,18 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ThemePreference.init(this)
+
+        val firebaseAppCheck = FirebaseAppCheck.getInstance()
+        if (BuildConfig.DEBUG) {
+            firebaseAppCheck.installAppCheckProviderFactory(
+                DebugAppCheckProviderFactory.getInstance()
+            )
+        } else {
+            firebaseAppCheck.installAppCheckProviderFactory(
+                PlayIntegrityAppCheckProviderFactory.getInstance()
+            )
+        }
+
         setContent {
             WearApp()
         }

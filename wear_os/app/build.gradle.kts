@@ -19,6 +19,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     kotlinOptions {
@@ -37,6 +38,10 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
+
+    // Firebase App Check — Play Integrity (release) + Debug (debug builds)
+    implementation("com.google.firebase:firebase-appcheck-playintegrity")
+    implementation("com.google.firebase:firebase-appcheck-debug")
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'entrenamiento.dart';
 import '../../../features/groups/data/services/training_challenge_sync_service.dart';
+import '../../../features/home/data/home_estadistica_repository.dart';
 
 class TrainingRepository {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -33,6 +34,8 @@ class TrainingRepository {
 
     final trainingId = doc.id;
 
+    HomeEstadisticaRepository().clearCache();
+
     // Sync to challenges (async, don't await to avoid blocking)
     _syncService.onTrainingSaved(
       uid: uid,
@@ -53,7 +56,7 @@ class TrainingRepository {
 
     final QuerySnapshot<Map<String, dynamic>> snapshot = await _userTrainings(
       uid,
-    ).orderBy('createdAt', descending: true).get();
+    ).orderBy('createdAt', descending: true).limit(100).get();
 
     final List<Entrenamiento> result = <Entrenamiento>[];
 

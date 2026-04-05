@@ -241,6 +241,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.9.3+4"
+  firebase_app_check:
+    dependency: "direct main"
+    description:
+      name: firebase_app_check
+      sha256: cba9987ae8f3263c7a0ee778a49b8811df526344eb4ea4fd01f570a14e38f3de
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.1+1"
+  firebase_app_check_platform_interface:
+    dependency: transitive
+    description:
+      name: firebase_app_check_platform_interface
+      sha256: "3943857956ab1c7c4425050c72fecf51ac743d2291b12b5bc580e9a32aa419fb"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.1+1"
+  firebase_app_check_web:
+    dependency: transitive
+    description:
+      name: firebase_app_check_web
+      sha256: "3b51c73ee1bbdbf5c6fcdfb999c6e884ec61f892c74076e60c44ff8048b443e3"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.1+1"
   firebase_auth:
     dependency: "direct main"
     description:
@@ -684,10 +708,10 @@ packages:
     dependency: transitive
     description:
       name: matcher
-      sha256: dc0b7dc7651697ea4ff3e69ef44b0407ea32c487a39fff6a4004fa585e901861
+      sha256: "12956d0ad8390bbcc63ca2e1469c0619946ccb52809807067a7020d57e647aa6"
       url: "https://pub.dev"
     source: hosted
-    version: "0.12.19"
+    version: "0.12.18"
   material_color_utilities:
     dependency: transitive
     description:
@@ -1073,10 +1097,10 @@ packages:
     dependency: transitive
     description:
       name: test_api
-      sha256: "8161c84903fd860b26bfdefb7963b3f0b68fee7adea0f59ef805ecca346f0c7a"
+      sha256: "93167629bfc610f71560ab9312acdda4959de4df6fac7492c89ff0d3886f6636"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.10"
+    version: "0.7.9"
   typed_data:
     dependency: transitive
     description:

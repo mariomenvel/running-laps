@@ -37,6 +37,19 @@ service cloud.firestore {
                .data.role in ['admin', 'owner'];
     }
 
+    // True when the incoming document is not abnormally large.
+    // Applied to user-facing creates to limit storage abuse.
+    function isReasonableDocument() {
+      return request.resource.data.keys().size() < 50;
+    }
+
+    // True when the document is both key-count-bounded and total-size-bounded.
+    // Applied to group-level creates to prevent large document injection.
+    function isSafeWrite() {
+      return request.resource.data.keys().size() < 50
+          && request.resource.data.toString().size() < 10000;
+    }
+
     // ────────────────────────────────────────────────────────────────────────
     // users/{uid}
     // ────────────────────────────────────────────────────────────────────────
@@ -49,7 +62,7 @@ service cloud.firestore {
       allow read: if isSignedIn();
 
       // A user can create their own profile on first register / Google login.
-      allow create: if isOwner(uid);
+      allow create: if isOwner(uid) && isReasonableDocument();
 
       // A user can update their own profile, but CANNOT set isAdmin on themselves.
       // Privilege escalation via the client must be impossible.
@@ -89,9 +102,13 @@ service cloud.firestore {
         // Wear OS watch has no real Firebase Auth session — it stores the uid
         // in SharedPreferences and sends it as a document field. Allow create
         // when the document self-identifies as wear_os and declares the uid.
-        allow create: if isOwner(uid)
+        // Field size limits prevent storage abuse regardless of auth path.
+        allow create: if (isOwner(uid)
             || (request.resource.data.source == "wear_os"
-                && request.resource.data.get("wear_uid", "") == uid);
+                && request.resource.data.get("wear_uid", "") == uid))
+            && request.resource.data.keys().size() < 20
+            && request.resource.data.get("titulo", "").size() < 200
+            && request.resource.data.get("series", []).size() < 500;
       }
 
       // ── users/{uid}/tags/{id} ──────────────────────────────────────────────
@@ -142,9 +159,13 @@ service cloud.firestore {
         // ChallengeFinalizationService writes award notifications for winners
         // whose uid differs from the authenticated caller (cross-user create).
         // Content is non-sensitive (medal / badge award info).
-        // PRODUCTION RECOMMENDATION: Move finalization to a Cloud Function
-        //   (Admin SDK) and restrict this to isOwner(uid) only.
-        allow create: if isSignedIn();
+        // toUid must match the document's parent uid to prevent cross-user spam.
+        // TEMP: any signed-in user can create until Cloud Functions are available.
+        // PRODUCTION: restrict to Admin SDK via Cloud Function only.
+        allow create: if isSignedIn()
+            && request.resource.data.keys().size() < 15
+            && request.resource.data.get("type", "").size() < 50
+            && request.resource.data.get("toUid", "") == uid;
       }
     }
 
@@ -158,16 +179,18 @@ service cloud.firestore {
       allow read: if isSignedIn();
 
       // Any signed-in user can create a group (they become its owner).
-      allow create: if isSignedIn();
+      allow create: if isSignedIn() && isSafeWrite();
 
       // Only group admins / owners can rename, configure, or delete the group.
       allow update, delete: if isGroupAdmin(groupId);
 
-      // Any signed-in user can increment memberCount when joining via invite code.
-      // Restricted to changing only the 'memberCount' field to prevent abuse.
+      // Any signed-in user can increment memberCount by exactly 1 when joining
+      // via invite code. Restricted to the 'memberCount' field and a +1 delta
+      // to prevent arbitrary inflation.
       allow update: if isSignedIn() &&
                        request.resource.data.diff(resource.data)
-                         .affectedKeys().hasOnly(['memberCount']);
+                         .affectedKeys().hasOnly(['memberCount']) &&
+                       request.resource.data.memberCount == resource.data.memberCount + 1;
 
       // ── groups/{groupId}/members/{uid} ─────────────────────────────────────
       match /members/{uid} {
@@ -227,11 +250,12 @@ service cloud.firestore {
         // Only group admins can create, update, or revoke invites.
         allow write: if isGroupAdmin(groupId);
 
-        // Any signed-in user can increment the uses counter when joining via code.
-        // Restricted to changing only the 'uses' field to prevent abuse.
+        // Any signed-in user can increment the uses counter by exactly 1 when
+        // joining via code. Delta-locked to prevent replay/counter-inflation.
         allow update: if isSignedIn() &&
                          request.resource.data.diff(resource.data)
-                           .affectedKeys().hasOnly(['uses']);
+                           .affectedKeys().hasOnly(['uses']) &&
+                         request.resource.data.uses == resource.data.uses + 1;
       }
 
       // ── groups/{groupId}/medals/{uid} ──────────────────────────────────────
@@ -295,7 +319,16 @@ service cloud.firestore {
     //   once Firestore supports accessing request.resource.data in top-level rules.
     match /invite_codes/{code} {
       allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      // Restrict create: caller must be signed in and supply the required fields
+      // with a bounded document size. The matching invite document in
+      // groups/{groupId}/invites/{id} (protected by isGroupAdmin) is written
+      // atomically in the same batch, so a rogue create here is low-risk but
+      // field validation still prevents junk data accumulation.
+      allow create: if isSignedIn()
+          && request.resource.data.keys().hasAll(['groupId', 'inviteId'])
+          && request.resource.data.keys().size() < 10;
+      // Only the group admin who owns the invite can update or delete the lookup entry.
+      allow update, delete: if isGroupAdmin(resource.data.groupId);
     }
 
     // ────────────────────────────────────────────────────────────────────────
@@ -310,15 +343,21 @@ service cloud.firestore {
     //   Token server-side instead of forwarding the client ID token.
     match /wear_sessions/{code} {
       // Watch creates session before authentication — allow unauthenticated create.
-      // Safe because: codes expire in 5 minutes, contain no sensitive data at creation.
-      allow create: if true;
+      // Requires createdAt + status fields so TTL cleanup can target stale docs,
+      // and caps document size to prevent abuse of the open create rule.
+      allow create: if request.resource.data.keys().hasAll(['createdAt', 'status'])
+          && request.resource.data.status == 'pending'
+          && request.resource.data.keys().size() < 10
+          && request.resource.data.get("createdAt", 0) is timestamp
+          && request.resource.data.createdAt <= request.time + duration.value(10, 'm');
 
       // Only authenticated users (phone) can update (write the idToken).
       allow update: if isSignedIn();
 
       // Watch reads to check auth status — allow unauthenticated read.
-      // Safe because the code is random and unknown without physical access to the watch.
-      allow read: if true;
+      // Only recent sessions (created < 10 minutes ago) are readable to prevent
+      // bots from enumerating historical session documents.
+      allow read: if resource.data.createdAt > request.time - duration.value(10, 'm');
 
       // Only authenticated users can delete.
       allow delete: if isSignedIn();

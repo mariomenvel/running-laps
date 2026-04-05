@@ -56,7 +56,7 @@ class GroupDetailRepository {
       // Optimización: Podríamos filtrar en la Query de Firestore por fecha, 
       // pero como guardas fecha como String ISO8601 en tu modelo Entrenamiento,
       // descargamos y filtramos en memoria (para MVP está bien).
-      final trainingsSnap = await _db.collection('users').doc(uid).collection('trainings').get();
+      final trainingsSnap = await _db.collection('users').doc(uid).collection('trainings').limit(500).get();
 
       double totalKm = 0;
       final now = DateTime.now();
@@ -151,7 +151,7 @@ class GroupDetailRepository {
   // --- 4. DATOS PARA PERFIL (Gamification) ---
   Future<List<Entrenamiento>> fetchUserTrainings(String uid) async {
     try {
-      final snap = await _db.collection('users').doc(uid).collection('trainings').orderBy('fecha', descending: true).get();
+      final snap = await _db.collection('users').doc(uid).collection('trainings').orderBy('fecha', descending: true).limit(500).get();
       return snap.docs.map((d) => Entrenamiento.fromMap(d.data())).toList();
     } catch (e) {
 

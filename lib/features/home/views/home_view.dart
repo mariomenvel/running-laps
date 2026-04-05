@@ -37,7 +37,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 /// Home View rediseñado con widgets configurables
 /// Versión moderna con sistema de personalización
 class HomeView extends StatefulWidget {
-  const HomeView({super.key});
+  const HomeView({super.key, this.user});
+
+  final User? user;
 
   @override
   State<HomeView> createState() => _HomeViewState();
@@ -99,7 +101,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     _aChart    = CurvedAnimation(parent: _entranceController, curve: const Interval(0.350, 0.867, curve: Curves.easeOutQuart));
     _aRecent   = CurvedAnimation(parent: _entranceController, curve: const Interval(0.417, 0.933, curve: Curves.easeOutQuart));
     _aGroups   = CurvedAnimation(parent: _entranceController, curve: const Interval(0.483, 1.000, curve: Curves.easeOutQuart));
-    _currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    _currentUserId = widget.user?.uid ?? FirebaseAuth.instance.currentUser?.uid ?? '';
     _initializeHome();
     _loadGroups();
     _initNotificationListener();

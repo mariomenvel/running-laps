@@ -148,6 +148,7 @@ class RewardsRepository {
         .collection('medal_history')
         .where('uid', isEqualTo: uid)
         .orderBy('awardedAt', descending: true)
+        .limit(50)
         .snapshots()
         .map((snapshot) {
       return snapshot.docs
@@ -167,6 +168,7 @@ class RewardsRepository {
         .collection('badge_history')
         .where('uid', isEqualTo: uid)
         .orderBy('awardedAt', descending: true)
+        .limit(50)
         .snapshots()
         .map((snapshot) {
       return snapshot.docs

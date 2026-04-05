@@ -63,4 +63,8 @@ flutter {
 dependencies {
     // Wearable Data Layer API — phone side
     implementation("com.google.android.gms:play-services-wearable:18.1.0")
+
+    // Firebase App Check — Play Integrity (release) + Debug (debug builds)
+    implementation("com.google.firebase:firebase-appcheck-playintegrity")
+    implementation("com.google.firebase:firebase-appcheck-debug")
 }

@@ -25,8 +25,32 @@ class DailyMetric {
 // ===================================
 
 class HomeEstadisticaRepository {
+  static final HomeEstadisticaRepository _instance =
+      HomeEstadisticaRepository._internal();
+  factory HomeEstadisticaRepository() => _instance;
+  HomeEstadisticaRepository._internal();
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+  // --- Cache ---
+  final Map<String, List<DailyMetric>> _cache = {};
+  final Map<String, DateTime> _cacheTimestamps = {};
+  static const _cacheDuration = Duration(minutes: 5);
+
+  String _cacheKey(TimeRange range, HomeMetric metric) =>
+      '${range.name}_${metric.name}';
+
+  bool _isCacheValid(String key) {
+    final ts = _cacheTimestamps[key];
+    if (ts == null) return false;
+    return DateTime.now().difference(ts) < _cacheDuration;
+  }
+
+  void clearCache() {
+    _cache.clear();
+    _cacheTimestamps.clear();
+  }
 
   Future<List<Map<String, dynamic>>> _getRawData({
     required DateTime startDate,
@@ -48,6 +72,7 @@ class HomeEstadisticaRepository {
           .where('fecha', isGreaterThanOrEqualTo: startString)
           .where('fecha', isLessThanOrEqualTo: endString)
           .orderBy('fecha', descending: false)
+          .limit(500)
           .get();
 
       return snapshot.docs
@@ -62,6 +87,11 @@ class HomeEstadisticaRepository {
     required TimeRange range,
     required HomeMetric metric,
   }) async {
+    final key = _cacheKey(range, metric);
+    if (_isCacheValid(key)) {
+      return _cache[key]!;
+    }
+
     final now = DateTime.now();
     // Aseguramos el final del día actual
     final endDate = DateTime(now.year, now.month, now.day, 23, 59, 59);
@@ -99,15 +129,20 @@ class HomeEstadisticaRepository {
     final rawData = await _getRawData(startDate: startDate, endDate: endDate);
 
     // 2. Procesamiento
+    List<DailyMetric> result;
     if (range == TimeRange.max) {
-      return _processMaxDataNoGaps(rawData, metric);
+      result = _processMaxDataNoGaps(rawData, metric);
     } else if (range == TimeRange.oneWeek || range == TimeRange.oneMonth) {
-      return _processDailyData(rawData, startDate, endDate, metric);
+      result = _processDailyData(rawData, startDate, endDate, metric);
     } else if (range == TimeRange.sixMonths) {
-      return _processWeeklyData(rawData, startDate, endDate, metric);
+      result = _processWeeklyData(rawData, startDate, endDate, metric);
     } else {
-      return _processMonthlyData(rawData, startDate, endDate, metric);
+      result = _processMonthlyData(rawData, startDate, endDate, metric);
     }
+
+    _cache[key] = result;
+    _cacheTimestamps[key] = DateTime.now();
+    return result;
   }
 
   // --- PROCESADORES ---
@@ -304,4 +339,3 @@ class HomeEstadisticaRepository {
     }
   }
 }
-

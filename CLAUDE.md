@@ -1,14 +1,38 @@
 # CLAUDE.md — Running Laps
 
 > Guía de referencia rápida para Claude Code. Lee esto antes de tocar cualquier archivo.
+> Documentación completa: `ARCHITECTURE.md` | Historial de cambios: `CHANGELOG.md`
+
+---
 
 ## Identidad del proyecto
 
 **Running Laps** — App Flutter multiplataforma para runners que practican entrenamiento fraccionado (series/intervalos). Enfoque diferencial: RPE (Rate of Perceived Exertion) + tracking GPS por serie individual.
 
-- Nombre paquete: `running_laps`
-- Versión: 1.0.0+1 | SDK: `^3.9.2`
-- Branch principal: `main` | Branch activo en desarrollo: `login`
+- Paquete: `running_laps` | Versión: 1.0.0+1 | SDK: `^3.9.2`
+- Branch principal: `main` | Branch activo: `login`
+- Plataformas: Flutter (Android, iOS, Web) + Wear OS (Kotlin/Compose, app independiente)
+
+---
+
+## ⚠️ ADVERTENCIAS CRÍTICAS — No tocar sin entender completamente
+
+### 1. Autenticación Wear OS — UID hardcodeado (TEMPORAL)
+El reloj no tiene flujo de login propio. Actualmente usa un código de sesión de 6 dígitos generado desde la app móvil (`WearAuthService`) para obtener el `uid` del usuario. Las reglas de Firestore permiten leer `trainings`, `templates` y `settings` con `request.auth == null` para soportar esto.
+
+**Esto es una solución temporal.** La arquitectura correcta es una Cloud Function que verifique el código y devuelva un custom token de Firebase Auth. No eliminar el bypass de reglas sin haber implementado el reemplazo.
+
+### 2. `DEBUG_SIMULATE = true` — NUNCA en producción
+Si existe esta flag en `SeriesTrainingService.kt` o en el equivalente Flutter, **debe estar en `false` antes de cualquier build de release**. En modo simulación el GPS y los timers usan datos falsos.
+
+### 3. App Check — tokens de debug
+Los tokens de debug de App Check están registrados en Firebase Console (proyecto → App Check → Apps → Manage debug tokens). Si se regeneran sin actualizar la consola, los builds de debug dejarán de funcionar. No regenerar sin coordinación.
+
+### 4. Colección `entrenamientos` vs `trainings`
+El nombre real de la colección en Firestore es **`trainings`**. Existe código legado que usa `"entrenamientos"` — ya corregido en Wear OS HomeScreen.kt, pero puede aparecer en otros sitios. Siempre usar `"trainings"`.
+
+### 5. `HomeEstadisticaRepository` es singleton
+No instanciar con `HomeEstadisticaRepository()` esperando una instancia independiente — siempre devuelve la misma instancia. El caché (5 min) se invalida automáticamente al guardar un entrenamiento. Si se necesita forzar refresco, llamar `HomeEstadisticaRepository().clearCache()`.
 
 ---
 
@@ -16,166 +40,164 @@
 
 ```
 lib/
-├── config/app_theme.dart       ← Tema global. Clase Tema + AvatarHelper
-├── core/                       ← Transversal (services, widgets, utils)
+├── main.dart                   ← Firebase init, App Check, ThemeService → SplashScreen
+├── config/app_theme.dart       ← Tema global (brandPurple = 0xFF8E24AA), AvatarHelper
+├── core/                       ← Servicios transversales, widgets compartidos, utils
 ├── features/                   ← Módulos funcionales (ver lista abajo)
-├── firebase_options.dart
-└── main.dart                   ← AuthWrapper → HomeView o AuthPage
+└── firebase_options.dart       ← Generado por flutterfire CLI. No editar a mano.
+
+wear_os/app/src/main/kotlin/com/runninglaps/wear/
+├── MainActivity.kt             ← Entry point, navegación, App Check
+├── SeriesTrainingService.kt    ← Foreground service: timer, GPS, alarmas, plantillas
+├── SeriesActiveScreen.kt       ← UI activa durante la serie
+├── SeriesPageScreen.kt         ← Config de serie + picker de plantilla
+├── TemplatePickerScreen.kt     ← Selector de plantilla desde Firestore
+├── TemplateModels.kt           ← Modelos de datos para plantillas
+└── HomeScreen.kt               ← Dashboard con stats (usa colección "trainings")
 ```
 
 **Reglas estrictas:**
 - `views/` → solo UI, sin lógica de negocio
-- `viewmodels/` → DEBE usar `ValueNotifier` / `ValueListenableBuilder`. NUNCA GetX para estado
+- `viewmodels/` → **SIEMPRE** `ValueNotifier` / `ValueListenableBuilder`. **NUNCA GetX para estado**
 - `data/` → repositorios + modelos (fuente de verdad)
-- GetX solo para navegación/utilidades si se usa
+- GetX solo para navegación/utilidades puntuales
 
 ---
 
 ## Features implementadas
 
 | Feature | Carpeta | Descripción |
-|---------|---------|-------------|
+|---|---|---|
 | Auth | `features/auth/` | Login email/pass + Google, registro, verificación email, recuperar contraseña |
 | Training | `features/training/` | Sesión de entrenamiento, GPS por serie, tags |
-| History | `features/history/` | Historial completo, filtros, calendario, mapa GPS, exportar PDF |
+| History | `features/history/` | Historial, filtros, calendario, mapa GPS, exportar PDF |
 | Home | `features/home/` | Dashboard configurable con widgets arrastrables |
-| Profile | `features/profile/` | Menú perfil, foto/avatar, configuración cuenta |
-| Analytics | `features/analytics/` | Hub avanzado: overview, trends, distribution, patterns, coach insights |
-| Groups | `features/groups/` | Grupos sociales, desafíos, ranking, recompensas, invitaciones, auto-join |
-| Templates | `features/templates/` | Plantillas de entrenamiento con bloques y alarmas de ritmo/tiempo |
+| Profile | `features/profile/` | Menú perfil, foto/avatar, configuración de cuenta |
+| Analytics | `features/analytics/` | Overview, trends, distribution, patterns, coach insights |
+| Groups | `features/groups/` | Grupos sociales, desafíos, ranking, recompensas, invitaciones |
+| Templates | `features/templates/` | Plantillas con bloques (distancia/tiempo) y alarmas de ritmo |
 | Avatar | `features/avatar/` | Constructor de avatares SVG por capas |
-| Admin | `features/admin/` | Panel de administración (desafíos, dashboard) — solo admins |
+| Admin | `features/admin/` | Panel admin — solo si `isAdmin == true` en Firestore |
+
+---
+
+## Flujo de autenticación
+
+```
+main() → SplashScreen (2s) → AuthWrapper
+  AuthWrapper (StreamBuilder<User?>)
+    ├── hasData  → HomeView(user: snapshot.data!)   ← user pasado explícitamente (evita race condition web)
+    └── sin data → AuthPage
+
+Google Sign-In web:  signInWithPopup → getIdToken(true) → saveUserDoc (en auth_remote, no en auth_repository)
+Google Sign-In móvil: GoogleSignIn().signIn() → signInWithCredential → saveUserDoc (en auth_repository)
+Email/pass: requiere emailVerified antes de permitir acceso
+```
+
+---
+
+## Firebase / Firestore — colecciones reales
+
+```
+users/{uid}                           perfil: nombre, email, photoUrl, avatarConfig, isAdmin
+users/{uid}/trainings/{id}            entrenamientos: fecha(ISO8601), distanciaTotalM, tiempoTotalSec,
+                                        ritmoMedioSecKm, rpePromedio, series[], trackPoints[]
+users/{uid}/tags/{nombre}             etiquetas personalizadas
+users/{uid}/templates/{id}            plantillas con blocks[] y alerts
+users/{uid}/settings/homeLayoutConfig configuración de widgets del home
+groups/{groupId}                      grupos sociales
+groups/{groupId}/challenges/{id}      desafíos del grupo
+groups/{groupId}/participations/{uid} progreso de cada participante
+wear_sessions/{código6}               sesiones temporales Wear OS (expiran en 10 min)
+invite_codes/{código}                 códigos de invitación a grupos
+global_challenges/{id}                desafíos globales
+```
 
 ---
 
 ## Servicios Core
 
 | Servicio | Ruta | Función |
-|----------|------|---------|
-| `GPSService` | `core/services/gps_service.dart` | Tracking GPS: Haversine + KalmanFilter, ventana 5 puntos, descarta acc >20m |
-| `SensorService` | `core/services/sensor_service.dart` | Pedómetro/pasos (pedometer) |
-| `PDFGeneratorService` | `core/services/pdf_generator_service.dart` | Generación y exportación de PDFs |
-| `SettingsService` | `core/services/settings_service.dart` | Preferencias: `getAlarmEnabled()`, `getGpsDefault()` — usa SharedPreferences |
-| `UserService` | `core/services/user_service.dart` | Gestión usuario: updateNombre, reauthenticate, updatePassword, deleteAccount, isGoogleUser |
-
----
-
-## Theme y estilos
-
-```dart
-// lib/config/app_theme.dart
-class Tema {
-  static const Color brandPurple = Color(0xFF8E24AA);
-}
-class AvatarHelper {
-  static Widget construirImagenPerfil({double radius = 24.0}) // Stream Firestore
-  static Widget construirAvatar({...}) // Estático con config dada
-}
-```
-
-⚠️ El archivo tema está en `lib/config/app_theme.dart`, NO en `lib/app/tema.dart`.
+|---|---|---|
+| `GPSService` | `core/services/gps_service.dart` | Haversine + KalmanFilter, ventana 5 puntos, descarta acc >20m |
+| `SensorService` | `core/services/sensor_service.dart` | Pedómetro |
+| `PDFGeneratorService` | `core/services/pdf_generator_service.dart` | Exportar PDF de historial |
+| `SettingsService` | `core/services/settings_service.dart` | SharedPreferences: alarma, GPS default |
+| `UserService` | `core/services/user_service.dart` | updateNombre, reauth, updatePassword, deleteAccount, isGoogleUser |
+| `WearAuthService` | `core/services/wear_auth_service.dart` | Genera/valida códigos de sesión Wear OS |
 
 ---
 
 ## Modelos clave
 
-### Entrenamiento (`features/training/data/entrenamiento.dart`)
-- `distanciaTotalM` → metros (int)
-- `tiempoTotalSec` → segundos (double)
-- `rpePromedio` → 1-10 (double)
-- `ritmoMedioSecPorKm()` → calculado
-- Debe tener ≥1 serie
+**`Entrenamiento`** (`features/training/data/entrenamiento.dart`)
+- `distanciaTotalM` → int (metros) | `tiempoTotalSec` → double (segundos)
+- `rpePromedio()` → calculado desde series | `ritmoMedioSecPorKm()` → calculado
+- Debe tener ≥1 serie válida (distanciaM > 0 salvo drill estático)
 
-### Serie (`features/training/data/serie.dart`)
-- `tiempoSec`, `distanciaM`, `descansoSec`, `rpe`
+**`Serie`** (`features/training/data/serie.dart`)
+- `tiempoSec`, `distanciaM`, `descansoSec`, `rpe` (1-10)
 - `usedGps`, `gpsPoints` → opcionales
-- 0 metros = inválido (salvo drill estático)
 
-### TemplateBlock (`features/templates/data/template_models.dart`)
-- `type`: `distance` | `time`
-- `value`: metros o segundos
+**`TemplateBlock`** (`features/templates/data/template_models.dart`)
+- `type`: `distance` | `time` | `value`: metros o segundos
 - `alerts`: `TemplateAlerts` con modo `time` o `pace`
 
 ---
 
-## Firebase / Firestore
+## Seguridad — resumen
 
-**Colecciones:**
-```
-users/{uid}                          → perfil usuario
-users/{uid}/entrenamientos/{id}      → entrenamientos
-users/{uid}/tags/{id}               → etiquetas
-groups/{groupId}                    → grupos
-groups/{groupId}/challenges/{id}    → desafíos
-```
-
-**Auth:** Email/password + Google Sign-In.
-Login requiere email verificado (usuarios email/pass).
-Google users → `isGoogleUser()` en `UserService`.
+- **App Check** activo en todas las plataformas (Android/iOS/Web/Wear OS)
+- **Reglas Firestore**: usuario solo lee/escribe sus propios documentos. Wear OS puede leer `trainings`, `templates`, `settings` sin auth (bypass temporal). Ver `firestore.rules` para detalles completos.
+- **Límites en todas las queries principales**: `.limit(100)` en historial personal, `.limit(500)` en gráficas home y stats de grupo, `.limit(50)` en streams de rewards.
 
 ---
 
-## Autenticación — flujo actual (branch `login`)
+## Deuda técnica — priorizada
 
-1. `main.dart` → `AuthWrapper` → `StreamBuilder<User?>` decide `HomeView` o `AuthPage`
-2. `AuthController` delega en `AuthRepository` (Firebase) y `UserService` (gestión de cuenta)
-3. Email/pass: requiere verificación de email antes de entrar
-4. Google: sin verificación
-5. `signUp()`: valida min 8 chars + 1 mayúscula + 1 dígito
-6. `AccountSettingsView` permite: cambiar nombre, cambiar contraseña, borrar cuenta, toggle ajustes (alarma/GPS default)
+**Alta:**
+1. Prints `WEB LOGIN: ...` en `auth_remote.dart` — eliminar cuando el fix de Google Sign In web esté confirmado
+2. `stub_html.dart` en `core/utils/` — ya no se importa, borrar
+3. Historial limitado a 100 entrenamientos — implementar paginación con cursor
 
----
+**Media:**
+4. Auth Wear OS — reemplazar bypass de reglas con Cloud Function + custom token
+5. `PatternCache` invalida por longitud de lista, no por contenido real
+6. `getAllEntrenamientos(uid)` en `TrainingRepository` es alias inútil — ignora el uid recibido
 
-## Tracking — arquitectura nueva
-
-```
-core/tracking/
-├── tracking_state.dart    → estados del tracking activo
-├── tracking_types.dart    → tipos/enums
-└── sensor_frame.dart      → frame de datos sensor (GPS + pedómetro combinados)
-
-core/utils/
-└── kalman_filter.dart     → filtro Kalman para suavizado GPS
-```
-
-`GpsStatus`: uninitialized → permissionDenied → disabled → ready → active → paused → error
+**Baja:**
+7. `TimeRange.max` hardcodeado desde 2020 — configurable
+8. Sin tests automatizados
 
 ---
 
-## Admin
+## Antes de hacer cualquier cambio — checklist
 
-`features/admin/` — Solo accesible si `AuthController.isUserAdmin()` → `AuthRepository.isUserAdmin()`.
-Tabs: `AdminDashboardTab`, `AdminChallengesTab`.
-`AdminRepository` para operaciones de admin en Firestore.
+1. **Leer** el archivo que se va a modificar completo antes de editar
+2. **Ejecutar** `flutter analyze 2>&1 | grep 'error:'` tras cambios en Dart
+3. **Verificar** que no se rompen los call sites si se cambia una firma de función
+4. **Documentar** el cambio en `CHANGELOG.md` si es significativo
+5. **No añadir** imports de `dart:html` directamente — usar `kIsWeb` de `foundation.dart`
+6. **No instanciar** `FirebaseFirestore.instance` ni `FirebaseAuth.instance` en vistas — usar repositorios
 
 ---
 
 ## Convenciones de código
 
-- Clases: `PascalCase` | Archivos: `snake_case` | Variables/métodos: `camelCase`
-- Constantes: `lowerCamelCase`
-- Imports: dart → flutter → firebase → paquetes → locales
-- Siempre `if (!mounted) return;` tras awaits en widgets
-- Snackbars: usar `ModernSnackBar.showSuccess/showError/showWarning(context, msg)`
+- **Dart:** `PascalCase` clases, `snake_case` archivos, `camelCase` variables/métodos, `lowerCamelCase` constantes
+- **Kotlin:** igual que Dart para nombres; `companion object` para estado compartido entre Service y UI
+- **Imports Dart:** `dart:` → `flutter/` → `firebase_*` → paquetes externos → locales (`package:running_laps/...`)
+- `if (!mounted) return;` obligatorio tras cualquier `await` en un `State`
+- Snackbars: **siempre** `ModernSnackBar.showSuccess/showError/showWarning(context, msg)`
+- Estado en ViewModels: **siempre** `ValueNotifier` + `ValueListenableBuilder`
 
 ---
 
-## Commits recientes relevantes
-
-- `79059ff` Keystore
-- `95ed7f4` Mejoras visuales
-- `488191e` Preferencias del usuario (`SettingsService`)
-- `78563ed` Configuración de perfil valores predeterminados
-- `ce14ac6` Configurar cuenta y borrar cuenta (`AccountSettingsView`)
-- `32e1b9f` Login con Google (`signInWithGoogle`, `UserService.isGoogleUser`)
-
----
-
-## Assets importantes
+## Assets
 
 ```
 assets/images/logo.png     → logo app
-assets/images/Icon.png     → icono login screen
+assets/images/Icon.png     → icono splash/login
 assets/images/fondo.png    → fondo login screen
 assets/avatar/**           → SVGs por categoría (body, eyes, hair/long, hair/short, etc.)
 ```

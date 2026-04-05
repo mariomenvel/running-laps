@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'firebase_options.dart'; // Generado por flutterfire CLI
 import 'core/theme/app_theme.dart';
@@ -16,6 +18,17 @@ void main() async {
   // Inicializar Firebase para Web, Android e iOS
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Inicializar App Check — Play Integrity en release, debug token en debug
+  await FirebaseAppCheck.instance.activate(
+    androidProvider: kDebugMode
+        ? AndroidProvider.debug
+        : AndroidProvider.playIntegrity,
+    appleProvider: kDebugMode
+        ? AppleProvider.debug
+        : AppleProvider.deviceCheck,
+    webProvider: ReCaptchaV3Provider('6LcH2acsAAAAAGdH2Wi1X39xnD3EB6o40ZsVjnIo'),
   );
 
   await ThemeService.init();

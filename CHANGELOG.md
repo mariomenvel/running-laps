@@ -1,0 +1,191 @@
+# CHANGELOG — Running Laps
+
+## [Unreleased] — 2026-04-05
+
+### Seguridad — Firebase App Check
+
+#### Flutter (móvil)
+- Añadida dependencia `firebase_app_check: ^0.4.1+1` en `pubspec.yaml`
+- Añadidas dependencias nativas en `android/app/build.gradle.kts`:
+  - `firebase-appcheck-playintegrity`
+  - `firebase-appcheck-debug`
+- Implementada activación en `lib/main.dart`:
+  - Android release: `AndroidProvider.playIntegrity`
+  - Android debug: `AndroidProvider.debug`
+  - iOS release: `AppleProvider.deviceCheck`
+  - iOS debug: `AppleProvider.debug`
+  - Web: `ReCaptchaV3Provider('6LcH2acsAAAAAGdH2Wi1X39xnD3EB6o40ZsVjnIo')`
+- Eliminado el guard `if (!kIsWeb)` — App Check activo en todas las plataformas
+
+#### Wear OS (Kotlin)
+- Añadidas dependencias App Check en `wear_os/app/build.gradle.kts`:
+  - `firebase-appcheck-playintegrity`
+  - `firebase-appcheck-debug`
+- Habilitado `buildConfig = true` en el bloque `buildFeatures`
+- Implementada activación en `MainActivity.kt`:
+  - Release: `PlayIntegrityAppCheckProviderFactory`
+  - Debug: `DebugAppCheckProviderFactory` (via `BuildConfig.DEBUG`)
+
+---
+
+### Seguridad — Reglas de Firestore
+
+Auditoría completa de `firestore.rules`. Cambios aplicados:
+
+#### Helpers añadidos
+- `isReasonableDocument()` — limita tamaño de documentos entrantes
+- `isSafeWrite()` — valida campos mínimos y tamaño en escrituras de grupos
+
+#### Colecciones endurecidas
+
+| Colección | Cambio |
+|---|---|
+| `trainings` | `allow read` ampliado a `request.auth == null` para lecturas desde Wear OS sin sesión |
+| `templates` | `allow read` ampliado a `request.auth == null` para lecturas desde Wear OS |
+| `settings` | `allow read` ampliado a `request.auth == null` para lecturas desde Wear OS |
+| `result_notifications` | Añadida validación de tamaño + comprobación `toUid == uid` |
+| `groups` (create) | Envuelto en `isSafeWrite()` |
+| `groups` (memberCount) | Delta bloqueado a +1 para evitar manipulación del contador |
+| `invite_codes` | Validación de campos obligatorios en create; update/delete restringido a admin del grupo |
+| `wear_sessions` (create) | Validación de campos requeridos, `status == 'pending'`, tipo timestamp, cota futura ≤ +10 minutos |
+| `wear_sessions` (read) | Sustituido `allow read: if true` por ventana temporal: `createdAt > now - 10 minutos` |
+| `invites` (uses) | Delta bloqueado a +1 |
+
+#### Correcciones específicas
+- Eliminada validación `code.size() == 6` en `wear_sessions` — el código es el ID del documento, no un campo interno
+- Corregida comprobación `result_notifications`: cambiado `request.auth.uid` por `uid` (wildcard del path) para permitir escrituras entre usuarios distintos desde `ChallengeFinalizationService`
+
+---
+
+### Autenticación — Google Sign In en Web
+
+**Problema:** `GoogleSignIn().signIn()` devuelve `null` en plataforma web.
+
+**Solución aplicada en `lib/features/auth/data/auth_remote.dart`:**
+- Añadido branch `if (kIsWeb)` en `signInWithGoogle()`
+- Web usa `_auth.signInWithPopup(GoogleAuthProvider())` directamente
+- Tras `signInWithPopup`, se fuerza refresco del token: `await user.getIdToken(true)`
+- Creación del documento Firestore del usuario en el propio branch web, antes de retornar el `UserCredential`:
+  - Si `doc.exists == false` → `_db.collection("users").doc(uid).set({...})`
+  - Esto evita condiciones de carrera con listeners que se abren antes de que `AuthRepository` pueda crear el documento
+- Añadidos prints de debug temporales para diagnóstico (`WEB LOGIN: user=...`, `WEB LOGIN: token refreshed`, etc.)
+
+**Por qué en `auth_remote` y no en `auth_repository`:**
+En web, los listeners de Firestore se activan antes de que el flujo de `AuthRepository.signInWithGoogle()` llegue a su comprobación `getUserName()`. Crear el documento directamente en `auth_remote`, inmediatamente tras el `signInWithPopup` y con token ya refrescado, garantiza que el documento existe cuando los primeros listeners lo necesitan.
+
+---
+
+### Autenticación — Race condition en HomeView (web)
+
+**Problema:** `FirebaseAuth.instance.currentUser` puede ser `null` en `HomeView.initState()` en web, porque el SDK de Firebase web inicializa el estado de auth de forma asíncrona.
+
+**Solución:**
+- `AuthWrapper` pasa el objeto `User` del stream directamente a `HomeView`:
+  ```dart
+  if (snapshot.hasData) return HomeView(user: snapshot.data!);
+  ```
+- `HomeView` recibe `User? user` como parámetro opcional
+- En `initState`: `_currentUserId = widget.user?.uid ?? FirebaseAuth.instance.currentUser?.uid ?? ''`
+- El parámetro es opcional (no required) para no romper otros puntos de navegación que no disponen del objeto `User`
+
+---
+
+### Rendimiento — Límites en consultas Firestore
+
+Se añadió `.limit()` a todas las consultas sin cota de documentos identificadas en la auditoría:
+
+| Archivo | Consulta | Límite añadido |
+|---|---|---|
+| `training_repository.dart:56` | `getTrainings()` ordenado por `createdAt` | `.limit(100)` |
+| `group_detail_repository.dart:59` | `trainings` sin filtro de fecha (para stats de grupo) | `.limit(500)` |
+| `group_detail_repository.dart:154` | `fetchUserTrainings()` ordenado por `fecha` | `.limit(500)` |
+| `rewards_repository.dart:150` | Stream `medal_history` con `.where('uid')` | `.limit(50)` |
+| `rewards_repository.dart:169` | Stream `badge_history` con `.where('uid')` | `.limit(50)` |
+| `home_estadistica_repository.dart` | `_getRawData()` con filtro de fecha | `.limit(500)` |
+
+Consultas ya protegidas (sin cambio necesario):
+- `auth_remote.dart:122` — `.limit(1)` ya existía
+- `user_lookup_service.dart:17` — `.limit(1)` ya existía
+- `admin_repository.dart:47,52` — `.limit(1000)` ya existía
+- `admin_repository.dart:177` — `.limit(500)` ya existía
+
+---
+
+### Rendimiento — HomeEstadisticaRepository: singleton + caché
+
+**Problema:** `HomeEstadisticaRepository` se instanciaba de nuevo cada vez que el controlador se creaba (por re-mount del widget Home), perdiendo cualquier caché. Cada cambio de métrica o rango temporal disparaba una consulta Firestore nueva sin ningún control.
+
+**Cambios en `lib/features/home/data/home_estadistica_repository.dart`:**
+
+1. **Patrón singleton:**
+   ```dart
+   static final HomeEstadisticaRepository _instance =
+       HomeEstadisticaRepository._internal();
+   factory HomeEstadisticaRepository() => _instance;
+   HomeEstadisticaRepository._internal();
+   ```
+
+2. **Caché en memoria por combinación rango+métrica:**
+   - Clave: `"${range.name}_${metric.name}"` (ej. `"oneWeek_ritmoMedio"`)
+   - Expiración: 5 minutos desde la última petición
+   - Almacenamiento: `Map<String, List<DailyMetric>>` + `Map<String, DateTime>` de timestamps
+   - `clearCache()` limpia ambos mapas
+
+3. **Invalidación del caché tras guardar:**
+   - `lib/features/training/data/training_repository.dart`: añadido import y llamada `HomeEstadisticaRepository().clearCache()` en `createTraining()`, inmediatamente tras obtener el `trainingId`
+   - Al ser singleton, la llamada siempre impacta la misma instancia que usa el widget Home
+
+**Impacto:** De hasta 20 consultas Firestore por sesión en la pantalla Home (5 rangos × 4 métricas), se reduce a máximo 20 consultas en las primeras 5 minutos y 0 adicionales mientras el caché sea válido.
+
+---
+
+### Eliminación de código muerto
+
+- **Eliminado:** `lib/features/training/views/training_start_view_helper.dart`
+  - Archivo con métodos sueltos sin clase contenedora
+  - Referencias a variables no definidas en el archivo
+  - Sin imports, sin ningún caller en el resto del proyecto
+  - Confirmado con `flutter analyze` tras la eliminación
+
+---
+
+### Wear OS — Soporte de plantillas (5 partes)
+
+#### PART 1 — TemplateModels.kt (nuevo)
+- Modelos Kotlin espejo de `template_models.dart`:
+  - `WearTemplateAlerts`, `WearTemplateBlock`, `WearTemplate`
+- Función `parseTemplateFromFirestore(id, data)` para deserializar desde Firestore
+
+#### PART 2 — TemplatePickerScreen.kt (nuevo)
+- Pantalla Wear OS Compose para seleccionar plantilla
+- Carga desde `users/{uid}/templates/` en Firestore
+- Estados: spinner → "Sin plantillas" → lista con chips de color
+- Callback `onTemplateSelected: (WearTemplate) -> Unit`
+
+#### PART 3 — SeriesTrainingService.kt (modificado)
+- Añadidos en companion object: `instance`, `pendingTemplate`, `_templateFinished`, `templateFinished`
+- `reset()` limpia `_templateFinished`
+- `onCreate()` / `onDestroy()` gestionan `instance`
+- `onStartCommand()` aplica `pendingTemplate` si existe
+- Nuevos métodos: `loadTemplate()`, `applyBlock()`, `computeAlarmIntervalMs()`
+- `confirmRpe()`: descarta serie vacía (`distanciaM <= 0f && tiempoSec <= 2s`), avanza bloque de plantilla, emite `_templateFinished = true` al agotar bloques
+
+#### PART 4 — SeriesActiveScreen.kt (modificado)
+- Recoge `templateFinished` como estado Compose
+- Overlay "¡Plantilla completada!" con degradado radial brandPurple al completar
+- Auto-stop tras 2 segundos con `LaunchedEffect` + `delay`
+
+#### PART 5 — SeriesPageScreen.kt + MainActivity.kt (modificados)
+- `SeriesPage` acepta `initialTemplate: WearTemplate?` para pre-selección
+- `metersToDistStr()` y `secondsToDescStr()` como helpers internos
+- `MainActivity`: estado `activeTemplate` con `remember { mutableStateOf<WearTemplate?>(null) }`
+- Ruta `template_picker` → `TemplatePickerScreen` con callback de selección
+- Ruta `series_page` pasa `initialTemplate = activeTemplate`
+
+---
+
+### Wear OS — HomeScreen.kt (correcciones)
+
+- Colección corregida: `"entrenamientos"` → `"trainings"` (nombre real en Firestore)
+- Añadido `.addOnFailureListener` con logging de errores
+- Parsing defensivo: lee `distanciaTotalM` del nivel superior o, si no existe, suma `series[].distanciaM` manualmente
