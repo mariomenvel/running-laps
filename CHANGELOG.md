@@ -26,6 +26,13 @@
 - `_loadEntrenamientos()` usa `widget.user?.uid ?? FirebaseAuth.instance.currentUser?.uid` como fuente primaria de uid
 - Stream `result_notifications` limitado a `.limit(20)`
 
+### iOS — Limitaciones conocidas
+- Live Activities no implementado (requiere Xcode + Swift extension target)
+- No hay notificación persistente en iOS como en Android — el foreground task muestra la barra azul de ubicación del sistema
+- GPS en segundo plano funciona correctamente vía `UIBackgroundModes: location`
+- Botones de control (Terminar / Fin de serie) no disponibles en notificación iOS — `NotificationButtons` son Android-only
+- Workaround: control desde la app o desde Wear OS
+
 ### Documentación
 - Creados `CHANGELOG.md`, `ARCHITECTURE.md` y `CLAUDE.md` en raíz del proyecto
 

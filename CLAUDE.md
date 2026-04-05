@@ -168,6 +168,7 @@ global_challenges/{id}                desafíos globales
 **Baja:**
 7. `TimeRange.max` hardcodeado desde 2020 — configurable
 8. Sin tests automatizados
+9. iOS Live Activities: requiere Xcode + Swift ActivityKit extension. Sin Xcode es inviable.
 
 ---
 
