@@ -6,6 +6,7 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:geolocator/geolocator.dart';
 
 import 'package:running_laps/core/services/foreground_tracking_handler.dart';
+import 'package:running_laps/core/services/ios_live_activity_service.dart';
 import 'package:running_laps/core/services/sensor_service.dart';
 import 'package:running_laps/core/tracking/tracking_state.dart';
 import 'package:running_laps/core/tracking/sensor_frame.dart';
@@ -86,6 +87,7 @@ class GPSService {
       ValueNotifier(createInitialTrackingState());
 
   StreamSubscription<Position>? _positionSubscription;
+  StreamSubscription<String>? _iosActionSubscription;
   Timer? _notificationTimer;
 
   int _gpsStableSeconds = 0;
@@ -103,6 +105,7 @@ class GPSService {
 
   GPSService() {
     _initForegroundTask();
+    _initIOSLiveActivityActions();
   }
 
   Future<bool> initialize() async {
@@ -232,7 +235,11 @@ class GPSService {
     _notificationTimer?.cancel();
     _notificationTimer = null;
     status.value = GpsStatus.paused;
-    await FlutterForegroundTask.stopService();
+    if (_useIOSLiveActivity) {
+      await IOSLiveActivityService.instance.stop();
+    } else {
+      await FlutterForegroundTask.stopService();
+    }
   }
 
   /// Stops tracking and clears all accumulated data (distance, points, pace).
@@ -251,10 +258,17 @@ class GPSService {
   }
 
   void dispose() {
-    FlutterForegroundTask.removeTaskDataCallback(_onDataFromTask);
+    if (!_useIOSLiveActivity) {
+      FlutterForegroundTask.removeTaskDataCallback(_onDataFromTask);
+    }
     _positionSubscription?.cancel();
     _notificationTimer?.cancel();
-    FlutterForegroundTask.stopService();
+    _iosActionSubscription?.cancel();
+    if (_useIOSLiveActivity) {
+      IOSLiveActivityService.instance.stop();
+    } else {
+      FlutterForegroundTask.stopService();
+    }
     status.dispose();
     totalDistanceMeters.dispose();
     currentPace.dispose();
@@ -267,6 +281,8 @@ class GPSService {
 
   /// One-time setup: init options + communication port + data callback.
   void _initForegroundTask() {
+    if (_useIOSLiveActivity) return;
+
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: 'running_laps_tracking',
@@ -294,6 +310,17 @@ class GPSService {
     FlutterForegroundTask.addTaskDataCallback(_onDataFromTask);
   }
 
+  void _initIOSLiveActivityActions() {
+    if (!_useIOSLiveActivity) return;
+
+    _iosActionSubscription = IOSLiveActivityService.instance.actions.listen((
+      String action,
+    ) {
+      notificationAction.value = action;
+      notificationAction.value = null;
+    });
+  }
+
   /// Starts the Android foreground service / iOS background task.
   Future<void> _startForegroundService() async {
     final title = _notificationTitle();
@@ -301,6 +328,23 @@ class GPSService {
         _mode == TrackingMode.continuous ? 'finish_run' : 'end_serie';
     final buttonLabel =
         _mode == TrackingMode.continuous ? 'Terminar' : 'Fin de serie';
+
+    if (_useIOSLiveActivity) {
+      await IOSLiveActivityService.instance.start(
+        _currentIOSPayload(
+          title: title,
+          actionId: buttonId,
+          actionLabel: buttonLabel,
+        ),
+      );
+
+      _notificationTimer?.cancel();
+      _notificationTimer = Timer.periodic(
+        const Duration(seconds: 1),
+        (_) => _sendNotificationUpdate(),
+      );
+      return;
+    }
 
     await FlutterForegroundTask.startService(
       serviceId: 500,
@@ -331,6 +375,21 @@ class GPSService {
   /// Pushes current metrics to [ForegroundTrackingHandler] so it can refresh
   /// the notification text, title, and button.
   void _sendNotificationUpdate() {
+    if (_useIOSLiveActivity) {
+      IOSLiveActivityService.instance.update(
+        _currentIOSPayload(
+          title: _notificationTitle(),
+          actionId: _mode == TrackingMode.continuous
+              ? 'finish_run'
+              : 'end_serie',
+          actionLabel: _mode == TrackingMode.continuous
+              ? 'Terminar'
+              : 'Fin de serie',
+        ),
+      );
+      return;
+    }
+
     FlutterForegroundTask.sendDataToTask({
       'distance': _formatDistance(totalDistanceMeters.value),
       'elapsed': _getElapsedText(),
@@ -393,6 +452,37 @@ class GPSService {
   }
 
   /* ═══════════════════════ GPS HANDLER ══════════════════════ */
+
+  int _getElapsedSeconds() {
+    final elapsed = _getElapsedText().split(':');
+    if (elapsed.length != 2) return 0;
+    final minutes = int.tryParse(elapsed[0]) ?? 0;
+    final seconds = int.tryParse(elapsed[1]) ?? 0;
+    return (minutes * 60) + seconds;
+  }
+
+  IOSLiveActivityPayload _currentIOSPayload({
+    required String title,
+    required String actionId,
+    required String actionLabel,
+  }) {
+    return IOSLiveActivityPayload(
+      title: title,
+      distance: _formatDistance(totalDistanceMeters.value),
+      elapsed: _getElapsedText(),
+      elapsedSeconds: _getElapsedSeconds(),
+      pace: currentPace.value,
+      mode: _mode == TrackingMode.continuous ? 'continuous' : 'intervals',
+      serie: _serieNumber,
+      hasGps: _gpsEnabled,
+      isPaused: status.value != GpsStatus.running,
+      actionLabel: actionLabel,
+      actionId: actionId,
+    );
+  }
+
+  bool get _useIOSLiveActivity =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
   void _handlePosition(Position position) {
     if (status.value != GpsStatus.running) return;

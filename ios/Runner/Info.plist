@@ -62,11 +62,29 @@
 		<dict>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.runninglaps.runningLaps</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.googleusercontent.apps.461355077893-89jpebvlhjf1cbuu43hc89kfk5kpsenn</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>runninglaps.liveactivity</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>runninglaps</string>
+			</array>
+		</dict>
 	</array>
+	<key>GIDClientID</key>
+	<string>461355077893-89jpebvlhjf1cbuu43hc89kfk5kpsenn.apps.googleusercontent.com</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
+	<true/>
 </dict>
 </plist>
