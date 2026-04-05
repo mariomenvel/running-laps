@@ -42,6 +42,10 @@ class AuthRepository {
           "email": user.email,
           "createdAt": FieldValue.serverTimestamp(),
           "photoUrl": user.photoURL,
+          "totalSessions": 0,
+          "totalKm": 0.0,
+          "totalTimeMinutes": 0.0,
+          "lastTrainingDate": null,
         });
       }
 
@@ -62,6 +66,10 @@ class AuthRepository {
       "nombre": nombre,
       "email": email.trim(),
       "createdAt": FieldValue.serverTimestamp(),
+      "totalSessions": 0,
+      "totalKm": 0.0,
+      "totalTimeMinutes": 0.0,
+      "lastTrainingDate": null,
     });
   }
 

@@ -1,5 +1,36 @@
 # CHANGELOG — Running Laps
 
+## [Optimización de consultas y agregados] — 2026-04-05
+
+### Límites de consultas añadidos
+- `group_detail_repository.dart`: `.limit(500)` en fetches de trainings para rankings de grupo
+- `training_repository.dart`: `.limit(100)` en `getTrainings()`
+- `rewards_repository.dart`: `.limit(50)` en streams de medals y badges
+- `home_view.dart`: `.limit(20)` en stream de `result_notifications`
+
+### HomeEstadisticaRepository
+- Convertido a singleton para persistir caché entre navegaciones
+- Caché en memoria de 5 minutos por combinación rango+métrica (clave: `"${range.name}_${metric.name}"`)
+- `.limit(500)` en queries de gráficas (`_getRawData`)
+- `clearCache()` llamado automáticamente desde `TrainingRepository.createTraining()` al guardar un entrenamiento
+
+### Agregados en `users/{uid}`
+- Nuevos campos: `totalKm` (double), `totalSessions` (int), `totalTimeMinutes` (double), `lastTrainingDate` (String ISO8601)
+- Se actualizan atómicamente con `FieldValue.increment()` en `createTraining()` — seguro ante escrituras concurrentes
+- Inicializados a 0 en el registro de nuevos usuarios (email/password y Google Sign-In, en los tres puntos de creación de documento)
+- KPI cards de la home leen estos campos directamente con fallback a cálculo local sobre `_entrenamientos` para usuarios sin los campos (compatibilidad con cuentas existentes)
+- Documento `users/{uid}` cargado en paralelo con `getAllEntrenamientos()` usando `Future.wait` — sin coste adicional de latencia
+
+### Correcciones de race condition web
+- `AuthWrapper` pasa el objeto `User` directamente a `HomeView(user: snapshot.data!)` para evitar `currentUser == null` en `initState` en web
+- `_loadEntrenamientos()` usa `widget.user?.uid ?? FirebaseAuth.instance.currentUser?.uid` como fuente primaria de uid
+- Stream `result_notifications` limitado a `.limit(20)`
+
+### Documentación
+- Creados `CHANGELOG.md`, `ARCHITECTURE.md` y `CLAUDE.md` en raíz del proyecto
+
+---
+
 ## [Unreleased] — 2026-04-05
 
 ### Seguridad — Firebase App Check

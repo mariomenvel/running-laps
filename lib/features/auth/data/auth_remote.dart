@@ -77,6 +77,10 @@ class AuthRemote {
                 "email": user.email,
                 "createdAt": FieldValue.serverTimestamp(),
                 "photoUrl": user.photoURL,
+                "totalSessions": 0,
+                "totalKm": 0.0,
+                "totalTimeMinutes": 0.0,
+                "lastTrainingDate": null,
               });
               print('WEB LOGIN: document created successfully');
             }

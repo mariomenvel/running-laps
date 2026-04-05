@@ -56,6 +56,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   int _challengesPage = 0;
 
   List<Entrenamiento> _entrenamientos = [];
+  Map<String, dynamic>? _userDoc;
   bool _isLoadingData = true;
   int _bestMarkDistanceM = 400;
 
@@ -160,11 +161,17 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     setState(() => _isLoadingData = true);
 
     try {
-      final userId = FirebaseAuth.instance.currentUser?.uid;
+      final userId = widget.user?.uid ?? FirebaseAuth.instance.currentUser?.uid;
       if (userId != null) {
-        final allData = await _trainingRepository.getAllEntrenamientos(userId);
+        final results = await Future.wait([
+          _trainingRepository.getAllEntrenamientos(userId),
+          FirebaseFirestore.instance.collection('users').doc(userId).get(),
+        ]);
+        final allData = results[0] as List<Entrenamiento>;
+        final doc = results[1] as DocumentSnapshot;
         setState(() {
           _entrenamientos = allData..sort((a, b) => b.fecha.compareTo(a.fecha));
+          if (doc.exists) _userDoc = doc.data() as Map<String, dynamic>?;
         });
       }
     } catch (e) {
@@ -195,6 +202,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         .doc(_currentUserId)
         .collection('result_notifications')
         .orderBy('createdAt', descending: true)
+        .limit(20)
         .snapshots()
         .listen((snapshot) {
       if (!mounted) return;
@@ -854,8 +862,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     Color c(Color vivid) => isMonochrome ? Tema.brandPurple : vivid;
     final colored = !isMonochrome;
 
-    final totalKm = _entrenamientos.fold<double>(
-        0, (s, e) => s + e.distanciaTotalM() / 1000.0);
+    final totalKm = (_userDoc?['totalKm'] as num?)?.toDouble() ??
+        _entrenamientos.fold<double>(0, (s, e) => s + e.distanciaTotalM() / 1000.0);
     final avgPace = _calculateAveragePace();
     final best = _calcBestMarkTime(_bestMarkDistanceM);
     final distLabel = _bestMarkDistanceM >= 1000
@@ -884,7 +892,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       ),
       KpiCardWithDelta(
         title: 'Sesiones',
-        value: '${_entrenamientos.length}',
+        value: '${(_userDoc?['totalSessions'] as num?)?.toInt() ?? _entrenamientos.length}',
         primaryColor: c(const Color(0xFFFF9800)),
         icon: Icons.fitness_center,
         compact: true,

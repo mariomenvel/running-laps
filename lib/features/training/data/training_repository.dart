@@ -34,6 +34,16 @@ class TrainingRepository {
 
     final trainingId = doc.id;
 
+    // Actualizar contadores agregados en users/{uid} (atómico con FieldValue.increment)
+    _db.collection('users').doc(uid).update({
+      'totalSessions': FieldValue.increment(1),
+      'totalKm': FieldValue.increment(e.distanciaTotalM() / 1000.0),
+      'totalTimeMinutes': FieldValue.increment(e.tiempoTotalSec() / 60.0),
+      'lastTrainingDate': e.fecha.toIso8601String(),
+    }).catchError((_) {
+      // No bloquear si el update falla (campo puede no existir en docs antiguos)
+    });
+
     HomeEstadisticaRepository().clearCache();
 
     // Sync to challenges (async, don't await to avoid blocking)

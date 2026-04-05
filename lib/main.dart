@@ -20,16 +20,19 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Inicializar App Check — Play Integrity en release, debug token en debug
-  await FirebaseAppCheck.instance.activate(
-    androidProvider: kDebugMode
-        ? AndroidProvider.debug
-        : AndroidProvider.playIntegrity,
-    appleProvider: kDebugMode
-        ? AppleProvider.debug
-        : AppleProvider.deviceCheck,
-    webProvider: ReCaptchaV3Provider('6LcH2acsAAAAAGdH2Wi1X39xnD3EB6o40ZsVjnIo'),
-  );
+  // Inicializar App Check — Android y Web activos. iOS en monitor mode (sin credenciales Apple Developer).
+  if (!kIsWeb) {
+    await FirebaseAppCheck.instance.activate(
+      androidProvider: kDebugMode
+          ? AndroidProvider.debug
+          : AndroidProvider.playIntegrity,
+      appleProvider: AppleProvider.deviceCheck,
+    );
+  } else {
+    await FirebaseAppCheck.instance.activate(
+      webProvider: ReCaptchaV3Provider('6LcH2acsAAAAAGdH2Wi1X39xnD3EB6o40ZsVjnIo'),
+    );
+  }
 
   await ThemeService.init();
 

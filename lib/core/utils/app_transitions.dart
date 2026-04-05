@@ -1,27 +1,12 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-/// Standard push route: slide from right + fade.
-/// Duration: 280ms, curve: easeInOut.
+/// Standard push route: native Cupertino slide-from-right.
+/// Enables iOS swipe-back gesture automatically.
 /// Use for all regular screen pushes.
-class AppRoute<T> extends PageRouteBuilder<T> {
-  final Widget page;
-
-  AppRoute({required this.page, super.settings})
-      : super(
-          pageBuilder: (context, animation, secondaryAnimation) => page,
-          transitionDuration: const Duration(milliseconds: 280),
-          reverseTransitionDuration: const Duration(milliseconds: 280),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            final slideAnimation = animation.drive(
-              Tween(begin: const Offset(1.0, 0.0), end: Offset.zero)
-                  .chain(CurveTween(curve: Curves.easeInOut)),
-            );
-            return FadeTransition(
-              opacity: animation,
-              child: SlideTransition(position: slideAnimation, child: child),
-            );
-          },
-        );
+class AppRoute<T> extends CupertinoPageRoute<T> {
+  AppRoute({required Widget page, RouteSettings? settings})
+      : super(builder: (_) => page, settings: settings);
 }
 
 /// Modal push route: slide from bottom + fade.
