@@ -103,8 +103,8 @@ import GoogleSignIn
 
     let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
     let action = components?.queryItems?.first(where: { $0.name == "action" })?.value
-    guard let action, !action.isEmpty else {
-      return false
+    guard let action, !action.isEmpty, action != "open" else {
+      return true  // "open" just foregrounds the app — no action emitted
     }
 
     LiveActivityActionStreamHandler.shared.emit(action: action)

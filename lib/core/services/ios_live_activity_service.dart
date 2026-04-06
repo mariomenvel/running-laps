@@ -16,7 +16,30 @@ class IOSLiveActivityPayload {
     required this.isPaused,
     required this.actionLabel,
     required this.actionId,
+    this.phase = 'running',
+    this.restCountdown = 0,
   });
+
+  factory IOSLiveActivityPayload.rest({
+    required int restCountdown,
+    required int serie,
+  }) {
+    return IOSLiveActivityPayload(
+      title: 'Running Laps · Descansando',
+      distance: '0 m',
+      elapsed: '00:00',
+      elapsedSeconds: 0,
+      pace: '--:-- /km',
+      mode: 'intervals',
+      serie: serie,
+      hasGps: false,
+      isPaused: true,
+      actionLabel: 'Saltar',
+      actionId: 'skip_rest',
+      phase: 'rest',
+      restCountdown: restCountdown,
+    );
+  }
 
   final String title;
   final String distance;
@@ -29,6 +52,8 @@ class IOSLiveActivityPayload {
   final bool isPaused;
   final String actionLabel;
   final String actionId;
+  final String phase;
+  final int restCountdown;
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
@@ -43,6 +68,8 @@ class IOSLiveActivityPayload {
       'isPaused': isPaused,
       'actionLabel': actionLabel,
       'actionId': actionId,
+      'phase': phase,
+      'restCountdown': restCountdown,
     };
   }
 }

@@ -80,7 +80,11 @@ final class RunningLapsLiveActivityManager {
     let isPaused = map["isPaused"] as? Bool ?? false
     let actionLabel = map["actionLabel"] as? String ?? "Abrir"
     let actionId = map["actionId"] as? String ?? "open"
-    let actionUrl = "runninglaps://training?action=\(actionId)"
+    let actionUrl = actionId == "open"
+      ? "runninglaps://training?action=open"
+      : "runninglaps://training?action=\(actionId)"
+    let phase = map["phase"] as? String ?? "running"
+    let restCountdown = map["restCountdown"] as? Int ?? 0
 
     return RunningLapsActivityAttributes.ContentState(
       title: title,
@@ -93,7 +97,9 @@ final class RunningLapsLiveActivityManager {
       hasGps: hasGps,
       isPaused: isPaused,
       actionLabel: actionLabel,
-      actionUrl: actionUrl
+      actionUrl: actionUrl,
+      phase: phase,
+      restCountdown: restCountdown
     )
   }
   #endif

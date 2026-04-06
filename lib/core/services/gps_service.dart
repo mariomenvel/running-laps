@@ -160,10 +160,15 @@ class GPSService {
 
     _positionSubscription?.cancel();
 
-    const locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.bestForNavigation,
-      distanceFilter: 0,
-    );
+    final locationSettings = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+        ? const LocationSettings(
+            accuracy: LocationAccuracy.bestForNavigation,
+            distanceFilter: 2, // iOS: minimum 2 meters movement to trigger update
+          )
+        : const LocationSettings(
+            accuracy: LocationAccuracy.bestForNavigation,
+            distanceFilter: 0,
+          );
 
     _positionSubscription = Geolocator.getPositionStream(
       locationSettings: locationSettings,
@@ -478,6 +483,8 @@ class GPSService {
       isPaused: status.value != GpsStatus.running,
       actionLabel: actionLabel,
       actionId: actionId,
+      phase: _mode == TrackingMode.continuous ? 'continuous' : 'running',
+      restCountdown: 0,
     );
   }
 
@@ -614,6 +621,11 @@ class GPSService {
         lat,
         lon,
       );
+      // On iOS, ignore micro-movements below 1 meter (GPS noise)
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS && distance < 1.0) {
+        distance = 0.0;
+      }
+
       // Physical speed limit (10 m/s = 36 km/h)
       final double calculatedSpeed = distance / dt;
       if (calculatedSpeed > 10.0) {

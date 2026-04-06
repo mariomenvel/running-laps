@@ -17,6 +17,8 @@ struct RunningLapsActivityAttributes: ActivityAttributes {
     var isPaused: Bool
     var actionLabel: String
     var actionUrl: String
+    var phase: String      // "continuous", "running", "rest"
+    var restCountdown: Int // seconds remaining in rest phase
   }
 
   var sessionId: String

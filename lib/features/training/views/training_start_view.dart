@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart'; // Para SystemSound
@@ -12,6 +13,7 @@ import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import '../../../core/widgets/app_header.dart';
 import '../../../core/services/gps_service.dart';
+import '../../../core/services/ios_live_activity_service.dart';
 import '../../../core/widgets/modern_snackbar.dart';
 import '../../../core/services/settings_service.dart';
 import '../../../core/utils/app_transitions.dart';
@@ -76,6 +78,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   int _restSecondsRemaining = 0;
   int _restTotalSeconds = 0;
   bool _isResting = false;
+  StreamSubscription<String>? _iosRestActionSubscription;
 
 
   // --- Colores ---
@@ -115,6 +118,14 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   void initState() {
     super.initState();
     _loadUserPreferences();
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+      _iosRestActionSubscription =
+          IOSLiveActivityService.instance.actions.listen((String action) {
+        if (action == 'skip_rest' && _isResting) {
+          _skipRest();
+        }
+      });
+    }
   }
 
   Future<void> _loadUserPreferences() async {
@@ -147,6 +158,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   void dispose() {
     _trainingNameController.dispose();
     _restTimer?.cancel();
+    _iosRestActionSubscription?.cancel();
     super.dispose();
   }
 
@@ -163,11 +175,22 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         setState(() {
           _restSecondsRemaining--;
         });
+        if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+          IOSLiveActivityService.instance.update(
+            IOSLiveActivityPayload.rest(
+              restCountdown: _restSecondsRemaining,
+              serie: _vm.series.length + 1,
+            ),
+          );
+        }
       } else {
         timer.cancel();
         setState(() {
           _isResting = false;
         });
+        if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+          IOSLiveActivityService.instance.stop();
+        }
       }
     });
   }
@@ -179,6 +202,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       _isResting = false;
       _restSecondsRemaining = 0;
     });
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+      IOSLiveActivityService.instance.stop();
+    }
   }
 
 
@@ -402,6 +428,14 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           _restSecondsRemaining = remainingRest;
           _isResting = true;
         });
+        if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+          IOSLiveActivityService.instance.start(
+            IOSLiveActivityPayload.rest(
+              restCountdown: _restSecondsRemaining,
+              serie: _vm.series.length + 1,
+            ),
+          );
+        }
         _startRestCountdown();
       } else {
         ModernSnackBar.showSuccess(context, '¡Serie guardada! Ritmo: ${result.ritmoTexto()}');
