@@ -145,6 +145,8 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
         alignment: Alignment.topCenter,
         children: [
           SafeArea(
+            top: false,
+            bottom: false,
             child: Column(
               children: [
                 // 1. Header Fijo

@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import '../../../../core/widgets/app_header.dart';
+import '../../../../core/widgets/app_page_scaffold.dart';
 import '../../../../core/widgets/gradient_banner.dart';
 import '../../profile/views/profile_menu_screen.dart';
 
@@ -61,85 +62,78 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            AppHeader(
-              onTapLeft: null,
-              onTapRight: () {
-                Navigator.push(
-                  context,
-                  AppRoute(page: const ProfileMenuView()),
+    return AppPageScaffold(
+      header: AppHeader(
+        onTapLeft: null,
+        onTapRight: () {
+          Navigator.push(
+            context,
+            AppRoute(page: const ProfileMenuView()),
+          );
+        },
+        showBottomDivider: false,
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: Row(
+              children: [
+                _AnimatedBackButton(onTap: () => Navigator.pop(context)),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ValueListenableBuilder<bool>(
+              valueListenable: _controller.isLoading,
+              builder: (context, loading, _) {
+                if (loading) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: Tema.brandPurple),
+                  );
+                }
+
+                return ValueListenableBuilder<String?>(
+                  valueListenable: _controller.error,
+                  builder: (context, error, _) {
+                    if (error != null) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              size: 64,
+                              color: Colors.red.shade300,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Error: $error',
+                              style: TextStyle(color: Colors.red.shade600),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return ValueListenableBuilder<Challenge?>(
+                      valueListenable: _controller.challenge,
+                      builder: (context, challenge, _) {
+                        if (challenge == null) {
+                          return const Center(
+                            child: Text('Reto no encontrado'),
+                          );
+                        }
+
+                        return _buildContent(challenge);
+                      },
+                    );
+                  },
                 );
               },
-              showBottomDivider: false,
             ),
-
-            // Back Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Row(
-                children: [
-                  _AnimatedBackButton(onTap: () => Navigator.pop(context)),
-                ],
-              ),
-            ),
-
-            // Content
-            Expanded(
-              child: ValueListenableBuilder<bool>(
-                valueListenable: _controller.isLoading,
-                builder: (context, loading, _) {
-                  if (loading) {
-                    return const Center(
-                      child: CircularProgressIndicator(color: Tema.brandPurple),
-                    );
-                  }
-
-                  return ValueListenableBuilder<String?>(
-                    valueListenable: _controller.error,
-                    builder: (context, error, _) {
-                      if (error != null) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                size: 64,
-                                color: Colors.red.shade300,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Error: $error',
-                                style: TextStyle(color: Colors.red.shade600),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      return ValueListenableBuilder<Challenge?>(
-                        valueListenable: _controller.challenge,
-                        builder: (context, challenge, _) {
-                          if (challenge == null) {
-                            return const Center(
-                              child: Text('Reto no encontrado'),
-                            );
-                          }
-
-                          return _buildContent(challenge);
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

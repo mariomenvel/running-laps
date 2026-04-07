@@ -416,6 +416,8 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
     
     return Scaffold(
       body: SafeArea(
+        top: false,
+        bottom: false,
         child: Column(
           children: [
             // 1. Fixed Branding Header (No divider)

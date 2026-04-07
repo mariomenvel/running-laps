@@ -950,6 +950,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
+        top: false,
+        bottom: false,
         child: Column(
           children: [
             _buildHeader(),
