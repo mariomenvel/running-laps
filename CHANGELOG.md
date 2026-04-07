@@ -33,6 +33,14 @@
 - Botones de control (Terminar / Fin de serie) no disponibles en notificación iOS — `NotificationButtons` son Android-only
 - Workaround: control desde la app o desde Wear OS
 
+### iOS — Live Activity fixes adicionales
+- Fix datos de distancia/ritmo no actualizaban en background:
+  eliminado `Timer.periodic` en iOS, updates ahora se disparan desde `_handlePosition()`
+  directamente al recibir posición GPS (iOS entrega eventos GPS en background
+  via `UIBackgroundModes: location` aunque el isolate Dart esté suspendido)
+- Timer de notificación solo activo en Android
+- `pause()`/`resume()` solo gestionan el timer en Android
+
 ### iOS — Pendiente con logs
 - Google Sign In: app se cierra al pulsar el botón.
   Cambios aplicados: `REVERSED_CLIENT_ID` en `Info.plist`, `GoogleService-Info.plist` añadido,

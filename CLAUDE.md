@@ -15,24 +15,51 @@
 
 ---
 
+## Estado actual por plataforma
+
+| Plataforma | Estado | Notas |
+|---|---|---|
+| **Android** | ✅ Funciona | App Check Play Integrity (debug: debug token) |
+| **iOS** | ⚠️ Parcial | Ver tabla abajo |
+| **Web** | ✅ Funciona | App Check reCAPTCHA v3 |
+| **Wear OS** | ⚠️ Bypass temporal | UID hardcodeado via código de 6 dígitos, sin Firebase Auth real |
+
+### iOS — detalle de estado
+
+| Funcionalidad | Estado | Notas |
+|---|---|---|
+| Auth email/contraseña | ✅ OK | |
+| Google Sign-In | ❌ Crash al pulsar botón | `GoogleService-Info.plist` presente, crash sin logs. Pendiente Xcode/Mac |
+| GPS tracking | ✅ OK | `UIBackgroundModes: location`, Kalman + Haversine |
+| Live Activity (carrera) | ✅ Implementado | Lock Screen + Dynamic Island, gradiente púrpura |
+| Live Activity (descanso) | ✅ Implementado | `phase: rest`, countdown, botón "Saltar", acción `skip_rest` |
+| App Check | ❌ Omitido | Sin Apple Developer → DeviceCheck no disponible |
+| Notificación persistente | ⚠️ Solo barra azul GPS | `flutter_foreground_task` no muestra notificación en iOS |
+
+---
+
 ## ⚠️ ADVERTENCIAS CRÍTICAS — No tocar sin entender completamente
 
 ### 1. Autenticación Wear OS — UID hardcodeado (TEMPORAL)
-El reloj no tiene flujo de login propio. Actualmente usa un código de sesión de 6 dígitos generado desde la app móvil (`WearAuthService`) para obtener el `uid` del usuario. Las reglas de Firestore permiten leer `trainings`, `templates` y `settings` con `request.auth == null` para soportar esto.
-
-**Esto es una solución temporal.** La arquitectura correcta es una Cloud Function que verifique el código y devuelva un custom token de Firebase Auth. No eliminar el bypass de reglas sin haber implementado el reemplazo.
+El reloj usa código de sesión de 6 dígitos generado en `WearAuthService`. Las reglas de Firestore permiten leer `trainings`, `templates` y `settings` con `request.auth == null`. **No eliminar el bypass sin implementar el reemplazo** (Cloud Function + custom token).
 
 ### 2. `DEBUG_SIMULATE = true` — NUNCA en producción
-Si existe esta flag en `SeriesTrainingService.kt` o en el equivalente Flutter, **debe estar en `false` antes de cualquier build de release**. En modo simulación el GPS y los timers usan datos falsos.
+Si existe esta flag en `SeriesTrainingService.kt`, **debe estar en `false` antes de cualquier build de release**.
 
 ### 3. App Check — tokens de debug
-Los tokens de debug de App Check están registrados en Firebase Console (proyecto → App Check → Apps → Manage debug tokens). Si se regeneran sin actualizar la consola, los builds de debug dejarán de funcionar. No regenerar sin coordinación.
+Tokens registrados en Firebase Console. Si se regeneran sin actualizar la consola, los builds de debug dejarán de funcionar.
 
 ### 4. Colección `entrenamientos` vs `trainings`
-El nombre real de la colección en Firestore es **`trainings`**. Existe código legado que usa `"entrenamientos"` — ya corregido en Wear OS HomeScreen.kt, pero puede aparecer en otros sitios. Siempre usar `"trainings"`.
+El nombre real es **`trainings`**. Código legado puede usar `"entrenamientos"`. Siempre usar `"trainings"`.
 
 ### 5. `HomeEstadisticaRepository` es singleton
-No instanciar con `HomeEstadisticaRepository()` esperando una instancia independiente — siempre devuelve la misma instancia. El caché (5 min) se invalida automáticamente al guardar un entrenamiento. Si se necesita forzar refresco, llamar `HomeEstadisticaRepository().clearCache()`.
+No instanciar con `HomeEstadisticaRepository()` esperando instancia independiente. Caché de 5 min invalidada automáticamente al guardar entrenamiento via `clearCache()`.
+
+### 6. iOS Live Activity — sincronía Dart ↔ Swift
+Cualquier campo nuevo en `IOSLiveActivityPayload` requiere actualizar **tres sitios**:
+- `IOSLiveActivityPayload` + `toMap()` en `ios_live_activity_service.dart`
+- `ContentState` en `ios/Runner/RunningLapsActivityAttributes.swift`
+- `contentState(from:)` en `ios/Runner/RunningLapsLiveActivityManager.swift`
 
 ---
 
@@ -40,20 +67,31 @@ No instanciar con `HomeEstadisticaRepository()` esperando una instancia independ
 
 ```
 lib/
-├── main.dart                   ← Firebase init, App Check, ThemeService → SplashScreen
-├── config/app_theme.dart       ← Tema global (brandPurple = 0xFF8E24AA), AvatarHelper
-├── core/                       ← Servicios transversales, widgets compartidos, utils
-├── features/                   ← Módulos funcionales (ver lista abajo)
-└── firebase_options.dart       ← Generado por flutterfire CLI. No editar a mano.
+├── main.dart                   ← Firebase init, App Check (Android+Web), ThemeService → SplashScreen
+├── config/app_theme.dart       ← Color brandPurple = 0xFF8E24AA, AvatarHelper
+├── core/
+│   ├── services/
+│   │   ├── gps_service.dart                ← GPS + Live Activity iOS + Kalman + Haversine
+│   │   ├── ios_live_activity_service.dart  ← MethodChannel/EventChannel puente Swift↔Dart
+│   │   ├── wear_auth_service.dart          ← Códigos de sesión Wear OS
+│   │   ├── settings_service.dart           ← SharedPreferences: alarm, GPS defaults
+│   │   └── user_service.dart               ← nombre, contraseña, borrar cuenta
+│   └── utils/app_transitions.dart          ← AppRoute (CupertinoPageRoute), AppModalRoute
+├── features/                   ← auth, training, history, home, analytics, groups, templates, avatar, profile, admin
+└── firebase_options.dart       ← Generado por flutterfire CLI. NO editar a mano.
+
+ios/Runner/
+├── AppDelegate.swift                        ← Google Sign-In URL, Live Activity channels, handleCustomURL()
+├── RunningLapsActivityAttributes.swift      ← Struct ActivityKit: ContentState (phase, restCountdown, etc.)
+├── RunningLapsLiveActivityManager.swift     ← start/update/stop Activity<RunningLapsActivityAttributes>
+└── Info.plist                               ← CFBundleURLTypes (REVERSED_CLIENT_ID), UIBackgroundModes
+
+ios/RunningLapsLiveActivityExtension/
+└── RunningLapsLiveActivityWidget.swift      ← Lock Screen + Dynamic Island (gradiente púrpura, phase-aware)
 
 wear_os/app/src/main/kotlin/com/runninglaps/wear/
 ├── MainActivity.kt             ← Entry point, navegación, App Check
-├── SeriesTrainingService.kt    ← Foreground service: timer, GPS, alarmas, plantillas
-├── SeriesActiveScreen.kt       ← UI activa durante la serie
-├── SeriesPageScreen.kt         ← Config de serie + picker de plantilla
-├── TemplatePickerScreen.kt     ← Selector de plantilla desde Firestore
-├── TemplateModels.kt           ← Modelos de datos para plantillas
-└── HomeScreen.kt               ← Dashboard con stats (usa colección "trainings")
+└── SeriesTrainingService.kt    ← Foreground service: timer, GPS, alarmas, plantillas
 ```
 
 **Reglas estrictas:**
@@ -81,16 +119,67 @@ wear_os/app/src/main/kotlin/com/runninglaps/wear/
 
 ---
 
+## App Check — estado actual
+
+```dart
+// main.dart — lógica actual
+if (!kIsWeb) {
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    await FirebaseAppCheck.instance.activate(
+      androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
+    );
+  }
+  // iOS omitido — sin Apple Developer credentials para DeviceCheck
+} else {
+  await FirebaseAppCheck.instance.activate(
+    webProvider: ReCaptchaV3Provider('6LcH2acsAAAAAGdH2Wi1X39xnD3EB6o40ZsVjnIo'),
+  );
+}
+```
+
+---
+
+## iOS Live Activity — arquitectura
+
+```
+Flutter (Dart)                              iOS (Swift)
+──────────────────────────────────────────────────────────────
+IOSLiveActivityService.instance
+  .start(IOSLiveActivityPayload)   →  RunningLapsLiveActivityManager.start()
+  .update(IOSLiveActivityPayload)  →  RunningLapsLiveActivityManager.update()
+  .stop()                          →  RunningLapsLiveActivityManager.stop()
+  .actions Stream<String>          ←  LiveActivityActionStreamHandler
+                                         ← AppDelegate.handleCustomURL()
+                                             ← runninglaps://training?action=X
+
+IOSLiveActivityPayload.phase:
+  "continuous" → carrera libre
+  "running"    → serie activa (intervalos)
+  "rest"       → descanso — usar IOSLiveActivityPayload.rest(restCountdown, serie)
+
+Actions recibidas:
+  "finish_run"  → GPSService.notificationAction → training_session_view._finishSeries()
+  "end_serie"   → ídem
+  "skip_rest"   → training_start_view._skipRest()
+  "open"        → solo abre la app, no emite acción (filtrado en AppDelegate)
+
+GPS updates en background (iOS):
+  _handlePosition() → _sendNotificationUpdate() directamente (sin Timer)
+  Timer.periodic solo existe en Android (FlutterForegroundTask)
+```
+
+---
+
 ## Flujo de autenticación
 
 ```
 main() → SplashScreen (2s) → AuthWrapper
   AuthWrapper (StreamBuilder<User?>)
-    ├── hasData  → HomeView(user: snapshot.data!)   ← user pasado explícitamente (evita race condition web)
+    ├── hasData  → HomeView(user: snapshot.data!)   ← evita race condition en web
     └── sin data → AuthPage
 
-Google Sign-In web:  signInWithPopup → getIdToken(true) → saveUserDoc (en auth_remote, no en auth_repository)
-Google Sign-In móvil: GoogleSignIn().signIn() → signInWithCredential → saveUserDoc (en auth_repository)
+Google Sign-In web:  signInWithPopup → getIdToken(true) → saveUserDoc (en auth_remote)
+Google Sign-In móvil: GoogleSignIn().signIn() → signInWithCredential → saveUserDoc
 Email/pass: requiere emailVerified antes de permitir acceso
 ```
 
@@ -99,9 +188,9 @@ Email/pass: requiere emailVerified antes de permitir acceso
 ## Firebase / Firestore — colecciones reales
 
 ```
-users/{uid}                           perfil: nombre, email, photoUrl, avatarConfig, isAdmin
-users/{uid}/trainings/{id}            entrenamientos: fecha(ISO8601), distanciaTotalM, tiempoTotalSec,
-                                        ritmoMedioSecKm, rpePromedio, series[], trackPoints[]
+users/{uid}                           totalSessions, totalKm, totalTimeMinutes, lastTrainingDate
+                                        (actualizados atómicamente con FieldValue.increment en createTraining)
+users/{uid}/trainings/{id}            fecha(ISO8601), distanciaTotalM, tiempoTotalSec, series[], trackPoints[]
 users/{uid}/tags/{nombre}             etiquetas personalizadas
 users/{uid}/templates/{id}            plantillas con blocks[] y alerts
 users/{uid}/settings/homeLayoutConfig configuración de widgets del home
@@ -115,66 +204,40 @@ global_challenges/{id}                desafíos globales
 
 ---
 
-## Servicios Core
-
-| Servicio | Ruta | Función |
-|---|---|---|
-| `GPSService` | `core/services/gps_service.dart` | Haversine + KalmanFilter, ventana 5 puntos, descarta acc >20m |
-| `SensorService` | `core/services/sensor_service.dart` | Pedómetro |
-| `PDFGeneratorService` | `core/services/pdf_generator_service.dart` | Exportar PDF de historial |
-| `SettingsService` | `core/services/settings_service.dart` | SharedPreferences: alarma, GPS default |
-| `UserService` | `core/services/user_service.dart` | updateNombre, reauth, updatePassword, deleteAccount, isGoogleUser |
-| `WearAuthService` | `core/services/wear_auth_service.dart` | Genera/valida códigos de sesión Wear OS |
-
----
-
-## Modelos clave
-
-**`Entrenamiento`** (`features/training/data/entrenamiento.dart`)
-- `distanciaTotalM` → int (metros) | `tiempoTotalSec` → double (segundos)
-- `rpePromedio()` → calculado desde series | `ritmoMedioSecPorKm()` → calculado
-- Debe tener ≥1 serie válida (distanciaM > 0 salvo drill estático)
-
-**`Serie`** (`features/training/data/serie.dart`)
-- `tiempoSec`, `distanciaM`, `descansoSec`, `rpe` (1-10)
-- `usedGps`, `gpsPoints` → opcionales
-
-**`TemplateBlock`** (`features/templates/data/template_models.dart`)
-- `type`: `distance` | `time` | `value`: metros o segundos
-- `alerts`: `TemplateAlerts` con modo `time` o `pace`
-
----
-
 ## Seguridad — resumen
 
-- **App Check** activo en todas las plataformas (Android/iOS/Web/Wear OS)
-- **Reglas Firestore**: usuario solo lee/escribe sus propios documentos. Wear OS puede leer `trainings`, `templates`, `settings` sin auth (bypass temporal). Ver `firestore.rules` para detalles completos.
-- **Límites en todas las queries principales**: `.limit(100)` en historial personal, `.limit(500)` en gráficas home y stats de grupo, `.limit(50)` en streams de rewards.
+- **App Check**: Android (Play Integrity) + Web (reCAPTCHA v3). iOS omitido temporalmente.
+- **Reglas Firestore**: usuario solo lee/escribe sus propios documentos.
+  - Wear OS bypass: `trainings`, `templates`, `settings`, `tags` legibles sin auth. TEMPORAL.
+  - Todas las creates tienen límites de tamaño (`keys().size() < N`, `toString().size() < N`).
+- **Límites en queries**: `.limit(100)` historial personal, `.limit(500)` gráficas/grupos, `.limit(50)` streams de rewards.
+- **`result_notifications`**: cualquier usuario autenticado puede crear (TEMP). En producción: solo Admin SDK.
 
 ---
 
 ## Deuda técnica — priorizada
 
 **Alta:**
-1. Prints `WEB LOGIN: ...` en `auth_remote.dart` — eliminar cuando el fix de Google Sign In web esté confirmado
-2. `stub_html.dart` en `core/utils/` — ya no se importa, borrar
-3. Historial limitado a 100 entrenamientos — implementar paginación con cursor
+1. **Google Sign-In iOS crash** — crash al pulsar botón. Requiere Xcode + logs. `assertionFailure` en `AppDelegate.configureGoogleSignIn()` si `GoogleService-Info.plist` no tiene `CLIENT_ID` válido
+2. **Auth Wear OS** — reemplazar bypass Firestore con Cloud Function + custom token Firebase Auth
+3. **Historial limitado a 100** — implementar paginación con cursor
 
 **Media:**
-4. Auth Wear OS — reemplazar bypass de reglas con Cloud Function + custom token
-5. `PatternCache` invalida por longitud de lista, no por contenido real
-6. `getAllEntrenamientos(uid)` en `TrainingRepository` es alias inútil — ignora el uid recibido
+4. **Backfill agregados** — usuarios existentes tienen `totalKm/totalSessions = 0`. Requiere admin script o Cloud Function
+5. **App Check iOS** — activar `AppleProvider.deviceCheck` cuando haya Apple Developer credentials
+6. `PatternCache` invalida por longitud, no por contenido real
+7. `getAllEntrenamientos(uid)` en `TrainingRepository` ignora el uid recibido
 
 **Baja:**
-7. `TimeRange.max` hardcodeado desde 2020 — configurable
-8. Sin tests automatizados
-9. iOS Live Activities: requiere Xcode + Swift ActivityKit extension. Sin Xcode es inviable.
+8. `stub_html.dart` en `core/utils/` — sin imports, borrar
+9. `TimeRange.max` hardcodeado desde 2020
+10. Sin tests automatizados
 
 ---
 
 ## Antes de hacer cualquier cambio — checklist
 
-1. **Leer** el archivo que se va a modificar completo antes de editar
+1. **Leer** el archivo completo antes de editar
 2. **Ejecutar** `flutter analyze 2>&1 | grep 'error:'` tras cambios en Dart
 3. **Verificar** que no se rompen los call sites si se cambia una firma de función
 4. **Documentar** el cambio en `CHANGELOG.md` si es significativo
@@ -185,20 +248,22 @@ global_challenges/{id}                desafíos globales
 
 ## Convenciones de código
 
-- **Dart:** `PascalCase` clases, `snake_case` archivos, `camelCase` variables/métodos, `lowerCamelCase` constantes
-- **Kotlin:** igual que Dart para nombres; `companion object` para estado compartido entre Service y UI
-- **Imports Dart:** `dart:` → `flutter/` → `firebase_*` → paquetes externos → locales (`package:running_laps/...`)
+- **Dart:** `PascalCase` clases, `snake_case` archivos, `camelCase` variables/métodos
+- **Kotlin:** igual; `companion object` para estado compartido entre Service y UI
+- **Imports Dart:** `dart:` → `flutter/` → `firebase_*` → paquetes externos → locales
 - `if (!mounted) return;` obligatorio tras cualquier `await` en un `State`
 - Snackbars: **siempre** `ModernSnackBar.showSuccess/showError/showWarning(context, msg)`
 - Estado en ViewModels: **siempre** `ValueNotifier` + `ValueListenableBuilder`
+- `debugPrint()` en lugar de `print()` — se elimina automáticamente en release
 
 ---
 
 ## Assets
 
 ```
-assets/images/logo.png     → logo app
-assets/images/Icon.png     → icono splash/login
-assets/images/fondo.png    → fondo login screen
-assets/avatar/**           → SVGs por categoría (body, eyes, hair/long, hair/short, etc.)
+assets/images/logo.png           → logo app
+assets/images/Icon.png           → icono splash/login
+assets/images/fondo.png          → fondo login screen
+assets/images/icono_launcher.png → icono launcher (4252×4252, RGBA, generado con flutter_launcher_icons)
+assets/avatar/**                 → SVGs por categoría (body, eyes, hair/long, hair/short, etc.)
 ```

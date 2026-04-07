@@ -77,12 +77,28 @@ features/{nombre}/
 
 ### App Check por plataforma
 
-| Plataforma | Release | Debug |
-|---|---|---|
-| Android | Play Integrity | Debug token |
-| iOS | DeviceCheck | Debug token |
-| Web | reCAPTCHA v3 (`6LcH2acsAAAAAGdH2Wi1X39xnD3EB6o40ZsVjnIo`) | reCAPTCHA v3 (misma clave) |
-| Wear OS (Android) | Play Integrity | Debug token (`BuildConfig.DEBUG`) |
+| Plataforma | Release | Debug | Estado |
+|---|---|---|---|
+| Android | Play Integrity | Debug token | ✅ Activo |
+| iOS | DeviceCheck | Debug token | ❌ Omitido — sin Apple Developer credentials |
+| Web | reCAPTCHA v3 (`6LcH2acsAAAAAGdH2Wi1X39xnD3EB6o40ZsVjnIo`) | reCAPTCHA v3 | ✅ Activo |
+| Wear OS (Android) | Play Integrity | Debug token | ✅ Activo |
+
+```dart
+// main.dart — lógica actual
+if (!kIsWeb) {
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    await FirebaseAppCheck.instance.activate(
+      androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
+    );
+  }
+  // iOS: omitido temporalmente (sin Apple Developer credentials para DeviceCheck)
+} else {
+  await FirebaseAppCheck.instance.activate(
+    webProvider: ReCaptchaV3Provider('6LcH2acsAAAAAGdH2Wi1X39xnD3EB6o40ZsVjnIo'),
+  );
+}
+```
 
 ---
 
@@ -340,6 +356,39 @@ Todas las consultas Firestore principales tienen `.limit()` para acotar el coste
 - Caché de patrones de series y entrenamientos detectados
 - Validación por longitud de lista (débil — no detecta borrado+inserción con mismo count)
 
+### Contadores agregados en `users/{uid}`
+
+Para evitar calcular KPIs (km totales, sesiones, tiempo) leyendo todos los entrenamientos, se mantienen contadores atómicos en el documento raíz del usuario:
+
+| Campo | Tipo | Actualización |
+|---|---|---|
+| `totalKm` | double | `FieldValue.increment(distanciaKm)` en `createTraining()` |
+| `totalSessions` | int | `FieldValue.increment(1)` en `createTraining()` |
+| `totalTimeMinutes` | double | `FieldValue.increment(minutos)` en `createTraining()` |
+| `lastTrainingDate` | String ISO8601 | Escrito en `createTraining()` |
+
+Las KPI cards de la home leen estos campos con fallback a cálculo local sobre `_entrenamientos` para cuentas existentes sin los campos. El documento `users/{uid}` se carga en paralelo con `getAllEntrenamientos()` usando `Future.wait` sin coste adicional de latencia.
+
+### Límites en queries principales
+
+| Archivo | Consulta | Límite |
+|---|---|---|
+| `training_repository.dart` | `getTrainings()` historial personal | 100 |
+| `home_estadistica_repository.dart` | `_getRawData()` gráficas | 500 |
+| `group_detail_repository.dart` | trainings stats de grupo | 500 |
+| `group_detail_repository.dart` | `fetchUserTrainings()` | 500 |
+| `group_detail_repository.dart` | members fetch | 500 |
+| `group_detail_repository.dart` | trainings daily km | 200 |
+| `challenges_repository.dart` | `streamActiveChallenges` | 20 |
+| `challenges_repository.dart` | `streamChallengeParticipants` | 500 |
+| `challenges_repository.dart` | `getActiveChallengesOnce` | 50 |
+| `rewards_repository.dart` | `streamGroupMedals/Badges` | 200 |
+| `rewards_repository.dart` | `medal_history` / `badge_history` | 50 |
+| `user_groups_repository.dart` | streams de grupos del usuario | 50 |
+| `training_challenge_sync_service.dart` | grupos, challenges, trainings | 50/50/200 |
+| `home_view.dart` | `result_notifications` | 20 |
+| `admin_repository.dart` | colecciones admin | 500–1000 |
+
 ---
 
 ## 7. Tracking GPS — arquitectura
@@ -362,7 +411,107 @@ El servicio GPS descarta automáticamente puntos con `accuracy > 20m` y aplica u
 
 ---
 
-## 8. Wear OS — arquitectura interna
+## 8. iOS Live Activity — arquitectura
+
+### Ficheros involucrados
+
+| Fichero | Rol |
+|---|---|
+| `lib/core/services/ios_live_activity_service.dart` | Clase Dart: `IOSLiveActivityService` singleton + `IOSLiveActivityPayload` |
+| `ios/Runner/RunningLapsActivityAttributes.swift` | Define `ActivityAttributes` + `ContentState` (campos compartidos Flutter↔Widget) |
+| `ios/Runner/RunningLapsLiveActivityManager.swift` | Gestiona `Activity<RunningLapsActivityAttributes>`: start/update/stop via MethodChannel |
+| `ios/Runner/AppDelegate.swift` | Registra channels, parsea URL scheme `runninglaps://`, emite acciones al EventChannel |
+| `ios/RunningLapsLiveActivityExtension/RunningLapsLiveActivityWidget.swift` | SwiftUI: UI de Lock Screen y Dynamic Island |
+
+### Comunicación Flutter ↔ iOS
+
+```
+Dart → iOS (comandos):
+  MethodChannel 'running_laps/live_activity'
+    invokeMethod('start', payload.toMap())
+    invokeMethod('update', payload.toMap())
+    invokeMethod('stop')
+
+iOS → Dart (acciones del usuario):
+  EventChannel 'running_laps/live_activity_actions'
+    emite String: 'end_serie' | 'finish_run' | 'skip_rest'
+    ('open' filtrado en AppDelegate — solo lleva la app a primer plano)
+```
+
+### IOSLiveActivityPayload — campos
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `title` | String | Texto del header |
+| `distance` | String | Ej. `"1.23 km"` |
+| `elapsed` | String | Ej. `"12:34"` (respaldo si timer nativo no disponible) |
+| `elapsedSeconds` | int | Segundos transcurridos — ancla el timer nativo iOS |
+| `pace` | String | Ej. `"5:12 /km"` |
+| `mode` | String | `'continuous'` \| `'intervals'` |
+| `serie` | int | Número de serie actual |
+| `hasGps` | bool | Si hay señal GPS válida |
+| `isPaused` | bool | Pausa el timer nativo cuando `true` |
+| `actionLabel` | String | Texto del botón de acción |
+| `actionId` | String | `'end_serie'` \| `'finish_run'` \| `'skip_rest'` |
+| `phase` | String | `'continuous'` \| `'running'` \| `'rest'` |
+| `restCountdown` | int | Segundos restantes de descanso (solo en `phase: 'rest'`) |
+
+El factory `IOSLiveActivityPayload.rest()` construye el payload de descanso con `phase: 'rest'`, `actionId: 'skip_rest'` y los campos de métricas en blanco.
+
+### Sistema de fases
+
+```
+phase: 'continuous'   → Carrera libre (modo libre, sin series)
+phase: 'running'      → Serie activa (modo intervalos)
+phase: 'rest'         → Descanso entre series (countdown visible)
+```
+
+La UI del widget adapta su layout según `state.phase`:
+- `running`/`continuous`: métricas (distancia · tiempo · pace) + botón de acción
+- `rest`: countdown grande + "Descansando · Serie N" + botón "Saltar"
+
+### URL scheme y acciones
+
+```
+runninglaps://training?action=open        → solo lleva app a primer plano (no emite al EventChannel)
+runninglaps://training?action=end_serie   → emite 'end_serie'  → _onNotificationAction() → _finishSeries()
+runninglaps://training?action=finish_run  → emite 'finish_run' → _onNotificationAction() → _finishSeries()
+runninglaps://training?action=skip_rest   → emite 'skip_rest'  → _skipRest()
+```
+
+- `widgetURL` (toque en cuerpo del widget) → `action=open` — no dispara acción de entrenamiento
+- `Link(destination:)` en botones → URL de acción real
+
+### Actualizaciones en background (iOS)
+
+En iOS **no hay `Timer.periodic`** para enviar actualizaciones de Live Activity. En su lugar, `_handlePosition()` en `GPSService` llama directamente `_sendNotificationUpdate()` al recibir cada posición GPS. iOS garantiza la entrega de eventos GPS vía `UIBackgroundModes: location` aunque el isolate Dart esté suspendido.
+
+```dart
+// gps_service.dart — _handlePosition()
+if (_useIOSLiveActivity) {
+  _sendNotificationUpdate();   // update sincronizado con cada punto GPS
+}
+
+// pause() / resume() — el timer solo se gestiona en Android
+if (!_useIOSLiveActivity) {
+  _notificationTimer?.cancel();
+  // ...restart timer...
+}
+```
+
+### Timer nativo de elapsed (SwiftUI)
+
+El tiempo transcurrido se muestra con el timer nativo de iOS (sin que Flutter envíe actualizaciones cada segundo):
+
+```swift
+Text(timerInterval: referenceDate...Date(timeIntervalSinceNow: 86400), countsDown: false)
+// referenceDate = Date(timeIntervalSinceNow: -elapsedSeconds)
+// Cuando isPaused == true: muestra state.elapsed estático
+```
+
+---
+
+## 9. Wear OS — arquitectura interna
 
 ```
 MainActivity.kt
@@ -419,10 +568,22 @@ La comunicación entre la UI Compose y el servicio usa `StateFlow` en el compani
 | Variable | Dónde | Valor |
 |---|---|---|
 | `google-services.json` | `android/app/` | Configuración Firebase Android (no en repo) |
-| `GoogleService-Info.plist` | `ios/Runner/` | Configuración Firebase iOS (no en repo) |
+| `GoogleService-Info.plist` | `ios/Runner/` | Configuración Firebase iOS (**en repo**) |
 | `firebase_options.dart` | `lib/` | Generado por `flutterfire configure` |
 | reCAPTCHA v3 site key | `lib/main.dart` | `6LcH2acsAAAAAGdH2Wi1X39xnD3EB6o40ZsVjnIo` |
 | Brand color | `lib/config/app_theme.dart` | `Tema.brandPurple = Color(0xFF8E24AA)` |
+
+### Configuración iOS específica
+
+| Ítem | Archivo | Estado |
+|---|---|---|
+| `REVERSED_CLIENT_ID` en URL schemes | `ios/Runner/Info.plist` | ✅ Configurado (requerido para Google Sign-In) |
+| `UIBackgroundModes: location` | `ios/Runner/Info.plist` | ✅ Activo — GPS funciona en background |
+| `NSSupportsLiveActivities: true` | `ios/Runner/Info.plist` | ✅ Activo |
+| `GIDSignIn.sharedInstance.handle(url)` | `ios/Runner/AppDelegate.swift` | ✅ Implementado |
+| Google Sign-In — crash al pulsar botón | — | ⚠️ **Pendiente diagnóstico** — requiere logs de Xcode/Mac |
+| App Check iOS (DeviceCheck) | `lib/main.dart` | ❌ Omitido — sin Apple Developer credentials |
+| Live Activity extension | `ios/RunningLapsLiveActivityExtension/` | ✅ Implementada y funcional |
 
 ---
 

@@ -179,6 +179,7 @@ class GPSService {
     if (status.value == GpsStatus.running) {
       status.value = GpsStatus.paused;
       _positionSubscription?.pause();
+      if (!_useIOSLiveActivity) _notificationTimer?.cancel();
       _pauseStartTime = DateTime.now();
     }
   }
@@ -191,6 +192,13 @@ class GPSService {
         _pausedDurationMs +=
             DateTime.now().difference(_pauseStartTime!).inMilliseconds;
         _pauseStartTime = null;
+      }
+      if (!_useIOSLiveActivity) {
+        _notificationTimer?.cancel();
+        _notificationTimer = Timer.periodic(
+          const Duration(seconds: 1),
+          (_) => _sendNotificationUpdate(),
+        );
       }
     }
   }
@@ -270,7 +278,7 @@ class GPSService {
     _notificationTimer?.cancel();
     _iosActionSubscription?.cancel();
     if (_useIOSLiveActivity) {
-      IOSLiveActivityService.instance.stop();
+      unawaited(IOSLiveActivityService.instance.stop());
     } else {
       FlutterForegroundTask.stopService();
     }
@@ -342,12 +350,9 @@ class GPSService {
           actionLabel: buttonLabel,
         ),
       );
-
-      _notificationTimer?.cancel();
-      _notificationTimer = Timer.periodic(
-        const Duration(seconds: 1),
-        (_) => _sendNotificationUpdate(),
-      );
+      // iOS: updates are driven by GPS position events in _handlePosition(),
+      // not by a timer — location background mode keeps delivering positions
+      // even when the app is backgrounded, unlike Timer which may be suspended.
       return;
     }
 
@@ -547,6 +552,13 @@ class GPSService {
           ));
         }
       }
+    }
+
+    // On iOS the Live Activity is updated on every GPS event rather than on a
+    // timer — the location background mode keeps delivering positions while
+    // backgrounded, whereas Timer.periodic may be throttled or suspended.
+    if (_useIOSLiveActivity) {
+      _sendNotificationUpdate();
     }
 
     cadence.value = _sensorService.cadence.value;

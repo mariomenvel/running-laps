@@ -101,16 +101,28 @@ class IOSLiveActivityService {
 
   Future<void> start(IOSLiveActivityPayload payload) async {
     if (!isSupported) return;
-    await _methodChannel.invokeMethod<void>('start', payload.toMap());
+    try {
+      await _methodChannel.invokeMethod<void>('start', payload.toMap());
+    } catch (e) {
+      debugPrint('[LiveActivity] start failed: $e');
+    }
   }
 
   Future<void> update(IOSLiveActivityPayload payload) async {
     if (!isSupported) return;
-    await _methodChannel.invokeMethod<void>('update', payload.toMap());
+    try {
+      await _methodChannel.invokeMethod<void>('update', payload.toMap());
+    } catch (e) {
+      debugPrint('[LiveActivity] update failed: $e');
+    }
   }
 
   Future<void> stop() async {
     if (!isSupported) return;
-    await _methodChannel.invokeMethod<void>('stop');
+    try {
+      await _methodChannel.invokeMethod<void>('stop');
+    } catch (e) {
+      debugPrint('[LiveActivity] stop failed: $e');
+    }
   }
 }
