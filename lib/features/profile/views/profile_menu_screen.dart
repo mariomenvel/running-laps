@@ -301,6 +301,8 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
+        top: false,
+        bottom: false,
         child: Column(
           children: <Widget>[
             // HEADER

@@ -90,6 +90,8 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
+        top: false,
+        bottom: false,
         child: Column(
           children: [
             // 1. HEADER

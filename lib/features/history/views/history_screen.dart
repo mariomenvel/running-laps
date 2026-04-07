@@ -118,6 +118,8 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
       body: Stack(
         children: [
           SafeArea(
+            top: false,
+            bottom: false,
             child: Column(
               children: <Widget>[
             // 1. HEADER (Reutilizando AppHeader que ya tiene el gradiente)

@@ -188,6 +188,8 @@ class _TemplatesListViewState extends State<TemplatesListView> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
+        top: false,
+        bottom: false,
         child: Column(
           children: [
             AppHeader(

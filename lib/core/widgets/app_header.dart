@@ -27,6 +27,7 @@ class AppHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final topPadding = MediaQuery.of(context).padding.top;
     return Container(
       decoration: isDark
           ? BoxDecoration(color: Theme.of(context).colorScheme.surface)
@@ -45,6 +46,7 @@ class AppHeader extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
+          SizedBox(height: topPadding),
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 20.0,

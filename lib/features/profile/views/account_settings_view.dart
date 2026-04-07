@@ -1293,6 +1293,8 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
+        top: false,
+        bottom: false,
         child: Column(
           children: [
             AppHeader(

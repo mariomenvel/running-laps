@@ -5,6 +5,7 @@ import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
+import 'package:running_laps/core/widgets/app_page_scaffold.dart';
 
 import '../widgets/training_map_view.dart';
 
@@ -51,13 +52,12 @@ class _TrainingDetailViewState extends State<TrainingDetailView>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            AppHeader(
-              showBottomDivider: false,
-            ),
+    return AppPageScaffold(
+      header: const AppHeader(
+        showBottomDivider: false,
+      ),
+      body: Column(
+        children: [
             _slideFromLeft(_aBanner, GradientBanner(
               title: training.titulo,
               subtitle: "Análisis con Mapa GPS",
@@ -91,7 +91,6 @@ class _TrainingDetailViewState extends State<TrainingDetailView>
               ),
             ),
           ],
-        ),
       ),
     );
   }

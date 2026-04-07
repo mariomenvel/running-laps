@@ -67,6 +67,8 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with TickerProv
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
+        top: false,
+        bottom: false,
         child: Column(
           children: [
             // 1. Header

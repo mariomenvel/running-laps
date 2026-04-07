@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
+import 'package:running_laps/core/widgets/app_page_scaffold.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
 import '../../profile/views/profile_menu_screen.dart';
 import '../viewmodels/group_rewards_controller.dart';
@@ -20,41 +21,39 @@ class GroupRewardsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            AppHeader(
-              onTapLeft: null,
-              onTapRight: () {
-                Navigator.push(
-                  context,
-                  AppRoute(page: const ProfileMenuView()),
-                );
-              },
-              showBottomDivider: false,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Row(
-                children: [
-                  _AnimatedBackButton(onTap: () => Navigator.pop(context)),
-                ],
-              ),
-            ),
-            GradientBanner(
-              title: "Recompensas",
-              subtitle: "Medallero y logros del grupo",
-              icon: Icons.emoji_events_rounded,
-              height: 85,
-              gradientColors: [
-                Tema.brandPurple,
-                Tema.brandPurple.withOpacity(0.7),
+    return AppPageScaffold(
+      header: AppHeader(
+        onTapLeft: null,
+        onTapRight: () {
+          Navigator.push(
+            context,
+            AppRoute(page: const ProfileMenuView()),
+          );
+        },
+        showBottomDivider: false,
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: Row(
+              children: [
+                _AnimatedBackButton(onTap: () => Navigator.pop(context)),
               ],
             ),
-            Expanded(child: GroupRewardsBody(groupId: groupId)),
-          ],
-        ),
+          ),
+          GradientBanner(
+            title: "Recompensas",
+            subtitle: "Medallero y logros del grupo",
+            icon: Icons.emoji_events_rounded,
+            height: 85,
+            gradientColors: [
+              Tema.brandPurple,
+              Tema.brandPurple.withOpacity(0.7),
+            ],
+          ),
+          Expanded(child: GroupRewardsBody(groupId: groupId)),
+        ],
       ),
     );
   }
