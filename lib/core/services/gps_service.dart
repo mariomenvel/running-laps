@@ -9,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:running_laps/core/services/foreground_tracking_handler.dart';
 import 'package:running_laps/core/services/ios_live_activity_service.dart';
 import 'package:running_laps/core/services/sensor_service.dart';
+import 'package:running_laps/core/services/settings_service.dart';
 import 'package:running_laps/core/tracking/sensor_frame.dart';
 import 'package:running_laps/core/tracking/tracking_state.dart';
 import 'package:running_laps/core/tracking/tracking_types.dart';
@@ -77,6 +78,7 @@ class GPSService {
   int _serieNumber = 1;
   bool _gpsEnabled = false;
   String? _externalElapsed;
+  String? _userId;
 
   GPSService() {
     _initForegroundTask();
@@ -196,6 +198,25 @@ class GPSService {
     _externalElapsed = elapsed;
   }
 
+  /// Loads the last persisted stride length for [uid] and applies it to the
+  /// current tracking state. Call before startTracking() when GPS is enabled.
+  Future<void> loadStrideLength(String uid) async {
+    _userId = uid;
+    final saved = await SettingsService().getStrideLength(uid);
+    if (saved != null && saved > 0.3 && saved < 2.0) {
+      _trackingState.value = TrackingState(
+        latitude: _trackingState.value.latitude,
+        longitude: _trackingState.value.longitude,
+        velocity: _trackingState.value.velocity,
+        heading: _trackingState.value.heading,
+        distanceTotal: _trackingState.value.distanceTotal,
+        strideLength: saved,
+        lastTimestamp: _trackingState.value.lastTimestamp,
+        userState: _trackingState.value.userState,
+      );
+    }
+  }
+
   Future<void> stopTracking() async {
     if (status.value != GpsStatus.running &&
         status.value != GpsStatus.paused) {
@@ -207,6 +228,15 @@ class GPSService {
     _notificationTimer?.cancel();
     _notificationTimer = null;
     _ekf.reset();
+
+    // Persist learned stride length if GPS was active long enough to calibrate
+    if (_userId != null && _gpsEnabled && _gpsStableSeconds >= 30) {
+      unawaited(SettingsService().saveStrideLength(
+        _userId!,
+        _trackingState.value.strideLength,
+      ));
+    }
+
     status.value = GpsStatus.paused;
 
     if (_useIOSLiveActivity) {

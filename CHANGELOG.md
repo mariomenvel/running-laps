@@ -1,5 +1,25 @@
 # CHANGELOG — Running Laps
 
+## [GPS Fase 4 - RDP Smoothing + Stride Persistido] — 2026-04-08
+
+### GPS - Post-proceso y calibración personal
+- Nuevo archivo lib/core/utils/rdp_smoother.dart — algoritmo Ramer-Douglas-Peucker
+  - Simplifica trazas GPS antes de guardar en Firestore
+  - Epsilon 2.5m: preserva curvas, elimina puntos redundantes en rectas
+  - Distancia perpendicular cross-track esférica (precisa para cualquier distancia)
+  - Aplicado a trackPoints (traza completa) y gpsPoints de cada serie
+  - Solo si hay más de 10 puntos (evita procesar trazas triviales)
+- Stride length persistido en Firestore:
+  - Guardado en users/{uid}/settings/gpsCalibration al finalizar sesión
+  - Solo si _gpsStableSeconds >= 30 (calibración suficiente)
+  - Cargado antes de startTracking() para que el primer tick use el valor calibrado
+  - Rango válido: 0.3m - 2.0m (descarta valores incoherentes)
+  - Campo sessions: incremento atómico para rastrear número de calibraciones
+
+### Referencia
+Ver GPS_Plan_RunningLaps.docx — Fase 4 completada.
+Plan GPS completo implementado (Fases 1-4).
+
 ## [GPS Fase 3 - UserTrackingState + Dead Reckoning] — 2026-04-08
 
 ### GPS - Máquina de estados y dead reckoning

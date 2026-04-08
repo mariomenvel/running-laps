@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -100,6 +101,43 @@ class SettingsService {
         'paceSec': 0,
         'segment': 400,
       };
+    }
+  }
+
+  // --- Stride Length (Firestore) ---
+
+  /// Returns the last calibrated stride length for [uid], or null if never saved.
+  Future<double?> getStrideLength(String uid) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('settings')
+          .doc('gpsCalibration')
+          .get();
+      if (!doc.exists) return null;
+      return (doc.data()?['strideLength'] as num?)?.toDouble();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Persists the learned [strideLength] for [uid].
+  /// Increments the sessions counter atomically.
+  Future<void> saveStrideLength(String uid, double strideLength) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('settings')
+          .doc('gpsCalibration')
+          .set({
+        'strideLength': strideLength,
+        'calibratedAt': FieldValue.serverTimestamp(),
+        'sessions': FieldValue.increment(1),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('[SettingsService] saveStrideLength failed: $e');
     }
   }
 

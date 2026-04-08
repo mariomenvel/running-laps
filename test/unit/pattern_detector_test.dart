@@ -2,8 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:running_laps/features/analytics/data/pattern_detector.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/data/serie.dart';
-import 'package:running_laps/features/analytics/data/series_pattern.dart';
-import 'package:running_laps/features/analytics/data/workout_pattern.dart';
 
 void main() {
   late PatternDetector detector;

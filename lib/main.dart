@@ -6,7 +6,6 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'firebase_options.dart'; // Generado por flutterfire CLI
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_service.dart';
-import 'features/auth/views/auth_wrapper.dart';
 import 'features/auth/views/splash_screen.dart';
 
 void main() async {

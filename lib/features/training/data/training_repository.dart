@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'entrenamiento.dart';
+import 'serie.dart';
+import '../../../core/services/gps_service.dart';
+import '../../../core/utils/rdp_smoother.dart';
 import '../../../features/groups/data/services/training_challenge_sync_service.dart';
 import '../../../features/home/data/home_estadistica_repository.dart';
 
@@ -23,6 +26,32 @@ class TrainingRepository {
 
   Future<String> createTraining(Entrenamiento e) async {
     final String uid = _requireUid();
+
+    // RDP smoothing on trackPoints (whole-session trace)
+    if (e.trackPoints.length > 10) {
+      final smoothed = RDPSmoother.simplify(e.trackPoints, epsilon: 2.5);
+      e = e.copyWith(trackPoints: smoothed);
+    }
+
+    // RDP smoothing on gpsPoints within each serie
+    final smoothedSeries = e.series.map((serie) {
+      final pts = serie.gpsPoints;
+      if (pts == null || pts.length <= 10) return serie;
+      final gpsPoints = pts.map((m) => GpsPoint.fromMap(m)).toList();
+      final smoothed = RDPSmoother.simplify(gpsPoints, epsilon: 2.5);
+      return Serie(
+        tiempoSec: serie.tiempoSec,
+        distanciaM: serie.distanciaM,
+        descansoSec: serie.descansoSec,
+        rpe: serie.rpe,
+        usedGps: serie.usedGps,
+        usedGpsDistance: serie.usedGpsDistance,
+        gpsPoints: smoothed.map((p) => p.toMap()).toList(),
+        finishedAt: serie.finishedAt,
+      );
+    }).toList();
+    e = e.copyWith(series: smoothedSeries);
+
     final Map<String, dynamic> data = e.toMap();
 
     data['createdAt'] = FieldValue.serverTimestamp();

@@ -5,7 +5,6 @@ import '../data/tag_model.dart';
 import '../data/tag_manager.dart';
 import '../data/training_repository.dart';
 import '../data/entrenamiento.dart';
-import 'tag_chip.dart';
 import 'create_tag_dialog.dart';
 import '../../../core/widgets/modern_snackbar.dart';
 

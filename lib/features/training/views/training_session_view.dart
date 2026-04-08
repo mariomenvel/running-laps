@@ -14,6 +14,7 @@ import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/constants/app_help_content.dart';
 import 'package:running_laps/core/widgets/info_tooltip.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/services/gps_service.dart';
 import '../../home/views/home_view.dart';
 
@@ -143,6 +144,13 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
       final mode = widget.distancia == 'Libre'
           ? TrackingMode.continuous
           : TrackingMode.intervals;
+
+      // Load persisted stride length before starting so the first ticks
+      // benefit from the previously calibrated value.
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        await _gpsService!.loadStrideLength(uid);
+      }
 
       await _gpsService!.startTracking(
         mode: mode,
