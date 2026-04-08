@@ -20,6 +20,11 @@ class KalmanFilter {
   })  : _processNoise = processNoise,
         _baseMeasurementNoise = measurementNoise;
 
+  /// Adjusts process noise at runtime (adaptive Kalman)
+  void setProcessNoise(double noise) {
+    _processNoise = noise.clamp(1e-7, 1e-3);
+  }
+
   /// Hard reset (call at start of training)
   void reset() {
     _stateEstimate = null;

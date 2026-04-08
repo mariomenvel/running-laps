@@ -11,7 +11,7 @@ import 'package:running_laps/core/services/ios_live_activity_service.dart';
 import 'package:running_laps/core/services/sensor_service.dart';
 import 'package:running_laps/core/tracking/sensor_frame.dart';
 import 'package:running_laps/core/tracking/tracking_state.dart';
-import 'package:running_laps/core/utils/kalman_filter.dart';
+import 'package:running_laps/core/utils/ekf2d.dart';
 
 enum GpsStatus { unknown, disabled, permissionDenied, running, paused }
 
@@ -56,14 +56,7 @@ class GPSService {
   final List<GpsPoint> points = [];
 
   final SensorService _sensorService = SensorService();
-  final KalmanFilter _kalmanLat = KalmanFilter(
-    processNoise: 1e-6,
-    measurementNoise: 4.0,
-  );
-  final KalmanFilter _kalmanLon = KalmanFilter(
-    processNoise: 1e-6,
-    measurementNoise: 4.0,
-  );
+  final EKF2D _ekf = EKF2D();
   final ValueNotifier<TrackingState> _trackingState = ValueNotifier(
     createInitialTrackingState(),
   );
@@ -121,8 +114,7 @@ class GPSService {
     status.value = GpsStatus.running;
 
     _trackingState.value = createInitialTrackingState();
-    _kalmanLat.reset();
-    _kalmanLon.reset();
+    _ekf.reset();
     _sensorService.resetSession();
     points.clear();
     _gpsStableSeconds = 0;
@@ -190,8 +182,7 @@ class GPSService {
     _mode = mode;
     _serieNumber = serieNumber;
     _gpsEnabled = false;
-    _kalmanLat.reset();
-    _kalmanLon.reset();
+    _ekf.reset();
     status.value = GpsStatus.paused;
     await _startForegroundService();
   }
@@ -210,6 +201,7 @@ class GPSService {
     _positionSubscription = null;
     _notificationTimer?.cancel();
     _notificationTimer = null;
+    _ekf.reset();
     status.value = GpsStatus.paused;
 
     if (_useIOSLiveActivity) {
@@ -227,8 +219,7 @@ class GPSService {
     averagePace.value = '--:-- /km';
     cadence.value = 0;
     _trackingState.value = createInitialTrackingState();
-    _kalmanLat.reset();
-    _kalmanLon.reset();
+    _ekf.reset();
     _sessionStartTime = null;
     _pausedDurationMs = 0;
     _pauseStartTime = null;
@@ -248,6 +239,7 @@ class GPSService {
     } else {
       FlutterForegroundTask.stopService();
     }
+    _ekf.reset();
 
     status.dispose();
     totalDistanceMeters.dispose();
@@ -544,12 +536,49 @@ class GPSService {
       );
     }
 
+    // EKF2D integration
     double? lat = state.latitude;
     double? lon = state.longitude;
+
     if (hasUsableGps && frame.latitude != null && frame.longitude != null) {
-      final accDeg = _accuracyToDegrees(gpsAccuracy);
-      lat = _kalmanLat.filter(frame.latitude!, accuracy: accDeg);
-      lon = _kalmanLon.filter(frame.longitude!, accuracy: accDeg);
+      if (!_ekf.isInitialized) {
+        _ekf.initialize(
+          frame.latitude!,
+          frame.longitude!,
+          hasGpsSpeed ? frame.gpsSpeed! : 0.0,
+          state.heading,
+        );
+        lat = frame.latitude;
+        lon = frame.longitude;
+      } else {
+        // Adaptive noise
+        final velocityDelta = hasGpsSpeed
+            ? (frame.gpsSpeed! - state.velocity).abs()
+            : 0.0;
+        _ekf.setAdaptiveNoise(gpsAccuracy, velocityDelta);
+
+        // Predict + update
+        _ekf.predict(dt);
+        final corrected = _ekf.updateGPS(
+          frame.latitude!,
+          frame.longitude!,
+          gpsAccuracy,
+        );
+        lat = corrected[0];
+        lon = corrected[1];
+
+        // Update heading from GPS speed direction when moving
+        if (hasGpsSpeed && frame.gpsSpeed! > 0.5) {
+          if (state.latitude != null && state.longitude != null) {
+            final dlat = lat! - state.latitude!;
+            final dlon = lon! - state.longitude!;
+            if (dlat.abs() > 1e-8 || dlon.abs() > 1e-8) {
+              final hdg = math.atan2(dlon, dlat);
+              _ekf.updateHeading(hdg);
+            }
+          }
+        }
+      }
     }
 
     double distance = 0.0;
@@ -580,7 +609,8 @@ class GPSService {
         distance = rawDistance;
         if (!kIsWeb &&
             defaultTargetPlatform == TargetPlatform.iOS &&
-            distance < 1.0) {
+            distance < 1.0 &&
+            frame.stepsDelta == 0) {
           distance = 0.0;
         }
         acceptedGpsSegment = true;
@@ -630,13 +660,6 @@ class GPSService {
       strideLength: stride,
       lastTimestamp: frame.timestamp,
     );
-  }
-
-  double _accuracyToDegrees(double accuracyMeters) {
-    final normalized = accuracyMeters.isFinite
-        ? accuracyMeters.clamp(3.0, 50.0)
-        : 50.0;
-    return normalized * 0.000009;
   }
 
   double _maxAllowedSpeed({

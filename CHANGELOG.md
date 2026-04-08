@@ -1,5 +1,38 @@
 # CHANGELOG — Running Laps
 
+## [GPS Fase 2 - EKF 2D] — 2026-04-08
+
+### GPS - Extended Kalman Filter 2D
+- Nuevo archivo lib/core/utils/ekf2d.dart — EKF con vector de estado [lat, lon, vel, heading]
+- Reemplaza los dos KalmanFilter 1D independientes (lat y lon separados)
+- Ventajas vs Kalman 1D:
+  - Modela la correlación entre latitud y longitud via heading
+  - Predicción cinemática: propaga posición usando velocidad + heading entre ticks GPS
+  - Corrección GPS con ruido adaptativo (accuracy → R matrix)
+  - updateHeading() cuando speed > 0.5 m/s para mantener heading actualizado
+- Matrices: F (Jacobiano del modelo), P (covarianza 4x4), R (ruido medición), Q (ruido proceso)
+- Sin dependencias externas — solo dart:math
+- _accuracyToDegrees() eliminado (ya no necesario)
+- _ekf.reset() en startTracking(), stopTracking() y dispose()
+
+### Referencia
+Ver GPS_Plan_RunningLaps.docx — Fase 2 completada.
+Fase 3 (UserTrackingState + dead reckoning) es el siguiente paso.
+
+## [GPS Fase 1 - processNoise adaptativo] — 2026-04-08
+
+### GPS - Mejoras Kalman filter
+- processNoise baseline aumentado de 1e-6 a 1e-5 (reducía demasiado las curvas)
+- processNoise adaptativo en _processTick():
+  - Sube cuando GPS accuracy es pobre (señal débil)
+  - Sube x3 cuando hay cambio brusco de velocidad (curvas/aceleraciones)
+  - Rango: 5e-6 (señal perfecta) a 1.5e-4 (señal pobre + curva)
+- Nuevo método setProcessNoise() en KalmanFilter con clamp [1e-7, 1e-3]
+
+### Referencia
+Ver GPS_Plan_RunningLaps.docx — Fase 1 completada.
+Fase 2 (EKF 2D) pendiente de validar resultados de Fase 1 en campo.
+
 ## [Optimización de consultas y agregados] — 2026-04-05
 
 ### Límites de consultas añadidos

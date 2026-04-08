@@ -1,0 +1,98 @@
+﻿diff --git a/lib/core/services/gps_service.dart b/lib/core/services/gps_service.dart
+index bc12204..295489f 100644
+--- a/lib/core/services/gps_service.dart
++++ b/lib/core/services/gps_service.dart
+@@ -154,6 +154,7 @@ class GPSService {
+     if (status.value == GpsStatus.running) {
+       status.value = GpsStatus.paused;
+       _positionSubscription?.pause();
++      if (!_useIOSLiveActivity) _notificationTimer?.cancel();
+       _pauseStartTime = DateTime.now();
+     }
+   }
+@@ -167,6 +168,13 @@ class GPSService {
+             DateTime.now().difference(_pauseStartTime!).inMilliseconds;
+         _pauseStartTime = null;
+       }
++      if (!_useIOSLiveActivity) {
++        _notificationTimer?.cancel();
++        _notificationTimer = Timer.periodic(
++          const Duration(seconds: 1),
++          (_) => _sendNotificationUpdate(),
++        );
++      }
+     }
+   }
+ 
+@@ -236,7 +244,7 @@ class GPSService {
+     _iosActionSubscription?.cancel();
+ 
+     if (_useIOSLiveActivity) {
+-      IOSLiveActivityService.instance.stop();
++      unawaited(IOSLiveActivityService.instance.stop());
+     } else {
+       FlutterForegroundTask.stopService();
+     }
+@@ -300,26 +308,30 @@ class GPSService {
+           actionLabel: buttonLabel,
+         ),
+       );
+-    } else {
+-      await FlutterForegroundTask.startService(
+-        serviceId: 500,
+-        notificationTitle: title,
+-        notificationText: '0.00 km  ┬À  00:00  ┬À  --:-- /km',
+-        notificationIcon: const NotificationIcon(
+-          metaDataName: 'com.runninglaps.foreground_icon',
+-          backgroundColor: Color(0xFF8E24AA),
+-        ),
+-        notificationButtons: [
+-          NotificationButton(
+-            id: buttonId,
+-            text: buttonLabel,
+-            textColor: const Color(0xFF8E24AA),
+-          ),
+-        ],
+-        callback: trackingServiceCallback,
+-      );
++      // iOS: updates are driven by GPS position events in _handlePosition(),
++      // not by a timer ÔÇö location background mode keeps delivering positions
++      // even when the app is backgrounded, unlike Timer which may be suspended.
++      return;
+     }
+ 
++    await FlutterForegroundTask.startService(
++      serviceId: 500,
++      notificationTitle: title,
++      notificationText: '0.00 km  ┬À  00:00  ┬À  --:-- /km',
++      notificationIcon: const NotificationIcon(
++        metaDataName: 'com.runninglaps.foreground_icon',
++        backgroundColor: Color(0xFF8E24AA),
++      ),
++      notificationButtons: [
++        NotificationButton(
++          id: buttonId,
++          text: buttonLabel,
++          textColor: const Color(0xFF8E24AA),
++        ),
++      ],
++      callback: trackingServiceCallback,
++    );
++
+     _notificationTimer?.cancel();
+     _notificationTimer = Timer.periodic(
+       const Duration(seconds: 1),
+@@ -485,6 +497,13 @@ class GPSService {
+       }
+     }
+ 
++    // On iOS the Live Activity is updated on every GPS event rather than on a
++    // timer ÔÇö the location background mode keeps delivering positions while
++    // backgrounded, whereas Timer.periodic may be throttled or suspended.
++    if (_useIOSLiveActivity) {
++      _sendNotificationUpdate();
++    }
++
+     cadence.value = _sensorService.cadence.value;
+   }
+ 
