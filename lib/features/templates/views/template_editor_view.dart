@@ -3,21 +3,28 @@ import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../data/template_models.dart';
 import '../data/templates_repository.dart';
 import '../widgets/block_editor_sheet.dart';
+import '../../profile/data/zones_repository.dart';
 
 class TemplateEditorView extends StatefulWidget {
   final TrainingTemplate? template; // null = new
   final bool isMomentary;
   final bool isSelectionMode;
+  /// Si template == null, indica si el nuevo template es calentamiento/vuelta a la calma.
+  /// Si template != null, se ignora — se usa template.isWarmupCooldown.
+  final bool isWarmupCooldown;
 
   const TemplateEditorView({
-    Key? key, 
+    Key? key,
     this.template,
     this.isMomentary = false,
     this.isSelectionMode = false,
+    this.isWarmupCooldown = false,
   }) : super(key: key);
 
   @override
@@ -32,6 +39,15 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
   bool _isSaving = false;
   bool _hasChanges = false;
   int _selectedColor = 0xFF9C27B0; // Default Tema.brandPurple
+
+  // FC config — cargado async en initState
+  bool _hasFcConfig = false;
+
+  // Metadata de sesión (solo para plantillas principales)
+  SessionCategory? _selectedCategory;
+  String? _selectedWarmupId;
+  String? _selectedCooldownId;
+  List<TrainingTemplate> _warmupOptions = [];
 
   final List<int> _availableColors = [
     0xFF9C27B0, // Purple
@@ -53,23 +69,50 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
       _nameController.text = widget.template!.name;
       _blocks = List.from(widget.template!.blocks);
       _selectedColor = widget.template!.colorValue;
-      // Sort just in case order is not sequential
       _blocks.sort((a, b) => a.order.compareTo(b.order));
+
+      // Restaurar metadata guardada
+      final cat = widget.template!.category;
+      if (cat != null && cat.isNotEmpty) {
+        _selectedCategory = SessionCategoryX.fromValue(cat);
+      }
+      _selectedWarmupId = widget.template!.warmupTemplateId;
+      _selectedCooldownId = widget.template!.cooldownTemplateId;
+    }
+    _loadAsync();
+  }
+
+  Future<void> _loadAsync() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    // Cargar si el usuario tiene FCmáx configurada
+    final profile = await ZonesRepository().getUserProfile(uid);
+    if (!mounted) return;
+    setState(() => _hasFcConfig = profile?.fcMax != null);
+
+    // Cargar opciones de calentamiento/cooldown (solo para plantillas principales)
+    if (!widget.isWarmupCooldown) {
+      await _loadWarmupOptions();
+    }
+  }
+
+  Future<void> _loadWarmupOptions() async {
+    try {
+      final all = await TrainingTemplatesRepository().getUserTemplates();
+      if (!mounted) return;
+      setState(() {
+        _warmupOptions = all.where((t) => t.isWarmupCooldown).toList();
+      });
+    } catch (e) {
+      debugPrint('TemplateEditorView._loadWarmupOptions error: $e');
     }
   }
   
   // Re-assign order based on list index
   void _reorderBlocks() {
     for (int i = 0; i < _blocks.length; i++) {
-      // Create new instance with updated order, keep ID
-      _blocks[i] = TemplateBlock(
-        id: _blocks[i].id,
-        order: i, 
-        type: _blocks[i].type,
-        value: _blocks[i].value,
-        restSeconds: _blocks[i].restSeconds,
-        alerts: _blocks[i].alerts,
-      );
+      _blocks[i] = _blocks[i].copyWith(order: i);
     }
   }
 
@@ -78,7 +121,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => const BlockEditorSheet(),
+      builder: (context) => BlockEditorSheet(hasFcConfig: _hasFcConfig),
     );
 
     if (newBlock != null) {
@@ -95,7 +138,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => BlockEditorSheet(initialBlock: _blocks[index]),
+      builder: (context) => BlockEditorSheet(initialBlock: _blocks[index], hasFcConfig: _hasFcConfig),
     );
 
     if (updatedBlock != null) {
@@ -157,6 +200,10 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
         createdAt: widget.template?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
         colorValue: _selectedColor,
+        isWarmupCooldown: widget.isWarmupCooldown,
+        category: _selectedCategory?.toValue,
+        warmupTemplateId: _selectedWarmupId,
+        cooldownTemplateId: _selectedCooldownId,
       );
 
       // --- LOGIC FOR MOMENTARY / SELECTION ---
@@ -482,7 +529,10 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
               ),
             ),
 
-            // 4. Series List Header & Indicator
+            // 4. Metadata (categoría, calentamiento, cooldown) — solo plantillas principales
+            if (!widget.isWarmupCooldown) _buildMetadataSection(),
+
+            // 5. Series List Header & Indicator
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
               child: Row(
@@ -573,6 +623,307 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
           ],
         ),
       ),
+    );
+  }
+
+  // ── Sección de metadata (categoría, calentamiento, cooldown) ────────
+
+  Widget _buildMetadataSection() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          ),
+        ),
+        child: Column(
+          children: [
+            // Selector de categoría
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: DropdownButtonFormField<SessionCategory?>(
+                value: _selectedCategory,
+                decoration: InputDecoration(
+                  labelText: 'Tipo de sesión (opcional)',
+                  labelStyle: TextStyle(
+                    fontSize: 13,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.55),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  isDense: true,
+                ),
+                isExpanded: true,
+                hint: Text(
+                  'Tipo de sesión (opcional)',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                  ),
+                ),
+                items: [
+                  DropdownMenuItem<SessionCategory?>(
+                    value: null,
+                    child: Text(
+                      'Sin categoría',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                  ...SessionCategory.values.map(
+                    (cat) => DropdownMenuItem<SessionCategory?>(
+                      value: cat,
+                      child: Text(cat.label, style: const TextStyle(fontSize: 14)),
+                    ),
+                  ),
+                ],
+                onChanged: (v) => setState(() {
+                  _selectedCategory = v;
+                  _hasChanges = true;
+                }),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+            Divider(height: 1, color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
+
+            // Calentamiento
+            _buildWarmupCooldownSelector(
+              label: 'Calentamiento',
+              selectedId: _selectedWarmupId,
+              options: _warmupOptions,
+              onChanged: (id) => setState(() {
+                _selectedWarmupId = id;
+                _hasChanges = true;
+              }),
+            ),
+
+            Divider(height: 1, indent: 16, color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
+
+            // Vuelta a la calma
+            _buildWarmupCooldownSelector(
+              label: 'Vuelta a la calma',
+              selectedId: _selectedCooldownId,
+              options: _warmupOptions,
+              onChanged: (id) => setState(() {
+                _selectedCooldownId = id;
+                _hasChanges = true;
+              }),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWarmupCooldownSelector({
+    required String label,
+    required String? selectedId,
+    required List<TrainingTemplate> options,
+    required void Function(String?) onChanged,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    final selectedTemplate = options.where((t) => t.id == selectedId).firstOrNull;
+
+    if (options.isEmpty) {
+      // Sin plantillas disponibles
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(
+              label == 'Calentamiento' ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+              size: 16,
+              color: cs.onSurface.withOpacity(0.4),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurface.withOpacity(0.7),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'No tienes plantillas de calentamiento aún',
+                    style: TextStyle(fontSize: 12, color: cs.onSurface.withOpacity(0.4)),
+                  ),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  AppModalRoute(
+                    page: TemplateEditorView(
+                      isWarmupCooldown: true,
+                    ),
+                  ),
+                );
+                if (!mounted) return;
+                await _loadWarmupOptions();
+              },
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                'Crear',
+                style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.brandPurpleLight
+                      : Tema.brandPurple,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Con opciones disponibles
+    return InkWell(
+      onTap: () => _showWarmupPicker(
+        label: label,
+        selectedId: selectedId,
+        options: options,
+        onChanged: onChanged,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(
+              label == 'Calentamiento' ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+              size: 16,
+              color: cs.onSurface.withOpacity(0.4),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: cs.onSurface.withOpacity(0.7),
+                ),
+              ),
+            ),
+            Text(
+              selectedTemplate?.name ?? 'Ninguno',
+              style: TextStyle(
+                fontSize: 13,
+                color: selectedTemplate != null
+                    ? cs.onSurface
+                    : cs.onSurface.withOpacity(0.4),
+                fontWeight: selectedTemplate != null ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(Icons.chevron_right_rounded, size: 16, color: cs.onSurface.withOpacity(0.3)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showWarmupPicker({
+    required String label,
+    required String? selectedId,
+    required List<TrainingTemplate> options,
+    required void Function(String?) onChanged,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(ctx).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                child: Row(
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(ctx).colorScheme.onSurface,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+              ),
+              // Opción "Ninguno"
+              _PickerOption(
+                name: 'Ninguno',
+                isSelected: selectedId == null,
+                color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.3),
+                onTap: () {
+                  onChanged(null);
+                  Navigator.pop(ctx);
+                },
+              ),
+              ...options.map((t) => _PickerOption(
+                    name: t.name,
+                    isSelected: t.id == selectedId,
+                    color: Color(t.colorValue),
+                    onTap: () {
+                      onChanged(t.id);
+                      Navigator.pop(ctx);
+                    },
+                  )),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -920,6 +1271,49 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ── Fila de opción en el picker de calentamiento/cooldown ─────────────
+
+class _PickerOption extends StatelessWidget {
+  final String name;
+  final bool isSelected;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _PickerOption({
+    required this.name,
+    required this.isSelected,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Container(
+        width: 10,
+        height: 10,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      ),
+      title: Text(
+        name,
+        style: TextStyle(
+          fontSize: 15,
+          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+      ),
+      trailing: isSelected
+          ? Icon(Icons.check_rounded,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.brandPurpleLight
+                  : Tema.brandPurple,
+              size: 20)
+          : null,
+      onTap: onTap,
     );
   }
 }

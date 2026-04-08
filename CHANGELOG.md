@@ -1,5 +1,42 @@
 # CHANGELOG — Running Laps
 
+## [Fase 1 — Zonas de entrenamiento] — 2026-04-08
+
+### Nuevos archivos
+- `lib/features/profile/data/user_profile_model.dart` — modelo completo
+  de usuario con fromMap/toMap/copyWith (sentinel para nullable)
+- `lib/core/services/zones_service.dart` — singleton, lógica pura:
+  fcMaxEffective, zonesFor, zoneFor. ZoneRange con color incluido
+- `lib/features/profile/data/zones_repository.dart` — getUserProfile,
+  saveFcConfig con update parcial (no sobreescribe campos no enviados)
+- `lib/features/profile/viewmodels/zones_viewmodel.dart` — 
+  ZonesViewModelState inmutable + ZonesViewModel con ValueNotifier
+- `lib/features/profile/views/zones_config_screen.dart` — pantalla
+  completa con onboarding contextual (birthDate/sex), tabla de zonas
+  en tiempo real, validación FCmáx 100-220 y FC reposo 30-100
+
+### Archivos modificados
+- `lib/features/auth/data/auth_repository.dart` — fcMax, fcReposo,
+  birthDate, sex inicializados a null en registro email/password
+  y Google Sign-In móvil
+- `lib/features/auth/data/auth_remote.dart` — ídem para Google
+  Sign-In web
+- `lib/core/theme/app_colors.dart` — añadidos tokens de zonas:
+  rest, rpeLow, rpeMid, effort, rpeMax
+- `lib/features/profile/views/profile_menu_screen.dart` — entrada
+  "Zonas de entrenamiento" en sección Personal
+
+### Aparcado (requiere integración BLE pulsómetros)
+- T5: distribución de tiempo por zona en detalle de entreno
+- T7: onboarding momento 2 (detección de FC alta post-entreno)
+
+### Deuda técnica registrada
+- AppColors vive en core/theme/app_colors.dart, no en
+  config/app_theme.dart — referencias en CLAUDE.md y COLOR_SYSTEM.md
+  desactualizadas (baja prioridad)
+- _OnboardingSheetState usa setState para estado local de formulario
+  — aceptable en widget efímero sin ViewModel asociado
+
 ## [GPS Fase 4 - RDP Smoothing + Stride Persistido] — 2026-04-08
 
 ### GPS - Post-proceso y calibración personal

@@ -160,17 +160,18 @@ class _TemplatesListViewState extends State<TemplatesListView> {
     }
   }
 
-  void _navigateToEditor({TrainingTemplate? template}) async {
+  void _navigateToEditor({TrainingTemplate? template, bool isWarmupCooldown = false}) async {
     final result = await Navigator.push(
       context,
       AppModalRoute(
         page: TemplateEditorView(
           template: template,
-          isSelectionMode: widget.isSelectionMode, // Pass selection mode
+          isSelectionMode: widget.isSelectionMode,
+          isWarmupCooldown: template?.isWarmupCooldown ?? isWarmupCooldown,
         ),
       ),
     );
-    
+
     // If selecting, result is the template to use
     if (widget.isSelectionMode && result != null) {
       if (!mounted) return;
@@ -249,115 +250,130 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                   }
 
                   final templates = snapshot.data ?? [];
+                  final mainTemplates = templates
+                      .where((t) => !t.isWarmupCooldown)
+                      .toList();
+                  final warmupCooldownTemplates = templates
+                      .where((t) => t.isWarmupCooldown)
+                      .toList();
 
-                  if (templates.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(40),
-                            decoration: BoxDecoration(
-                              color: Tema.brandPurple.withOpacity(0.05),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(Icons.description_outlined, size: 80, color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple).withOpacity(0.4)),
-                          ),
-                          const SizedBox(height: 32),
-                          Text(
-                            'No tienes plantillas guardadas',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Crea tu primera plantilla para entrenar\nde forma estructurada.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                              height: 1.4,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
+                  return ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                    children: [
+                      // ── Sección 1: Sesiones ──────────────────────
+                      _buildSectionHeader('Sesiones'),
+                      const SizedBox(height: 12),
+                      if (mainTemplates.isEmpty)
+                        _buildEmptyHint('Aún no tienes sesiones guardadas'),
+                      ...mainTemplates.map((t) => Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: _buildTemplateCard(t),
+                          )),
+                      if (!widget.isSelectionMode) ...[
+                        const SizedBox(height: 4),
+                        _buildAddButton(
+                          label: 'Nueva sesión',
+                          colors: [Colors.green.shade400, Colors.green.shade600],
+                          onTap: () => _navigateToEditor(isWarmupCooldown: false),
+                        ),
+                      ],
+                      const SizedBox(height: 32),
 
-                  return ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                    itemCount: templates.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 16),
-                    itemBuilder: (context, index) {
-                      final template = templates[index];
-                      return _buildTemplateCard(template);
-                    },
+                      // ── Sección 2: Calentamientos y vueltas a la calma ──
+                      _buildSectionHeader('Calentamientos y vueltas a la calma'),
+                      const SizedBox(height: 12),
+                      if (warmupCooldownTemplates.isEmpty)
+                        _buildEmptyHint('Aún no tienes plantillas de calentamiento'),
+                      ...warmupCooldownTemplates.map((t) => Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: _buildTemplateCard(t),
+                          )),
+                      if (!widget.isSelectionMode) ...[
+                        const SizedBox(height: 4),
+                        _buildAddButton(
+                          label: 'Nuevo calentamiento / vuelta a la calma',
+                          colors: [Colors.teal.shade400, Colors.teal.shade600],
+                          onTap: () => _navigateToEditor(isWarmupCooldown: true),
+                        ),
+                      ],
+                    ],
                   );
                 },
               ),
             ),
-            if (!widget.isSelectionMode) _buildBottomAction(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBottomAction() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.transparent
-                : Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
-        ],
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 4),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
+        ),
       ),
-      child: GestureDetector(
-        onTap: () => _navigateToEditor(),
-        child: Container(
-          height: 60,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.green.shade400, Colors.green.shade600],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+    );
+  }
+
+  Widget _buildEmptyHint(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 14,
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.45),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddButton({
+    required String label,
+    required List<Color> colors,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 56,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: colors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: colors.last.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.green.shade600.withOpacity(0.3),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.add_rounded, color: Colors.white, size: 26),
+            const SizedBox(width: 8),
+            Text(
+              label.toUpperCase(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+                fontSize: 13,
+                letterSpacing: 0.8,
               ),
-            ],
-          ),
-          child: const Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.add_rounded, color: Colors.white, size: 32),
-                SizedBox(width: 8),
-                Text(
-                  "NUEVA PLANTILLA",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 16,
-                    letterSpacing: 1.1,
-                  ),
-                ),
-              ],
             ),
-          ),
+          ],
         ),
       ),
     );
