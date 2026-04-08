@@ -13,30 +13,34 @@ class DistributionTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: controller.filteredData,
-      builder: (context, data, _) {
-        if (controller.isLoading.value) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: controller.isLoading,
+      builder: (context, isLoading, _) {
+        if (isLoading) {
           return const Center(child: CircularProgressIndicator(color: Tema.brandPurple));
         }
+        return ValueListenableBuilder(
+          valueListenable: controller.filteredData,
+          builder: (context, data, _) {
+            if (data.isEmpty) {
+              return const Center(child: Text("No hay datos para el periodo seleccionado"));
+            }
 
-        if (data.isEmpty) {
-          return const Center(child: Text("No hay datos para el periodo seleccionado"));
-        }
-
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildTrainingBalanceSection(context, data),
-              const SizedBox(height: 32),
-              _buildConsistencySection(context, data),
-              const SizedBox(height: 32),
-              _buildNextMilestoneSection(context, data),
-              const SizedBox(height: 40),
-            ],
-          ),
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTrainingBalanceSection(context, data),
+                  const SizedBox(height: 32),
+                  _buildConsistencySection(context, data),
+                  const SizedBox(height: 32),
+                  _buildNextMilestoneSection(context, data),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            );
+          },
         );
       },
     );

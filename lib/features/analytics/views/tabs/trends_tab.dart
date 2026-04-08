@@ -13,30 +13,34 @@ class TrendsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: controller.filteredData,
-      builder: (context, data, _) {
-        if (controller.isLoading.value) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: controller.isLoading,
+      builder: (context, isLoading, _) {
+        if (isLoading) {
           return const Center(child: CircularProgressIndicator(color: Tema.brandPurple));
         }
-
-        if (data.isEmpty) {
+        return ValueListenableBuilder(
+          valueListenable: controller.filteredData,
+          builder: (context, data, _) {
+            if (data.isEmpty) {
           return const Center(child: Text("No hay datos para el periodo seleccionado"));
         }
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildBestPerformancesSection(context, data),
-              const SizedBox(height: 32),
-              _buildWeeklyProgressSection(context, data),
-              const SizedBox(height: 32),
-              _buildPaceEvolutionSection(context, data),
-              const SizedBox(height: 40),
-            ],
-          ),
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildBestPerformancesSection(context, data),
+                  const SizedBox(height: 32),
+                  _buildWeeklyProgressSection(context, data),
+                  const SizedBox(height: 32),
+                  _buildPaceEvolutionSection(context, data),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            );
+          },
         );
       },
     );
@@ -264,10 +268,13 @@ class TrendsTab extends StatelessWidget {
   /// Encuentra mejor ritmo para una distancia específica
   String? _findBestPaceForDistance(List<Entrenamiento> data, int targetDistance) {
     double? bestPace;
+    final tolerance = targetDistance < 1000 ? 0.20 : targetDistance < 3000 ? 0.10 : 0.15;
+    final minDist = targetDistance * (1 - tolerance);
+    final maxDist = targetDistance * (1 + tolerance);
 
     for (var workout in data) {
       for (var serie in workout.series) {
-        if ((serie.distanciaM - targetDistance).abs() <= targetDistance * 0.05) {
+        if (serie.distanciaM >= minDist && serie.distanciaM <= maxDist) {
           final pace = serie.ritmoSecPorKm().toDouble();
           if (pace > 0 && (bestPace == null || pace < bestPace)) {
             bestPace = pace;
