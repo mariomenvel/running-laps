@@ -46,6 +46,10 @@ class AuthRepository {
           "totalKm": 0.0,
           "totalTimeMinutes": 0.0,
           "lastTrainingDate": null,
+          "fcMax": null,
+          "fcReposo": null,
+          "birthDate": null,
+          "sex": null,
         });
       }
 
@@ -70,6 +74,10 @@ class AuthRepository {
       "totalKm": 0.0,
       "totalTimeMinutes": 0.0,
       "lastTrainingDate": null,
+      "fcMax": null,
+      "fcReposo": null,
+      "birthDate": null,
+      "sex": null,
     });
   }
 

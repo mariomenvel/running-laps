@@ -17,6 +17,7 @@ import '../../groups/views/participant_profile_screen.dart';
 import 'package:running_laps/features/analytics/views/analytics_hub_screen.dart';
 import '../../admin/views/admin_panel_screen.dart';
 import 'account_settings_view.dart';
+import 'zones_config_screen.dart';
 
 // Widgets comunes
 import 'package:running_laps/core/widgets/app_header.dart';
@@ -403,6 +404,21 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                           icon: Icons.face_rounded,
                           color: Colors.green,
                           onTap: _openAvatarEditor,
+                        ),
+                        _buildMenuTile(
+                          title: "Zonas de entrenamiento",
+                          icon: Icons.favorite_outline_rounded,
+                          color: AppColors.effort,
+                          onTap: () {
+                            final user = FirebaseAuth.instance.currentUser;
+                            if (user == null) return;
+                            Navigator.push(
+                              context,
+                              AppRoute(
+                                page: ZonesConfigScreen(uid: user.uid),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     )),

@@ -59,6 +59,18 @@ class AppColors {
   static const Color paceMedium = Color(0xFFF59E0B); // amber
   static const Color paceSlow   = Color(0xFFEF4444); // red
 
+  // ── Training Zones (FC-based) ─────────────────────────────────────
+  /// Z1 Regenerativo  < 60% FCmáx
+  static const Color rest    = Color(0xFF378ADD);
+  /// Z2 Base aeróbica 60-70% FCmáx
+  static const Color rpeLow  = Color(0xFF5A9E5A);
+  /// Z3 Umbral        70-80% FCmáx
+  static const Color rpeMid  = Color(0xFFEF9F27);
+  /// Z4 VO2max        80-90% FCmáx
+  static const Color effort  = Color(0xFFD85A30);
+  /// Z5 Máximo        > 90% FCmáx
+  static const Color rpeMax  = Color(0xFFE24B4A);
+
   // ── Skeleton Shimmer ──────────────────────────────────────────────
   static const Color skeletonBaseLight  = Color(0xFFE5E7EB);
   static const Color skeletonBaseDark   = Color(0xFF3A3A3C);
