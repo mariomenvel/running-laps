@@ -51,7 +51,7 @@ class HomeLayoutConfig {
             'showTrend': true,
           },
         ),
-        
+
         // Widget 2: Progresión de distancia
         HomeWidget(
           id: 'distance_progression',
@@ -65,7 +65,7 @@ class HomeLayoutConfig {
             'showTarget': false,
           },
         ),
-        
+
         // Widget 3: Consistencia (entrenamientos por semana)
         HomeWidget(
           id: 'consistency_tracker',
@@ -77,7 +77,7 @@ class HomeLayoutConfig {
             'showMonths': 3,
           },
         ),
-        
+
         // Widget 4: Distribución por tags
         HomeWidget(
           id: 'tags_distribution',
@@ -86,15 +86,15 @@ class HomeLayoutConfig {
           order: 3,
           config: {
             'title': 'Tipos de Entrenamiento',
-            'metric': 'distance', // o 'count'
+            'metric': 'distance',
           },
         ),
-        
+
         // Widget 5: Carga de entrenamiento
         HomeWidget(
           id: 'load_chart',
           type: WidgetType.barChart,
-          visible: false, // Oculto por defecto
+          visible: false,
           order: 4,
           config: {
             'title': 'Carga Semanal',
@@ -102,7 +102,7 @@ class HomeLayoutConfig {
             'aggregation': 'week',
           },
         ),
-        
+
         // Widget 6: RPE promedio
         HomeWidget(
           id: 'rpe_trend',
@@ -115,7 +115,7 @@ class HomeLayoutConfig {
             'aggregation': 'week',
           },
         ),
-        
+
         // Widget 7: Progreso en patrones (400m, etc.)
         HomeWidget(
           id: 'pattern_progress',
@@ -124,10 +124,10 @@ class HomeLayoutConfig {
           order: 6,
           config: {
             'title': 'Progreso en Series',
-            'patterns': ['400', '1000'], // Distancias a trackear
+            'patterns': ['400', '1000'],
           },
         ),
-        
+
         // Widget 8: Últimos entrenamientos (carrusel)
         HomeWidget(
           id: 'recent_workouts',
@@ -139,7 +139,6 @@ class HomeLayoutConfig {
             'count': 5,
           },
         ),
-
       ],
     );
   }
@@ -166,11 +165,11 @@ class HomeLayoutConfig {
 
 /// Widget individual configurable en Home
 class HomeWidget {
-  final String id; // Identificador único
+  final String id;
   final WidgetType type;
   final bool visible;
-  final int order; // Orden de visualización (0-based)
-  final Map<String, dynamic> config; // Configuración específica del widget
+  final int order;
+  final Map<String, dynamic> config;
 
   HomeWidget({
     required this.id,
@@ -180,7 +179,6 @@ class HomeWidget {
     required this.config,
   });
 
-  /// Serialización
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -191,7 +189,6 @@ class HomeWidget {
     };
   }
 
-  /// Deserialización
   factory HomeWidget.fromMap(Map<String, dynamic> map) {
     return HomeWidget(
       id: map['id'] as String,
@@ -204,26 +201,17 @@ class HomeWidget {
 
   static WidgetType _parseWidgetType(String typeStr) {
     switch (typeStr) {
-      case 'kpiCard':
-        return WidgetType.kpiCard;
-      case 'lineChart':
-        return WidgetType.lineChart;
-      case 'barChart':
-        return WidgetType.barChart;
-      case 'donutChart':
-        return WidgetType.donutChart;
-      case 'heatmap':
-        return WidgetType.heatmap;
-      case 'carousel':
-        return WidgetType.carousel;
-      case 'progressTracker':
-        return WidgetType.progressTracker;
-      default:
-        return WidgetType.kpiCard;
+      case 'kpiCard':        return WidgetType.kpiCard;
+      case 'lineChart':      return WidgetType.lineChart;
+      case 'barChart':       return WidgetType.barChart;
+      case 'donutChart':     return WidgetType.donutChart;
+      case 'heatmap':        return WidgetType.heatmap;
+      case 'carousel':       return WidgetType.carousel;
+      case 'progressTracker': return WidgetType.progressTracker;
+      default:               return WidgetType.kpiCard;
     }
   }
 
-  /// Copiar con cambios
   HomeWidget copyWith({
     String? id,
     WidgetType? type,
@@ -243,53 +231,37 @@ class HomeWidget {
 
 /// Tipos de widgets disponibles
 enum WidgetType {
-  kpiCard, // Tarjeta KPI con valor y delta
-  lineChart, // Gráfica de línea
-  barChart, // Gráfica de barras
-  donutChart, // Gráfica de donut/pie
-  heatmap, // Heatmap tipo GitHub
-  carousel, // Carrusel horizontal
-  progressTracker, // Tracker de progreso en patrones
+  kpiCard,
+  lineChart,
+  barChart,
+  donutChart,
+  heatmap,
+  carousel,
+  progressTracker,
 }
 
-/// Extensión para obtener título legible
 extension WidgetTypeExtension on WidgetType {
   String get displayName {
     switch (this) {
-      case WidgetType.kpiCard:
-        return 'KPI Card';
-      case WidgetType.lineChart:
-        return 'Gráfica de Línea';
-      case WidgetType.barChart:
-        return 'Gráfica de Barras';
-      case WidgetType.donutChart:
-        return 'Gráfica Circular';
-      case WidgetType.heatmap:
-        return 'Heatmap';
-      case WidgetType.carousel:
-        return 'Carrusel';
-      case WidgetType.progressTracker:
-        return 'Progreso';
+      case WidgetType.kpiCard:          return 'KPI Card';
+      case WidgetType.lineChart:        return 'Gráfica de Línea';
+      case WidgetType.barChart:         return 'Gráfica de Barras';
+      case WidgetType.donutChart:       return 'Gráfica Circular';
+      case WidgetType.heatmap:          return 'Heatmap';
+      case WidgetType.carousel:         return 'Carrusel';
+      case WidgetType.progressTracker:  return 'Progreso';
     }
   }
 
   String get icon {
     switch (this) {
-      case WidgetType.kpiCard:
-        return '📊';
-      case WidgetType.lineChart:
-        return '📈';
-      case WidgetType.barChart:
-        return '📊';
-      case WidgetType.donutChart:
-        return '🍩';
-      case WidgetType.heatmap:
-        return '🔥';
-      case WidgetType.carousel:
-        return '🎠';
-      case WidgetType.progressTracker:
-        return '🎯';
+      case WidgetType.kpiCard:          return '📊';
+      case WidgetType.lineChart:        return '📈';
+      case WidgetType.barChart:         return '📊';
+      case WidgetType.donutChart:       return '🍩';
+      case WidgetType.heatmap:          return '🔥';
+      case WidgetType.carousel:         return '🎠';
+      case WidgetType.progressTracker:  return '🎯';
     }
   }
 }
-

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/features/home/viewmodels/home_config_controller.dart';
-import 'package:running_laps/features/analytics/data/home_layout_config.dart';
+import 'package:running_laps/features/home/data/home_layout_config.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';

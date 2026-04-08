@@ -8,6 +8,8 @@ import 'package:running_laps/config/app_theme.dart';
 
 import 'package:running_laps/features/analytics/views/tabs/overview_tab.dart';
 import 'package:running_laps/features/analytics/views/tabs/patterns_tab.dart';
+import 'package:running_laps/features/analytics/views/tabs/trends_tab.dart';
+import 'package:running_laps/features/analytics/views/tabs/distribution_tab.dart';
 
 import '../../../../core/widgets/app_footer.dart';
 import '../../../../core/widgets/app_header.dart';
@@ -44,7 +46,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with TickerProv
     _controller = AnalyticsHubController(userId: userId);
     _controller.initialize(initialData: widget.preFilteredData);
     
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _entranceCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
     _aBanner  = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.000, 0.517, curve: Curves.easeOutQuart));
     _aTabs    = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.067, 0.583, curve: Curves.easeOutQuart));
@@ -134,6 +136,8 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with TickerProv
                     tabs: const [
                       Tab(text: 'Resumen'),
                       Tab(text: 'Patrones'),
+                      Tab(text: 'Tendencias'),
+                      Tab(text: 'Distribución'),
                     ],
                   ),
                 );
@@ -169,6 +173,8 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with TickerProv
                         children: [
                           OverviewTab(controller: _controller),
                           PatternsTab(controller: _controller),
+                          TrendsTab(controller: _controller),
+                          DistributionTab(controller: _controller),
                         ],
                       );
                     },

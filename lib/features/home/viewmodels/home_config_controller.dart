@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:running_laps/features/analytics/data/home_config_repository.dart';
-import 'package:running_laps/features/analytics/data/home_layout_config.dart';
+import 'package:running_laps/features/home/data/home_config_repository.dart';
+import 'package:running_laps/features/home/data/home_layout_config.dart';
 
 class HomeConfigController {
   final String userId;
