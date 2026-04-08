@@ -11,6 +11,7 @@ import 'package:running_laps/core/services/ios_live_activity_service.dart';
 import 'package:running_laps/core/services/sensor_service.dart';
 import 'package:running_laps/core/tracking/sensor_frame.dart';
 import 'package:running_laps/core/tracking/tracking_state.dart';
+import 'package:running_laps/core/tracking/tracking_types.dart';
 import 'package:running_laps/core/utils/ekf2d.dart';
 
 enum GpsStatus { unknown, disabled, permissionDenied, running, paused }
@@ -66,6 +67,8 @@ class GPSService {
   Timer? _notificationTimer;
 
   int _gpsStableSeconds = 0;
+  int _noGpsSeconds = 0;
+  int _stoppedSeconds = 0;
   DateTime? _sessionStartTime;
   int _pausedDurationMs = 0;
   DateTime? _pauseStartTime;
@@ -118,6 +121,8 @@ class GPSService {
     _sensorService.resetSession();
     points.clear();
     _gpsStableSeconds = 0;
+    _noGpsSeconds = 0;
+    _stoppedSeconds = 0;
     _sessionStartTime = DateTime.now();
     _pausedDurationMs = 0;
     _pauseStartTime = null;
@@ -524,6 +529,24 @@ class GPSService {
       _gpsStableSeconds = 0;
     }
 
+    // UserTrackingState machine
+    UserTrackingState newUserState = state.userState;
+
+    if (hasUsableGps && (frame.stepsDelta > 0)) {
+      _noGpsSeconds = 0;
+      _stoppedSeconds = 0;
+      newUserState = UserTrackingState.movingGps;
+    } else if (!hasUsableGps && frame.stepsDelta > 0) {
+      _noGpsSeconds++;
+      _stoppedSeconds = 0;
+      if (_noGpsSeconds > 5) newUserState = UserTrackingState.movingNoGps;
+    } else if (frame.stepsDelta == 0 && state.velocity < 0.3) {
+      _stoppedSeconds++;
+      if (_stoppedSeconds > 3) newUserState = UserTrackingState.stopped;
+    } else {
+      newUserState = UserTrackingState.uncertain;
+    }
+
     if (!hasUsableGps && frame.stepsDelta == 0 && state.velocity < 0.35) {
       return TrackingState(
         latitude: state.latitude,
@@ -533,6 +556,7 @@ class GPSService {
         distanceTotal: state.distanceTotal,
         strideLength: state.strideLength,
         lastTimestamp: frame.timestamp,
+        userState: newUserState,
       );
     }
 
@@ -617,10 +641,19 @@ class GPSService {
       }
     }
 
-    if (!acceptedGpsSegment && !hasUsableGps && frame.stepsDelta > 0) {
-      final fallbackDistance = frame.stepsDelta * state.strideLength;
-      if (fallbackDistance <= 4.0 * deltaTime) {
-        distance = fallbackDistance;
+    // Dead reckoning: when movingNoGps use pedometer exclusively
+    if (!acceptedGpsSegment && frame.stepsDelta > 0) {
+      final pedometerDistance = frame.stepsDelta * state.strideLength;
+      if (newUserState == UserTrackingState.movingNoGps) {
+        // GPS lost — trust pedometer fully
+        if (pedometerDistance <= 4.0 * deltaTime) {
+          distance = pedometerDistance;
+        }
+      } else if (!hasUsableGps) {
+        // GPS marginal — use pedometer as fallback with cap
+        if (pedometerDistance <= 4.0 * deltaTime) {
+          distance = pedometerDistance;
+        }
       }
     }
 
@@ -659,6 +692,7 @@ class GPSService {
       distanceTotal: state.distanceTotal + distance,
       strideLength: stride,
       lastTimestamp: frame.timestamp,
+      userState: newUserState,
     );
   }
 

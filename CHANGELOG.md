@@ -1,5 +1,24 @@
 # CHANGELOG — Running Laps
 
+## [GPS Fase 3 - UserTrackingState + Dead Reckoning] — 2026-04-08
+
+### GPS - Máquina de estados y dead reckoning
+- UserTrackingState activado en el pipeline (era dead code)
+- Nuevo campo userState en TrackingState
+- Máquina de estados en _processTick():
+  - movingGps: GPS usable + movimiento detectado
+  - movingNoGps: sin GPS >5s pero hay pasos del podómetro
+  - stopped: sin pasos + velocidad <0.3 m/s durante >3s
+  - uncertain: transición entre estados
+- Dead reckoning en estado movingNoGps: usa podómetro exclusivamente
+  cuando el GPS se pierde (túneles, edificios, sombras)
+- Contadores _noGpsSeconds y _stoppedSeconds para transiciones suaves
+- Reset de contadores en startTracking()
+
+### Referencia  
+Ver GPS_Plan_RunningLaps.docx — Fase 3 completada.
+Fase 4 (RDP smoothing + stride persistido) es el siguiente paso.
+
 ## [GPS Fase 2 - EKF 2D] — 2026-04-08
 
 ### GPS - Extended Kalman Filter 2D

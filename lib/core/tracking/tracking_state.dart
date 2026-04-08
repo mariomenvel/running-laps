@@ -1,3 +1,5 @@
+import 'package:running_laps/core/tracking/tracking_types.dart';
+
 class TrackingState {
 
     double? latitude;
@@ -9,6 +11,8 @@ class TrackingState {
     double distanceTotal;   // metros
     double strideLength;    // metros
 
+    UserTrackingState userState;
+
     DateTime lastTimestamp;
 
     TrackingState({
@@ -19,6 +23,7 @@ class TrackingState {
         required this.distanceTotal,
         required this.strideLength,
         required this.lastTimestamp,
+        this.userState = UserTrackingState.stopped,
     });
 }
 
@@ -31,5 +36,6 @@ TrackingState createInitialTrackingState() {
         distanceTotal: 0.0,
         strideLength: 0.75, // conservador
         lastTimestamp: DateTime.now(),
+        userState: UserTrackingState.stopped,
     );
 }
