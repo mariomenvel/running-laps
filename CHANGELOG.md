@@ -1,5 +1,68 @@
 # CHANGELOG — Running Laps
 
+## [Fase 3 — Modo atleta y planificación] — 2026-04-10
+
+### Feature athlete (nueva, reemplaza feature calendar)
+- `AthleteSession` — modelo completo con warmup/cooldown texto
+  libre, bloques tipados (series/continuousTime/continuousDistance),
+  objetivos por bloque (pace rango, RPE, zona FC), dos notas
+  separadas (planificación y ejecución)
+- `AthleteSessionRepository` — stream por rango, CRUD completo,
+  markAsCompleted, getSessionsForDate
+- `AthleteHubView` — hub de entrada desde Perfil → "Modo atleta":
+  estado vacío explicativo, resumen semanal con datos, próximo
+  entreno, acceso a calendario y analytics
+- `AthleteCalendarView` — StandardTableCalendar con marcadores
+  por categoría de sesión
+- `SessionEditorView` — editor completo: fecha/hora, categoría,
+  calentamiento/cooldown texto libre, bloques, dos notas,
+  partir de plantilla existente, guardar como plantilla
+- `SessionBlockEditor` — ReorderableListView de bloques,
+  _BlockEditorSheet con campos por tipo y sección objetivos
+  colapsable (pace rango, RPE slider, zona FC)
+- `SaveAsTemplateSheet` — opciones granulares: calentamiento,
+  vuelta a la calma, bloque sin/con objetivos, parte principal
+  sin/con objetivos, sesión completa
+
+### Limpieza
+- Feature calendar eliminada (PlannedSession, CalendarView,
+  CalendarViewModel, PlannedSessionEditorView)
+- Icono calendario eliminado de HomeView
+- Referencias a PlannedSession eliminadas de training_start_view
+
+### Perfil
+- Nuevo tile "Modo atleta" en ProfileMenuScreen
+
+### Pendiente
+- Vinculación entreno ejecutado con sesión planificada
+  (reemplazar _LinkSessionSheet eliminada — ticket para Fase 3.1)
+- Notificación recordatorio cuando hay hora en la sesión
+
+---
+
+## [Decisiones de diseño — Modo atleta] — 2026-04-10
+
+### Diseño aprobado
+- Modo atleta accesible desde Perfil (no desde HomeView)
+- AthleteHubView como pantalla de entrada con resumen semanal
+- SessionEditorView: calentamiento/cooldown texto libre,
+  bloques tipados, objetivos por bloque, dos notas separadas
+- Pace objetivo como rango min-max
+- Reps explícitas con registro individual por rep al ejecutar
+- Guardar como plantilla con opciones granulares
+- Feature calendar anterior (PlannedSession) se reemplaza
+  completamente por feature athlete (AthleteSession)
+
+### Analytics — decisión
+- Hub existente se enlaza desde Modo atleta hasta Fase 5
+- Fase 5 rediseñada: métricas con narrativa, no números aislados
+- Métricas prioritarias sin FC: récords, progreso pace series,
+  volumen media móvil, planificado vs ejecutado, RPE vs pace
+- Métricas con FC (post pulsómetro BLE): eficiencia aeróbica,
+  cardiac decoupling, ATL/CTL/TSB
+
+---
+
 ## [Fase 1 — Zonas de entrenamiento] — 2026-04-08
 
 ### Nuevos archivos

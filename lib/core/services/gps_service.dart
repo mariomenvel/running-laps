@@ -137,7 +137,7 @@ class GPSService {
         !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
             ? const LocationSettings(
                 accuracy: LocationAccuracy.bestForNavigation,
-                distanceFilter: 2,
+                distanceFilter: 0,
               )
             : const LocationSettings(
                 accuracy: LocationAccuracy.bestForNavigation,
@@ -544,7 +544,7 @@ class GPSService {
     final gpsAccuracy = frame.gpsAccuracy ?? double.infinity;
     final hasCoordinates =
         frame.latitude != null && frame.longitude != null;
-    final hasUsableGps = hasCoordinates && gpsAccuracy <= 50;
+    final hasUsableGps = hasCoordinates && gpsAccuracy <= 25;
     final hasReliableGps = hasCoordinates && gpsAccuracy <= 20;
     final hasGpsSpeed =
         frame.gpsSpeed != null &&
@@ -596,6 +596,7 @@ class GPSService {
 
     if (hasUsableGps && frame.latitude != null && frame.longitude != null) {
       if (!_ekf.isInitialized) {
+        if (gpsAccuracy > 15) return state; // esperar señal fina
         _ekf.initialize(
           frame.latitude!,
           frame.longitude!,

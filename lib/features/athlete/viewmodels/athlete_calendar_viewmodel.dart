@@ -1,19 +1,19 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:running_laps/features/calendar/data/planned_session_model.dart';
-import 'package:running_laps/features/calendar/data/planned_session_repository.dart';
+import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
+import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
-class CalendarViewModelState {
-  final Map<String, List<PlannedSession>> sessionsByDate;
+class AthleteCalendarState {
+  final Map<String, List<AthleteSession>> sessionsByDate;
   final DateTime focusedMonth;
   final DateTime? selectedDay;
   final bool isLoading;
   final String? errorMessage;
 
-  const CalendarViewModelState({
+  const AthleteCalendarState({
     this.sessionsByDate = const {},
     required this.focusedMonth,
     this.selectedDay,
@@ -21,14 +21,14 @@ class CalendarViewModelState {
     this.errorMessage,
   });
 
-  CalendarViewModelState copyWith({
-    Map<String, List<PlannedSession>>? sessionsByDate,
+  AthleteCalendarState copyWith({
+    Map<String, List<AthleteSession>>? sessionsByDate,
     DateTime? focusedMonth,
-    Object? selectedDay = _sentinel,
+    Object? selectedDay    = _sentinel,
     bool? isLoading,
-    Object? errorMessage = _sentinel,
+    Object? errorMessage   = _sentinel,
   }) {
-    return CalendarViewModelState(
+    return AthleteCalendarState(
       sessionsByDate: sessionsByDate ?? this.sessionsByDate,
       focusedMonth:   focusedMonth   ?? this.focusedMonth,
       selectedDay:    selectedDay  == _sentinel ? this.selectedDay  : selectedDay  as DateTime?,
@@ -42,22 +42,22 @@ const Object _sentinel = Object();
 
 // ── ViewModel ─────────────────────────────────────────────────────────────────
 
-class CalendarViewModel {
-  CalendarViewModel({PlannedSessionRepository? repository})
-      : _repository = repository ?? PlannedSessionRepository();
+class AthleteCalendarViewModel {
+  AthleteCalendarViewModel({AthleteSessionRepository? repository})
+      : _repository = repository ?? AthleteSessionRepository();
 
-  final PlannedSessionRepository _repository;
+  final AthleteSessionRepository _repository;
 
-  final ValueNotifier<CalendarViewModelState> state = ValueNotifier(
-    CalendarViewModelState(focusedMonth: DateTime.now()),
+  final ValueNotifier<AthleteCalendarState> state = ValueNotifier(
+    AthleteCalendarState(focusedMonth: DateTime.now()),
   );
 
   String? _uid;
-  StreamSubscription<List<PlannedSession>>? _subscription;
+  StreamSubscription<List<AthleteSession>>? _subscription;
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
-  Future<void> init(String uid) async {
+  void init(String uid) {
     _uid = uid;
     _subscribeToMonth(DateTime.now());
   }
@@ -66,20 +66,15 @@ class CalendarViewModel {
     final current = state.value;
     final monthChanged = day.year != current.focusedMonth.year ||
         day.month != current.focusedMonth.month;
-
     state.value = current.copyWith(selectedDay: day);
-
-    if (monthChanged) {
-      _subscribeToMonth(day);
-    }
+    if (monthChanged) _subscribeToMonth(day);
   }
 
   void onPageChanged(DateTime month) {
     _subscribeToMonth(month);
   }
 
-  /// Returns all sessions for [day], empty list if none.
-  List<PlannedSession> sessionsForDay(DateTime day) {
+  List<AthleteSession> sessionsForDay(DateTime day) {
     return state.value.sessionsByDate[_normalize(day)] ?? [];
   }
 
@@ -92,7 +87,6 @@ class CalendarViewModel {
 
   void _subscribeToMonth(DateTime month) {
     if (_uid == null) return;
-
     _subscription?.cancel();
 
     final first = DateTime(month.year, month.month, 1);
@@ -112,7 +106,7 @@ class CalendarViewModel {
         )
         .listen(
           (sessions) {
-            final map = <String, List<PlannedSession>>{};
+            final map = <String, List<AthleteSession>>{};
             for (final s in sessions) {
               map.putIfAbsent(s.date, () => []).add(s);
             }
@@ -123,7 +117,7 @@ class CalendarViewModel {
             );
           },
           onError: (Object e) {
-            debugPrint('[CalendarViewModel] stream error: $e');
+            debugPrint('[AthleteCalendarViewModel] stream error: $e');
             state.value = state.value.copyWith(
               isLoading: false,
               errorMessage: 'Error cargando sesiones',

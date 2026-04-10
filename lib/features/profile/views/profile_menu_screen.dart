@@ -18,6 +18,7 @@ import 'package:running_laps/features/analytics/views/analytics_hub_screen.dart'
 import '../../admin/views/admin_panel_screen.dart';
 import 'account_settings_view.dart';
 import 'zones_config_screen.dart';
+import 'package:running_laps/features/athlete/views/athlete_hub_view.dart';
 
 // Widgets comunes
 import 'package:running_laps/core/widgets/app_header.dart';
@@ -417,6 +418,17 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                               AppRoute(
                                 page: ZonesConfigScreen(uid: user.uid),
                               ),
+                            );
+                          },
+                        ),
+                        _buildMenuTile(
+                          title: "Modo atleta",
+                          icon: Icons.directions_run_rounded,
+                          color: AppColors.brandPurple,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              AppRoute(page: const AthleteHubView()),
                             );
                           },
                         ),
