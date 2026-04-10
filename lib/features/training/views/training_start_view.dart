@@ -29,6 +29,9 @@ import 'training_session_view.dart';
 import '../../templates/views/templates_list_view.dart';
 import '../../templates/data/template_models.dart';
 import '../../templates/views/template_editor_view.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
+import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 
 
 // ===============================================================
@@ -834,6 +837,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   }
 
 
+  String _normalizeDateForPlanning(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
   Future<void> _saveTrainingToFirebase(String trainingName, List<String> tags) async {
     setState(() {
       _isSaving = true;
@@ -853,8 +859,39 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         recordedPoints: gpsSnapshot,
       );
 
-
-
+      // ── Vincular con sesión planificada ───────────────────────────────
+      try {
+        final uid = FirebaseAuth.instance.currentUser?.uid;
+        if (uid != null) {
+          final today = _normalizeDateForPlanning(DateTime.now());
+          final planned = await AthleteSessionRepository()
+              .getSessionsForDate(uid: uid, date: today);
+          final pending = planned
+              .where((s) => s.status == AthleteSessionStatus.planned)
+              .toList();
+          if (pending.isNotEmpty && mounted) {
+            await showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (_) => _LinkSessionSheet(
+                plannedSessions: pending,
+                onLink: (session) async {
+                  await AthleteSessionRepository().markAsCompleted(
+                    uid: uid,
+                    sessionId: session.id,
+                    trainingId: newTrainingId,
+                  );
+                },
+                parentContext: context,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        debugPrint('Error vinculando sesión planificada: $e');
+        // no interrumpir el flujo — la vinculación es opcional
+      }
 
 
       if (!mounted) return;
@@ -2928,6 +2965,165 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 ),
               )
             : Icon(icon, color: color ?? Tema.brandPurple, size: 40.0),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _LinkSessionSheet
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _LinkSessionSheet extends StatelessWidget {
+  final List<AthleteSession> plannedSessions;
+  final Future<void> Function(AthleteSession) onLink;
+  final BuildContext parentContext;
+
+  const _LinkSessionSheet({
+    required this.plannedSessions,
+    required this.onLink,
+    required this.parentContext,
+  });
+
+  String _categoryLabel(String? cat) {
+    if (cat == null) return 'Sin tipo';
+    try {
+      return SessionCategoryX.fromValue(cat).label;
+    } catch (_) {
+      return cat;
+    }
+  }
+
+  Color _categoryColor(String? cat) {
+    switch (cat) {
+      case 'regenerativo':                        return AppColors.rest;
+      case 'rodaje_base':                         return AppColors.rpeLow;
+      case 'tempo':
+      case 'fartlek':                             return AppColors.rpeMid;
+      case 'series_largas':
+      case 'series_cuestas':
+      case 'series_mixtas':                       return AppColors.effort;
+      case 'series_cortas':
+      case 'competicion':                         return AppColors.rpeMax;
+      default:                                    return AppColors.brandPurple;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color:        Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Container(
+                  width:  40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color:        const Color(0xFFAAAAAA),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+            ),
+            // Header
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                '¿Vincular con sesión planificada?',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'Tenías estas sesiones planificadas para hoy',
+                style: TextStyle(fontSize: 13, color: Color(0xFFAAAAAA)),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Session list (máx 3)
+            ...plannedSessions.take(3).map((s) {
+              final color = _categoryColor(s.category);
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 4),
+                child: Row(children: [
+                  Container(
+                    width:  10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                        color: color, shape: BoxShape.circle),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _categoryLabel(s.category),
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w600),
+                        ),
+                        if (s.time != null)
+                          Text(
+                            s.time!,
+                            style: const TextStyle(
+                                fontSize: 12, color: Color(0xFFAAAAAA)),
+                          ),
+                      ],
+                    ),
+                  ),
+                  FilledButton(
+                    onPressed: () async {
+                      await onLink(s);
+                      if (context.mounted) Navigator.pop(context);
+                      ModernSnackBar.showSuccess(
+                          parentContext, 'Sesión completada ✓');
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.brandPurple,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      visualDensity: VisualDensity.compact,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: const Text('Vincular',
+                        style: TextStyle(fontSize: 13)),
+                  ),
+                ]),
+              );
+            }),
+
+            const SizedBox(height: 12),
+
+            // Skip button
+            Center(
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFFAAAAAA)),
+                child: const Text('Omitir'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
