@@ -8,6 +8,7 @@ import 'package:running_laps/features/training/data/training_repository.dart';
 import 'package:running_laps/features/home/widgets/home_flagship_chart.dart'; // Added Chart Import
 import 'package:running_laps/features/training/views/training_start_view.dart';
 import 'package:running_laps/features/profile/views/profile_menu_screen.dart';
+import 'package:running_laps/features/calendar/views/calendar_view.dart';
 import 'package:running_laps/core/widgets/app_footer.dart';
 import 'package:running_laps/core/widgets/kpi_card_with_delta.dart';
 import 'package:running_laps/core/constants/app_help_content.dart';
@@ -330,18 +331,40 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                   backgroundImage: AssetImage('assets/images/logo.png'),
                 ),
                 
-                // Avatar perfil
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      AppRoute(page: const ProfileMenuView()),
-                    );
-                  },
-                  child: Hero(
-                    tag: 'profile_avatar',
-                    child: AvatarHelper.construirImagenPerfil(radius: 24),
-                  ),
+                // Calendario
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        AppRoute(
+                          page: CalendarView(uid: _currentUserId ?? ''),
+                        ),
+                      ),
+                      icon: const Icon(
+                        Icons.calendar_month_outlined,
+                        color: AppColors.brandPurple,
+                        size: 26,
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                    const SizedBox(width: 12),
+                    // Avatar perfil
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          AppRoute(page: const ProfileMenuView()),
+                        );
+                      },
+                      child: Hero(
+                        tag: 'profile_avatar',
+                        child: AvatarHelper.construirImagenPerfil(radius: 24),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

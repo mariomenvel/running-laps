@@ -28,6 +28,9 @@ import '../widgets/create_tag_dialog.dart';
 import 'training_session_view.dart';
 import '../../templates/views/templates_list_view.dart';
 import '../../templates/data/template_models.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:running_laps/features/calendar/data/planned_session_model.dart';
+import 'package:running_laps/features/calendar/data/planned_session_repository.dart';
 import '../../templates/views/template_editor_view.dart';
 
 
@@ -859,6 +862,42 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
       if (!mounted) return;
 
+      // ── Offer to link with a planned session for today ────────────
+      try {
+        final uid = FirebaseAuth.instance.currentUser?.uid;
+        if (uid != null) {
+          final today = _normalizeDateForPlanning(DateTime.now());
+          final planned = await PlannedSessionRepository()
+              .getPlannedSessionsForDate(uid: uid, date: today);
+          if (!mounted) return;
+          if (planned.isNotEmpty) {
+            await showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              builder: (_) => _LinkSessionSheet(
+                plannedSessions: planned,
+                parentContext: context,
+                onLink: (session) async {
+                  await PlannedSessionRepository().markAsCompleted(
+                    uid: uid,
+                    sessionId: session.id,
+                    trainingId: newTrainingId,
+                  );
+                },
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        debugPrint('[training_start_view] planned session link error: $e');
+      }
+      // ─────────────────────────────────────────────────────────────
+
+      if (!mounted) return;
+
       final Entrenamiento savedEntrenamiento = Entrenamiento(
         id: newTrainingId,
         titulo: trainingName,
@@ -928,6 +967,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     }
   }
 
+
+  String _normalizeDateForPlanning(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   void _onLogoTapped() {
     if (_vm.series.isEmpty) {
@@ -2931,9 +2973,184 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   }
 }
 
+// ── _LinkSessionSheet ─────────────────────────────────────────────────────────
 
+class _LinkSessionSheet extends StatelessWidget {
+  final List<PlannedSession> plannedSessions;
+  final BuildContext parentContext;
+  final Future<void> Function(PlannedSession) onLink;
 
+  const _LinkSessionSheet({
+    required this.plannedSessions,
+    required this.parentContext,
+    required this.onLink,
+  });
 
+  Color _categoryColor(String category) {
+    switch (category) {
+      case 'regenerativo':   return AppColors.rest;
+      case 'rodaje_base':    return AppColors.rpeLow;
+      case 'tempo':
+      case 'fartlek':        return AppColors.rpeMid;
+      case 'series_largas':
+      case 'series_cuestas':
+      case 'series_mixtas':  return AppColors.effort;
+      case 'series_cortas':
+      case 'competicion':    return AppColors.rpeMax;
+      default:               return AppColors.brandPurple;
+    }
+  }
+
+  String _categoryLabel(String category) {
+    switch (category) {
+      case 'regenerativo':    return 'Regenerativo';
+      case 'rodaje_base':     return 'Rodaje base (Z2)';
+      case 'tempo':           return 'Tempo (Z3)';
+      case 'fartlek':         return 'Fartlek';
+      case 'series_largas':   return 'Series largas';
+      case 'series_cortas':   return 'Series cortas';
+      case 'series_cuestas':  return 'Series en cuestas';
+      case 'series_mixtas':   return 'Series mixtas';
+      case 'competicion':     return 'Competición';
+      case 'test':            return 'Test';
+      case 'gimnasio_fuerza': return 'Gimnasio / fuerza';
+      default:                return category;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final secondaryColor =
+        isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 16 + bottomPadding),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Title
+          const Text(
+            '¿Vincular con sesión planificada?',
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Tenías estas sesiones planificadas para hoy',
+            style: TextStyle(fontSize: 13, color: secondaryColor),
+          ),
+          const SizedBox(height: 16),
+
+          // Session list (max 3 visible)
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 210),
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemCount: plannedSessions.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (context, i) {
+                final session = plannedSessions[i];
+                final color = _categoryColor(session.category);
+                return Row(
+                  children: [
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _categoryLabel(session.category),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          if (session.time != null)
+                            Text(
+                              session.time!,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: secondaryColor,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        try {
+                          await onLink(session);
+                          if (parentContext.mounted) {
+                            ModernSnackBar.showSuccess(
+                              parentContext,
+                              'Sesión completada ✓',
+                            );
+                          }
+                        } catch (e) {
+                          debugPrint('[_LinkSessionSheet] onLink error: $e');
+                        }
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.brandPurple,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text(
+                        'Vincular',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Skip button
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFFAAAAAA),
+              ),
+              child: const Text('Omitir'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 
 
