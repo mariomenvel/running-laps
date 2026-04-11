@@ -1,5 +1,34 @@
 # CHANGELOG — Running Laps
 
+## [Fase 4 — Competiciones y macrociclo] — 2026-04-10
+
+### Modelos
+- `AthleteSession`: nuevos campos `raceName`, `raceDistanceM`,
+  `targetTimeSeconds` para sesiones de tipo competición
+
+### Servicios
+- `TrainingLoadService` (singleton, lógica pura):
+  cálculo de carga con TRIMP de Banister si hay FC,
+  proxy categoría+RPE si no; `nextRace`, `daysUntilRace`,
+  `isRaceWeek`, `daysUntil`. Enganches abiertos para FC.
+
+### SessionEditorView
+- Sección "Detalles de la competición" dinámica cuando
+  category == competicion: nombre, distancia estándar/custom,
+  tiempo objetivo h/m/s
+
+### AthleteHubView
+- `_RaceCountdownCard`: contador regresivo visible cuando
+  hay competición en ≤21 días, con indicador de semana taper
+
+### SeasonView (nueva pantalla)
+- Accesible desde AthleteHubView → "Ver temporada"
+- Gráfica de barras scrollable: carga semanal 16 semanas
+  con colores por contexto (competición/taper/alta/normal)
+- Próximas competiciones con badge de días restantes
+- Estadísticas del período: km, sesiones, carga total
+- Nota informativa: carga estimada, mejora con pulsómetro
+
 ## [Fase 3 — Modo atleta y planificación] — 2026-04-10
 
 ### Feature athlete (nueva, reemplaza feature calendar)

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:running_laps/core/services/training_load_service.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 
@@ -59,6 +60,22 @@ class AthleteHubViewModel {
   final ValueNotifier<AthleteHubState> state =
       ValueNotifier(const AthleteHubState());
 
+  List<AthleteSession> _allSessions = [];
+
+  // ── Getters — race awareness ───────────────────────────────────────────────
+
+  AthleteSession? get nextRace =>
+      TrainingLoadService.instance.nextRace(_allSessions, DateTime.now());
+
+  int? get daysUntilRace {
+    final race = nextRace;
+    if (race == null) return null;
+    return TrainingLoadService.instance.daysUntil(race, DateTime.now());
+  }
+
+  bool get isRaceWeek =>
+      TrainingLoadService.instance.isRaceWeek(DateTime.now(), _allSessions);
+
   // ── Public API ─────────────────────────────────────────────────────────────
 
   Future<void> init(String uid) async {
@@ -76,6 +93,21 @@ class AthleteHubViewModel {
         start: _normalize(DateTime(weekStart.year, weekStart.month, weekStart.day)),
         end:   _normalize(DateTime(weekEnd.year,   weekEnd.month,   weekEnd.day)),
       );
+
+      // Load next 90 days for race awareness (deduped with week sessions)
+      final futureEnd = today.length == 10
+          ? _normalize(DateTime.now().add(const Duration(days: 90)))
+          : _normalize(DateTime.now().add(const Duration(days: 90)));
+      final futureSessions = await _weekSessions(
+        uid:   uid,
+        start: today,
+        end:   futureEnd,
+      );
+      final seenIds = <String>{};
+      _allSessions = [
+        ...sessions.where((s) => seenIds.add(s.id)),
+        ...futureSessions.where((s) => seenIds.add(s.id)),
+      ];
 
       final summary = WeeklySummary(
         sessionCount:   sessions.length,

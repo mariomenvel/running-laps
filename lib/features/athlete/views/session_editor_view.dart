@@ -51,6 +51,14 @@ class _SessionEditorViewState extends State<SessionEditorView> {
   final TextEditingController _planningNotesCtrl   = TextEditingController();
   final TextEditingController _executionNotesCtrl  = TextEditingController();
 
+  // Race fields (only when category == competicion)
+  final TextEditingController _raceNameCtrl        = TextEditingController();
+  int? _standardDistanceM;   // null = none, -1 = custom, else one of the std values
+  final TextEditingController _customDistanceCtrl  = TextEditingController();
+  final TextEditingController _targetHCtrl         = TextEditingController();
+  final TextEditingController _targetMCtrl         = TextEditingController();
+  final TextEditingController _targetSCtrl         = TextEditingController();
+
   // Blocks
   List<SessionBlock> _currentBlocks = [];
   bool _hasFcConfig = false;
@@ -102,6 +110,24 @@ class _SessionEditorViewState extends State<SessionEditorView> {
       // Notes
       _planningNotesCtrl.text  = s.planningNotes  ?? '';
       _executionNotesCtrl.text = s.executionNotes ?? '';
+      // Race fields
+      _raceNameCtrl.text = s.raceName ?? '';
+      final dist = s.raceDistanceM;
+      if (dist != null) {
+        const stdDists = [5000, 10000, 21097, 42195];
+        if (stdDists.contains(dist)) {
+          _standardDistanceM = dist;
+        } else {
+          _standardDistanceM = -1;
+          _customDistanceCtrl.text = dist.toString();
+        }
+      }
+      final t = s.targetTimeSeconds;
+      if (t != null && t > 0) {
+        _targetHCtrl.text = (t ~/ 3600).toString();
+        _targetMCtrl.text = ((t % 3600) ~/ 60).toString();
+        _targetSCtrl.text = (t % 60).toString();
+      }
     }
   }
 
@@ -113,6 +139,11 @@ class _SessionEditorViewState extends State<SessionEditorView> {
     _cooldownDurCtrl.dispose();
     _planningNotesCtrl.dispose();
     _executionNotesCtrl.dispose();
+    _raceNameCtrl.dispose();
+    _customDistanceCtrl.dispose();
+    _targetHCtrl.dispose();
+    _targetMCtrl.dispose();
+    _targetSCtrl.dispose();
     _vm.dispose();
     super.dispose();
   }
@@ -159,9 +190,18 @@ class _SessionEditorViewState extends State<SessionEditorView> {
     );
   }
 
+  int? _buildTargetSeconds() {
+    final h = int.tryParse(_targetHCtrl.text) ?? 0;
+    final m = int.tryParse(_targetMCtrl.text) ?? 0;
+    final s = int.tryParse(_targetSCtrl.text) ?? 0;
+    final total = h * 3600 + m * 60 + s;
+    return total > 0 ? total : null;
+  }
+
   AthleteSession _buildSession() {
     final now = DateTime.now();
     final existing = widget.session;
+    final isComp = _selectedCategory == SessionCategory.competicion;
     return AthleteSession(
       id:            existing?.id ?? '',
       uid:           widget.uid,
@@ -182,6 +222,14 @@ class _SessionEditorViewState extends State<SessionEditorView> {
       executionNotes: _executionNotesCtrl.text.trim().isEmpty
           ? null
           : _executionNotesCtrl.text.trim(),
+      raceName: isComp && _raceNameCtrl.text.trim().isNotEmpty
+          ? _raceNameCtrl.text.trim() : null,
+      raceDistanceM: isComp
+          ? (_standardDistanceM == -1
+              ? int.tryParse(_customDistanceCtrl.text.trim())
+              : _standardDistanceM)
+          : null,
+      targetTimeSeconds: isComp ? _buildTargetSeconds() : null,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     );
@@ -352,6 +400,10 @@ class _SessionEditorViewState extends State<SessionEditorView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildMetadataSection(),
+                      if (_selectedCategory == SessionCategory.competicion) ...[
+                        const SizedBox(height: 28),
+                        _buildRaceSection(),
+                      ],
                       const SizedBox(height: 28),
                       _buildWarmupSection(),
                       const SizedBox(height: 28),
@@ -443,6 +495,67 @@ class _SessionEditorViewState extends State<SessionEditorView> {
             )),
           ],
           onChanged: (v) => setState(() => _selectedCategory = v),
+        ),
+      ],
+    );
+  }
+
+  // ── Sección 1b: Detalles de competición ──────────────────────────────────
+
+  Widget _buildRaceSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final secondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionHeader('Detalles de competición', color: AppColors.rpeMax),
+        const SizedBox(height: 10),
+        TextFormField(
+          controller: _raceNameCtrl,
+          decoration: _inputDecoration(
+            hint: 'Nombre de la carrera (p. ej. "10K Valencia")',
+          ),
+        ),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<int?>(
+          value: _standardDistanceM,
+          isExpanded: true,
+          decoration: _inputDecoration(hint: 'Distancia oficial'),
+          items: const [
+            DropdownMenuItem(value: null,  child: Text('Sin distancia')),
+            DropdownMenuItem(value: 5000,  child: Text('5K')),
+            DropdownMenuItem(value: 10000, child: Text('10K')),
+            DropdownMenuItem(value: 21097, child: Text('Media maratón (21,1 km)')),
+            DropdownMenuItem(value: 42195, child: Text('Maratón (42,2 km)')),
+            DropdownMenuItem(value: -1,    child: Text('Otra distancia')),
+          ],
+          onChanged: (v) => setState(() => _standardDistanceM = v),
+        ),
+        if (_standardDistanceM == -1) ...[
+          const SizedBox(height: 10),
+          TextFormField(
+            controller: _customDistanceCtrl,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: _inputDecoration(hint: 'Distancia en metros'),
+          ),
+        ],
+        const SizedBox(height: 12),
+        Text(
+          'Tiempo objetivo',
+          style: TextStyle(fontSize: 13, color: secondary),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            _TimePartField(ctrl: _targetHCtrl, label: 'h'),
+            const SizedBox(width: 8),
+            _TimePartField(ctrl: _targetMCtrl, label: 'min'),
+            const SizedBox(width: 8),
+            _TimePartField(ctrl: _targetSCtrl, label: 'seg'),
+          ],
         ),
       ],
     );
@@ -819,6 +932,57 @@ class _WarmupCooldownForm extends StatelessWidget {
             ),
           ],
         ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _TimePartField  (h / min / seg for target time)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _TimePartField extends StatelessWidget {
+  final TextEditingController ctrl;
+  final String label;
+
+  const _TimePartField({required this.ctrl, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 52,
+          child: TextFormField(
+            controller:      ctrl,
+            keyboardType:    TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            textAlign:       TextAlign.center,
+            decoration: InputDecoration(
+              hintText: '0',
+              isDense:  true,
+              border:        OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8)),
+              enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withValues(alpha: 0.5),
+                  )),
+              focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppColors.brandPurple)),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+            ),
+            style: const TextStyle(fontSize: 15),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(label, style: const TextStyle(fontSize: 13)),
       ],
     );
   }

@@ -218,7 +218,6 @@ class _SaveAsTemplateSheetState extends State<_SaveAsTemplateSheet> {
     );
     // name dialog uses _defaultName; description is encoded in the
     // template name that the user can edit in the dialog.
-    _ = name; // suppress unused warning
   }
 
   void _handleCooldown() {

@@ -8,6 +8,7 @@ import 'package:running_laps/features/analytics/views/analytics_hub_screen.dart'
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/viewmodels/athlete_hub_viewmodel.dart';
 import 'package:running_laps/features/athlete/views/athlete_calendar_view.dart';
+import 'package:running_laps/features/athlete/views/season_view.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
 
 class AthleteHubView extends StatefulWidget {
@@ -77,12 +78,18 @@ class _AthleteHubViewState extends State<AthleteHubView> {
   // ── Content (with data) ────────────────────────────────────────────────────
 
   Widget _buildContent(BuildContext context, AthleteHubState state) {
+    final days = _vm.daysUntilRace;
+    final race = _vm.nextRace;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _WeeklySummaryCard(summary: state.weeklySummary),
+          if (race != null && days != null && days <= 21) ...[
+            const SizedBox(height: 20),
+            _RaceCountdownCard(race: race, daysUntil: days),
+          ],
           const SizedBox(height: 20),
           if (state.nextSession != null) ...[
             _NextSessionCard(session: state.nextSession!),
@@ -126,6 +133,26 @@ class _AthleteHubViewState extends State<AthleteHubView> {
           icon: const Icon(Icons.bar_chart_rounded),
           label: const Text(
             'Ver análisis',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          ),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.brandPurple,
+            side: const BorderSide(color: AppColors.brandPurple),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: () => Navigator.push(
+            context,
+            AppRoute(page: SeasonView(uid: _uid)),
+          ),
+          icon: const Icon(Icons.show_chart_rounded),
+          label: const Text(
+            'Ver temporada',
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           ),
           style: OutlinedButton.styleFrom(
@@ -288,6 +315,123 @@ class _SummaryChip extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ── _RaceCountdownCard ────────────────────────────────────────────────────────
+
+class _RaceCountdownCard extends StatelessWidget {
+  final AthleteSession race;
+  final int daysUntil;
+
+  const _RaceCountdownCard({required this.race, required this.daysUntil});
+
+  String _formatTargetTime(int seconds) {
+    final h = seconds ~/ 3600;
+    final m = (seconds % 3600) ~/ 60;
+    final s = seconds % 60;
+    if (h > 0) {
+      return '${h}h ${m.toString().padLeft(2, '0')}m ${s.toString().padLeft(2, '0')}s';
+    }
+    return '${m}m ${s.toString().padLeft(2, '0')}s';
+  }
+
+  String _distanceLabel(int? m) {
+    if (m == null) return '';
+    if (m == 5000)  return '5K';
+    if (m == 10000) return '10K';
+    if (m == 21097) return 'Media maratón';
+    if (m == 42195) return 'Maratón';
+    return '${(m / 1000).toStringAsFixed(1)} km';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final name      = race.raceName;
+    final distLabel = _distanceLabel(race.raceDistanceM);
+    final target    = race.targetTimeSeconds;
+
+    String subtitle = '';
+    if (distLabel.isNotEmpty && target != null) {
+      subtitle = '$distLabel  ·  Objetivo: ${_formatTargetTime(target)}';
+    } else if (distLabel.isNotEmpty) {
+      subtitle = distLabel;
+    } else if (target != null) {
+      subtitle = 'Objetivo: ${_formatTargetTime(target)}';
+    }
+
+    final String countdownLabel;
+    if (daysUntil == 0) {
+      countdownLabel = '¡Hoy es el día!';
+    } else if (daysUntil == 1) {
+      countdownLabel = 'Mañana';
+    } else {
+      countdownLabel = 'En $daysUntil días';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color:        AppColors.effortSurface,
+        borderRadius: BorderRadius.circular(16),
+        border:       Border.all(color: AppColors.effortBorder),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.emoji_events_rounded, color: AppColors.rpeMax, size: 28),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'PRÓXIMA COMPETICIÓN',
+                  style: TextStyle(
+                    fontSize:      11,
+                    fontWeight:    FontWeight.w700,
+                    letterSpacing: 0.6,
+                    color:         AppColors.rpeMax,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  name?.isNotEmpty == true ? name! : 'Competición',
+                  style: const TextStyle(
+                    fontSize:   15,
+                    fontWeight: FontWeight.w700,
+                    color:      Colors.white,
+                  ),
+                ),
+                if (subtitle.isNotEmpty)
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color:    Color(0xFFCCCCCC),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color:        AppColors.rpeMax.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10),
+              border:       Border.all(color: AppColors.effortBorder),
+            ),
+            child: Text(
+              countdownLabel,
+              style: const TextStyle(
+                fontSize:   13,
+                fontWeight: FontWeight.w700,
+                color:      AppColors.rpeMax,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

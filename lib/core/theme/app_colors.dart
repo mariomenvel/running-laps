@@ -71,6 +71,12 @@ class AppColors {
   /// Z5 Máximo        > 90% FCmáx
   static const Color rpeMax  = Color(0xFFE24B4A);
 
+  // ── Effort surface (competición / zona alta) ─────────────────────
+  /// Fondo oscuro rojizo para tarjetas de competición / zona máxima.
+  static const Color effortSurface = Color(0xFF2A0808);
+  /// Borde rojizo sutil que acompaña a effortSurface.
+  static const Color effortBorder  = Color(0xFF5A2020);
+
   // ── Skeleton Shimmer ──────────────────────────────────────────────
   static const Color skeletonBaseLight  = Color(0xFFE5E7EB);
   static const Color skeletonBaseDark   = Color(0xFF3A3A3C);

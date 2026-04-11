@@ -219,6 +219,11 @@ class AthleteSession {
   final String? planningNotes;
   final String? executionNotes;
 
+  // Campos de competición (solo relevantes si category == 'competicion')
+  final String? raceName;          // p.ej. "10K Valencia"
+  final int?    raceDistanceM;     // distancia oficial en metros
+  final int?    targetTimeSeconds; // tiempo objetivo en segundos
+
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -236,6 +241,9 @@ class AthleteSession {
     this.cooldown,
     this.planningNotes,
     this.executionNotes,
+    this.raceName,
+    this.raceDistanceM,
+    this.targetTimeSeconds,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -266,6 +274,9 @@ class AthleteSession {
                               : null,
       planningNotes:        map['planningNotes'] as String?,
       executionNotes:       map['executionNotes'] as String?,
+      raceName:             map['raceName']          as String?,
+      raceDistanceM:        map['raceDistanceM']     as int?,
+      targetTimeSeconds:    map['targetTimeSeconds'] as int?,
       createdAt:            _toDateTime(map['createdAt']),
       updatedAt:            _toDateTime(map['updatedAt']),
     );
@@ -287,6 +298,9 @@ class AthleteSession {
       if (cooldown             != null) 'cooldown':             cooldown!.toMap(),
       if (planningNotes        != null) 'planningNotes':        planningNotes,
       if (executionNotes       != null) 'executionNotes':       executionNotes,
+      if (raceName             != null) 'raceName':             raceName,
+      if (raceDistanceM        != null) 'raceDistanceM':        raceDistanceM,
+      if (targetTimeSeconds    != null) 'targetTimeSeconds':    targetTimeSeconds,
     };
   }
 
@@ -304,6 +318,9 @@ class AthleteSession {
     Object? cooldown            = _sentinel,
     Object? planningNotes       = _sentinel,
     Object? executionNotes      = _sentinel,
+    Object? raceName            = _sentinel,
+    Object? raceDistanceM       = _sentinel,
+    Object? targetTimeSeconds   = _sentinel,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -321,6 +338,9 @@ class AthleteSession {
       cooldown:            cooldown            == _sentinel ? this.cooldown            : cooldown            as SessionWarmupCooldown?,
       planningNotes:       planningNotes       == _sentinel ? this.planningNotes       : planningNotes       as String?,
       executionNotes:      executionNotes      == _sentinel ? this.executionNotes      : executionNotes      as String?,
+      raceName:            raceName            == _sentinel ? this.raceName            : raceName            as String?,
+      raceDistanceM:       raceDistanceM       == _sentinel ? this.raceDistanceM       : raceDistanceM       as int?,
+      targetTimeSeconds:   targetTimeSeconds   == _sentinel ? this.targetTimeSeconds   : targetTimeSeconds   as int?,
       createdAt:           createdAt           ?? this.createdAt,
       updatedAt:           updatedAt           ?? this.updatedAt,
     );
