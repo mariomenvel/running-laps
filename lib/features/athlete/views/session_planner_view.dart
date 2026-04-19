@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/services/notification_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
@@ -281,6 +282,25 @@ class _SessionPlannerViewState extends State<SessionPlannerView> {
 
       await _repo.createSession(session);
       if (!mounted) return;
+
+      if (_selectedTime != null) {
+        final sessionDateTime = DateTime(
+          _selectedDate.year,
+          _selectedDate.month,
+          _selectedDate.day,
+          _selectedTime!.hour,
+          _selectedTime!.minute,
+        );
+        final title = session.blocks.isNotEmpty ? 'Sesión planificada' : 'Sesión planificada';
+        NotificationService().scheduleSessionReminder(
+          sessionId: session.id.isEmpty
+              ? DateTime.now().millisecondsSinceEpoch.toString()
+              : session.id,
+          sessionDateTime: sessionDateTime,
+          sessionTitle: title,
+        ).catchError((e) => debugPrint('schedule reminder error: $e'));
+      }
+
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;

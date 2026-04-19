@@ -8,6 +8,7 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_service.dart';
 import 'features/auth/views/splash_screen.dart';
 import 'core/services/heart_rate_service.dart';
+import 'core/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,6 +41,11 @@ void main() async {
   // Intentar reconectar pulsómetro en background — no bloquea el arranque
   HeartRateService().autoReconnect().catchError(
     (e) => debugPrint('[main] HR autoReconnect: $e'),
+  );
+
+  await NotificationService().init();
+  NotificationService().scheduleWeeklySummary().catchError(
+    (e) => debugPrint('[main] weekly summary: $e'),
   );
 
   runApp(const MyApp());

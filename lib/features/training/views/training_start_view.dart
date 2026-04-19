@@ -34,7 +34,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 import 'package:running_laps/core/services/heart_rate_service.dart';
+import 'package:running_laps/core/services/notification_service.dart';
 import 'package:running_laps/core/services/training_load_service.dart';
+import 'package:running_laps/features/athlete/data/progress_repository.dart';
 import 'package:running_laps/features/profile/data/zones_repository.dart';
 
 
@@ -958,6 +960,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         recordedPoints: gpsSnapshot,
       );
 
+      _checkPersonalRecords(seriesSnapshot);
+
       // ── Vincular con sesión planificada ───────────────────────────────
       try {
         final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -1125,6 +1129,55 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     }
   }
 
+
+  Future<void> _checkPersonalRecords(List<Serie> series) async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
+
+      const standards = {
+        400:   [320,  480],
+        1000:  [900,  1100],
+        1500:  [1275, 1725],
+        5000:  [4250, 5750],
+        10000: [8500, 11500],
+      };
+
+      final existing = await ProgressRepository().getPersonalRecords(uid);
+
+      for (final serie in series) {
+        if (serie.distanciaM <= 0 || serie.tiempoSec <= 0) continue;
+        final pace = serie.tiempoSec / (serie.distanciaM / 1000);
+
+        for (final entry in standards.entries) {
+          final dist  = entry.key;
+          final range = entry.value;
+          if (serie.distanciaM >= range[0] && serie.distanciaM <= range[1]) {
+            final existingRecord = existing[dist];
+            if (existingRecord == null || pace < existingRecord.paceSecPerKm) {
+              final distLabel = dist < 1000
+                  ? '${dist}m'
+                  : dist == 1500
+                      ? '1.5km'
+                      : '${dist ~/ 1000}km';
+              final paceMin = pace ~/ 60;
+              final paceSec = (pace % 60).round();
+              final paceStr =
+                  '$paceMin:${paceSec.toString().padLeft(2, '0')}';
+              if (mounted) {
+                NotificationService().showPersonalRecord(
+                  distance: distLabel,
+                  pace: paceStr,
+                ).catchError((e) => debugPrint('PR notification: $e'));
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('checkPersonalRecords error: $e');
+    }
+  }
 
   void _onLogoTapped() {
     if (_vm.series.isEmpty) {

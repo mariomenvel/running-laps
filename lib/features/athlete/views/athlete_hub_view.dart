@@ -15,6 +15,8 @@ import 'package:running_laps/features/athlete/views/session_planner_view.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
 import 'package:running_laps/features/training/views/manual_training_view.dart';
+import 'package:running_laps/core/services/notification_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AthleteHubView extends StatefulWidget {
   final String uid;
@@ -34,6 +36,16 @@ class _AthleteHubViewState extends State<AthleteHubView> {
     super.initState();
     _viewModel = AthleteCalendarViewModel();
     _viewModel.init(widget.uid);
+    _requestNotificationPermissions();
+  }
+
+  Future<void> _requestNotificationPermissions() async {
+    final prefs = await SharedPreferences.getInstance();
+    final asked = prefs.getBool('notif_permissions_asked') ?? false;
+    if (!asked) {
+      await NotificationService().requestPermissions();
+      await prefs.setBool('notif_permissions_asked', true);
+    }
   }
 
   @override
