@@ -7,6 +7,7 @@ import 'firebase_options.dart'; // Generado por flutterfire CLI
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_service.dart';
 import 'features/auth/views/splash_screen.dart';
+import 'core/services/heart_rate_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +36,11 @@ void main() async {
   }
 
   await ThemeService.init();
+
+  // Intentar reconectar pulsómetro en background — no bloquea el arranque
+  HeartRateService().autoReconnect().catchError(
+    (e) => debugPrint('[main] HR autoReconnect: $e'),
+  );
 
   runApp(const MyApp());
 }

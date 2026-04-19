@@ -19,6 +19,8 @@ import '../../admin/views/admin_panel_screen.dart';
 import 'account_settings_view.dart';
 import 'zones_config_screen.dart';
 import 'package:running_laps/features/athlete/views/athlete_hub_view.dart';
+import 'package:running_laps/features/profile/views/heart_rate_monitor_view.dart';
+import 'package:running_laps/core/services/heart_rate_service.dart';
 
 // Widgets comunes
 import 'package:running_laps/core/widgets/app_header.dart';
@@ -234,6 +236,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
     required Color color,
     required VoidCallback onTap,
     bool isDestructive = false,
+    String? subtitle,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
@@ -270,15 +273,31 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                   child: Icon(icon, color: color, size: 22),
                 ),
                 const SizedBox(width: 16),
-                // Title
+                // Title + optional subtitle
                 Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: isDestructive ? Colors.red : Theme.of(context).colorScheme.onSurface,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: isDestructive ? Colors.red : Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 // Arrow
@@ -430,6 +449,32 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                             Navigator.push(
                               context,
                               AppRoute(page: AthleteHubView(uid: uid)),
+                            );
+                          },
+                        ),
+                        ListenableBuilder(
+                          listenable: Listenable.merge([
+                            HeartRateService().connectionState,
+                            HeartRateService().connectedDeviceName,
+                          ]),
+                          builder: (context, _) {
+                            final hrState   = HeartRateService().connectionState.value;
+                            final isConnected = hrState == HrConnectionState.connected;
+                            final name      = HeartRateService().connectedDeviceName.value;
+                            final subtitle  = isConnected
+                                ? 'Conectado${name != null ? ' · $name' : ''}'
+                                : 'Sin conectar';
+                            return _buildMenuTile(
+                              title: "Pulsómetro",
+                              icon: Icons.favorite_rounded,
+                              color: AppColors.rpeMax,
+                              subtitle: subtitle,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  AppRoute(page: const HeartRateMonitorView()),
+                                );
+                              },
                             );
                           },
                         ),

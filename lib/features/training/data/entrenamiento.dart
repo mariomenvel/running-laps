@@ -26,6 +26,9 @@ class Entrenamiento {
   final bool isManual;
   final String? notas;
 
+  // FC media de toda la sesión (media de fcMedia de las series)
+  final double? fcMediaSesion;
+
   Entrenamiento({
     this.id,
     required this.titulo,
@@ -42,6 +45,7 @@ class Entrenamiento {
     this.analysis,
     this.isManual = false,
     this.notas,
+    this.fcMediaSesion,
   });
 
   Entrenamiento copyWith({
@@ -60,6 +64,7 @@ class Entrenamiento {
     AnalysisResult? analysis,
     bool? isManual,
     String? notas,
+    Object? fcMediaSesion = _entrSentinel,
   }) {
     return Entrenamiento(
       id: id ?? this.id,
@@ -77,6 +82,8 @@ class Entrenamiento {
       analysis: analysis ?? this.analysis,
       isManual: isManual ?? this.isManual,
       notas: notas ?? this.notas,
+      fcMediaSesion: identical(fcMediaSesion, _entrSentinel)
+          ? this.fcMediaSesion : fcMediaSesion as double?,
     );
   }
 
@@ -183,6 +190,9 @@ class Entrenamiento {
     if (notas != null) {
       base['notas'] = notas;
     }
+    if (fcMediaSesion != null) {
+      base['fcMediaSesion'] = fcMediaSesion;
+    }
 
     return base;
   }
@@ -254,8 +264,11 @@ class Entrenamiento {
       analysis: loadedAnalysis,
       isManual: map['isManual'] as bool? ?? false,
       notas: map['notas'] as String?,
+      fcMediaSesion: (map['fcMediaSesion'] as num?)?.toDouble(),
     );
   }
+
+  static const Object _entrSentinel = Object();
 
   // Acepta ISO-8601 (String) o miliSecundos epoch (int).
   static DateTime _parseFechaFlexible(dynamic v) {

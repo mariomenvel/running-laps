@@ -17,6 +17,7 @@ import 'package:running_laps/core/widgets/info_tooltip.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/services/gps_service.dart';
 import '../../../core/services/zones_service.dart';
+import '../../../core/services/heart_rate_service.dart';
 import '../../home/views/home_view.dart';
 
 
@@ -35,6 +36,7 @@ class TrainingSessionView extends StatefulWidget {
   final int? targetPaceMaxSeconds;
   final double? targetRpe;
   final int? targetZone;
+  final int? fcMax;
 
   const TrainingSessionView({
     Key? key,
@@ -50,6 +52,7 @@ class TrainingSessionView extends StatefulWidget {
     this.targetPaceMaxSeconds,
     this.targetRpe,
     this.targetZone,
+    this.fcMax,
   }) : super(key: key);
 
 
@@ -85,6 +88,9 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
   // NUEVO: Momento exacto en que se detuvo la serie
   DateTime? _finishedAt;
 
+  // --- Acumulador FC para media de la serie ---
+  final List<int> _hrReadings = [];
+
   // --- Demo mode (set to false for production) ---
   static const bool _demoMode = false;
 
@@ -114,6 +120,10 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
       curve: Curves.easeIn,
     );
     _fadeController.forward();
+
+    // Suscribirse a FC para acumular lecturas durante la serie
+    HeartRateService().heartRate.addListener(_onHrChanged);
+    HeartRateService().connectionState.addListener(_onHrChanged);
 
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1500),
@@ -219,8 +229,18 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     );
   }
 
+  void _onHrChanged() {
+    final hr    = HeartRateService().heartRate.value;
+    final state = HeartRateService().connectionState.value;
+    if (hr != null && hr > 0 && state == HrConnectionState.connected) {
+      _hrReadings.add(hr);
+    }
+  }
+
   @override
   void dispose() {
+    HeartRateService().heartRate.removeListener(_onHrChanged);
+    HeartRateService().connectionState.removeListener(_onHrChanged);
     _pulseController.dispose();
     _fadeController.dispose();
     _timer?.cancel();
@@ -361,6 +381,11 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     // 1. Obtener tiempo final en segundos
     final double tiempoFinalSec = _stopwatch.elapsed.inMilliseconds / 1000.0;
 
+    // FC media acumulada durante la serie
+    final double? fcMedia = _hrReadings.isNotEmpty
+        ? _hrReadings.reduce((a, b) => a + b) / _hrReadings.length
+        : null;
+
     // 2. Crear el objeto Serie (sin GPS)
     final Serie serieTerminada = Serie(
       tiempoSec: tiempoFinalSec,
@@ -370,7 +395,8 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
       usedGps: false,
       usedGpsDistance: null,
       gpsPoints: null,
-      finishedAt: _finishedAt, // Pasamos el timestamp
+      finishedAt: _finishedAt,
+      fcMedia: fcMedia,
     );
 
     // 3. Cerrar el diálogo de RPE
@@ -391,6 +417,11 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     // 1. Obtener tiempo final en segundos
     final double tiempoFinalSec = _stopwatch.elapsed.inMilliseconds / 1000.0;
 
+    // FC media acumulada durante la serie
+    final double? fcMedia = _hrReadings.isNotEmpty
+        ? _hrReadings.reduce((a, b) => a + b) / _hrReadings.length
+        : null;
+
     // 2. Convertir puntos GPS a Map
     List<Map<String, dynamic>>? gpsPointsMaps;
     if (_gpsService != null) {
@@ -408,7 +439,8 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
       usedGps: true,
       usedGpsDistance: usedGpsDistance,
       gpsPoints: gpsPointsMaps,
-      finishedAt: _finishedAt, // Pasamos el timestamp
+      finishedAt: _finishedAt,
+      fcMedia: fcMedia,
     );
 
     // 4. Volver a la pantalla anterior devolviendo la serie
@@ -616,6 +648,9 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
             const Spacer(flex: 1),
           ],
           _buildInlineStats(),
+          const SizedBox(height: 12),
+          _HeartRateIndicator(
+              fcMax: widget.fcMax, targetZone: widget.targetZone),
           const Spacer(flex: 2),
         ],
       ),
@@ -805,7 +840,9 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                         valueListenable: _gpsService?.currentPace ?? ValueNotifier("--:--"),
                         builder: (ctx, pace, _) => _buildRitmoSpeedometer(pace),
                       ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 10),
+                _HeartRateIndicator(fcMax: widget.fcMax),
+                const SizedBox(height: 4),
                 // TIEMPO — centered, small, unobtrusive
                 Text(
                   _tiempoMostrado,
@@ -1736,6 +1773,148 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
         ),
       ),
     );
+  }
+}
+
+// ── HR helpers ────────────────────────────────────────────────────────────────
+
+Color _hrZoneColor(int? hr, int? fcMax) {
+  if (hr == null || fcMax == null) return const Color(0xFF8E8E93);
+  final zone = ZonesService().zoneFor(hr, fcMax);
+  if (zone == null) return const Color(0xFF8E8E93);
+  final zones = ZonesService().zonesFor(fcMax);
+  return zones[zone - 1].color;
+}
+
+// ── _HeartRateIndicator ───────────────────────────────────────────────────────
+
+class _HeartRateIndicator extends StatefulWidget {
+  final int? fcMax;
+  final int? targetZone;
+
+  const _HeartRateIndicator({this.fcMax, this.targetZone});
+
+  @override
+  State<_HeartRateIndicator> createState() => _HeartRateIndicatorState();
+}
+
+class _HeartRateIndicatorState extends State<_HeartRateIndicator> {
+  bool _hasLastDevice = false;
+
+  @override
+  void initState() {
+    super.initState();
+    HeartRateService().getLastDeviceId().then((id) {
+      if (mounted) setState(() => _hasLastDevice = id != null);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        HeartRateService().connectionState,
+        HeartRateService().heartRate,
+      ]),
+      builder: (context, _) {
+        final state = HeartRateService().connectionState.value;
+        final hr    = HeartRateService().heartRate.value;
+
+        if (state == HrConnectionState.connected) {
+          if (hr == null) return const SizedBox.shrink();
+          final color = _hrZoneColor(hr, widget.fcMax);
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.favorite_rounded, color: color, size: 16),
+              const SizedBox(width: 4),
+              Text(
+                '$hr ppm',
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: color),
+              ),
+              if (widget.targetZone != null && widget.fcMax != null) ...[
+                const SizedBox(width: 4),
+                _ZoneStatusIndicator(
+                  currentHr:  hr,
+                  targetZone: widget.targetZone!,
+                  fcMax:      widget.fcMax!,
+                ),
+              ],
+            ],
+          );
+        }
+
+        if (state == HrConnectionState.scanning ||
+            state == HrConnectionState.connecting) {
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              SizedBox(
+                width:  12,
+                height: 12,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Color(0xFF8E8E93)),
+              ),
+              SizedBox(width: 4),
+              Text('Conectando...',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF8E8E93))),
+            ],
+          );
+        }
+
+        if (state == HrConnectionState.disconnected && _hasLastDevice) {
+          return const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.favorite_outline_rounded,
+                  color: Color(0xFF8E8E93), size: 14),
+              SizedBox(width: 4),
+              Text('Sin FC',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF8E8E93))),
+            ],
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
+    );
+  }
+}
+
+// ── _ZoneStatusIndicator ──────────────────────────────────────────────────────
+
+class _ZoneStatusIndicator extends StatelessWidget {
+  final int currentHr;
+  final int targetZone;
+  final int fcMax;
+
+  const _ZoneStatusIndicator({
+    required this.currentHr,
+    required this.targetZone,
+    required this.fcMax,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final currentZone = ZonesService().zoneFor(currentHr, fcMax) ?? 1;
+
+    final Color color;
+    final IconData icon;
+    if (currentZone == targetZone) {
+      color = AppColors.rpeLow;
+      icon  = Icons.check_circle_rounded;
+    } else if (currentZone > targetZone) {
+      color = AppColors.rpeMax;
+      icon  = Icons.arrow_upward_rounded;
+    } else {
+      color = AppColors.rpeMid;
+      icon  = Icons.arrow_downward_rounded;
+    }
+
+    return Icon(icon, size: 16, color: color);
   }
 }
 

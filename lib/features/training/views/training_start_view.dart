@@ -33,6 +33,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
+import 'package:running_laps/core/services/heart_rate_service.dart';
+import 'package:running_laps/core/services/training_load_service.dart';
+import 'package:running_laps/features/profile/data/zones_repository.dart';
 
 
 // ===============================================================
@@ -120,14 +123,36 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   // Storage for GPS points from Continuous Run
   List<GpsPoint>? _collectedGpsPoints;
 
+  // FC máxima del perfil del usuario
+  int? _fcMax;
+
   // --- Tags (Selección al guardar) ---
   final Set<String> _selectedTags = {};
 
+
+  Future<void> _loadFcMax() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    try {
+      final profile = await ZonesRepository().getUserProfile(uid);
+      if (mounted) setState(() => _fcMax = profile?.fcMax);
+    } catch (e) {
+      debugPrint('[TrainingStartView] _loadFcMax error: $e');
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _loadUserPreferences();
+    _loadFcMax();
+    // CAMBIO 4: reconectar pulsómetro si hay uno guardado
+    if (HeartRateService().connectionState.value ==
+        HrConnectionState.disconnected) {
+      HeartRateService()
+          .autoReconnect()
+          .catchError((e) => debugPrint('[TrainingStartView] HR reconnect: $e'));
+    }
     // Si se abre con plantilla preseleccionada, cargarla inmediatamente
     if (widget.sourceTemplate != null) {
       _vm.loadTemplate(widget.sourceTemplate!);
@@ -405,6 +430,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           targetPaceSeconds:   _currentBlock?.targetPaceSec,
           targetRpe:           _currentBlock?.targetRpe,
           targetZone:          _currentBlock?.targetZone,
+          fcMax:               _fcMax,
         ),
       ),
     );
@@ -996,7 +1022,36 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       }
 
 
-      if (!mounted) return;
+      // CAMBIO 4 — fcMediaSesion
+      final seriesConFc = seriesSnapshot.where((s) => s.fcMedia != null).toList();
+      final double? fcMediaSesion = seriesConFc.isNotEmpty
+          ? seriesConFc.map((s) => s.fcMedia!).reduce((a, b) => a + b) / seriesConFc.length
+          : null;
+
+      // CAMBIO 5 — actualizar Firestore con fcMediaSesion + loadScore TRIMP
+      if (fcMediaSesion != null && _fcMax != null) {
+        try {
+          final uid = FirebaseAuth.instance.currentUser?.uid;
+          if (uid != null) {
+            final profile = await ZonesRepository().getUserProfile(uid);
+            final double distKm = seriesSnapshot.fold<int>(0, (acc, s) => acc + s.distanciaM) / 1000.0;
+            final double durMin = seriesSnapshot.fold<double>(0.0, (acc, s) => acc + s.tiempoSec) / 60.0;
+            final double load = TrainingLoadService.instance.calculateLoad(
+              distanceKm: distKm,
+              durationMinutes: durMin,
+              fcAvgBpm: fcMediaSesion,
+              fcMax: _fcMax!.toDouble(),
+              fcRest: profile?.fcReposo?.toDouble(),
+            );
+            await FirebaseFirestore.instance
+                .collection('users').doc(uid)
+                .collection('trainings').doc(newTrainingId)
+                .update({'loadScore': load, 'fcMediaSesion': fcMediaSesion});
+          }
+        } catch (e) {
+          debugPrint('[_saveTrainingToFirebase] FC load update error: $e');
+        }
+      }
 
       if (!mounted) return;
 
@@ -1008,6 +1063,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         series: seriesSnapshot,
         tags: tags.isNotEmpty ? tags : null,
         trackPoints: gpsSnapshot ?? [],
+        fcMediaSesion: fcMediaSesion,
       );
 
       setState(() {
@@ -1162,7 +1218,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         page: TrainingSessionView(
           gpsActivo: true,
           distancia: "Libre",
-          descanso: "0",
+          descanso:  "0",
+          fcMax:     _fcMax,
         ),
       ),
     );
@@ -2965,6 +3022,11 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                         ),
                       ],
                     ),
+                    // FC de recuperación
+                    Positioned(
+                      bottom: 4,
+                      child: _HrRecoveryLabel(fcMax: _fcMax),
+                    ),
                   ],
                 ),
               ),
@@ -3227,6 +3289,48 @@ class _LinkSessionSheet extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── _HrRecoveryLabel ──────────────────────────────────────────────────────────
+// Muestra la FC actual durante el descanso para monitorizar la recuperación.
+
+class _HrRecoveryLabel extends StatelessWidget {
+  final int? fcMax;
+
+  const _HrRecoveryLabel({this.fcMax});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        HeartRateService().connectionState,
+        HeartRateService().heartRate,
+      ]),
+      builder: (context, _) {
+        final state = HeartRateService().connectionState.value;
+        final hr    = HeartRateService().heartRate.value;
+
+        if (state != HrConnectionState.connected || hr == null) {
+          return const SizedBox.shrink();
+        }
+
+        // Umbral de recuperación: 65 % de fcMax, o 120 ppm si no hay fcMax
+        final threshold = fcMax != null ? (fcMax! * 0.65).round() : 120;
+        final ready     = hr <= threshold;
+
+        return Text(
+          ready ? 'Listo para la siguiente' : 'Recuperando · $hr ppm',
+          style: TextStyle(
+            fontSize:   11,
+            fontWeight: FontWeight.w500,
+            color:      ready
+                ? AppColors.rpeLow
+                : AppColors.rpeMax,
+          ),
+        );
+      },
     );
   }
 }

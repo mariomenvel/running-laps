@@ -11,8 +11,11 @@ class Serie {
   final bool? usedGpsDistance;   // ¿Se eligió la distancia GPS al guardar?
   final List<Map<String, dynamic>>? gpsPoints;  // Puntos GPS del recorrido
   
-  // New: timestamp for when series finished 
-  final DateTime? finishedAt; 
+  // New: timestamp for when series finished
+  final DateTime? finishedAt;
+
+  // FC media durante la serie (bpm), null si no hay pulsómetro
+  final double? fcMedia;
 
   Serie({
     required this.tiempoSec,
@@ -23,6 +26,7 @@ class Serie {
     this.usedGpsDistance,
     this.gpsPoints,
     this.finishedAt,
+    this.fcMedia,
   }):assert(tiempoSec >= 0),
      assert(distanciaM >= 0),
      assert(descansoSec >= 0),
@@ -64,6 +68,7 @@ class Serie {
       if (usedGpsDistance != null) 'usedGpsDistance': usedGpsDistance,
       if (gpsPoints != null) 'gpsPoints': gpsPoints,
       if (finishedAt != null) 'finishedAt': finishedAt!.toIso8601String(),
+      if (fcMedia != null) 'fcMedia': fcMedia,
     };
   }
 
@@ -91,9 +96,41 @@ class Serie {
         }
         return finishedAt;
       }(),
+      fcMedia: (map['fcMedia'] as num?)?.toDouble(),
+    );
+  }
+
+  Serie copyWith({
+    double? tiempoSec,
+    int? distanciaM,
+    int? descansoSec,
+    double? rpe,
+    Object? usedGps         = _sentinel,
+    Object? usedGpsDistance = _sentinel,
+    Object? gpsPoints       = _sentinel,
+    Object? finishedAt      = _sentinel,
+    Object? fcMedia         = _sentinel,
+  }) {
+    return Serie(
+      tiempoSec:       tiempoSec       ?? this.tiempoSec,
+      distanciaM:      distanciaM      ?? this.distanciaM,
+      descansoSec:     descansoSec     ?? this.descansoSec,
+      rpe:             rpe             ?? this.rpe,
+      usedGps:         identical(usedGps, _sentinel)
+          ? this.usedGps         : usedGps as bool?,
+      usedGpsDistance: identical(usedGpsDistance, _sentinel)
+          ? this.usedGpsDistance : usedGpsDistance as bool?,
+      gpsPoints:       identical(gpsPoints, _sentinel)
+          ? this.gpsPoints       : gpsPoints as List<Map<String, dynamic>>?,
+      finishedAt:      identical(finishedAt, _sentinel)
+          ? this.finishedAt      : finishedAt as DateTime?,
+      fcMedia:         identical(fcMedia, _sentinel)
+          ? this.fcMedia         : fcMedia as double?,
     );
   }
 }
+
+const Object _sentinel = Object();
 
 
 
