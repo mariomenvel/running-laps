@@ -426,9 +426,10 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                           icon: Icons.directions_run_rounded,
                           color: AppColors.brandPurple,
                           onTap: () {
+                            final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
                             Navigator.push(
                               context,
-                              AppRoute(page: const AthleteHubView()),
+                              AppRoute(page: AthleteHubView(uid: uid)),
                             );
                           },
                         ),

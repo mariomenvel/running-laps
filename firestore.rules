@@ -151,6 +151,13 @@ service cloud.firestore {
         allow write: if isOwner(uid);
       }
 
+      // ── users/{uid}/athleteSessions/{sessionId} ───────────────────────────
+      match /athleteSessions/{sessionId} {
+        // Planned sessions are private to the owner.
+        // AthleteSessionRepository always reads/writes the current user's own sessions.
+        allow read, write: if isOwner(uid);
+      }
+
       // ── users/{uid}/result_notifications/{id} ──────────────────────────────
       match /result_notifications/{notifId} {
         // The owner reads and deletes their own reward notifications.

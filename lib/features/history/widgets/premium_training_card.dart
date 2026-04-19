@@ -240,15 +240,39 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
              child: Column(
                crossAxisAlignment: CrossAxisAlignment.start,
                children: [
-                 Text(
-                   widget.training.titulo,
-                   style: TextStyle(
-                     fontWeight: FontWeight.bold,
-                     fontSize: 16,
-                     color: Theme.of(context).colorScheme.onSurface,
-                   ),
-                   maxLines: 1,
-                   overflow: TextOverflow.ellipsis,
+                 Row(
+                   children: [
+                     Expanded(
+                       child: Text(
+                         widget.training.titulo,
+                         style: TextStyle(
+                           fontWeight: FontWeight.bold,
+                           fontSize: 16,
+                           color: Theme.of(context).colorScheme.onSurface,
+                         ),
+                         maxLines: 1,
+                         overflow: TextOverflow.ellipsis,
+                       ),
+                     ),
+                     if (widget.training.isManual) ...[
+                       const SizedBox(width: 6),
+                       Container(
+                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                         decoration: BoxDecoration(
+                           color:        Colors.blue.withOpacity(0.12),
+                           borderRadius: BorderRadius.circular(6),
+                         ),
+                         child: const Text(
+                           'Manual',
+                           style: TextStyle(
+                             fontSize:   10,
+                             fontWeight: FontWeight.w600,
+                             color:      Colors.blue,
+                           ),
+                         ),
+                       ),
+                     ],
+                   ],
                  ),
                  const SizedBox(height: 4),
                  Text(

@@ -22,6 +22,10 @@ class Entrenamiento {
   final List<GpsPoint> trackPoints;
   final AnalysisResult? analysis;
 
+  // Entrenamiento manual (sin GPS)
+  final bool isManual;
+  final String? notas;
+
   Entrenamiento({
     this.id,
     required this.titulo,
@@ -36,6 +40,8 @@ class Entrenamiento {
     this.source,
     this.trackPoints = const [],
     this.analysis,
+    this.isManual = false,
+    this.notas,
   });
 
   Entrenamiento copyWith({
@@ -52,6 +58,8 @@ class Entrenamiento {
     TemplateSource? source,
     List<GpsPoint>? trackPoints,
     AnalysisResult? analysis,
+    bool? isManual,
+    String? notas,
   }) {
     return Entrenamiento(
       id: id ?? this.id,
@@ -67,6 +75,8 @@ class Entrenamiento {
       source: source ?? this.source,
       trackPoints: trackPoints ?? this.trackPoints,
       analysis: analysis ?? this.analysis,
+      isManual: isManual ?? this.isManual,
+      notas: notas ?? this.notas,
     );
   }
 
@@ -167,6 +177,12 @@ class Entrenamiento {
     if (analysis != null) {
       base['analysis'] = analysis!.toMap();
     }
+    if (isManual) {
+      base['isManual'] = true;
+    }
+    if (notas != null) {
+      base['notas'] = notas;
+    }
 
     return base;
   }
@@ -236,6 +252,8 @@ class Entrenamiento {
       source: map['source'] is Map ? TemplateSource.fromMap(map['source'] as Map<String, dynamic>) : null,
       trackPoints: loadedPoints,
       analysis: loadedAnalysis,
+      isManual: map['isManual'] as bool? ?? false,
+      notas: map['notas'] as String?,
     );
   }
 

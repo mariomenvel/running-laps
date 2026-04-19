@@ -33,6 +33,11 @@ import 'package:running_laps/features/groups/views/widgets/challenge_result_dial
 import 'dart:async';
 import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
+import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
+import 'package:running_laps/features/templates/data/template_models.dart';
+import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'package:running_laps/features/training/views/manual_training_view.dart';
 
 /// Home View rediseñado con widgets configurables
 /// Versión moderna con sistema de personalización
@@ -62,6 +67,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
   // Groups State
   Future<List<Group>>? _userGroupsFuture;
+
+  AthleteSession? _todaySession;
 
   StreamSubscription? _notifSubscription;
   String? _currentUserId;
@@ -106,6 +113,85 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     _initializeHome();
     _loadGroups();
     _initNotificationListener();
+    _loadTodaySession();
+  }
+
+  Future<void> _loadTodaySession() async {
+    try {
+      final uid = _currentUserId;
+      if (uid == null || uid.isEmpty) return;
+      final today = DateTime.now();
+      final dateStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+      final sessions = await AthleteSessionRepository()
+          .getSessionsForDate(uid: uid, date: dateStr);
+      final pending = sessions
+          .where((s) => s.status == AthleteSessionStatus.planned)
+          .toList();
+      if (!mounted) return;
+      setState(() => _todaySession = pending.isNotEmpty ? pending.first : null);
+    } catch (e) {
+      debugPrint('Error cargando sesión de hoy: $e');
+    }
+  }
+
+  Future<void> _launchGuidedSession(
+    BuildContext context,
+    AthleteSession session,
+  ) async {
+    if (session.blocks.isEmpty) {
+      ModernSnackBar.showError(context, 'Esta sesión no tiene series configuradas');
+      return;
+    }
+    final now    = DateTime.now();
+    final blocks = session.blocks.asMap().entries.map((e) {
+      final b          = e.value;
+      final isDistance = b.distanceM != null;
+      return TemplateBlock(
+        id:          b.id,
+        order:       e.key,
+        type:        isDistance ? TemplateBlockType.distance : TemplateBlockType.time,
+        value:       isDistance ? b.distanceM! : (b.durationMinutes ?? 0) * 60,
+        restSeconds: b.restSeconds ?? 0,
+        alerts: TemplateAlerts(
+          enabled:         b.targetPaceMinMin != null,
+          mode:            'pace',
+          timeMin:         0,
+          timeSec:         0,
+          paceMin:         b.targetPaceMinMin ?? 0,
+          paceSec:         b.targetPaceMinSec ?? 0,
+          segmentDistance: b.distanceM ?? 1000,
+        ),
+        targetPaceMin: b.targetPaceMinMin,
+        targetPaceSec: b.targetPaceMinSec,
+        targetRpe:     b.targetRpe,
+        targetZone:    b.targetZone,
+      );
+    }).toList();
+
+    final sessionName = session.category != null
+        ? SessionCategoryX.fromValue(session.category!).label
+        : 'Sesión planificada';
+
+    final template = TrainingTemplate(
+      id:               session.id,
+      name:             sessionName,
+      colorValue:       Tema.brandPurple.value,
+      isWarmupCooldown: false,
+      blocks:           blocks,
+      createdAt:        now,
+      updatedAt:        now,
+    );
+
+    if (!context.mounted) return;
+    Navigator.push(
+      context,
+      AppRoute(
+        page: TrainingStartView(
+          sourceTemplate:   template,
+          athleteSessionId: session.id,
+        ),
+      ),
+    );
   }
 
   void _loadGroups() {
@@ -374,6 +460,13 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           children: [
             _slideFromLeft(_aGreeting, _buildWelcomeHeader()),
             const SizedBox(height: 12),
+            if (_todaySession != null) ...[
+              _TodaySessionBanner(
+                session: _todaySession!,
+                onTap: () => _launchGuidedSession(context, _todaySession!),
+              ),
+              const SizedBox(height: 12),
+            ],
             if (_entrenamientos.isEmpty) ...[
               const SizedBox(height: 8),
               _buildEmptyHomeState(),
@@ -1300,9 +1393,74 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
 
   void _onPlayButtonTap() {
-    Navigator.push(
-      context,
-      AppRoute(page: TrainingStartView()),
+    final isDark   = Theme.of(context).brightness == Brightness.dark;
+    final bgColor  = isDark ? const Color(0xFF1C1C1E) : Colors.white;
+    final txtColor = isDark ? Colors.white : const Color(0xFF1C1C1E);
+    final hintColor = isDark ? const Color(0xFF8E8E93) : const Color(0xFF6C6C70);
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        margin:      const EdgeInsets.all(12),
+        decoration:  BoxDecoration(
+          color:        bgColor,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 36, height: 4,
+                decoration: BoxDecoration(
+                  color:        hintColor.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text('Iniciar entrenamiento',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: txtColor)),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color:        AppColors.brandPurple.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.gps_fixed_rounded, color: AppColors.brandPurple, size: 22),
+                ),
+                title: Text('Con GPS', style: TextStyle(color: txtColor, fontWeight: FontWeight.w500)),
+                subtitle: Text('Tracking en tiempo real', style: TextStyle(color: hintColor, fontSize: 12)),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, AppRoute(page: TrainingStartView()));
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color:        Colors.blue.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.edit_note_rounded, color: Colors.blue, size: 22),
+                ),
+                title: Text('Manual', style: TextStyle(color: txtColor, fontWeight: FontWeight.w500)),
+                subtitle: Text('Sin GPS, introduce los datos', style: TextStyle(color: hintColor, fontSize: 12)),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, AppRoute(page: const ManualTrainingView()));
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1484,6 +1642,95 @@ class _GroupHighlightCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ===================================================================
+// BANNER SESIÓN DE HOY
+// ===================================================================
+class _TodaySessionBanner extends StatelessWidget {
+  final AthleteSession session;
+  final VoidCallback onTap;
+
+  const _TodaySessionBanner({required this.session, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF1A1030) : const Color(0xFFF3EFFE);
+    final titleColor = isDark ? Colors.white : const Color(0xFF1C1C1E);
+
+    final title = session.category != null
+        ? SessionCategoryX.fromValue(session.category!).label
+        : 'Sesión planificada';
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 0),
+      decoration: BoxDecoration(
+        color: bgColor,
+        border: Border.all(color: AppColors.brandPurple.withOpacity(0.4)),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.fitness_center_rounded,
+                        color: AppColors.brandPurple, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Entreno de hoy',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.brandPurple,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: titleColor,
+                  ),
+                ),
+                if (session.blocks.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    '${session.blocks.length} series'
+                    '${session.time != null ? ' · ${session.time}' : ''}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF8E8E93),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.brandPurple,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: onTap,
+            child: const Text('Empezar'),
+          ),
+        ],
       ),
     );
   }

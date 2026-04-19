@@ -30,6 +30,7 @@ import '../../templates/views/templates_list_view.dart';
 import '../../templates/data/template_models.dart';
 import '../../templates/views/template_editor_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 
@@ -41,8 +42,14 @@ import 'package:running_laps/features/athlete/data/athlete_session_repository.da
 
 
 class TrainingStartView extends StatefulWidget {
-  const TrainingStartView({Key? key}) : super(key: key);
+  final TrainingTemplate? sourceTemplate;
+  final String? athleteSessionId;
 
+  const TrainingStartView({
+    Key? key,
+    this.sourceTemplate,
+    this.athleteSessionId,
+  }) : super(key: key);
 
   @override
   _TrainingStartViewState createState() => _TrainingStartViewState();
@@ -121,6 +128,15 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   void initState() {
     super.initState();
     _loadUserPreferences();
+    // Si se abre con plantilla preseleccionada, cargarla inmediatamente
+    if (widget.sourceTemplate != null) {
+      _vm.loadTemplate(widget.sourceTemplate!);
+      if (_vm.plannedBlocks.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _applyTemplateBlock(_vm.plannedBlocks[0]);
+        });
+      }
+    }
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       _iosRestActionSubscription =
           IOSLiveActivityService.instance.actions.listen((String action) {
@@ -368,16 +384,27 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     _updateAlarmInterval();
 
 
+    // Bloque actual de la plantilla (si existe) para pasar objetivos
+    final int _currentBlockIdx = _vm.series.length;
+    final TemplateBlock? _currentBlock =
+        (_vm.source != null && _currentBlockIdx < _vm.plannedBlocks.length)
+            ? _vm.plannedBlocks[_currentBlockIdx]
+            : null;
+
     final result = await Navigator.push(
       context,
       AppRoute(
         page: TrainingSessionView(
-          distancia: _distanciaSeleccionada.toString(),
-          descanso: _descansoSeleccionado.toString(),
-          gpsActivo: _vm.gpsOn,
-          alarmIntervalMs: _alarmIntervalMs,
-          currentSeries: _vm.series.length + 1,
-          totalSeries: _vm.source != null ? _vm.plannedBlocks.length : null,
+          distancia:           _distanciaSeleccionada.toString(),
+          descanso:            _descansoSeleccionado.toString(),
+          gpsActivo:           _vm.gpsOn,
+          alarmIntervalMs:     _alarmIntervalMs,
+          currentSeries:       _vm.series.length + 1,
+          totalSeries:         _vm.source != null ? _vm.plannedBlocks.length : null,
+          targetPaceMinutes:   _currentBlock?.targetPaceMin,
+          targetPaceSeconds:   _currentBlock?.targetPaceSec,
+          targetRpe:           _currentBlock?.targetRpe,
+          targetZone:          _currentBlock?.targetZone,
         ),
       ),
     );
@@ -840,6 +867,52 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   String _normalizeDateForPlanning(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
+  Map<String, dynamic> _buildComparison({
+    required AthleteSession planned,
+    required List<Serie> executed,
+  }) {
+    final blocks = <Map<String, dynamic>>[];
+    for (int i = 0; i < planned.blocks.length; i++) {
+      final block = planned.blocks[i];
+      final serie = i < executed.length ? executed[i] : null;
+
+      final targetPaceSec = block.targetPaceMinMin != null
+          ? block.targetPaceMinMin! * 60 + (block.targetPaceMinSec ?? 0)
+          : null;
+
+      final executedPaceSec = serie != null && serie.distanciaM > 0
+          ? serie.tiempoSec / (serie.distanciaM / 1000)
+          : null;
+
+      blocks.add({
+        'order': i,
+        'planned': {
+          'distanceM':       block.distanceM,
+          'durationMinutes': block.durationMinutes,
+          'targetPaceSec':   targetPaceSec,
+          'targetRpe':       block.targetRpe,
+          'targetZone':      block.targetZone,
+          'restSeconds':     block.restSeconds,
+        },
+        'executed': serie != null
+            ? {
+                'distanceM':  serie.distanciaM,
+                'durationSec': serie.tiempoSec,
+                'paceSec':    executedPaceSec,
+                'rpe':        serie.rpe,
+              }
+            : null,
+      });
+    }
+    return {
+      'athleteSessionId':  planned.id,
+      'sessionCategory':   planned.category,
+      'date':              planned.date,
+      'blocks':            blocks,
+      'completedAt':       DateTime.now().toIso8601String(),
+    };
+  }
+
   Future<void> _saveTrainingToFirebase(String trainingName, List<String> tags) async {
     setState(() {
       _isSaving = true;
@@ -863,29 +936,58 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       try {
         final uid = FirebaseAuth.instance.currentUser?.uid;
         if (uid != null) {
-          final today = _normalizeDateForPlanning(DateTime.now());
-          final planned = await AthleteSessionRepository()
-              .getSessionsForDate(uid: uid, date: today);
-          final pending = planned
-              .where((s) => s.status == AthleteSessionStatus.planned)
-              .toList();
-          if (pending.isNotEmpty && mounted) {
-            await showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (_) => _LinkSessionSheet(
-                plannedSessions: pending,
-                onLink: (session) async {
-                  await AthleteSessionRepository().markAsCompleted(
-                    uid: uid,
-                    sessionId: session.id,
-                    trainingId: newTrainingId,
-                  );
-                },
-                parentContext: context,
-              ),
+          if (widget.athleteSessionId != null) {
+            // Vinculación automática — viene de "Ejecutar sesión"
+            await AthleteSessionRepository().markAsCompleted(
+              uid:        uid,
+              sessionId:  widget.athleteSessionId!,
+              trainingId: newTrainingId,
             );
+            // Guardar comparativa planificado vs ejecutado
+            try {
+              final planned = await AthleteSessionRepository()
+                  .getSession(uid: uid, id: widget.athleteSessionId!);
+              if (planned != null) {
+                final comparison = _buildComparison(
+                  planned:  planned,
+                  executed: seriesSnapshot,
+                );
+                await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(uid)
+                    .collection('trainings')
+                    .doc(newTrainingId)
+                    .update({'plannedComparison': comparison});
+              }
+            } catch (e) {
+              debugPrint('Error guardando comparativa: $e');
+            }
+          } else {
+            // Vinculación manual — mostrar sheet si hay sesiones pendientes
+            final today = _normalizeDateForPlanning(DateTime.now());
+            final planned = await AthleteSessionRepository()
+                .getSessionsForDate(uid: uid, date: today);
+            final pending = planned
+                .where((s) => s.status == AthleteSessionStatus.planned)
+                .toList();
+            if (pending.isNotEmpty && mounted) {
+              await showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => _LinkSessionSheet(
+                  plannedSessions: pending,
+                  onLink: (session) async {
+                    await AthleteSessionRepository().markAsCompleted(
+                      uid:        uid,
+                      sessionId:  session.id,
+                      trainingId: newTrainingId,
+                    );
+                  },
+                  parentContext: context,
+                ),
+              );
+            }
           }
         }
       } catch (e) {
@@ -1132,7 +1234,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 children: [
                   const SizedBox(height: 20.0),
                   
-                  if (_vm.source != null) ...[
+                  if (_vm.source != null && _vm.series.isEmpty) ...[
                      _buildTemplateCard(),
                      const SizedBox(height: 16),
                   ],
@@ -1235,7 +1337,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                   // Bottom section: Template summary OR Continuous run button
                   // Continuous run button is hidden when interval series are in progress
                   // to prevent accidentally launching a Libre session mid-interval.
-                  if (_vm.source != null) ...[
+                  if (_vm.source != null && _vm.series.isEmpty) ...[
                     _buildTemplateCard(),
                     const SizedBox(height: 16),
                   ] else if (_vm.series.isEmpty) ...[

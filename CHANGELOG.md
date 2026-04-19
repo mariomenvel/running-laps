@@ -1,5 +1,41 @@
 # CHANGELOG — Running Laps
 
+## [Fase 5 — Métricas de progreso] — 2026-04-10
+
+### Nueva feature: ProgressView (lib/features/athlete/)
+Accesible desde AthleteHubView → "Ver análisis"
+(reemplaza enlace a AnalyticsHubScreen para usuarios atleta)
+
+### ProgressRepository
+- `getPersonalRecords`: mejor pace por distancia estándar
+  (400m/1km/5km/10km) con tolerancias por rango
+- `getSeriesProgress`: grupos de series equivalentes (±10%
+  distancia, mínimo 3) con historial temporal de pace
+- `getWeeklyVolume`: km reales por semana, últimas 12 semanas,
+  semanas vacías incluidas
+- `getPlannedVsExecuted`: sesiones vinculadas con training
+  ejecutado, indexado en memoria sin queries adicionales
+
+### ProgressViewModel
+- Carga en paralelo con Future.wait
+- Media móvil de 4 semanas sobre volumen semanal
+- `trendForGroup`: tendencia pace primera vs segunda mitad
+- `paceDeviationSecPerKm`: delta objetivo vs ejecutado,
+  usa punto medio del rango pace como referencia
+
+### ProgressView — 4 secciones
+- Récords personales: grid 2×2 con pace y fecha
+- Progreso en series: mini gráfica CustomPaint por grupo,
+  badge tendencia mejorando/a revisar
+- Volumen semanal: barras + línea media móvil, CustomPaint
+- Planificado vs ejecutado: delta con colores semáforo
+  (verde ≤15s/km, ámbar ≤30, rojo >30)
+
+### Enganches abiertos para FC
+- TrainingLoadService acepta fcAvgBpm/fcMax/fcRest opcionales
+- Sin FC: proxy categoría+RPE. Con FC: TRIMP de Banister
+- Eficiencia aeróbica y cardiac decoupling pendientes
+
 ## [Fase 4 — Competiciones y macrociclo] — 2026-04-10
 
 ### Modelos

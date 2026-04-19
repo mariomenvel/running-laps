@@ -7,7 +7,7 @@ import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/viewmodels/season_viewmodel.dart';
-import 'package:running_laps/features/athlete/views/athlete_calendar_view.dart';
+import 'package:running_laps/features/athlete/views/athlete_hub_view.dart';
 
 class SeasonView extends StatefulWidget {
   final String uid;
@@ -238,7 +238,7 @@ class _SeasonViewState extends State<SeasonView> {
             child: OutlinedButton.icon(
               onPressed: () => Navigator.push(
                 context,
-                AppRoute(page: AthleteCalendarView(uid: widget.uid)),
+                AppRoute(page: AthleteHubView(uid: widget.uid)),
               ),
               icon:  const Icon(Icons.add_rounded),
               label: const Text('Programar competición'),

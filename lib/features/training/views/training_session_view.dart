@@ -16,6 +16,7 @@ import 'package:running_laps/core/constants/app_help_content.dart';
 import 'package:running_laps/core/widgets/info_tooltip.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/services/gps_service.dart';
+import '../../../core/services/zones_service.dart';
 import '../../home/views/home_view.dart';
 
 
@@ -27,6 +28,13 @@ class TrainingSessionView extends StatefulWidget {
   final int? currentSeries;
   final int? totalSeries;
 
+  // Objetivos de bloque (opcionales — solo se muestran si se pasan)
+  final int? targetPaceMinutes;
+  final int? targetPaceSeconds;
+  final int? targetPaceMaxMinutes;
+  final int? targetPaceMaxSeconds;
+  final double? targetRpe;
+  final int? targetZone;
 
   const TrainingSessionView({
     Key? key,
@@ -36,6 +44,12 @@ class TrainingSessionView extends StatefulWidget {
     this.alarmIntervalMs,
     this.currentSeries,
     this.totalSeries,
+    this.targetPaceMinutes,
+    this.targetPaceSeconds,
+    this.targetPaceMaxMinutes,
+    this.targetPaceMaxSeconds,
+    this.targetRpe,
+    this.targetZone,
   }) : super(key: key);
 
 
@@ -593,6 +607,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         children: [
+          _buildObjectivesBar(),
           const Spacer(flex: 2),
           _buildHeroTimer(),
           const Spacer(flex: 2),
@@ -1610,6 +1625,118 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
       },
     );
   }
+
+  // ── Barra de objetivos de bloque ────────────────────────────────────────────
+
+  static int? _parsePaceSec(String pace) {
+    final parts = pace.split(':');
+    if (parts.length != 2) return null;
+    final m = int.tryParse(parts[0]);
+    final s = int.tryParse(parts[1]);
+    if (m == null || s == null) return null;
+    return m * 60 + s;
+  }
+
+  static Color _rpeColorFor(double v) {
+    if (v <= 3) return AppColors.rpeLow;
+    if (v <= 6) return AppColors.rpeMid;
+    if (v <= 8) return AppColors.effort;
+    return AppColors.rpeMax;
+  }
+
+  static Color _zoneColorFor(int zone) {
+    final colors = [
+      const Color(0xFF5A9E9E), // Z1
+      AppColors.rpeLow,        // Z2
+      AppColors.rpeMid,        // Z3
+      AppColors.effort,        // Z4
+      AppColors.rpeMax,        // Z5
+    ];
+    if (zone >= 1 && zone <= 5) return colors[zone - 1];
+    return const Color(0xFF8E8E93);
+  }
+
+  Widget _buildObjectivesBar() {
+    final hasObjectives = widget.targetPaceMinutes != null ||
+        widget.targetRpe != null ||
+        widget.targetZone != null;
+    if (!hasObjectives) return const SizedBox.shrink();
+
+    final targetMinSec = widget.targetPaceMinutes != null
+        ? widget.targetPaceMinutes! * 60 + (widget.targetPaceSeconds ?? 0)
+        : null;
+    final targetMaxSec = widget.targetPaceMaxMinutes != null
+        ? widget.targetPaceMaxMinutes! * 60 + (widget.targetPaceMaxSeconds ?? 0)
+        : (targetMinSec != null ? targetMinSec + 15 : null);
+
+    final paceLabel = widget.targetPaceMinutes != null
+        ? (widget.targetPaceMaxMinutes != null
+            ? '${widget.targetPaceMinutes}:${(widget.targetPaceSeconds ?? 0).toString().padLeft(2, '0')}'
+              '–${widget.targetPaceMaxMinutes}:${(widget.targetPaceMaxSeconds ?? 0).toString().padLeft(2, '0')}'
+            : '${widget.targetPaceMinutes}:${(widget.targetPaceSeconds ?? 0).toString().padLeft(2, '0')}')
+        : null;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            // Pace objetivo
+            if (paceLabel != null)
+              _ObjectiveChip(
+                icon:     Icons.speed_rounded,
+                label:    paceLabel,
+                sublabel: '/km obj.',
+              ),
+
+            // Indicador pace actual vs objetivo
+            if (targetMinSec != null && widget.gpsActivo)
+              ValueListenableBuilder<String>(
+                valueListenable:
+                    _gpsService?.currentPace ?? ValueNotifier('--:--'),
+                builder: (_, pace, __) {
+                  final currentSec = _parsePaceSec(pace);
+                  if (currentSec == null) return const SizedBox.shrink();
+                  final inRange = currentSec >= targetMinSec - 5 &&
+                      currentSec <= targetMaxSec! + 5;
+                  final tooFast = currentSec < targetMinSec - 5;
+                  return Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: _PaceStatusIndicator(
+                        isInRange: inRange, isTooFast: tooFast),
+                  );
+                },
+              ),
+
+            // RPE objetivo
+            if (widget.targetRpe != null)
+              Padding(
+                padding: const EdgeInsets.only(left: 6),
+                child: _ObjectiveChip(
+                  icon:     Icons.favorite_outline_rounded,
+                  label:    'RPE ${widget.targetRpe!}',
+                  sublabel: 'objetivo',
+                  color:    _rpeColorFor(widget.targetRpe!),
+                ),
+              ),
+
+            // Zona FC objetivo
+            if (widget.targetZone != null)
+              Padding(
+                padding: const EdgeInsets.only(left: 6),
+                child: _ObjectiveChip(
+                  icon:     Icons.monitor_heart_outlined,
+                  label:    'Z${widget.targetZone}',
+                  sublabel: 'zona obj.',
+                  color:    _zoneColorFor(widget.targetZone!),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // Speedometer arc painter for RITMO card.
@@ -1656,4 +1783,89 @@ class _SpeedometerPainter extends CustomPainter {
       old.fraction != fraction ||
       old.arcColor != arcColor ||
       old.trackColor != trackColor;
+}
+
+// ── _ObjectiveChip ────────────────────────────────────────────────────────────
+
+class _ObjectiveChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String sublabel;
+  final Color color;
+
+  const _ObjectiveChip({
+    required this.icon,
+    required this.label,
+    required this.sublabel,
+    this.color = AppColors.brandPurple,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color:        color.withValues(alpha: 0.15),
+        border:       Border.all(color: color.withValues(alpha: 0.4)),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize:       MainAxisSize.min,
+            children: [
+              Text(label,
+                  style: TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600, color: color)),
+              Text(sublabel,
+                  style: TextStyle(
+                      fontSize: 10, color: color.withValues(alpha: 0.7))),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── _PaceStatusIndicator ──────────────────────────────────────────────────────
+
+class _PaceStatusIndicator extends StatelessWidget {
+  final bool isInRange;
+  final bool isTooFast;
+
+  const _PaceStatusIndicator({
+    required this.isInRange,
+    required this.isTooFast,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Color color;
+    final IconData iconData;
+    if (isInRange) {
+      color    = AppColors.rpeLow;
+      iconData = Icons.check_rounded;
+    } else if (isTooFast) {
+      color    = AppColors.rpeMid;
+      iconData = Icons.arrow_upward_rounded;
+    } else {
+      color    = AppColors.rpeMax;
+      iconData = Icons.arrow_downward_rounded;
+    }
+    return Container(
+      width:  32,
+      height: 32,
+      decoration: BoxDecoration(
+        color:  color.withValues(alpha: 0.15),
+        shape:  BoxShape.circle,
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Icon(iconData, size: 16, color: color),
+    );
+  }
 }
