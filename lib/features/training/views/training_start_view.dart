@@ -34,6 +34,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 import 'package:running_laps/core/services/heart_rate_service.dart';
+import 'package:running_laps/features/profile/views/heart_rate_monitor_view.dart';
 import 'package:running_laps/core/services/notification_service.dart';
 import 'package:running_laps/core/services/training_load_service.dart';
 import 'package:running_laps/features/athlete/data/progress_repository.dart';
@@ -1360,6 +1361,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
                   if (_vm.series.isEmpty) ...[
                     _buildGpsToggle(),
+                    _buildHrToggle(),
                     const SizedBox(height: 30.0),
                   ],
                   Text(
@@ -1413,11 +1415,12 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                     const SizedBox(height: 20.0), 
                   ],
 
-                  // GPS toggle (only when no series yet)
+                  // GPS + HR toggles (only when no series yet)
                   if (_vm.series.isEmpty) ...[
                     _buildGpsToggle(),
+                    _buildHrToggle(),
                     const SizedBox(height: 20.0),
-                    
+
                     // Template buttons (only when no template loaded)
                     if (_vm.source == null) ...[
                       _buildTemplateButtons(),
@@ -2854,6 +2857,118 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     );
   }
 
+
+  Widget _buildHrToggle() {
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        HeartRateService().connectionState,
+        HeartRateService().connectedDeviceName,
+      ]),
+      builder: (context, _) {
+        final state       = HeartRateService().connectionState.value;
+        final isConnected = state == HrConnectionState.connected;
+        final deviceName  = HeartRateService().connectedDeviceName.value ?? 'Pulsómetro';
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          margin: const EdgeInsets.only(top: 8.0),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(16.0),
+            border: Border.all(
+              color: isConnected
+                  ? AppColors.rpeMax.withOpacity(0.5)
+                  : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+              width: isConnected ? 2.0 : 1.0,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isConnected
+                    ? AppColors.rpeMax.withOpacity(0.08)
+                    : Theme.of(context).brightness == Brightness.dark
+                        ? Colors.transparent
+                        : Colors.black.withOpacity(0.05),
+                blurRadius: 10.0,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    isConnected ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
+                    color: isConnected
+                        ? AppColors.rpeMax
+                        : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                    size: 28,
+                  ),
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isConnected ? deviceName : 'Pulsómetro',
+                        style: TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                          color: isConnected
+                              ? Theme.of(context).colorScheme.onSurface
+                              : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                      ),
+                      if (isConnected)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: Text(
+                            'Conectado',
+                            style: TextStyle(
+                              fontSize: 12.0,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.rpeMax,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+              Transform.scale(
+                scale: 0.9,
+                child: Switch(
+                  value: isConnected,
+                  onChanged: (val) async {
+                    if (val) {
+                      final lastId = await HeartRateService().getLastDeviceId();
+                      if (lastId != null) {
+                        HeartRateService().connect(lastId);
+                      } else {
+                        if (!mounted) return;
+                        await Navigator.push(
+                          context,
+                          AppRoute(page: const HeartRateMonitorView()),
+                        );
+                      }
+                    } else {
+                      HeartRateService().disconnect();
+                    }
+                  },
+                  activeColor: AppColors.rpeMax,
+                  inactiveThumbColor: Colors.white,
+                  inactiveTrackColor: Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(context).colorScheme.onSurface.withOpacity(0.15)
+                      : Colors.grey[200],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   // ===================================================================
   // Template Buttons Section

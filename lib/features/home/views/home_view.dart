@@ -37,7 +37,6 @@ import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
-import 'package:running_laps/features/training/views/manual_training_view.dart';
 
 /// Home View rediseñado con widgets configurables
 /// Versión moderna con sistema de personalización
@@ -1393,75 +1392,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
 
   void _onPlayButtonTap() {
-    final isDark   = Theme.of(context).brightness == Brightness.dark;
-    final bgColor  = isDark ? const Color(0xFF1C1C1E) : Colors.white;
-    final txtColor = isDark ? Colors.white : const Color(0xFF1C1C1E);
-    final hintColor = isDark ? const Color(0xFF8E8E93) : const Color(0xFF6C6C70);
-
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        margin:      const EdgeInsets.all(12),
-        decoration:  BoxDecoration(
-          color:        bgColor,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 8),
-              Container(
-                width: 36, height: 4,
-                decoration: BoxDecoration(
-                  color:        hintColor.withOpacity(0.4),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text('Iniciar entrenamiento',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: txtColor)),
-              const SizedBox(height: 8),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color:        AppColors.brandPurple.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.gps_fixed_rounded, color: AppColors.brandPurple, size: 22),
-                ),
-                title: Text('Con GPS', style: TextStyle(color: txtColor, fontWeight: FontWeight.w500)),
-                subtitle: Text('Tracking en tiempo real', style: TextStyle(color: hintColor, fontSize: 12)),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(context, AppRoute(page: TrainingStartView()));
-                },
-              ),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color:        Colors.blue.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.edit_note_rounded, color: Colors.blue, size: 22),
-                ),
-                title: Text('Manual', style: TextStyle(color: txtColor, fontWeight: FontWeight.w500)),
-                subtitle: Text('Sin GPS, introduce los datos', style: TextStyle(color: hintColor, fontSize: 12)),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(context, AppRoute(page: const ManualTrainingView()));
-                },
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        ),
-      ),
-    );
+    Navigator.push(context, AppRoute(page: const TrainingStartView()));
   }
 }
 

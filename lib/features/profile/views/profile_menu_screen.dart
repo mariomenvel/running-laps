@@ -12,6 +12,7 @@ import 'package:running_laps/features/history/views/history_screen.dart';
 import '../../templates/views/templates_list_view.dart';
 import 'avatar_editor_wraper_view.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
+import 'package:running_laps/features/training/views/manual_training_view.dart';
 import '../../groups/views/groups_list_screen.dart';
 import '../../groups/views/participant_profile_screen.dart';
 import 'package:running_laps/features/analytics/views/analytics_hub_screen.dart';
@@ -420,6 +421,20 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                           onTap: _openHistory,
                         ),
                         _buildMenuTile(
+                          title: "Registrar entrenamiento",
+                          icon: Icons.edit_note_rounded,
+                          color: const Color(0xFF8E8E93),
+                          subtitle: "Apunta lo que ya has hecho",
+                          onTap: () {
+                            final user = FirebaseAuth.instance.currentUser;
+                            if (user == null) return;
+                            Navigator.push(
+                              context,
+                              AppRoute(page: const ManualTrainingView()),
+                            );
+                          },
+                        ),
+                        _buildMenuTile(
                           title: "Editar avatar",
                           icon: Icons.face_rounded,
                           color: Colors.green,
@@ -449,32 +464,6 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                             Navigator.push(
                               context,
                               AppRoute(page: AthleteHubView(uid: uid)),
-                            );
-                          },
-                        ),
-                        ListenableBuilder(
-                          listenable: Listenable.merge([
-                            HeartRateService().connectionState,
-                            HeartRateService().connectedDeviceName,
-                          ]),
-                          builder: (context, _) {
-                            final hrState   = HeartRateService().connectionState.value;
-                            final isConnected = hrState == HrConnectionState.connected;
-                            final name      = HeartRateService().connectedDeviceName.value;
-                            final subtitle  = isConnected
-                                ? 'Conectado${name != null ? ' · $name' : ''}'
-                                : 'Sin conectar';
-                            return _buildMenuTile(
-                              title: "Pulsómetro",
-                              icon: Icons.favorite_rounded,
-                              color: AppColors.rpeMax,
-                              subtitle: subtitle,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  AppRoute(page: const HeartRateMonitorView()),
-                                );
-                              },
                             );
                           },
                         ),
@@ -516,6 +505,32 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                                   currentName: _nombreUsuario,
                                   onNameUpdated: _cargarNombre,
                                 )),
+                            );
+                          },
+                        ),
+                        ListenableBuilder(
+                          listenable: Listenable.merge([
+                            HeartRateService().connectionState,
+                            HeartRateService().connectedDeviceName,
+                          ]),
+                          builder: (context, _) {
+                            final isConnected = HeartRateService().connectionState.value
+                                == HrConnectionState.connected;
+                            final name = HeartRateService().connectedDeviceName.value;
+                            final subtitle = isConnected
+                                ? 'Conectado${name != null ? ' · $name' : ''}'
+                                : 'Sin conectar';
+                            return _buildMenuTile(
+                              title: "Pulsómetro BLE",
+                              icon: Icons.favorite_rounded,
+                              color: AppColors.rpeMax,
+                              subtitle: subtitle,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  AppRoute(page: const HeartRateMonitorView()),
+                                );
+                              },
                             );
                           },
                         ),
