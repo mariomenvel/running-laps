@@ -66,6 +66,7 @@ class GPSService {
   StreamSubscription<Position>? _positionSubscription;
   StreamSubscription<String>? _iosActionSubscription;
   Timer? _notificationTimer;
+  Timer? _ekfPredictTimer;
 
   int _gpsStableSeconds = 0;
   int _noGpsSeconds = 0;
@@ -147,6 +148,8 @@ class GPSService {
     _positionSubscription = Geolocator.getPositionStream(
       locationSettings: locationSettings,
     ).listen(_handlePosition);
+
+    _startEkfPrediction();
   }
 
   void pause() {
@@ -154,6 +157,7 @@ class GPSService {
       status.value = GpsStatus.paused;
       _positionSubscription?.pause();
       if (!_useIOSLiveActivity) _notificationTimer?.cancel();
+      _stopEkfPrediction();
       _pauseStartTime = DateTime.now();
     }
   }
@@ -174,6 +178,7 @@ class GPSService {
           (_) => _sendNotificationUpdate(),
         );
       }
+      _startEkfPrediction();
     }
   }
 
@@ -227,6 +232,7 @@ class GPSService {
     _positionSubscription = null;
     _notificationTimer?.cancel();
     _notificationTimer = null;
+    _stopEkfPrediction();
     _ekf.reset();
 
     // Persist learned stride length if GPS was active long enough to calibrate
@@ -267,6 +273,7 @@ class GPSService {
     }
     _positionSubscription?.cancel();
     _notificationTimer?.cancel();
+    _ekfPredictTimer?.cancel();
     _iosActionSubscription?.cancel();
 
     if (_useIOSLiveActivity) {
@@ -464,19 +471,46 @@ class GPSService {
   bool get _useIOSLiveActivity =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
+  void _startEkfPrediction() {
+    _ekfPredictTimer?.cancel();
+    _ekfPredictTimer = Timer.periodic(
+      const Duration(milliseconds: 100),
+      (_) {
+        if (!_ekf.isInitialized) return;
+        final frame = _sensorService.buildSensorFrame(
+            timestamp: DateTime.now());
+        _ekf.predict(
+          0.1,
+          gyroZ: frame.gyroscopeZ,
+          accelMagnitude: frame.accelerationMagnitude,
+        );
+      },
+    );
+  }
+
+  void _stopEkfPrediction() {
+    _ekfPredictTimer?.cancel();
+    _ekfPredictTimer = null;
+  }
+
   void _handlePosition(Position position) {
     if (status.value != GpsStatus.running) return;
 
     final now = DateTime.now();
+    final sensorFrame = _sensorService.buildSensorFrame(timestamp: now);
     final frame = SensorFrame(
-      latitude: position.latitude,
-      longitude: position.longitude,
-      altitude: position.altitude,
-      gpsAccuracy: position.accuracy,
-      gpsSpeed: position.speed,
-      stepsDelta: _sensorService.consumeStepsDelta(),
-      acceleration: 0.0,
-      timestamp: now,
+      latitude:              position.latitude,
+      longitude:             position.longitude,
+      altitude:              position.altitude,
+      gpsAccuracy:           position.accuracy,
+      gpsSpeed:              position.speed,
+      stepsDelta:            sensorFrame.stepsDelta,
+      accelerationX:         sensorFrame.accelerationX,
+      accelerationY:         sensorFrame.accelerationY,
+      accelerationZ:         sensorFrame.accelerationZ,
+      accelerationMagnitude: sensorFrame.accelerationMagnitude,
+      gyroscopeZ:            sensorFrame.gyroscopeZ,
+      timestamp:             now,
     );
 
     final newState = _processTick(_trackingState.value, frame);
@@ -544,7 +578,7 @@ class GPSService {
     final gpsAccuracy = frame.gpsAccuracy ?? double.infinity;
     final hasCoordinates =
         frame.latitude != null && frame.longitude != null;
-    final hasUsableGps = hasCoordinates && gpsAccuracy <= 25;
+    final hasUsableGps = hasCoordinates && gpsAccuracy <= 35;   // EKF pondera por accuracy²
     final hasReliableGps = hasCoordinates && gpsAccuracy <= 20;
     final hasGpsSpeed =
         frame.gpsSpeed != null &&
@@ -602,6 +636,7 @@ class GPSService {
           frame.longitude!,
           hasGpsSpeed ? frame.gpsSpeed! : 0.0,
           state.heading,
+          accuracy: gpsAccuracy,
         );
         lat = frame.latitude;
         lon = frame.longitude;
@@ -612,8 +647,12 @@ class GPSService {
             : 0.0;
         _ekf.setAdaptiveNoise(gpsAccuracy, velocityDelta);
 
-        // Predict + update
-        _ekf.predict(dt);
+        // Predict + update con datos IMU
+        _ekf.predict(
+          dt,
+          gyroZ: frame.gyroscopeZ,
+          accelMagnitude: frame.accelerationMagnitude,
+        );
         final corrected = _ekf.updateGPS(
           frame.latitude!,
           frame.longitude!,

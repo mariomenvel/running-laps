@@ -29,7 +29,7 @@ class TrainingRepository {
 
     // RDP smoothing on trackPoints (whole-session trace)
     if (e.trackPoints.length > 10) {
-      final smoothed = RDPSmoother.simplify(e.trackPoints, epsilon: 2.5);
+      final smoothed = RDPSmoother.simplify(e.trackPoints, epsilon: 2.0);
       e = e.copyWith(trackPoints: smoothed);
     }
 

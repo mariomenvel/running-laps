@@ -270,7 +270,7 @@ class HeartRateMonitorView extends StatelessWidget {
         bottom: false,
         child: Column(
           children: [
-            AppHeader(title: 'Pulsómetro'),
+            AppHeader(title: const Text('Pulsómetro')),
             Expanded(
               child: ListenableBuilder(
                 listenable: Listenable.merge([

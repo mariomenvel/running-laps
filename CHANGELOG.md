@@ -1,5 +1,21 @@
 # CHANGELOG — Running Laps
 
+## [GPS — EKF2D + fusión IMU] — 2026-04-23
+
+### Mejoras GPS
+- EKF2D con estado 4D (lat, lon, velocidad, heading)
+- Predicción sub-segundo cada 100ms con giroscopio y acelerómetro
+- processNoise adaptativo: bajo en rectas (gravedad restada), alto en curvas
+- Umbral accuracy: 25m → 35m con ponderación por accuracy²
+- Micro-movement threshold inteligente con podómetro (iOS)
+- RDP smoother: epsilon trackPoints 2.5 → 2.0 metros
+- sensors_plus: acelerómetro + giroscopio a 50Hz (gameInterval)
+
+### Pendiente de prueba en campo
+- Validar trazas en ciudad con edificios
+- Comparar con recorrido de referencia
+- Ajustar epsilon RDP según resultados reales
+
 ## [Fase 5 — Métricas de progreso] — 2026-04-10
 
 ### Nueva feature: ProgressView (lib/features/athlete/)

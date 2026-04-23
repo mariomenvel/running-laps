@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:math' show sqrt;
 import 'package:flutter/foundation.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 
 import 'package:running_laps/core/tracking/sensor_frame.dart';
 
@@ -20,6 +22,8 @@ class SensorService {
   // Internal subscriptions
   StreamSubscription<StepCount>? _stepCountSubscription;
   StreamSubscription<PedestrianStatus>? _statusSubscription;
+  StreamSubscription<AccelerometerEvent>? _accSub;
+  StreamSubscription<GyroscopeEvent>? _gyroSub;
 
   // Reactive state (USED BY UI)
   final ValueNotifier<int> totalSteps = ValueNotifier(0);
@@ -34,8 +38,16 @@ class SensorService {
   bool _isInitialized = false;
   int _initialStepsOffset = 0;
 
-  // 🔑 NEW: step delta tracking for GPS system
+  // Step delta tracking for GPS system
   int _lastSessionStepCount = 0;
+
+  // Accelerometer state (m/s²) — initial Z = gravity
+  double _accX = 0.0;
+  double _accY = 0.0;
+  double _accZ = 9.81;
+
+  // Gyroscope state (rad/s)
+  double _gyroZ = 0.0;
 
   /* =========================
      INITIALIZATION
@@ -44,8 +56,6 @@ class SensorService {
   Future<bool> initialize() async {
     if (_isInitialized) return true;
 
-    // Pedómetro es opcional: si el permiso está denegado o no disponible en
-    // este dispositivo, continuamos sin él (el GPS sigue funcionando).
     var permissionStatus = await Permission.activityRecognition.status;
     if (permissionStatus.isDenied) {
       permissionStatus = await Permission.activityRecognition.request();
@@ -54,8 +64,9 @@ class SensorService {
     if (permissionStatus.isGranted) {
       _initStreams();
     }
-    // Aunque el pedómetro no esté disponible devolvemos true para no
-    // bloquear la solicitud de permiso de ubicación en GPSService.
+
+    _initImuStreams();
+
     _isInitialized = true;
     return true;
   }
@@ -66,17 +77,36 @@ class SensorService {
 
     _stepCountSubscription = _stepCountStream?.listen(
       _onStepCount,
-      onError: (error) {
-
-      },
+      onError: (error) {},
     );
 
     _statusSubscription = _pedestrianStatusStream?.listen(
       _onPedestrianStatusChanged,
       onError: (error) {
-
         status.value = SensorStatus.unknown;
       },
+    );
+  }
+
+  void _initImuStreams() {
+    _accSub = accelerometerEventStream(
+      samplingPeriod: SensorInterval.gameInterval,
+    ).listen(
+      (event) {
+        _accX = event.x;
+        _accY = event.y;
+        _accZ = event.z;
+      },
+      onError: (e) => debugPrint('[SensorService] acc error: $e'),
+    );
+
+    _gyroSub = gyroscopeEventStream(
+      samplingPeriod: SensorInterval.gameInterval,
+    ).listen(
+      (event) {
+        _gyroZ = event.z;
+      },
+      onError: (e) => debugPrint('[SensorService] gyro error: $e'),
     );
   }
 
@@ -140,17 +170,29 @@ class SensorService {
     return delta < 0 ? 0 : delta;
   }
 
+  // Aceleración lateral (componente horizontal sin gravedad)
+  // Útil para detectar cambios de dirección y velocidad
+  double get lateralAcceleration {
+    final horizontal = sqrt(_accX * _accX + _accY * _accY);
+    return horizontal;
+  }
+
   SensorFrame buildSensorFrame({
     required DateTime timestamp,
   }) {
+    final mag = sqrt(_accX * _accX + _accY * _accY + _accZ * _accZ);
     return SensorFrame(
-      latitude: null,
-      longitude: null,
-      gpsAccuracy: null,
-      gpsSpeed: null,
-      stepsDelta: consumeStepsDelta(),
-      acceleration: 0.0, // placeholder (future-proof)
-      timestamp: timestamp,
+      latitude:              null,
+      longitude:             null,
+      gpsAccuracy:           null,
+      gpsSpeed:              null,
+      stepsDelta:            consumeStepsDelta(),
+      accelerationX:         _accX,
+      accelerationY:         _accY,
+      accelerationZ:         _accZ,
+      accelerationMagnitude: mag,
+      gyroscopeZ:            _gyroZ,
+      timestamp:             timestamp,
     );
   }
 
@@ -169,6 +211,8 @@ class SensorService {
   void dispose() {
     _stepCountSubscription?.cancel();
     _statusSubscription?.cancel();
+    _accSub?.cancel();
+    _gyroSub?.cancel();
     totalSteps.dispose();
     sessionSteps.dispose();
     cadence.dispose();

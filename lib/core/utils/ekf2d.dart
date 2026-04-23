@@ -1,12 +1,9 @@
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 
-/// 2D Extended Kalman Filter for GPS position smoothing.
-///
-/// State vector: [latitude, longitude, velocity (m/s), heading (radians)]
-/// Coordinate convention: heading 0 = North, increases clockwise (matches GPS bearing).
-///
-/// Uses a constant-velocity motion model for prediction and a linear GPS
-/// measurement model (lat/lon observed directly).
+/// Extended Kalman Filter 2D para tracking GPS de running.
+/// Estado: [latitud, longitud, velocidad (m/s), heading (rad)]
+/// Fusiona GPS con acelerómetro y giroscopio para trazas precisas.
 class EKF2D {
   // ── Process noise (tunable at runtime) ──────────────────────────────────
   double processNoisePosition; // variance for lat/lon state (degrees²)
@@ -40,38 +37,48 @@ class EKF2D {
   double get latitude     => _state[0];
   double get longitude    => _state[1];
   double get velocity     => _state[2];
+  double get speed        => _state[2].clamp(0.0, 12.0); // alias con clamp
   double get heading      => _state[3];
   bool   get isInitialized => _initialized;
 
   // ─────────────────────────────────────────────────────────────────────────
   // Initialize with the first reliable GPS fix
+  // accuracy: GPS horizontal accuracy in metres (optional — scales P init)
   // ─────────────────────────────────────────────────────────────────────────
   void initialize(
     double lat,
     double lon,
     double vel,
-    double hdg,
-  ) {
+    double hdg, {
+    double accuracy = 10.0,
+  }) {
     _state[0] = lat;
     _state[1] = lon;
     _state[2] = vel.clamp(0.0, 12.0);
     _state[3] = _normalizeAngle(hdg);
 
-    // Reset covariance to identity — uncertainty is high until first updates
+    // Covarianza inicial basada en accuracy del GPS
+    final posVar = (accuracy / earthRadiusDeg) * (accuracy / earthRadiusDeg);
     for (int i = 0; i < 4; i++) {
       for (int j = 0; j < 4; j++) {
-        _P[i][j] = i == j ? 1.0 : 0.0;
+        _P[i][j] = i == j
+            ? (i < 2 ? posVar : (i == 2 ? 4.0 : 1.0))
+            : 0.0;
       }
     }
 
     _initialized = true;
+    debugPrint('[EKF2D] initialized at ($lat, $lon) accuracy=${accuracy}m');
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // Predict step — constant-velocity model, dt in seconds
+  // Predict step — constant-velocity model with IMU fusion
+  // dt: segundos desde última actualización
+  // gyroZ: velocidad angular del giroscopio (rad/s) — actualiza heading
+  // accelMagnitude: magnitud lateral de aceleración — escala ruido de proceso
   // ─────────────────────────────────────────────────────────────────────────
-  void predict(double dt) {
-    if (!_initialized || dt <= 0) return;
+  void predict(double dt, {double gyroZ = 0.0, double accelMagnitude = 0.0}) {
+    if (!_initialized || dt <= 0 || dt > 2.0) return;
 
     final lat = _state[0];
     final vel = _state[2];
@@ -86,36 +93,38 @@ class EKF2D {
 
     _state[0] = lat + dLat;
     _state[1] = _state[1] + dLon;
-    // velocity and heading unchanged (constant model)
+    // heading update via giroscopio
+    _state[3] = _normalizeAngle(hdg + gyroZ * dt);
+    // velocity unchanged (constant model)
 
     // ── Jacobian F of the motion model (4×4) ────────────────────────────
-    // ∂f/∂lat: dLat depends on lat only through cosLat in dLon
-    //   row 0 (lat):  [1,  0,  cos(hdg)*dt/Rdeg,  -vel*sin(hdg)*dt/Rdeg ]
-    //   row 1 (lon):  [dLon_dLat, 1, sin(hdg)*dt/(Rdeg*cos(lat)), vel*cos(hdg)*dt/(Rdeg*cosLat)]
-    //   row 2 (vel):  [0, 0, 1, 0]
-    //   row 3 (hdg):  [0, 0, 0, 1]
     final dLon_dLat = cosLat.abs() > 1e-10
         ? (vel * math.sin(hdg) * dt * math.tan(lat * math.pi / 180.0)) /
           (earthRadiusDeg * cosLat)
         : 0.0;
+    final safecos = cosLat.abs() > 1e-10 ? cosLat : 1.0;
 
     final F = [
       [1.0, 0.0,  math.cos(hdg) * dt / earthRadiusDeg, -vel * math.sin(hdg) * dt / earthRadiusDeg],
-      [dLon_dLat, 1.0, math.sin(hdg) * dt / (earthRadiusDeg * (cosLat.abs() > 1e-10 ? cosLat : 1.0)), vel * math.cos(hdg) * dt / (earthRadiusDeg * (cosLat.abs() > 1e-10 ? cosLat : 1.0))],
+      [dLon_dLat, 1.0, math.sin(hdg) * dt / (earthRadiusDeg * safecos), vel * math.cos(hdg) * dt / (earthRadiusDeg * safecos)],
       [0.0, 0.0, 1.0, 0.0],
       [0.0, 0.0, 0.0, 1.0],
     ];
 
-    // ── Process noise matrix Q ───────────────────────────────────────────
+    // ── Q adaptativo: más ruido si hay aceleración lateral brusca ───────
+    // Restar gravedad para obtener solo aceleración dinámica
+    // En recta: ~0.2-0.5 m/s². En curva: ~1-3 m/s²
+    final dynamicAccel = (accelMagnitude - 9.81).abs();
+    final qScale = 1.0 + (dynamicAccel * 3.0).clamp(0.0, 9.0);
     final Q = [
-      [processNoisePosition, 0.0,                   0.0,                   0.0],
-      [0.0,                  processNoisePosition,  0.0,                   0.0],
-      [0.0,                  0.0,                   processNoiseVelocity,  0.0],
-      [0.0,                  0.0,                   0.0,                   processNoiseHeading],
+      [processNoisePosition * qScale, 0.0, 0.0, 0.0],
+      [0.0, processNoisePosition * qScale, 0.0, 0.0],
+      [0.0, 0.0, processNoiseVelocity * qScale, 0.0],
+      [0.0, 0.0, 0.0, processNoiseHeading * qScale],
     ];
 
     // P = F * P * F^T + Q
-    final FP  = _matMul(F, _P);
+    final FP   = _matMul(F, _P);
     final FPFt = _matMul(FP, _transpose(F));
     for (int i = 0; i < 4; i++) {
       for (int j = 0; j < 4; j++) {
@@ -200,6 +209,34 @@ class EKF2D {
     final innovation = _normalizeAngle(newHeading - _state[3]);
     _state[3] = _normalizeAngle(_state[3] + K * innovation);
     _P[3][3] = (1.0 - K) * pHdg;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // update — atajo que combina updateGPS + updateHeading + velocidad GPS
+  // Equivalente al método update del spec: fusiona lat, lon, speed, heading
+  // ─────────────────────────────────────────────────────────────────────────
+  void update({
+    required double latitude,
+    required double longitude,
+    required double speed,
+    required double heading,
+    required double accuracy,
+  }) {
+    if (!_initialized) {
+      initialize(latitude, longitude, speed, heading, accuracy: accuracy);
+      return;
+    }
+    updateGPS(latitude, longitude, accuracy);
+    if (speed > 0.5) {
+      updateHeading(heading);
+      // Actualizar velocidad con ganancia simple
+      final pVel = _P[2][2];
+      final R = 1.0; // ±1 m/s medición GPS
+      final K = pVel / (pVel + R);
+      _state[2] = (_state[2] + K * (speed.clamp(0.0, 12.0) - _state[2]))
+          .clamp(0.0, 12.0);
+      _P[2][2] = (1.0 - K) * pVel;
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────

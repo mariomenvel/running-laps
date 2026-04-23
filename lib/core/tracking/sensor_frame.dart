@@ -3,13 +3,21 @@ class SensorFrame {
     // GPS
     final double? latitude;
     final double? longitude;
-    final double? altitude;      // New: Altitude support
+    final double? altitude;
     final double? gpsAccuracy;   // metros
     final double? gpsSpeed;      // m/s
 
-    // Movimiento
+    // Movimiento — pasos
     final int stepsDelta;        // pasos desde el último tick
-    final double acceleration;  // magnitud media (simplificada)
+
+    // Acelerómetro (m/s²)
+    final double accelerationX;
+    final double accelerationY;
+    final double accelerationZ;
+    final double accelerationMagnitude;  // sqrt(x²+y²+z²)
+
+    // Giroscopio (rad/s)
+    final double gyroscopeZ;     // rotación sobre eje vertical
 
     // Tiempo
     final DateTime timestamp;
@@ -21,7 +29,11 @@ class SensorFrame {
       this.gpsAccuracy,
       this.gpsSpeed,
       required this.stepsDelta,
-      required this.acceleration,
+      required this.accelerationX,
+      required this.accelerationY,
+      required this.accelerationZ,
+      required this.accelerationMagnitude,
+      required this.gyroscopeZ,
       required this.timestamp,
     });
 }
