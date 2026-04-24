@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:running_laps/core/services/heart_rate_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
@@ -14,7 +16,20 @@ class HeartRateMonitorView extends StatelessWidget {
     final granted = await HeartRateService().requestPermissions();
     if (!context.mounted) return;
     if (!granted) {
-      ModernSnackBar.showError(context, 'Permisos de Bluetooth necesarios');
+      if (Platform.isIOS) {
+        final status = await Permission.bluetooth.status;
+        if (!context.mounted) return;
+        if (status.isPermanentlyDenied) {
+          ModernSnackBar.showError(context,
+              'Activa el Bluetooth en Ajustes → Running Laps → Bluetooth');
+        } else {
+          ModernSnackBar.showError(context,
+              'Permisos de Bluetooth necesarios');
+        }
+      } else {
+        ModernSnackBar.showError(context,
+            'Permisos de Bluetooth necesarios');
+      }
       return;
     }
     HeartRateService().startScan();

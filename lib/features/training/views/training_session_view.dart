@@ -62,7 +62,7 @@ class TrainingSessionView extends StatefulWidget {
 
 
 class _TrainingSessionViewState extends State<TrainingSessionView>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   // --- Estado del Cronómetro ---
   final Stopwatch _stopwatch = Stopwatch();
   Timer? _timer;
@@ -109,6 +109,8 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addObserver(this);
 
     // Fade-in animation
     _fadeController = AnimationController(
@@ -238,7 +240,21 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _stopwatch.isRunning) {
+      // Force one immediate UI refresh so the displayed time
+      // catches up after iOS/Android throttled the Timer.
+      if (mounted) {
+        setState(() {
+          _tiempoMostrado = _formatTiempo(_stopwatch.elapsed);
+        });
+      }
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     HeartRateService().heartRate.removeListener(_onHrChanged);
     HeartRateService().connectionState.removeListener(_onHrChanged);
     _pulseController.dispose();

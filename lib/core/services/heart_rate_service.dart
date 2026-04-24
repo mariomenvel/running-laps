@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -42,16 +44,37 @@ class HeartRateService {
 
   // Solicitar permisos BLE
   Future<bool> requestPermissions() async {
-    final statuses = await [
-      Permission.bluetooth,
-      Permission.bluetoothScan,
-      Permission.bluetoothConnect,
-      Permission.locationWhenInUse,
-    ].request();
-    return statuses.values.every(
-      (s) =>
-          s == PermissionStatus.granted || s == PermissionStatus.limited,
-    );
+    if (Platform.isAndroid) {
+      final sdkInt = (await DeviceInfoPlugin().androidInfo).version.sdkInt;
+      if (sdkInt >= 31) {
+        // Android 12+ (API 31+): BLUETOOTH_SCAN + BLUETOOTH_CONNECT
+        final statuses = await [
+          Permission.bluetoothScan,
+          Permission.bluetoothConnect,
+        ].request();
+        return statuses.values.every(
+          (s) => s.isGranted || s.isLimited);
+      } else {
+        // Android < 12: BLUETOOTH clásico + ubicación
+        final statuses = await [
+          Permission.bluetooth,
+          Permission.locationWhenInUse,
+        ].request();
+        return statuses.values.every(
+          (s) => s.isGranted || s.isLimited);
+      }
+    }
+    if (Platform.isIOS) {
+      final status = await Permission.bluetooth.status;
+      if (status.isGranted) return true;
+      if (status.isPermanentlyDenied) {
+        await openAppSettings();
+        return false;
+      }
+      final result = await Permission.bluetooth.request();
+      return result.isGranted;
+    }
+    return false;
   }
 
   // Escanear dispositivos con Heart Rate Service

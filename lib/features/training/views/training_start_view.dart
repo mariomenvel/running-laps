@@ -36,6 +36,7 @@ import 'package:running_laps/features/athlete/data/athlete_session_repository.da
 import 'package:running_laps/core/services/heart_rate_service.dart';
 import 'package:running_laps/features/profile/views/heart_rate_monitor_view.dart';
 import 'package:running_laps/core/services/notification_service.dart';
+import 'package:running_laps/core/services/session_recovery_service.dart';
 import 'package:running_laps/core/services/training_load_service.dart';
 import 'package:running_laps/features/athlete/data/progress_repository.dart';
 import 'package:running_laps/features/profile/data/zones_repository.dart';
@@ -50,11 +51,15 @@ import 'package:running_laps/features/profile/data/zones_repository.dart';
 class TrainingStartView extends StatefulWidget {
   final TrainingTemplate? sourceTemplate;
   final String? athleteSessionId;
+  final List<Serie>? recoveredSeries;
+  final DateTime? recoveredStartTime;
 
   const TrainingStartView({
     Key? key,
     this.sourceTemplate,
     this.athleteSessionId,
+    this.recoveredSeries,
+    this.recoveredStartTime,
   }) : super(key: key);
 
   @override
@@ -96,6 +101,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   bool _isResting = false;
   StreamSubscription<String>? _iosRestActionSubscription;
 
+  // Momento de inicio de sesión (para recovery)
+  DateTime? _sessionStartTime;
 
   // --- Colores ---
   static const Color _bgGradientColor = Color(0xFFF9F5FB);
@@ -171,6 +178,16 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         if (action == 'skip_rest' && _isResting) {
           _skipRest();
         }
+      });
+    }
+    // Cargar series recuperadas si se abre desde el banner de recovery
+    if (widget.recoveredSeries != null && widget.recoveredSeries!.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        for (final serie in widget.recoveredSeries!) {
+          _vm.addSerie(serie);
+        }
+        _sessionStartTime = widget.recoveredStartTime;
+        if (mounted) setState(() {});
       });
     }
   }
@@ -441,9 +458,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     if (!mounted) return; // PROACTIVE FIX: Check if widget is still mounted
 
     if (result != null && result is Serie) {
+      _sessionStartTime ??= DateTime.now();
       setState(() {
         _vm.addSerie(result);
-
 
         // Guardamos como "último valor"
         _ultimoValorDistancia = result.distanciaM;
@@ -473,6 +490,12 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         }
       });
 
+      SessionRecoveryService().saveSession(
+        series: _vm.series,
+        gpsOn: _vm.gpsOn,
+        startTime: _sessionStartTime!,
+        templateName: _vm.source?.templateSnapshot?.name,
+      );
 
       if (result.descansoSec > 0) {
         // Calculate remaining rest time considering time spent in RPE/Save
@@ -1071,6 +1094,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         fcMediaSesion: fcMediaSesion,
       );
 
+      SessionRecoveryService().clearSession();
       setState(() {
         _vm.clearSeries();
         _restTimer?.cancel();
@@ -1279,16 +1303,24 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     );
 
     if (result != null && result is Serie) {
-       setState(() {
-          if (result.gpsPoints != null) {
-              _collectedGpsPoints = result.gpsPoints!.map((m) => GpsPoint.fromMap(m)).toList();
-          }
-          _vm.addSerie(result);
-       });
-       
-       if (mounted) {
-         _onFinishTrainingTap(); 
-       }
+      _sessionStartTime ??= DateTime.now();
+      setState(() {
+        if (result.gpsPoints != null) {
+          _collectedGpsPoints = result.gpsPoints!.map((m) => GpsPoint.fromMap(m)).toList();
+        }
+        _vm.addSerie(result);
+      });
+
+      SessionRecoveryService().saveSession(
+        series: _vm.series,
+        gpsOn: _vm.gpsOn,
+        startTime: _sessionStartTime!,
+        templateName: _vm.source?.templateSnapshot?.name,
+      );
+
+      if (mounted) {
+        _onFinishTrainingTap();
+      }
     }
   }
 

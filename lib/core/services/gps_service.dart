@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -47,7 +48,7 @@ class GpsPoint {
   );
 }
 
-class GPSService {
+class GPSService with WidgetsBindingObserver {
   final ValueNotifier<GpsStatus> status = ValueNotifier(GpsStatus.unknown);
   final ValueNotifier<int> totalDistanceMeters = ValueNotifier(0);
   final ValueNotifier<String> currentPace = ValueNotifier('--:-- /km');
@@ -67,6 +68,9 @@ class GPSService {
   StreamSubscription<String>? _iosActionSubscription;
   Timer? _notificationTimer;
   Timer? _ekfPredictTimer;
+  DateTime? _lastLiveActivityUpdate;
+  DateTime? _backgroundStartTime;
+  bool _observerRegistered = false;
 
   int _gpsStableSeconds = 0;
   int _noGpsSeconds = 0;
@@ -149,6 +153,7 @@ class GPSService {
       locationSettings: locationSettings,
     ).listen(_handlePosition);
 
+    _registerObserver();
     _startEkfPrediction();
   }
 
@@ -233,6 +238,7 @@ class GPSService {
     _notificationTimer?.cancel();
     _notificationTimer = null;
     _stopEkfPrediction();
+    _unregisterObserver();
     _ekf.reset();
 
     // Persist learned stride length if GPS was active long enough to calibrate
@@ -268,6 +274,7 @@ class GPSService {
   }
 
   void dispose() {
+    _unregisterObserver();
     if (!_useIOSLiveActivity) {
       FlutterForegroundTask.removeTaskDataCallback(_onDataFromTask);
     }
@@ -375,6 +382,12 @@ class GPSService {
 
   void _sendNotificationUpdate() {
     if (_useIOSLiveActivity) {
+      final now = DateTime.now();
+      if (_lastLiveActivityUpdate != null &&
+          now.difference(_lastLiveActivityUpdate!).inMilliseconds < 1000) {
+        return;
+      }
+      _lastLiveActivityUpdate = now;
       IOSLiveActivityService.instance.update(
         _currentIOSPayload(
           title: _notificationTitle(),
@@ -470,6 +483,41 @@ class GPSService {
 
   bool get _useIOSLiveActivity =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
+  void _registerObserver() {
+    if (!_observerRegistered) {
+      WidgetsBinding.instance.addObserver(this);
+      _observerRegistered = true;
+    }
+  }
+
+  void _unregisterObserver() {
+    if (_observerRegistered) {
+      WidgetsBinding.instance.removeObserver(this);
+      _observerRegistered = false;
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _backgroundStartTime = DateTime.now();
+      debugPrint('[GPS] app went to background');
+      _stopEkfPrediction();
+    } else if (state == AppLifecycleState.resumed) {
+      debugPrint('[GPS] app resumed from background');
+      if (_backgroundStartTime != null &&
+          (status.value == GpsStatus.running ||
+           status.value == GpsStatus.paused)) {
+        final backgroundDuration =
+            DateTime.now().difference(_backgroundStartTime!);
+        debugPrint('[GPS] was in background for '
+            '${backgroundDuration.inSeconds}s');
+        _startEkfPrediction();
+      }
+      _backgroundStartTime = null;
+    }
+  }
 
   void _startEkfPrediction() {
     _ekfPredictTimer?.cancel();
@@ -574,7 +622,7 @@ class GPSService {
         1000.0;
     if (dt <= 0) return state;
 
-    final deltaTime = dt.clamp(0.2, 2.0);
+    final deltaTime = dt.clamp(0.2, 10.0);
     final gpsAccuracy = frame.gpsAccuracy ?? double.infinity;
     final hasCoordinates =
         frame.latitude != null && frame.longitude != null;

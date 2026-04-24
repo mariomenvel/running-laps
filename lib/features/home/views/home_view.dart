@@ -37,6 +37,7 @@ import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'package:running_laps/core/services/session_recovery_service.dart';
 
 /// Home View rediseñado con widgets configurables
 /// Versión moderna con sistema de personalización
@@ -58,6 +59,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       GlobalChallengesRepository();
   final PageController _challengesPageController = PageController();
   int _challengesPage = 0;
+  RecoveredSession? _recoveredSession;
 
   List<Entrenamiento> _entrenamientos = [];
   Map<String, dynamic>? _userDoc;
@@ -113,6 +115,33 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     _loadGroups();
     _initNotificationListener();
     _loadTodaySession();
+    _checkRecoveredSession();
+  }
+
+  Future<void> _checkRecoveredSession() async {
+    final session = await SessionRecoveryService().loadSession();
+    if (session != null && mounted) {
+      setState(() => _recoveredSession = session);
+    }
+  }
+
+  void _resumeSession() {
+    final session = _recoveredSession!;
+    setState(() => _recoveredSession = null);
+    Navigator.push(
+      context,
+      AppRoute(
+        page: TrainingStartView(
+          recoveredSeries: session.series,
+          recoveredStartTime: session.startTime,
+        ),
+      ),
+    );
+  }
+
+  void _discardSession() {
+    SessionRecoveryService().clearSession();
+    setState(() => _recoveredSession = null);
   }
 
   Future<void> _loadTodaySession() async {
@@ -459,6 +488,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           children: [
             _slideFromLeft(_aGreeting, _buildWelcomeHeader()),
             const SizedBox(height: 12),
+            if (_recoveredSession != null)
+              _RecoveryBanner(
+                session: _recoveredSession!,
+                onResume: _resumeSession,
+                onDiscard: _discardSession,
+              ),
             if (_todaySession != null) ...[
               _TodaySessionBanner(
                 session: _todaySession!,
@@ -1573,6 +1608,75 @@ class _GroupHighlightCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ===================================================================
+// BANNER RECOVERY
+// ===================================================================
+class _RecoveryBanner extends StatelessWidget {
+  final RecoveredSession session;
+  final VoidCallback onResume;
+  final VoidCallback onDiscard;
+
+  const _RecoveryBanner({
+    required this.session,
+    required this.onResume,
+    required this.onDiscard,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.effortSurface,
+        border: Border.all(color: AppColors.effort.withOpacity(0.5)),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.warning_amber_rounded,
+              color: AppColors.effort, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Sesión interrumpida',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.effort,
+                  ),
+                ),
+                Text(
+                  '${session.series.length} series · ${session.elapsedFormatted}',
+                  style: const TextStyle(
+                      fontSize: 12, color: Color(0xFF8E8E93)),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+                foregroundColor: AppColors.effort,
+                padding: const EdgeInsets.symmetric(horizontal: 8)),
+            onPressed: onResume,
+            child: const Text('Recuperar'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+                foregroundColor: Color(0xFF8E8E93),
+                padding: const EdgeInsets.symmetric(horizontal: 8)),
+            onPressed: onDiscard,
+            child: const Text('Descartar'),
+          ),
+        ],
       ),
     );
   }
