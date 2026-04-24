@@ -273,7 +273,6 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                         const SizedBox(height: 4),
                         _buildAddButton(
                           label: 'Nueva sesión',
-                          colors: [Colors.green.shade400, Colors.green.shade600],
                           onTap: () => _navigateToEditor(isWarmupCooldown: false),
                         ),
                       ],
@@ -292,7 +291,6 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                         const SizedBox(height: 4),
                         _buildAddButton(
                           label: 'Nuevo calentamiento / vuelta a la calma',
-                          colors: [Colors.teal.shade400, Colors.teal.shade600],
                           onTap: () => _navigateToEditor(isWarmupCooldown: true),
                         ),
                       ],
@@ -337,7 +335,6 @@ class _TemplatesListViewState extends State<TemplatesListView> {
 
   Widget _buildAddButton({
     required String label,
-    required List<Color> colors,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -345,30 +342,22 @@ class _TemplatesListViewState extends State<TemplatesListView> {
       child: Container(
         height: 56,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: colors,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: colors.last.withOpacity(0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
+          color: const Color(0xFF1E1530),
+          border: Border.all(
+              color: AppColors.brandPurple.withOpacity(0.4)),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.add_rounded, color: Colors.white, size: 26),
+            const Icon(Icons.add_rounded,
+                color: AppColors.brandPurple, size: 22),
             const SizedBox(width: 8),
             Text(
               label.toUpperCase(),
               style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
+                color: AppColors.brandPurple,
+                fontWeight: FontWeight.w700,
                 fontSize: 13,
                 letterSpacing: 0.8,
               ),
