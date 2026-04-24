@@ -5,6 +5,7 @@ import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/app_page_scaffold.dart';
+import 'package:running_laps/features/templates/data/template_models.dart';
 
 class TrainingNoGpsDetailView extends StatefulWidget {
   final Entrenamiento training;
@@ -21,9 +22,10 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
 
   // ── Entrance animation ──────────────────────────────────────────
   late final AnimationController _entranceCtrl;
-  late final Animation<double> _aBanner;  // 0ms   – fade + slide left
-  late final Animation<double> _aStats;   // 100ms – scale in
-  late final Animation<double> _aSeries;  // 200ms – fade + slide bottom
+  late final Animation<double> _aBanner;      // 0ms   – fade + slide left
+  late final Animation<double> _aStats;       // 100ms – scale in
+  late final Animation<double> _aSeries;      // 200ms – fade + slide bottom
+  late final Animation<double> _aComparison;  // 350ms – fade + slide bottom
   // ────────────────────────────────────────────────────────────────
 
   @override
@@ -33,9 +35,10 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
-    _aBanner = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.000, 0.517, curve: Curves.easeOutQuart));
-    _aStats  = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.083, 0.600, curve: Curves.easeOutQuart));
-    _aSeries = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.167, 0.683, curve: Curves.easeOutQuart));
+    _aBanner     = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.000, 0.517, curve: Curves.easeOutQuart));
+    _aStats      = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.083, 0.600, curve: Curves.easeOutQuart));
+    _aSeries     = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.167, 0.683, curve: Curves.easeOutQuart));
+    _aComparison = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.292, 0.808, curve: Curves.easeOutQuart));
     _entranceCtrl.forward();
   }
 
@@ -79,6 +82,11 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
                     const SizedBox(height: 32),
                     _slideFromBottom(_aSeries, _buildSeriesSection()),
                     const SizedBox(height: 32),
+                    if (training.plannedComparison != null)
+                      _slideFromBottom(_aComparison,
+                          _buildComparisonSection()),
+                    if (training.plannedComparison != null)
+                      const SizedBox(height: 32),
                   ],
                 ),
               ),
@@ -394,5 +402,326 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
         ),
       ),
     );
+  }
+
+  // ── Comparativa planificado vs ejecutado ─────────────────────────
+
+  Widget _buildComparisonSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final comp = training.plannedComparison!;
+    final blocks = (comp['blocks'] as List<dynamic>? ?? []);
+
+    Widget header = Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.rpeMid.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Icon(Icons.compare_arrows_rounded,
+              color: AppColors.rpeMid, size: 18),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          'PLANIFICADO VS EJECUTADO',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+      ],
+    );
+
+    final category = comp['sessionCategory'] as String?;
+
+    if (blocks.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            header,
+            const SizedBox(height: 16),
+            const Text('Sin datos de comparativa',
+                style: TextStyle(fontSize: 13, color: Color(0xFF8E8E93))),
+          ],
+        ),
+      );
+    }
+
+    final deltas = <double>[];
+    for (final b in blocks) {
+      final planned = b['planned'] as Map?;
+      final executed = b['executed'] as Map?;
+      final tps = (planned?['targetPaceSec'] as num?)?.toDouble();
+      final eps = (executed?['paceSec'] as num?)?.toDouble();
+      if (tps != null && eps != null) deltas.add(eps - tps);
+    }
+    final avgDelta =
+        deltas.isEmpty ? null : deltas.reduce((a, b) => a + b) / deltas.length;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.transparent
+                : Colors.black.withOpacity(0.04),
+            offset: const Offset(0, 6),
+            blurRadius: 16,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          header,
+          if (category != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              SessionCategoryX.fromValue(category).label,
+              style: const TextStyle(
+                  fontSize: 13, color: AppColors.brandPurpleLight),
+            ),
+          ],
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              const SizedBox(
+                width: 64,
+                child: Text('Serie',
+                    style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
+              ),
+              const Expanded(
+                child: Text('Planificado',
+                    style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
+                    textAlign: TextAlign.center),
+              ),
+              const Expanded(
+                child: Text('Ejecutado',
+                    style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
+                    textAlign: TextAlign.center),
+              ),
+              const SizedBox(
+                width: 52,
+                child: Text('Delta',
+                    style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
+                    textAlign: TextAlign.right),
+              ),
+            ],
+          ),
+          const Divider(color: Color(0xFF3A3A3C), height: 20),
+          ...blocks.map((b) {
+            final planned = b['planned'] as Map?;
+            final executed = b['executed'] as Map?;
+            final order = (b['order'] as num?)?.toInt() ?? 0;
+
+            final targetPaceSec =
+                (planned?['targetPaceSec'] as num?)?.toDouble();
+            final execPaceSec =
+                (executed?['paceSec'] as num?)?.toDouble();
+
+            final targetPaceStr =
+                targetPaceSec != null ? _formatPace(targetPaceSec) : '—';
+            final execPaceStr =
+                execPaceSec != null ? _formatPace(execPaceSec) : '—';
+
+            double? delta;
+            if (targetPaceSec != null && execPaceSec != null) {
+              delta = execPaceSec - targetPaceSec;
+            }
+
+            final onSurface = Theme.of(context).colorScheme.onSurface;
+
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 64,
+                        child: Text(
+                          'Serie ${order + 1}',
+                          style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: onSurface),
+                        ),
+                      ),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text(
+                              targetPaceStr,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: targetPaceSec != null
+                                    ? onSurface
+                                    : const Color(0xFF8E8E93),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            if ((planned?['targetRpe'] as num?) != null) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                'RPE ${(planned!['targetRpe'] as num).toStringAsFixed(1)}',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: _rpeColor((planned['targetRpe']
+                                            as num)
+                                        .toDouble())),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            if (executed == null)
+                              const Text(
+                                'No ejecutada',
+                                style: TextStyle(
+                                    fontSize: 12, color: Color(0xFF8E8E93)),
+                                textAlign: TextAlign.center,
+                              )
+                            else ...[
+                              Text(
+                                execPaceStr,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: delta != null
+                                      ? _deltaColor(delta)
+                                      : onSurface,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              if ((executed['rpe'] as num?) != null) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  'RPE ${(executed['rpe'] as num).toStringAsFixed(1)}',
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      color: _rpeColor(
+                                          (executed['rpe'] as num)
+                                              .toDouble())),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ],
+                          ],
+                        ),
+                      ),
+                      SizedBox(
+                        width: 52,
+                        child: delta != null
+                            ? Text(
+                                delta >= 0
+                                    ? '+${_formatPaceDelta(delta)}'
+                                    : '-${_formatPaceDelta(delta.abs())}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: _deltaColor(delta),
+                                ),
+                                textAlign: TextAlign.right,
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    ],
+                  ),
+                ),
+                Divider(
+                    color: const Color(0xFF3A3A3C).withOpacity(0.5),
+                    height: 1),
+              ],
+            );
+          }),
+          if (avgDelta != null) ...[
+            const SizedBox(height: 12),
+            _buildComparisonSummary(avgDelta),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildComparisonSummary(double avgDelta) {
+    String text;
+    IconData icon;
+    Color color;
+
+    if (avgDelta < -15) {
+      text = 'Fuiste más rápido de lo planeado 🔥';
+      icon = Icons.bolt_rounded;
+      color = AppColors.rpeLow;
+    } else if (avgDelta < 15) {
+      text = 'Muy ajustado al plan ✓';
+      icon = Icons.check_circle_outline_rounded;
+      color = AppColors.rpeLow;
+    } else if (avgDelta < 30) {
+      text = 'Algo por encima del objetivo';
+      icon = Icons.warning_amber_rounded;
+      color = AppColors.rpeMid;
+    } else {
+      text = 'Bastante por encima del objetivo';
+      icon = Icons.error_outline_rounded;
+      color = AppColors.rpeMax;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(text,
+                style: TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w500, color: color)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatPace(double secPerKm) {
+    final min = secPerKm ~/ 60;
+    final sec = (secPerKm % 60).round();
+    return '$min:${sec.toString().padLeft(2, '0')} /km';
+  }
+
+  String _formatPaceDelta(double sec) {
+    if (sec < 60) return '${sec.round()}s';
+    return '${(sec / 60).toStringAsFixed(1)}min';
+  }
+
+  Color _deltaColor(double delta) {
+    if (delta.abs() <= 15) return AppColors.rpeLow;
+    if (delta.abs() <= 30) return AppColors.rpeMid;
+    return AppColors.rpeMax;
+  }
+
+  Color _rpeColor(double rpe) {
+    if (rpe <= 4) return AppColors.rpeLow;
+    if (rpe <= 7) return AppColors.rpeMid;
+    return AppColors.rpeMax;
   }
 }

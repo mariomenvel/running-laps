@@ -29,6 +29,9 @@ class Entrenamiento {
   // FC media de toda la sesión (media de fcMedia de las series)
   final double? fcMediaSesion;
 
+  // Comparativa planificado vs ejecutado (solo si viene de sesión planificada)
+  final Map<String, dynamic>? plannedComparison;
+
   Entrenamiento({
     this.id,
     required this.titulo,
@@ -46,6 +49,7 @@ class Entrenamiento {
     this.isManual = false,
     this.notas,
     this.fcMediaSesion,
+    this.plannedComparison,
   });
 
   Entrenamiento copyWith({
@@ -65,6 +69,7 @@ class Entrenamiento {
     bool? isManual,
     String? notas,
     Object? fcMediaSesion = _entrSentinel,
+    Object? plannedComparison = _entrSentinel,
   }) {
     return Entrenamiento(
       id: id ?? this.id,
@@ -84,6 +89,8 @@ class Entrenamiento {
       notas: notas ?? this.notas,
       fcMediaSesion: identical(fcMediaSesion, _entrSentinel)
           ? this.fcMediaSesion : fcMediaSesion as double?,
+      plannedComparison: identical(plannedComparison, _entrSentinel)
+          ? this.plannedComparison : plannedComparison as Map<String, dynamic>?,
     );
   }
 
@@ -193,6 +200,9 @@ class Entrenamiento {
     if (fcMediaSesion != null) {
       base['fcMediaSesion'] = fcMediaSesion;
     }
+    if (plannedComparison != null) {
+      base['plannedComparison'] = plannedComparison;
+    }
 
     return base;
   }
@@ -265,6 +275,7 @@ class Entrenamiento {
       isManual: map['isManual'] as bool? ?? false,
       notas: map['notas'] as String?,
       fcMediaSesion: (map['fcMediaSesion'] as num?)?.toDouble(),
+      plannedComparison: map['plannedComparison'] as Map<String, dynamic>?,
     );
   }
 
