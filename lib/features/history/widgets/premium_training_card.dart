@@ -257,18 +257,29 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                      if (widget.training.isManual) ...[
                        const SizedBox(width: 6),
                        Container(
-                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                         padding: const EdgeInsets.symmetric(
+                             horizontal: 8, vertical: 3),
                          decoration: BoxDecoration(
-                           color:        Colors.blue.withOpacity(0.12),
+                           color: const Color(0xFF1E1530),
+                           border: Border.all(
+                               color: AppColors.brandPurple.withOpacity(0.6)),
                            borderRadius: BorderRadius.circular(6),
                          ),
-                         child: const Text(
-                           'Manual',
-                           style: TextStyle(
-                             fontSize:   10,
-                             fontWeight: FontWeight.w600,
-                             color:      Colors.blue,
-                           ),
+                         child: Row(
+                           mainAxisSize: MainAxisSize.min,
+                           children: [
+                             const Icon(Icons.edit_rounded,
+                                 color: AppColors.brandPurple, size: 12),
+                             const SizedBox(width: 3),
+                             const Text(
+                               'Manual',
+                               style: TextStyle(
+                                 fontSize: 11,
+                                 fontWeight: FontWeight.w600,
+                                 color: AppColors.brandPurpleLight,
+                               ),
+                             ),
+                           ],
                          ),
                        ),
                      ],

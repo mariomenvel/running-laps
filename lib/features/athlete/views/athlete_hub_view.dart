@@ -76,6 +76,8 @@ class _AthleteHubViewState extends State<AthleteHubView> {
                     height: 380,
                     child: _buildCalendarContent(state, isDark),
                   ),
+                  if (state.sessionsByDate.isEmpty)
+                    _EmptyCalendarHint(uid: widget.uid),
                   _TabSelector(
                     selectedTab: _selectedTab,
                     onTabChange: (i) => setState(() => _selectedTab = i),
@@ -512,33 +514,126 @@ class _ProgressTabState extends State<_ProgressTab> {
             future: _progressFuture,
             builder: (context, snap) {
               final groups = snap.data ?? [];
-              final trend = groups.isNotEmpty ? _trendFor(groups.first) : null;
-              if (trend == null) {
+              if (groups.isEmpty || groups.first.count < 6) {
                 return Text(
                   'Completa más sesiones para ver si mejoras al mismo esfuerzo',
                   style: TextStyle(fontSize: 13, color: secondary),
                 );
               }
               final g = groups.first;
+              final mid = g.history.length ~/ 2;
+              final firstHalf  = g.history.sublist(0, mid);
+              final secondHalf = g.history.sublist(mid);
+
+              final avgPaceFirst  = firstHalf.fold<double>(0, (s, p) => s + p.paceSecPerKm) / firstHalf.length;
+              final avgPaceSecond = secondHalf.fold<double>(0, (s, p) => s + p.paceSecPerKm) / secondHalf.length;
+              final avgRpeFirst   = firstHalf.fold<double>(0, (s, p) => s + p.rpe) / firstHalf.length;
+              final avgRpeSecond  = secondHalf.fold<double>(0, (s, p) => s + p.rpe) / secondHalf.length;
+
+              final paceImproved = avgPaceSecond < avgPaceFirst;
+              final rpeDown      = avgRpeSecond  < avgRpeFirst;
+              final paceDelta    = (avgPaceFirst - avgPaceSecond).abs().round();
+              final rpeDelta     = (avgRpeFirst  - avgRpeSecond).abs();
+
               final distLabel = g.baseDistanceM >= 1000
                   ? '${(g.baseDistanceM / 1000).toStringAsFixed(0)} km'
                   : '${g.baseDistanceM}m';
-              final improved = trend > 0;
-              final absT = trend.abs().round();
-              final msg = improved
-                  ? 'En series de $distLabel, tu pace ha mejorado ${absT}s/km manteniendo RPE similar'
-                  : 'En series de $distLabel, tu pace ha empeorado ${absT}s/km. Revisa tu carga.';
+
+              // Headline interpretation
+              final String headline;
+              final Color  headlineColor;
+              if (paceImproved && rpeDown) {
+                headline = '¡Mejora eficiente! Más rápido con menos esfuerzo';
+                headlineColor = AppColors.rpeLow;
+              } else if (paceImproved && !rpeDown) {
+                headline = 'Pace mejora, pero el esfuerzo también sube';
+                headlineColor = const Color(0xFFFFC107);
+              } else if (!paceImproved && rpeDown) {
+                headline = 'Menos esfuerzo, pero el pace aún no acompaña';
+                headlineColor = const Color(0xFFFFC107);
+              } else {
+                headline = 'Pace y esfuerzo han empeorado. Revisa tu carga';
+                headlineColor = AppColors.rpeHigh;
+              }
+
               return Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF1C1C1E)
-                      : const Color(0xFFF2F2F7),
-                  borderRadius: BorderRadius.circular(12),
+                  color: isDark ? const Color(0xFF1C1C1E) : const Color(0xFFF2F2F7),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: Text(msg,
-                    style: TextStyle(
-                        fontSize: 13, color: secondary, height: 1.4)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // distance label
+                    Text(
+                      'Series de $distLabel — últimas ${g.count} sesiones',
+                      style: TextStyle(fontSize: 11, color: secondary),
+                    ),
+                    const SizedBox(height: 8),
+                    // comparison row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _RpeVsPaceHalfCard(
+                            label: 'Primeras ${firstHalf.length}',
+                            pace: _fmtPace(avgPaceFirst),
+                            rpe: avgRpeFirst,
+                            isDark: isDark,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Column(
+                          children: [
+                            Icon(
+                              paceImproved ? Icons.arrow_forward_rounded : Icons.arrow_forward_rounded,
+                              size: 16,
+                              color: secondary,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _RpeVsPaceHalfCard(
+                            label: 'Últimas ${secondHalf.length}',
+                            pace: _fmtPace(avgPaceSecond),
+                            rpe: avgRpeSecond,
+                            paceColor: paceImproved ? AppColors.rpeLow : AppColors.rpeHigh,
+                            rpeColor: rpeDown ? AppColors.rpeLow : AppColors.rpeHigh,
+                            isDark: isDark,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    // delta line
+                    Row(
+                      children: [
+                        Icon(
+                          paceImproved ? Icons.trending_down_rounded : Icons.trending_up_rounded,
+                          size: 14,
+                          color: paceImproved ? AppColors.rpeLow : AppColors.rpeHigh,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${paceImproved ? '-' : '+'}${paceDelta}s/km pace  •  RPE ${rpeDown ? '-' : '+'}${rpeDelta.toStringAsFixed(1)}',
+                          style: TextStyle(fontSize: 12, color: secondary),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // headline
+                    Text(
+                      headline,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: headlineColor,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
               );
             },
           ),
@@ -1881,6 +1976,138 @@ class _DayCircle extends StatelessWidget {
           fontWeight: textWeight,
           color: textColor,
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _EmptyCalendarHint
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _RpeVsPaceHalfCard
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _RpeVsPaceHalfCard extends StatelessWidget {
+  final String label;
+  final String pace;
+  final double rpe;
+  final Color? paceColor;
+  final Color? rpeColor;
+  final bool isDark;
+
+  const _RpeVsPaceHalfCard({
+    required this.label,
+    required this.pace,
+    required this.rpe,
+    this.paceColor,
+    this.rpeColor,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = isDark ? const Color(0xFF2C2C2E) : const Color(0xFFE5E5EA);
+    final labelColor = isDark ? const Color(0xFF8E8E93) : const Color(0xFF6C6C70);
+    final valuePaceColor = paceColor ?? (isDark ? Colors.white : const Color(0xFF1C1C1E));
+    final valueRpeColor  = rpeColor  ?? (isDark ? Colors.white : const Color(0xFF1C1C1E));
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: TextStyle(fontSize: 10, color: labelColor)),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Icon(Icons.speed_rounded, size: 12, color: labelColor),
+              const SizedBox(width: 3),
+              Text(pace,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: valuePaceColor,
+                  )),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Row(
+            children: [
+              Icon(Icons.favorite_rounded, size: 12, color: labelColor),
+              const SizedBox(width: 3),
+              Text('RPE ${rpe.toStringAsFixed(1)}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: valueRpeColor,
+                  )),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _EmptyCalendarHint extends StatelessWidget {
+  final String uid;
+  const _EmptyCalendarHint({required this.uid});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.calendar_month_outlined,
+              color: Color(0xFF8E8E93), size: 40),
+          const SizedBox(height: 8),
+          const Text(
+            'Sin sesiones planificadas',
+            style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF8E8E93)),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Toca un día para planificar tu entrenamiento',
+            style: TextStyle(fontSize: 13, color: Color(0xFF8E8E93)),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.brandPurple,
+              side: const BorderSide(color: AppColors.brandPurple),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            icon: const Icon(Icons.add_rounded, color: AppColors.brandPurple),
+            label: const Text('Planificar sesión',
+                style: TextStyle(color: AppColors.brandPurple)),
+            onPressed: () {
+              Navigator.push(
+                context,
+                AppRoute(
+                  page: SessionPlannerView(
+                    uid: uid,
+                    initialDate: DateTime.now(),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }

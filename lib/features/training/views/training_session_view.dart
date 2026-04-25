@@ -484,6 +484,12 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
   }
 
 
+  String _formatElapsed(Duration d) {
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
   String _formatDescanso(int totalSeconds) {
     final int minutes = totalSeconds ~/ 60;
     final int seconds = totalSeconds % 60;
@@ -1388,6 +1394,13 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     final int initialItemIndex = ((_rpeSeleccionado - 1.0) * 2).round();
 
 
+    // Capturar contexto antes de entrar al sheet
+    final int serieNum = widget.currentSeries ?? 1;
+    final Duration elapsed = _stopwatch.elapsed;
+    final int distanciaM = widget.gpsActivo
+        ? _gpsService?.totalDistanceMeters.value ?? 0
+        : _distanciaInt;
+
     final bool? result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -1396,9 +1409,9 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
       enableDrag: false,
       builder: (BuildContext ctx) {
         return WillPopScope(
-          onWillPop: () async => false, // Prevent back button
+          onWillPop: () async => false,
           child: Container(
-            height: 320, // Altura ajustada
+            height: 390,
             decoration: BoxDecoration(
               color: Theme.of(ctx).colorScheme.surface,
               borderRadius: const BorderRadius.only(
@@ -1408,16 +1421,55 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
             ),
             child: Column(
               children: [
+                // Contexto de serie completada
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Serie completada',
+                        style: TextStyle(
+                            fontSize: 13, color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.5)),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Serie $serieNum',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Theme.of(ctx).colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          if (elapsed.inSeconds > 0) ...[
+                            _RpeStatChip(
+                              icon: Icons.timer_rounded,
+                              label: _formatElapsed(elapsed),
+                            ),
+                          ],
+                          if (distanciaM > 0) ...[
+                            const SizedBox(width: 8),
+                            _RpeStatChip(
+                              icon: Icons.straighten_rounded,
+                              label: '${distanciaM}m',
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
                 // Header estilo iOS
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                  padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Espacio vacío para equilibrar el header (ya que quitamos el botón cancelar)
                       const SizedBox(width: 48),
-
-                      // Título (Centro)
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -1429,8 +1481,6 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                           const InfoTooltip(content: AppHelpContent.trainingRPE),
                         ],
                       ),
-
-                      // Botón Guardar (Derecha)
                       CupertinoButton(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text("Listo", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontSize: 17, fontWeight: FontWeight.bold)),
@@ -2061,6 +2111,39 @@ class _PaceStatusIndicator extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Icon(iconData, size: 16, color: color),
+    );
+  }
+}
+
+class _RpeStatChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _RpeStatChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1530),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: AppColors.brandPurple),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.brandPurpleLight,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
