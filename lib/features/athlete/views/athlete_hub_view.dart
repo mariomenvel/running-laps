@@ -553,7 +553,7 @@ class _ProgressTabState extends State<_ProgressTab> {
                 headlineColor = const Color(0xFFFFC107);
               } else {
                 headline = 'Pace y esfuerzo han empeorado. Revisa tu carga';
-                headlineColor = AppColors.rpeHigh;
+                headlineColor = AppColors.rpeMax;
               }
 
               return Container(
@@ -598,8 +598,8 @@ class _ProgressTabState extends State<_ProgressTab> {
                             label: 'Últimas ${secondHalf.length}',
                             pace: _fmtPace(avgPaceSecond),
                             rpe: avgRpeSecond,
-                            paceColor: paceImproved ? AppColors.rpeLow : AppColors.rpeHigh,
-                            rpeColor: rpeDown ? AppColors.rpeLow : AppColors.rpeHigh,
+                            paceColor: paceImproved ? AppColors.rpeLow : AppColors.rpeMax,
+                            rpeColor: rpeDown ? AppColors.rpeLow : AppColors.rpeMax,
                             isDark: isDark,
                           ),
                         ),
@@ -612,7 +612,7 @@ class _ProgressTabState extends State<_ProgressTab> {
                         Icon(
                           paceImproved ? Icons.trending_down_rounded : Icons.trending_up_rounded,
                           size: 14,
-                          color: paceImproved ? AppColors.rpeLow : AppColors.rpeHigh,
+                          color: paceImproved ? AppColors.rpeLow : AppColors.rpeMax,
                         ),
                         const SizedBox(width: 4),
                         Text(

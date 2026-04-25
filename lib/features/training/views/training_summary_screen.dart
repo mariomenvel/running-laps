@@ -141,7 +141,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
 
   Future<Entrenamiento?> _fetchSimilarTraining() async {
     try {
-      final all = await TrainingRepository().getTrainings();
+      final all = (await TrainingRepository().getTrainings(pageSize: 500)).trainings;
       for (final t in all) {
         // Skip the just-saved training itself
         if (t.id != null &&

@@ -89,11 +89,11 @@ class SeasonViewModel {
 
       // Load in parallel
       final results = await Future.wait<dynamic>([
-        _trainingRepo.getTrainings(),                                       // [0]
+        _trainingRepo.getTrainings(pageSize: 500),                          // [0]
         _sessionsOnce(uid: uid, start: periodStart, end: futureEnd),        // [1]
       ]);
 
-      final trainings   = results[0] as List<Entrenamiento>;
+      final trainings   = (results[0] as TrainingsPage).trainings;
       final allSessions = results[1] as List<AthleteSession>;
 
       // ── Build weekly loads ───────────────────────────────────────────────

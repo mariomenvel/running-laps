@@ -13,8 +13,7 @@ class Entrenamiento {
   final TemplateSource? source;
   
   // Campos para analytics
-  final String? weekKey;  // Semana ISO: "2025-W52"
-  final double? load;     // Carga de entrenamiento: RPE * duración_min
+  final double? loadScore;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   
@@ -39,8 +38,7 @@ class Entrenamiento {
     required this.gps,
     required this.series,
     this.tags,
-    this.weekKey,
-    this.load,
+    this.loadScore,
     this.createdAt,
     this.updatedAt,
     this.source,
@@ -59,8 +57,7 @@ class Entrenamiento {
     bool? gps,
     List<Serie>? series,
     List<String>? tags,
-    String? weekKey,
-    double? load,
+    double? loadScore,
     DateTime? createdAt,
     DateTime? updatedAt,
     TemplateSource? source,
@@ -78,8 +75,7 @@ class Entrenamiento {
       gps: gps ?? this.gps,
       series: series ?? this.series,
       tags: tags ?? this.tags,
-      weekKey: weekKey ?? this.weekKey,
-      load: load ?? this.load,
+      loadScore: loadScore ?? this.loadScore,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       source: source ?? this.source,
@@ -168,11 +164,8 @@ class Entrenamiento {
     }
     
     // Guardar campos de analytics
-    if (weekKey != null) {
-      base['weekKey'] = weekKey;
-    }
-    if (load != null) {
-      base['load'] = load;
+    if (loadScore != null) {
+      base['loadScore'] = loadScore;
     }
     if (createdAt != null) {
       base['createdAt'] = createdAt!.toIso8601String();
@@ -224,16 +217,9 @@ class Entrenamiento {
       tagsList = List<String>.from(map['tags'] as List);
     }
     
-    // Leer campos de analytics (compatibilidad)
-    String? weekKeyValue;
-    if (map.containsKey('weekKey')) {
-      weekKeyValue = map['weekKey'] as String?;
-    }
-    
-    double? loadValue;
-    if (map.containsKey('load')) {
-      loadValue = (map['load'] as num?)?.toDouble();
-    }
+    // Leer loadScore con fallback a 'load' para compatibilidad con documentos antiguos
+    final double? loadValue = (map['loadScore'] as num?)?.toDouble()
+        ?? (map['load'] as num?)?.toDouble();
     
     DateTime? createdAtValue;
     if (map.containsKey('createdAt') && map['createdAt'] != null) {
@@ -265,8 +251,7 @@ class Entrenamiento {
       gps: map['gps'] as bool,
       series: cargadas,
       tags: tagsList,
-      weekKey: weekKeyValue,
-      load: loadValue,
+      loadScore: loadValue,
       createdAt: createdAtValue,
       updatedAt: updatedAtValue,
       source: map['source'] is Map ? TemplateSource.fromMap(map['source'] as Map<String, dynamic>) : null,

@@ -81,12 +81,15 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
                     _scaleIn(_aStats, _buildStatsGrid()),
                     const SizedBox(height: 32),
                     _slideFromBottom(_aSeries, _buildSeriesSection()),
-                    const SizedBox(height: 32),
-                    if (training.plannedComparison != null)
-                      _slideFromBottom(_aComparison,
-                          _buildComparisonSection()),
-                    if (training.plannedComparison != null)
+                    if (training.notas != null && training.notas!.isNotEmpty) ...[
                       const SizedBox(height: 32),
+                      _slideFromBottom(_aSeries, _buildNotasSection()),
+                    ],
+                    if (training.plannedComparison != null) ...[
+                      const SizedBox(height: 32),
+                      _slideFromBottom(_aComparison, _buildComparisonSection()),
+                      const SizedBox(height: 32),
+                    ],
                   ],
                 ),
               ),
@@ -159,6 +162,73 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
             const SizedBox(width: 16),
             Expanded(child: _buildStatCard("RPE Promedio", rpe.toStringAsFixed(1), Icons.bolt, Colors.red)),
           ],
+        ),
+        if (training.fcMediaSesion != null) ...[
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  "FC media",
+                  "${training.fcMediaSesion!.round()} ppm",
+                  Icons.favorite_rounded,
+                  AppColors.rpeMax,
+                ),
+              ),
+              const Expanded(child: SizedBox()),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildNotasSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.brandPurple.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.notes_rounded,
+                  color: isDark ? AppColors.brandPurpleLight : AppColors.brandPurple,
+                  size: 20),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'NOTAS',
+              style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1C1C1E) : const Color(0xFFF2F2F7),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isDark ? const Color(0xFF38383A) : const Color(0xFFE5E7EB),
+            ),
+          ),
+          child: Text(
+            training.notas!,
+            style: TextStyle(
+              fontSize: 15,
+              height: 1.5,
+              color: isDark ? const Color(0xFFEBEBF5) : const Color(0xFF3A3A3C),
+            ),
+          ),
         ),
       ],
     );
@@ -336,73 +406,6 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
     }
     return "${minutes}m ${seconds.toString().padLeft(2, '0')}s";
   }
-}
-
-class _AnimatedBackButton extends StatefulWidget {
-  final VoidCallback onTap;
-  const _AnimatedBackButton({required this.onTap});
-
-  @override
-  State<_AnimatedBackButton> createState() => _AnimatedBackButtonState();
-}
-
-class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _isPressed = true),
-      onTapUp: (_) {
-        setState(() => _isPressed = false);
-        widget.onTap();
-      },
-      onTapCancel: () => setState(() => _isPressed = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: _isPressed
-              ? Theme.of(context).colorScheme.onSurface.withOpacity(0.08)
-              : Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.transparent
-                  : Colors.black.withOpacity(_isPressed ? 0.03 : 0.06),
-              blurRadius: _isPressed ? 4 : 12,
-              offset: Offset(0, _isPressed ? 2 : 4),
-            ),
-          ],
-          border: Border.all(color: Tema.brandPurple.withOpacity(0.1)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: 16,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.brandPurpleLight
-                  : Tema.brandPurple,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              "Volver",
-              style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.brandPurpleLight
-                    : Tema.brandPurple,
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   // ── Comparativa planificado vs ejecutado ─────────────────────────
 
@@ -473,9 +476,7 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? Colors.transparent
-                : Colors.black.withOpacity(0.04),
+            color: isDark ? Colors.transparent : Colors.black.withOpacity(0.04),
             offset: const Offset(0, 6),
             blurRadius: 16,
           ),
@@ -487,36 +488,24 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
           header,
           if (category != null) ...[
             const SizedBox(height: 8),
-            Text(
-              SessionCategoryX.fromValue(category).label,
-              style: const TextStyle(
-                  fontSize: 13, color: AppColors.brandPurpleLight),
-            ),
+            Text(SessionCategoryX.fromValue(category).label,
+                style: const TextStyle(fontSize: 13, color: AppColors.brandPurpleLight)),
           ],
           const SizedBox(height: 16),
           Row(
             children: [
-              const SizedBox(
-                width: 64,
-                child: Text('Serie',
-                    style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
-              ),
-              const Expanded(
-                child: Text('Planificado',
-                    style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
-                    textAlign: TextAlign.center),
-              ),
-              const Expanded(
-                child: Text('Ejecutado',
-                    style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
-                    textAlign: TextAlign.center),
-              ),
-              const SizedBox(
-                width: 52,
-                child: Text('Delta',
-                    style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
-                    textAlign: TextAlign.right),
-              ),
+              const SizedBox(width: 64,
+                  child: Text('Serie', style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93)))),
+              const Expanded(child: Text('Planificado',
+                  style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
+                  textAlign: TextAlign.center)),
+              const Expanded(child: Text('Ejecutado',
+                  style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
+                  textAlign: TextAlign.center)),
+              const SizedBox(width: 52,
+                  child: Text('Delta',
+                      style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
+                      textAlign: TextAlign.right)),
             ],
           ),
           const Divider(color: Color(0xFF3A3A3C), height: 20),
@@ -524,129 +513,72 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
             final planned = b['planned'] as Map?;
             final executed = b['executed'] as Map?;
             final order = (b['order'] as num?)?.toInt() ?? 0;
-
-            final targetPaceSec =
-                (planned?['targetPaceSec'] as num?)?.toDouble();
-            final execPaceSec =
-                (executed?['paceSec'] as num?)?.toDouble();
-
-            final targetPaceStr =
-                targetPaceSec != null ? _formatPace(targetPaceSec) : '—';
-            final execPaceStr =
-                execPaceSec != null ? _formatPace(execPaceSec) : '—';
-
+            final targetPaceSec = (planned?['targetPaceSec'] as num?)?.toDouble();
+            final execPaceSec = (executed?['paceSec'] as num?)?.toDouble();
+            final targetPaceStr = targetPaceSec != null ? _formatPace(targetPaceSec) : '—';
+            final execPaceStr = execPaceSec != null ? _formatPace(execPaceSec) : '—';
             double? delta;
             if (targetPaceSec != null && execPaceSec != null) {
               delta = execPaceSec - targetPaceSec;
             }
-
             final onSurface = Theme.of(context).colorScheme.onSurface;
-
             return Column(
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Row(
                     children: [
-                      SizedBox(
-                        width: 64,
-                        child: Text(
-                          'Serie ${order + 1}',
-                          style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: onSurface),
-                        ),
+                      SizedBox(width: 64,
+                          child: Text('Serie ${order + 1}',
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: onSurface))),
+                      Expanded(
+                        child: Column(children: [
+                          Text(targetPaceStr,
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600,
+                                  color: targetPaceSec != null ? onSurface : const Color(0xFF8E8E93)),
+                              textAlign: TextAlign.center),
+                          if ((planned?['targetRpe'] as num?) != null) ...[
+                            const SizedBox(height: 2),
+                            Text('RPE ${(planned!['targetRpe'] as num).toStringAsFixed(1)}',
+                                style: TextStyle(fontSize: 11,
+                                    color: _rpeColor((planned['targetRpe'] as num).toDouble())),
+                                textAlign: TextAlign.center),
+                          ],
+                        ]),
                       ),
                       Expanded(
-                        child: Column(
-                          children: [
-                            Text(
-                              targetPaceStr,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: targetPaceSec != null
-                                    ? onSurface
-                                    : const Color(0xFF8E8E93),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            if ((planned?['targetRpe'] as num?) != null) ...[
+                        child: Column(children: [
+                          if (executed == null)
+                            const Text('No ejecutada',
+                                style: TextStyle(fontSize: 12, color: Color(0xFF8E8E93)),
+                                textAlign: TextAlign.center)
+                          else ...[
+                            Text(execPaceStr,
+                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600,
+                                    color: delta != null ? _deltaColor(delta) : onSurface),
+                                textAlign: TextAlign.center),
+                            if ((executed['rpe'] as num?) != null) ...[
                               const SizedBox(height: 2),
-                              Text(
-                                'RPE ${(planned!['targetRpe'] as num).toStringAsFixed(1)}',
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    color: _rpeColor((planned['targetRpe']
-                                            as num)
-                                        .toDouble())),
-                                textAlign: TextAlign.center,
-                              ),
+                              Text('RPE ${(executed['rpe'] as num).toStringAsFixed(1)}',
+                                  style: TextStyle(fontSize: 11,
+                                      color: _rpeColor((executed['rpe'] as num).toDouble())),
+                                  textAlign: TextAlign.center),
                             ],
                           ],
-                        ),
+                        ]),
                       ),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            if (executed == null)
-                              const Text(
-                                'No ejecutada',
-                                style: TextStyle(
-                                    fontSize: 12, color: Color(0xFF8E8E93)),
-                                textAlign: TextAlign.center,
-                              )
-                            else ...[
-                              Text(
-                                execPaceStr,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: delta != null
-                                      ? _deltaColor(delta)
-                                      : onSurface,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              if ((executed['rpe'] as num?) != null) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  'RPE ${(executed['rpe'] as num).toStringAsFixed(1)}',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      color: _rpeColor(
-                                          (executed['rpe'] as num)
-                                              .toDouble())),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ],
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                        width: 52,
-                        child: delta != null
-                            ? Text(
-                                delta >= 0
-                                    ? '+${_formatPaceDelta(delta)}'
-                                    : '-${_formatPaceDelta(delta.abs())}',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: _deltaColor(delta),
-                                ),
-                                textAlign: TextAlign.right,
-                              )
-                            : const SizedBox.shrink(),
-                      ),
+                      SizedBox(width: 52,
+                          child: delta != null
+                              ? Text(
+                                  delta >= 0 ? '+${_formatPaceDelta(delta)}' : '-${_formatPaceDelta(delta.abs())}',
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
+                                      color: _deltaColor(delta)),
+                                  textAlign: TextAlign.right)
+                              : const SizedBox.shrink()),
                     ],
                   ),
                 ),
-                Divider(
-                    color: const Color(0xFF3A3A3C).withOpacity(0.5),
-                    height: 1),
+                Divider(color: const Color(0xFF3A3A3C).withOpacity(0.5), height: 1),
               ],
             );
           }),
@@ -663,7 +595,6 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
     String text;
     IconData icon;
     Color color;
-
     if (avgDelta < -15) {
       text = 'Fuiste más rápido de lo planeado 🔥';
       icon = Icons.bolt_rounded;
@@ -681,24 +612,15 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
       icon = Icons.error_outline_rounded;
       color = AppColors.rpeMax;
     }
-
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 16),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(text,
-                style: TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w500, color: color)),
-          ),
-        ],
-      ),
+      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+      child: Row(children: [
+        Icon(icon, color: color, size: 16),
+        const SizedBox(width: 8),
+        Expanded(child: Text(text,
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: color))),
+      ]),
     );
   }
 
@@ -723,5 +645,72 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
     if (rpe <= 4) return AppColors.rpeLow;
     if (rpe <= 7) return AppColors.rpeMid;
     return AppColors.rpeMax;
+  }
+}
+
+class _AnimatedBackButton extends StatefulWidget {
+  final VoidCallback onTap;
+  const _AnimatedBackButton({required this.onTap});
+
+  @override
+  State<_AnimatedBackButton> createState() => _AnimatedBackButtonState();
+}
+
+class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: _isPressed
+              ? Theme.of(context).colorScheme.onSurface.withOpacity(0.08)
+              : Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.transparent
+                  : Colors.black.withOpacity(_isPressed ? 0.03 : 0.06),
+              blurRadius: _isPressed ? 4 : 12,
+              offset: Offset(0, _isPressed ? 2 : 4),
+            ),
+          ],
+          border: Border.all(color: Tema.brandPurple.withOpacity(0.1)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: 16,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.brandPurpleLight
+                  : Tema.brandPurple,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              "Volver",
+              style: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.brandPurpleLight
+                    : Tema.brandPurple,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -49,6 +49,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
   static const Color _brandDark = Color(0xFF2C3E50);
 
   late final HistoryController _controller;
+  late final ScrollController _scrollController;
 
   // ── Entrance animation ──────────────────────────────────────────
   late final AnimationController _entranceCtrl;
@@ -70,10 +71,19 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
   final Set<String> _selectedTrainingIds = {};
   bool get _isSelectionMode => _selectedTrainingIds.isNotEmpty;
 
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final pos = _scrollController.position;
+    if (pos.pixels >= pos.maxScrollExtent - 200) {
+      _controller.loadMore();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _controller = HistoryController();
+    _scrollController = ScrollController()..addListener(_onScroll);
     _controller.loadTrainings();
     _entranceCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
     _aBanner = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.000, 0.517, curve: Curves.easeOutQuart));
@@ -91,6 +101,8 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     _entranceCtrl.dispose();
     _controller.dispose();
     super.dispose();
@@ -697,9 +709,40 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
 
                     final List<Animation<double>> _itemAnims = [_aItem0, _aItem1, _aItem2, _aItem3, _aItem4];
                     return ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 100.0), // Padding extra bottom para la barra
-                      itemCount: trainings.length,
+                      controller: _scrollController,
+                      padding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 100.0),
+                      itemCount: trainings.length + 1,
                       itemBuilder: (BuildContext context, int index) {
+                        // Footer: spinner o mensaje de fin de lista
+                        if (index == trainings.length) {
+                          if (_controller.isLoadingMore) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.brandPurple,
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            );
+                          }
+                          if (!_controller.hasMore && trainings.isNotEmpty) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: Center(
+                                child: Text(
+                                  'Has visto todos tus entrenamientos',
+                                  style: TextStyle(
+                                    color: Color(0xFF8E8E93),
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        }
+
                         final Entrenamiento training = trainings[index];
                         final isSelected = _selectedTrainingIds.contains(training.id);
 

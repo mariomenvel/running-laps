@@ -55,8 +55,7 @@ class EntrenamientoUtils {
     DateTime? now,
   }) {
     final timestamp = now ?? DateTime.now();
-    final weekKey = getWeekKey(entrenamiento.fecha);
-    final load = calculateLoad(entrenamiento);
+    final loadScore = calculateLoad(entrenamiento);
 
     return Entrenamiento(
       id: entrenamiento.id,
@@ -65,8 +64,7 @@ class EntrenamientoUtils {
       gps: entrenamiento.gps,
       series: entrenamiento.series,
       tags: entrenamiento.tags,
-      weekKey: weekKey,
-      load: load,
+      loadScore: loadScore,
       createdAt: entrenamiento.createdAt ?? timestamp,
       updatedAt: timestamp,
     );
@@ -81,7 +79,7 @@ class EntrenamientoUtils {
     final grouped = <String, List<Entrenamiento>>{};
     
     for (var entreno in entrenamientos) {
-      final key = entreno.weekKey ?? getWeekKey(entreno.fecha);
+      final key = getWeekKey(entreno.fecha);
       grouped.putIfAbsent(key, () => []);
       grouped[key]!.add(entreno);
     }
@@ -128,7 +126,7 @@ class EntrenamientoUtils {
       totalMeters += entreno.distanciaTotalM();
       totalSeconds += entreno.tiempoTotalSec();
       totalRPE += entreno.rpePromedio();
-      totalLoad += entreno.load ?? calculateLoad(entreno);
+      totalLoad += entreno.loadScore ?? calculateLoad(entreno);
     }
 
     final totalKm = totalMeters / 1000.0;

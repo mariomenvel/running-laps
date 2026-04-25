@@ -88,12 +88,15 @@ class _TrainingDetailViewState extends State<TrainingDetailView>
                     _slideFromBottom(_aMap, _buildMapCard()),
                     const SizedBox(height: 32),
                     _slideFromBottom(_aSeries, _buildSeriesSection()),
-                    const SizedBox(height: 32),
-                    if (training.plannedComparison != null)
-                      _slideFromBottom(_aComparison,
-                          _buildComparisonSection()),
-                    if (training.plannedComparison != null)
+                    if (training.notas != null && training.notas!.isNotEmpty) ...[
                       const SizedBox(height: 32),
+                      _slideFromBottom(_aSeries, _buildNotasSection()),
+                    ],
+                    if (training.plannedComparison != null) ...[
+                      const SizedBox(height: 32),
+                      _slideFromBottom(_aComparison, _buildComparisonSection()),
+                      const SizedBox(height: 32),
+                    ],
                   ],
                 ),
               ),
@@ -232,6 +235,73 @@ class _TrainingDetailViewState extends State<TrainingDetailView>
             const SizedBox(width: 16),
             Expanded(child: _buildStatCard("RPE Promedio", rpe.toStringAsFixed(1), Icons.bolt, Colors.red)),
           ],
+        ),
+        if (training.fcMediaSesion != null) ...[
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  "FC media",
+                  "${training.fcMediaSesion!.round()} ppm",
+                  Icons.favorite_rounded,
+                  AppColors.rpeMax,
+                ),
+              ),
+              const Expanded(child: SizedBox()),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildNotasSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.brandPurple.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.notes_rounded,
+                  color: isDark ? AppColors.brandPurpleLight : AppColors.brandPurple,
+                  size: 20),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'NOTAS',
+              style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1C1C1E) : const Color(0xFFF2F2F7),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isDark ? const Color(0xFF38383A) : const Color(0xFFE5E7EB),
+            ),
+          ),
+          child: Text(
+            training.notas!,
+            style: TextStyle(
+              fontSize: 15,
+              height: 1.5,
+              color: isDark ? const Color(0xFFEBEBF5) : const Color(0xFF3A3A3C),
+            ),
+          ),
         ),
       ],
     );
@@ -409,73 +479,6 @@ class _TrainingDetailViewState extends State<TrainingDetailView>
     }
     return "${minutes}m ${seconds.toString().padLeft(2, '0')}s";
   }
-}
-
-class _AnimatedBackButton extends StatefulWidget {
-  final VoidCallback onTap;
-  const _AnimatedBackButton({required this.onTap});
-
-  @override
-  State<_AnimatedBackButton> createState() => _AnimatedBackButtonState();
-}
-
-class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _isPressed = true),
-      onTapUp: (_) {
-        setState(() => _isPressed = false);
-        widget.onTap();
-      },
-      onTapCancel: () => setState(() => _isPressed = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: _isPressed
-              ? Theme.of(context).colorScheme.onSurface.withOpacity(0.08)
-              : Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.transparent
-                  : Colors.black.withOpacity(_isPressed ? 0.03 : 0.06),
-              blurRadius: _isPressed ? 4 : 12,
-              offset: Offset(0, _isPressed ? 2 : 4),
-            ),
-          ],
-          border: Border.all(color: Tema.brandPurple.withOpacity(0.1)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: 16,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.brandPurpleLight
-                  : Tema.brandPurple,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              "Volver",
-              style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.brandPurpleLight
-                    : Tema.brandPurple,
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   // ── Comparativa planificado vs ejecutado ─────────────────────────
 
@@ -528,7 +531,6 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
       );
     }
 
-    // Calcular deltas para el resumen
     final deltas = <double>[];
     for (final b in blocks) {
       final planned = b['planned'] as Map?;
@@ -568,7 +570,6 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
             ),
           ],
           const SizedBox(height: 16),
-          // Cabecera columnas
           Row(
             children: [
               const SizedBox(
@@ -595,7 +596,6 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
             ],
           ),
           const Divider(color: Color(0xFF3A3A3C), height: 20),
-          // Filas de bloques
           ...blocks.map((b) {
             final planned = b['planned'] as Map?;
             final executed = b['executed'] as Map?;
@@ -726,7 +726,6 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
               ],
             );
           }),
-          // Resumen
           if (avgDelta != null) ...[
             const SizedBox(height: 12),
             _buildComparisonSummary(avgDelta),
@@ -800,5 +799,72 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
     if (rpe <= 4) return AppColors.rpeLow;
     if (rpe <= 7) return AppColors.rpeMid;
     return AppColors.rpeMax;
+  }
+}
+
+class _AnimatedBackButton extends StatefulWidget {
+  final VoidCallback onTap;
+  const _AnimatedBackButton({required this.onTap});
+
+  @override
+  State<_AnimatedBackButton> createState() => _AnimatedBackButtonState();
+}
+
+class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: _isPressed
+              ? Theme.of(context).colorScheme.onSurface.withOpacity(0.08)
+              : Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.transparent
+                  : Colors.black.withOpacity(_isPressed ? 0.03 : 0.06),
+              blurRadius: _isPressed ? 4 : 12,
+              offset: Offset(0, _isPressed ? 2 : 4),
+            ),
+          ],
+          border: Border.all(color: Tema.brandPurple.withOpacity(0.1)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: 16,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.brandPurpleLight
+                  : Tema.brandPurple,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              "Volver",
+              style: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.brandPurpleLight
+                    : Tema.brandPurple,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

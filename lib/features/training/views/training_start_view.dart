@@ -9,6 +9,7 @@ import 'package:firebase_core/firebase_core.dart'; // Para FirebaseException
 
 import '../data/serie.dart';
 import '../data/entrenamiento.dart';
+import '../data/training_repository.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import '../../../core/widgets/app_header.dart';
@@ -30,7 +31,6 @@ import '../../templates/views/templates_list_view.dart';
 import '../../templates/data/template_models.dart';
 import '../../templates/views/template_editor_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 import 'package:running_laps/core/services/heart_rate_service.dart';
@@ -1006,12 +1006,11 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                   planned:  planned,
                   executed: seriesSnapshot,
                 );
-                await FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(uid)
-                    .collection('trainings')
-                    .doc(newTrainingId)
-                    .update({'plannedComparison': comparison});
+                await TrainingRepository().updateTrainingAnalysis(
+                  uid: uid,
+                  trainingId: newTrainingId,
+                  plannedComparison: comparison,
+                );
               }
             } catch (e) {
               debugPrint('Error guardando comparativa: $e');
@@ -1071,10 +1070,12 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               fcMax: _fcMax!.toDouble(),
               fcRest: profile?.fcReposo?.toDouble(),
             );
-            await FirebaseFirestore.instance
-                .collection('users').doc(uid)
-                .collection('trainings').doc(newTrainingId)
-                .update({'loadScore': load, 'fcMediaSesion': fcMediaSesion});
+            await TrainingRepository().updateTrainingAnalysis(
+              uid: uid,
+              trainingId: newTrainingId,
+              loadScore: load,
+              fcMediaSesion: fcMediaSesion,
+            );
           }
         } catch (e) {
           debugPrint('[_saveTrainingToFirebase] FC load update error: $e');

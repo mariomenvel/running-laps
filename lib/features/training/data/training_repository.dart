@@ -7,6 +7,18 @@ import '../../../core/utils/rdp_smoother.dart';
 import '../../../features/groups/data/services/training_challenge_sync_service.dart';
 import '../../../features/home/data/home_estadistica_repository.dart';
 
+class TrainingsPage {
+  final List<Entrenamiento> trainings;
+  final DocumentSnapshot? lastDocument;
+  final bool hasMore;
+
+  const TrainingsPage({
+    required this.trainings,
+    required this.hasMore,
+    this.lastDocument,
+  });
+}
+
 class TrainingRepository {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -89,24 +101,31 @@ class TrainingRepository {
   }
 
 
-  // NUEVO: obtener lista de entrenamientos del usuario actual
-  Future<List<Entrenamiento>> getTrainings() async {
-    final String uid = _requireUid();
+  Future<TrainingsPage> getTrainings({
+    String? uid,
+    DocumentSnapshot? startAfter,
+    int pageSize = 20,
+  }) async {
+    final resolvedUid = uid ?? _requireUid();
 
-    final QuerySnapshot<Map<String, dynamic>> snapshot = await _userTrainings(
-      uid,
-    ).orderBy('createdAt', descending: true).limit(100).get();
+    Query<Map<String, dynamic>> query = _userTrainings(resolvedUid)
+        .orderBy('fecha', descending: true)
+        .limit(pageSize);
 
-    final List<Entrenamiento> result = <Entrenamiento>[];
-
-    for (int i = 0; i < snapshot.docs.length; i = i + 1) {
-      final QueryDocumentSnapshot<Map<String, dynamic>> doc = snapshot.docs[i];
-      final Map<String, dynamic> data = doc.data();
-      // Pasar el ID del documento al modelo
-      result.add(Entrenamiento.fromMap(data, id: doc.id));
+    if (startAfter != null) {
+      query = query.startAfterDocument(startAfter);
     }
 
-    return result;
+    final snapshot = await query.get();
+    final trainings = snapshot.docs
+        .map((doc) => Entrenamiento.fromMap(doc.data(), id: doc.id))
+        .toList();
+
+    return TrainingsPage(
+      trainings: trainings,
+      lastDocument: snapshot.docs.isNotEmpty ? snapshot.docs.last : null,
+      hasMore: snapshot.docs.length == pageSize,
+    );
   }
 
   /// Actualiza solo las etiquetas de un entrenamiento existente
@@ -134,12 +153,23 @@ class TrainingRepository {
     }
   }
   Future<List<Entrenamiento>> getAllEntrenamientos(String uid) async {
-    // Alias for getTrainings but with explicit uid argument (which getTrainings ignores and uses auth user)
-    // To match the new signature: getAllEntrenamientos(String uid)
-    // However, existing getTrainings uses _requireUid inside.
-    // We should check if uid matches current user or if we need to support other users.
-    // For now, assuming analytics is for current user.
-    return getTrainings();
+    final page = await getTrainings(uid: uid, pageSize: 500);
+    return page.trainings;
+  }
+
+  Future<void> updateTrainingAnalysis({
+    required String uid,
+    required String trainingId,
+    Map<String, dynamic>? plannedComparison,
+    double? loadScore,
+    double? fcMediaSesion,
+  }) async {
+    final data = <String, dynamic>{};
+    if (plannedComparison != null) data['plannedComparison'] = plannedComparison;
+    if (loadScore != null) data['loadScore'] = loadScore;
+    if (fcMediaSesion != null) data['fcMediaSesion'] = fcMediaSesion;
+    if (data.isEmpty) return;
+    await _userTrainings(uid).doc(trainingId).update(data);
   }
 }
 

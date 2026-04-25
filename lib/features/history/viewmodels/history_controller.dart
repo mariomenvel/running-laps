@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/data/training_repository.dart';
@@ -44,6 +46,14 @@ class HistoryController {
   // NUEVO: Filtro por etiquetas (Set para evitar duplicados)
   final ValueNotifier<Set<String>> selectedTags = ValueNotifier<Set<String>>({});
 
+  // ── Pagination state ──────────────────────────────────────────────
+  DocumentSnapshot? _lastDocument;
+  bool _hasMore = true;
+  bool _isLoadingMore = false;
+
+  bool get hasMore => _hasMore;
+  bool get isLoadingMore => _isLoadingMore;
+
   final TagManager _tagManager = TagManager();
   Map<String, Color> _tagColors = {};
 
@@ -54,35 +64,67 @@ class HistoryController {
     }
   }
 
-  Future<void> loadTrainings() async {
-    if (isLoading.value) {
-      return;
-    }
+  String? _resolveUid() => FirebaseAuth.instance.currentUser?.uid;
 
+  Future<void> loadTrainings() async {
+    if (isLoading.value) return;
+
+    // Reset pagination
+    _lastDocument = null;
+    _hasMore = true;
     error.value = null;
     isLoading.value = true;
 
     try {
-      // 1. Cargar entrenos
-      final List<Entrenamiento> loaded =
-          await _trainingRepo.getTrainings();
-      _allTrainings.value = loaded;
-      
-      // 2. Cargar colores de etiquetas
+      final uid = _resolveUid();
+      if (uid == null) {
+        error.value = 'No hay usuario autenticado';
+        return;
+      }
+
+      final page = await _trainingRepo.getTrainings(uid: uid, pageSize: 20);
+      _allTrainings.value = page.trainings;
+      _lastDocument = page.lastDocument;
+      _hasMore = page.hasMore;
+
+      // Cargar colores de etiquetas
       try {
         final tags = await _tagManager.getUserTags();
-        _tagColors = {
-          for (var t in tags) t.name: t.color
-        };
-      } catch (e) {
-        // No bloqueamos la app si fallan los tags
-      }
+        _tagColors = {for (var t in tags) t.name: t.color};
+      } catch (_) {}
 
       applyFilters();
     } catch (e) {
-      error.value = 'Error al cargar entrenamientos: ' + e.toString();
+      error.value = 'Error al cargar entrenamientos: $e';
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> loadMore() async {
+    if (!_hasMore || _isLoadingMore || _lastDocument == null) return;
+
+    final uid = _resolveUid();
+    if (uid == null) return;
+
+    _isLoadingMore = true;
+
+    try {
+      final page = await _trainingRepo.getTrainings(
+        uid: uid,
+        startAfter: _lastDocument,
+        pageSize: 20,
+      );
+
+      _allTrainings.value = [..._allTrainings.value, ...page.trainings];
+      _lastDocument = page.lastDocument;
+      _hasMore = page.hasMore;
+
+      applyFilters();
+    } catch (e) {
+      debugPrint('[HistoryController] loadMore error: $e');
+    } finally {
+      _isLoadingMore = false;
     }
   }
 

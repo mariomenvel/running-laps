@@ -93,7 +93,7 @@ class ProgressRepository {
   // ── getPersonalRecords ─────────────────────────────────────────────────────
 
   Future<Map<int, PersonalRecord>> getPersonalRecords(String uid) async {
-    final trainings = await _trainingRepo.getTrainings();
+    final trainings = (await _trainingRepo.getTrainings(pageSize: 500)).trainings;
     final records   = <int, PersonalRecord>{};
 
     for (final training in trainings) {
@@ -129,7 +129,7 @@ class ProgressRepository {
   // ── getSeriesProgress ──────────────────────────────────────────────────────
 
   Future<List<SeriesProgressGroup>> getSeriesProgress(String uid) async {
-    final trainings = await _trainingRepo.getTrainings();
+    final trainings = (await _trainingRepo.getTrainings(pageSize: 500)).trainings;
 
     // Map from base distance (m) → list of data points
     final groups = <int, List<SeriesDataPoint>>{};
@@ -185,7 +185,7 @@ class ProgressRepository {
     String uid, {
     int weeks = 12,
   }) async {
-    final trainings = await _trainingRepo.getTrainings();
+    final trainings = (await _trainingRepo.getTrainings(pageSize: 500)).trainings;
     final now       = DateTime.now();
     final today     = DateTime(now.year, now.month, now.day);
 
@@ -264,7 +264,7 @@ class ProgressRepository {
     // Load trainings and index by id
     List<Entrenamiento> trainings;
     try {
-      trainings = await _trainingRepo.getTrainings();
+      trainings = (await _trainingRepo.getTrainings(pageSize: 500)).trainings;
     } catch (e) {
       debugPrint('[ProgressRepository] getPlannedVsExecuted trainings error: $e');
       trainings = [];
