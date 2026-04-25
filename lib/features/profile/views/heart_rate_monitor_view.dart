@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -15,23 +14,66 @@ class HeartRateMonitorView extends StatelessWidget {
   Future<void> _startScan(BuildContext context) async {
     final granted = await HeartRateService().requestPermissions();
     if (!context.mounted) return;
+
     if (!granted) {
-      if (Platform.isIOS) {
-        final status = await Permission.bluetooth.status;
-        if (!context.mounted) return;
-        if (status.isPermanentlyDenied) {
-          ModernSnackBar.showError(context,
-              'Activa el Bluetooth en Ajustes → Running Laps → Bluetooth');
-        } else {
-          ModernSnackBar.showError(context,
-              'Permisos de Bluetooth necesarios');
-        }
+      final bleStatus = await HeartRateService().getBleStatus();
+      if (!context.mounted) return;
+
+      final String title;
+      final String message;
+      final bool showSettings;
+
+      if (bleStatus == BleStatus.poweredOff) {
+        title = 'Bluetooth desactivado';
+        message = 'Activa el Bluetooth en el Centro de Control para conectar tu pulsómetro.';
+        showSettings = false;
+      } else if (bleStatus == BleStatus.unauthorized) {
+        title = 'Permiso de Bluetooth necesario';
+        message = 'Ve a Ajustes → Running Laps → Bluetooth y actívalo.';
+        showSettings = true;
       } else {
-        ModernSnackBar.showError(context,
-            'Permisos de Bluetooth necesarios');
+        title = 'Bluetooth no disponible';
+        message = 'Comprueba que el Bluetooth está activado e inténtalo de nuevo.';
+        showSettings = false;
       }
+
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: const Color(0xFF1C1C1E),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
+          title: Text(title,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600)),
+          content: Text(message,
+              style: const TextStyle(
+                  color: Color(0xFFEBEBF5),
+                  fontSize: 15,
+                  height: 1.5)),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancelar',
+                    style: TextStyle(color: Color(0xFF8E8E93)))),
+            if (showSettings)
+              FilledButton(
+                style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.brandPurple),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  openAppSettings();
+                },
+                child: const Text('Abrir Ajustes'),
+              ),
+          ],
+        ),
+      );
       return;
     }
+
     HeartRateService().startScan();
   }
 

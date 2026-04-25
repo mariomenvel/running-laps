@@ -45,36 +45,52 @@ class HeartRateService {
   // Solicitar permisos BLE
   Future<bool> requestPermissions() async {
     if (Platform.isAndroid) {
-      final sdkInt = (await DeviceInfoPlugin().androidInfo).version.sdkInt;
+      final sdkInt = await DeviceInfoPlugin()
+          .androidInfo
+          .then((i) => i.version.sdkInt);
       if (sdkInt >= 31) {
-        // Android 12+ (API 31+): BLUETOOTH_SCAN + BLUETOOTH_CONNECT
         final statuses = await [
           Permission.bluetoothScan,
           Permission.bluetoothConnect,
         ].request();
         return statuses.values.every(
-          (s) => s.isGranted || s.isLimited);
+            (s) => s.isGranted || s.isLimited);
       } else {
-        // Android < 12: BLUETOOTH clásico + ubicación
         final statuses = await [
           Permission.bluetooth,
           Permission.locationWhenInUse,
         ].request();
         return statuses.values.every(
-          (s) => s.isGranted || s.isLimited);
+            (s) => s.isGranted || s.isLimited);
       }
     }
+
+    // iOS: flutter_reactive_ble gestiona CoreBluetooth directamente.
+    // El diálogo del sistema aparece automáticamente al iniciar el scan.
     if (Platform.isIOS) {
-      final status = await Permission.bluetooth.status;
-      if (status.isGranted) return true;
-      if (status.isPermanentlyDenied) {
-        await openAppSettings();
-        return false;
+      try {
+        final status = await _ble.statusStream.first
+            .timeout(const Duration(seconds: 3));
+        if (status == BleStatus.ready) return true;
+        if (status == BleStatus.poweredOff) return false;
+        if (status == BleStatus.unauthorized) return false;
+        return true;
+      } catch (e) {
+        debugPrint('[HeartRateService] status timeout: $e');
+        return true;
       }
-      final result = await Permission.bluetooth.request();
-      return result.isGranted;
     }
+
     return false;
+  }
+
+  Future<BleStatus> getBleStatus() async {
+    try {
+      return await _ble.statusStream.first
+          .timeout(const Duration(seconds: 2));
+    } catch (e) {
+      return BleStatus.unknown;
+    }
   }
 
   // Escanear dispositivos con Heart Rate Service
