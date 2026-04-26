@@ -30,6 +30,7 @@ class AthleteHubView extends StatefulWidget {
 class _AthleteHubViewState extends State<AthleteHubView> {
   late final AthleteCalendarViewModel _viewModel;
   int _selectedTab = 0;
+  bool _calendarExpanded = true;
 
   @override
   void initState() {
@@ -72,9 +73,54 @@ class _AthleteHubViewState extends State<AthleteHubView> {
               valueListenable: _viewModel.state,
               builder: (context, state, _) => Column(
                 children: [
-                  SizedBox(
-                    height: 380,
-                    child: _buildCalendarContent(state, isDark),
+                  GestureDetector(
+                    onVerticalDragEnd: (details) {
+                      if (details.primaryVelocity == null) return;
+                      if (details.primaryVelocity! < -200) {
+                        setState(() => _calendarExpanded = false);
+                      } else if (details.primaryVelocity! > 200) {
+                        setState(() => _calendarExpanded = true);
+                      }
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      height: _calendarExpanded ? 380 : 110,
+                      child: _buildCalendarContent(state, isDark),
+                    ),
+                  ),
+                  Center(
+                    child: GestureDetector(
+                      onTap: () => setState(
+                          () => _calendarExpanded = !_calendarExpanded),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        width: _calendarExpanded ? 32 : 48,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF3A3A3C),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        _InfoButton(
+                          title: 'Leyenda del calendario',
+                          explanation:
+                              '• Punto verde: sesión completada\n'
+                              '• Punto morado: sesión planificada\n'
+                              '• Punto rojo: competición\n'
+                              '• Círculo morado sólido: día seleccionado\n'
+                              '• Círculo morado tenue: hoy',
+                        ),
+                      ],
+                    ),
                   ),
                   if (state.sessionsByDate.isEmpty)
                     _EmptyCalendarHint(uid: widget.uid),
@@ -115,6 +161,13 @@ class _AthleteHubViewState extends State<AthleteHubView> {
         firstDay: DateTime(2020, 1, 1),
         lastDay: DateTime(2027, 12, 31),
         focusedDay: state.focusedMonth,
+        calendarFormat: _calendarExpanded
+            ? CalendarFormat.month
+            : CalendarFormat.week,
+        availableCalendarFormats: const {
+          CalendarFormat.month: 'Mes',
+          CalendarFormat.week: 'Semana',
+        },
         selectedDayPredicate: (day) => isSameDay(day, state.selectedDay),
         eventLoader: _viewModel.sessionsForDay,
         availableGestures: AvailableGestures.horizontalSwipe,
@@ -133,7 +186,7 @@ class _AthleteHubViewState extends State<AthleteHubView> {
           );
         },
         onPageChanged: (focused) => _viewModel.onPageChanged(focused),
-        rowHeight: 42.0,
+        rowHeight: 52.0,
         daysOfWeekHeight: 32.0,
         headerStyle: HeaderStyle(
           formatButtonVisible: false,
@@ -213,32 +266,29 @@ class _AthleteHubViewState extends State<AthleteHubView> {
           defaultBuilder: (context, day, focusedDay) {
             final sessions = _viewModel.sessionsForDay(day);
             if (sessions.isEmpty) return null;
-            return _DayWithSession(
-              day: day,
+            return _DayCircle(
+              day: day.day,
               isToday: false,
               isSelected: false,
-              hasSessions: true,
-              isDark: isDark,
+              sessions: sessions,
             );
           },
           todayBuilder: (context, day, focusedDay) {
             final sessions = _viewModel.sessionsForDay(day);
-            return _DayWithSession(
-              day: day,
+            return _DayCircle(
+              day: day.day,
               isToday: true,
               isSelected: false,
-              hasSessions: sessions.isNotEmpty,
-              isDark: isDark,
+              sessions: sessions,
             );
           },
           selectedBuilder: (context, day, focusedDay) {
             final sessions = _viewModel.sessionsForDay(day);
-            return _DayWithSession(
-              day: day,
+            return _DayCircle(
+              day: day.day,
               isToday: false,
               isSelected: true,
-              hasSessions: sessions.isNotEmpty,
-              isDark: isDark,
+              sessions: sessions,
             );
           },
         ),
@@ -1881,102 +1931,128 @@ Future<void> _launchGuidedSession(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _DayWithSession
+// _DayCircle — día con puntos de estado opcionales
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _DayWithSession extends StatelessWidget {
-  final DateTime day;
+List<Color> _dotsForDay(
+  List<AthleteSession> sessions,
+  bool isSelected,
+) {
+  final colors = <Color>[];
+  final hasCompleted =
+      sessions.any((s) => s.status == AthleteSessionStatus.completed);
+  final hasPlanned = sessions.any((s) =>
+      s.status == AthleteSessionStatus.planned &&
+      s.category != 'competicion');
+  final hasRace =
+      sessions.any((s) => s.category == 'competicion');
+
+  if (hasCompleted) {
+    colors.add(isSelected ? Colors.white : AppColors.rpeLow);
+  }
+  if (hasPlanned) {
+    colors.add(isSelected
+        ? Colors.white.withOpacity(0.7)
+        : AppColors.brandPurple);
+  }
+  if (hasRace) {
+    colors.add(isSelected ? Colors.white : AppColors.rpeMax);
+  }
+  return colors.take(3).toList();
+}
+
+class _DayCircle extends StatelessWidget {
+  final int day;
   final bool isToday;
   final bool isSelected;
-  final bool hasSessions;
-  final bool isDark;
+  final List<AthleteSession> sessions;
 
-  const _DayWithSession({
+  const _DayCircle({
     required this.day,
     required this.isToday,
     required this.isSelected,
-    required this.hasSessions,
-    required this.isDark,
+    this.sessions = const [],
   });
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final defaultColor =
+        isDark ? Colors.white : const Color(0xFF1C1C1E);
+    final dots = _dotsForDay(sessions, isSelected);
+
+    final Color textColor;
+    final FontWeight textWeight;
+    BoxDecoration? circleDecoration;
+
     if (isSelected) {
-      return _DayCircle(
-        day: day,
-        backgroundColor: AppColors.brandPurple,
-        textColor: Colors.white,
-        textWeight: FontWeight.w600,
-        border: null,
+      textColor = Colors.white;
+      textWeight = FontWeight.w600;
+      circleDecoration = const BoxDecoration(
+        color: AppColors.brandPurple,
+        shape: BoxShape.circle,
       );
-    }
-    if (isToday && hasSessions) {
-      return _DayCircle(
-        day: day,
-        backgroundColor: AppColors.brandPurple.withValues(alpha: 0.15),
-        textColor: AppColors.brandPurple,
-        textWeight: FontWeight.w600,
-        border: Border.all(color: AppColors.brandPurple, width: 1.5),
+    } else if (isToday) {
+      textColor = AppColors.brandPurple;
+      textWeight = FontWeight.w600;
+      circleDecoration = BoxDecoration(
+        color: AppColors.brandPurple.withValues(alpha: 0.15),
+        shape: BoxShape.circle,
       );
+    } else {
+      textColor = defaultColor;
+      textWeight = FontWeight.w400;
+      circleDecoration = null;
     }
-    if (isToday) {
-      return _DayCircle(
-        day: day,
-        backgroundColor: AppColors.brandPurple.withValues(alpha: 0.15),
-        textColor: AppColors.brandPurple,
-        textWeight: FontWeight.w600,
-        border: null,
-      );
-    }
-    if (hasSessions) {
-      final defaultColor =
-          isDark ? Colors.white : const Color(0xFF1C1C1E);
-      return _DayCircle(
-        day: day,
-        backgroundColor: Colors.transparent,
-        textColor: defaultColor,
-        textWeight: FontWeight.w400,
-        border: Border.all(color: AppColors.brandPurple, width: 1.5),
-      );
-    }
-    return const SizedBox.shrink();
+
+    return SizedBox(
+      width: 40,
+      height: 44,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: circleDecoration,
+            child: Text(
+              '$day',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: textWeight,
+                color: textColor,
+              ),
+            ),
+          ),
+          if (dots.isNotEmpty) ...[
+            const SizedBox(height: 3),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: dots
+                  .map((c) => Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 1.5),
+                        child: _SessionDot(color: c),
+                      ))
+                  .toList(),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 
-class _DayCircle extends StatelessWidget {
-  final DateTime day;
-  final Color backgroundColor;
-  final Color textColor;
-  final FontWeight textWeight;
-  final Border? border;
-
-  const _DayCircle({
-    required this.day,
-    required this.backgroundColor,
-    required this.textColor,
-    required this.textWeight,
-    required this.border,
-  });
+class _SessionDot extends StatelessWidget {
+  final Color color;
+  const _SessionDot({required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 40,
-      height: 40,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        shape: BoxShape.circle,
-        border: border,
-      ),
-      child: Text(
-        '${day.day}',
-        style: TextStyle(
-          fontSize: 15,
-          fontWeight: textWeight,
-          color: textColor,
-        ),
-      ),
+      width: 5,
+      height: 5,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }
