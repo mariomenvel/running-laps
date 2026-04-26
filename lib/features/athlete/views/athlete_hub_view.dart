@@ -16,6 +16,7 @@ import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
 import 'package:running_laps/features/training/views/manual_training_view.dart';
 import 'package:running_laps/core/services/notification_service.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AthleteHubView extends StatefulWidget {
@@ -73,37 +74,11 @@ class _AthleteHubViewState extends State<AthleteHubView> {
               valueListenable: _viewModel.state,
               builder: (context, state, _) => Column(
                 children: [
-                  GestureDetector(
-                    onVerticalDragEnd: (details) {
-                      if (details.primaryVelocity == null) return;
-                      if (details.primaryVelocity! < -200) {
-                        setState(() => _calendarExpanded = false);
-                      } else if (details.primaryVelocity! > 200) {
-                        setState(() => _calendarExpanded = true);
-                      }
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                      height: _calendarExpanded ? 380 : 110,
-                      child: _buildCalendarContent(state, isDark),
-                    ),
-                  ),
-                  Center(
-                    child: GestureDetector(
-                      onTap: () => setState(
-                          () => _calendarExpanded = !_calendarExpanded),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        width: _calendarExpanded ? 32 : 48,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF3A3A3C),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    height: _calendarExpanded ? 380 : 110,
+                    child: _buildCalendarContent(state, isDark),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -191,12 +166,6 @@ class _AthleteHubViewState extends State<AthleteHubView> {
         headerStyle: HeaderStyle(
           formatButtonVisible: false,
           titleCentered: true,
-          titleTextStyle: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.4,
-            color: titleColor,
-          ),
           leftChevronIcon: const Icon(
             Icons.chevron_left,
             color: AppColors.brandPurple,
@@ -263,6 +232,38 @@ class _AthleteHubViewState extends State<AthleteHubView> {
           ),
         ),
         calendarBuilders: CalendarBuilders<AthleteSession>(
+          headerTitleBuilder: (context, day) {
+            return GestureDetector(
+              onTap: () =>
+                  setState(() => _calendarExpanded = !_calendarExpanded),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    DateFormat('MMMM yyyy', 'es_ES').format(day),
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.4,
+                      color: isDark
+                          ? Colors.white
+                          : const Color(0xFF1C1C1E),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  AnimatedRotation(
+                    turns: _calendarExpanded ? 0.0 : 0.5,
+                    duration: const Duration(milliseconds: 300),
+                    child: const Icon(
+                      Icons.keyboard_arrow_up_rounded,
+                      size: 20,
+                      color: AppColors.brandPurple,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
           defaultBuilder: (context, day, focusedDay) {
             final sessions = _viewModel.sessionsForDay(day);
             if (sessions.isEmpty) return null;
