@@ -1,8 +1,11 @@
 import 'dart:math' show max, min;
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/features/profile/data/zones_repository.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
@@ -30,6 +33,8 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
   late final Animation<double> _aComparison;  // 350ms – fade + slide bottom
   // ────────────────────────────────────────────────────────────────
 
+  late final Future<int?> _fcMaxFuture;
+
   @override
   void initState() {
     super.initState();
@@ -42,6 +47,19 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
     _aSeries     = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.167, 0.683, curve: Curves.easeOutQuart));
     _aComparison = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.292, 0.808, curve: Curves.easeOutQuart));
     _entranceCtrl.forward();
+    _fcMaxFuture = _loadFcMax();
+  }
+
+  Future<int?> _loadFcMax() async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return null;
+      final profile = await ZonesRepository().getUserProfile(uid);
+      return profile?.fcMax;
+    } catch (e) {
+      debugPrint('[TrainingNoGpsDetailView] error cargando fcMax: $e');
+      return null;
+    }
   }
 
   @override
@@ -698,6 +716,14 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
                   _FcStat('Mín', '${minBpm.round()} ppm', AppColors.rpeLow),
                 ],
               ),
+              FutureBuilder<int?>(
+                future: _fcMaxFuture,
+                builder: (context, snap) {
+                  final fcMax = snap.data;
+                  if (fcMax == null) return const SizedBox.shrink();
+                  return _buildZoneDistribution(allReadings, fcMax);
+                },
+              ),
               const SizedBox(height: 12),
               if (allReadings.length > 1)
                 SizedBox(
@@ -722,6 +748,67 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildZoneDistribution(List<int> readings, int fcMax) {
+    final zones = ZonesService().zonesFor(fcMax);
+    final zoneCounts = List<int>.filled(5, 0);
+    for (final bpm in readings) {
+      final z = ZonesService().zoneFor(bpm, fcMax);
+      zoneCounts[z - 1]++;
+    }
+    final total = readings.length;
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Column(
+        children: List.generate(5, (i) {
+          if (zoneCounts[i] == 0) return const SizedBox.shrink();
+          final color = zones[i].color;
+          final pct = zoneCounts[i] / total;
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 28,
+                  child: Text('Z${i + 1}',
+                      style: TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      Container(
+                          height: 8,
+                          decoration: BoxDecoration(
+                              color: AppColors.borderDark.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(4))),
+                      FractionallySizedBox(
+                        widthFactor: pct,
+                        child: Container(
+                            height: 8,
+                            decoration: BoxDecoration(
+                                color: color,
+                                borderRadius: BorderRadius.circular(4))),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 36,
+                  child: Text('${(pct * 100).round()}%',
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(
+                          fontSize: 12, color: Color(0xFF8E8E93))),
+                ),
+              ],
+            ),
+          );
+        }),
+      ),
     );
   }
 
