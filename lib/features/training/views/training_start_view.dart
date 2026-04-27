@@ -1836,6 +1836,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                         _buildSerieStat('${serie.tiempoSec.toStringAsFixed(1)}s', Icons.timer_outlined, Colors.orange.shade400),
                         _buildSerieStat(serie.ritmoTexto(), Icons.speed, Colors.green.shade400),
                         _buildSerieStat('RPE ${serie.rpe}', Icons.bolt, Colors.red.shade400, isRpe: true),
+                        if (serie.fcMedia != null)
+                          _buildSerieStat('${serie.fcMedia!.round()} ppm', Icons.favorite_rounded, AppColors.rpeMax),
                       ],
                     ),
                   ),

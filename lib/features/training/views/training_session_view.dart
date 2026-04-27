@@ -398,9 +398,13 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     final double tiempoFinalSec = _stopwatch.elapsed.inMilliseconds / 1000.0;
 
     // FC media acumulada durante la serie
-    final double? fcMedia = _hrReadings.isNotEmpty
-        ? _hrReadings.reduce((a, b) => a + b) / _hrReadings.length
+    final List<int>? fcReadings = _hrReadings.isNotEmpty
+        ? List<int>.from(_hrReadings) : null;
+    final double? fcMedia = fcReadings != null
+        ? fcReadings.reduce((a, b) => a + b) / fcReadings.length
         : null;
+    debugPrint('[FC] Serie terminada — lecturas: ${fcReadings?.length ?? 0}, media: $fcMedia');
+    _hrReadings.clear();
 
     // 2. Crear el objeto Serie (sin GPS)
     final Serie serieTerminada = Serie(
@@ -413,6 +417,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
       gpsPoints: null,
       finishedAt: _finishedAt,
       fcMedia: fcMedia,
+      fcReadings: fcReadings,
     );
 
     // 3. Cerrar el diálogo de RPE
@@ -434,9 +439,13 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     final double tiempoFinalSec = _stopwatch.elapsed.inMilliseconds / 1000.0;
 
     // FC media acumulada durante la serie
-    final double? fcMedia = _hrReadings.isNotEmpty
-        ? _hrReadings.reduce((a, b) => a + b) / _hrReadings.length
+    final List<int>? fcReadings = _hrReadings.isNotEmpty
+        ? List<int>.from(_hrReadings) : null;
+    final double? fcMedia = fcReadings != null
+        ? fcReadings.reduce((a, b) => a + b) / fcReadings.length
         : null;
+    debugPrint('[FC] Serie GPS terminada — lecturas: ${fcReadings?.length ?? 0}, media: $fcMedia');
+    _hrReadings.clear();
 
     // 2. Convertir puntos GPS a Map
     List<Map<String, dynamic>>? gpsPointsMaps;
@@ -457,6 +466,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
       gpsPoints: gpsPointsMaps,
       finishedAt: _finishedAt,
       fcMedia: fcMedia,
+      fcReadings: fcReadings,
     );
 
     // 4. Volver a la pantalla anterior devolviendo la serie

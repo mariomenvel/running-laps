@@ -1,3 +1,5 @@
+import 'dart:math' show max, min;
+
 import 'package:flutter/material.dart';
 // fl_chart was here
 import 'package:running_laps/config/app_theme.dart';
@@ -88,6 +90,10 @@ class _TrainingDetailViewState extends State<TrainingDetailView>
                     _slideFromBottom(_aMap, _buildMapCard()),
                     const SizedBox(height: 32),
                     _slideFromBottom(_aSeries, _buildSeriesSection()),
+                    if (_hasFcData()) ...[
+                      const SizedBox(height: 32),
+                      _slideFromBottom(_aSeries, _buildFcChart()),
+                    ],
                     if (training.notas != null && training.notas!.isNotEmpty) ...[
                       const SizedBox(height: 32),
                       _slideFromBottom(_aSeries, _buildNotasSection()),
@@ -800,6 +806,163 @@ class _TrainingDetailViewState extends State<TrainingDetailView>
     if (rpe <= 7) return AppColors.rpeMid;
     return AppColors.rpeMax;
   }
+
+  bool _hasFcData() => training.series.any(
+      (s) => s.fcReadings != null && s.fcReadings!.isNotEmpty);
+
+  Widget _buildFcChart() {
+    final allReadings = training.series
+        .where((s) => s.fcReadings != null && s.fcReadings!.isNotEmpty)
+        .expand((s) => s.fcReadings!)
+        .toList();
+    if (allReadings.isEmpty) return const SizedBox.shrink();
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final maxBpm = allReadings.reduce(max).toDouble();
+    final minBpm = allReadings.reduce(min).toDouble();
+    final avgBpm = (allReadings.reduce((a, b) => a + b) / allReadings.length).round();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text('FRECUENCIA CARDÍACA',
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.8,
+                  color: isDark ? const Color(0xFF8E8E93) : const Color(0xFF6C6C70))),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1C1C1E) : const Color(0xFFF2F2F7),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _FcStat('Máx', '${maxBpm.round()} ppm', AppColors.rpeMax),
+                  _FcStat('Media', '$avgBpm ppm', AppColors.brandPurple),
+                  _FcStat('Mín', '${minBpm.round()} ppm', AppColors.rpeLow),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (allReadings.length > 1)
+                SizedBox(
+                  height: 80,
+                  child: CustomPaint(
+                    painter: _FcChartPainter(
+                      readings: allReadings,
+                      maxBpm: maxBpm,
+                      minBpm: minBpm,
+                      seriesBoundaries: _getSeriesBoundaries(training.series),
+                    ),
+                    size: Size.infinite,
+                  ),
+                )
+              else
+                Text('${allReadings.first} ppm',
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              const Text('Líneas verticales = cambio de serie',
+                  style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<int> _getSeriesBoundaries(List<dynamic> series) {
+    final boundaries = <int>[];
+    int idx = 0;
+    for (int i = 0; i < series.length - 1; i++) {
+      idx += series[i].fcReadings?.length ?? 0;
+      if (idx > 0) boundaries.add(idx);
+    }
+    return boundaries;
+  }
+}
+
+class _FcStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  const _FcStat(this.label, this.value, this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label,
+            style: const TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
+        const SizedBox(height: 2),
+        Text(value,
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: color)),
+      ],
+    );
+  }
+}
+
+class _FcChartPainter extends CustomPainter {
+  final List<int> readings;
+  final double maxBpm;
+  final double minBpm;
+  final List<int> seriesBoundaries;
+
+  const _FcChartPainter({
+    required this.readings,
+    required this.maxBpm,
+    required this.minBpm,
+    required this.seriesBoundaries,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (readings.length < 2) return;
+
+    final range = (maxBpm - minBpm) + 1;
+    final points = List.generate(readings.length, (i) {
+      final x = i / (readings.length - 1) * size.width;
+      final y = (1 - (readings[i] - minBpm) / range) * size.height;
+      return Offset(x, y);
+    });
+
+    // Líneas verticales de cambio de serie
+    final dividerPaint = Paint()
+      ..color = const Color(0xFF3A3A3C)
+      ..strokeWidth = 1.0;
+    for (final b in seriesBoundaries) {
+      final x = b / readings.length * size.width;
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), dividerPaint);
+    }
+
+    // Línea de FC suavizada
+    final linePaint = Paint()
+      ..color = AppColors.rpeMax
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final path = Path()..moveTo(points[0].dx, points[0].dy);
+    for (int i = 1; i < points.length; i++) {
+      final midX = (points[i - 1].dx + points[i].dx) / 2;
+      path.cubicTo(
+          midX, points[i - 1].dy, midX, points[i].dy, points[i].dx, points[i].dy);
+    }
+    canvas.drawPath(path, linePaint);
+  }
+
+  @override
+  bool shouldRepaint(_FcChartPainter old) =>
+      old.readings != readings || old.maxBpm != maxBpm || old.minBpm != minBpm;
 }
 
 class _AnimatedBackButton extends StatefulWidget {

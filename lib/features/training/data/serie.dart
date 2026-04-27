@@ -17,6 +17,9 @@ class Serie {
   // FC media durante la serie (bpm), null si no hay pulsómetro
   final double? fcMedia;
 
+  // Lecturas BPM punto a punto durante la serie, null si no hay pulsómetro
+  final List<int>? fcReadings;
+
   Serie({
     required this.tiempoSec,
     required this.distanciaM,
@@ -27,6 +30,7 @@ class Serie {
     this.gpsPoints,
     this.finishedAt,
     this.fcMedia,
+    this.fcReadings,
   }):assert(tiempoSec >= 0),
      assert(distanciaM >= 0),
      assert(descansoSec >= 0),
@@ -69,6 +73,7 @@ class Serie {
       if (gpsPoints != null) 'gpsPoints': gpsPoints,
       if (finishedAt != null) 'finishedAt': finishedAt!.toIso8601String(),
       if (fcMedia != null) 'fcMedia': fcMedia,
+      if (fcReadings != null && fcReadings!.isNotEmpty) 'fcReadings': fcReadings,
     };
   }
 
@@ -97,6 +102,9 @@ class Serie {
         return finishedAt;
       }(),
       fcMedia: (map['fcMedia'] as num?)?.toDouble(),
+      fcReadings: (map['fcReadings'] as List<dynamic>?)
+          ?.map((e) => (e as num).toInt())
+          .toList(),
     );
   }
 
@@ -110,6 +118,7 @@ class Serie {
     Object? gpsPoints       = _sentinel,
     Object? finishedAt      = _sentinel,
     Object? fcMedia         = _sentinel,
+    Object? fcReadings      = _sentinel,
   }) {
     return Serie(
       tiempoSec:       tiempoSec       ?? this.tiempoSec,
@@ -126,6 +135,8 @@ class Serie {
           ? this.finishedAt      : finishedAt as DateTime?,
       fcMedia:         identical(fcMedia, _sentinel)
           ? this.fcMedia         : fcMedia as double?,
+      fcReadings:      identical(fcReadings, _sentinel)
+          ? this.fcReadings      : fcReadings as List<int>?,
     );
   }
 }
