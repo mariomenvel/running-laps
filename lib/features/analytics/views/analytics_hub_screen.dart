@@ -89,7 +89,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with TickerProv
               title: widget.preFilteredData != null ? 'Resultados Filtrados' : 'Analytics Hub',
               subtitle: "Tu rendimiento en detalle",
               icon: Icons.analytics_rounded,
-              gradientColors: const [Color(0xFF6A1B9A), Color(0xFF8E24AA)], // Purple gradient
+              accentColor: AppColors.brandSurface,
               height: 85,
               trailing: SizedBox(
                 width: 140, // Limit width for the selector
@@ -118,11 +118,11 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with TickerProv
                   child: TabBar(
                     controller: _tabController,
                     indicator: BoxDecoration(
-                      color: Tema.brandPurple,
+                      color: AppColors.brand,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Tema.brandPurple.withOpacity(0.3),
+                          color: AppColors.brand.withOpacity(0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),

@@ -51,7 +51,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
             title: "Panel de Control",
             subtitle: "Gestiona retos globales y visualiza estadÃ­sticas",
             icon: Icons.admin_panel_settings_rounded,
-            gradientColors: [Colors.black87, Colors.black54],
+            accentColor: AppColors.surface,
             height: 85,
           ),
           Builder(

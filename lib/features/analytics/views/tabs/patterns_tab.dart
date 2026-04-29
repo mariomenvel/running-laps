@@ -25,7 +25,7 @@ class PatternsTab extends StatelessWidget {
       valueListenable: controller.filteredData,
       builder: (context, data, _) {
         if (controller.isLoading.value) {
-           return const Center(child: CircularProgressIndicator(color: Tema.brandPurple));
+           return const Center(child: CircularProgressIndicator(color: AppColors.brand));
         }
 
         if (data.isEmpty) {
@@ -135,10 +135,10 @@ class SeriesPatternCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.blue.withOpacity(0.1), width: 1),
+          border: Border.all(color: AppColors.rest.withOpacity(0.1), width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.blue.withOpacity(0.08),
+              color: AppColors.rest.withOpacity(0.08),
               blurRadius: 20,
               offset: const Offset(0, 8),
               spreadRadius: -4,
@@ -163,15 +163,11 @@ class SeriesPatternCard extends StatelessWidget {
                        Container(
                          padding: const EdgeInsets.all(10),
                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Colors.blue.shade400, Colors.blue.shade600],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                            color: AppColors.rest,
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.blue.withOpacity(0.3),
+                                color: AppColors.rest.withOpacity(0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -293,10 +289,10 @@ class WorkoutPatternCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.purple.withOpacity(0.1), width: 1),
+          border: Border.all(color: AppColors.brand.withOpacity(0.1), width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.purple.withOpacity(0.08),
+              color: AppColors.brand.withOpacity(0.08),
               blurRadius: 20,
               offset: const Offset(0, 8),
               spreadRadius: -4,
@@ -322,15 +318,11 @@ class WorkoutPatternCard extends StatelessWidget {
                          Container(
                            padding: const EdgeInsets.all(10),
                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Colors.purple.shade400, Colors.purple.shade600],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
+                              color: AppColors.brand,
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.purple.withOpacity(0.3),
+                                  color: AppColors.brand.withOpacity(0.3),
                                   blurRadius: 8,
                                   offset: const Offset(0, 4),
                                 ),

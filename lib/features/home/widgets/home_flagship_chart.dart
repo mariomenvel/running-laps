@@ -150,7 +150,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
         child: Icon(
           icon,
           size: 20,
-          color: isSelected ? (Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple) : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+          color: isSelected ? (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand) : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
         ),
       ),
     );
@@ -240,7 +240,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
                   TextSpan(
                     text: _formatValue(data.value),
                     style: TextStyle(
-                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
                     ),
@@ -338,15 +338,15 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
   }
   
   Color get _metricColor => _selectedMetric == ChartFlagshipMetric.distance
-      ? Tema.brandPurple
+      ? AppColors.brand
       : const Color(0xFF2196F3);
 
   LinearGradient _getGradient(bool isTouched) {
     if (_selectedMetric == ChartFlagshipMetric.distance) {
        return LinearGradient(
         colors: isTouched 
-            ? [Tema.brandPurple, Tema.brandPurple] 
-            : [Tema.brandPurple, const Color(0xFFB39DDB)], // Purple scale
+            ? [AppColors.brand, AppColors.brand] 
+            : [AppColors.brand, const Color(0xFFB39DDB)], // Purple scale
         begin: Alignment.bottomCenter,
         end: Alignment.topCenter,
       );

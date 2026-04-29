@@ -14,7 +14,7 @@ Color _zoneColor(int zone) {
     case 3:  return AppColors.rpeMid;
     case 4:  return AppColors.effort;
     case 5:  return AppColors.rpeMax;
-    default: return AppColors.brandPurple;
+    default: return AppColors.brand;
   }
 }
 
@@ -179,7 +179,7 @@ class _SessionBlockEditorState extends State<SessionBlockEditor> {
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(d, true),
-                        style: TextButton.styleFrom(foregroundColor: Colors.red),
+                        style: TextButton.styleFrom(foregroundColor: AppColors.rpeMax),
                         child: const Text('Eliminar'),
                       ),
                     ],
@@ -191,7 +191,7 @@ class _SessionBlockEditorState extends State<SessionBlockEditor> {
                   padding:     const EdgeInsets.only(right: 20),
                   margin:      const EdgeInsets.only(bottom: 10),
                   decoration:  BoxDecoration(
-                    color:        Colors.red,
+                    color:        AppColors.rpeMax,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.delete_outline, color: Colors.white),
@@ -271,8 +271,8 @@ class _AddBlockButton extends StatelessWidget {
     return OutlinedButton(
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.brandPurple,
-        side:            const BorderSide(color: AppColors.brandPurple),
+        foregroundColor: AppColors.brand,
+        side:            const BorderSide(color: AppColors.brand),
         padding:         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         visualDensity:   VisualDensity.compact,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -300,9 +300,9 @@ class _BlockCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final brandChipBg = AppColors.brandPurple.withValues(alpha: 0.12);
+    final brandChipBg = AppColors.brand.withValues(alpha: 0.12);
     final brandChipText =
-        isDark ? AppColors.brandPurpleLight : AppColors.brandPurple;
+        isDark ? AppColors.brandLight : AppColors.brand;
 
     return GestureDetector(
       onTap: onTap,
@@ -707,7 +707,7 @@ class _BlockEditorSheetState extends State<_BlockEditorSheet> {
                           fontWeight:    FontWeight.w700,
                           letterSpacing: 0.8,
                           color: _showObjectives
-                              ? AppColors.brandPurple
+                              ? AppColors.brand
                               : const Color(0xFFAAAAAA),
                         ),
                       ),
@@ -718,7 +718,7 @@ class _BlockEditorSheetState extends State<_BlockEditorSheet> {
                             : Icons.expand_more_rounded,
                         size: 18,
                         color: _showObjectives
-                            ? AppColors.brandPurple
+                            ? AppColors.brand
                             : const Color(0xFFAAAAAA),
                       ),
                     ]),
@@ -737,7 +737,7 @@ class _BlockEditorSheetState extends State<_BlockEditorSheet> {
                     child: FilledButton(
                       onPressed: _trySave,
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.brandPurple,
+                        backgroundColor: AppColors.brand,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -844,7 +844,7 @@ class _BlockEditorSheetState extends State<_BlockEditorSheet> {
             label: const Text('Añadir RPE objetivo',
                 style: TextStyle(fontSize: 13)),
             style: TextButton.styleFrom(
-                foregroundColor: AppColors.brandPurple,
+                foregroundColor: AppColors.brand,
                 visualDensity:   VisualDensity.compact),
           )
         else ...[
@@ -965,7 +965,7 @@ class _SheetTextField extends StatelessWidget {
             )),
         focusedBorder:  OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide:   const BorderSide(color: AppColors.brandPurple)),
+            borderSide:   const BorderSide(color: AppColors.brand)),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       ),
@@ -1009,7 +1009,7 @@ class _SheetNumField extends StatelessWidget {
               )),
           focusedBorder:  OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide:   const BorderSide(color: AppColors.brandPurple)),
+              borderSide:   const BorderSide(color: AppColors.brand)),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         ),
@@ -1048,7 +1048,7 @@ class _PaceField extends StatelessWidget {
               )),
           focusedBorder:  OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide:   const BorderSide(color: AppColors.brandPurple)),
+              borderSide:   const BorderSide(color: AppColors.brand)),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
         ),

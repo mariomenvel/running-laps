@@ -108,12 +108,7 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
       decoration: isDark
           ? BoxDecoration(color: AppColors.surfaceVariantDark)
           : const BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment.topCenter,
-                radius: 1.2,
-                colors: [_bgGradientColor, Colors.white],
-                stops: [0.0, 1.0],
-              ),
+              color: Colors.white,
               image: DecorationImage(
                 image: AssetImage('assets/images/fondo.png'),
                 fit: BoxFit.cover,
@@ -136,7 +131,7 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
                   },
                   child: const CircleAvatar(
                     radius: 24.0,
-                    backgroundColor: Tema.brandPurple,
+                    backgroundColor: AppColors.brand,
                     backgroundImage: AssetImage('assets/images/logo.png'),
                     child: null,
                   ),
@@ -158,7 +153,7 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
                   onTap: _saveAvatarToFirebase,
                   child: CircleAvatar(
                     radius: 24.0,
-                    backgroundColor: Tema.brandPurple,
+                    backgroundColor: AppColors.brand,
                     child: _isLoading
                         ? const Padding(
                             padding: EdgeInsets.all(12.0),
@@ -197,7 +192,7 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
             // 2. El contenido del Avatar Maker ocupa el resto del espacio
             Expanded(
               child: _isLoading
-                  ? Center(child: CircularProgressIndicator(color: Tema.brandPurple))
+                  ? Center(child: CircularProgressIndicator(color: AppColors.brand))
                   : const AvatarMakerScreen(),
             ),
           ],

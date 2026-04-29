@@ -110,7 +110,7 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
               title: "Perfil de Corredor",
               subtitle: widget.name,
               icon: Icons.verified_user_rounded,
-              gradientColors: const [Colors.deepPurple, Colors.purpleAccent],
+              accentColor: AppColors.brandSurface,
               height: 90,
             ),
 
@@ -153,10 +153,10 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: Tema.brandPurple.withOpacity(0.1),
+                                      color: AppColors.brand.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    child: Text("Corredor/a", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.bold, fontSize: 12)),
+                                    child: Text("Corredor/a", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.bold, fontSize: 12)),
                                   ),
                                   const SizedBox(height: 20),
                                   // STATS ROW

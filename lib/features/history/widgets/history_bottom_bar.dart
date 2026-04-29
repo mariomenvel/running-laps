@@ -67,7 +67,7 @@ class HistoryBottomBar extends StatelessWidget {
                     label: 'Comparar ($selectedCount)',
                     subtitle: 'Ver diferencias',
                     onTap: onCompare!,
-                    color: Tema.brandPurple,
+                    color: AppColors.brand,
                   ),
                 ),
             ],
@@ -84,7 +84,7 @@ class HistoryBottomBar extends StatelessWidget {
     required VoidCallback onTap,
     Color? color,
   }) {
-    final buttonColor = color ?? Tema.brandPurple;
+    final buttonColor = color ?? AppColors.brand;
     
     return Material(
       color: buttonColor,

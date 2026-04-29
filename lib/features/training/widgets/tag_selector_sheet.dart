@@ -145,7 +145,7 @@ class _TagSelectorSheetState extends State<TagSelectorSheet> {
             '${_selectedTagNames.length}/5 seleccionadas',
             style: TextStyle(
               fontSize: 13,
-              color: Colors.grey.shade600,
+              color: AppColors.iconMuted,
             ),
           ),
           const SizedBox(height: 20),
@@ -155,7 +155,7 @@ class _TagSelectorSheetState extends State<TagSelectorSheet> {
             const Center(
               child: Padding(
                 padding: EdgeInsets.all(32.0),
-                child: CircularProgressIndicator(color: Tema.brandPurple),
+                child: CircularProgressIndicator(color: AppColors.brand),
               ),
             )
           else if (_errorMessage != null)
@@ -164,7 +164,7 @@ class _TagSelectorSheetState extends State<TagSelectorSheet> {
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
                   children: [
-                    const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    const Icon(Icons.error_outline, color: AppColors.rpeMax, size: 48),
                     const SizedBox(height: 12),
                     Text(_errorMessage!, textAlign: TextAlign.center),
                     const SizedBox(height: 16),
@@ -194,12 +194,12 @@ class _TagSelectorSheetState extends State<TagSelectorSheet> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? tag.color.withOpacity(0.15)
-                            : Colors.grey.shade100,
+                            : AppColors.iconMuted,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: isSelected
                               ? tag.color
-                              : Colors.grey.shade300,
+                              : AppColors.iconMuted,
                           width: isSelected ? 2 : 1,
                         ),
                       ),
@@ -218,7 +218,7 @@ class _TagSelectorSheetState extends State<TagSelectorSheet> {
                             style: TextStyle(
                               color: isSelected
                                   ? tag.color
-                                  : Colors.grey.shade700,
+                                  : AppColors.iconMuted,
                               fontWeight: isSelected
                                   ? FontWeight.w700
                                   : FontWeight.w500,
@@ -240,10 +240,10 @@ class _TagSelectorSheetState extends State<TagSelectorSheet> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Tema.brandPurple.withOpacity(0.1),
+                      color: AppColors.brand.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: Tema.brandPurple,
+                        color: AppColors.brand,
                         width: 1,
                         style: BorderStyle.solid,
                       ),
@@ -254,13 +254,13 @@ class _TagSelectorSheetState extends State<TagSelectorSheet> {
                         Icon(
                           Icons.add_circle_outline,
                           size: 16,
-                          color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                          color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                         ),
                         const SizedBox(width: 6),
                         Text(
                           'Nueva etiqueta',
                           style: TextStyle(
-                            color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                            color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
                           ),
@@ -295,7 +295,7 @@ class _TagSelectorSheetState extends State<TagSelectorSheet> {
                 child: ElevatedButton(
                   onPressed: _isSaving ? null : _saveTags,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Tema.brandPurple,
+                    backgroundColor: AppColors.brand,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(

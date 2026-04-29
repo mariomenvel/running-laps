@@ -1,3 +1,4 @@
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'dart:ui' show Color;
 
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
@@ -104,7 +105,7 @@ class ForegroundTrackingHandler extends TaskHandler {
           id: buttonId,
           text: buttonLabel,
           // Brand purple text on the (white) Android notification button.
-          textColor: const Color(0xFF8E24AA),
+          textColor: AppColors.brand,
         ),
       ],
     );

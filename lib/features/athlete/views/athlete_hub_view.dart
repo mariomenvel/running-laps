@@ -169,12 +169,12 @@ class _AthleteHubViewState extends State<AthleteHubView> {
           titleCentered: true,
           leftChevronIcon: const Icon(
             Icons.chevron_left,
-            color: AppColors.brandPurple,
+            color: AppColors.brand,
             size: 28,
           ),
           rightChevronIcon: const Icon(
             Icons.chevron_right,
-            color: AppColors.brandPurple,
+            color: AppColors.brand,
             size: 28,
           ),
           headerPadding: const EdgeInsets.symmetric(vertical: 12),
@@ -193,16 +193,16 @@ class _AthleteHubViewState extends State<AthleteHubView> {
             color: defaultTextColor,
           ),
           todayDecoration: BoxDecoration(
-            color: AppColors.brandPurple.withValues(alpha: 0.15),
+            color: AppColors.brand.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           todayTextStyle: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: AppColors.brandPurple,
+            color: AppColors.brand,
           ),
           selectedDecoration: const BoxDecoration(
-            color: AppColors.brandPurple,
+            color: AppColors.brand,
             shape: BoxShape.circle,
           ),
           selectedTextStyle: const TextStyle(
@@ -258,7 +258,7 @@ class _AthleteHubViewState extends State<AthleteHubView> {
                     child: const Icon(
                       Icons.keyboard_arrow_up_rounded,
                       size: 20,
-                      color: AppColors.brandPurple,
+                      color: AppColors.brand,
                     ),
                   ),
                 ],
@@ -460,7 +460,7 @@ class _ProgressTabState extends State<_ProgressTab> {
                   height: 60,
                   child: Center(
                     child: CircularProgressIndicator(
-                        color: AppColors.brandPurple, strokeWidth: 2),
+                        color: AppColors.brand, strokeWidth: 2),
                   ),
                 );
               }
@@ -508,7 +508,7 @@ class _ProgressTabState extends State<_ProgressTab> {
                               style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.brandPurple)),
+                                  color: AppColors.brand)),
                         ],
                       ),
                     );
@@ -537,7 +537,7 @@ class _ProgressTabState extends State<_ProgressTab> {
                   height: 40,
                   child: Center(
                     child: CircularProgressIndicator(
-                        color: AppColors.brandPurple, strokeWidth: 2),
+                        color: AppColors.brand, strokeWidth: 2),
                   ),
                 );
               }
@@ -761,7 +761,7 @@ class _ExecutedSessionDetailState extends State<_ExecutedSessionDetail> {
         if (snap.connectionState == ConnectionState.waiting) {
           return const Center(
             child: CircularProgressIndicator(
-                color: AppColors.brandPurple, strokeWidth: 2),
+                color: AppColors.brand, strokeWidth: 2),
           );
         }
         final data = snap.data;
@@ -993,7 +993,7 @@ class _PlanningTabState extends State<_PlanningTab> {
                   height: 56,
                   child: Center(
                     child: CircularProgressIndicator(
-                        color: AppColors.brandPurple, strokeWidth: 2),
+                        color: AppColors.brand, strokeWidth: 2),
                   ),
                 );
               }
@@ -1011,7 +1011,7 @@ class _PlanningTabState extends State<_PlanningTab> {
                   const SizedBox(width: 8),
                   _WeekStatChip(
                     icon: Icons.calendar_today_rounded,
-                    iconColor: AppColors.brandPurple,
+                    iconColor: AppColors.brand,
                     value: '${stats.planned}',
                     label: 'Planificadas',
                     isDark: isDark,
@@ -1048,7 +1048,7 @@ class _PlanningTabState extends State<_PlanningTab> {
                   height: 80,
                   child: Center(
                     child: CircularProgressIndicator(
-                        color: AppColors.brandPurple, strokeWidth: 2),
+                        color: AppColors.brand, strokeWidth: 2),
                   ),
                 );
               }
@@ -1076,7 +1076,7 @@ class _PlanningTabState extends State<_PlanningTab> {
                     child: SizedBox(
                       width: 20, height: 20,
                       child: CircularProgressIndicator(
-                          color: AppColors.brandPurple, strokeWidth: 2),
+                          color: AppColors.brand, strokeWidth: 2),
                     ),
                   ),
                 );
@@ -1123,7 +1123,7 @@ class _PlanningTabState extends State<_PlanningTab> {
                     margin: const EdgeInsets.symmetric(horizontal: 0),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.effortSurface,
+                      color: AppColors.effortSurfaceConst,
                       border: Border.all(
                           color: AppColors.effort.withOpacity(0.4)),
                       borderRadius: BorderRadius.circular(12),
@@ -1185,7 +1185,7 @@ class _PlanningTabState extends State<_PlanningTab> {
                     child: SizedBox(
                       width: 20, height: 20,
                       child: CircularProgressIndicator(
-                          color: AppColors.brandPurple, strokeWidth: 2),
+                          color: AppColors.brand, strokeWidth: 2),
                     ),
                   ),
                 );
@@ -1235,16 +1235,16 @@ class _PlanningTabState extends State<_PlanningTab> {
             width: double.infinity,
             child: OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.brandPurple),
+                side: const BorderSide(color: AppColors.brand),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               icon: const Icon(Icons.add_rounded,
-                  color: AppColors.brandPurple),
+                  color: AppColors.brand),
               label: const Text('Planificar sesión',
                   style: TextStyle(
-                      color: AppColors.brandPurple,
+                      color: AppColors.brand,
                       fontSize: 15,
                       fontWeight: FontWeight.w600)),
               onPressed: () => Navigator.push(
@@ -1358,7 +1358,7 @@ class _ExplanationSheet extends StatelessWidget {
           Row(
             children: [
               const Icon(Icons.info_outline_rounded,
-                  color: AppColors.brandPurple, size: 20),
+                  color: AppColors.brand, size: 20),
               const SizedBox(width: 8),
               Text(
                 title,
@@ -1380,7 +1380,7 @@ class _ExplanationSheet extends StatelessWidget {
             width: double.infinity,
             child: FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.brandPurple,
+                backgroundColor: AppColors.brand,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
               ),
@@ -1644,7 +1644,7 @@ class _WeeklyBarChart extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 8,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.brandPurple,
+                    color: AppColors.brand,
                   ),
                 ),
               );
@@ -1682,8 +1682,8 @@ class _WeeklyBarPainter extends CustomPainter {
       final isCurrent = v.weekStart == currentMonday;
       final barPaint = Paint()
         ..color = isCurrent
-            ? AppColors.brandPurple
-            : AppColors.brandPurple.withOpacity(0.4)
+            ? AppColors.brand
+            : AppColors.brand.withOpacity(0.4)
         ..style = PaintingStyle.fill;
       final h = max(minBarH, (v.km / maxKm) * size.height * 0.95);
       final left = i * barW + barPad;
@@ -1752,7 +1752,7 @@ class _UpcomingSessionCard extends StatelessWidget {
                     style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.brandPurple)),
+                        color: AppColors.brand)),
                 Text(monthStr,
                     style: const TextStyle(
                         fontSize: 11, color: Color(0xFF8E8E93))),
@@ -1779,14 +1779,14 @@ class _UpcomingSessionCard extends StatelessWidget {
                 if (session.time != null)
                   Text(session.time!,
                       style: const TextStyle(
-                          fontSize: 12, color: AppColors.brandPurple)),
+                          fontSize: 12, color: AppColors.brand)),
               ],
             ),
           ),
           if (isToday && session.blocks.isNotEmpty)
             FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.brandPurple,
+                backgroundColor: AppColors.brand,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12),
                 minimumSize: const Size(0, 32),
@@ -1838,18 +1838,18 @@ class _RaceCountdownCard extends StatelessWidget {
             color: surfaceColor,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-                color: AppColors.brandPurple.withOpacity(0.3)),
+                color: AppColors.brand.withOpacity(0.3)),
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.brandPurple.withOpacity(0.12),
+                  color: AppColors.brand.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.emoji_events_rounded,
-                    color: AppColors.brandPurple, size: 20),
+                    color: AppColors.brand, size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1873,7 +1873,7 @@ class _RaceCountdownCard extends StatelessWidget {
                       style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.brandPurple),
+                          color: AppColors.brand),
                     ),
                     const Text('días',
                         style: TextStyle(
@@ -1923,14 +1923,14 @@ class _MiniLinePainter extends CustomPainter {
     }
 
     final linePaint = Paint()
-      ..color = AppColors.brandPurple
+      ..color = AppColors.brand
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
     final dotPaint = Paint()
-      ..color = AppColors.brandPurpleLight
+      ..color = AppColors.brandLight
       ..style = PaintingStyle.fill;
 
     final path = Path();
@@ -2088,7 +2088,7 @@ class _DayActionSheet extends StatelessWidget {
                         else
                           FilledButton(
                             style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.brandPurple,
+                              backgroundColor: AppColors.brand,
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 12),
                               minimumSize: const Size(0, 34),
@@ -2134,7 +2134,7 @@ class _DayActionSheet extends StatelessWidget {
               icon: const Icon(Icons.add_rounded),
               label: const Text('Planificar sesión'),
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.brandPurple,
+                backgroundColor: AppColors.brand,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -2155,8 +2155,8 @@ class _DayActionSheet extends StatelessWidget {
               icon: const Icon(Icons.edit_note_rounded, size: 18),
               label: const Text('Registrar entrenamiento'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.brandPurple,
-                side: const BorderSide(color: AppColors.brandPurple),
+                foregroundColor: AppColors.brand,
+                side: const BorderSide(color: AppColors.brand),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -2228,7 +2228,7 @@ Future<void> _launchGuidedSession(
   final template = TrainingTemplate(
     id: session.id,
     name: sessionName,
-    colorValue: AppColors.brandPurple.value,
+    colorValue: AppColors.brand.value,
     isWarmupCooldown: false,
     blocks: blocks,
     createdAt: now,
@@ -2270,7 +2270,7 @@ List<Color> _dotsForDay(
   if (hasPlanned) {
     colors.add(isSelected
         ? Colors.white.withOpacity(0.7)
-        : AppColors.brandPurple);
+        : AppColors.brand);
   }
   if (hasRace) {
     colors.add(isSelected ? Colors.white : AppColors.rpeMax);
@@ -2306,14 +2306,14 @@ class _DayCircle extends StatelessWidget {
       textColor = Colors.white;
       textWeight = FontWeight.w600;
       circleDecoration = const BoxDecoration(
-        color: AppColors.brandPurple,
+        color: AppColors.brand,
         shape: BoxShape.circle,
       );
     } else if (isToday) {
-      textColor = AppColors.brandPurple;
+      textColor = AppColors.brand;
       textWeight = FontWeight.w600;
       circleDecoration = BoxDecoration(
-        color: AppColors.brandPurple.withValues(alpha: 0.15),
+        color: AppColors.brand.withValues(alpha: 0.15),
         shape: BoxShape.circle,
       );
     } else {
@@ -2480,14 +2480,14 @@ class _EmptyCalendarHint extends StatelessWidget {
           const SizedBox(height: 16),
           OutlinedButton.icon(
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.brandPurple,
-              side: const BorderSide(color: AppColors.brandPurple),
+              foregroundColor: AppColors.brand,
+              side: const BorderSide(color: AppColors.brand),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),
-            icon: const Icon(Icons.add_rounded, color: AppColors.brandPurple),
+            icon: const Icon(Icons.add_rounded, color: AppColors.brand),
             label: const Text('Planificar sesión',
-                style: TextStyle(color: AppColors.brandPurple)),
+                style: TextStyle(color: AppColors.brand)),
             onPressed: () {
               Navigator.push(
                 context,

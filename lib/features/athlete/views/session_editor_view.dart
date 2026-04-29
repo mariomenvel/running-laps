@@ -290,7 +290,7 @@ class _SessionEditorViewState extends State<SessionEditorView> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: AppColors.rpeMax),
             child: const Text('Eliminar'),
           ),
         ],
@@ -371,7 +371,7 @@ class _SessionEditorViewState extends State<SessionEditorView> {
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppColors.brandPurple,
+                        color: AppColors.brand,
                       ),
                     ),
                   ),
@@ -382,7 +382,7 @@ class _SessionEditorViewState extends State<SessionEditorView> {
                   child: const Text(
                     'Guardar',
                     style: TextStyle(
-                      color:      AppColors.brandPurple,
+                      color:      AppColors.brand,
                       fontWeight: FontWeight.w700,
                       fontSize:   16,
                     ),
@@ -392,7 +392,7 @@ class _SessionEditorViewState extends State<SessionEditorView> {
           ),
           body: state.isLoading
               ? const Center(
-                  child: CircularProgressIndicator(color: AppColors.brandPurple),
+                  child: CircularProgressIndicator(color: AppColors.brand),
                 )
               : SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
@@ -575,8 +575,8 @@ class _SessionEditorViewState extends State<SessionEditorView> {
             icon:  const Icon(Icons.add, size: 18),
             label: const Text('Añadir calentamiento'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.brandPurple,
-              side:            const BorderSide(color: AppColors.brandPurple),
+              foregroundColor: AppColors.brand,
+              side:            const BorderSide(color: AppColors.brand),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -629,8 +629,8 @@ class _SessionEditorViewState extends State<SessionEditorView> {
             icon:  const Icon(Icons.add, size: 18),
             label: const Text('Añadir vuelta a la calma'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.brandPurple,
-              side:            const BorderSide(color: AppColors.brandPurple),
+              foregroundColor: AppColors.brand,
+              side:            const BorderSide(color: AppColors.brand),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -698,11 +698,11 @@ class _SessionEditorViewState extends State<SessionEditorView> {
           icon:  const Icon(Icons.file_copy_outlined, size: 18),
           label: const Text('Partir de plantilla existente'),
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.brandPurple,
+            foregroundColor: AppColors.brand,
             side: BorderSide(
               color: state.availableTemplates.isEmpty
                   ? const Color(0xFFAAAAAA)
-                  : AppColors.brandPurple,
+                  : AppColors.brand,
             ),
             padding: const EdgeInsets.symmetric(vertical: 12),
             shape: RoundedRectangleBorder(
@@ -724,11 +724,11 @@ class _SessionEditorViewState extends State<SessionEditorView> {
           icon:  const Icon(Icons.bookmark_add_outlined, size: 18),
           label: const Text('Guardar como plantilla'),
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.brandPurple,
+            foregroundColor: AppColors.brand,
             side: BorderSide(
               color: (_currentBlocks.isEmpty && !_hasWarmup && !_hasCooldown)
                   ? const Color(0xFFAAAAAA)
-                  : AppColors.brandPurple,
+                  : AppColors.brand,
             ),
             padding: const EdgeInsets.symmetric(vertical: 12),
             shape: RoundedRectangleBorder(
@@ -741,7 +741,7 @@ class _SessionEditorViewState extends State<SessionEditorView> {
             onPressed: state.isSaving ? null : _confirmDelete,
             child: const Text(
               'Eliminar sesión',
-              style: TextStyle(color: Colors.red, fontSize: 15),
+              style: TextStyle(color: AppColors.rpeMax, fontSize: 15),
             ),
           ),
         ],
@@ -767,7 +767,7 @@ class _SessionEditorViewState extends State<SessionEditorView> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide:   const BorderSide(color: AppColors.brandPurple),
+        borderSide:   const BorderSide(color: AppColors.brand),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     );
@@ -828,7 +828,7 @@ class _RowField extends StatelessWidget {
           ),
         ),
         child: Row(children: [
-          Icon(icon, size: 18, color: AppColors.brandPurple),
+          Icon(icon, size: 18, color: AppColors.brand),
           const SizedBox(width: 10),
           Text(label, style: const TextStyle(fontSize: 15)),
         ]),
@@ -877,7 +877,7 @@ class _WarmupCooldownForm extends StatelessWidget {
                 )),
             focusedBorder:  OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide:   const BorderSide(color: AppColors.brandPurple)),
+                borderSide:   const BorderSide(color: AppColors.brand)),
             contentPadding: const EdgeInsets.symmetric(
                 horizontal: 14, vertical: 12),
           ),
@@ -885,7 +885,7 @@ class _WarmupCooldownForm extends StatelessWidget {
         const SizedBox(height: 10),
         Row(
           children: [
-            const Icon(Icons.timer_outlined, size: 16, color: AppColors.brandPurple),
+            const Icon(Icons.timer_outlined, size: 16, color: AppColors.brand),
             const SizedBox(width: 6),
             SizedBox(
               width: 70,
@@ -909,7 +909,7 @@ class _WarmupCooldownForm extends StatelessWidget {
                   focusedBorder:  OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide:   const BorderSide(
-                          color: AppColors.brandPurple)),
+                          color: AppColors.brand)),
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 ),
@@ -926,7 +926,7 @@ class _WarmupCooldownForm extends StatelessWidget {
               icon:        const Icon(Icons.close, size: 16),
               label:       const Text('Quitar'),
               style:       TextButton.styleFrom(
-                foregroundColor: Colors.red,
+                foregroundColor: AppColors.rpeMax,
                 visualDensity:   VisualDensity.compact,
               ),
             ),
@@ -974,7 +974,7 @@ class _TimePartField extends StatelessWidget {
                   )),
               focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.brandPurple)),
+                  borderSide: const BorderSide(color: AppColors.brand)),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
             ),

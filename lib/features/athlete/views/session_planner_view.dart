@@ -361,7 +361,7 @@ class _SessionPlannerViewState extends State<SessionPlannerView> {
       final template = TrainingTemplate(
         id:               now.millisecondsSinceEpoch.toString(),
         name:             name,
-        colorValue:       AppColors.brandPurple.value,
+        colorValue:       AppColors.brand.value,
         isWarmupCooldown: false,
         blocks:           tBlocks,
         createdAt:        now,
@@ -422,7 +422,7 @@ class _SessionPlannerViewState extends State<SessionPlannerView> {
             ),
             FilledButton(
               style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.brandPurple),
+                  backgroundColor: AppColors.brand),
               onPressed: () => Navigator.pop(ctx, true),
               child: const Text('Reemplazar'),
             ),
@@ -467,7 +467,7 @@ class _SessionPlannerViewState extends State<SessionPlannerView> {
         backgroundColor: bgColor,
         elevation:       0,
         leading: IconButton(
-          icon: const Icon(Icons.close_rounded, color: AppColors.brandPurple),
+          icon: const Icon(Icons.close_rounded, color: AppColors.brand),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -488,7 +488,7 @@ class _SessionPlannerViewState extends State<SessionPlannerView> {
                       height: 20,
                       child:  CircularProgressIndicator(
                         strokeWidth: 2,
-                        color:       AppColors.brandPurple,
+                        color:       AppColors.brand,
                       ),
                     ),
                   ),
@@ -498,7 +498,7 @@ class _SessionPlannerViewState extends State<SessionPlannerView> {
                   child: const Text(
                     'Guardar',
                     style: TextStyle(
-                      color:      AppColors.brandPurple,
+                      color:      AppColors.brand,
                       fontSize:   15,
                       fontWeight: FontWeight.w600,
                     ),
@@ -563,12 +563,12 @@ class _SessionPlannerViewState extends State<SessionPlannerView> {
                 child: Row(
                   children: const [
                     Icon(Icons.add_circle_rounded,
-                        color: AppColors.brandPurple),
+                        color: AppColors.brand),
                     SizedBox(width: 8),
                     Text(
                       'Añadir serie',
                       style: TextStyle(
-                          fontSize: 15, color: AppColors.brandPurple),
+                          fontSize: 15, color: AppColors.brand),
                     ),
                   ],
                 ),
@@ -658,7 +658,7 @@ class _FieldRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 14),
             child: Row(
               children: [
-                Icon(icon, size: 20, color: AppColors.brandPurple),
+                Icon(icon, size: 20, color: AppColors.brand),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(label,
@@ -1117,7 +1117,7 @@ class _DistancePickerSheetState extends State<_DistancePickerSheet> {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-                backgroundColor: AppColors.brandPurple),
+                backgroundColor: AppColors.brand),
             onPressed: () {
               final v = int.tryParse(ctrl.text.trim());
               Navigator.pop(ctx);
@@ -1167,7 +1167,7 @@ class _DistancePickerSheetState extends State<_DistancePickerSheet> {
                   child: Text(
                     'Otra distancia →',
                     style: TextStyle(
-                        fontSize: 18, color: AppColors.brandPurple),
+                        fontSize: 18, color: AppColors.brand),
                   ),
                 ),
               ],
@@ -1179,7 +1179,7 @@ class _DistancePickerSheetState extends State<_DistancePickerSheet> {
               width: double.infinity,
               child: FilledButton(
                 style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brandPurple),
+                    backgroundColor: AppColors.brand),
                 onPressed: () {
                   if (_selectedIndex == _standardDistances.length) {
                     _openCustom();
@@ -1313,7 +1313,7 @@ class _DurationPickerSheetState extends State<_DurationPickerSheet> {
               width: double.infinity,
               child: FilledButton(
                 style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brandPurple),
+                    backgroundColor: AppColors.brand),
                 onPressed: () =>
                     Navigator.pop(context, (_minutes, _seconds)),
                 child: const Text('Confirmar'),
@@ -1496,7 +1496,7 @@ class _PacePickerSheetState extends State<_PacePickerSheet> {
                 const Spacer(),
                 CupertinoSwitch(
                   value:          _hasMax,
-                  activeTrackColor: AppColors.brandPurple,
+                  activeTrackColor: AppColors.brand,
                   onChanged: (v) => setState(() => _hasMax = v),
                 ),
               ],
@@ -1535,7 +1535,7 @@ class _PacePickerSheetState extends State<_PacePickerSheet> {
               width: double.infinity,
               child: FilledButton(
                 style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brandPurple),
+                    backgroundColor: AppColors.brand),
                 onPressed: () => Navigator.pop(
                   context,
                   (
@@ -1636,7 +1636,7 @@ class _RpePickerSheetState extends State<_RpePickerSheet> {
               width: double.infinity,
               child: FilledButton(
                 style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brandPurple),
+                    backgroundColor: AppColors.brand),
                 onPressed: () =>
                     Navigator.pop(context, _rpeValues[_idx]),
                 child: const Text('Listo'),
@@ -1710,7 +1710,7 @@ class _RestPickerSheetState extends State<_RestPickerSheet> {
               width: double.infinity,
               child: FilledButton(
                 style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brandPurple),
+                    backgroundColor: AppColors.brand),
                 onPressed: () =>
                     Navigator.pop(context, _restValues[_idx]),
                 child: const Text('Listo'),
@@ -1796,7 +1796,7 @@ class _SaveTemplateSheetState extends State<_SaveTemplateSheet> {
             width: double.infinity,
             child: FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.brandPurple,
+                backgroundColor: AppColors.brand,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
               ),

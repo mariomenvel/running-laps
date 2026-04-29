@@ -23,7 +23,7 @@ class OverviewTab extends StatelessWidget {
       valueListenable: controller.filteredData,
       builder: (context, data, _) {
         if (controller.isLoading.value) {
-           return const Center(child: CircularProgressIndicator(color: Tema.brandPurple));
+           return const Center(child: CircularProgressIndicator(color: AppColors.brand));
         }
 
         if (data.isEmpty) {
@@ -70,7 +70,7 @@ class OverviewTab extends StatelessWidget {
                         value: '${totalKm.toStringAsFixed(1)} km',
                         subtitle: 'En periodo',
                         icon: Icons.map,
-                        primaryColor: Colors.blue,
+                        primaryColor: AppColors.rest,
                         helpText: AppHelpContent.analyticsDistancia,
                       ),
                       KpiCardWithDelta(
@@ -78,7 +78,7 @@ class OverviewTab extends StatelessWidget {
                         value: '$totalWorkouts',
                         subtitle: 'Entrenamientos',
                         icon: Icons.directions_run,
-                        primaryColor: Colors.orange,
+                        primaryColor: AppColors.rpeMid,
                         helpText: AppHelpContent.analyticsSesiones,
                       ),
                       KpiCardWithDelta(
@@ -86,7 +86,7 @@ class OverviewTab extends StatelessWidget {
                         value: avgPace,
                         subtitle: '/km',
                         icon: Icons.speed,
-                        primaryColor: Colors.purple,
+                        primaryColor: AppColors.brand,
                         isInverted: true,
                         helpText: AppHelpContent.analyticsRitmo,
                       ),
@@ -95,7 +95,7 @@ class OverviewTab extends StatelessWidget {
                         value: controller.formattedTotalDuration,
                         subtitle: 'En periodo',
                         icon: Icons.timer,
-                        primaryColor: Colors.teal,
+                        primaryColor: AppColors.brand,
                         helpText: AppHelpContent.analyticsTiempoTotal, 
                       ),
                     ],
@@ -143,11 +143,11 @@ class OverviewTab extends StatelessWidget {
         const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(child: _buildBestMarkCard(context, '400m', best400m, Icons.bolt, Colors.amber)),
+            Expanded(child: _buildBestMarkCard(context, '400m', best400m, Icons.bolt, AppColors.rpeMid)),
             const SizedBox(width: 12),
-            Expanded(child: _buildBestMarkCard(context, '1km', best1km, Icons.speed, Colors.blue)),
+            Expanded(child: _buildBestMarkCard(context, '1km', best1km, Icons.speed, AppColors.rest)),
             const SizedBox(width: 12),
-            Expanded(child: _buildBestMarkCard(context, '5km', best5km, Icons.emoji_events, Colors.purple)),
+            Expanded(child: _buildBestMarkCard(context, '5km', best5km, Icons.emoji_events, AppColors.brand)),
           ],
         ),
       ],
@@ -177,7 +177,7 @@ class OverviewTab extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [color.withOpacity(0.8), color]),
+              color: color,
               shape: BoxShape.circle,
               boxShadow: [BoxShadow(color: color.withOpacity(0.5), blurRadius: 12, offset: const Offset(0, 6))],
             ),
@@ -208,7 +208,7 @@ class OverviewTab extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
             boxShadow: [
-              BoxShadow(color: Colors.blue.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10), spreadRadius: -5),
+              BoxShadow(color: AppColors.rest.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10), spreadRadius: -5),
               BoxShadow(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.transparent
@@ -240,7 +240,7 @@ class OverviewTab extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
             boxShadow: [
-              BoxShadow(color: Tema.brandPurple.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10), spreadRadius: -5),
+              BoxShadow(color: AppColors.brand.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10), spreadRadius: -5),
               BoxShadow(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.transparent
@@ -292,7 +292,7 @@ class OverviewTab extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
             boxShadow: [
-              BoxShadow(color: Tema.brandPurple.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10), spreadRadius: -5),
+              BoxShadow(color: AppColors.brand.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10), spreadRadius: -5),
               BoxShadow(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.transparent
@@ -388,7 +388,7 @@ class OverviewTab extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
             boxShadow: [
-              BoxShadow(color: Colors.amber.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10), spreadRadius: -5),
+              BoxShadow(color: AppColors.rpeMid.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10), spreadRadius: -5),
               BoxShadow(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.transparent
@@ -403,18 +403,18 @@ class OverviewTab extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [Colors.amber.shade400, Colors.amber.shade600]),
+                  color: AppColors.rpeMid,
                   shape: BoxShape.circle,
-                  boxShadow: [BoxShadow(color: Colors.amber.withOpacity(0.5), blurRadius: 12, offset: const Offset(0, 6))],
+                  boxShadow: [BoxShadow(color: AppColors.rpeMid.withOpacity(0.5), blurRadius: 12, offset: const Offset(0, 6))],
                 ),
                 child: const Icon(Icons.emoji_events, color: Colors.white, size: 40),
               ),
               const SizedBox(height: 20),
-              Text('${remaining.toStringAsFixed(1)} km', style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.amber, letterSpacing: -1)),
+              Text('${remaining.toStringAsFixed(1)} km', style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: AppColors.rpeMid, letterSpacing: -1)),
               const SizedBox(height: 8),
               Text('para alcanzar $nextMilestone km', style: TextStyle(fontSize: 16, color: onSurface.withOpacity(0.7), fontWeight: FontWeight.w600)),
               const SizedBox(height: 20),
-              LinearProgressIndicator(value: totalKm / nextMilestone, backgroundColor: onSurface.withOpacity(0.12), valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber), minHeight: 8, borderRadius: BorderRadius.circular(4)),
+              LinearProgressIndicator(value: totalKm / nextMilestone, backgroundColor: onSurface.withOpacity(0.12), valueColor: const AlwaysStoppedAnimation<Color>(AppColors.rpeMid), minHeight: 8, borderRadius: BorderRadius.circular(4)),
             ],
           ),
         ),
@@ -432,9 +432,9 @@ class OverviewTab extends StatelessWidget {
   }
 
   Color _getConsistencyColor(double score) {
-    if (score >= 80) return Colors.green.shade600;
-    if (score >= 50) return Colors.orange.shade600;
-    return Colors.red.shade600;
+    if (score >= 80) return AppColors.rpeLow;
+    if (score >= 50) return AppColors.rpeMid;
+    return AppColors.rpeMax;
   }
 
   String _getConsistencyLabel(double score) {
@@ -462,10 +462,10 @@ class _WeeklyVolumeChart extends StatelessWidget {
     final displayData = sorted.length > 12 ? sorted.sublist(sorted.length - 12) : sorted;
     final barGroups = displayData.asMap().entries.map((e) {
       final km = e.value.distanciaTotalM() / 1000.0;
-      return BarChartGroupData(x: e.key, barRods: [BarChartRodData(toY: km, gradient: LinearGradient(colors: [Colors.blue.shade400, Colors.blue.shade600], begin: Alignment.bottomCenter, end: Alignment.topCenter), width: 20, borderRadius: const BorderRadius.vertical(top: Radius.circular(8)))]);
+      return BarChartGroupData(x: e.key, barRods: [BarChartRodData(toY: km, gradient: LinearGradient(colors: [AppColors.rest, AppColors.rest], begin: Alignment.bottomCenter, end: Alignment.topCenter), width: 20, borderRadius: const BorderRadius.vertical(top: Radius.circular(8)))]);
     }).toList();
 
-    return BarChart(BarChartData(alignment: BarChartAlignment.spaceAround, barTouchData: BarTouchData(touchTooltipData: BarTouchTooltipData(getTooltipColor: (_) => Colors.blueGrey.shade900, tooltipBorderRadius: BorderRadius.circular(8), tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), getTooltipItem: (group, groupIndex, rod, rodIndex) {
+    return BarChart(BarChartData(alignment: BarChartAlignment.spaceAround, barTouchData: BarTouchData(touchTooltipData: BarTouchTooltipData(getTooltipColor: (_) => AppColors.iconMuted, tooltipBorderRadius: BorderRadius.circular(8), tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), getTooltipItem: (group, groupIndex, rod, rodIndex) {
       final workout = displayData[groupIndex];
       final date = "${workout.fecha.day}/${workout.fecha.month}";
       return BarTooltipItem("$date\n", const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold), children: [TextSpan(text: "${rod.toY.toStringAsFixed(1)} km", style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold))]);
@@ -491,7 +491,7 @@ class _PaceEvolutionChart extends StatelessWidget {
     final minY = spots.map((e) => e.y).reduce((a, b) => a < b ? a : b);
     final targetMinY = (minY * 0.95).floorToDouble();
 
-    return LineChart(LineChartData(lineTouchData: LineTouchData(touchTooltipData: LineTouchTooltipData(getTooltipColor: (_) => Colors.blueGrey.shade900, tooltipBorderRadius: BorderRadius.circular(8), tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), getTooltipItems: (touchedSpots) {
+    return LineChart(LineChartData(lineTouchData: LineTouchData(touchTooltipData: LineTouchTooltipData(getTooltipColor: (_) => AppColors.iconMuted, tooltipBorderRadius: BorderRadius.circular(8), tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), getTooltipItems: (touchedSpots) {
       return touchedSpots.map((spot) {
         final workout = displayData[spot.x.toInt()];
         final date = "${workout.fecha.day}/${workout.fecha.month}";
@@ -500,7 +500,7 @@ class _PaceEvolutionChart extends StatelessWidget {
         final s = (totalSeconds % 60).toString().padLeft(2, '0');
         return LineTooltipItem("$date\n", const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold), children: [TextSpan(text: "$m:$s /km", style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold))]);
       }).toList();
-    })), gridData: FlGridData(show: true, drawVerticalLine: false, getDrawingHorizontalLine: (value) => FlLine(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1), strokeWidth: 1)), titlesData: const FlTitlesData(show: false), borderData: FlBorderData(show: false), minY: targetMinY > 0 ? targetMinY : 0, lineBarsData: [LineChartBarData(spots: spots, isCurved: true, curveSmoothness: 0.4, gradient: LinearGradient(colors: [Tema.brandPurple, Colors.purple.shade300]), barWidth: 4, isStrokeCapRound: true, dotData: const FlDotData(show: false), belowBarData: BarAreaData(show: true, gradient: LinearGradient(colors: [Tema.brandPurple.withOpacity(0.3), Tema.brandPurple.withOpacity(0.0)], begin: Alignment.topCenter, end: Alignment.bottomCenter))) ]));
+    })), gridData: FlGridData(show: true, drawVerticalLine: false, getDrawingHorizontalLine: (value) => FlLine(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1), strokeWidth: 1)), titlesData: const FlTitlesData(show: false), borderData: FlBorderData(show: false), minY: targetMinY > 0 ? targetMinY : 0, lineBarsData: [LineChartBarData(spots: spots, isCurved: true, curveSmoothness: 0.4, gradient: LinearGradient(colors: [AppColors.brand, AppColors.brand]), barWidth: 4, isStrokeCapRound: true, dotData: const FlDotData(show: false), belowBarData: BarAreaData(show: true, gradient: LinearGradient(colors: [AppColors.brand.withOpacity(0.3), AppColors.brand.withOpacity(0.0)], begin: Alignment.topCenter, end: Alignment.bottomCenter))) ]));
   }
 }
 
@@ -526,11 +526,11 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
     final sortedEntries = distribution.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
     final top3 = sortedEntries.take(3).toList();
     final cs = Theme.of(context).colorScheme;
-    return Column(children: [SizedBox(height: 220, child: Row(children: [Expanded(flex: 3, child: Stack(alignment: Alignment.center, children: [PieChart(PieChartData(pieTouchData: PieTouchData(touchCallback: (FlTouchEvent event, pieTouchResponse) { setState(() { if (!event.isInterestedForInteractions || pieTouchResponse == null || pieTouchResponse.touchedSection == null) { touchedIndex = -1; return; } touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex; }); }), sections: sortedEntries.asMap().entries.map((e) { final index = e.key; final entry = e.value; final isTouched = index == touchedIndex; final color = _getTagColor(index); final fontSize = isTouched ? 16.0 : 12.0; final radius = isTouched ? 60.0 : 50.0; return PieChartSectionData(color: color, value: entry.value, title: isTouched ? '${entry.value.toStringAsFixed(0)}km' : '', radius: radius, titleStyle: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold, color: Colors.white, shadows: const [Shadow(color: Colors.black26, blurRadius: 4)])); }).toList(), centerSpaceRadius: 55, sectionsSpace: 3, borderData: FlBorderData(show: false))), Column(mainAxisSize: MainAxisSize.min, children: [Text(totalKm >= 100 ? totalKm.toStringAsFixed(0) : totalKm.toStringAsFixed(1), style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, letterSpacing: -1, height: 1.0)), Text('KM TOTALES', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: cs.onSurface.withOpacity(0.5), letterSpacing: 1.2))])])), const SizedBox(width: 16), Expanded(flex: 2, child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: sortedEntries.take(5).toList().asMap().entries.map((e) { final index = e.key; final entry = e.value; final isTouched = index == touchedIndex; final color = _getTagColor(index); final percent = (entry.value / totalKm * 100).toInt(); return AnimatedContainer(duration: const Duration(milliseconds: 200), padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8), decoration: BoxDecoration(color: isTouched ? color.withOpacity(0.1) : Colors.transparent, borderRadius: BorderRadius.circular(8)), child: Row(children: [Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle, boxShadow: [BoxShadow(color: color.withOpacity(0.3), blurRadius: 4, spreadRadius: 1)])), const SizedBox(width: 8), Expanded(child: Text(entry.key, style: TextStyle(fontSize: 13, fontWeight: isTouched ? FontWeight.bold : FontWeight.w600, color: isTouched ? color : cs.onSurface), overflow: TextOverflow.ellipsis)), Text('$percent%', style: TextStyle(fontSize: 12, color: isTouched ? color : cs.onSurface.withOpacity(0.6), fontWeight: isTouched ? FontWeight.w800 : FontWeight.w500))])); }).toList()))])), const SizedBox(height: 24), Wrap(spacing: 12, runSpacing: 12, alignment: WrapAlignment.center, children: top3.asMap().entries.map((e) { final index = e.key; final entry = e.value; final color = _getTagColor(index); final percent = (entry.value / totalKm * 100).toInt(); return Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), decoration: BoxDecoration(color: cs.surface, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: color.withOpacity(0.15), blurRadius: 10, offset: const Offset(0, 4))], border: Border.all(color: color.withOpacity(0.2))), child: IntrinsicWidth(child: Row(children: [Icon(Icons.stars_rounded, color: color, size: 18), const SizedBox(width: 6), Text(entry.key, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: cs.onSurface)), const SizedBox(width: 6), Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)), child: Text('$percent%', style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w900)))]))); }).toList())]);
+    return Column(children: [SizedBox(height: 220, child: Row(children: [Expanded(flex: 3, child: Stack(alignment: Alignment.center, children: [PieChart(PieChartData(pieTouchData: PieTouchData(touchCallback: (FlTouchEvent event, pieTouchResponse) { setState(() { if (!event.isInterestedForInteractions || pieTouchResponse == null || pieTouchResponse.touchedSection == null) { touchedIndex = -1; return; } touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex; }); }), sections: sortedEntries.asMap().entries.map((e) { final index = e.key; final entry = e.value; final isTouched = index == touchedIndex; final color = _getTagColor(index); final fontSize = isTouched ? 16.0 : 12.0; final radius = isTouched ? 60.0 : 50.0; return PieChartSectionData(color: color, value: entry.value, title: isTouched ? '${entry.value.toStringAsFixed(0)}km' : '', radius: radius, titleStyle: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold, color: Colors.white, shadows: const [Shadow(color: Colors.black26, blurRadius: 4)])); }).toList(), centerSpaceRadius: 55, sectionsSpace: 3, borderData: FlBorderData(show: false))), Column(mainAxisSize: MainAxisSize.min, children: [Text(totalKm >= 100 ? totalKm.toStringAsFixed(0) : totalKm.toStringAsFixed(1), style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, letterSpacing: -1, height: 1.0)), Text('KM TOTALES', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: cs.onSurface.withOpacity(0.5), letterSpacing: 1.2))])])), const SizedBox(width: 16), Expanded(flex: 2, child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: sortedEntries.take(5).toList().asMap().entries.map((e) { final index = e.key; final entry = e.value; final isTouched = index == touchedIndex; final color = _getTagColor(index); final percent = (entry.value / totalKm * 100).toInt(); return AnimatedContainer(duration: const Duration(milliseconds: 200), padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8), decoration: BoxDecoration(color: isTouched ? color.withOpacity(0.1) : Colors.transparent, borderRadius: BorderRadius.circular(8)), child: Row(children: [Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle, boxShadow: [BoxShadow(color: color.withOpacity(0.3), blurRadius: 4, spreadRadius: 1)])), const SizedBox(width: 8), Expanded(child: Text(entry.key, style: TextStyle(fontSize: 13, fontWeight: isTouched ? FontWeight.bold : FontWeight.w600, color: isTouched ? color : cs.onSurface), overflow: TextOverflow.ellipsis)), Text('$percent%', style: TextStyle(fontSize: 12, color: isTouched ? color : cs.onSurface.withOpacity(0.6), fontWeight: isTouched ? FontWeight.w800 : FontWeight.w500))])); }).toList()))])), const SizedBox(height: 24), Wrap(spacing: 12, runSpacing: 12, alignment: WrapAlignment.center, children: top3.asMap().entries.map((e) { final index = e.key; final entry = e.value; final color = _getTagColor(index); final percent = (entry.value / totalKm * 100).toInt(); return Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), decoration: BoxDecoration(color: cs.surface, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: color.withOpacity(0.15), blurRadius: 10, offset: const Offset(0, 4))], border: Border.all(color: color.withOpacity(0.2))), child: IntrinsicWidth(child: Row(children: [Icon(Icons.stars_rounded, color: color, size: 18), const SizedBox(width: 6), Text(entry.key, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: cs.onSurface)), const SizedBox(width: 6), Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)), child: Text('$percent%', style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w900)))]))); }).toList())]);
   }
 
   Color _getTagColor(int index) {
-    final colors = [Tema.brandPurple, const Color(0xFF2196F3), const Color(0xFF4CAF50), const Color(0xFFFF9800), const Color(0xFFE91E63), const Color(0xFF00BCD4)];
+    final colors = [AppColors.brand, const Color(0xFF2196F3), const Color(0xFF4CAF50), const Color(0xFFFF9800), const Color(0xFFE91E63), const Color(0xFF00BCD4)];
     return colors[index % colors.length];
   }
 }

@@ -80,7 +80,7 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
               title: training.titulo,
               subtitle: "Análisis del Entrenamiento",
               icon: Icons.analytics_rounded,
-              gradientColors: const [Tema.brandPurple, Color(0xFF8E44AD)],
+              accentColor: AppColors.brandSurface,
               height: 100,
             )),
             Padding(
@@ -174,17 +174,17 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
       children: [
         Row(
           children: [
-            Expanded(child: _buildStatCard("Distancia", "${distKm.toStringAsFixed(2)} km", Icons.straighten, Colors.blue)),
+            Expanded(child: _buildStatCard("Distancia", "${distKm.toStringAsFixed(2)} km", Icons.straighten, AppColors.rest)),
             const SizedBox(width: 16),
-            Expanded(child: _buildStatCard("Tiempo", timeStr, Icons.timer, Colors.orange)),
+            Expanded(child: _buildStatCard("Tiempo", timeStr, Icons.timer, AppColors.rpeMid)),
           ],
         ),
         const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(child: _buildStatCard("Ritmo Medio", paceStr, Icons.speed, Colors.green)),
+            Expanded(child: _buildStatCard("Ritmo Medio", paceStr, Icons.speed, AppColors.rpeLow)),
             const SizedBox(width: 16),
-            Expanded(child: _buildStatCard("RPE Promedio", rpe.toStringAsFixed(1), Icons.bolt, Colors.red)),
+            Expanded(child: _buildStatCard("RPE Promedio", rpe.toStringAsFixed(1), Icons.bolt, AppColors.rpeMax)),
           ],
         ),
         if (training.fcMediaSesion != null) ...[
@@ -217,11 +217,11 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.brandPurple.withOpacity(0.1),
+                color: AppColors.brand.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(Icons.notes_rounded,
-                  color: isDark ? AppColors.brandPurpleLight : AppColors.brandPurple,
+                  color: isDark ? AppColors.brandLight : AppColors.brand,
                   size: 20),
             ),
             const SizedBox(width: 12),
@@ -318,10 +318,10 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Tema.brandPurple.withOpacity(0.1),
+                color: AppColors.brand.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.list_alt_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 20),
+              child: Icon(Icons.list_alt_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 20),
             ),
             const SizedBox(width: 12),
             Text(
@@ -357,14 +357,14 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
                   height: 32,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: Tema.brandPurple.withOpacity(0.1),
+                    color: AppColors.brand.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Text(
                     "${index + 1}",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                       fontSize: 13,
                     ),
                   ),
@@ -392,18 +392,18 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
                         children: [
                           Text(
                             serie.ritmoTexto(),
-                            style: TextStyle(fontSize: 13, color: Colors.green.shade600, fontWeight: FontWeight.w600),
+                            style: TextStyle(fontSize: 13, color: AppColors.rpeLow, fontWeight: FontWeight.w600),
                           ),
                           if (serie.rpe > 0)
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.1),
+                                color: AppColors.rpeMax.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
                                 "RPE ${serie.rpe}",
-                                style: const TextStyle(fontSize: 11, color: Colors.red, fontWeight: FontWeight.bold),
+                                style: const TextStyle(fontSize: 11, color: AppColors.rpeMax, fontWeight: FontWeight.bold),
                               ),
                             ),
                         ],
@@ -513,7 +513,7 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
           if (category != null) ...[
             const SizedBox(height: 8),
             Text(SessionCategoryX.fromValue(category).label,
-                style: const TextStyle(fontSize: 13, color: AppColors.brandPurpleLight)),
+                style: const TextStyle(fontSize: 13, color: AppColors.brandLight)),
           ],
           const SizedBox(height: 16),
           Row(
@@ -712,7 +712,7 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _FcStat('Máx', '${maxBpm.round()} ppm', AppColors.rpeMax),
-                  _FcStat('Media', '$avgBpm ppm', AppColors.brandPurple),
+                  _FcStat('Media', '$avgBpm ppm', AppColors.brand),
                   _FcStat('Mín', '${minBpm.round()} ppm', AppColors.rpeLow),
                 ],
               ),
@@ -756,7 +756,7 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
     final zoneCounts = List<int>.filled(5, 0);
     for (final bpm in readings) {
       final z = ZonesService().zoneFor(bpm, fcMax);
-      zoneCounts[z - 1]++;
+      zoneCounts[(z ?? 1) - 1]++;
     }
     final total = readings.length;
     return Padding(
@@ -816,7 +816,7 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
     final boundaries = <int>[];
     int idx = 0;
     for (int i = 0; i < series.length - 1; i++) {
-      idx += series[i].fcReadings?.length ?? 0;
+      idx += (series[i].fcReadings?.length ?? 0) as int;
       if (idx > 0) boundaries.add(idx);
     }
     return boundaries;
@@ -933,7 +933,7 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
               offset: Offset(0, _isPressed ? 2 : 4),
             ),
           ],
-          border: Border.all(color: Tema.brandPurple.withOpacity(0.1)),
+          border: Border.all(color: AppColors.brand.withOpacity(0.1)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -942,16 +942,16 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
               Icons.arrow_back_ios_new_rounded,
               size: 16,
               color: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.brandPurpleLight
-                  : Tema.brandPurple,
+                  ? AppColors.brandLight
+                  : AppColors.brand,
             ),
             const SizedBox(width: 6),
             Text(
               "Volver",
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.brandPurpleLight
-                    : Tema.brandPurple,
+                    ? AppColors.brandLight
+                    : AppColors.brand,
                 fontWeight: FontWeight.w700,
                 fontSize: 13,
               ),

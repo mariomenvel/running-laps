@@ -24,7 +24,7 @@ class WorkoutPatternDetailView extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -35,11 +35,11 @@ class WorkoutPatternDetailView extends StatelessWidget {
             // KPI Header
             Row(
               children: [
-                Expanded(child: _buildKpiCard(context, "Ritmo Medio", pattern.averagePaceFormatted, Icons.speed, Colors.blue)),
+                Expanded(child: _buildKpiCard(context, "Ritmo Medio", pattern.averagePaceFormatted, Icons.speed, AppColors.rest)),
                 const SizedBox(width: 12),
-                Expanded(child: _buildKpiCard(context, "Tiempo Medio", pattern.averageTotalTimeFormatted, Icons.timer, Colors.green)),
+                Expanded(child: _buildKpiCard(context, "Tiempo Medio", pattern.averageTotalTimeFormatted, Icons.timer, AppColors.rpeLow)),
                 const SizedBox(width: 12),
-                Expanded(child: _buildKpiCard(context, "Sesiones", "${pattern.count}", Icons.calendar_today, Colors.orange)),
+                Expanded(child: _buildKpiCard(context, "Sesiones", "${pattern.count}", Icons.calendar_today, AppColors.rpeMid)),
               ],
             ),
             
@@ -164,7 +164,7 @@ class WorkoutPatternDetailView extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Tema.brandPurple.withOpacity(0.1),
+                color: AppColors.brand.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(20),
                 ),
               child: Column(
@@ -173,11 +173,11 @@ class WorkoutPatternDetailView extends StatelessWidget {
                 children: [
                   Text(
                     WorkoutPattern.formatDuration(instance.entrenamiento.tiempoTotalSec()),
-                    style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.bold, fontSize: 16),
+                    style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   Text(
                     "$pace /km",
-                    style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple).withOpacity(0.6), fontSize: 11, fontWeight: FontWeight.w500),
+                    style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand).withOpacity(0.6), fontSize: 11, fontWeight: FontWeight.w500),
                   ),
                 ],
               ),
@@ -218,12 +218,12 @@ class _PerformanceChart extends StatelessWidget {
           LineChartBarData(
             spots: spots,
             isCurved: true, // Smooth curve for average performance
-            color: Colors.blueAccent,
+            color: AppColors.rest,
             barWidth: 3,
             dotData: const FlDotData(show: true),
             belowBarData: BarAreaData(
               show: true,
-              color: Colors.blueAccent.withOpacity(0.1),
+              color: AppColors.rest.withOpacity(0.1),
             ),
           ),
         ],

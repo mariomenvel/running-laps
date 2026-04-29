@@ -1,32 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 import '../models/enums.dart';
 
 /// Shared color utilities for challenge UI.
-/// Used by ChallengeDetailScreen and GlobalChallengeCard so both surfaces
-/// render consistent metric-based gradients.
+/// Uses AppColors tokens for consistent metric-based colors.
 class ChallengeColorHelper {
-  /// Returns the accent (right-side) color that represents a given metric.
+  /// Returns the accent color that represents a given metric.
   static Color accentForMetric(ChallengeMetric metric) {
     switch (metric) {
       case ChallengeMetric.distance:
-        return const Color(0xFF10B981); // emerald green
+        return AppColors.rest;      // azul distancia
       case ChallengeMetric.time:
-        return const Color(0xFFF59E0B); // amber
+        return AppColors.rpeMid;    // ámbar tiempo
       case ChallengeMetric.sessions:
-        return const Color(0xFF3B82F6); // blue
+        return AppColors.brand;     // morado sesiones
       case ChallengeMetric.bestPace:
       case ChallengeMetric.avgPace:
-        return const Color(0xFFEF4444); // coral red
+        return AppColors.effort;    // coral ritmo
     }
   }
 
-  /// Returns a LinearGradient: brandPurple (left) → metric accent (right).
-  static LinearGradient gradientForMetric(ChallengeMetric metric) {
-    return LinearGradient(
-      begin: Alignment.centerLeft,
-      end: Alignment.centerRight,
-      colors: [Tema.brandPurple, accentForMetric(metric)],
-    );
+  /// Returns the surface background color for a metric badge/card.
+  static Color surfaceForMetric(ChallengeMetric metric) {
+    switch (metric) {
+      case ChallengeMetric.distance:
+        return AppColors.restSurface;
+      case ChallengeMetric.time:
+        return AppColors.brandSurface;
+      case ChallengeMetric.sessions:
+        return AppColors.brandSurface;
+      case ChallengeMetric.bestPace:
+      case ChallengeMetric.avgPace:
+        return AppColors.effortSurfaceConst;
+    }
   }
+
 }

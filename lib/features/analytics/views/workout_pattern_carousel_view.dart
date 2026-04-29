@@ -40,13 +40,13 @@ class _WorkoutPatternCarouselViewState
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           if (widget.patterns[_currentPatternIndex].instances.length >= 2)
             IconButton(
-              icon: Icon(Icons.compare_arrows, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+              icon: Icon(Icons.compare_arrows, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
               onPressed: () => _showComparisonSelector(),
             ),
         ],
@@ -118,18 +118,18 @@ class _ComparisonSelectorSheetState extends State<_ComparisonSelectorSheet> {
 
                 return ListTile(
                   tileColor: isSelected
-                      ? Tema.brandPurple.withOpacity(0.1)
+                      ? AppColors.brand.withOpacity(0.1)
                       : Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                     side: BorderSide(
-                      color: isSelected ? Tema.brandPurple : Colors.transparent,
+                      color: isSelected ? AppColors.brand : Colors.transparent,
                       width: 2,
                     ),
                   ),
                   leading: CircleAvatar(
                     backgroundColor:
-                        isSelected ? Tema.brandPurple : Theme.of(context).colorScheme.onSurface.withOpacity(0.25),
+                        isSelected ? AppColors.brand : Theme.of(context).colorScheme.onSurface.withOpacity(0.25),
                     child: Text(
                       isSelectedA ? 'A' : isSelectedB ? 'B' : '${index + 1}',
                       style: TextStyle(
@@ -187,7 +187,7 @@ class _ComparisonSelectorSheetState extends State<_ComparisonSelectorSheet> {
                     }
                   : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Tema.brandPurple,
+                backgroundColor: AppColors.brand,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -230,11 +230,7 @@ class _WorkoutPatternContent extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Tema.brandPurple.withOpacity(0.1), Colors.transparent],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
+              color: AppColors.brand.withOpacity(0.08),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Column(
@@ -246,7 +242,7 @@ class _WorkoutPatternContent extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     foreground: Paint()
                       ..shader = LinearGradient(
-                        colors: [Tema.brandPurple, Colors.deepPurple.shade600],
+                        colors: [AppColors.brand, Colors.deepPurple.shade600],
                       ).createShader(const Rect.fromLTWH(0, 0, 200, 70)),
                     letterSpacing: -1,
                   ),
@@ -276,7 +272,7 @@ class _WorkoutPatternContent extends StatelessWidget {
                   "Ritmo Medio",
                   pattern.averagePaceFormatted,
                   Icons.speed,
-                  Colors.blue,
+                  AppColors.rest,
                 ),
               ),
               const SizedBox(width: 12),
@@ -286,7 +282,7 @@ class _WorkoutPatternContent extends StatelessWidget {
                   "Consistencia",
                   "${(pattern.averageConsistency * 100).toInt()}%",
                   Icons.track_changes,
-                  Colors.green,
+                  AppColors.rpeLow,
                 ),
               ),
               const SizedBox(width: 12),
@@ -296,7 +292,7 @@ class _WorkoutPatternContent extends StatelessWidget {
                   "Sesiones",
                   "${pattern.count}",
                   Icons.calendar_today,
-                  Colors.orange,
+                  AppColors.rpeMid,
                 ),
               ),
             ],
@@ -313,7 +309,7 @@ class _WorkoutPatternContent extends StatelessWidget {
               border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
               boxShadow: [
                 BoxShadow(
-                  color: Tema.brandPurple.withOpacity(0.08),
+                  color: AppColors.brand.withOpacity(0.08),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                   spreadRadius: -4,
@@ -403,11 +399,7 @@ class _WorkoutPatternContent extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [color.withOpacity(0.8), color],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: color,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
@@ -474,13 +466,11 @@ class _WorkoutPatternContent extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.purple.shade300, Colors.purple.shade500],
-                  ),
+                  color: AppColors.brand,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.purple.withOpacity(0.3),
+                      color: AppColors.brand.withOpacity(0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -517,19 +507,14 @@ class _WorkoutPatternContent extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Tema.brandPurple.withOpacity(0.15),
-                  Tema.brandPurple.withOpacity(0.08),
-                ],
-              ),
+              color: AppColors.brand.withOpacity(0.12),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Tema.brandPurple.withOpacity(0.3)),
+              border: Border.all(color: AppColors.brand.withOpacity(0.3)),
             ),
             child: Text(
               "$pace /km",
               style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
                 letterSpacing: -0.3,
@@ -572,12 +557,12 @@ class _PerformanceChart extends StatelessWidget {
           LineChartBarData(
             spots: spots,
             isCurved: true,
-            color: Colors.blueAccent,
+            color: AppColors.rest,
             barWidth: 3,
             dotData: const FlDotData(show: true),
             belowBarData: BarAreaData(
               show: true,
-              color: Colors.blueAccent.withOpacity(0.1),
+              color: AppColors.rest.withOpacity(0.1),
             ),
           ),
         ],

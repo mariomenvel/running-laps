@@ -195,7 +195,7 @@ class _SaveAsTemplateSheetState extends State<_SaveAsTemplateSheet> {
           TextButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
             style: TextButton.styleFrom(
-                foregroundColor: AppColors.brandPurple),
+                foregroundColor: AppColors.brand),
             child: const Text('Guardar',
                 style: TextStyle(fontWeight: FontWeight.w700)),
           ),
@@ -322,7 +322,7 @@ class _SaveAsTemplateSheetState extends State<_SaveAsTemplateSheet> {
               const Expanded(
                 child: Center(
                   child: CircularProgressIndicator(
-                      color: AppColors.brandPurple),
+                      color: AppColors.brand),
                 ),
               )
             else
@@ -376,7 +376,7 @@ class _SaveAsTemplateSheetState extends State<_SaveAsTemplateSheet> {
                         Container(
                           decoration: BoxDecoration(
                             border:       Border.all(
-                                color: AppColors.brandPurple
+                                color: AppColors.brand
                                     .withValues(alpha: 0.3)),
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -413,7 +413,7 @@ class _SaveAsTemplateSheetState extends State<_SaveAsTemplateSheet> {
                                               _selectedBlockIndex!, true),
                                       style: FilledButton.styleFrom(
                                         backgroundColor:
-                                            AppColors.brandPurple,
+                                            AppColors.brand,
                                         padding: const EdgeInsets.symmetric(
                                             vertical: 10),
                                         shape: RoundedRectangleBorder(
@@ -481,8 +481,8 @@ class _SaveAsTemplateSheetState extends State<_SaveAsTemplateSheet> {
   }
 
   ButtonStyle _subOptionStyle() => OutlinedButton.styleFrom(
-        foregroundColor: AppColors.brandPurple,
-        side:            const BorderSide(color: AppColors.brandPurple),
+        foregroundColor: AppColors.brand,
+        side:            const BorderSide(color: AppColors.brand),
         padding:         const EdgeInsets.symmetric(vertical: 10),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       );
@@ -519,7 +519,7 @@ class _OptionTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isExpanded
-                ? AppColors.brandPurple
+                ? AppColors.brand
                 : (isDark ? AppColors.borderDark : AppColors.borderLight),
           ),
         ),
@@ -527,10 +527,10 @@ class _OptionTile extends StatelessWidget {
           Container(
             padding:     const EdgeInsets.all(8),
             decoration:  BoxDecoration(
-              color:        AppColors.brandPurple.withValues(alpha: 0.1),
+              color:        AppColors.brand.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, size: 18, color: AppColors.brandPurple),
+            child: Icon(icon, size: 18, color: AppColors.brand),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -596,7 +596,7 @@ class _BlockPickerTile extends StatelessWidget {
         style: TextStyle(
           fontSize:   13,
           fontWeight: FontWeight.w700,
-          color:      selected ? AppColors.brandPurple : const Color(0xFFAAAAAA),
+          color:      selected ? AppColors.brand : const Color(0xFFAAAAAA),
         ),
       ),
       title: Text(_title,
@@ -606,7 +606,7 @@ class _BlockPickerTile extends StatelessWidget {
           )),
       trailing: selected
           ? const Icon(Icons.check_circle,
-              color: AppColors.brandPurple, size: 18)
+              color: AppColors.brand, size: 18)
           : null,
       onTap: onTap,
       shape: const RoundedRectangleBorder(),
@@ -631,8 +631,8 @@ class _SubOptionRow extends StatelessWidget {
         child: OutlinedButton(
           onPressed: onWithout,
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.brandPurple,
-            side:            const BorderSide(color: AppColors.brandPurple),
+            foregroundColor: AppColors.brand,
+            side:            const BorderSide(color: AppColors.brand),
             padding:         const EdgeInsets.symmetric(vertical: 10),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
@@ -646,7 +646,7 @@ class _SubOptionRow extends StatelessWidget {
         child: FilledButton(
           onPressed: onWith,
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.brandPurple,
+            backgroundColor: AppColors.brand,
             padding:         const EdgeInsets.symmetric(vertical: 10),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),

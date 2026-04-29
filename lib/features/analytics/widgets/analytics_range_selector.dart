@@ -27,15 +27,11 @@ class AnalyticsRangeSelector extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Tema.brandPurple, Tema.brandPurple.withOpacity(0.8)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: AppColors.brand,
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                  BoxShadow(
-                   color: Tema.brandPurple.withOpacity(0.4),
+                   color: AppColors.brand.withOpacity(0.4),
                    blurRadius: 10,
                    offset: const Offset(0, 4),
                  ),
@@ -144,10 +140,10 @@ class AnalyticsRangeSelector extends StatelessWidget {
                leading: Container(
                  padding: const EdgeInsets.all(8),
                  decoration: BoxDecoration(
-                   color: Colors.blue.withOpacity(0.1),
+                   color: AppColors.rest.withOpacity(0.1),
                    borderRadius: BorderRadius.circular(10),
                  ),
-                 child: const Icon(Icons.date_range_rounded, color: Colors.blue),
+                 child: const Icon(Icons.date_range_rounded, color: AppColors.rest),
                ),
                title: const Text(
                  "Rango Personalizado",
@@ -210,15 +206,15 @@ class AnalyticsRangeSelector extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             decoration: BoxDecoration(
-              color: isSelected ? Tema.brandPurple.withOpacity(0.08) : Colors.transparent,
+              color: isSelected ? AppColors.brand.withOpacity(0.08) : Colors.transparent,
               borderRadius: BorderRadius.circular(16),
-              border: isSelected ? Border.all(color: Tema.brandPurple, width: 1.5) : Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
+              border: isSelected ? Border.all(color: AppColors.brand, width: 1.5) : Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
             ),
             child: Row(
               children: [
                 Icon(
                   icon,
-                  color: isSelected ? Tema.brandPurple : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  color: isSelected ? AppColors.brand : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                   size: 22,
                 ),
                 const SizedBox(width: 16),
@@ -228,12 +224,12 @@ class AnalyticsRangeSelector extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                      color: isSelected ? Tema.brandPurple : Theme.of(context).colorScheme.onSurface,
+                      color: isSelected ? AppColors.brand : Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ),
                 if (isSelected)
-                  Icon(Icons.check_circle_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 24),
+                  Icon(Icons.check_circle_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 24),
               ],
             ),
           ),

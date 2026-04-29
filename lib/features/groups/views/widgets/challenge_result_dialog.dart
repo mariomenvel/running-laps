@@ -90,8 +90,8 @@ class _ChallengeResultDialogState extends State<ChallengeResultDialog> {
                             fontSize: 28,
                             fontWeight: FontWeight.w900,
                             color: widget.notification.type == GroupNotificationType.goalMet 
-                              ? Colors.green.shade700 
-                              : Tema.brandPurple,
+                              ? AppColors.rpeLow 
+                              : AppColors.brand,
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -104,7 +104,7 @@ class _ChallengeResultDialogState extends State<ChallengeResultDialog> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16,
-                            color: Colors.grey.shade700,
+                            color: AppColors.iconMuted,
                             height: 1.4,
                           ),
                         ),
@@ -123,16 +123,16 @@ class _ChallengeResultDialogState extends State<ChallengeResultDialog> {
                             onPressed: widget.onClosed,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: widget.notification.type == GroupNotificationType.goalMet 
-                                ? Colors.green.shade600 
-                                : Tema.brandPurple,
+                                ? AppColors.rpeLow 
+                                : AppColors.brand,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               elevation: 8,
                               shadowColor: (widget.notification.type == GroupNotificationType.goalMet 
-                                ? Colors.green 
-                                : Tema.brandPurple).withOpacity(0.4),
+                                ? AppColors.rpeLow 
+                                : AppColors.brand).withOpacity(0.4),
                             ),
                             child: Text(
                               widget.notification.type == GroupNotificationType.goalMet 
@@ -160,11 +160,11 @@ class _ChallengeResultDialogState extends State<ChallengeResultDialog> {
           blastDirectionality: BlastDirectionality.explosive,
           shouldLoop: false,
           colors: const [
-            Colors.green,
-            Colors.blue,
-            Colors.pink,
-            Colors.orange,
-            Colors.purple,
+            AppColors.rpeLow,
+            AppColors.rest,
+            AppColors.brand,
+            AppColors.rpeMid,
+            AppColors.brand,
             Colors.yellow,
           ],
         ),
@@ -178,9 +178,9 @@ class _ChallengeResultDialogState extends State<ChallengeResultDialog> {
     List<Color> gradient;
 
     if (widget.notification.type == GroupNotificationType.goalMet) {
-      iconColor = Colors.orange.shade400;
+      iconColor = AppColors.rpeMid;
       icon = Icons.stars_rounded;
-      gradient = [Colors.orange.shade300, Colors.deepOrange.shade600];
+      gradient = [AppColors.rpeMid, AppColors.effort];
     } else if (widget.notification.medal != null) {
       switch (widget.notification.medal!) {
         case MedalType.gold:
@@ -205,20 +205,16 @@ class _ChallengeResultDialogState extends State<ChallengeResultDialog> {
           break;
       }
     } else {
-      iconColor = Colors.green.shade400;
+      iconColor = AppColors.rpeLow;
       icon = Icons.verified_rounded;
-      gradient = [Colors.green.shade300, Colors.green.shade600];
+      gradient = [AppColors.rpeLow, AppColors.rpeLow];
     }
 
     return Container(
       height: 140,
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: gradient.map((c) => c.withOpacity(0.1)).toList(),
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
+        color: gradient.first.withOpacity(0.1),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: Center(
@@ -255,9 +251,9 @@ class _ChallengeResultDialogState extends State<ChallengeResultDialog> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: AppColors.iconMuted,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppColors.iconMuted),
       ),
       child: Column(
         children: [
@@ -282,7 +278,7 @@ class _ChallengeResultDialogState extends State<ChallengeResultDialog> {
   Widget _buildRow(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: Colors.grey.shade600),
+        Icon(icon, size: 20, color: AppColors.iconMuted),
         const SizedBox(width: 12),
         Expanded(
           child: Text(

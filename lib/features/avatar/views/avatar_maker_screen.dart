@@ -319,8 +319,8 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                 },
                 leading: Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                  child: const Icon(Icons.folder_special, color: Colors.blue),
+                  decoration: BoxDecoration(color: AppColors.rest.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                  child: const Icon(Icons.folder_special, color: AppColors.rest),
                 ),
                 title: const Text("Guardar en la App"),
                 subtitle: const Text("Para usarlo en tu perfil"),
@@ -332,8 +332,8 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                 },
                 leading: Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                  child: const Icon(Icons.photo_library, color: Colors.green),
+                  decoration: BoxDecoration(color: AppColors.rpeLow.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                  child: const Icon(Icons.photo_library, color: AppColors.rpeLow),
                 ),
                 title: const Text("Guardar en Galería"),
                 subtitle: const Text("Descargar imagen PNG"),
@@ -365,13 +365,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
       body: Container(
         decoration: isDark
             ? BoxDecoration(color: Theme.of(context).colorScheme.surface)
-            : const BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment(0, -0.5),
-                  radius: 1.5,
-                  colors: [_bgGradientStart, _bgGradientEnd],
-                ),
-              ),
+            : const BoxDecoration(color: Colors.white),
         child: SafeArea(
           bottom: false, // Permitir que el sheet baje hasta el fondo
           child: Stack(

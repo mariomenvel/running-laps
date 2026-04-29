@@ -142,7 +142,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
               title: 'Historial',
               subtitle: 'Todos tus entrenamientos',
               icon: Icons.history_rounded,
-              gradientColors: const [Colors.orange, Colors.deepOrange],
+              accentColor: AppColors.effortSurfaceConst,
               height: 85,
               trailing: IconButton(
                  onPressed: _openAnalytics,
@@ -212,7 +212,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                               },
                               icon: Icon(
                                 _isCalendarView ? Icons.list_rounded : Icons.calendar_month_rounded,
-                                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                               ),
                               tooltip: _isCalendarView ? 'Ver lista' : 'Ver calendario',
                             ),
@@ -253,10 +253,10 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          color: Tema.brandPurple.withOpacity(0.1),
+                          color: AppColors.brand.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: Tema.brandPurple.withOpacity(0.3),
+                            color: AppColors.brand.withOpacity(0.3),
                             width: 1.5,
                           ),
                         ),
@@ -265,7 +265,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                             Icon(
                               Icons.calendar_today_rounded,
                               size: 18,
-                              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                             ),
                             const SizedBox(width: 8),
                             Text(
@@ -274,8 +274,8 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
                                 color: Theme.of(context).brightness == Brightness.dark
-                                    ? AppColors.brandPurpleLight
-                                    : Tema.brandPurple,
+                                    ? AppColors.brandLight
+                                    : AppColors.brand,
                               ),
                             ),
                             const Spacer(),
@@ -293,7 +293,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                                 child: Icon(
                                   Icons.close_rounded,
                                   size: 18,
-                                  color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                                  color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                                 ),
                               ),
                             ),
@@ -313,8 +313,8 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                     child: TextField(
                       decoration: InputDecoration(
                         hintText: 'Buscar por título...',
-                        hintStyle: TextStyle(color: Colors.grey.shade500),
-                        prefixIcon: Icon(Icons.search, color: Colors.grey.shade600),
+                        hintStyle: TextStyle(color: AppColors.iconMuted),
+                        prefixIcon: Icon(Icons.search, color: AppColors.iconMuted),
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
@@ -323,11 +323,11 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
+                          borderSide: BorderSide(color: AppColors.iconMuted),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: Tema.brandPurple, width: 2),
+                          borderSide: const BorderSide(color: AppColors.brand, width: 2),
                         ),
                         contentPadding: const EdgeInsets.symmetric(vertical: 14),
                       ),
@@ -447,13 +447,13 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: AppColors.iconMuted),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.tune_rounded, size: 18, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+                Icon(Icons.tune_rounded, size: 18, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
                 const SizedBox(width: 6),
                 ValueListenableBuilder<int>( // Escuchar cambios en profile_controller para mostrar badge
                   valueListenable: ValueNotifier<int>(0), // TODO: Esto debería ser reactivo real, ver abajo
@@ -476,7 +476,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                         
                         return Text(
                           'Filtros ($count)', 
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontSize: 13)
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontSize: 13)
                         );
                       },
                     );
@@ -557,10 +557,10 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: AppColors.rpeMax.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text('Borrar todo', style: TextStyle(fontSize: 11, color: Colors.red, fontWeight: FontWeight.bold)),
+                  child: const Text('Borrar todo', style: TextStyle(fontSize: 11, color: AppColors.rpeMax, fontWeight: FontWeight.bold)),
                 ),
               )
             ],
@@ -574,9 +574,9 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Tema.brandPurple.withOpacity(0.1),
+        color: AppColors.brand.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Tema.brandPurple.withOpacity(0.3)),
+        border: Border.all(color: AppColors.brand.withOpacity(0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -587,14 +587,14 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.brandPurpleLight
-                  : Tema.brandPurple,
+                  ? AppColors.brandLight
+                  : AppColors.brand,
             ),
           ),
           const SizedBox(width: 4),
           GestureDetector(
             onTap: onRemove,
-            child: Icon(Icons.close, size: 14, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+            child: Icon(Icons.close, size: 14, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
           ),
         ],
       ),
@@ -626,7 +626,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
-                        Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
+                        Icon(Icons.error_outline, size: 48, color: AppColors.rpeMax),
                         const SizedBox(height: 16),
                         Text(
                           error,
@@ -639,7 +639,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                           icon: const Icon(Icons.refresh, size: 18),
                           label: const Text('Reintentar'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Tema.brandPurple,
+                            backgroundColor: AppColors.brand,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                           ),
@@ -720,7 +720,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                               padding: EdgeInsets.symmetric(vertical: 16),
                               child: Center(
                                 child: CircularProgressIndicator(
-                                  color: AppColors.brandPurple,
+                                  color: AppColors.brand,
                                   strokeWidth: 2,
                                 ),
                               ),

@@ -13,7 +13,7 @@ import 'package:running_laps/core/widgets/kpi_card_with_delta.dart';
 import 'package:running_laps/core/constants/app_help_content.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/services/settings_service.dart';
-import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/theme/app_colors.dart' hide AppColors;
 
 // GROUPS IMPORTS
 import 'package:running_laps/features/groups/data/repositories/groups_repository.dart';
@@ -31,7 +31,6 @@ import 'package:running_laps/features/groups/data/models/challenge_models.dart';
 import 'package:running_laps/features/groups/data/models/result_notification_model.dart';
 import 'package:running_laps/features/groups/views/widgets/challenge_result_dialog.dart';
 import 'dart:async';
-import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
@@ -203,7 +202,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     final template = TrainingTemplate(
       id:               session.id,
       name:             sessionName,
-      colorValue:       Tema.brandPurple.value,
+      colorValue:       AppColors.brand.value,
       isWarmupCooldown: false,
       blocks:           blocks,
       createdAt:        now,
@@ -417,12 +416,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       decoration: isDark
           ? BoxDecoration(color: Theme.of(context).colorScheme.surface)
           : const BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment.topCenter,
-                radius: 1.2,
-                colors: [Color(0xFFF9F5FB), Colors.white],
-                stops: [0.0, 1.0],
-              ),
+              color: Colors.white,
               image: DecorationImage(
                 image: AssetImage('assets/images/fondo.png'),
                 fit: BoxFit.cover,
@@ -440,7 +434,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 // Logo
                 const CircleAvatar(
                   radius: 24,
-                  backgroundColor: Tema.brandPurple,
+                  backgroundColor: AppColors.brand,
                   backgroundImage: AssetImage('assets/images/logo.png'),
                 ),
                 
@@ -482,7 +476,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       onRefresh: _loadEntrenamientos,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -535,7 +529,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     return SkeletonShimmer(
       key: const ValueKey('home_loading'),
       builder: (sv) => SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -616,7 +610,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               AppRoute(page: const TrainingStartView()),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Tema.brandPurple,
+              backgroundColor: AppColors.brand,
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -716,13 +710,13 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: Tema.brandPurple.withOpacity(0.12),
+                      color: AppColors.brand.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       '${challenges.length}',
                       style: TextStyle(
-                        color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                        color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
@@ -767,7 +761,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     height: 6,
                     decoration: BoxDecoration(
                       color: active
-                          ? Tema.brandPurple
+                          ? AppColors.brand
                           : Theme.of(context).colorScheme.outline.withOpacity(0.4),
                       borderRadius: BorderRadius.circular(3),
                     ),
@@ -817,7 +811,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 child: Text(
                   "Ver todos",
                   style: TextStyle(
-                    color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                    color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -886,12 +880,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Tema.brandPurple.withOpacity(0.1), Tema.brandPurple.withOpacity(0.05)],
-              ),
+              color: AppColors.brand.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.groups_outlined, size: 48, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+            child: Icon(Icons.groups_outlined, size: 48, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
           ),
           const SizedBox(height: 16),
           Text(
@@ -912,7 +904,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Tema.brandPurple,
+              backgroundColor: AppColors.brand,
               foregroundColor: Colors.white,
             ),
             child: const Text("Explorar Comunidades"),
@@ -986,7 +978,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
   Widget _buildKPICards() {
     final isMonochrome = SettingsService.cardStyleNotifier.value;
-    Color c(Color vivid) => isMonochrome ? Tema.brandPurple : vivid;
+    Color c(Color vivid) => isMonochrome ? AppColors.brand : vivid;
     final colored = !isMonochrome;
 
     final totalKm = (_userDoc?['totalKm'] as num?)?.toDouble() ??
@@ -1131,7 +1123,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               child: Text(
                 'Ver todos',
                 style: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                  color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
@@ -1156,239 +1148,151 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     );
   }
 
-  /// Card de entrenamiento - Estilo premium neutro con detalles espectaculares
   Widget _buildWorkoutCard(Entrenamiento workout, {int index = 0}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final km = (workout.distanciaTotalM() / 1000).toStringAsFixed(1);
     final pace = workout.ritmoMedioTexto();
     final duration = _formatDuration(workout.tiempoTotalSec());
-    final rpe = workout.rpePromedio().round();
-    
-    // Formatting Date
+    final rpe = workout.rpePromedio();
+    final rpeRounded = rpe.round();
+
     final now = DateTime.now();
     final diff = now.difference(workout.fecha).inDays;
-    String dateLabel;
-    if (diff == 0) {
-      dateLabel = 'Hoy';
-    } else if (diff == 1) {
-      dateLabel = 'Ayer';
-    } else {
-      dateLabel = '${workout.fecha.day}/${workout.fecha.month}';
-    }
-    
-    // Determine theme colors based on Tags
-    Color primaryThemeColor;
-    List<Color> backgroundGradientColors;
+    final dateLabel = diff == 0
+        ? 'Hoy'
+        : diff == 1
+            ? 'Ayer'
+            : '${workout.fecha.day}/${workout.fecha.month}';
 
-    if (workout.tags != null && workout.tags!.isNotEmpty) {
-      final firstColor = _getTagColor(workout.tags![0]);
-      
-      if (workout.tags!.length > 1) {
-         // Multiple tags: Rich gradient from Tag 1 to Tag 2
-         final secondColor = _getTagColor(workout.tags![1]);
-         primaryThemeColor = firstColor; 
-         backgroundGradientColors = [
-           firstColor,
-           secondColor,
-         ];
-      } else {
-        // Single tag: Rich gradient from Color to slightly darker/varied version
-        primaryThemeColor = firstColor;
-        backgroundGradientColors = [
-           firstColor,
-           firstColor.withBlue((firstColor.blue + 20).clamp(0, 255)).withRed((firstColor.red - 20).clamp(0, 255)),
-        ];
-      }
-    } else {
-      // No tags: Brand Purple Gradient
-      primaryThemeColor = Tema.brandPurple;
-      backgroundGradientColors = [
-         Colors.purple.shade900,
-         Colors.purple.shade500,
-      ];
-    }
+    final cardBg = isDark ? AppColors.surface : Colors.white;
+    final cardBorder = isDark ? AppColors.border : const Color(0xFFE5E5E5);
+    final distanceColor = isDark ? Colors.white : const Color(0xFF1A1A1A);
+    final unitColor = isDark ? Colors.white60 : const Color(0xFF888888);
+    final dateTextColor = isDark ? const Color(0xFFAAAAAA) : const Color(0xFF666666);
 
     return Container(
-      width: 280, 
+      width: 280,
       margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
+        color: cardBg,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: backgroundGradientColors.first.withOpacity(0.4), // Glowing shadow matches card
-            blurRadius: 12,
-            offset: const Offset(0, 8),
-            spreadRadius: -2,
-          ),
-        ],
+        border: Border.all(color: cardBorder, width: 0.5),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Stack(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Vivid Background
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: backgroundGradientColors,
+            // Header: fecha + RPE pill
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Chip de fecha
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface2,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    dateLabel,
+                    style: TextStyle(
+                      color: dateTextColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            
-            // 2. Artistic "Watermark" Circle (Decorative)
-            Positioned(
-              top: -40,
-              right: -40,
-              child: Container(
-                width: 150,
-                height: 150,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.1),
+                // RPE pill
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.effortSurface(rpe),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.effortBorderColor(rpe),
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Text(
+                    'RPE $rpeRounded',
+                    style: TextStyle(
+                      color: AppColors.effortColor(rpe),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
 
-            // 3. Main Content
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header: Date & RPE Badge
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.2), // Dark glass
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          dateLabel,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      
-                      // RPE Pill
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: _getRpeColor(rpe), // Semantic color
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                             BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4),
-                          ]
-                        ),
-                        child: Text(
-                           "RPE $rpe",
-                           style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                        ),
-                      )
-                    ],
+            const Spacer(),
+
+            // Distancia principal
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text(
+                  km,
+                  style: TextStyle(
+                    fontSize: 42,
+                    fontWeight: FontWeight.w800,
+                    color: distanceColor,
+                    letterSpacing: -2,
+                    height: 1.0,
                   ),
-                  
-                  const Spacer(),
-                  
-                  // Big Main Stat (Distance)
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Text(
-                        km,
-                        style: const TextStyle(
-                          fontSize: 42,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: -2,
-                          height: 1.0,
-                          shadows: [
-                            Shadow(color: Colors.black26, offset: Offset(0, 2), blurRadius: 4)
-                          ]
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Text(
-                        "km",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'km',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: unitColor,
                   ),
-                  const SizedBox(height: 16),
-                  
-                  // Glass Stats Panel
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15), // Frosted glass
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withOpacity(0.2)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        // Duration
-                        _buildGlassStat(Icons.timer_outlined, duration),
-                        // Divider
-                        Container(width: 1, height: 20, color: Colors.white.withOpacity(0.3)),
-                        // Pace
-                        _buildGlassStat(Icons.speed, pace),
-                      ],
-                    ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 14),
+
+            // Métricas secundarias
+            Row(
+              children: [
+                Icon(Icons.timer_outlined, size: 14, color: AppColors.iconMuted),
+                const SizedBox(width: 4),
+                Text(
+                  duration,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: isDark ? Colors.white70 : const Color(0xFF444444),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 16),
+                Icon(Icons.speed, size: 14, color: AppColors.iconMuted),
+                const SizedBox(width: 4),
+                Text(
+                  pace,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: isDark ? Colors.white70 : const Color(0xFF444444),
+                  ),
+                ),
+              ],
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGlassStat(IconData icon, String value) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.white70, size: 14),
-        const SizedBox(width: 6),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTagBadge(String tag) {
-    final color = _getTagColor(tag);
-    return Container(
-      margin: const EdgeInsets.only(left: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.3), width: 0.5),
-      ),
-      child: Text(
-        tag,
-        style: TextStyle(
-          color: color,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
         ),
       ),
     );
@@ -1401,30 +1305,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     if (h > 0) return '${h}h ${m}m';
     return '${m}m';
   }
-
-  Color _getRpeColor(int rpe) {
-    if (rpe <= 3) return Colors.green;
-    if (rpe <= 5) return Colors.blue;
-    if (rpe <= 7) return Colors.orange;
-    return Colors.redAccent;
-  }
-
-  Color _getTagColor(String tag) {
-    // Consistent color hashing based on tag string
-    final hash = tag.codeUnits.fold(0, (previous, current) => previous + current);
-    final colors = [
-      Colors.blue,
-      Colors.indigo,
-      Colors.teal,
-      Colors.green,
-      Colors.orange,
-      Colors.purple,
-      Colors.pink,
-      Colors.red,
-    ];
-    return colors[hash % colors.length];
-  }
-
 
   void _onPlayButtonTap() {
     Navigator.push(context, AppRoute(page: const TrainingStartView()));
@@ -1442,168 +1322,110 @@ class _GroupHighlightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Paleta de colores para Liquid Glass
-    final List<List<Color>> palettes = [
-      [const Color(0xFF6A11CB), const Color(0xFF2575FC)], // Purple Blue
-      [const Color(0xFFFF5F6D), const Color(0xFFFFC371)], // Sunset
-      [const Color(0xFF11998E), const Color(0xFF38EF7D)], // Emerald
-      [const Color(0xFFFC466B), const Color(0xFF3F5EFB)], // Pink Blue
-    ];
-    final backgroundGradient = palettes[group.name.length % palettes.length];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? AppColors.surface : Colors.white;
+    final cardBorder = isDark ? AppColors.border : const Color(0xFFE5E5E5);
+    final nameColor = isDark ? Colors.white : const Color(0xFF1A1A1A);
 
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          AppRoute(page: GroupScreen(groupId: group.id)),
-        );
-      },
+      onTap: () => Navigator.push(
+        context,
+        AppRoute(page: GroupScreen(groupId: group.id)),
+      ),
       child: Container(
         width: 220,
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
         decoration: BoxDecoration(
+          color: cardBg,
           borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: backgroundGradient.first.withOpacity(0.35),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
-              spreadRadius: -2,
-            )
-          ],
+          border: Border.all(color: cardBorder, width: 0.5),
+          boxShadow: isDark
+              ? null
+              : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: Stack(
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. LIQUID GRADIENT BACKGROUND
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: backgroundGradient,
-                  ),
-                ),
-              ),
-              
-              // 2. LAYERED ARTISTIC WATERMARKS
-              Positioned(
-                top: -20,
-                right: -20,
-                child: Container(
-                  width: 130,
-                  height: 130,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.12),
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: -30,
-                left: -10,
-                child: Container(
-                  width: 90,
-                  height: 90,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.08),
-                  ),
-                ),
-              ),
-
-              // 3. GLASS INTERACTION LAYER (Subtle Blur)
-              Positioned.fill(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 0.5, sigmaY: 0.5),
-                  child: Container(
+              // Icono grupo + badge rank
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(24),
+                      color: AppColors.brandSurface,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.groups_rounded,
+                      size: 16,
+                      color: AppColors.brandLight,
                     ),
                   ),
-                ),
+                  if (userRank != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.brandSurface,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.brandBorder, width: 0.5),
+                      ),
+                      child: Text(
+                        '#$userRank',
+                        style: const TextStyle(
+                          color: AppColors.brandLight,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                ],
               ),
 
-              // 4. MAIN CONTENT
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Ranking/Type Badge
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.25),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white.withOpacity(0.2)),
-                          ),
-                          child: const Icon(
-                            Icons.groups_rounded, 
-                            size: 16, 
-                            color: Colors.white,
-                          ),
-                        ),
-                        if (userRank != null)
-                          _GlassBadge(
-                            label: "#$userRank",
-                            color: Colors.white,
-                          ),
-                      ],
-                    ),
-                    
-                    const Spacer(),
-                    
-                    // Group Name
-                    Text(
-                      group.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w900, 
-                        fontSize: 19,
-                        height: 1.1,
-                        letterSpacing: -0.6,
-                        color: Colors.white,
-                        shadows: [
-                          Shadow(color: Colors.black38, offset: Offset(0, 1), blurRadius: 4)
-                        ]
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    
-                    const SizedBox(height: 14),
-                    
-                    // Stats Panel (Frosted Glass)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.white.withOpacity(0.2)),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.person_outline_rounded, size: 12, color: Colors.white70),
-                          const SizedBox(width: 4),
-                          Text(
-                            "${group.memberCount}",
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+              const Spacer(),
+
+              // Nombre del grupo
+              Text(
+                group.name,
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 17,
+                  height: 1.15,
+                  letterSpacing: -0.4,
+                  color: nameColor,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+
+              const SizedBox(height: 12),
+
+              // Contador de miembros
+              Row(
+                children: [
+                  const Icon(
+                    Icons.person_outline_rounded,
+                    size: 13,
+                    color: AppColors.iconMuted,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${group.memberCount}',
+                    style: const TextStyle(
+                      color: AppColors.iconMuted,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -1633,7 +1455,7 @@ class _RecoveryBanner extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.effortSurface,
+        color: AppColors.effortSurface(9),
         border: Border.all(color: AppColors.effort.withOpacity(0.5)),
         borderRadius: BorderRadius.circular(16),
       ),
@@ -1705,7 +1527,7 @@ class _TodaySessionBanner extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 0),
       decoration: BoxDecoration(
         color: bgColor,
-        border: Border.all(color: AppColors.brandPurple.withOpacity(0.4)),
+        border: Border.all(color: AppColors.brand.withOpacity(0.4)),
         borderRadius: BorderRadius.circular(16),
       ),
       padding: const EdgeInsets.all(16),
@@ -1718,14 +1540,14 @@ class _TodaySessionBanner extends StatelessWidget {
                 Row(
                   children: [
                     const Icon(Icons.fitness_center_rounded,
-                        color: AppColors.brandPurple, size: 16),
+                        color: AppColors.brand, size: 16),
                     const SizedBox(width: 4),
                     Text(
                       'Entreno de hoy',
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.brandPurple,
+                        color: AppColors.brand,
                         letterSpacing: 0.4,
                       ),
                     ),
@@ -1757,7 +1579,7 @@ class _TodaySessionBanner extends StatelessWidget {
           const SizedBox(width: 16),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.brandPurple,
+              backgroundColor: AppColors.brand,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),

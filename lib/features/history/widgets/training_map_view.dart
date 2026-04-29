@@ -18,7 +18,7 @@ class TrainingMapView extends StatelessWidget {
       return const Center(
         child: Text(
           "No hay datos de GPS disponibles",
-          style: TextStyle(color: Colors.grey),
+          style: TextStyle(color: AppColors.iconMuted),
         ),
       );
     }
@@ -67,7 +67,7 @@ class TrainingMapView extends StatelessWidget {
                 Polyline(
                   points: polylinePoints,
                   strokeWidth: 4.0,
-                  color: Tema.brandPurple,
+                  color: AppColors.brand,
                 ),
               ],
             ),

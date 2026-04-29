@@ -195,7 +195,7 @@ class _AthleteSessionEditorViewState extends State<AthleteSessionEditorView> {
                             icon:  const Icon(Icons.add, size: 18),
                             label: const Text('Añadir'),
                             style: TextButton.styleFrom(
-                              foregroundColor: AppColors.brandPurple,
+                              foregroundColor: AppColors.brand,
                               visualDensity:   VisualDensity.compact,
                             ),
                           ),
@@ -241,7 +241,7 @@ class _AthleteSessionEditorViewState extends State<AthleteSessionEditorView> {
                         child: FilledButton(
                           onPressed: state.isSaving ? null : _save,
                           style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.brandPurple,
+                            backgroundColor: AppColors.brand,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
@@ -333,7 +333,7 @@ class _TappableField extends StatelessWidget {
               color: isDark ? AppColors.borderDark : AppColors.borderLight),
         ),
         child: Row(children: [
-          Icon(icon, size: 16, color: AppColors.brandPurple),
+          Icon(icon, size: 16, color: AppColors.brand),
           const SizedBox(width: 8),
           Expanded(
             child: Text(label,
@@ -375,11 +375,11 @@ class _CategoryPicker extends StatelessWidget {
               )),
           selected:         isSelected,
           onSelected:       (_) => onChanged(isSelected ? null : value),
-          selectedColor:    AppColors.brandPurple,
+          selectedColor:    AppColors.brand,
           backgroundColor:  Theme.of(context).colorScheme.surface,
           side:             BorderSide(
               color: isSelected
-                  ? AppColors.brandPurple
+                  ? AppColors.brand
                   : Theme.of(context).colorScheme.outline.withOpacity(0.4)),
           padding:          const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           visualDensity:    VisualDensity.compact,
@@ -461,7 +461,7 @@ class _WarmupCooldownEditorState extends State<_WarmupCooldownEditor> {
         ),
         const SizedBox(height: 8),
         Row(children: [
-          const Icon(Icons.timer_outlined, size: 16, color: AppColors.brandPurple),
+          const Icon(Icons.timer_outlined, size: 16, color: AppColors.brand),
           const SizedBox(width: 6),
           SizedBox(
             width: 60,
@@ -574,7 +574,7 @@ class _EmptyBlocksHint extends StatelessWidget {
         ),
         child: Column(children: [
           Icon(Icons.add_circle_outline,
-              size: 32, color: AppColors.brandPurple.withOpacity(0.5)),
+              size: 32, color: AppColors.brand.withOpacity(0.5)),
           const SizedBox(height: 8),
           Text('Añadir bloque',
               style: TextStyle(fontSize: 14, color: secondary)),
@@ -746,7 +746,7 @@ class _SessionBlockEditorState extends State<_SessionBlockEditor> {
             ReorderableDragStartListener(
               index: widget.index,
               child: const Icon(Icons.drag_handle_rounded,
-                  size: 20, color: Colors.grey),
+                  size: 20, color: AppColors.iconMuted),
             ),
             const SizedBox(width: 8),
             Text(
@@ -757,7 +757,7 @@ class _SessionBlockEditorState extends State<_SessionBlockEditor> {
             const Spacer(),
             IconButton(
               icon:           const Icon(Icons.delete_outline, size: 20),
-              color:          Colors.redAccent,
+              color:          AppColors.rpeMax,
               onPressed:      widget.onRemove,
               visualDensity:  VisualDensity.compact,
               padding:        EdgeInsets.zero,
@@ -808,14 +808,14 @@ class _SessionBlockEditorState extends State<_SessionBlockEditor> {
                     ? Icons.expand_less_rounded
                     : Icons.expand_more_rounded,
                 size: 18,
-                color: AppColors.brandPurple,
+                color: AppColors.brand,
               ),
               const SizedBox(width: 4),
               const Text('Objetivos',
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.brandPurple)),
+                      color: AppColors.brand)),
             ]),
           ),
         ),

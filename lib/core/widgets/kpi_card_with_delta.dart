@@ -1,3 +1,4 @@
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:running_laps/core/widgets/info_tooltip.dart';
@@ -63,11 +64,7 @@ class KpiCardWithDelta extends StatelessWidget {
           child: Container(
             decoration: coloredBackground
                 ? BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [primaryColor, gradientColor ?? primaryColor.withOpacity(0.7)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: primaryColor,
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
@@ -111,9 +108,7 @@ class KpiCardWithDelta extends StatelessWidget {
 
                   // Content
                   Padding(
-                    padding: compact
-                        ? const EdgeInsets.symmetric(horizontal: 16, vertical: 13)
-                        : const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(14),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -128,19 +123,18 @@ class KpiCardWithDelta extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   color: coloredBackground
                                       ? Colors.white.withOpacity(0.2)
-                                      : primaryColor.withOpacity(0.8),
+                                      : (Theme.of(context).brightness == Brightness.dark
+                                          ? const Color(0xFF1E1E1E)
+                                          : const Color(0xFFF5F5F5)),
                                   borderRadius: BorderRadius.circular(12),
-                                  boxShadow: coloredBackground
-                                      ? null
-                                      : [
-                                          BoxShadow(
-                                            color: primaryColor.withOpacity(0.3),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 4),
-                                          )
-                                        ],
                                 ),
-                                child: Icon(icon, color: Colors.white, size: iconBoxSize * 0.6),
+                                child: Icon(
+                                  icon,
+                                  color: coloredBackground
+                                      ? Colors.white
+                                      : const Color(0xFF555555),
+                                  size: iconBoxSize * 0.6,
+                                ),
                               ),
                             
                             // Trend or Sparkline
@@ -229,8 +223,8 @@ class KpiCardWithDelta extends StatelessWidget {
   Widget _buildSimpleTrendIcon() {
     final isUp = deltaPercentage! > 0;
     final color = isInverted 
-        ? (isUp ? Colors.red : Colors.green) 
-        : (isUp ? Colors.green : Colors.red);
+        ? (isUp ? AppColors.rpeMax : AppColors.rpeLow) 
+        : (isUp ? AppColors.rpeLow : AppColors.rpeMax);
         
     return Icon(
       isUp ? Icons.trending_up_rounded : Icons.trending_down_rounded,

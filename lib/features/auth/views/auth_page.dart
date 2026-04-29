@@ -228,7 +228,7 @@ class _AuthPageState extends State<AuthPage> {
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -245,7 +245,7 @@ class _AuthPageState extends State<AuthPage> {
                   _buildTextField(
                     controller: _resetEmailCtrl,
                     hintText: 'Correo electrónico',
-                    prefixIcon: const Icon(Icons.email_outlined, color: Colors.grey),
+                    prefixIcon: const Icon(Icons.email_outlined, color: AppColors.iconMuted),
                   ),
                   
                   // ZONA DE ERROR INLINE
@@ -254,19 +254,19 @@ class _AuthPageState extends State<AuthPage> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.red[50], // Fondo rojo suave
+                        color: AppColors.rpeMax.withOpacity(0.12), // Fondo rojo suave
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.red.withOpacity(0.3)),
+                        border: Border.all(color: AppColors.rpeMax.withOpacity(0.3)),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.error_outline, color: Colors.red),
+                          const Icon(Icons.error_outline, color: AppColors.rpeMax),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               _localError!,
                               style: const TextStyle(
-                                color: Colors.red,
+                                color: AppColors.rpeMax,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
@@ -288,7 +288,7 @@ class _AuthPageState extends State<AuthPage> {
                               ? null
                               : _submitRecovery, // Llamamos a la función interna
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Tema.brandPurple,
+                            backgroundColor: AppColors.brand,
                             foregroundColor: Colors.white,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
@@ -371,9 +371,9 @@ class _AuthPageState extends State<AuthPage> {
           width: 20,
           height: 20,
           decoration: BoxDecoration(
-            color: isMet ? Colors.green : Colors.transparent,
+            color: isMet ? AppColors.rpeLow : Colors.transparent,
             border: Border.all(
-              color: isMet ? Colors.green : Colors.grey.shade400,
+              color: isMet ? AppColors.rpeLow : AppColors.iconMuted,
             ),
             shape: BoxShape.circle,
           ),
@@ -389,7 +389,7 @@ class _AuthPageState extends State<AuthPage> {
         Text(
           text,
           style: TextStyle(
-            color: isMet ? Colors.green : Colors.grey.shade600,
+            color: isMet ? AppColors.rpeLow : AppColors.iconMuted,
             fontSize: 13,
             fontWeight: isMet ? FontWeight.w600 : FontWeight.normal,
           ),
@@ -415,7 +415,7 @@ class _AuthPageState extends State<AuthPage> {
     return Container(
       height: 60,
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey.shade100,
+        color: isDark ? Colors.white.withOpacity(0.08) : AppColors.iconMuted,
         borderRadius: BorderRadius.circular(16),
         boxShadow: isDark
             ? []
@@ -473,7 +473,7 @@ class _AuthPageState extends State<AuthPage> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Tema.brandPurple.withOpacity(0.3), // Sombra con color de marca
+                color: AppColors.brand.withOpacity(0.3), // Sombra con color de marca
                 blurRadius: 15,
                 offset: const Offset(0, 8),
               ),
@@ -484,7 +484,7 @@ class _AuthPageState extends State<AuthPage> {
             child: OutlinedButton(
               onPressed: disabled ? null : onPressed,
               style: OutlinedButton.styleFrom(
-                backgroundColor: Tema.brandPurple,
+                backgroundColor: AppColors.brand,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -563,7 +563,7 @@ class _AuthPageState extends State<AuthPage> {
         _buildTextField(
           controller: _authCtrl.emailCtrl,
           hintText: 'Correo electrónico',
-          prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[400]),
+          prefixIcon: Icon(Icons.email_outlined, color: AppColors.surface2),
           textInputAction: TextInputAction.next,
           onSubmitted: (_) => FocusScope.of(context).nextFocus(),
         ),
@@ -572,13 +572,13 @@ class _AuthPageState extends State<AuthPage> {
           controller: _authCtrl.passCtrl,
           hintText: 'Contraseña',
           obscureText: !_showLoginPassword,
-          prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[400]),
+          prefixIcon: Icon(Icons.lock_outline, color: AppColors.surface2),
           textInputAction: TextInputAction.done,
           onSubmitted: (_) => FocusScope.of(context).unfocus(),
           suffixIcon: IconButton(
             icon: Icon(
               _showLoginPassword ? Icons.visibility_off : Icons.visibility,
-              color: Colors.grey,
+              color: AppColors.iconMuted,
             ),
             onPressed: () {
               setState(() {
@@ -594,10 +594,10 @@ class _AuthPageState extends State<AuthPage> {
             child: Builder(builder: (context) => Text(
               '¿Olvidaste tu contraseña?',
               style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                 fontWeight: FontWeight.bold,
                 decoration: TextDecoration.underline,
-                decorationColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                decorationColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
               ),
             )),
           ),
@@ -637,7 +637,7 @@ class _AuthPageState extends State<AuthPage> {
         _buildTextField(
           controller: _authCtrl.usernameCtrl,
           hintText: 'Nombre de usuario',
-          prefixIcon: Icon(Icons.person_outline, color: Colors.grey[400]),
+          prefixIcon: Icon(Icons.person_outline, color: AppColors.surface2),
           textInputAction: TextInputAction.next,
           onSubmitted: (_) => FocusScope.of(context).nextFocus(),
         ),
@@ -645,7 +645,7 @@ class _AuthPageState extends State<AuthPage> {
         _buildTextField(
           controller: _authCtrl.emailCtrl,
           hintText: 'Correo electrónico',
-          prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[400]),
+          prefixIcon: Icon(Icons.email_outlined, color: AppColors.surface2),
           textInputAction: TextInputAction.next,
           onSubmitted: (_) => FocusScope.of(context).nextFocus(),
         ),
@@ -654,13 +654,13 @@ class _AuthPageState extends State<AuthPage> {
           controller: _authCtrl.passCtrl,
           hintText: 'Contraseña',
           obscureText: !_showRegisterPassword,
-          prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[400]),
+          prefixIcon: Icon(Icons.lock_outline, color: AppColors.surface2),
           textInputAction: TextInputAction.next,
           onSubmitted: (_) => FocusScope.of(context).nextFocus(),
           suffixIcon: IconButton(
             icon: Icon(
               _showRegisterPassword ? Icons.visibility_off : Icons.visibility,
-              color: Colors.grey,
+              color: AppColors.iconMuted,
             ),
             onPressed: () {
               setState(() {
@@ -674,7 +674,7 @@ class _AuthPageState extends State<AuthPage> {
           controller: _authCtrl.confirmPassCtrl,
           hintText: 'Confirmar contraseña',
           obscureText: !_showRegisterConfirmPassword,
-          prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[400]),
+          prefixIcon: Icon(Icons.lock_outline, color: AppColors.surface2),
           textInputAction: TextInputAction.done,
           onSubmitted: (_) => FocusScope.of(context).unfocus(),
           suffixIcon: IconButton(
@@ -682,7 +682,7 @@ class _AuthPageState extends State<AuthPage> {
               _showRegisterConfirmPassword
                   ? Icons.visibility_off
                   : Icons.visibility,
-              color: Colors.grey,
+              color: AppColors.iconMuted,
             ),
             onPressed: () {
               setState(() {
@@ -717,7 +717,7 @@ class _AuthPageState extends State<AuthPage> {
               child: Text(
                 '¿Ya tienes cuenta? Iniciar sesión',
                 style: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                  color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -745,12 +745,7 @@ class _AuthPageState extends State<AuthPage> {
         decoration: isDark
             ? const BoxDecoration(color: AppColors.backgroundDark)
             : const BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.center,
-                  radius: 1.5,
-                  colors: [Color(0xFFF9F5FB), Colors.white],
-                  stops: [0.0, 1.0],
-                ),
+                color: Colors.white,
                 image: DecorationImage(
                   image: AssetImage('assets/images/fondo.png'),
                   fit: BoxFit.cover,
@@ -895,7 +890,7 @@ class _PremiumGoogleButtonState extends State<_PremiumGoogleButton> with SingleT
                 offset: const Offset(0, 10),
               ),
               BoxShadow(
-                color: Tema.brandPurple.withOpacity(0.03),
+                color: AppColors.brand.withOpacity(0.03),
                 blurRadius: 30,
                 offset: const Offset(0, 15),
               ),
@@ -912,7 +907,7 @@ class _PremiumGoogleButtonState extends State<_PremiumGoogleButton> with SingleT
                           height: 24,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Tema.brandPurple),
+                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.brand),
                           ),
                         )
                       : Row(
@@ -937,7 +932,7 @@ class _PremiumGoogleButtonState extends State<_PremiumGoogleButton> with SingleT
                                 width: 18,
                                 height: 18,
                                 errorBuilder: (context, error, stackTrace) => 
-                                    Icon(Icons.login_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 18),
+                                    Icon(Icons.login_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 18),
                               ),
                             ),
                             const SizedBox(width: 16),

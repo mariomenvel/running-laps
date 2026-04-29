@@ -11,14 +11,14 @@ Widget buildTemplateButtons(BuildContext context, VoidCallback onLoadTemplate, V
         width: double.infinity,
         child: OutlinedButton.icon(
           onPressed: onLoadTemplate,
-          icon: Icon(Icons.folder_open, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+          icon: Icon(Icons.folder_open, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
           label: Text(
             'Cargar Plantilla',
-            style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.bold),
+            style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.bold),
           ),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            side: const BorderSide(color: Tema.brandPurple, width: 2),
+            side: const BorderSide(color: AppColors.brand, width: 2),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
@@ -29,14 +29,14 @@ Widget buildTemplateButtons(BuildContext context, VoidCallback onLoadTemplate, V
         width: double.infinity,
         child: OutlinedButton.icon(
           onPressed: onQuickTemplate,
-          icon: Icon(Icons.flash_on, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+          icon: Icon(Icons.flash_on, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
           label: Text(
             'Plantilla Rápida',
-            style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.bold),
+            style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.bold),
           ),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            side: const BorderSide(color: Tema.brandPurple, width: 2),
+            side: const BorderSide(color: AppColors.brand, width: 2),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
@@ -57,7 +57,7 @@ Widget buildContinuousRunButton(BuildContext context, VoidCallback onPressed) {
         style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
       ),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Tema.brandPurple,
+        backgroundColor: AppColors.brand,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 4,
       ),

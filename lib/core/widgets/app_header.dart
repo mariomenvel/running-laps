@@ -32,12 +32,7 @@ class AppHeader extends StatelessWidget {
       decoration: isDark
           ? BoxDecoration(color: Theme.of(context).colorScheme.surface)
           : const BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment.topCenter,
-                radius: 1.2,
-                colors: <Color>[_bgGradientColor, Colors.white],
-                stops: <double>[0.0, 1.0],
-              ),
+              color: Colors.white,
               image: DecorationImage(
                 image: AssetImage('assets/images/fondo.png'),
                 fit: BoxFit.cover,
@@ -71,7 +66,7 @@ class AppHeader extends StatelessWidget {
                   },
                   child: const CircleAvatar(
                     radius: 24.0,
-                    backgroundColor: Tema.brandPurple,
+                    backgroundColor: AppColors.brand,
                     backgroundImage: AssetImage('assets/images/logo.png'),
                   ),
                 ),

@@ -126,7 +126,7 @@ class _ManualTrainingViewState extends State<ManualTrainingView> {
               child: SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  style: FilledButton.styleFrom(backgroundColor: AppColors.brandPurple),
+                  style: FilledButton.styleFrom(backgroundColor: AppColors.brand),
                   onPressed: () {
                     setState(() => _selectedDate = temp);
                     Navigator.pop(context);
@@ -264,7 +264,7 @@ class _ManualTrainingViewState extends State<ManualTrainingView> {
             TextButton(
               onPressed: _save,
               child: const Text('Guardar',
-                  style: TextStyle(color: AppColors.brandPurple, fontWeight: FontWeight.w600)),
+                  style: TextStyle(color: AppColors.brand, fontWeight: FontWeight.w600)),
             ),
         ],
       ),
@@ -302,7 +302,7 @@ class _ManualTrainingViewState extends State<ManualTrainingView> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
                 children: [
-                  Icon(Icons.calendar_today_rounded, color: AppColors.brandPurple, size: 18),
+                  Icon(Icons.calendar_today_rounded, color: AppColors.brand, size: 18),
                   const SizedBox(width: 10),
                   Text('Fecha', style: TextStyle(color: txtColor, fontSize: 15)),
                   const Spacer(),
@@ -325,8 +325,8 @@ class _ManualTrainingViewState extends State<ManualTrainingView> {
               const Spacer(),
               TextButton.icon(
                 onPressed: () => setState(() => _series.add(_ManualSerieData())),
-                icon: const Icon(Icons.add_circle_rounded, size: 16, color: AppColors.brandPurple),
-                label: const Text('Añadir', style: TextStyle(color: AppColors.brandPurple, fontSize: 13)),
+                icon: const Icon(Icons.add_circle_rounded, size: 16, color: AppColors.brand),
+                label: const Text('Añadir', style: TextStyle(color: AppColors.brand, fontSize: 13)),
                 style: TextButton.styleFrom(padding: EdgeInsets.zero),
               ),
             ],
@@ -454,14 +454,14 @@ class _ManualSerieCard extends StatelessWidget {
                 Container(
                   width: 24, height: 24,
                   decoration: BoxDecoration(
-                    color:        AppColors.brandPurple.withOpacity(0.12),
+                    color:        AppColors.brand.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Center(
                     child: Text('${index + 1}',
                         style: const TextStyle(
                             fontSize: 12, fontWeight: FontWeight.w700,
-                            color: AppColors.brandPurple)),
+                            color: AppColors.brand)),
                   ),
                 ),
                 const Spacer(),
@@ -486,13 +486,13 @@ class _ManualSerieCard extends StatelessWidget {
                 _PickerChip(
                   icon:    Icons.straighten_rounded,
                   label:   _distanceLabel(serie.distanceM),
-                  color:   AppColors.brandPurple,
+                  color:   AppColors.brand,
                   onTap:   onPickDistance,
                 ),
                 _PickerChip(
                   icon:    Icons.timer_outlined,
                   label:   _durationLabel(),
-                  color:   AppColors.brandPurple,
+                  color:   AppColors.brand,
                   onTap:   onPickDuration,
                 ),
                 _PickerChip(
@@ -625,7 +625,7 @@ class _DistancePickerSheetState extends State<_DistancePickerSheet> {
             child: const Text('Cancelar'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.brandPurple),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.brand),
             onPressed: () {
               final v = int.tryParse(ctrl.text.trim());
               Navigator.pop(ctx);
@@ -663,7 +663,7 @@ class _DistancePickerSheetState extends State<_DistancePickerSheet> {
                           style: TextStyle(fontSize: 18, color: labelColor)))),
                 Center(
                   child: Text('Otra distancia →',
-                      style: TextStyle(fontSize: 18, color: AppColors.brandPurple)),
+                      style: TextStyle(fontSize: 18, color: AppColors.brand)),
                 ),
               ],
             ),
@@ -673,7 +673,7 @@ class _DistancePickerSheetState extends State<_DistancePickerSheet> {
             child: SizedBox(
               width: double.infinity,
               child: FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: AppColors.brandPurple),
+                style: FilledButton.styleFrom(backgroundColor: AppColors.brand),
                 onPressed: () {
                   if (_selectedIndex == totalItems - 1) {
                     _openCustom();
@@ -777,7 +777,7 @@ class _DurationPickerSheetState extends State<_DurationPickerSheet> {
             child: SizedBox(
               width: double.infinity,
               child: FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: AppColors.brandPurple),
+                style: FilledButton.styleFrom(backgroundColor: AppColors.brand),
                 onPressed: () => Navigator.pop(context, (_minutes, _seconds)),
                 child: const Text('Confirmar'),
               ),
@@ -856,7 +856,7 @@ class _RpePickerSheetState extends State<_RpePickerSheet> {
             child: SizedBox(
               width: double.infinity,
               child: FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: AppColors.brandPurple),
+                style: FilledButton.styleFrom(backgroundColor: AppColors.brand),
                 onPressed: () => Navigator.pop(context, _rpeValues[_idx]),
                 child: const Text('Listo'),
               ),
@@ -918,7 +918,7 @@ class _RestPickerSheetState extends State<_RestPickerSheet> {
             child: SizedBox(
               width: double.infinity,
               child: FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: AppColors.brandPurple),
+                style: FilledButton.styleFrom(backgroundColor: AppColors.brand),
                 onPressed: () => Navigator.pop(context, _restValues[_idx]),
                 child: const Text('Listo'),
               ),

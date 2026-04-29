@@ -60,7 +60,7 @@ class _PremiumDateRangePickerState extends State<PremiumDateRangePicker> {
     final surfaceColor =
         isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final brandColor =
-        isDark ? AppColors.brandPurpleLight : AppColors.brandPurple;
+        isDark ? AppColors.brandLight : AppColors.brand;
 
     return Container(
       decoration: BoxDecoration(
@@ -170,7 +170,7 @@ class _PremiumDateRangePickerState extends State<PremiumDateRangePicker> {
                                 context, DateTimeRange(start: start, end: end));
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.brandPurple,
+                            backgroundColor: AppColors.brand,
                             foregroundColor: Colors.white,
                             padding:
                                 const EdgeInsets.symmetric(vertical: 16),

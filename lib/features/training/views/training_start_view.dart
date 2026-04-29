@@ -71,7 +71,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   // --- ViewModel ---
   final TrainingViewModel _vm = TrainingViewModel();
 
-  Color get _brandAccentColor => Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple;
+  Color get _brandAccentColor => Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand;
 
   // --- Estado UI ---
   bool _isSaving = false;
@@ -559,13 +559,13 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: Colors.red.shade50,
+                color: AppColors.rpeMax,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.warning_rounded,
                 size: 48,
-                color: Colors.red.shade600,
+                color: AppColors.rpeMax,
               ),
             ),
             const SizedBox(height: 24),
@@ -600,14 +600,14 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red.shade600,
+                  backgroundColor: AppColors.rpeMax,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                   elevation: 4,
-                  shadowColor: Colors.red.shade600.withOpacity(0.4),
+                  shadowColor: AppColors.rpeMax.withOpacity(0.4),
                 ),
                 child: const Text(
                   'Descartar',
@@ -759,19 +759,19 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                         return Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.red.shade50,
+                            color: AppColors.rpeMax,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.red.shade200),
+                            border: Border.all(color: AppColors.rpeMax),
                           ),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.error_outline, color: Colors.red.shade400, size: 32),
+                              Icon(Icons.error_outline, color: AppColors.rpeMax, size: 32),
                               const SizedBox(height: 8),
                               Text(
                                 'Error al cargar etiquetas',
                                 style: TextStyle(
-                                  color: Colors.red.shade700,
+                                  color: AppColors.rpeMax,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
                                 ),
@@ -788,7 +788,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                                 icon: const Icon(Icons.refresh, size: 18),
                                 label: const Text('Reintentar'),
                                 style: TextButton.styleFrom(
-                                  foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                                  foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                                 ),
                               ),
                             ],
@@ -805,9 +805,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                         children: [
                           // Botón nueva etiqueta
                           ActionChip(
-                            avatar: Icon(Icons.add, size: 16, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
-                            label: Text('Nueva', style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple)),
-                            backgroundColor: Tema.brandPurple.withOpacity(0.1),
+                            avatar: Icon(Icons.add, size: 16, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+                            label: Text('Nueva', style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand)),
+                            backgroundColor: AppColors.brand.withOpacity(0.1),
                             side: BorderSide.none,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                             onPressed: () async {
@@ -894,13 +894,13 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                       Expanded(
                         child: TextButton(
                           onPressed: () => _discardTraining(ctx),
-                          child: const Text('Descartar', style: TextStyle(color: Colors.red)),
+                          child: const Text('Descartar', style: TextStyle(color: AppColors.rpeMax)),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: TextButton(
-                          child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+                          child: const Text('Cancelar', style: TextStyle(color: AppColors.iconMuted)),
                           onPressed: () => Navigator.of(ctx).pop(),
                         ),
                       ),
@@ -1331,7 +1331,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
        child: Column(
          mainAxisAlignment: MainAxisAlignment.center,
          children: [
-           Icon(Icons.directions_run_rounded, size: 80, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+           Icon(Icons.directions_run_rounded, size: 80, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
            const SizedBox(height: 24),
            const Text(
              "Carrera Continua",
@@ -1349,10 +1349,10 @@ class _TrainingStartViewState extends State<TrainingStartView> {
              height: 60,
              child: ElevatedButton.icon(
                style: ElevatedButton.styleFrom(
-                 backgroundColor: Tema.brandPurple,
+                 backgroundColor: AppColors.brand,
                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                  elevation: 8,
-                 shadowColor: Tema.brandPurple.withOpacity(0.5),
+                 shadowColor: AppColors.brand.withOpacity(0.5),
                ),
                icon: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 32),
                label: const Text("EMPEZAR AHORA", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1)),
@@ -1532,14 +1532,14 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               color: _brandAccentColor.withOpacity(0.05),
               child: Row(
                 children: [
-                  Icon(Icons.star_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 18),
+                  Icon(Icons.star_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 18),
                   const SizedBox(width: 8),
                   Text(
                     "PLANTILLA ACTIVA",
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                       letterSpacing: 1.5,
                     ),
                   ),
@@ -1551,9 +1551,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.surface,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.red.withOpacity(0.2)),
+                        border: Border.all(color: AppColors.rpeMax.withOpacity(0.2)),
                       ),
-                      child: const Icon(Icons.close_rounded, size: 14, color: Colors.red),
+                      child: const Icon(Icons.close_rounded, size: 14, color: AppColors.rpeMax),
                     ),
                   ),
                 ],
@@ -1588,7 +1588,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                       icon: const Icon(Icons.edit_rounded, size: 16),
                       label: const Text("EDITAR ESTRUCTURA"),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                        foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                         side: BorderSide(color: _brandAccentColor.withOpacity(0.3)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1611,7 +1611,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       children: [
         Row(
           children: [
-            Icon(icon, size: 16, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+            Icon(icon, size: 16, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
             const SizedBox(width: 6),
             Text(
               value,
@@ -1666,7 +1666,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               padding: const EdgeInsets.only(right: 20.0),
               margin: const EdgeInsets.symmetric(vertical: 4.0),
               decoration: BoxDecoration(
-                color: Colors.red.shade400,
+                color: AppColors.rpeMax,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
@@ -1699,10 +1699,10 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.red.shade50,
+                          color: AppColors.rpeMax,
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(Icons.delete_sweep_rounded, color: Colors.red.shade600, size: 40),
+                        child: Icon(Icons.delete_sweep_rounded, color: AppColors.rpeMax, size: 40),
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -1735,15 +1735,11 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                           Expanded(
                             child: Container(
                               decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [Colors.red.shade400, Colors.red.shade700],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
+                                color: AppColors.rpeMax,
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.red.shade400.withOpacity(0.3),
+                                    color: AppColors.rpeMax.withOpacity(0.3),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -1799,14 +1795,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                     height: 32,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          _brandAccentColor,
-                          Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight.withOpacity(0.8) : const Color(0xFF9C27B0)
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: _brandAccentColor,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
@@ -1832,10 +1821,10 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _buildSerieStat('${serie.distanciaM}m', Icons.straighten, Colors.blue.shade400),
-                        _buildSerieStat('${serie.tiempoSec.toStringAsFixed(1)}s', Icons.timer_outlined, Colors.orange.shade400),
-                        _buildSerieStat(serie.ritmoTexto(), Icons.speed, Colors.green.shade400),
-                        _buildSerieStat('RPE ${serie.rpe}', Icons.bolt, Colors.red.shade400, isRpe: true),
+                        _buildSerieStat('${serie.distanciaM}m', Icons.straighten, AppColors.rest),
+                        _buildSerieStat('${serie.tiempoSec.toStringAsFixed(1)}s', Icons.timer_outlined, AppColors.rpeMid),
+                        _buildSerieStat(serie.ritmoTexto(), Icons.speed, AppColors.rpeLow),
+                        _buildSerieStat('RPE ${serie.rpe}', Icons.bolt, AppColors.rpeMax, isRpe: true),
                         if (serie.fcMedia != null)
                           _buildSerieStat('${serie.fcMedia!.round()} ppm', Icons.favorite_rounded, AppColors.rpeMax),
                       ],
@@ -2043,7 +2032,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               style: TextStyle(
                 fontSize: 28.0,
                 fontWeight: FontWeight.bold,
-                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
               ),
             ),
           ],
@@ -2074,7 +2063,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 children: [
                   const Text("Distancia de la serie", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   IconButton(
-                    icon: Icon(Icons.keyboard, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+                    icon: Icon(Icons.keyboard, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
                     onPressed: () {
                       Navigator.pop(context);
                       _showManualInputDialog(isDistance: true);
@@ -2101,7 +2090,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 },
                 children: [
                   ...List.generate(100, (index) => Center(child: Text("${(index + 1) * 50}m"))),
-                  Center(child: Text("Otro...", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.bold))),
+                  Center(child: Text("Otro...", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.bold))),
                 ],
               ),
             ),
@@ -2157,7 +2146,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 children: [
                   const Text("Tiempo de descanso", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   IconButton(
-                    icon: Icon(Icons.keyboard, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+                    icon: Icon(Icons.keyboard, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
                     onPressed: () {
                       Navigator.pop(context);
                       _showManualInputDialog(isDistance: false);
@@ -2183,7 +2172,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 },
                 children: [
                   ...List.generate(61, (index) => Center(child: Text(_formatMinSec(index * 5)))),
-                  Center(child: Text("Otro...", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.bold))),
+                  Center(child: Text("Otro...", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.bold))),
                 ],
               ),
             ),
@@ -2344,7 +2333,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                             children: [
                               Icon(
                                 isValid ? Icons.check_circle : Icons.error,
-                                color: isValid ? Colors.green.shade400 : Colors.red.shade400,
+                                color: isValid ? AppColors.rpeLow : AppColors.rpeMax,
                                 size: 18,
                               ),
                               const SizedBox(width: 8),
@@ -2353,7 +2342,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
-                                  color: isValid ? Colors.green.shade700 : Colors.red.shade700,
+                                  color: isValid ? AppColors.rpeLow : AppColors.rpeMax,
                                 ),
                               ),
                             ],
@@ -2455,12 +2444,12 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16.0),
           border: Border.all(
-              color: _alarmEnabled ? Tema.brandPurple.withOpacity(0.5) : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+              color: _alarmEnabled ? AppColors.brand.withOpacity(0.5) : Theme.of(context).colorScheme.outline.withOpacity(0.2),
               width: _alarmEnabled ? 2.0 : 1.0),
           boxShadow: [
             BoxShadow(
               color: _alarmEnabled
-                  ? Tema.brandPurple.withOpacity(0.1)
+                  ? AppColors.brand.withOpacity(0.1)
                   : Theme.of(context).brightness == Brightness.dark
                       ? Colors.transparent
                       : Colors.black.withOpacity(0.05),
@@ -2499,7 +2488,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                           style: TextStyle(
                             fontSize: 14.0,
                             fontWeight: FontWeight.w600,
-                            color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                            color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                           ),
                         ),
                       )
@@ -2516,7 +2505,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
               ),
               if (_alarmEnabled)
                  IconButton(
-                   icon: Icon(Icons.edit, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+                   icon: Icon(Icons.edit, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
                    onPressed: () => _showAlarmConfigSheet(context),
                  ),
               Transform.scale(
@@ -2533,11 +2522,11 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                        // _showAlarmConfigSheet(context);
                     }
                   },
-                  activeColor: Tema.brandPurple,
+                  activeColor: AppColors.brand,
                   inactiveThumbColor: Colors.white,
                   inactiveTrackColor: Theme.of(context).brightness == Brightness.dark
                       ? Theme.of(context).colorScheme.onSurface.withOpacity(0.15)
-                      : Colors.grey[200],
+                      : AppColors.surface2,
                 ),
               ),
             ],
@@ -2599,7 +2588,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: Text("Listo", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.bold)),
+                          child: Text("Listo", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.bold)),
                         )
                       ],
                     ),
@@ -2862,7 +2851,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                         style: TextStyle(
                           fontSize: 12.0,
                           fontWeight: FontWeight.w600,
-                          color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                          color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                         ),
                       ),
                     ),
@@ -2880,11 +2869,11 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 });
 
               },
-              activeColor: Tema.brandPurple,
+              activeColor: AppColors.brand,
               inactiveThumbColor: Colors.white,
               inactiveTrackColor: Theme.of(context).brightness == Brightness.dark
                   ? Theme.of(context).colorScheme.onSurface.withOpacity(0.15)
-                  : Colors.grey[200],
+                  : AppColors.surface2,
             ),
           ),
         ],
@@ -2995,7 +2984,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                   inactiveThumbColor: Colors.white,
                   inactiveTrackColor: Theme.of(context).brightness == Brightness.dark
                       ? Theme.of(context).colorScheme.onSurface.withOpacity(0.15)
-                      : Colors.grey[200],
+                      : AppColors.surface2,
                 ),
               ),
             ],
@@ -3018,7 +3007,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
             onTap: _openTemplateSelector,
             icon: Icons.folder_open_rounded,
             title: 'Cargar\nPlantilla',
-            color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+            color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
           ),
         ),
         const SizedBox(width: 12),
@@ -3028,7 +3017,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
             onTap: _createMomentaryTemplate,
             icon: Icons.bolt_rounded,
             title: 'Plantilla\nRápida',
-            color: Colors.orange.shade700,
+            color: AppColors.rpeMid,
           ),
         ),
       ],
@@ -3102,14 +3091,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       width: double.infinity,
       height: 60,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            _brandAccentColor,
-            Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight.withOpacity(0.8) : const Color(0xFFBA68C8)
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: _brandAccentColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -3170,12 +3152,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       decoration: isDark
           ? BoxDecoration(color: Theme.of(context).colorScheme.surface)
           : const BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment.bottomCenter,
-                radius: 1.2,
-                colors: <Color>[_bgGradientColor, Colors.white],
-                stops: <double>[0.0, 1.0],
-              ),
+              color: Colors.white,
               image: DecorationImage(
                 image: AssetImage('assets/images/fondo.png'),
                 fit: BoxFit.cover,
@@ -3216,7 +3193,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                             style: TextStyle(
                               fontSize: 22, // Tamaño ajustado
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                               fontFeatures: const <FontFeature>[
                                 FontFeature.tabularFigures(),
                               ],
@@ -3247,12 +3224,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       decoration: isDark
           ? BoxDecoration(color: Theme.of(context).colorScheme.surface)
           : const BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment.bottomCenter,
-                radius: 1.2,
-                colors: [_bgGradientColor, Colors.white],
-                stops: [0.0, 1.0],
-              ),
+              color: Colors.white,
               image: DecorationImage(
                 image: AssetImage('assets/images/fondo.png'),
                 fit: BoxFit.cover,
@@ -3281,7 +3253,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                       _buildCircularButton(
                         icon: Icons.close,
                         onTap: _onFinishTrainingTap,
-                        color: Colors.red[700],
+                        color: AppColors.rpeMax,
                         isLoading: _isSaving,
                       ),
                     ],
@@ -3308,7 +3280,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: (color ?? Tema.brandPurple).withOpacity(0.2),
+              color: (color ?? AppColors.brand).withOpacity(0.2),
               blurRadius: 20.0,
               offset: const Offset(0, 8),
               spreadRadius: 2,
@@ -3328,10 +3300,10 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 height: 40.0,
                 child: CircularProgressIndicator(
                   strokeWidth: 3.0,
-                  valueColor: AlwaysStoppedAnimation<Color>(Tema.brandPurple),
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.brand),
                 ),
               )
-            : Icon(icon, color: color ?? Tema.brandPurple, size: 40.0),
+            : Icon(icon, color: color ?? AppColors.brand, size: 40.0),
       ),
     );
   }
@@ -3372,7 +3344,7 @@ class _LinkSessionSheet extends StatelessWidget {
       case 'series_mixtas':                       return AppColors.effort;
       case 'series_cortas':
       case 'competicion':                         return AppColors.rpeMax;
-      default:                                    return AppColors.brandPurple;
+      default:                                    return AppColors.brand;
     }
   }
 
@@ -3464,7 +3436,7 @@ class _LinkSessionSheet extends StatelessWidget {
                           parentContext, 'Sesión completada ✓');
                     },
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.brandPurple,
+                      backgroundColor: AppColors.brand,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
                       visualDensity: VisualDensity.compact,

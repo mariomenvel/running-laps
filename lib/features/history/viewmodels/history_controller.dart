@@ -1,3 +1,4 @@
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -129,7 +130,7 @@ class HistoryController {
   }
 
   Color getColorForTag(String? tagName) {
-    if (tagName == null) return Colors.grey.shade300;
+    if (tagName == null) return AppColors.iconMuted;
     // Buscamos en tags definidos por usuario, si no, generamos uno determinista
     return _tagColors[tagName] ?? TagUtils.getColor(tagName);
   }

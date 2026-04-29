@@ -76,13 +76,7 @@ class _AppFooterState extends State<AppFooter>
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     return Container(
       decoration: BoxDecoration(
-        gradient: isDark ? null : const RadialGradient(
-          center: Alignment.bottomCenter,
-          radius: 1.2,
-          colors: <Color>[_bgGradientColor, Colors.white],
-          stops: <double>[0.0, 1.0],
-        ),
-        color: isDark ? Theme.of(context).colorScheme.surface : null,
+        color: isDark ? Theme.of(context).colorScheme.surface : Colors.white,
         image: isDark ? null : const DecorationImage(
           image: AssetImage('assets/images/fondo.png'),
           fit: BoxFit.cover,
@@ -120,17 +114,11 @@ class _AppFooterState extends State<AppFooter>
             child: Container(
               padding: const EdgeInsets.all(15.0),
               decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  colors: [
-                    Theme.of(context).colorScheme.surface,
-                    Theme.of(context).colorScheme.surface,
-                  ],
-                  stops: const [0.0, 1.0],
-                ),
+                color: Theme.of(context).colorScheme.surface,
                 shape: BoxShape.circle,
                 boxShadow: <BoxShadow>[
                   BoxShadow(
-                    color: Tema.brandPurple.withOpacity(0.2),
+                    color: AppColors.brand.withOpacity(0.2),
                     blurRadius: 20.0,
                     offset: const Offset(0, 8),
                     spreadRadius: 2,
@@ -150,10 +138,10 @@ class _AppFooterState extends State<AppFooter>
                       height: 40,
                       child: CircularProgressIndicator(
                         strokeWidth: 3,
-                        valueColor: AlwaysStoppedAnimation<Color>(Tema.brandPurple),
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.brand),
                       ),
                     )
-                  : const Icon(Icons.play_arrow, color: Tema.brandPurple, size: 40.0),
+                  : const Icon(Icons.play_arrow, color: AppColors.brand, size: 40.0),
             ),
           );
         },

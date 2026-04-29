@@ -131,7 +131,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
      showDialog(
        context: context, 
        barrierDismissible: false,
-       builder: (c) => const Center(child: CircularProgressIndicator(color: Tema.brandPurple)),
+       builder: (c) => const Center(child: CircularProgressIndicator(color: AppColors.brand)),
      );
      
      try {
@@ -285,7 +285,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: isDestructive ? Colors.red : Theme.of(context).colorScheme.onSurface,
+                          color: isDestructive ? AppColors.rpeMax : Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                       if (subtitle != null) ...[
@@ -375,13 +375,13 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                         _buildMenuTile(
                           title: "Mis grupos",
                           icon: Icons.groups_rounded,
-                          color: Colors.blueAccent,
+                          color: AppColors.rest,
                           onTap: _openGroups,
                         ),
                         _buildMenuTile(
                           title: "Mi perfil público",
                           icon: Icons.person_pin_rounded,
-                          color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                          color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                           onTap: _openPublicProfile,
                         ),
                       ],
@@ -395,7 +395,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                         _buildMenuTile(
                           title: "Analytics hub",
                           icon: Icons.analytics_rounded,
-                          color: Colors.purpleAccent,
+                          color: AppColors.brand,
                           onTap: () {
                             Navigator.push(
                               context,
@@ -406,7 +406,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                         _buildMenuTile(
                           title: "Mis plantillas",
                           icon: Icons.list_alt_rounded,
-                          color: Colors.teal,
+                          color: AppColors.brand,
                           onTap: () {
                             Navigator.push(
                               context,
@@ -417,7 +417,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                         _buildMenuTile(
                           title: "Historial de entrenamientos",
                           icon: Icons.history_rounded,
-                          color: Colors.orangeAccent,
+                          color: AppColors.effort,
                           onTap: _openHistory,
                         ),
                         _buildMenuTile(
@@ -437,7 +437,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                         _buildMenuTile(
                           title: "Editar avatar",
                           icon: Icons.face_rounded,
-                          color: Colors.green,
+                          color: AppColors.rpeLow,
                           onTap: _openAvatarEditor,
                         ),
                         _buildMenuTile(
@@ -458,7 +458,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                         _buildMenuTile(
                           title: "Modo atleta",
                           icon: Icons.directions_run_rounded,
-                          color: AppColors.brandPurple,
+                          color: AppColors.brand,
                           onTap: () {
                             final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
                             Navigator.push(
@@ -497,7 +497,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                         _buildMenuTile(
                           title: "Configuración de cuenta",
                           icon: Icons.manage_accounts_rounded,
-                          color: Colors.blueGrey,
+                          color: AppColors.iconMuted,
                           onTap: () {
                             Navigator.push(
                               context,
@@ -548,7 +548,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                             return _buildMenuTile(
                               title: isLoading ? "Cerrando sesión..." : "Cerrar sesión",
                               icon: Icons.logout_rounded,
-                              color: Colors.redAccent,
+                              color: AppColors.rpeMax,
                               isDestructive: true,
                               onTap: isLoading ? () {} : () => _logout(),
                             );

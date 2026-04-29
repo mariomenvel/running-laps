@@ -51,7 +51,7 @@ class _SeasonViewState extends State<SeasonView> {
               builder: (context, state, _) {
                 if (state.isLoading) {
                   return const Center(
-                    child: CircularProgressIndicator(color: AppColors.brandPurple),
+                    child: CircularProgressIndicator(color: AppColors.brand),
                   );
                 }
                 if (state.errorMessage != null) {
@@ -146,7 +146,7 @@ class _SeasonViewState extends State<SeasonView> {
                           weeks.length;
                   barColor = (avg > 0 && week.loadScore > avg * 1.3)
                       ? AppColors.rpeMid
-                      : AppColors.brandPurple;
+                      : AppColors.brand;
                 }
 
                 final String label = isCurrentWeek
@@ -199,7 +199,7 @@ class _SeasonViewState extends State<SeasonView> {
             _LegendDot(color: AppColors.rpeMax,       label: 'Competición'),
             _LegendDot(color: AppColors.effort,       label: 'Taper'),
             _LegendDot(color: AppColors.rpeMid,       label: 'Carga alta'),
-            _LegendDot(color: AppColors.brandPurple,  label: 'Normal'),
+            _LegendDot(color: AppColors.brand,  label: 'Normal'),
           ],
         ),
 
@@ -243,8 +243,8 @@ class _SeasonViewState extends State<SeasonView> {
               icon:  const Icon(Icons.add_rounded),
               label: const Text('Programar competición'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.brandPurple,
-                side: const BorderSide(color: AppColors.brandPurple),
+                foregroundColor: AppColors.brand,
+                side: const BorderSide(color: AppColors.brand),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -286,7 +286,7 @@ class _SeasonViewState extends State<SeasonView> {
             Expanded(child: _StatChip(
               value: '${totalKm.toStringAsFixed(1)} km',
               label: 'Total km',
-              color: AppColors.brandPurple,
+              color: AppColors.brand,
               isDark: isDark,
             )),
             const SizedBox(width: 10),
@@ -350,7 +350,7 @@ class _RaceCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color:        AppColors.effortSurface,
+        color:        AppColors.effortSurfaceConst,
         borderRadius: BorderRadius.circular(14),
         border:       Border.all(color: AppColors.effortBorder),
       ),

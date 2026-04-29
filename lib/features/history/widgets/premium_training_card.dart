@@ -105,10 +105,10 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
           decoration: BoxDecoration(
-            color: widget.isSelected ? Tema.brandPurple.withOpacity(0.05) : Theme.of(context).colorScheme.surface,
+            color: widget.isSelected ? AppColors.brand.withOpacity(0.05) : Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(20.0),
             border: widget.isSelected 
-                ? Border.all(color: Tema.brandPurple, width: 2)
+                ? Border.all(color: AppColors.brand, width: 2)
                 : Border.all(color: Colors.transparent, width: 2),
             boxShadow: [
               BoxShadow(
@@ -118,7 +118,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
               ),
               if (widget.isSelected)
                 BoxShadow(
-                  color: Tema.brandPurple.withOpacity(0.15),
+                  color: AppColors.brand.withOpacity(0.15),
                   offset: const Offset(0, 4),
                   blurRadius: 12,
                 ),
@@ -135,13 +135,13 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                     _buildStatItem(Icons.straighten_rounded, distanciaTexto, 'km', Colors.blue.shade400),
+                     _buildStatItem(Icons.straighten_rounded, distanciaTexto, 'km', AppColors.rest),
                      Container(width: 1, height: 24, color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
-                     _buildStatItem(Icons.timer_outlined, tiempoTexto, '', Colors.orange.shade400),
+                     _buildStatItem(Icons.timer_outlined, tiempoTexto, '', AppColors.rpeMid),
                      Container(width: 1, height: 24, color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
-                     _buildStatItem(Icons.speed_rounded, ritmoTexto, '/km', Colors.green.shade400),
+                     _buildStatItem(Icons.speed_rounded, ritmoTexto, '/km', AppColors.rpeLow),
                      Container(width: 1, height: 24, color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
-                     _buildStatItem(Icons.bolt_rounded, rpeTexto, 'RPE', Colors.red.shade400),
+                     _buildStatItem(Icons.bolt_rounded, rpeTexto, 'RPE', AppColors.rpeMax),
                   ],
                 ),
               ),
@@ -230,10 +230,10 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
               padding: const EdgeInsets.all(10),
               margin: const EdgeInsets.only(right: 14),
               decoration: BoxDecoration(
-                color: Tema.brandPurple.withOpacity(0.08),
+                color: AppColors.brand.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.directions_run_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 24),
+              child: Icon(Icons.directions_run_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 24),
              ),
 
            Expanded(
@@ -262,21 +262,21 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                          decoration: BoxDecoration(
                            color: const Color(0xFF1E1530),
                            border: Border.all(
-                               color: AppColors.brandPurple.withOpacity(0.6)),
+                               color: AppColors.brand.withOpacity(0.6)),
                            borderRadius: BorderRadius.circular(6),
                          ),
                          child: Row(
                            mainAxisSize: MainAxisSize.min,
                            children: [
                              const Icon(Icons.edit_rounded,
-                                 color: AppColors.brandPurple, size: 12),
+                                 color: AppColors.brand, size: 12),
                              const SizedBox(width: 3),
                              const Text(
                                'Manual',
                                style: TextStyle(
                                  fontSize: 11,
                                  fontWeight: FontWeight.w600,
-                                 color: AppColors.brandPurpleLight,
+                                 color: AppColors.brandLight,
                                ),
                              ),
                            ],
@@ -341,10 +341,10 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
       width: 24,
       height: 24,
       decoration: BoxDecoration(
-        color: widget.isSelected ? Tema.brandPurple : Colors.transparent,
+        color: widget.isSelected ? AppColors.brand : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: widget.isSelected ? Tema.brandPurple : Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+          color: widget.isSelected ? AppColors.brand : Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
           width: 2,
         ),
       ),
@@ -498,10 +498,10 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Tema.brandPurple.withOpacity(0.1),
+                    color: AppColors.brand.withOpacity(0.1),
                     borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
-                  child: Icon(Icons.label_rounded, size: 18, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+                  child: Icon(Icons.label_rounded, size: 18, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -528,7 +528,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                     color: const Color(0x1AFF0000),
                     borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
-                  child: const Icon(Icons.picture_as_pdf_rounded, size: 18, color: Colors.red),
+                  child: const Icon(Icons.picture_as_pdf_rounded, size: 18, color: AppColors.rpeMax),
                 ),
                 const SizedBox(width: 12),
                 Column(
@@ -587,8 +587,8 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
               icon: const Icon(Icons.analytics_rounded, size: 20),
               label: Text(widget.training.gps ? "Ver Análisis y Mapa" : "Ver Análisis"),
               style: OutlinedButton.styleFrom(
-                foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
-                side: BorderSide(color: Tema.brandPurple.withOpacity(0.5)),
+                foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+                side: BorderSide(color: AppColors.brand.withOpacity(0.5)),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -656,7 +656,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
             height: 24,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: Tema.brandPurple.withOpacity(0.1),
+              color: AppColors.brand.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Text(
@@ -665,8 +665,8 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.brandPurpleLight
-                    : Tema.brandPurple,
+                    ? AppColors.brandLight
+                    : AppColors.brand,
               ),
             ),
           ),

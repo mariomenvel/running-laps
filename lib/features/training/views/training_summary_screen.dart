@@ -52,8 +52,8 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
   static const _red   = Color(0xFFEF4444);
 
   Color get _adaptivePurple => Theme.of(context).brightness == Brightness.dark
-      ? AppColors.brandPurpleLight
-      : Tema.brandPurple;
+      ? AppColors.brandLight
+      : AppColors.brand;
 
   // ─────────────────────────────────────────────────────────────────────────
   @override
@@ -690,7 +690,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
         width: double.infinity,
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Tema.brandPurple,
+            backgroundColor: AppColors.brand,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(

@@ -1,5 +1,29 @@
 # CHANGELOG — Running Laps
 
+## [Auditoría de colores — limpieza de colores ilegales] — 2026-04-29
+
+### Resumen
+Eliminados todos los colores fuera del sistema de diseño en `lib/`. El principio: "El color comunica significado, no decoración."
+
+### Cambios
+- **Material Colors ilegales eliminados**: `Colors.blueAccent` → `AppColors.rest`, `Colors.orangeAccent` → `AppColors.effort`, `Colors.deepPurple` → `AppColors.brandSurface`. Total: 11 reemplazos.
+- **Degradados de tarjetas/botones eliminados**: 10 `LinearGradient` en fondos de tarjeta/botón reemplazados por colores sólidos de `AppColors`. Se mantienen los de gráficas (fl_chart), skeleton shimmer y Paint shaders.
+- **`GradientBanner.gradientColors`** → renombrado a `accentColor` (Color sólido). Actualizadas 11 llamadas en vistas.
+- **`ChallengeColorHelper.gradientForMetric()`** eliminado — sin usos externos.
+- **Código malformado del agente anterior** corregido: `${IMPORT_LINE}` en 18 archivos, `const AppColors.brand` → `AppColors.brand`, `AppColors.rpeMax[50]` → `.withOpacity()`, BoxDecoration mal cerrado en `create_tag_dialog.dart`.
+- **0 errores** en `flutter analyze`.
+
+## [Design System — AppColors fuente de verdad] — 2026-04-28
+
+### Cambios
+- `lib/core/theme/app_colors.dart` reescrito: sistema de 3 capas (marca/esfuerzo/funcional) + helpers RPE + tokens por pantalla (serie, descanso, config, home, retos)
+- `lib/core/theme/app_theme.dart` reescrito: dark-only `AppTheme.dark()` + `AppTypography` + `AppSpacing` + `AppDimens`
+- `lib/config/app_theme.dart`: elimina `AppColors` duplicada, re-exporta desde `core/theme/app_colors.dart`, mantiene `Tema` (deprecated) y `AvatarHelper`
+- `AppColors.brandPurple` → `AppColors.brand` en todo el proyecto (52 archivos)
+- `AppTheme.light()` eliminado; `main.dart` usa `ThemeMode.dark` permanente
+- Aliases de compatibilidad añadidos para tokens legacy (`surfaceDark`, `borderDark`, `textPrimaryDark`, etc.) — marcados como deprecated para migración gradual
+- `AppColors.effortSurface` ahora es un método (RPE-aware); `effortSurfaceConst` para usos sin contexto RPE
+
 ## [GPS — EKF2D + fusión IMU] — 2026-04-23
 
 ### Mejoras GPS

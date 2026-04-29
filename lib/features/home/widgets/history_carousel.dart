@@ -100,13 +100,9 @@ class _HistoryCarouselState extends State<HistoryCarousel> {
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: Theme.of(context).brightness == Brightness.dark
-                          ? [const Color(0xFF3A2A40), const Color(0xFF2C2C2E)]
-                          : [const Color(0xFFF8F4FF), Colors.white],
-                    ),
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.brandSurface
+                        : Colors.white,
                   ),
                 ),
               ),
@@ -119,7 +115,7 @@ class _HistoryCarouselState extends State<HistoryCarousel> {
                   width: 150,
                   height: 150,
                   decoration: BoxDecoration(
-                    color: Tema.brandPurple.withOpacity(0.05),
+                    color: AppColors.brand.withOpacity(0.05),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -147,7 +143,7 @@ class _HistoryCarouselState extends State<HistoryCarousel> {
                         ),
                         Icon(
                           training.gps ? Icons.gps_fixed : Icons.timer, 
-                          color: Tema.brandPurple.withOpacity(0.5),
+                          color: AppColors.brand.withOpacity(0.5),
                         ),
                       ],
                     ),

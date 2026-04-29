@@ -93,7 +93,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
               width: 48,
               height: 5,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: AppColors.iconMuted,
                 borderRadius: BorderRadius.circular(2.5),
               ),
             ),
@@ -116,7 +116,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
                 TextButton(
                   onPressed: _save,
                   style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                    foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
@@ -138,7 +138,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
                    Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
+                        color: AppColors.iconMuted,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       padding: const EdgeInsets.all(4),
@@ -178,7 +178,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
       child: Text(
         text,
         style: TextStyle(
-          color: isSelected ? (Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple) : Colors.black54,
+          color: isSelected ? (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand) : Colors.black54,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
           fontSize: 14,
         ),
@@ -192,7 +192,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
       children: [
         const Text(
           "Elige la frecuencia del aviso",
-          style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500),
+          style: TextStyle(fontSize: 14, color: AppColors.iconMuted, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 24),
         Container(
@@ -200,7 +200,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
           decoration: BoxDecoration(
             color: const Color(0xFFF9FAFB),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.grey.shade100),
+            border: Border.all(color: AppColors.iconMuted),
           ),
           child: Row(
             children: [
@@ -213,7 +213,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
                   textBuilder: (i) => i.toString(),
                 ),
               ),
-              VerticalDivider(width: 1, indent: 40, endIndent: 40, color: Colors.grey.shade300),
+              VerticalDivider(width: 1, indent: 40, endIndent: 40, color: AppColors.iconMuted),
               Expanded(
                 child: _buildCupertinoWheel(
                   label: 'SEGUNDOS',
@@ -240,7 +240,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
       children: [
         const Text(
           "Marca tu ritmo objetivo",
-          style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500),
+          style: TextStyle(fontSize: 14, color: AppColors.iconMuted, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 20),
         Container(
@@ -248,7 +248,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
           decoration: BoxDecoration(
             color: const Color(0xFFF9FAFB),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.grey.shade100),
+            border: Border.all(color: AppColors.iconMuted),
           ),
           child: Row(
             children: [
@@ -261,7 +261,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
                   textBuilder: (i) => (i + 2).toString(),
                 ),
               ),
-              VerticalDivider(width: 1, indent: 40, endIndent: 40, color: Colors.grey.shade300),
+              VerticalDivider(width: 1, indent: 40, endIndent: 40, color: AppColors.iconMuted),
               Expanded(
                 child: _buildCupertinoWheel(
                   label: 'SEGUNDOS',
@@ -285,7 +285,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
           decoration: BoxDecoration(
             color: const Color(0xFFF9FAFB),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.grey.shade100),
+            border: Border.all(color: AppColors.iconMuted),
           ),
           child: _buildCupertinoWheel(
             label: 'METROS',
@@ -314,7 +314,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
           label,
           style: TextStyle(
             fontSize: 11,
-            color: Colors.grey.shade500,
+            color: AppColors.iconMuted,
             fontWeight: FontWeight.bold,
             letterSpacing: 1,
           ),

@@ -97,7 +97,7 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final brandColor =
-        isDark ? AppColors.brandPurpleLight : AppColors.brandPurple;
+        isDark ? AppColors.brandLight : AppColors.brand;
 
     return Container(
       padding: EdgeInsets.only(
@@ -145,7 +145,7 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
                 onPressed: _clearFilters,
                 child: const Text(
                   'Limpiar',
-                  style: TextStyle(color: Colors.redAccent),
+                  style: TextStyle(color: AppColors.rpeMax),
                 ),
               ),
             ],
