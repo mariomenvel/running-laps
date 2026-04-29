@@ -18,7 +18,6 @@ import '../../../../core/widgets/modern_snackbar.dart';
 
 // Widgets
 import '../../../core/widgets/app_header.dart';
-import '../../../core/widgets/app_footer.dart';
 import '../../../core/widgets/empty_state_widget.dart';
 import '../../../core/widgets/gradient_banner.dart';
 import '../../../core/widgets/skeleton_shimmer.dart';
@@ -169,14 +168,6 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
                     ),
             ),
 
-            // 4. Footer Intacto
-            AppFooter(
-              onTap: () {
-                 Navigator.of(context).push(
-                  AppRoute(page: TrainingStartView()),
-                );
-              },
-            ),
           ],
         ),
       ),

@@ -14,7 +14,6 @@ import '../data/repositories/challenges_repository.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import '../../../../core/widgets/app_header.dart';
-import '../../../../core/widgets/app_footer.dart';
 import '../../../../core/widgets/gradient_banner.dart';
 
 // Screens
@@ -210,18 +209,6 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
             colors: const [AppColors.brand, AppColors.rest, AppColors.brand, AppColors.rpeMid],
           ),
 
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: AppFooter(
-                onTap: () {
-                   Navigator.of(context).push(
-                    AppRoute(page: TrainingStartView()),
-                  );
-                },
-              ),
-            ),
         ],
       ),
       floatingActionButton: _isOwner && _tabController.index == 0

@@ -11,7 +11,6 @@ import 'package:running_laps/features/analytics/views/tabs/patterns_tab.dart';
 import 'package:running_laps/features/analytics/views/tabs/trends_tab.dart';
 import 'package:running_laps/features/analytics/views/tabs/distribution_tab.dart';
 
-import '../../../../core/widgets/app_footer.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/gradient_banner.dart';
@@ -183,13 +182,6 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen> with TickerProv
               )),
             ),
 
-            // 5. Footer
-            AppFooter(
-              onTap: () => Navigator.push(
-                context,
-                AppRoute(page: TrainingStartView()),
-              ),
-            ),
           ],
         ),
       ),

@@ -15,7 +15,6 @@ import '../../training/data/tag_model.dart';
 import '../../training/data/tag_manager.dart';
 import '../../training/widgets/tag_chip.dart';
 import '../../training/widgets/tag_selector_sheet.dart';
-import '../../../core/widgets/app_footer.dart';
 import '../../../core/widgets/app_header.dart';
 import '../../../core/widgets/empty_state_widget.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
@@ -343,16 +342,6 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
             ),
 
 
-            // 3. FOOTER (Fijo abajo)
-            AppFooter(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  AppRoute(page: const TrainingStartView()),
-                );
-              },
-              isLoading: false,
-            ),
           ],
         ), // Cierre Column
       ), // Cierre SafeArea

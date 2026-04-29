@@ -8,7 +8,6 @@ import 'package:running_laps/features/training/data/training_repository.dart';
 import 'package:running_laps/features/home/widgets/home_flagship_chart.dart'; // Added Chart Import
 import 'package:running_laps/features/training/views/training_start_view.dart';
 import 'package:running_laps/features/profile/views/profile_menu_screen.dart';
-import 'package:running_laps/core/widgets/app_footer.dart';
 import 'package:running_laps/core/widgets/kpi_card_with_delta.dart';
 import 'package:running_laps/core/constants/app_help_content.dart';
 import 'package:running_laps/config/app_theme.dart';
@@ -402,8 +401,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           _buildHeader(),
           // El body solo ocupa el espacio seguro central
           Expanded(child: _buildBody()),
-          // El footer cubre TAMBIÉN la zona del home indicator (safe area inferior)
-          AppFooter(onTap: _onPlayButtonTap),
         ],
       ),
     );

@@ -25,7 +25,6 @@ import 'package:running_laps/core/services/heart_rate_service.dart';
 
 // Widgets comunes
 import 'package:running_laps/core/widgets/app_header.dart';
-import 'package:running_laps/core/widgets/app_footer.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 
 class ProfileMenuView extends StatefulWidget {
@@ -562,16 +561,6 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
               ),
             ),
 
-            // FOOTER
-            AppFooter(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  AppRoute(page: const TrainingStartView()),
-                );
-              },
-              isLoading: false,
-            ),
           ],
         ),
       ),

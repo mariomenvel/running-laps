@@ -3,7 +3,6 @@ import 'package:running_laps/core/utils/app_transitions.dart';
 import '../../../config/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_header.dart';
-import '../../../core/widgets/app_footer.dart';
 import '../../../core/widgets/gradient_banner.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import '../data/repositories/group_detail_repository.dart';
@@ -223,8 +222,6 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
                   ),
             ),
 
-            // 3. FOOTER
-            AppFooter(isLoading: false, onTap: () {}),
           ],
         ),
       ),
