@@ -60,6 +60,23 @@ class AthleteSessionRepository {
     }
   }
 
+  /// Sesiones con status=planned desde hoy hasta el domingo de esta semana.
+  Future<List<AthleteSession>> getWeekSessions({required String uid}) async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final daysUntilSunday = 7 - today.weekday;
+    final sunday = today.add(Duration(days: daysUntilSunday));
+
+    final result = <AthleteSession>[];
+    for (var d = today; !d.isAfter(sunday); d = d.add(const Duration(days: 1))) {
+      final dateStr =
+          '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+      final sessions = await getSessionsForDate(uid: uid, date: dateStr);
+      result.addAll(sessions.where((s) => s.status == AthleteSessionStatus.planned));
+    }
+    return result;
+  }
+
   // ── Write ─────────────────────────────────────────────────────────────────
 
   Future<void> createSession(AthleteSession session) async {
