@@ -7,7 +7,7 @@ import 'package:running_laps/features/avatar/views/avatar_maker_screen.dart';
 import 'package:get/get.dart';
 import 'package:running_laps/features/avatar/viewmodels/avatar_maker_controller.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../home/views/home_view.dart';
+import '../../home/views/home_view_legacy.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 

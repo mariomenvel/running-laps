@@ -16,7 +16,7 @@ class AuthWrapper extends StatelessWidget {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        if (snapshot.hasData) return MainShell(user: snapshot.data!);
+        if (snapshot.hasData) return const MainShell();
         return const AuthPage();
       },
     );

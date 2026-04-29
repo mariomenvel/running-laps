@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:running_laps/core/services/session_recovery_service.dart';
 import 'package:running_laps/core/services/user_service.dart';
+import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 import 'package:running_laps/features/athlete/data/progress_repository.dart';
@@ -29,10 +30,18 @@ class HomeViewModel {
   final recentWorkouts   = ValueNotifier<List<Entrenamiento>>([]);
   final recoveredSession = ValueNotifier<RecoveredSession?>(null);
 
+  // Progreso semanal (ambos modos)
+  final weeklyVolumeKm       = ValueNotifier<double>(0.0);
+  final weeklySessionCount   = ValueNotifier<int>(0);
+  final weeklyTimeMinutes    = ValueNotifier<int>(0);
+  final weeklyRpeAvg         = ValueNotifier<double>(0.0);
+  final weeklyLoadTotal      = ValueNotifier<double>(0.0);
+  // Mapa zona (1..5) → segundos corridos en esa zona esta semana
+  final weeklyZoneSeconds    = ValueNotifier<Map<int, double>>({});
+
   // Modo atleta
-  final todaySession   = ValueNotifier<AthleteSession?>(null);
-  final weekSessions   = ValueNotifier<List<AthleteSession>>([]);
-  final weeklyVolumeKm = ValueNotifier<double>(0.0);
+  final todaySession = ValueNotifier<AthleteSession?>(null);
+  final weekSessions = ValueNotifier<List<AthleteSession>>([]);
 
   // Modo recreativo
   final personalRecords = ValueNotifier<Map<int, PersonalRecord>>({});
@@ -64,8 +73,11 @@ class HomeViewModel {
       allWorkouts.sort((a, b) => b.fecha.compareTo(a.fecha));
       recentWorkouts.value = allWorkouts.take(5).toList();
 
+      final fcMax = (data['fcMax'] as num?)?.toInt() ?? 0;
+      _computeWeeklyStats(allWorkouts, fcMax);
+
       if (athleteMode) {
-        await _loadAthleteData(allWorkouts);
+        await _loadAthleteData();
       } else {
         await _loadRecreativoData();
       }
@@ -84,11 +96,21 @@ class HomeViewModel {
     isAthleteMode.value = newValue;
     isLoading.value = true;
     try {
-      final allWorkouts = await _trainingRepo.getAllEntrenamientos(userId);
+      final results = await Future.wait([
+        _trainingRepo.getAllEntrenamientos(userId),
+        FirebaseFirestore.instance.collection('users').doc(userId).get(),
+      ]);
+      final allWorkouts = results[0] as List<Entrenamiento>;
+      final userDoc     = results[1] as DocumentSnapshot;
+      final data        = userDoc.data() as Map<String, dynamic>? ?? {};
+      final fcMax       = (data['fcMax'] as num?)?.toInt() ?? 0;
+
       allWorkouts.sort((a, b) => b.fecha.compareTo(a.fecha));
       recentWorkouts.value = allWorkouts.take(5).toList();
+      _computeWeeklyStats(allWorkouts, fcMax);
+
       if (newValue) {
-        await _loadAthleteData(allWorkouts);
+        await _loadAthleteData();
       } else {
         await _loadRecreativoData();
       }
@@ -105,16 +127,65 @@ class HomeViewModel {
     totalSessions.dispose();
     recentWorkouts.dispose();
     recoveredSession.dispose();
+    weeklyVolumeKm.dispose();
+    weeklySessionCount.dispose();
+    weeklyTimeMinutes.dispose();
+    weeklyRpeAvg.dispose();
+    weeklyLoadTotal.dispose();
+    weeklyZoneSeconds.dispose();
     todaySession.dispose();
     weekSessions.dispose();
-    weeklyVolumeKm.dispose();
     personalRecords.dispose();
   }
 
   // ── Privado ──────────────────────────────────────────────────────────────
 
-  Future<void> _loadAthleteData(List<Entrenamiento> allWorkouts) async {
-    final now = DateTime.now();
+  void _computeWeeklyStats(List<Entrenamiento> allWorkouts, int fcMax) {
+    final now    = DateTime.now();
+    final monday = DateTime(now.year, now.month, now.day)
+        .subtract(Duration(days: now.weekday - 1));
+
+    final thisWeek = allWorkouts.where((e) => !e.fecha.isBefore(monday)).toList();
+
+    weeklySessionCount.value = thisWeek.length;
+    weeklyVolumeKm.value     = thisWeek.fold(0.0, (s, e) => s + e.distanciaTotalM() / 1000.0);
+    weeklyTimeMinutes.value  = thisWeek.fold(0, (s, e) => s + (e.tiempoTotalSec() / 60).round());
+
+    // RPE promedio (solo sesiones con RPE calculado)
+    final rpeList = thisWeek
+        .map((e) => e.rpePromedio())
+        .where((r) => r > 0)
+        .toList();
+    weeklyRpeAvg.value = rpeList.isEmpty
+        ? 0.0
+        : rpeList.reduce((a, b) => a + b) / rpeList.length;
+
+    // Carga total (loadScore almacenado)
+    weeklyLoadTotal.value = thisWeek.fold(
+      0.0,
+      (s, e) => s + (e.loadScore ?? 0.0),
+    );
+
+    // Distribución de zonas: sumar segundos por zona usando fcMedia por serie
+    final zoneMap = <int, double>{};
+    if (fcMax > 0) {
+      for (final e in thisWeek) {
+        for (final serie in e.series) {
+          final fc = serie.fcMedia;
+          if (fc != null && fc > 0) {
+            final zone = ZonesService().zoneFor(fc.toInt(), fcMax);
+            if (zone != null) {
+              zoneMap[zone] = (zoneMap[zone] ?? 0.0) + serie.tiempoSec;
+            }
+          }
+        }
+      }
+    }
+    weeklyZoneSeconds.value = zoneMap;
+  }
+
+  Future<void> _loadAthleteData() async {
+    final now     = DateTime.now();
     final dateStr =
         '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
@@ -129,13 +200,6 @@ class HomeViewModel {
     todaySession.value =
         todaySessions.where((s) => s.status == AthleteSessionStatus.planned).firstOrNull;
     weekSessions.value = week;
-
-    // Volumen ejecutado esta semana (lunes → hoy)
-    final monday = DateTime(now.year, now.month, now.day)
-        .subtract(Duration(days: now.weekday - 1));
-    weeklyVolumeKm.value = allWorkouts
-        .where((e) => !e.fecha.isBefore(monday))
-        .fold(0.0, (sum, e) => sum + e.distanciaTotalM() / 1000.0);
   }
 
   Future<void> _loadRecreativoData() async {

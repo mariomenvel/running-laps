@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/features/home/views/home_view.dart';
@@ -9,9 +8,7 @@ import 'package:running_laps/features/profile/views/profile_menu_screen.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
 
 class MainShell extends StatefulWidget {
-  const MainShell({super.key, this.user});
-
-  final User? user;
+  const MainShell({super.key});
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -24,7 +21,7 @@ class _MainShellState extends State<MainShell> {
   // IndexedStack: 4 slots reales (sin el FAB)
   // índices: 0=Home 1=Historial 2=Analytics 3=Perfil
   late final List<Widget> _screens = [
-    HomeView(user: widget.user),        // 0 → Home
+    const HomeView(),                   // 0 → Home
     const HistoryScreen(),              // 1 → Historial
     const AnalyticsHubScreen(),         // 2 → Analytics
     const ProfileMenuView(),            // 3 → Perfil

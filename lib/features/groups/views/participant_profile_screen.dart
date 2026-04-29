@@ -8,7 +8,7 @@ import 'package:running_laps/features/training/data/entrenamiento.dart';
 import '../data/repositories/group_detail_repository.dart';
 import '../data/services/gamification_service.dart';
 import '../data/models/group_stats_model.dart';
-import '../../home/views/home_view.dart';
+import '../../home/views/home_view_legacy.dart';
 import '../../profile/views/profile_menu_screen.dart';
 
 class ParticipantProfileScreen extends StatefulWidget {

@@ -18,7 +18,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/services/gps_service.dart';
 import '../../../core/services/zones_service.dart';
 import '../../../core/services/heart_rate_service.dart';
-import '../../home/views/home_view.dart';
+import '../../home/views/home_view_legacy.dart';
 
 
 class TrainingSessionView extends StatefulWidget {

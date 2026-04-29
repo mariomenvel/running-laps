@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/data/training_repository.dart';
-import 'package:running_laps/features/home/views/home_view.dart';
-// Note: We reuse TimeRange from HomeView for consistency, or we could move it to a shared model file.
 
 enum AnalyticsTimeRange {
   week,

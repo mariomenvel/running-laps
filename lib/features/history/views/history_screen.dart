@@ -9,7 +9,7 @@ import 'package:running_laps/features/history/viewmodels/history_controller.dart
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
 import 'package:running_laps/features/profile/views/profile_menu_screen.dart';
-import 'package:running_laps/features/home/views/home_view.dart';
+import 'package:running_laps/features/home/views/home_view_legacy.dart';
 import '../../training/data/serie.dart';
 import '../../training/data/tag_model.dart';
 import '../../training/data/tag_manager.dart';
