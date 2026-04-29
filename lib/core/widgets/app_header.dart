@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
-import 'package:running_laps/core/utils/app_transitions.dart';
-
-import 'package:running_laps/features/home/views/home_view.dart';
 
 class AppHeader extends StatelessWidget {
   final VoidCallback? onTapLeft;
@@ -52,18 +49,7 @@ class AppHeader extends StatelessWidget {
               children: <Widget>[
                 // --- LOGO / LEADING ---
                 leading ?? GestureDetector(
-                  onTap: () {
-                    if (onTapLeft != null) {
-                      onTapLeft!();
-                    } else {
-                      // Navegación Directa al Home (Limpia stack)
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        AppRoute(page: const HomeView()),
-                        (route) => false,
-                      );
-                    }
-                  },
+                  onTap: onTapLeft,
                   child: const CircleAvatar(
                     radius: 24.0,
                     backgroundColor: AppColors.brand,
