@@ -16,6 +16,7 @@ class AppTheme {
   static ThemeData light() => dark(); // no light mode — alias para compatibilidad
 
   static ThemeData dark() => ThemeData(
+    fontFamily: 'GeneralSans',
     brightness: Brightness.dark,
     scaffoldBackgroundColor: const Color(0xFF111111),
     colorScheme: const ColorScheme.dark(

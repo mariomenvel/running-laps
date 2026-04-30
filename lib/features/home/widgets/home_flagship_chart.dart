@@ -288,7 +288,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
                       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      fontFamily: "Roboto", 
+
                     ),
                   ),
                 );
