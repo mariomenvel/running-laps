@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
+import 'package:running_laps/features/calendar/views/calendar_view.dart';
 import 'package:running_laps/features/home/views/home_view.dart';
-import 'package:running_laps/features/history/views/history_screen.dart';
 import 'package:running_laps/features/analytics/views/analytics_hub_screen.dart';
 import 'package:running_laps/features/profile/views/profile_menu_screen.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
@@ -15,14 +15,14 @@ class MainShell extends StatefulWidget {
 }
 
 class _MainShellState extends State<MainShell> {
-  // Tab activo: 0=Home 1=Historial 2=Analytics 3=Perfil
+  // Tab activo: 0=Home 1=Calendario 2=Analytics 3=Perfil
   int _tabIndex = 0;
 
   // IndexedStack: 4 slots reales (sin el FAB)
-  // índices: 0=Home 1=Historial 2=Analytics 3=Perfil
+  // índices: 0=Home 1=Calendario 2=Analytics 3=Perfil
   late final List<Widget> _screens = [
     const HomeView(),                   // 0 → Home
-    const HistoryScreen(),              // 1 → Historial
+    const CalendarView(),               // 1 → Calendario
     const AnalyticsHubScreen(),         // 2 → Analytics
     const ProfileMenuView(),            // 3 → Perfil
   ];
@@ -95,9 +95,9 @@ class _NavBar extends StatelessWidget {
                 onTap: () => onTabTapped(0),
               ),
               _NavItem(
-                icon: Icons.history_outlined,
-                activeIcon: Icons.history_rounded,
-                label: 'Historial',
+                icon: Icons.calendar_today_outlined,
+                activeIcon: Icons.calendar_today_rounded,
+                label: 'Calendario',
                 active: currentIndex == 1,
                 onTap: () => onTabTapped(1),
               ),
