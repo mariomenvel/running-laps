@@ -9,7 +9,7 @@ import '../data/repositories/group_detail_repository.dart';
 import '../data/services/gamification_service.dart';
 import '../data/models/group_stats_model.dart';
 import '../../home/views/home_view_legacy.dart';
-import '../../profile/views/profile_menu_screen.dart';
+import '../../profile/views/profile_menu_screen_legacy.dart';
 
 class ParticipantProfileScreen extends StatefulWidget {
   final String uid;

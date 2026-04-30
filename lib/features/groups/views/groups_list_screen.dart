@@ -25,7 +25,7 @@ import '../../../core/widgets/skeleton_shimmer.dart';
 // Navigation
 import 'group_screen.dart';
 import '../../training/views/training_start_view.dart';
-import '../../profile/views/profile_menu_screen.dart';
+import '../../profile/views/profile_menu_screen_legacy.dart';
 
 /// Pantalla profesional y moderna que lista todos los grupos del usuario
 /// Diseño premium con gradientes vibrantes y animaciones fluidas

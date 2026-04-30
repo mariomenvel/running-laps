@@ -4,7 +4,7 @@ import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/features/calendar/views/calendar_view.dart';
 import 'package:running_laps/features/home/views/home_view.dart';
 import 'package:running_laps/features/analytics/views/analytics_hub_screen.dart';
-import 'package:running_laps/features/profile/views/profile_menu_screen.dart';
+import 'package:running_laps/features/profile/views/profile_view.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
 
 class MainShell extends StatefulWidget {
@@ -24,7 +24,7 @@ class _MainShellState extends State<MainShell> {
     const HomeView(),                   // 0 → Home
     const CalendarView(),               // 1 → Calendario
     const AnalyticsHubScreen(),         // 2 → Analytics
-    const ProfileMenuView(),            // 3 → Perfil
+    const ProfileView(),                 // 3 → Perfil
   ];
 
   void _onTabTapped(int navIndex) {

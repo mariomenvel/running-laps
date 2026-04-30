@@ -7,7 +7,7 @@ import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/app_page_scaffold.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
-import '../../profile/views/profile_menu_screen.dart';
+import '../../profile/views/profile_menu_screen_legacy.dart';
 import '../viewmodels/group_rewards_controller.dart';
 import '../data/models/rewards_models.dart';
 import '../data/models/enums.dart';

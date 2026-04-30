@@ -21,7 +21,7 @@ import '../../../core/utils/app_transitions.dart';
 
 import '../../home/views/home_view_legacy.dart';
 import 'training_summary_screen.dart';
-import '../../profile/views/profile_menu_screen.dart';
+import '../../profile/views/profile_menu_screen_legacy.dart';
 import '../viewmodels/training_viewmodel.dart';
 import '../data/tag_model.dart';
 import '../data/tag_manager.dart';
