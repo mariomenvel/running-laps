@@ -19,7 +19,7 @@ import '../../../core/widgets/modern_snackbar.dart';
 import '../../../core/services/settings_service.dart';
 import '../../../core/utils/app_transitions.dart';
 
-import '../../home/views/home_view_legacy.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
 import 'training_summary_screen.dart';
 import '../../profile/views/profile_menu_screen_legacy.dart';
 import '../viewmodels/training_viewmodel.dart';
@@ -1245,7 +1245,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         if (_vm.series.isEmpty) {
           Navigator.pushAndRemoveUntil(
             context,
-            AppRoute(page: const HomeView()),
+            AppRoute(page: const MainShell()),
             (route) => false,
           );
         } else {

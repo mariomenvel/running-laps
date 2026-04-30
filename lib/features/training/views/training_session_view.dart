@@ -18,7 +18,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/services/gps_service.dart';
 import '../../../core/services/zones_service.dart';
 import '../../../core/services/heart_rate_service.dart';
-import '../../home/views/home_view_legacy.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
 
 
 class TrainingSessionView extends StatefulWidget {
@@ -1560,7 +1560,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                  await Future.delayed(const Duration(seconds: 2));
                  if (mounted) {
                     Navigator.of(context).pushAndRemoveUntil(
-                      AppRoute(page: const HomeView()),
+                      AppRoute(page: const MainShell()),
                       (Route<dynamic> route) => false,
                     );
                  }

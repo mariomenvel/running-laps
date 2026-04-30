@@ -6,7 +6,7 @@ import '../data/entrenamiento.dart';
 import '../data/training_repository.dart';
 import '../../../../core/services/gps_service.dart';
 import '../../../../core/utils/app_transitions.dart';
-import '../../home/views/home_view_legacy.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
 import '../../history/widgets/training_map_view.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
@@ -699,7 +699,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
           ),
           onPressed: () => Navigator.pushAndRemoveUntil(
             context,
-            AppRoute(page: const HomeView()),
+            AppRoute(page: const MainShell()),
             (route) => false,
           ),
           child: const Text(
