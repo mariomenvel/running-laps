@@ -125,7 +125,7 @@ class _HomeViewState extends State<HomeView> {
       width: double.infinity,
       height: height,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.surfaceOf(context),
         borderRadius: BorderRadius.circular(AppDimens.cardRadius),
       ),
     );
@@ -144,12 +144,12 @@ class _HomeViewState extends State<HomeView> {
               children: [
                 Text(
                   _formatDateSpanish(),
-                  style: AppTypography.h2,
+                  style: AppTypography.h2.copyWith(color: AppColors.textPrimary(context)),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Hola, $name',
-                  style: AppTypography.small.copyWith(color: AppColors.iconMuted),
+                  style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
                 ),
               ],
             ),
@@ -158,7 +158,7 @@ class _HomeViewState extends State<HomeView> {
               message: isAthlete ? 'Cambiar a modo libre' : 'Cambiar a modo atleta',
               child: IconButton(
                 icon: const Icon(Icons.sync_rounded),
-                color: AppColors.iconMuted,
+                color: AppColors.iconMutedOf(context),
                 onPressed: _vm.toggleAthleteMode,
               ),
             ),
@@ -209,7 +209,7 @@ class _HomeViewState extends State<HomeView> {
               if (session != null) ...[
                 Text(
                   _categoryLabel(session.category),
-                  style: AppTypography.h3,
+                  style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context)),
                 ),
                 if (session.blocks.isNotEmpty) ...[
                   const SizedBox(height: 8),
@@ -217,7 +217,7 @@ class _HomeViewState extends State<HomeView> {
                     padding: const EdgeInsets.only(bottom: 2),
                     child: Text(
                       _blockSummary(b),
-                      style: AppTypography.body.copyWith(color: Colors.white70),
+                      style: AppTypography.body.copyWith(color: AppColors.textSecondary(context)),
                     ),
                   )),
                 ],
@@ -242,12 +242,12 @@ class _HomeViewState extends State<HomeView> {
               ] else ...[
                 Text(
                   'No hay sesión planificada para hoy',
-                  style: AppTypography.body.copyWith(color: AppColors.iconMuted),
+                  style: AppTypography.body.copyWith(color: AppColors.iconMutedOf(context)),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Puedes entrenar libre o planificar en el calendario',
-                  style: AppTypography.small.copyWith(color: AppColors.iconMuted),
+                  style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
                 ),
               ],
             ],
@@ -272,7 +272,7 @@ class _HomeViewState extends State<HomeView> {
                 Text(
                   'PRÓXIMOS ENTRENAMIENTOS',
                   style: AppTypography.small.copyWith(
-                    color: AppColors.iconMuted,
+                    color: AppColors.iconMutedOf(context),
                     letterSpacing: 1.2,
                     fontWeight: FontWeight.w700,
                   ),
@@ -282,7 +282,7 @@ class _HomeViewState extends State<HomeView> {
                   child: upcoming.isEmpty
                       ? Text(
                           'Sin entrenos planificados esta semana',
-                          style: AppTypography.small.copyWith(color: AppColors.iconMuted),
+                          style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
                         )
                       : Column(
                           children: [
@@ -298,20 +298,24 @@ class _HomeViewState extends State<HomeView> {
                                       width: 80,
                                       child: Text(
                                         _weekdayLabel(upcoming[i].date),
-                                        style: AppTypography.body.copyWith(color: Colors.white70),
+                                        style: AppTypography.body.copyWith(
+                                          color: AppColors.textSecondary(context),
+                                        ),
                                       ),
                                     ),
                                     Expanded(
                                       child: Text(
                                         _categoryLabel(upcoming[i].category),
-                                        style: AppTypography.body,
+                                        style: AppTypography.body.copyWith(
+                                          color: AppColors.textPrimary(context),
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
                               if (i < upcoming.length - 1)
-                                const Divider(color: AppColors.border, height: 1),
+                                Divider(color: AppColors.borderOf(context), height: 1),
                             ],
                           ],
                         ),
@@ -352,7 +356,7 @@ class _HomeViewState extends State<HomeView> {
                       Text(
                         'PROGRESO SEMANAL',
                         style: AppTypography.small.copyWith(
-                          color: AppColors.iconMuted,
+                          color: AppColors.iconMutedOf(context),
                           letterSpacing: 1.2,
                           fontWeight: FontWeight.w700,
                         ),
@@ -372,13 +376,16 @@ class _HomeViewState extends State<HomeView> {
                               ],
                             ),
                             const SizedBox(height: 16),
-                            const Divider(color: AppColors.border, height: 1),
+                            Divider(color: AppColors.borderOf(context), height: 1),
                             const SizedBox(height: 16),
 
                             // ── Volumen + barra ─────────────────────────
                             Row(
                               children: [
-                                Text('Volumen', style: AppTypography.body),
+                                Text(
+                                  'Volumen',
+                                  style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
+                                ),
                                 const Spacer(),
                                 Text(
                                   '${km.toStringAsFixed(1)} km',
@@ -391,7 +398,7 @@ class _HomeViewState extends State<HomeView> {
                               borderRadius: BorderRadius.circular(4),
                               child: LinearProgressIndicator(
                                 value: min(1.0, km / target),
-                                backgroundColor: AppColors.border,
+                                backgroundColor: AppColors.borderOf(context),
                                 valueColor: const AlwaysStoppedAnimation(AppColors.brand),
                                 minHeight: 8,
                               ),
@@ -402,7 +409,10 @@ class _HomeViewState extends State<HomeView> {
                               const SizedBox(height: 16),
                               Row(
                                 children: [
-                                  Text('Carga', style: AppTypography.body),
+                                  Text(
+                                    'Carga',
+                                    style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
+                                  ),
                                   const Spacer(),
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -427,7 +437,7 @@ class _HomeViewState extends State<HomeView> {
                               const SizedBox(height: 16),
                               Text(
                                 'Zonas de FC',
-                                style: AppTypography.small.copyWith(color: AppColors.iconMuted),
+                                style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
                               ),
                               const SizedBox(height: 8),
                               ClipRRect(
@@ -462,7 +472,7 @@ class _HomeViewState extends State<HomeView> {
                                       Text(
                                         'Z$z',
                                         style: AppTypography.small.copyWith(
-                                          color: AppColors.iconMuted,
+                                          color: AppColors.iconMutedOf(context),
                                           fontSize: 10,
                                         ),
                                       ),
@@ -562,7 +572,7 @@ class _HomeViewState extends State<HomeView> {
             Text(
               'TU PROGRESO',
               style: AppTypography.small.copyWith(
-                color: AppColors.iconMuted,
+                color: AppColors.iconMutedOf(context),
                 letterSpacing: 1.2,
                 fontWeight: FontWeight.w700,
               ),
@@ -572,7 +582,7 @@ class _HomeViewState extends State<HomeView> {
               child: records.isEmpty
                   ? Text(
                       'Aún no hay records. ¡Sal a entrenar!',
-                      style: AppTypography.small.copyWith(color: AppColors.iconMuted),
+                      style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
                     )
                   : Column(
                       children: records.entries.map((e) {
@@ -584,13 +594,17 @@ class _HomeViewState extends State<HomeView> {
                                 width: 80,
                                 child: Text(
                                   _formatDistance(e.key),
-                                  style: AppTypography.body.copyWith(color: Colors.white70),
+                                  style: AppTypography.body.copyWith(
+                                    color: AppColors.textSecondary(context),
+                                  ),
                                 ),
                               ),
                               Expanded(
                                 child: Text(
                                   _formatPace(e.value.paceSecPerKm),
-                                  style: AppTypography.body,
+                                  style: AppTypography.body.copyWith(
+                                    color: AppColors.textPrimary(context),
+                                  ),
                                 ),
                               ),
                             ],
@@ -620,7 +634,7 @@ class _HomeViewState extends State<HomeView> {
                 Text(
                   'ÚLTIMOS ENTRENAMIENTOS',
                   style: AppTypography.small.copyWith(
-                    color: AppColors.iconMuted,
+                    color: AppColors.iconMutedOf(context),
                     letterSpacing: 1.2,
                     fontWeight: FontWeight.w700,
                   ),
@@ -642,7 +656,7 @@ class _HomeViewState extends State<HomeView> {
             if (workouts.isEmpty)
               Text(
                 'Sin entrenamientos todavía',
-                style: AppTypography.small.copyWith(color: AppColors.iconMuted),
+                style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
               )
             else
               Column(
@@ -665,8 +679,8 @@ class _HomeViewState extends State<HomeView> {
       margin: const EdgeInsets.only(bottom: AppSpacing.s),
       padding: const EdgeInsets.all(AppSpacing.m),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border.all(color: AppColors.border, width: 0.5),
+        color: AppColors.surfaceOf(context),
+        border: Border.all(color: AppColors.borderOf(context), width: 0.5),
         borderRadius: BorderRadius.circular(AppDimens.cardRadius),
       ),
       child: Row(
@@ -674,11 +688,14 @@ class _HomeViewState extends State<HomeView> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(_formatWorkoutDate(w.fecha), style: AppTypography.body),
+              Text(
+                _formatWorkoutDate(w.fecha),
+                style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
+              ),
               const SizedBox(height: 2),
               Text(
                 w.titulo.isNotEmpty ? w.titulo : 'Entrenamiento libre',
-                style: AppTypography.small.copyWith(color: AppColors.iconMuted),
+                style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
               ),
             ],
           ),
@@ -686,9 +703,12 @@ class _HomeViewState extends State<HomeView> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('$km km', style: AppTypography.body),
+              Text(
+                '$km km',
+                style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
+              ),
               if (pace.isNotEmpty)
-                Text(pace, style: AppTypography.small.copyWith(color: AppColors.iconMuted)),
+                Text(pace, style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context))),
             ],
           ),
           const SizedBox(width: AppSpacing.s),
@@ -705,8 +725,8 @@ class _HomeViewState extends State<HomeView> {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.l),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border.all(color: AppColors.border, width: 0.5),
+        color: AppColors.surfaceOf(context),
+        border: Border.all(color: AppColors.borderOf(context), width: 0.5),
         borderRadius: BorderRadius.circular(AppDimens.cardRadius),
       ),
       child: child,
@@ -793,7 +813,7 @@ class _StatItem extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           label,
-          style: AppTypography.small.copyWith(color: AppColors.iconMuted),
+          style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
         ),
       ],
     );

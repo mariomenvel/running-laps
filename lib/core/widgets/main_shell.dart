@@ -75,10 +75,10 @@ class _NavBar extends StatelessWidget {
     final bottom = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         border: Border(
-          top: BorderSide(color: AppColors.border, width: 0.5),
+          top: BorderSide(color: Theme.of(context).colorScheme.outline, width: 0.5),
         ),
       ),
       child: SafeArea(
@@ -144,7 +144,9 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? AppColors.brand : AppColors.iconMuted;
+    final color = active
+        ? AppColors.brand
+        : Theme.of(context).colorScheme.onSurface.withOpacity(0.5);
 
     return Expanded(
       child: GestureDetector(

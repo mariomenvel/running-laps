@@ -112,6 +112,46 @@ class AppColors {
   static const homeNavInactive     = Color(0xFF2A2A2A);
   static const homeNavActive       = brand;
 
+  // ── Tokens modo claro — usar resolvers contextOf() en vistas ─────────────
+  // ignore: library_private_types_in_public_api
+  static const lightBackground   = Color(0xFFF5F5F5);
+  static const lightSurface      = Color(0xFFFFFFFF);
+  static const lightSurface2     = Color(0xFFF0F0F0);
+  static const lightBorder       = Color(0xFFE0E0E0);
+  static const lightBorder2      = Color(0xFFD0D0D0);
+  static const lightIconMuted    = Color(0xFF888888);
+  static const lightTextPrimary  = Color(0xFF1A1A1A);
+  static const lightTextSecondary = Color(0xFF666666);
+
+  // ── Resolvers por contexto (dark / light automático) ──────────────────────
+  // Usar estos en widgets que deben adaptarse al tema actual.
+  static Color background(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF111111) : lightBackground;
+
+  static Color surfaceOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? surface : lightSurface;
+
+  static Color surface2Of(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? surface2 : lightSurface2;
+
+  static Color borderOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? border : lightBorder;
+
+  static Color border2Of(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? border2 : lightBorder2;
+
+  static Color iconMutedOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? iconMuted : lightIconMuted;
+
+  static Color textPrimary(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? Colors.white : lightTextPrimary;
+
+  static Color textSecondary(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFFCCCCCC) : lightTextSecondary;
+
   // ── Aliases de compatibilidad (deprecated — migrar a tokens semánticos) ──
   /// @deprecated Use [surface]
   static const surfaceDark = surface;

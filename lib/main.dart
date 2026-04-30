@@ -62,9 +62,9 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Running Laps',
-          theme: AppTheme.dark(),
+          theme: AppTheme.light(),
           darkTheme: AppTheme.dark(),
-          themeMode: ThemeMode.dark,
+          themeMode: themeMode,
           home: const SplashScreen(),
         );
       },

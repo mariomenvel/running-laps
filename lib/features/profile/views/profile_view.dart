@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
+import 'package:running_laps/core/theme/theme_service.dart';
 import 'package:running_laps/core/services/heart_rate_service.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/auth/viewmodels/auth_controller.dart';
@@ -94,6 +95,41 @@ class _ProfileViewState extends State<ProfileView> {
     }
   }
 
+  String _currentThemeLabel() {
+    switch (ThemeService.themeMode.value) {
+      case ThemeMode.dark:   return 'Oscuro';
+      case ThemeMode.light:  return 'Claro';
+      case ThemeMode.system: return 'Sistema';
+    }
+  }
+
+  void _showThemePicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => ValueListenableBuilder<ThemeMode>(
+        valueListenable: ThemeService.themeMode,
+        builder: (ctx, current, __) => Padding(
+          padding: const EdgeInsets.all(AppSpacing.l),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Apariencia', style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context))),
+              const SizedBox(height: AppSpacing.l),
+              _ThemeOption('Oscuro',  ThemeMode.dark,   Icons.dark_mode_outlined,            current),
+              _ThemeOption('Claro',   ThemeMode.light,  Icons.light_mode_outlined,           current),
+              _ThemeOption('Sistema', ThemeMode.system, Icons.settings_brightness_outlined,  current),
+              const SizedBox(height: AppSpacing.l),
+            ],
+          ),
+        ),
+      ),
+    ).then((_) => setState(() {})); // refresca el subtitle tras cerrar
+  }
+
   Future<void> _logout() async {
     try {
       await _authCtrl.signOut();
@@ -130,24 +166,24 @@ class _ProfileViewState extends State<ProfileView> {
                   ),
                   child: CircleAvatar(
                     radius: 40,
-                    backgroundColor: AppColors.surface,
+                    backgroundColor: AppColors.surfaceOf(context),
                     backgroundImage: _photoUrl != null ? NetworkImage(_photoUrl!) : null,
                     child: _photoUrl == null
-                        ? const Icon(Icons.person, color: AppColors.iconMuted, size: 40)
+                        ? Icon(Icons.person, color: AppColors.iconMutedOf(context), size: 40)
                         : null,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.m),
-                Text(_userName, style: AppTypography.h2),
+                Text(_userName, style: AppTypography.h2.copyWith(color: AppColors.textPrimary(context))),
                 const SizedBox(height: AppSpacing.xs),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: _isAthleteMode
                         ? AppColors.brand.withOpacity(0.15)
-                        : AppColors.surface,
+                        : AppColors.surfaceOf(context),
                     border: Border.all(
-                      color: _isAthleteMode ? AppColors.brand : AppColors.border,
+                      color: _isAthleteMode ? AppColors.brand : AppColors.borderOf(context),
                     ),
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -220,6 +256,13 @@ class _ProfileViewState extends State<ProfileView> {
           const _SectionTitle('CONFIGURACIÓN'),
           const SizedBox(height: AppSpacing.s),
           _MenuCard(children: [
+            _MenuItem(
+              icon: Icons.brightness_6_outlined,
+              label: 'Apariencia',
+              subtitle: _currentThemeLabel(),
+              onTap: _showThemePicker,
+            ),
+            const _MenuDivider(),
             ListenableBuilder(
               listenable: Listenable.merge([
                 HeartRateService().connectionState,
@@ -315,7 +358,7 @@ class _SectionTitle extends StatelessWidget {
     return Text(
       title,
       style: AppTypography.small.copyWith(
-        color: AppColors.iconMuted,
+        color: AppColors.iconMutedOf(context),
         letterSpacing: 1.2,
         fontWeight: FontWeight.w600,
       ),
@@ -331,8 +374,8 @@ class _MenuCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border.all(color: AppColors.border),
+        color: AppColors.surfaceOf(context),
+        border: Border.all(color: AppColors.borderOf(context)),
         borderRadius: BorderRadius.circular(AppDimens.cardRadius),
       ),
       child: Column(children: children),
@@ -367,27 +410,27 @@ class _MenuItem extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.iconMuted, size: AppDimens.iconSizeSmall),
+            Icon(icon, color: AppColors.iconMutedOf(context), size: AppDimens.iconSizeSmall),
             const SizedBox(width: AppSpacing.m),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(label, style: AppTypography.body),
+                  Text(label, style: AppTypography.body.copyWith(color: AppColors.textPrimary(context))),
                   if (subtitle != null) ...[
                     const SizedBox(height: 2),
                     Text(
                       subtitle!,
                       style: AppTypography.small.copyWith(
-                        color: subtitleColor ?? AppColors.iconMuted,
+                        color: subtitleColor ?? AppColors.iconMutedOf(context),
                       ),
                     ),
                   ],
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: AppColors.iconMuted, size: 18),
+            Icon(Icons.chevron_right, color: AppColors.iconMutedOf(context), size: 18),
           ],
         ),
       ),
@@ -401,6 +444,37 @@ class _MenuDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // indent = AppSpacing.l (16) + iconSizeSmall (20) + AppSpacing.m (12) = 48
-    return const Divider(color: AppColors.border, height: 1, indent: 48);
+    return Divider(color: AppColors.borderOf(context), height: 1, indent: 48);
+  }
+}
+
+class _ThemeOption extends StatelessWidget {
+  const _ThemeOption(this.label, this.mode, this.icon, this.current);
+
+  final String label;
+  final ThemeMode mode;
+  final IconData icon;
+  final ThemeMode current;
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = current == mode;
+    return ListTile(
+      leading: Icon(icon, color: selected ? AppColors.brand : AppColors.iconMutedOf(context)),
+      title: Text(
+        label,
+        style: AppTypography.body.copyWith(
+          color: selected ? AppColors.brand : AppColors.textPrimary(context),
+          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+        ),
+      ),
+      trailing: selected
+          ? const Icon(Icons.check_rounded, color: AppColors.brand, size: 20)
+          : null,
+      onTap: () {
+        ThemeService.setTheme(mode);
+        Navigator.pop(context);
+      },
+    );
   }
 }

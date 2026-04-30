@@ -77,7 +77,7 @@ class _CalendarViewState extends State<CalendarView> {
       width: double.infinity,
       height: height,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.surfaceOf(context),
         borderRadius: BorderRadius.circular(AppDimens.cardRadius),
       ),
     );
@@ -197,7 +197,10 @@ class _CalendarViewState extends State<CalendarView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_formatDaySpanish(day), style: AppTypography.h3),
+                Text(
+                  _formatDaySpanish(day),
+                  style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context)),
+                ),
                 const SizedBox(height: AppSpacing.m),
                 if (sessions.isEmpty)
                   _buildEmptyAthleteDay(day)
@@ -224,7 +227,7 @@ class _CalendarViewState extends State<CalendarView> {
         children: [
           Text(
             'Sin sesión planificada',
-            style: AppTypography.body.copyWith(color: AppColors.iconMuted),
+            style: AppTypography.body.copyWith(color: AppColors.iconMutedOf(context)),
           ),
           const SizedBox(height: AppSpacing.m),
           OutlinedButton.icon(
@@ -279,7 +282,10 @@ class _CalendarViewState extends State<CalendarView> {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(categoryLabel, style: AppTypography.body),
+                child: Text(
+                  categoryLabel,
+                  style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
+                ),
               ),
               Text(
                 label,
@@ -299,7 +305,7 @@ class _CalendarViewState extends State<CalendarView> {
                 padding: const EdgeInsets.only(bottom: 2),
                 child: Text(
                   '• $detail',
-                  style: AppTypography.small.copyWith(color: Colors.white70),
+                  style: AppTypography.small.copyWith(color: AppColors.textSecondary(context)),
                 ),
               );
             }),
@@ -328,7 +334,7 @@ class _CalendarViewState extends State<CalendarView> {
                 const SizedBox(width: AppSpacing.m),
                 IconButton(
                   icon: const Icon(Icons.edit_outlined),
-                  color: AppColors.iconMuted,
+                  color: AppColors.iconMutedOf(context),
                   onPressed: () => Navigator.push(
                     context,
                     AppRoute(
@@ -355,7 +361,7 @@ class _CalendarViewState extends State<CalendarView> {
         Text(
           'RESUMEN SEMANAL',
           style: AppTypography.small.copyWith(
-            color: AppColors.iconMuted,
+            color: AppColors.iconMutedOf(context),
             letterSpacing: 1.2,
             fontWeight: FontWeight.w700,
           ),
@@ -367,7 +373,7 @@ class _CalendarViewState extends State<CalendarView> {
           decoration: _cardDecoration(),
           child: Text(
             'Próximamente',
-            style: AppTypography.small.copyWith(color: AppColors.iconMuted),
+            style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
           ),
         ),
       ],
@@ -390,7 +396,10 @@ class _CalendarViewState extends State<CalendarView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_formatDaySpanish(day), style: AppTypography.h3),
+                Text(
+                  _formatDaySpanish(day),
+                  style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context)),
+                ),
                 const SizedBox(height: AppSpacing.m),
                 if (workouts.isEmpty)
                   _buildEmptyRecreativoDay()
@@ -417,7 +426,7 @@ class _CalendarViewState extends State<CalendarView> {
         children: [
           Text(
             'No entrenaste este día',
-            style: AppTypography.body.copyWith(color: AppColors.iconMuted),
+            style: AppTypography.body.copyWith(color: AppColors.iconMutedOf(context)),
           ),
           const SizedBox(height: AppSpacing.m),
           ElevatedButton(
@@ -459,11 +468,11 @@ class _CalendarViewState extends State<CalendarView> {
               children: [
                 Text(
                   w.titulo.isNotEmpty ? w.titulo : 'Entrenamiento libre',
-                  style: AppTypography.body,
+                  style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
                 ),
                 Text(
                   kmStr,
-                  style: AppTypography.small.copyWith(color: AppColors.iconMuted),
+                  style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
                 ),
               ],
             ),
@@ -480,12 +489,12 @@ class _CalendarViewState extends State<CalendarView> {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.l),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.surfaceOf(context),
         border: Border(
           left: const BorderSide(color: AppColors.brand, width: 3),
-          top: BorderSide(color: AppColors.border, width: 0.5),
-          right: BorderSide(color: AppColors.border, width: 0.5),
-          bottom: BorderSide(color: AppColors.border, width: 0.5),
+          top: BorderSide(color: AppColors.borderOf(context), width: 0.5),
+          right: BorderSide(color: AppColors.borderOf(context), width: 0.5),
+          bottom: BorderSide(color: AppColors.borderOf(context), width: 0.5),
         ),
         borderRadius: BorderRadius.circular(AppDimens.cardRadius),
       ),
@@ -494,12 +503,12 @@ class _CalendarViewState extends State<CalendarView> {
         children: [
           Text(
             '¿Quieres planificar tus entrenos?',
-            style: AppTypography.body,
+            style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
           ),
           const SizedBox(height: 4),
           Text(
             'Activa el modo atleta para usar el calendario de planificación',
-            style: AppTypography.small.copyWith(color: AppColors.iconMuted),
+            style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
           ),
           const SizedBox(height: AppSpacing.m),
           TextButton(
@@ -519,8 +528,8 @@ class _CalendarViewState extends State<CalendarView> {
 
   BoxDecoration _cardDecoration() {
     return BoxDecoration(
-      color: AppColors.surface,
-      border: Border.all(color: AppColors.border, width: 0.5),
+      color: AppColors.surfaceOf(context),
+      border: Border.all(color: AppColors.borderOf(context), width: 0.5),
       borderRadius: BorderRadius.circular(AppDimens.cardRadius),
     );
   }

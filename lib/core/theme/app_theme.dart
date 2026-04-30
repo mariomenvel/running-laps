@@ -13,7 +13,33 @@ class AppTheme {
     },
   );
 
-  static ThemeData light() => dark(); // no light mode — alias para compatibilidad
+  static ThemeData light() => ThemeData(
+    fontFamily: 'GeneralSans',
+    brightness: Brightness.light,
+    scaffoldBackgroundColor: AppColors.lightBackground,
+    colorScheme: const ColorScheme.light(
+      primary: AppColors.brand,
+      secondary: AppColors.effort,
+      surface: AppColors.lightSurface,
+      onSurface: AppColors.lightTextPrimary,
+      outline: AppColors.lightBorder,
+    ),
+    cardColor: AppColors.lightSurface,
+    primaryColor: AppColors.brand,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: AppColors.lightSurface,
+      foregroundColor: AppColors.lightTextPrimary,
+      elevation: 0,
+      centerTitle: true,
+    ),
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: AppColors.lightSurface,
+      selectedItemColor: AppColors.brand,
+      unselectedItemColor: AppColors.lightIconMuted,
+    ),
+    visualDensity: VisualDensity.adaptivePlatformDensity,
+    pageTransitionsTheme: _pageTransitions,
+  );
 
   static ThemeData dark() => ThemeData(
     fontFamily: 'GeneralSans',
