@@ -57,8 +57,7 @@ class _PremiumDateRangePickerState extends State<PremiumDateRangePicker> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor =
-        isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final surfaceColor = AppColors.surfaceOf(context);
     final brandColor =
         isDark ? AppColors.brandLight : AppColors.brand;
 
@@ -77,9 +76,7 @@ class _PremiumDateRangePickerState extends State<PremiumDateRangePicker> {
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  color: isDark
-                      ? AppColors.borderDark
-                      : AppColors.borderLight,
+                  color: AppColors.borderOf(context),
                 ),
               ),
             ),
@@ -115,9 +112,7 @@ class _PremiumDateRangePickerState extends State<PremiumDateRangePicker> {
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(Icons.close),
                   style: IconButton.styleFrom(
-                    backgroundColor: isDark
-                        ? AppColors.surfaceVariantDark
-                        : AppColors.surfaceVariantLight,
+                    backgroundColor: AppColors.surface2Of(context),
                     shape: const CircleBorder(),
                   ),
                 ),

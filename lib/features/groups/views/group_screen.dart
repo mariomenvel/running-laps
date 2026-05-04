@@ -1293,9 +1293,9 @@ class _PremiumMemberCard extends StatelessWidget {
                         ],
                       )
                     else
-                      const Text(
+                      Text(
                         "Esperando aceptación...",
-                        style: TextStyle(fontSize: 12, color: AppColors.iconMuted, fontStyle: FontStyle.italic),
+                        style: TextStyle(fontSize: 12, color: AppColors.iconMutedOf(context), fontStyle: FontStyle.italic),
                       ),
                   ],
                 ),
@@ -1885,7 +1885,7 @@ class _PremiumFloatingActionButtonState extends State<_PremiumFloatingActionButt
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: AppColors.surfaceOf(context),
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(

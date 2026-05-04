@@ -245,7 +245,7 @@ class _AuthPageState extends State<AuthPage> {
                   _buildTextField(
                     controller: _resetEmailCtrl,
                     hintText: 'Correo electrónico',
-                    prefixIcon: const Icon(Icons.email_outlined, color: AppColors.iconMuted),
+                    prefixIcon: Icon(Icons.email_outlined, color: AppColors.iconMutedOf(context)),
                   ),
                   
                   // ZONA DE ERROR INLINE
@@ -373,7 +373,7 @@ class _AuthPageState extends State<AuthPage> {
           decoration: BoxDecoration(
             color: isMet ? AppColors.rpeLow : Colors.transparent,
             border: Border.all(
-              color: isMet ? AppColors.rpeLow : AppColors.iconMuted,
+              color: isMet ? AppColors.rpeLow : AppColors.iconMutedOf(context),
             ),
             shape: BoxShape.circle,
           ),
@@ -389,7 +389,7 @@ class _AuthPageState extends State<AuthPage> {
         Text(
           text,
           style: TextStyle(
-            color: isMet ? AppColors.rpeLow : AppColors.iconMuted,
+            color: isMet ? AppColors.rpeLow : AppColors.iconMutedOf(context),
             fontSize: 13,
             fontWeight: isMet ? FontWeight.w600 : FontWeight.normal,
           ),
@@ -415,7 +415,7 @@ class _AuthPageState extends State<AuthPage> {
     return Container(
       height: 60,
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.08) : AppColors.iconMuted,
+        color: isDark ? Colors.white.withOpacity(0.08) : AppColors.iconMutedOf(context),
         borderRadius: BorderRadius.circular(16),
         boxShadow: isDark
             ? []
@@ -578,7 +578,7 @@ class _AuthPageState extends State<AuthPage> {
           suffixIcon: IconButton(
             icon: Icon(
               _showLoginPassword ? Icons.visibility_off : Icons.visibility,
-              color: AppColors.iconMuted,
+              color: AppColors.iconMutedOf(context),
             ),
             onPressed: () {
               setState(() {
@@ -660,7 +660,7 @@ class _AuthPageState extends State<AuthPage> {
           suffixIcon: IconButton(
             icon: Icon(
               _showRegisterPassword ? Icons.visibility_off : Icons.visibility,
-              color: AppColors.iconMuted,
+              color: AppColors.iconMutedOf(context),
             ),
             onPressed: () {
               setState(() {
@@ -682,7 +682,7 @@ class _AuthPageState extends State<AuthPage> {
               _showRegisterConfirmPassword
                   ? Icons.visibility_off
                   : Icons.visibility,
-              color: AppColors.iconMuted,
+              color: AppColors.iconMutedOf(context),
             ),
             onPressed: () {
               setState(() {

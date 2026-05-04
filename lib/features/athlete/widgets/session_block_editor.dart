@@ -310,10 +310,10 @@ class _BlockCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+          color: AppColors.surfaceOf(context),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isDark ? AppColors.borderDark : AppColors.borderLight,
+            color: AppColors.borderOf(context),
           ),
         ),
         child: Column(

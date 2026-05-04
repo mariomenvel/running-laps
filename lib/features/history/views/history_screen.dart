@@ -436,7 +436,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              border: Border.all(color: AppColors.iconMuted),
+              border: Border.all(color: AppColors.iconMutedOf(context)),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Row(

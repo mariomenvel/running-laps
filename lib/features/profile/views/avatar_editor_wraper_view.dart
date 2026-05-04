@@ -102,18 +102,9 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
   // HEADER (Adaptado del primer código)
   // ===================================================================
   Widget _buildHeader() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final cs = Theme.of(context).colorScheme;
     return Container(
-      decoration: isDark
-          ? BoxDecoration(color: AppColors.surfaceVariantDark)
-          : const BoxDecoration(
-              color: Colors.white,
-              image: DecorationImage(
-                image: AssetImage('assets/images/fondo.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
+      decoration: BoxDecoration(color: AppColors.surface2Of(context)),
       child: Column(
         children: [
           Padding(

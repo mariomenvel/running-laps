@@ -460,7 +460,7 @@ class _CreateGroupModal extends StatelessWidget {
                       "Dale un nombre genial a tu comunidad",
                       style: TextStyle(
                         fontSize: 13,
-                        color: AppColors.iconMuted,
+                        color: AppColors.iconMutedOf(context),
                       ),
                     ),
                   ],
@@ -1452,7 +1452,7 @@ class _PremiumFloatingActionButtonState extends State<_PremiumFloatingActionButt
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: AppColors.surfaceOf(context),
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(

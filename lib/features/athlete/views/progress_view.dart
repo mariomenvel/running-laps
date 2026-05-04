@@ -313,10 +313,10 @@ class _PersonalRecordCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight,
+        color: AppColors.surface2Of(context),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+          color: AppColors.borderOf(context),
         ),
       ),
       child: Column(
@@ -382,10 +382,10 @@ class _SeriesProgressCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        color: AppColors.surfaceOf(context),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+          color: AppColors.borderOf(context),
         ),
       ),
       child: Column(
@@ -763,10 +763,10 @@ class _PveCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color:        isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        color:        AppColors.surfaceOf(context),
         borderRadius: BorderRadius.circular(14),
         border:       Border.all(
-          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+          color: AppColors.borderOf(context),
         ),
       ),
       child: Column(

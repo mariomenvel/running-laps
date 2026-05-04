@@ -422,7 +422,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                             builder: (context, isLoading, _) {
                               return Container(
                                 decoration: BoxDecoration(
-                                  color: allMet ? AppColors.rpeMid : AppColors.iconMuted,
+                                  color: allMet ? AppColors.rpeMid : AppColors.iconMutedOf(context),
                                   borderRadius: BorderRadius.circular(16),
                                   boxShadow: allMet ? [
                                     BoxShadow(
@@ -1290,7 +1290,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               title: 'Configuración de cuenta',
               subtitle: 'Gestiona tu perfil y seguridad',
               icon: Icons.manage_accounts_rounded,
-              accentColor: AppColors.surface,
+              accentColor: AppColors.surfaceOf(context),
               height: 90,
             ),
             

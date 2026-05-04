@@ -821,7 +821,7 @@ class _RowField extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
         decoration: BoxDecoration(
-          color:        isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+          color:        AppColors.surfaceOf(context),
           borderRadius: BorderRadius.circular(10),
           border:       Border.all(
             color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
@@ -1054,9 +1054,7 @@ class _TemplateSelectorSheet extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  tileColor: isDark
-                      ? AppColors.surfaceDark
-                      : AppColors.surfaceLight,
+                  tileColor: AppColors.surfaceOf(context),
                   onTap: () => onSelected(t),
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 4),

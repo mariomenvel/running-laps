@@ -450,10 +450,10 @@ class _StatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
       decoration: BoxDecoration(
-        color:        isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        color:        AppColors.surfaceOf(context),
         borderRadius: BorderRadius.circular(14),
         border:       Border.all(
-          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+          color: AppColors.borderOf(context),
         ),
       ),
       child: Column(

@@ -47,13 +47,13 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
       ),
       body: Column(
         children: [
-          const GradientBanner(
+          Builder(builder: (context) => GradientBanner(
             title: "Panel de Control",
-            subtitle: "Gestiona retos globales y visualiza estadÃ­sticas",
+            subtitle: "Gestiona retos globales y visualiza estadísticas",
             icon: Icons.admin_panel_settings_rounded,
-            accentColor: AppColors.surface,
+            accentColor: AppColors.surfaceOf(context),
             height: 85,
-          ),
+          )),
           Builder(
             builder: (context) {
               final isDark = Theme.of(context).brightness == Brightness.dark;

@@ -20,7 +20,7 @@ class InfoTooltip extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        color: AppColors.iconMuted.withOpacity(0.95),
+        color: AppColors.iconMutedOf(context).withOpacity(0.95),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(

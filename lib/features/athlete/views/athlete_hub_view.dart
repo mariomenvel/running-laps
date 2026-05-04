@@ -1194,9 +1194,7 @@ class _PlanningTabState extends State<_PlanningTab> {
               final surfaceColor = isDark
                   ? const Color(0xFF1C1C1E)
                   : const Color(0xFFF2F2F7);
-              final borderColor = isDark
-                  ? AppColors.borderDark
-                  : AppColors.borderLight;
+              final borderColor = AppColors.borderOf(context);
               if (sessions.isEmpty) {
                 return Container(
                   padding: const EdgeInsets.all(16),

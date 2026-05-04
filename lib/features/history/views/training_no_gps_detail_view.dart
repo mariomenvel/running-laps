@@ -783,7 +783,7 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
                       Container(
                           height: 8,
                           decoration: BoxDecoration(
-                              color: AppColors.borderDark.withValues(alpha: 0.3),
+                              color: AppColors.borderOf(context).withValues(alpha: 0.3),
                               borderRadius: BorderRadius.circular(4))),
                       FractionallySizedBox(
                         widthFactor: pct,

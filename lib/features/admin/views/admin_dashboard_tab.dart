@@ -258,7 +258,7 @@ class AdminDashboardTab extends StatelessWidget {
                     "${(stats['consistencyRate'] as double? ?? 0).toStringAsFixed(1)} /sem",
                     "Entrenamientos promedio por usuario (activo) semanal",
                     Icons.repeat,
-                    AppColors.iconMuted,
+                    AppColors.iconMutedOf(context),
                   ),
                   const SizedBox(width: 16),
                    _buildStatCard(

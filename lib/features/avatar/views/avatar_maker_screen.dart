@@ -37,10 +37,9 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
 
   Widget _buildHeader() {
     final cs = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceVariantDark : Colors.white,
+        color: AppColors.surfaceOf(context),
         border: Border(
           bottom: BorderSide(
             color: cs.outline.withOpacity(0.3),
@@ -89,9 +88,8 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
   }
 
   Widget _buildCategoryTabs(AvatarMakerController controller) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      color: isDark ? AppColors.surfaceVariantDark : null,
+      color: AppColors.surface2Of(context),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Wrap(
         spacing: 12,
@@ -107,7 +105,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: isSelected ? _brandPurple : (isDark ? AppColors.surfaceVariantDark : Theme.of(context).colorScheme.surface),
+                color: isSelected ? _brandPurple : AppColors.surface2Of(context),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   if (isSelected)
@@ -613,9 +611,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? AppColors.surfaceVariantDark
-                          : Theme.of(context).colorScheme.surface,
+                      color: AppColors.surface2Of(context),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: selected ? _brandPurple : Theme.of(context).colorScheme.outline.withOpacity(0.3),

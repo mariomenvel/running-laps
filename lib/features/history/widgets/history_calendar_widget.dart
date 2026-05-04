@@ -99,7 +99,7 @@ class _HistoryCalendarWidgetState extends State<HistoryCalendarWidget> {
                 child: Container(
                   height: 1,
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withOpacity(0.08) : AppColors.border,
+                    color: AppColors.borderOf(context),
                   ),
                 ),
               ),

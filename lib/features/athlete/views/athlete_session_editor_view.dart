@@ -327,10 +327,10 @@ class _TappableField extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
-          color:        isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+          color:        AppColors.surfaceOf(context),
           borderRadius: BorderRadius.circular(12),
           border:       Border.all(
-              color: isDark ? AppColors.borderDark : AppColors.borderLight),
+              color: AppColors.borderOf(context)),
         ),
         child: Row(children: [
           Icon(icon, size: 16, color: AppColors.brand),
@@ -441,10 +441,10 @@ class _WarmupCooldownEditorState extends State<_WarmupCooldownEditor> {
     return Container(
       padding:     const EdgeInsets.all(14),
       decoration:  BoxDecoration(
-        color:        isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        color:        AppColors.surfaceOf(context),
         borderRadius: BorderRadius.circular(12),
         border:       Border.all(
-            color: isDark ? AppColors.borderDark : AppColors.borderLight),
+            color: AppColors.borderOf(context)),
       ),
       child: Column(children: [
         TextField(
@@ -526,10 +526,10 @@ class _NotesFieldState extends State<_NotesField> {
     return Container(
       padding:    const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color:        isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        color:        AppColors.surfaceOf(context),
         borderRadius: BorderRadius.circular(12),
         border:       Border.all(
-            color: isDark ? AppColors.borderDark : AppColors.borderLight),
+            color: AppColors.borderOf(context)),
       ),
       child: TextField(
         controller:  _ctrl,
@@ -566,10 +566,10 @@ class _EmptyBlocksHint extends StatelessWidget {
         width:  double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 28),
         decoration: BoxDecoration(
-          color:        isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+          color:        AppColors.surfaceOf(context),
           borderRadius: BorderRadius.circular(12),
           border:       Border.all(
-              color: isDark ? AppColors.borderDark : AppColors.borderLight,
+              color: AppColors.borderOf(context),
               style: BorderStyle.solid),
         ),
         child: Column(children: [
@@ -733,10 +733,10 @@ class _SessionBlockEditorState extends State<_SessionBlockEditor> {
     return Container(
       margin:     const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color:        isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        color:        AppColors.surfaceOf(context),
         borderRadius: BorderRadius.circular(14),
         border:       Border.all(
-            color: isDark ? AppColors.borderDark : AppColors.borderLight),
+            color: AppColors.borderOf(context)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         // ── Header row ───────────────────────────────────────────────────────
@@ -745,8 +745,8 @@ class _SessionBlockEditorState extends State<_SessionBlockEditor> {
           child: Row(children: [
             ReorderableDragStartListener(
               index: widget.index,
-              child: const Icon(Icons.drag_handle_rounded,
-                  size: 20, color: AppColors.iconMuted),
+              child: Icon(Icons.drag_handle_rounded,
+                  size: 20, color: AppColors.iconMutedOf(context)),
             ),
             const SizedBox(width: 8),
             Text(
@@ -934,15 +934,11 @@ class _LabeledIntField extends StatelessWidget {
             border:         OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
-                    color: isDark
-                        ? AppColors.borderDark
-                        : AppColors.borderLight)),
+                    color: AppColors.borderOf(context))),
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
-                    color: isDark
-                        ? AppColors.borderDark
-                        : AppColors.borderLight)),
+                    color: AppColors.borderOf(context))),
           ),
           style: const TextStyle(fontSize: 14),
         ),
@@ -1007,15 +1003,11 @@ class _ZonePicker extends StatelessWidget {
           border:         OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(
-                  color: isDark
-                      ? AppColors.borderDark
-                      : AppColors.borderLight)),
+                  color: AppColors.borderOf(context))),
           enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(
-                  color: isDark
-                      ? AppColors.borderDark
-                      : AppColors.borderLight)),
+                  color: AppColors.borderOf(context))),
         ),
         items: [
           const DropdownMenuItem(value: null, child: Text('—', style: TextStyle(fontSize: 14))),
