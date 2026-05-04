@@ -7,18 +7,24 @@ import 'package:running_laps/features/training/data/entrenamiento.dart';
 class PersonalRecord {
   final int distanceM;
   final double paceSecKm;
+  final double totalTimeSec;
   final DateTime date;
   final double? previousPaceSecKm;
+  final double? previousTotalTimeSec;
 
   PersonalRecord({
     required this.distanceM,
     required this.paceSecKm,
+    required this.totalTimeSec,
     required this.date,
     this.previousPaceSecKm,
+    this.previousTotalTimeSec,
   });
 
   bool get isRecent => DateTime.now().difference(date).inDays <= 14;
-  double? get deltaSec => previousPaceSecKm != null ? previousPaceSecKm! - paceSecKm : null;
+  // delta en segundos de tiempo total (positivo = mejora)
+  double? get deltaSec =>
+      previousTotalTimeSec != null ? previousTotalTimeSec! - totalTimeSec : null;
 }
 
 class PaceDataPoint {
@@ -99,28 +105,35 @@ class AnalyticsViewModel {
 
     for (final dist in _standardDistances) {
       double? best;
+      double? bestTime;
       DateTime? bestDate;
       double? prevBest;
+      double? prevBestTime;
 
       for (final w in sorted) {
         for (final s in w.series) {
           if (s.distanciaM <= 0 || s.tiempoSec <= 0) continue;
           if ((s.distanciaM - dist).abs() / dist > _gpsTol) continue;
           final pace = s.tiempoSec / (s.distanciaM / 1000.0);
+          if (pace < 120 || pace > 900) continue; // fuera de rango humano
           if (best == null || pace < best) {
-            prevBest = best;
-            best = pace;
-            bestDate = w.fecha;
+            prevBest     = best;
+            prevBestTime = bestTime;
+            best         = pace;
+            bestTime     = s.tiempoSec;
+            bestDate     = w.fecha;
           }
         }
       }
 
-      if (best != null && bestDate != null) {
+      if (best != null && bestTime != null && bestDate != null) {
         records[dist] = PersonalRecord(
-          distanceM: dist,
-          paceSecKm: best,
-          date: bestDate,
-          previousPaceSecKm: prevBest,
+          distanceM:            dist,
+          paceSecKm:            best,
+          totalTimeSec:         bestTime,
+          date:                 bestDate,
+          previousPaceSecKm:    prevBest,
+          previousTotalTimeSec: prevBestTime,
         );
       }
     }
@@ -139,6 +152,7 @@ class AnalyticsViewModel {
         for (final d in _standardDistances) {
           if ((s.distanciaM - d).abs() / d <= _gpsTol) {
             final pace = s.tiempoSec / (s.distanciaM / 1000.0);
+            if (pace < 120 || pace > 600) continue; // fuera de rango para series
             byDist.putIfAbsent(d, () => []).add((w.fecha, pace));
           }
         }
@@ -182,12 +196,21 @@ class AnalyticsViewModel {
   }
 
   double _avgPace(List<Entrenamiento> list) {
-    double m = 0, s = 0;
+    double totalM = 0, totalS = 0;
     for (final w in list) {
-      m += w.distanciaTotalM();
-      s += w.tiempoTotalSec();
+      try {
+        final m = w.distanciaTotalM();
+        final s = w.tiempoTotalSec();
+        if (m <= 100 || s <= 30) continue;
+        final pace = s / (m / 1000.0);
+        if (pace < 120 || pace > 720) continue; // 2:00-12:00/km para sesiones
+        totalM += m;
+        totalS += s;
+      } catch (_) {
+        continue;
+      }
     }
-    return m <= 0 ? 0 : s / (m / 1000.0);
+    return totalM <= 0 ? 0 : totalS / (totalM / 1000.0);
   }
 
   // ── Entrenamiento ──────────────────────────────────────────────────────────
@@ -286,6 +309,21 @@ class AnalyticsViewModel {
     sessionsByType.value = Map.fromEntries(sorted.take(5));
   }
 
+  // ── Helpers de carga ──────────────────────────────────────────────────────
+
+  double _getLoadScore(Entrenamiento w) {
+    if (w.loadScore != null && w.loadScore! > 0) return w.loadScore!;
+    try {
+      final distKm    = w.distanciaTotalM() / 1000.0;
+      final durationMin = w.tiempoTotalSec() / 60.0;
+      if (distKm <= 0 || durationMin <= 0) return 0;
+      final rpe = w.rpePromedio();
+      return distKm * (rpe > 0 ? rpe : 5.0);
+    } catch (_) {
+      return 0;
+    }
+  }
+
   // ── Forma ──────────────────────────────────────────────────────────────────
 
   void _computeLoad(List<Entrenamiento> all) {
@@ -294,7 +332,7 @@ class AnalyticsViewModel {
     // Carga aguda: últimos 7 días
     acuteLoad.value = all
         .where((w) => w.fecha.isAfter(now.subtract(const Duration(days: 7))))
-        .fold(0.0, (s, w) => s + (w.loadScore ?? 0));
+        .fold(0.0, (s, w) => s + _getLoadScore(w));
 
     // Carga crónica: media de las 4 semanas anteriores
     double weekSum = 0;
@@ -303,7 +341,7 @@ class AnalyticsViewModel {
       final wEnd   = now.subtract(Duration(days: i * 7));
       weekSum += all
           .where((w) => w.fecha.isAfter(wStart) && w.fecha.isBefore(wEnd))
-          .fold(0.0, (s, w) => s + (w.loadScore ?? 0));
+          .fold(0.0, (s, w) => s + _getLoadScore(w));
     }
     chronicLoad.value = weekSum / 4;
     acwrRatio.value   = chronicLoad.value > 0 ? acuteLoad.value / chronicLoad.value : 0;
@@ -325,7 +363,7 @@ class AnalyticsViewModel {
       final wEnd   = now.subtract(Duration(days: i * 7));
       loadByWeek.add(all
           .where((w) => w.fecha.isAfter(wStart) && w.fecha.isBefore(wEnd))
-          .fold(0.0, (s, w) => s + (w.loadScore ?? 0)));
+          .fold(0.0, (s, w) => s + _getLoadScore(w)));
     }
     weeklyLoads.value = loadByWeek;
   }
@@ -335,7 +373,7 @@ class AnalyticsViewModel {
     final dailyLoad = <DateTime, double>{};
     for (final w in all) {
       final day = DateTime(w.fecha.year, w.fecha.month, w.fecha.day);
-      dailyLoad[day] = (dailyLoad[day] ?? 0) + (w.loadScore ?? 0);
+      dailyLoad[day] = (dailyLoad[day] ?? 0) + _getLoadScore(w);
     }
 
     double ctl = 0, atl = 0;
@@ -346,12 +384,12 @@ class AnalyticsViewModel {
     final atlH = <double>[];
     final tsbH = <double>[];
 
-    for (int i = 89; i >= 0; i--) {
+    for (int i = 179; i >= 0; i--) {
       final day  = DateTime(now.year, now.month, now.day).subtract(Duration(days: i));
       final load = dailyLoad[day] ?? 0;
       ctl = ctl * ctlDecay + load * (1 - ctlDecay);
       atl = atl * atlDecay + load * (1 - atlDecay);
-      if (i % 7 == 0) {
+      if (i % 14 == 0) {
         ctlH.add(ctl);
         atlH.add(atl);
         tsbH.add(ctl - atl);

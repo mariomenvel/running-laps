@@ -219,6 +219,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
     const distLabels = {400: '400m', 1000: '1km', 5000: '5km', 10000: '10km'};
 
     final allSeries = <LineChartBarData>[];
+    final allSpots  = <List<FlSpot>>[];
     for (final entry in prog.entries) {
       final color = distColors[entry.key] ?? AppColors.brand;
       final spots = entry.value
@@ -226,6 +227,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
           .entries
           .map((e) => FlSpot(e.key.toDouble(), e.value.paceSecKm))
           .toList();
+      allSpots.add(spots);
       allSeries.add(LineChartBarData(
         spots: spots,
         color: color,
@@ -236,9 +238,16 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
       ));
     }
 
-    final allPaces = prog.values.expand((l) => l.map((p) => p.paceSecKm)).toList();
-    final minY = (allPaces.reduce((a, b) => a < b ? a : b) - 30).clamp(0, double.infinity).toDouble();
-    final maxY = allPaces.reduce((a, b) => a > b ? a : b) + 30;
+    double minPace = double.infinity;
+    double maxPace = 0;
+    for (final spots in allSpots) {
+      for (final spot in spots) {
+        if (spot.y < minPace) minPace = spot.y;
+        if (spot.y > maxPace) maxPace = spot.y;
+      }
+    }
+    final minY = (minPace - 30).clamp(60.0, double.infinity);
+    final maxY = maxPace + 30;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,13 +269,19 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                       leftTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
-                          reservedSize: 44,
-                          getTitlesWidget: (v, _) => Text(
-                            _fmtPace(v.toInt()),
-                            style: TextStyle(
-                                fontSize: 10,
-                                color: AppColors.iconMutedOf(context)),
-                          ),
+                          reservedSize: 40,
+                          interval: 30,
+                          getTitlesWidget: (v, meta) {
+                            if (v < minY || v > maxY) return const SizedBox();
+                            final m = v.toInt() ~/ 60;
+                            final s = v.toInt() % 60;
+                            return Text(
+                              '$m:${s.toString().padLeft(2, '0')}',
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  color: AppColors.iconMutedOf(context)),
+                            );
+                          },
                         ),
                       ),
                       bottomTitles: AxisTitles(
@@ -1640,11 +1655,22 @@ class _RecordRow extends StatelessWidget {
                 )
               else ...[
                 Expanded(
-                  child: Text(
-                    _fmtPace(record!.paceSecKm.toInt()),
-                    style: AppTypography.body.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary(context)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _fmtTime(record!.totalTimeSec),
+                        style: AppTypography.body.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary(context)),
+                      ),
+                      Text(
+                        '${_fmtPace(record!.paceSecKm.toInt())} /km',
+                        style: AppTypography.small.copyWith(
+                            color: AppColors.iconMutedOf(context), fontSize: 10),
+                      ),
+                    ],
                   ),
                 ),
                 if (record!.isRecent)
@@ -1663,11 +1689,11 @@ class _RecordRow extends StatelessWidget {
                   )
                 else if (record!.deltaSec != null) ...[
                   Text(
-                    record!.deltaSec! >= 0
+                    record!.deltaSec! > 0
                         ? '↑ ${record!.deltaSec!.toStringAsFixed(0)}s'
                         : '↓ ${(-record!.deltaSec!).toStringAsFixed(0)}s',
                     style: AppTypography.small.copyWith(
-                      color: record!.deltaSec! >= 0 ? AppColors.rpeLow : AppColors.rpeMax,
+                      color: record!.deltaSec! > 0 ? AppColors.rpeLow : AppColors.rpeMax,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -1690,6 +1716,12 @@ class _RecordRow extends StatelessWidget {
   static String _fmtPace(int secKm) {
     final m = secKm ~/ 60;
     final s = secKm % 60;
+    return '$m:${s.toString().padLeft(2, '0')}';
+  }
+
+  static String _fmtTime(double totalSec) {
+    final m = totalSec ~/ 60;
+    final s = (totalSec % 60).round();
     return '$m:${s.toString().padLeft(2, '0')}';
   }
 
