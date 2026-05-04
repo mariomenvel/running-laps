@@ -25,6 +25,8 @@ class AnalyticsHubController {
   // Cache de todos los datos para no recargar constantemente
   List<Entrenamiento> _allData = [];
 
+  List<Entrenamiento> get allData => List.unmodifiable(_allData);
+
   AnalyticsHubController({
     required this.userId,
     TrainingRepository? repository,
