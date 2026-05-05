@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/features/calendar/views/calendar_view.dart';
 import 'package:running_laps/features/home/views/home_view.dart';
@@ -40,13 +40,47 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
+  Widget _buildGlobalHeader(BuildContext context) {
+    return Container(
+      height: 60,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          bottom: BorderSide(
+            color: AppColors.borderOf(context),
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            radius: 22,
+            backgroundColor: AppColors.brand,
+            backgroundImage: AssetImage('assets/images/logo.png'),
+          ),
+          const Spacer(),
+          AvatarHelper.construirImagenPerfil(radius: 20),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // IndexedStack preserva el estado de cada tab entre cambios
-      body: IndexedStack(
-        index: _tabIndex,
-        children: _screens,
+      body: Column(
+        children: [
+          SizedBox(height: MediaQuery.of(context).padding.top),
+          _buildGlobalHeader(context),
+          Expanded(
+            child: IndexedStack(
+              index: _tabIndex,
+              children: _screens,
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: _NavBar(
         currentIndex: _tabIndex,
