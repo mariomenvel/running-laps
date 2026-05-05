@@ -121,88 +121,76 @@ class _CalendarViewState extends State<CalendarView> {
     );
   }
 
-  // ── Vista mensual (lógica anterior) ──────────────────────────────────────
+  // ── Vista mensual — grid de semanas ──────────────────────────────────────
 
   Widget _buildMonthlyView(bool isAthlete) {
-    return Column(
-      children: [
-        _buildCalendar(isAthlete),
-        Expanded(child: _buildDayContent(isAthlete)),
-      ],
-    );
-  }
-
-  Widget _buildCalendar(bool isAthlete) {
     return ValueListenableBuilder<DateTime>(
       valueListenable: _vm.focusedMonth,
-      builder: (_, focused, __) => ValueListenableBuilder<DateTime>(
-        valueListenable: _vm.selectedDay,
-        builder: (_, selected, __) => isAthlete
-            ? _buildAthleteCalendar(focused, selected)
-            : _buildRecreativoCalendar(focused, selected),
-      ),
-    );
-  }
+      builder: (_, focused, __) => ValueListenableBuilder<List<Entrenamiento>>(
+        valueListenable: _vm.allWorkouts,
+        builder: (_, workouts, __) => ValueListenableBuilder<Map<String, List<AthleteSession>>>(
+          valueListenable: _vm.sessionsByDate,
+          builder: (_, sessionsByDate, __) {
+            final weeks = _getWeeksOfMonth(focused.year, focused.month);
+            // Precalcular volumen por semana (evitar recalcular en cada build de fila)
+            final weekVolumes = weeks.map((w) => _calcWeekVolumeKm(w, workouts)).toList();
+            final maxVol = weekVolumes.fold(0.0, (a, b) => a > b ? a : b);
 
-  Widget _buildAthleteCalendar(DateTime focused, DateTime selected) {
-    return ValueListenableBuilder<Map<String, List<AthleteSession>>>(
-      valueListenable: _vm.sessionsByDate,
-      builder: (_, byDate, __) => ValueListenableBuilder<Set<String>>(
-        valueListenable: _vm.trainingDates,
-        builder: (_, trainDates, __) => StandardTableCalendar<AthleteSession>(
-          lastDay: DateTime(2030, 12, 31),
-          focusedDay: focused,
-          selectedDay: selected,
-          eventLoader: (day) => byDate[_normalize(day)] ?? [],
-          onDaySelected: _vm.onDaySelected,
-          onPageChanged: _vm.onMonthChanged,
-          calendarBuilders: CalendarBuilders<AthleteSession>(
-            markerBuilder: (context, day, sessions) {
-              final dateKey  = _normalize(day);
-              final hasWorkout = trainDates.contains(dateKey);
-              final dots = _dotsForSessions(sessions);
-              // Añadir punto para trainings reales no cubiertos por una sesión completada
-              if (hasWorkout && !sessions.any((s) => s.status == AthleteSessionStatus.completed)) {
-                dots.insert(0, AppColors.brand);
-              }
-              if (dots.isEmpty) return null;
-              return Positioned(
-                bottom: 4,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: dots.take(3).map((c) => Container(
-                    width: 5, height: 5,
-                    margin: const EdgeInsets.symmetric(horizontal: 1),
-                    decoration: BoxDecoration(color: c, shape: BoxShape.circle),
-                  )).toList(),
+            return Column(
+              children: [
+                // ── Cabecera mes + navegación ─────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.l,
+                    vertical: AppSpacing.m,
+                  ),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          final prev = DateTime(focused.year, focused.month - 1);
+                          _vm.onMonthChanged(prev);
+                        },
+                        child: Icon(Icons.chevron_left, color: AppColors.iconMutedOf(context)),
+                      ),
+                      Expanded(
+                        child: Text(
+                          _monthYearLabel(focused),
+                          style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context)),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          final next = DateTime(focused.year, focused.month + 1);
+                          _vm.onMonthChanged(next);
+                        },
+                        child: Icon(Icons.chevron_right, color: AppColors.iconMutedOf(context)),
+                      ),
+                    ],
+                  ),
                 ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildRecreativoCalendar(DateTime focused, DateTime selected) {
-    return ValueListenableBuilder<Set<String>>(
-      valueListenable: _vm.trainingDates,
-      builder: (_, dates, __) => StandardTableCalendar<Object>(
-        lastDay: DateTime(2030, 12, 31),
-        focusedDay: focused,
-        selectedDay: selected,
-        eventLoader: (day) => dates.contains(_normalize(day)) ? [Object()] : [],
-        onDaySelected: _vm.onDaySelected,
-        onPageChanged: _vm.onMonthChanged,
-        calendarBuilders: CalendarBuilders<Object>(
-          markerBuilder: (context, day, events) {
-            if (events.isEmpty) return null;
-            return Positioned(
-              bottom: 4,
-              child: Container(
-                width: 5, height: 5,
-                decoration: const BoxDecoration(color: AppColors.brand, shape: BoxShape.circle),
-              ),
+                // ── Grid de semanas ───────────────────────────────────
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.l,
+                      vertical: AppSpacing.s,
+                    ),
+                    itemCount: weeks.length,
+                    itemBuilder: (_, i) => _buildWeekRow(
+                      week:        weeks[i],
+                      month:       focused.month,
+                      volumeKm:    weekVolumes[i],
+                      maxVolumeKm: maxVol,
+                      sessions:    sessionsByDate,
+                      trainings:   workouts,
+                      isAthlete:   isAthlete,
+                    ),
+                  ),
+                ),
+              ],
             );
           },
         ),
@@ -210,6 +198,339 @@ class _CalendarViewState extends State<CalendarView> {
     );
   }
 
+  Widget _buildWeekRow({
+    required List<DateTime> week,
+    required int month,
+    required double volumeKm,
+    required double maxVolumeKm,
+    required Map<String, List<AthleteSession>> sessions,
+    required List<Entrenamiento> trainings,
+    required bool isAthlete,
+  }) {
+    final ratio    = maxVolumeKm > 0 ? (volumeKm / maxVolumeKm).clamp(0.0, 1.0) : 0.0;
+    final barColor = ratio < 0.5
+        ? Color.lerp(AppColors.rpeLow, const Color(0xFFFFCA28), ratio * 2)!
+        : Color.lerp(const Color(0xFFFFCA28), AppColors.rpeMax, (ratio - 0.5) * 2)!;
+
+    // Contar sesiones/entrenamientos de la semana
+    int sessionCount = 0;
+    for (final day in week) {
+      final key = _normalize(day);
+      if (isAthlete) {
+        sessionCount += (sessions[key] ?? []).length;
+      } else {
+        if (trainings.any((w) => _normalize(w.fecha) == key)) sessionCount++;
+      }
+    }
+
+    return GestureDetector(
+      onTap: () => _showWeekDetailSheet(
+        week: week, sessions: sessions, trainings: trainings, isAthlete: isAthlete,
+      ),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.m),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceOf(context),
+          border: Border.all(color: AppColors.borderOf(context), width: 0.5),
+          borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+        ),
+        child: Column(
+          children: [
+            // Barra de volumen
+            Container(
+              height: 6,
+              decoration: BoxDecoration(
+                color: volumeKm > 0 ? barColor : AppColors.borderOf(context),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(AppDimens.cardRadius)),
+              ),
+            ),
+
+            // Días lun-dom
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.m,
+                vertical: AppSpacing.m,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: week.map((day) {
+                  final inMonth  = day.month == month;
+                  final isToday  = _normalize(day) == _normalize(DateTime.now());
+                  final hasData  = isAthlete
+                      ? (sessions[_normalize(day)] ?? []).isNotEmpty
+                      : trainings.any((w) => _normalize(w.fecha) == _normalize(day));
+
+                  return Column(
+                    children: [
+                      Text(
+                        _dayAbbr(day.weekday)[0],
+                        style: AppTypography.small.copyWith(
+                          color: AppColors.textSecondary(context),
+                          fontSize: 10,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: isToday ? AppColors.brand : Colors.transparent,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${day.day}',
+                            style: AppTypography.small.copyWith(
+                              color: isToday
+                                  ? Colors.white
+                                  : inMonth
+                                      ? AppColors.textPrimary(context)
+                                      : AppColors.iconMutedOf(context),
+                              fontWeight: inMonth ? FontWeight.w600 : FontWeight.normal,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      // Punto indicador de actividad
+                      Container(
+                        width: 4,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: hasData
+                              ? (inMonth ? AppColors.brand : AppColors.brand.withOpacity(0.3))
+                              : Colors.transparent,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
+
+            // Resumen km + sesiones
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.l,
+                vertical: AppSpacing.s,
+              ),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: AppColors.borderOf(context), width: 0.5),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    volumeKm > 0 ? '${volumeKm.toStringAsFixed(1)} km' : '– km',
+                    style: AppTypography.small.copyWith(
+                      color: volumeKm > 0
+                          ? AppColors.textPrimary(context)
+                          : AppColors.iconMutedOf(context),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    sessionCount > 0
+                        ? '$sessionCount ${sessionCount == 1 ? 'sesión' : 'sesiones'}'
+                        : 'Descanso',
+                    style: AppTypography.small.copyWith(
+                      color: sessionCount > 0
+                          ? AppColors.textSecondary(context)
+                          : AppColors.iconMutedOf(context),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.s),
+                  Icon(Icons.chevron_right, size: 14, color: AppColors.iconMutedOf(context)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showWeekDetailSheet({
+    required List<DateTime> week,
+    required Map<String, List<AthleteSession>> sessions,
+    required List<Entrenamiento> trainings,
+    required bool isAthlete,
+  }) {
+    final monday = week.first;
+    final sunday = week.last;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.92,
+        expand: false,
+        builder: (_, ctrl) => SingleChildScrollView(
+          controller: ctrl,
+          padding: const EdgeInsets.all(AppSpacing.l),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36, height: 4,
+                  margin: const EdgeInsets.only(bottom: AppSpacing.l),
+                  decoration: BoxDecoration(
+                    color: AppColors.borderOf(context),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Text(
+                _formatWeekRange(monday, sunday),
+                style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context)),
+              ),
+              const SizedBox(height: AppSpacing.l),
+              ...week.map((day) {
+                final key        = _normalize(day);
+                final daySessions = sessions[key] ?? [];
+                final dayWorkouts = trainings.where((w) => _normalize(w.fecha) == key).toList();
+                final hasContent  = isAthlete ? daySessions.isNotEmpty : dayWorkouts.isNotEmpty;
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.m),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 40,
+                        child: Column(
+                          children: [
+                            Text(
+                              _dayAbbr(day.weekday),
+                              style: AppTypography.small.copyWith(
+                                color: AppColors.textSecondary(context),
+                                fontSize: 10,
+                              ),
+                            ),
+                            Text(
+                              '${day.day}',
+                              style: AppTypography.body.copyWith(
+                                color: AppColors.textPrimary(context),
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.m),
+                      Expanded(
+                        child: !hasContent
+                            ? Text(
+                                'Descanso',
+                                style: AppTypography.small.copyWith(
+                                  color: AppColors.iconMutedOf(context),
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              )
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: isAthlete
+                                    ? daySessions.map((s) {
+                                        final cat = s.category != null
+                                            ? SessionCategoryX.fromValue(s.category!).label
+                                            : 'Entrenamiento';
+                                        return Row(children: [
+                                          Container(
+                                            width: 6, height: 6,
+                                            margin: const EdgeInsets.only(right: 6, top: 2),
+                                            decoration: BoxDecoration(
+                                              color: _statusColor(s.status),
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          Text(cat,
+                                              style: AppTypography.body.copyWith(
+                                                  color: AppColors.textPrimary(context))),
+                                        ]);
+                                      }).toList()
+                                    : dayWorkouts.map((w) {
+                                        final km = w.distanciaTotalM() / 1000.0;
+                                        return Row(children: [
+                                          Container(
+                                            width: 6, height: 6,
+                                            margin: const EdgeInsets.only(right: 6, top: 2),
+                                            decoration: const BoxDecoration(
+                                              color: AppColors.brand,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          Text(
+                                            '${w.titulo.isNotEmpty ? w.titulo : 'Entrenamiento'}'
+                                            ' · ${km.toStringAsFixed(1)} km',
+                                            style: AppTypography.body.copyWith(
+                                                color: AppColors.textPrimary(context)),
+                                          ),
+                                        ]);
+                                      }).toList(),
+                              ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Helpers vista mensual ─────────────────────────────────────────────────
+
+  List<List<DateTime>> _getWeeksOfMonth(int year, int month) {
+    final firstDay = DateTime(year, month, 1);
+    final lastDay  = DateTime(year, month + 1, 0);
+    final weeks    = <List<DateTime>>[];
+
+    // Empezar desde el lunes de la semana que contiene el día 1
+    var weekStart = firstDay.subtract(Duration(days: firstDay.weekday - 1));
+
+    while (!weekStart.isAfter(lastDay)) {
+      weeks.add(List.generate(7, (i) => weekStart.add(Duration(days: i))));
+      weekStart = weekStart.add(const Duration(days: 7));
+    }
+    return weeks;
+  }
+
+  double _calcWeekVolumeKm(List<DateTime> week, List<Entrenamiento> workouts) {
+    double total = 0;
+    for (final day in week) {
+      final key = _normalize(day);
+      for (final w in workouts) {
+        if (_normalize(w.fecha) == key) {
+          total += w.distanciaTotalM() / 1000.0;
+        }
+      }
+    }
+    return total;
+  }
+
+  String _monthYearLabel(DateTime d) {
+    const meses = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+    ];
+    return '${meses[d.month - 1]} ${d.year}';
+  }
+
+  // Helper para el border top en Container decoration
   Widget _buildDayContent(bool isAthlete) =>
       isAthlete ? _buildAthleteDayContent() : _buildRecreativoDayContent();
 
