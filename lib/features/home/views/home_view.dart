@@ -786,7 +786,9 @@ class _HomeViewState extends State<HomeView> {
 
   String _formatWorkoutDate(DateTime d) {
     final now = DateTime.now();
-    final diff = now.difference(d).inDays;
+    final today = DateTime(now.year, now.month, now.day);
+    final workoutDay = DateTime(d.year, d.month, d.day);
+    final diff = today.difference(workoutDay).inDays;
     if (diff == 0) return 'Hoy';
     if (diff == 1) return 'Ayer';
     const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
