@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -60,6 +62,148 @@ class _ProfileViewState extends State<ProfileView> {
       _isAdmin      = data['isAdmin'] ?? false;
       _isAthleteMode = data['isAthleteMode'] ?? false;
     });
+  }
+
+  void _showGenerateTestDataDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text('Generar datos de prueba',
+            style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context))),
+        content: Text(
+          'Esto borrará TODOS tus entrenamientos actuales y creará ~55 sesiones realistas distribuidas en los últimos 90 días.\n\n¿Continuar?',
+          style: AppTypography.body.copyWith(color: AppColors.iconMutedOf(context)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _generateTestData();
+            },
+            style: TextButton.styleFrom(foregroundColor: AppColors.rpeMax),
+            child: const Text('Borrar y generar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _generateTestData() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || !mounted) return;
+
+    ModernSnackBar.showWarning(context, 'Generando datos de prueba...');
+
+    try {
+      final firestore = FirebaseFirestore.instance;
+      final col = firestore.collection('users').doc(uid).collection('trainings');
+
+      // Borrar entrenamientos existentes
+      final existing = await col.limit(500).get();
+      final deleteBatch = firestore.batch();
+      for (final doc in existing.docs) {
+        deleteBatch.delete(doc.reference);
+      }
+      await deleteBatch.commit();
+
+      // Generar nuevos (misma lógica que el script)
+      final random = Random();
+      final now = DateTime.now();
+      const types = ['rodaje', 'series', 'tempo', 'largo'];
+
+      final trainings = <Map<String, dynamic>>[];
+      double totalKm = 0;
+      int totalSec = 0;
+
+      for (int dayBack = 90; dayBack >= 0; dayBack--) {
+        final date = now.subtract(Duration(days: dayBack));
+        final restChance = date.weekday == DateTime.sunday ? 0.60 : 0.38;
+        if (random.nextDouble() < restChance) continue;
+
+        final type = (date.weekday == DateTime.saturday)
+            ? 'largo'
+            : (date.weekday == DateTime.tuesday || date.weekday == DateTime.thursday)
+                ? (random.nextBool() ? 'series' : 'tempo')
+                : types[random.nextInt(types.length)];
+
+        final (distM, durMin, rpe, serieCount) = switch (type) {
+          'series' => (6000 + random.nextInt(3000), 35 + random.nextInt(15),
+              7.5 + random.nextDouble() * 1.5, 5 + random.nextInt(4)),
+          'tempo'  => (8000 + random.nextInt(4000), 45 + random.nextInt(20),
+              6.5 + random.nextDouble() * 1.5, 2),
+          'largo'  => (16000 + random.nextInt(9000), 90 + random.nextInt(40),
+              5.0 + random.nextDouble(), 1),
+          _        => (6000 + random.nextInt(7000), 35 + random.nextInt(25),
+              4.0 + random.nextDouble() * 1.5, 1 + random.nextInt(2)),
+        };
+
+        final v = 0.85 + random.nextDouble() * 0.30;
+        final finalDistM = (distM * v).toInt();
+        final finalDurSec = ((durMin * v) * 60).toInt().clamp(300, 18000);
+        final distPerSerie = finalDistM ~/ serieCount;
+        final secPerSerie = finalDurSec / serieCount;
+
+        final series = List.generate(serieCount, (_) => {
+          'distanciaM':  distPerSerie,
+          'tiempoSec':   double.parse(secPerSerie.toStringAsFixed(1)),
+          'descansoSec': serieCount > 2 ? 60 + random.nextInt(60) : 0,
+          'rpe':         double.parse((rpe + (random.nextDouble() - 0.5)).clamp(1.0, 10.0).toStringAsFixed(1)),
+          'fcMedia':     138.0 + random.nextInt(30),
+          'usedGps':     random.nextBool(),
+        });
+
+        final loadScore = (finalDistM / 1000.0) * rpe * 10;
+        totalKm += finalDistM / 1000.0;
+        totalSec += finalDurSec;
+
+        trainings.add({
+          'titulo':          '${type[0].toUpperCase()}${type.substring(1)}',
+          'fecha':           date.toIso8601String(),
+          'gps':             random.nextDouble() > 0.25,
+          'series':          series,
+          'distanciaTotalM': finalDistM,
+          'tiempoTotalSec':  finalDurSec.toDouble(),
+          'rpePromedio':     double.parse(rpe.toStringAsFixed(1)),
+          'ritmoMedioSecKm': finalDistM > 0 ? (finalDurSec / (finalDistM / 1000.0)).toInt() : null,
+          'loadScore':       double.parse(loadScore.toStringAsFixed(1)),
+          'fcMediaSesion':   138.0 + random.nextInt(25),
+          'isManual':        random.nextDouble() > 0.75,
+          'tags':            [type],
+          'createdAt':       date.toIso8601String(),
+          'updatedAt':       date.toIso8601String(),
+        });
+      }
+
+      // Guardar en batches de 400
+      for (int i = 0; i < trainings.length; i += 400) {
+        final chunk = trainings.sublist(i, (i + 400).clamp(0, trainings.length));
+        final batch = firestore.batch();
+        for (final t in chunk) {
+          batch.set(col.doc(), t);
+        }
+        await batch.commit();
+      }
+
+      // Actualizar stats
+      await firestore.collection('users').doc(uid).update({
+        'totalSessions':    trainings.length,
+        'totalKm':          double.parse(totalKm.toStringAsFixed(2)),
+        'totalTimeMinutes': totalSec ~/ 60,
+        'lastTrainingDate': now.toIso8601String(),
+      });
+
+      if (!mounted) return;
+      ModernSnackBar.showSuccess(context,
+          '${trainings.length} entrenamientos generados · ${totalKm.toStringAsFixed(0)} km');
+    } catch (e) {
+      if (!mounted) return;
+      ModernSnackBar.showError(context, 'Error: $e');
+    }
   }
 
   Future<void> _openPublicProfile() async {
@@ -321,6 +465,13 @@ class _ProfileViewState extends State<ProfileView> {
                 icon: Icons.admin_panel_settings_outlined,
                 label: 'Panel de administrador',
                 onTap: () => Navigator.push(context, AppRoute(page: const AdminPanelScreen())),
+              ),
+              const _MenuDivider(),
+              _MenuItem(
+                icon: Icons.refresh_outlined,
+                label: 'Generar datos de prueba',
+                subtitle: 'Borrará todos tus entrenamientos y creará ~55 realistas',
+                onTap: _showGenerateTestDataDialog,
               ),
             ]),
           ],
