@@ -86,7 +86,7 @@ class AnalyticsViewModel {
     _computeRecords(allWorkouts);
     _computePaceProgression(allWorkouts);
     _computeAvgPace(filtered, allWorkouts, range);
-    _computeVolume(filtered);
+    _computeVolume(filtered, range);
     _computeIntensity(filtered);
     _computeConsistency(allWorkouts, filtered, range);
     _computeLoad(allWorkouts);
@@ -215,10 +215,18 @@ class AnalyticsViewModel {
 
   // ── Entrenamiento ──────────────────────────────────────────────────────────
 
-  void _computeVolume(List<Entrenamiento> filtered) {
+  void _computeVolume(List<Entrenamiento> filtered, AnalyticsTimeRange range) {
     final now = DateTime.now();
+    final weeksToShow = switch (range) {
+      AnalyticsTimeRange.week        => 1,
+      AnalyticsTimeRange.month       => 4,
+      AnalyticsTimeRange.threeMonths => 12,
+      AnalyticsTimeRange.year        => 52,
+      AnalyticsTimeRange.custom      => 8,
+    };
+
     final weeks = <DateTime, double>{};
-    for (int i = 7; i >= 0; i--) {
+    for (int i = weeksToShow - 1; i >= 0; i--) {
       weeks[_mondayOf(now.subtract(Duration(days: i * 7)))] = 0;
     }
     for (final w in filtered) {
