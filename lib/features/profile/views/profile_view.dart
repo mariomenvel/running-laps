@@ -189,6 +189,9 @@ class _ProfileViewState extends State<ProfileView> {
         await batch.commit();
       }
 
+      // Generar sesiones planificadas (próximas 4 semanas)
+      await _generatePlannedSessions(firestore, uid, random);
+
       // Actualizar stats
       await firestore.collection('users').doc(uid).update({
         'totalSessions':    trainings.length,
@@ -199,10 +202,72 @@ class _ProfileViewState extends State<ProfileView> {
 
       if (!mounted) return;
       ModernSnackBar.showSuccess(context,
-          '${trainings.length} entrenamientos generados · ${totalKm.toStringAsFixed(0)} km');
+          '${trainings.length} entrenamientos + sesiones planificadas generadas · ${totalKm.toStringAsFixed(0)} km');
     } catch (e) {
       if (!mounted) return;
       ModernSnackBar.showError(context, 'Error: $e');
+    }
+  }
+
+  Future<void> _generatePlannedSessions(
+    FirebaseFirestore firestore, String uid, Random random,
+  ) async {
+    // Borrar sesiones planificadas existentes
+    final col = firestore.collection('users').doc(uid).collection('athleteSessions');
+    final existing = await col.limit(500).get();
+    if (existing.docs.isNotEmpty) {
+      final deleteBatch = firestore.batch();
+      for (final doc in existing.docs) {
+        deleteBatch.delete(doc.reference);
+      }
+      await deleteBatch.commit();
+    }
+
+    final now = DateTime.now();
+    const categories = ['rodaje_base', 'series_medias', 'tempo', 'rodaje_largo'];
+    final sessions = <Map<String, dynamic>>[];
+
+    // -14 días (pasadas, completadas) hasta +28 días (futuras, planificadas)
+    for (int i = -14; i <= 28; i++) {
+      final date = now.add(Duration(days: i));
+      if (date.weekday == DateTime.sunday) continue;
+      if (random.nextDouble() > 0.70) continue;
+
+      final isPast   = i < 0;
+      final status   = isPast ? 'completed' : 'planned';
+      final category = categories[random.nextInt(categories.length)];
+      final dateStr  = '${date.year}-'
+          '${date.month.toString().padLeft(2, '0')}-'
+          '${date.day.toString().padLeft(2, '0')}';
+
+      sessions.add({
+        'date':     dateStr,
+        'time':     '${6 + random.nextInt(12)}:00',
+        'category': category,
+        'status':   status,
+        if (isPast) 'completedTrainingId': null,
+        'blocks': [
+          {
+            'type':            'continuousDistance',
+            'distanceM':       3000 + random.nextInt(5000),
+            'targetPaceMinMin': 5,
+            'targetPaceMaxMin': 6,
+            'targetRpe':       5.0,
+          }
+        ],
+        'planningNotes': null,
+        'createdAt':     FieldValue.serverTimestamp(),
+        'updatedAt':     FieldValue.serverTimestamp(),
+      });
+    }
+
+    for (int i = 0; i < sessions.length; i += 400) {
+      final chunk = sessions.sublist(i, (i + 400).clamp(0, sessions.length));
+      final batch = firestore.batch();
+      for (final s in chunk) {
+        batch.set(col.doc(), s);
+      }
+      await batch.commit();
     }
   }
 

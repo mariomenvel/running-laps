@@ -147,29 +147,38 @@ class _CalendarViewState extends State<CalendarView> {
   Widget _buildAthleteCalendar(DateTime focused, DateTime selected) {
     return ValueListenableBuilder<Map<String, List<AthleteSession>>>(
       valueListenable: _vm.sessionsByDate,
-      builder: (_, byDate, __) => StandardTableCalendar<AthleteSession>(
-        lastDay: DateTime(2030, 12, 31),
-        focusedDay: focused,
-        selectedDay: selected,
-        eventLoader: (day) => byDate[_normalize(day)] ?? [],
-        onDaySelected: _vm.onDaySelected,
-        onPageChanged: _vm.onMonthChanged,
-        calendarBuilders: CalendarBuilders<AthleteSession>(
-          markerBuilder: (context, day, sessions) {
-            if (sessions.isEmpty) return null;
-            final dots = _dotsForSessions(sessions);
-            return Positioned(
-              bottom: 4,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: dots.map((c) => Container(
-                  width: 5, height: 5,
-                  margin: const EdgeInsets.symmetric(horizontal: 1),
-                  decoration: BoxDecoration(color: c, shape: BoxShape.circle),
-                )).toList(),
-              ),
-            );
-          },
+      builder: (_, byDate, __) => ValueListenableBuilder<Set<String>>(
+        valueListenable: _vm.trainingDates,
+        builder: (_, trainDates, __) => StandardTableCalendar<AthleteSession>(
+          lastDay: DateTime(2030, 12, 31),
+          focusedDay: focused,
+          selectedDay: selected,
+          eventLoader: (day) => byDate[_normalize(day)] ?? [],
+          onDaySelected: _vm.onDaySelected,
+          onPageChanged: _vm.onMonthChanged,
+          calendarBuilders: CalendarBuilders<AthleteSession>(
+            markerBuilder: (context, day, sessions) {
+              final dateKey  = _normalize(day);
+              final hasWorkout = trainDates.contains(dateKey);
+              final dots = _dotsForSessions(sessions);
+              // Añadir punto para trainings reales no cubiertos por una sesión completada
+              if (hasWorkout && !sessions.any((s) => s.status == AthleteSessionStatus.completed)) {
+                dots.insert(0, AppColors.brand);
+              }
+              if (dots.isEmpty) return null;
+              return Positioned(
+                bottom: 4,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: dots.take(3).map((c) => Container(
+                    width: 5, height: 5,
+                    margin: const EdgeInsets.symmetric(horizontal: 1),
+                    decoration: BoxDecoration(color: c, shape: BoxShape.circle),
+                  )).toList(),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
