@@ -21,6 +21,7 @@ class CalendarView extends StatefulWidget {
 
 class _CalendarViewState extends State<CalendarView> {
   late final CalendarViewModel _vm;
+  int _focusedYear = DateTime.now().year;
 
   @override
   void initState() {
@@ -224,7 +225,7 @@ class _CalendarViewState extends State<CalendarView> {
     }
 
     return GestureDetector(
-      onTap: () => _showWeekDetailSheet(
+      onTap: () => _showMonthlyWeekDetailSheet(
         week: week, sessions: sessions, trainings: trainings, isAthlete: isAthlete,
       ),
       child: Container(
@@ -354,7 +355,7 @@ class _CalendarViewState extends State<CalendarView> {
     );
   }
 
-  void _showWeekDetailSheet({
+  void _showMonthlyWeekDetailSheet({
     required List<DateTime> week,
     required Map<String, List<AthleteSession>> sessions,
     required List<Entrenamiento> trainings,
@@ -912,152 +913,270 @@ class _CalendarViewState extends State<CalendarView> {
       );
     }
 
-    return ValueListenableBuilder<List<SeasonWeekData>>(
-      valueListenable: _vm.seasonWeeks,
-      builder: (_, weeks, __) {
-        if (weeks.isEmpty) {
-          return Center(
-            child: Text(
-              'Cargando temporada...',
-              style: AppTypography.small.copyWith(color: AppColors.textSecondary(context)),
-            ),
-          );
-        }
-
-        final maxLoad = weeks.map((w) => w.loadScore).fold(0.0, (a, b) => a > b ? a : b);
+    return ValueListenableBuilder<List<Entrenamiento>>(
+      valueListenable: _vm.allWorkouts,
+      builder: (_, workouts, __) {
+        final weeks = _getWeeksOfYear(_focusedYear, workouts);
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+          padding: const EdgeInsets.all(AppSpacing.l),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('TEMPORADA', style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context))),
-              const SizedBox(height: 2),
-              Text('Últimas 16 semanas', style: AppTypography.small.copyWith(color: AppColors.textSecondary(context))),
-              const SizedBox(height: AppSpacing.l),
-
-              // Leyenda
-              Wrap(
-                spacing: AppSpacing.m,
-                runSpacing: AppSpacing.s,
+              // ── Cabecera año + navegación ─────────────────────────
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _LegendDot('Carga',       const Color(0xFFE57373)),
-                  _LegendDot('Base',        AppColors.brand),
-                  _LegendDot('Descarga',    AppColors.rpeLow),
-                  _LegendDot('Competición', AppColors.effort),
-                  _LegendDot('Transición',  AppColors.iconMuted),
+                  GestureDetector(
+                    onTap: () => setState(() => _focusedYear--),
+                    child: Icon(Icons.chevron_left, size: 24, color: AppColors.textPrimary(context)),
+                  ),
+                  const SizedBox(width: AppSpacing.l),
+                  Text(
+                    '$_focusedYear',
+                    style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context)),
+                  ),
+                  const SizedBox(width: AppSpacing.l),
+                  GestureDetector(
+                    onTap: () => setState(() => _focusedYear++),
+                    child: Icon(Icons.chevron_right, size: 24, color: AppColors.textPrimary(context)),
+                  ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.l),
+              const SizedBox(height: AppSpacing.xl),
 
-              // Filas de semanas
-              ...weeks.map((week) {
-                final isCurrentWeek = _isCurrentWeek(week.weekStart);
-                final barHeight = maxLoad > 0 ? (week.loadScore / maxLoad * 36).clamp(4.0, 36.0) : 4.0;
-                final typeColor = _weekTypeColor(week.weekType);
+              // ── Sección por mes ───────────────────────────────────
+              ...List.generate(12, (i) => _buildMonthSection(i + 1, weeks)),
 
-                return Container(
-                  margin: const EdgeInsets.only(bottom: AppSpacing.s),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceOf(context),
-                    border: Border.all(
-                      color: isCurrentWeek ? AppColors.brand : AppColors.borderOf(context),
-                      width: isCurrentWeek ? 1.5 : 0.5,
-                    ),
-                    borderRadius: BorderRadius.circular(AppDimens.cardRadius),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.m),
-                    child: Row(
-                      children: [
-                        // Barra indicador de tipo
-                        Container(
-                          width: 4,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: typeColor,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.m),
-
-                        // Info
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    'S${week.weekNumber}',
-                                    style: AppTypography.body.copyWith(
-                                      color: AppColors.textPrimary(context),
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    _weekTypeLabel(week.weekType),
-                                    style: AppTypography.small.copyWith(color: typeColor),
-                                  ),
-                                  if (week.hasRace) ...[
-                                    const SizedBox(width: 8),
-                                    const Icon(Icons.emoji_events, color: AppColors.effort, size: 14),
-                                  ],
-                                ],
-                              ),
-                              Text(
-                                _formatWeekRange(week.weekStart, week.weekStart.add(const Duration(days: 6))),
-                                style: AppTypography.small.copyWith(color: AppColors.textSecondary(context)),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // Stats compactas
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              '${week.volumeKm.toStringAsFixed(1)} km',
-                              style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
-                            ),
-                            Text(
-                              '${week.sessionCount} sesiones',
-                              style: AppTypography.small.copyWith(color: AppColors.textSecondary(context)),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: AppSpacing.m),
-
-                        // Barra de carga mini (vertical)
-                        SizedBox(
-                          width: 12,
-                          height: 40,
-                          child: Align(
-                            alignment: Alignment.bottomCenter,
-                            child: Container(
-                              width: 8,
-                              height: barHeight,
-                              decoration: BoxDecoration(
-                                color: typeColor.withOpacity(0.8),
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-
+              // ── Leyenda ───────────────────────────────────────────
+              _buildSeasonLegend(),
               const SizedBox(height: 100),
             ],
           ),
         );
       },
     );
+  }
+
+  Widget _buildMonthSection(int month, List<_WeekData> allWeeks) {
+    const abbrs = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+    final monthWeeks = allWeeks.where((w) =>
+        w.weekStart.month == month || w.weekEnd.month == month).toList();
+
+    if (monthWeeks.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          abbrs[month - 1],
+          style: AppTypography.body.copyWith(
+            color: AppColors.textSecondary(context),
+            letterSpacing: 2,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.s),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: monthWeeks.map((w) => Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: _buildWeekSquare(w),
+          )).toList(),
+        ),
+        const SizedBox(height: AppSpacing.xl),
+      ],
+    );
+  }
+
+  Widget _buildWeekSquare(_WeekData week) {
+    final color  = _weekTypeColor(week.volumeKm);
+    final height = week.volumeKm > 0
+        ? (24.0 + (week.volumeKm / 100.0).clamp(0.0, 1.0) * 24.0)
+        : 24.0;
+
+    return GestureDetector(
+      onTap: () => _showWeekDetailSheet(week),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'S${week.weekNumber}',
+            style: AppTypography.small.copyWith(
+              fontSize: 9,
+              color: AppColors.textSecondary(context),
+            ),
+          ),
+          const SizedBox(height: 3),
+          Container(
+            width: 28,
+            height: height,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: week.isCurrentWeek ? AppColors.brand : Colors.transparent,
+                width: 2,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _weekTypeColor(double volumeKm) {
+    if (volumeKm <= 0)  return AppColors.borderOf(context);
+    if (volumeKm < 30)  return AppColors.rpeLow.withOpacity(0.5);
+    if (volumeKm < 60)  return AppColors.rpeLow;
+    if (volumeKm < 90)  return AppColors.brand;
+    return AppColors.rpeMax;
+  }
+
+  Widget _buildSeasonLegend() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'TIPO DE SEMANA',
+          style: AppTypography.small.copyWith(
+            color: AppColors.textSecondary(context),
+            letterSpacing: 1.5,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.m),
+        Wrap(
+          spacing: AppSpacing.l,
+          runSpacing: AppSpacing.s,
+          children: [
+            _legendItem('Sin datos', AppColors.borderOf(context)),
+            _legendItem('< 30 km',   AppColors.rpeLow.withOpacity(0.5)),
+            _legendItem('30–60 km',  AppColors.rpeLow),
+            _legendItem('60–90 km',  AppColors.brand),
+            _legendItem('> 90 km',   AppColors.rpeMax),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _legendItem(String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12, height: 12,
+          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
+        ),
+        const SizedBox(width: 6),
+        Text(label, style: AppTypography.small.copyWith(color: AppColors.textSecondary(context))),
+      ],
+    );
+  }
+
+  void _showWeekDetailSheet(_WeekData week) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(AppSpacing.l),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36, height: 4,
+                margin: const EdgeInsets.only(bottom: AppSpacing.l),
+                decoration: BoxDecoration(
+                  color: AppColors.borderOf(context),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Text(
+              'Semana ${week.weekNumber}',
+              style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context)),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _formatWeekRange(week.weekStart, week.weekEnd),
+              style: AppTypography.small.copyWith(color: AppColors.textSecondary(context)),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _MiniStat(
+                  week.volumeKm > 0 ? '${week.volumeKm.toStringAsFixed(1)} km' : '–',
+                  'Volumen',
+                ),
+                _MiniStat('${week.sessionCount}', 'Sesiones'),
+                _MiniStat(_weekLabel(week.volumeKm), 'Tipo'),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xl),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _weekLabel(double km) {
+    if (km <= 0)  return 'Sin datos';
+    if (km < 25)  return 'Descarga';
+    if (km < 55)  return 'Base';
+    if (km < 85)  return 'Carga';
+    return 'Pico';
+  }
+
+  // ── Helpers vista temporada ───────────────────────────────────────────────
+
+  List<_WeekData> _getWeeksOfYear(int year, List<Entrenamiento> workouts) {
+    final jan1   = DateTime(year, 1, 1);
+    final dec31  = DateTime(year, 12, 31);
+    final result = <_WeekData>[];
+
+    // Empezar en el lunes de la semana que contiene el 1 de enero
+    var start     = jan1.subtract(Duration(days: jan1.weekday - 1));
+    int weekNum   = 1;
+    final today   = DateTime.now();
+
+    while (!start.isAfter(dec31)) {
+      final end = start.add(const Duration(days: 6));
+
+      // Solo semanas que solapan con el año
+      if (!end.isBefore(jan1)) {
+        double vol   = 0;
+        int    count = 0;
+        for (final w in workouts) {
+          final d = DateTime(w.fecha.year, w.fecha.month, w.fecha.day);
+          if (!d.isBefore(start) && !d.isAfter(end)) {
+            vol   += w.distanciaTotalM() / 1000.0;
+            count++;
+          }
+        }
+        final isCurrent = !today.isBefore(start) && !today.isAfter(end);
+        result.add(_WeekData(
+          weekNumber:    weekNum,
+          weekStart:     start,
+          weekEnd:       end,
+          volumeKm:      vol,
+          sessionCount:  count,
+          isCurrentWeek: isCurrent,
+        ));
+      }
+
+      start   = start.add(const Duration(days: 7));
+      weekNum++;
+      if (weekNum > 54) break;
+    }
+    return result;
   }
 
   // ── Helpers — cards día (vista mensual) ───────────────────────────────────
@@ -1273,16 +1392,6 @@ class _CalendarViewState extends State<CalendarView> {
     return colors.take(3).toList();
   }
 
-  Color _weekTypeColor(String weekType) {
-    switch (weekType) {
-      case 'carga':       return const Color(0xFFE57373);
-      case 'base':        return AppColors.brand;
-      case 'descarga':    return AppColors.rpeLow;
-      case 'competición': return AppColors.effort;
-      default:            return AppColors.iconMuted;
-    }
-  }
-
   String _weekTypeLabel(String weekType) {
     switch (weekType) {
       case 'carga':       return 'CARGA';
@@ -1412,3 +1521,22 @@ class _LegendDot extends StatelessWidget {
     );
   }
 }
+
+class _WeekData {
+  final int      weekNumber;
+  final DateTime weekStart;
+  final DateTime weekEnd;
+  final double   volumeKm;
+  final int      sessionCount;
+  final bool     isCurrentWeek;
+
+  const _WeekData({
+    required this.weekNumber,
+    required this.weekStart,
+    required this.weekEnd,
+    required this.volumeKm,
+    required this.sessionCount,
+    required this.isCurrentWeek,
+  });
+}
+
