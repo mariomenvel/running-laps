@@ -17,7 +17,10 @@ import 'package:running_laps/features/groups/views/groups_list_screen.dart';
 import 'package:running_laps/features/groups/views/participant_profile_screen.dart';
 import 'package:running_laps/features/training/views/manual_training_view.dart';
 import 'package:running_laps/features/admin/views/admin_panel_screen.dart';
-import 'package:running_laps/features/profile/views/avatar_editor_wraper_view.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:running_laps/features/avatar/models/avatar_config.dart';
+import 'package:running_laps/features/avatar/services/avatar_generator.dart';
+import 'package:running_laps/features/avatar/views/avatar_customizer_view.dart';
 import 'package:running_laps/features/profile/views/account_settings_view.dart';
 import 'package:running_laps/features/profile/views/zones_config_screen.dart';
 import 'package:running_laps/features/profile/views/heart_rate_monitor_view.dart';
@@ -36,6 +39,7 @@ class _ProfileViewState extends State<ProfileView> {
   String? _photoUrl;
   bool _isAdmin = false;
   bool _isAthleteMode = false;
+  AvatarConfig? _avatarConfig;
 
   @override
   void initState() {
@@ -56,11 +60,17 @@ class _ProfileViewState extends State<ProfileView> {
     final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
     if (!mounted) return;
     final data = doc.data() ?? {};
+    AvatarConfig? parsed;
+    final rawConfig = data['generativeAvatarConfig'];
+    if (rawConfig is Map<String, dynamic>) {
+      parsed = AvatarConfig.fromMap(rawConfig);
+    }
     setState(() {
-      _userName     = data['nombre'] ?? 'Usuario';
-      _photoUrl     = data['profileImageUrl'];
-      _isAdmin      = data['isAdmin'] ?? false;
+      _userName      = data['nombre'] ?? 'Usuario';
+      _photoUrl      = data['profileImageUrl'];
+      _isAdmin       = data['isAdmin'] ?? false;
       _isAthleteMode = data['isAthleteMode'] ?? false;
+      _avatarConfig  = parsed ?? AvatarConfig.random();
     });
   }
 
@@ -339,6 +349,18 @@ class _ProfileViewState extends State<ProfileView> {
     ).then((_) => setState(() {})); // refresca el subtitle tras cerrar
   }
 
+  Future<void> _openAvatarCustomizer() async {
+    final result = await Navigator.push<AvatarConfig>(
+      context,
+      AppModalRoute(
+        page: AvatarCustomizerView(initialConfig: _avatarConfig),
+      ),
+    );
+    if (result != null && mounted) {
+      setState(() => _avatarConfig = result);
+    }
+  }
+
   Future<void> _logout() async {
     try {
       await _authCtrl.signOut();
@@ -369,18 +391,21 @@ class _ProfileViewState extends State<ProfileView> {
             child: Column(
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    AppModalRoute(page: const AvatarEditorWrapperView()),
-                  ),
-                  child: CircleAvatar(
-                    radius: 40,
-                    backgroundColor: AppColors.surfaceOf(context),
-                    backgroundImage: _photoUrl != null ? NetworkImage(_photoUrl!) : null,
-                    child: _photoUrl == null
-                        ? Icon(Icons.person, color: AppColors.iconMutedOf(context), size: 40)
-                        : null,
-                  ),
+                  onTap: _openAvatarCustomizer,
+                  child: _avatarConfig != null
+                      ? ClipOval(
+                          child: SvgPicture.string(
+                            AvatarGenerator.generateSVG(_avatarConfig!),
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : CircleAvatar(
+                          radius: 40,
+                          backgroundColor: AppColors.surfaceOf(context),
+                          child: Icon(Icons.person, color: AppColors.iconMutedOf(context), size: 40),
+                        ),
                 ),
                 const SizedBox(height: AppSpacing.m),
                 Text(_userName, style: AppTypography.h2.copyWith(color: AppColors.textPrimary(context))),
@@ -513,10 +538,7 @@ class _ProfileViewState extends State<ProfileView> {
             _MenuItem(
               icon: Icons.brush_outlined,
               label: 'Editar avatar',
-              onTap: () => Navigator.push(
-                context,
-                AppModalRoute(page: const AvatarEditorWrapperView()),
-              ),
+              onTap: _openAvatarCustomizer,
             ),
           ]),
 

@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
+import 'package:running_laps/features/avatar/models/avatar_config.dart';
+import 'package:running_laps/features/avatar/services/avatar_generator.dart';
 import 'package:running_laps/features/calendar/views/calendar_view.dart';
 import 'package:running_laps/features/home/views/home_view.dart';
 import 'package:running_laps/features/analytics/views/analytics_hub_screen.dart';
@@ -61,7 +66,7 @@ class _MainShellState extends State<MainShell> {
             backgroundImage: AssetImage('assets/images/logo.png'),
           ),
           const Spacer(),
-          AvatarHelper.construirImagenPerfil(radius: 20),
+          const _LiveAvatarBadge(radius: 20),
         ],
       ),
     );
@@ -204,6 +209,47 @@ class _NavItem extends StatelessWidget {
       ),
     );
   }
+}
+
+// ─── Live avatar badge (Firestore stream) ────────────────────────────────────
+
+class _LiveAvatarBadge extends StatelessWidget {
+  const _LiveAvatarBadge({required this.radius});
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return _placeholder(context);
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
+      builder: (context, snap) {
+        AvatarConfig config = AvatarConfig.defaults;
+        if (snap.hasData && snap.data!.exists) {
+          final data = snap.data!.data() as Map<String, dynamic>;
+          final raw = data['generativeAvatarConfig'];
+          if (raw is Map<String, dynamic>) {
+            config = AvatarConfig.fromMap(raw);
+          }
+        }
+        return ClipOval(
+          child: SvgPicture.string(
+            AvatarGenerator.generateSVG(config),
+            width: radius * 2,
+            height: radius * 2,
+            fit: BoxFit.cover,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _placeholder(BuildContext context) => CircleAvatar(
+        radius: radius,
+        backgroundColor: AppColors.surfaceOf(context),
+        child: Icon(Icons.person, color: AppColors.iconMutedOf(context), size: radius),
+      );
 }
 
 // ─── FAB central ─────────────────────────────────────────────────────────────
