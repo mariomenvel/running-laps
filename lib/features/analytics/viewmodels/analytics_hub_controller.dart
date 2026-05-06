@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/services/rate_limit_service.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/data/training_repository.dart';
 
@@ -53,6 +55,8 @@ class AnalyticsHubController {
       _allData = await _repository.getAllEntrenamientos(userId);
       // Ordenar por fecha desc
       _allData.sort((a, b) => b.fecha.compareTo(a.fecha));
+    } on RateLimitExceededException catch (e) {
+      debugPrint('[AnalyticsHubController] rate limited: $e');
     } catch (e) {
       // Error
     } finally {

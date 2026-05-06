@@ -38,10 +38,12 @@ void main() async {
 
   await ThemeService.init();
 
-  // Intentar reconectar pulsómetro en background — no bloquea el arranque
-  HeartRateService().autoReconnect().catchError(
-    (e) => debugPrint('[main] HR autoReconnect: $e'),
-  );
+  // Intentar reconectar pulsómetro en background — solo en móvil (BLE no disponible en Web)
+  if (!kIsWeb) {
+    HeartRateService().autoReconnect().catchError(
+      (e) => debugPrint('[main] HR autoReconnect: $e'),
+    );
+  }
 
   await NotificationService().init();
   NotificationService().scheduleWeeklySummary().catchError(

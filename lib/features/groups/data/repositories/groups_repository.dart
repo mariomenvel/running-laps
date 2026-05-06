@@ -1,13 +1,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/group_models.dart';
 import '../models/enums.dart';
+import 'package:running_laps/core/services/rate_limit_service.dart';
 
 /// Repository para gestión de grupos
 class GroupsRepository {
   final FirebaseFirestore _firestore;
+  final RateLimitService _rateLimitService = RateLimitService();
 
   GroupsRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+      : _firestore = firestore ?? FirebaseFirestore.instance {
+    _rateLimitService.registerLimit('groups:getAll', const Duration(seconds: 2));
+    _rateLimitService.registerLimit('groups:create', const Duration(seconds: 5));
+    _rateLimitService.registerLimit('groups:join', const Duration(seconds: 3));
+    _rateLimitService.registerLimit('groups:ranking', const Duration(seconds: 3));
+  }
 
   // ============================================
   // CREATE
@@ -15,9 +22,12 @@ class GroupsRepository {
 
   /// Crea un nuevo grupo en Firestore
   Future<String> createGroup(Group group) async {
+    _rateLimitService.checkLimit('groups:create');
     try {
       final docRef = await _firestore.collection('groups').add(group.toMap());
       return docRef.id;
+    } on RateLimitExceededException {
+      rethrow;
     } catch (e) {
       throw Exception('Error creating group: $e');
     }
@@ -25,6 +35,7 @@ class GroupsRepository {
 
   /// Añade un miembro al grupo (usado principalmente para crear el owner al inicio)
   Future<void> addMember(String groupId, GroupMember member) async {
+    _rateLimitService.checkLimit('groups:join');
     try {
       await _firestore
           .collection('groups')
@@ -32,6 +43,8 @@ class GroupsRepository {
           .collection('members')
           .doc(member.uid)
           .set(member.toMap());
+    } on RateLimitExceededException {
+      rethrow;
     } catch (e) {
       throw Exception('Error adding member to group: $e');
     }
@@ -43,10 +56,13 @@ class GroupsRepository {
 
   /// Obtiene un grupo por su ID
   Future<Group?> getGroupById(String groupId) async {
+    _rateLimitService.checkLimit('groups:getAll');
     try {
       final doc = await _firestore.collection('groups').doc(groupId).get();
       if (!doc.exists) return null;
       return Group.fromMap(doc.data()!, id: doc.id);
+    } on RateLimitExceededException {
+      rethrow;
     } catch (e) {
       throw Exception('Error fetching group: $e');
     }

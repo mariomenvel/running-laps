@@ -2,14 +2,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'template_models.dart';
 import '../../auth/data/auth_repository.dart'; // To get userId
 import 'package:firebase_auth/firebase_auth.dart'; // Or wherever Auth is
+import 'package:running_laps/core/services/rate_limit_service.dart';
 
 class TrainingTemplatesRepository {
   final FirebaseFirestore _firestore;
-  // Assuming Auth is handled by checking current user, or passed in.
-  // Using generic FirebaseAuth for now or strictly checking current user.
-  
+  final RateLimitService _rateLimitService = RateLimitService();
+
   TrainingTemplatesRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+      : _firestore = firestore ?? FirebaseFirestore.instance {
+    _rateLimitService.registerLimit('templates:getAll', const Duration(seconds: 2));
+    _rateLimitService.registerLimit('templates:save', const Duration(seconds: 2));
+    _rateLimitService.registerLimit('templates:delete', const Duration(seconds: 3));
+  }
 
   String? get _currentUserId => FirebaseAuth.instance.currentUser?.uid;
 
@@ -19,6 +23,7 @@ class TrainingTemplatesRepository {
 
   // CREATE
   Future<String> createTemplate(TrainingTemplate template) async {
+    _rateLimitService.checkLimit('templates:save');
     final uid = _currentUserId;
     if (uid == null) throw Exception('No authenticated user');
 
@@ -28,6 +33,7 @@ class TrainingTemplatesRepository {
 
   // READ ALl
   Future<List<TrainingTemplate>> getUserTemplates() async {
+    _rateLimitService.checkLimit('templates:getAll');
     final uid = _currentUserId;
     if (uid == null) return [];
 
@@ -45,6 +51,7 @@ class TrainingTemplatesRepository {
 
   // UPDATE
   Future<void> updateTemplate(TrainingTemplate template) async {
+    _rateLimitService.checkLimit('templates:save');
     final uid = _currentUserId;
     if (uid == null) throw Exception('No authenticated user');
 
@@ -53,6 +60,7 @@ class TrainingTemplatesRepository {
 
   // DELETE
   Future<void> deleteTemplate(String templateId) async {
+    _rateLimitService.checkLimit('templates:delete');
     final uid = _currentUserId;
     if (uid == null) throw Exception('No authenticated user');
 

@@ -2,6 +2,8 @@ import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/services/rate_limit_service.dart';
+import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/data/training_repository.dart';
 import 'package:running_laps/features/history/viewmodels/history_analytics_view_model.dart';
@@ -95,6 +97,9 @@ class HistoryController {
       } catch (_) {}
 
       applyFilters();
+    } on RateLimitExceededException catch (e) {
+      debugPrint('[HistoryController] loadTrainings rate limited: $e');
+      error.value = 'Espera ${e.duration.inSeconds}s';
     } catch (e) {
       error.value = 'Error al cargar entrenamientos: $e';
     } finally {
@@ -122,6 +127,8 @@ class HistoryController {
       _hasMore = page.hasMore;
 
       applyFilters();
+    } on RateLimitExceededException catch (e) {
+      debugPrint('[HistoryController] loadMore rate limited: $e');
     } catch (e) {
       debugPrint('[HistoryController] loadMore error: $e');
     } finally {

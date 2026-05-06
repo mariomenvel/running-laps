@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'entrenamiento.dart';
 import 'serie.dart';
 import '../../../core/services/gps_service.dart';
+import '../../../core/services/rate_limit_service.dart';
 import '../../../core/utils/rdp_smoother.dart';
 import '../../../features/groups/data/services/training_challenge_sync_service.dart';
 import '../../../features/home/data/home_estadistica_repository.dart';
@@ -23,6 +24,12 @@ class TrainingRepository {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final TrainingChallengeSyncService _syncService = TrainingChallengeSyncService();
+  final RateLimitService _rateLimitService = RateLimitService();
+
+  TrainingRepository() {
+    _rateLimitService.registerLimit('history:getTrainings', const Duration(seconds: 2));
+    _rateLimitService.registerLimit('training:save', const Duration(seconds: 3));
+  }
 
   String _requireUid() {
     final User? u = _auth.currentUser;
@@ -37,6 +44,7 @@ class TrainingRepository {
   }
 
   Future<String> createTraining(Entrenamiento e) async {
+    _rateLimitService.checkLimit('training:save');
     final String uid = _requireUid();
 
     // RDP smoothing on trackPoints (whole-session trace)
@@ -106,6 +114,7 @@ class TrainingRepository {
     DocumentSnapshot? startAfter,
     int pageSize = 20,
   }) async {
+    _rateLimitService.checkLimit('history:getTrainings');
     final resolvedUid = uid ?? _requireUid();
 
     Query<Map<String, dynamic>> query = _userTrainings(resolvedUid)

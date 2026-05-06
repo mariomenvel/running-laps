@@ -21,11 +21,14 @@ enum HrConnectionState {
 }
 
 class HeartRateService {
-  static final HeartRateService _instance = HeartRateService._internal();
-  factory HeartRateService() => _instance;
-  HeartRateService._internal();
+  static HeartRateService? _instance;
+  factory HeartRateService() => _instance ??= HeartRateService._internal();
 
-  final _ble = FlutterReactiveBle();
+  // Null on Web — BLE is not available in browsers.
+  final FlutterReactiveBle? _ble;
+
+  HeartRateService._internal()
+      : _ble = kIsWeb ? null : FlutterReactiveBle();
 
   // Estado público
   final ValueNotifier<HrConnectionState> connectionState =
@@ -44,6 +47,7 @@ class HeartRateService {
 
   // Solicitar permisos BLE
   Future<bool> requestPermissions() async {
+    if (kIsWeb) return false;
     if (Platform.isAndroid) {
       final sdkInt = await DeviceInfoPlugin()
           .androidInfo
@@ -69,7 +73,7 @@ class HeartRateService {
     // El diálogo del sistema aparece automáticamente al iniciar el scan.
     if (Platform.isIOS) {
       try {
-        final status = await _ble.statusStream.first
+        final status = await _ble!.statusStream.first
             .timeout(const Duration(seconds: 3));
         if (status == BleStatus.ready) return true;
         if (status == BleStatus.poweredOff) return false;
@@ -85,8 +89,9 @@ class HeartRateService {
   }
 
   Future<BleStatus> getBleStatus() async {
+    if (kIsWeb) return BleStatus.unsupported;
     try {
-      return await _ble.statusStream.first
+      return await _ble!.statusStream.first
           .timeout(const Duration(seconds: 2));
     } catch (e) {
       return BleStatus.unknown;
@@ -97,11 +102,12 @@ class HeartRateService {
   Future<void> startScan({
     Duration timeout = const Duration(seconds: 10),
   }) async {
+    if (kIsWeb) return;
     scannedDevices.value = [];
     connectionState.value = HrConnectionState.scanning;
 
     _scanSub?.cancel();
-    _scanSub = _ble
+    _scanSub = _ble!
         .scanForDevices(
           withServices: [_heartRateServiceUuid],
           scanMode: ScanMode.lowLatency,
@@ -138,10 +144,11 @@ class HeartRateService {
 
   // Conectar a un dispositivo
   Future<void> connect(String deviceId, {String? deviceName}) async {
+    if (kIsWeb) return;
     await disconnect();
     connectionState.value = HrConnectionState.connecting;
 
-    _connectionSub = _ble
+    _connectionSub = _ble!
         .connectToDevice(
           id: deviceId,
           connectionTimeout: const Duration(seconds: 10),
@@ -178,7 +185,7 @@ class HeartRateService {
 
     _measurementSub?.cancel();
     _measurementSub =
-        _ble.subscribeToCharacteristic(characteristic).listen(
+        _ble!.subscribeToCharacteristic(characteristic).listen(
           (data) {
             heartRate.value = _parseHeartRate(data);
           },
