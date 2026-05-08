@@ -6,6 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
 import '../models/avatar_config.dart';
 import '../services/avatar_generator.dart';
 
@@ -64,7 +66,9 @@ class _AvatarCustomizerViewState extends State<AvatarCustomizerView> {
         child: Column(
           children: [
             _AvatarHeader(
-              onBack: () => Navigator.pop(context),
+              onBack: ShellEmbeddingScope.isEmbedded(context)
+                  ? () => MainShell.shellKey.currentState?.navigateBack()
+                  : () => Navigator.pop(context),
               onShuffle: () => _update(AvatarConfig.random()),
               onSave: _saving ? null : _save,
               saving: _saving,

@@ -6,8 +6,8 @@ import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/standard_table_calendar.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
-import 'package:running_laps/features/athlete/views/athlete_session_editor_view.dart';
 import 'package:running_laps/features/calendar/viewmodels/calendar_view_model.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
@@ -726,9 +726,9 @@ class _CalendarViewState extends State<CalendarView> {
                 const Spacer(),
                 if (isAthlete && sessions.isEmpty)
                   GestureDetector(
-                    onTap: () => Navigator.push(
-                      context,
-                      AppRoute(page: AthleteSessionEditorView(uid: _vm.userId, initialDate: _normalize(day))),
+                    onTap: () => MainShell.shellKey.currentState?.navigateTo(
+                      13,
+                      params: AthleteSessionShellParams(date: _normalize(day)),
                     ),
                     child: const Icon(Icons.add_circle_outline, color: AppColors.brand, size: 20),
                   ),
@@ -1199,9 +1199,9 @@ class _CalendarViewState extends State<CalendarView> {
               foregroundColor: AppColors.brand,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.buttonRadius)),
             ),
-            onPressed: () => Navigator.push(
-              context,
-              AppRoute(page: AthleteSessionEditorView(uid: _vm.userId, initialDate: _normalize(day))),
+            onPressed: () => MainShell.shellKey.currentState?.navigateTo(
+              13,
+              params: AthleteSessionShellParams(date: _normalize(day)),
             ),
           ),
         ],
@@ -1263,9 +1263,9 @@ class _CalendarViewState extends State<CalendarView> {
                 IconButton(
                   icon: const Icon(Icons.edit_outlined),
                   color: AppColors.iconMutedOf(context),
-                  onPressed: () => Navigator.push(
-                    context,
-                    AppRoute(page: AthleteSessionEditorView(uid: _vm.userId, initialDate: _normalize(day), existingSession: session)),
+                  onPressed: () => MainShell.shellKey.currentState?.navigateTo(
+                    13,
+                    params: AthleteSessionShellParams(date: _normalize(day), session: session),
                   ),
                 ),
               ],

@@ -6,24 +6,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/theme/theme_service.dart';
 import 'package:running_laps/core/services/heart_rate_service.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/auth/viewmodels/auth_controller.dart';
 import 'package:running_laps/features/auth/views/auth_page.dart';
-import 'package:running_laps/features/history/views/history_screen.dart';
-import 'package:running_laps/features/templates/views/templates_list_view.dart';
-import 'package:running_laps/features/groups/views/groups_list_screen.dart';
 import 'package:running_laps/features/groups/views/participant_profile_screen.dart';
 import 'package:running_laps/features/training/views/manual_training_view.dart';
 import 'package:running_laps/features/admin/views/admin_panel_screen.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:running_laps/features/avatar/models/avatar_config.dart';
 import 'package:running_laps/features/avatar/services/avatar_generator.dart';
-import 'package:running_laps/features/avatar/views/avatar_customizer_view.dart';
-import 'package:running_laps/features/profile/views/account_settings_view.dart';
-import 'package:running_laps/features/profile/views/zones_config_screen.dart';
-import 'package:running_laps/features/profile/views/heart_rate_monitor_view.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -183,7 +177,7 @@ class _ProfileViewState extends State<ProfileView> {
           'loadScore':       double.parse(loadScore.toStringAsFixed(1)),
           'fcMediaSesion':   138.0 + random.nextInt(25),
           'isManual':        random.nextDouble() > 0.75,
-          'tags':            [type],
+          'tags':            _tagsForType(type, random),
           'createdAt':       date.toIso8601String(),
           'updatedAt':       date.toIso8601String(),
         });
@@ -217,6 +211,20 @@ class _ProfileViewState extends State<ProfileView> {
       if (!mounted) return;
       ModernSnackBar.showError(context, 'Error: $e');
     }
+  }
+
+  List<String> _tagsForType(String type, Random random) {
+    const customExtras = ['pista', 'montaña', 'lluvia'];
+    final tags = switch (type) {
+      'series' => ['series'],
+      'tempo'  => ['tempo'],
+      'largo'  => ['largo', 'rodaje'],
+      _        => ['rodaje'],
+    };
+    if (random.nextDouble() < 0.30) {
+      tags.add(customExtras[random.nextInt(customExtras.length)]);
+    }
+    return tags;
   }
 
   Future<void> _generatePlannedSessions(
@@ -349,16 +357,8 @@ class _ProfileViewState extends State<ProfileView> {
     ).then((_) => setState(() {})); // refresca el subtitle tras cerrar
   }
 
-  Future<void> _openAvatarCustomizer() async {
-    final result = await Navigator.push<AvatarConfig>(
-      context,
-      AppModalRoute(
-        page: AvatarCustomizerView(initialConfig: _avatarConfig),
-      ),
-    );
-    if (result != null && mounted) {
-      setState(() => _avatarConfig = result);
-    }
+  void _openAvatarCustomizer() {
+    MainShell.shellKey.currentState?.navigateTo(14, params: _avatarConfig);
   }
 
   Future<void> _logout() async {
@@ -377,8 +377,6 @@ class _ProfileViewState extends State<ProfileView> {
 
   @override
   Widget build(BuildContext context) {
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
       child: Column(
@@ -441,20 +439,20 @@ class _ProfileViewState extends State<ProfileView> {
             _MenuItem(
               icon: Icons.fitness_center_outlined,
               label: 'Mis plantillas',
-              onTap: () => Navigator.push(context, AppRoute(page: const TemplatesListView())),
+              onTap: () => MainShell.shellKey.currentState?.navigateTo(11),
             ),
             const _MenuDivider(),
             _MenuItem(
               icon: Icons.favorite_outline,
               label: 'Zonas de entrenamiento',
               subtitle: 'FC máx, zonas personalizadas',
-              onTap: () => Navigator.push(context, AppRoute(page: ZonesConfigScreen(uid: uid))),
+              onTap: () => MainShell.shellKey.currentState?.navigateTo(9),
             ),
             const _MenuDivider(),
             _MenuItem(
               icon: Icons.history_outlined,
               label: 'Historial completo',
-              onTap: () => Navigator.push(context, AppRoute(page: const HistoryScreen())),
+              onTap: () => MainShell.shellKey.currentState?.navigateTo(4),
             ),
             const _MenuDivider(),
             _MenuItem(
@@ -474,7 +472,7 @@ class _ProfileViewState extends State<ProfileView> {
             _MenuItem(
               icon: Icons.group_outlined,
               label: 'Mis grupos',
-              onTap: () => Navigator.push(context, AppRoute(page: const GroupsListScreen())),
+              onTap: () => MainShell.shellKey.currentState?.navigateTo(6),
             ),
             const _MenuDivider(),
             _MenuItem(
@@ -513,10 +511,7 @@ class _ProfileViewState extends State<ProfileView> {
                       ? 'Conectado${name != null ? ' · $name' : ''}'
                       : 'Sin conectar',
                   subtitleColor: isConnected ? AppColors.rpeLow : null,
-                  onTap: () => Navigator.push(
-                    context,
-                    AppRoute(page: const HeartRateMonitorView()),
-                  ),
+                  onTap: () => MainShell.shellKey.currentState?.navigateTo(10),
                 );
               },
             ),
@@ -524,21 +519,15 @@ class _ProfileViewState extends State<ProfileView> {
             _MenuItem(
               icon: Icons.settings_outlined,
               label: 'Cuenta y ajustes',
-              onTap: () => Navigator.push(
-                context,
-                AppRoute(
-                  page: AccountSettingsView(
-                    currentName: _userName,
-                    onNameUpdated: _loadUserData,
-                  ),
-                ),
-              ),
+              onTap: () => MainShell.shellKey.currentState?.navigateTo(8,
+                  params: {'name': _userName, 'onUpdated': _loadUserData}),
             ),
             const _MenuDivider(),
             _MenuItem(
               icon: Icons.brush_outlined,
               label: 'Editar avatar',
-              onTap: _openAvatarCustomizer,
+              onTap: () => MainShell.shellKey.currentState?.navigateTo(14,
+                  params: _avatarConfig),
             ),
           ]),
 

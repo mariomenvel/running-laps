@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/features/profile/viewmodels/zones_viewmodel.dart';
 
 class ZonesConfigScreen extends StatefulWidget {
@@ -112,10 +113,12 @@ class _ZonesConfigScreenState extends State<ZonesConfigScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Zonas de entrenamiento'),
-        centerTitle: true,
-      ),
+      appBar: ShellEmbeddingScope.isEmbedded(context)
+          ? null
+          : AppBar(
+              title: const Text('Zonas de entrenamiento'),
+              centerTitle: true,
+            ),
       body: ValueListenableBuilder<ZonesViewModelState>(
         valueListenable: _vm.state,
         builder: (context, vmState, _) {

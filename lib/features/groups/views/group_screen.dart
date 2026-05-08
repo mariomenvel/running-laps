@@ -15,6 +15,8 @@ import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/gradient_banner.dart';
+import '../../../../core/widgets/main_shell.dart';
+import '../../../../core/widgets/shell_embedding_scope.dart';
 
 // Screens
 import 'challenge_detail_screen.dart';
@@ -177,7 +179,11 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   child: Row(
                     children: [
-                      _AnimatedBackButton(onTap: () => Navigator.pop(context)),
+                      _AnimatedBackButton(
+                        onTap: ShellEmbeddingScope.isEmbedded(context)
+                            ? () => MainShell.shellKey.currentState?.navigateBack()
+                            : () => Navigator.pop(context),
+                      ),
                     ],
                   ),
                 ),

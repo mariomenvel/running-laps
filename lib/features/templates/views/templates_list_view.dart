@@ -4,6 +4,8 @@ import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/app_header.dart'; // Using AppHeader if appropriate, or standard AppBar
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
+import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import '../data/template_models.dart';
 import '../data/templates_repository.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
@@ -157,6 +159,16 @@ class _TemplatesListViewState extends State<TemplatesListView> {
   }
 
   void _navigateToEditor({TrainingTemplate? template, bool isWarmupCooldown = false}) async {
+    final embedded = ShellEmbeddingScope.isEmbedded(context);
+    if (embedded && !widget.isSelectionMode) {
+      MainShell.shellKey.currentState?.navigateTo(12,
+          params: TemplateEditorShellParams(
+            template: template,
+            isWarmupCooldown: template?.isWarmupCooldown ?? isWarmupCooldown,
+          ));
+      return;
+    }
+
     final result = await Navigator.push(
       context,
       AppModalRoute(

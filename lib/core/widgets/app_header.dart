@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 
 class AppHeader extends StatelessWidget {
   final VoidCallback? onTapLeft;
@@ -23,6 +24,7 @@ class AppHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (ShellEmbeddingScope.isEmbedded(context)) return const SizedBox.shrink();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final topPadding = MediaQuery.of(context).padding.top;
     return Container(

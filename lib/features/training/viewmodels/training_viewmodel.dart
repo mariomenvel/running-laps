@@ -73,6 +73,12 @@ class TrainingViewModel {
     }
   }
 
+  void updateSerieRpeAt(int index, double rpe) {
+    if (index >= 0 && index < _series.length) {
+      _series[index] = _series[index].copyWith(rpe: rpe.clamp(1.0, 10.0));
+    }
+  }
+
   // ------- VALIDACIONES -------
 
   /// Devuelve un mensaje de error o null si todo está correcto.

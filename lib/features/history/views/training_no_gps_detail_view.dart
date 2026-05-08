@@ -12,16 +12,17 @@ import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/app_page_scaffold.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 
-class TrainingNoGpsDetailView extends StatefulWidget {
+// ignore: unused_element
+class TrainingNoGpsDetailViewLegacy extends StatefulWidget {
   final Entrenamiento training;
 
-  const TrainingNoGpsDetailView({Key? key, required this.training}) : super(key: key);
+  const TrainingNoGpsDetailViewLegacy({Key? key, required this.training}) : super(key: key);
 
   @override
-  State<TrainingNoGpsDetailView> createState() => _TrainingNoGpsDetailViewState();
+  State<TrainingNoGpsDetailViewLegacy> createState() => _TrainingNoGpsDetailViewLegacyState();
 }
 
-class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
+class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewLegacy>
     with SingleTickerProviderStateMixin {
   Entrenamiento get training => widget.training;
 

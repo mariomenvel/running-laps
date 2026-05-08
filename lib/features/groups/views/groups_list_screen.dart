@@ -23,7 +23,7 @@ import '../../../core/widgets/gradient_banner.dart';
 import '../../../core/widgets/skeleton_shimmer.dart';
 
 // Navigation
-import 'group_screen.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
 import '../../training/views/training_start_view.dart';
 import '../../profile/views/profile_menu_screen_legacy.dart';
 
@@ -612,10 +612,7 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
           onTapUp: _onTapUp,
           onTapCancel: _onTapCancel,
           onTap: () {
-            Navigator.push(
-              context,
-              AppRoute(page: GroupScreen(groupId: widget.groupId)),
-            );
+            MainShell.shellKey.currentState?.navigateTo(7, params: widget.groupId);
           },
           child: ScaleTransition(
             scale: _scaleAnimation,

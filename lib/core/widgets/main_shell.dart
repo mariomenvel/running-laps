@@ -4,38 +4,209 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
+import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/features/avatar/models/avatar_config.dart';
 import 'package:running_laps/features/avatar/services/avatar_generator.dart';
+import 'package:running_laps/features/avatar/views/avatar_customizer_view.dart';
 import 'package:running_laps/features/calendar/views/calendar_view.dart';
 import 'package:running_laps/features/home/views/home_view.dart';
 import 'package:running_laps/features/analytics/views/analytics_hub_screen.dart';
 import 'package:running_laps/features/profile/views/profile_view.dart';
+import 'package:running_laps/features/profile/views/account_settings_view.dart';
+import 'package:running_laps/features/profile/views/zones_config_screen.dart';
+import 'package:running_laps/features/profile/views/heart_rate_monitor_view.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
+import 'package:running_laps/features/history/views/history_screen.dart';
+import 'package:running_laps/features/history/views/training_detail_view.dart';
+import 'package:running_laps/features/training/data/entrenamiento.dart';
+import 'package:running_laps/features/groups/views/groups_list_screen.dart';
+import 'package:running_laps/features/groups/views/group_screen.dart';
+import 'package:running_laps/features/templates/views/templates_list_view.dart';
+import 'package:running_laps/features/templates/views/template_editor_view.dart';
+import 'package:running_laps/features/templates/data/template_models.dart';
+import 'package:running_laps/features/athlete/views/athlete_session_editor_view.dart';
+import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
+
+// ─── Params para tabs con parámetros ─────────────────────────────────────────
+
+class TemplateEditorShellParams {
+  final TrainingTemplate? template;
+  final bool isWarmupCooldown;
+  const TemplateEditorShellParams({this.template, this.isWarmupCooldown = false});
+}
+
+class AthleteSessionShellParams {
+  final String date;
+  final AthleteSession? session;
+  const AthleteSessionShellParams({required this.date, this.session});
+}
+
+// ─── MainShell ───────────────────────────────────────────────────────────────
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
+
+  static final GlobalKey<_MainShellState> shellKey = GlobalKey<_MainShellState>();
 
   @override
   State<MainShell> createState() => _MainShellState();
 }
 
 class _MainShellState extends State<MainShell> {
-  // Tab activo: 0=Home 1=Calendario 2=Analytics 3=Perfil
   int _tabIndex = 0;
+  int _previousTabIndex = 0;
 
-  // IndexedStack: 4 slots reales (sin el FAB)
-  // índices: 0=Home 1=Calendario 2=Analytics 3=Perfil
+  // Notifiers para tabs con parámetros
+  final _detailNotifier          = ValueNotifier<Entrenamiento?>(null);
+  final _groupIdNotifier         = ValueNotifier<String?>(null);
+  final _accountParamsNotifier   = ValueNotifier<Map<String, dynamic>?>(null);
+  final _templateEditorNotifier  = ValueNotifier<TemplateEditorShellParams?>(null);
+  final _athleteSessionNotifier  = ValueNotifier<AthleteSessionShellParams?>(null);
+  final _avatarConfigNotifier    = ValueNotifier<AvatarConfig?>(null);
+
   late final List<Widget> _screens = [
-    const HomeView(),                   // 0 → Home
-    const CalendarView(),               // 1 → Calendario
-    const AnalyticsHubScreen(),         // 2 → Analytics
-    const ProfileView(),                 // 3 → Perfil
+    // ── Tabs visibles en NavBar ──────────────────────────────────────────────
+    const HomeView(),           // 0 → Inicio
+    const CalendarView(),       // 1 → Calendario
+    const AnalyticsHubScreen(), // 2 → Analytics
+    const ProfileView(),        // 3 → Perfil
+
+    // ── Tabs ocultos en NavBar ───────────────────────────────────────────────
+    const HistoryScreen(),      // 4 → Historial
+
+    // 5 → Detalle entrenamiento
+    ValueListenableBuilder<Entrenamiento?>(
+      valueListenable: _detailNotifier,
+      builder: (_, training, __) => training != null
+          ? TrainingDetailView(
+              key: ValueKey(training.id ?? training.fecha.toIso8601String()),
+              training: training,
+            )
+          : const SizedBox.shrink(),
+    ),
+
+    const GroupsListScreen(),   // 6 → Lista de grupos
+
+    // 7 → Detalle de grupo
+    ValueListenableBuilder<String?>(
+      valueListenable: _groupIdNotifier,
+      builder: (_, gid, __) => gid != null
+          ? GroupScreen(key: ValueKey(gid), groupId: gid)
+          : const SizedBox.shrink(),
+    ),
+
+    // 8 → Cuenta y ajustes
+    ValueListenableBuilder<Map<String, dynamic>?>(
+      valueListenable: _accountParamsNotifier,
+      builder: (_, params, __) => AccountSettingsView(
+        key: ValueKey(params?['name'] ?? ''),
+        currentName: params?['name'] as String? ?? '',
+        onNameUpdated: (params?['onUpdated'] as VoidCallback?) ?? () {},
+      ),
+    ),
+
+    // 9 → Zonas de entrenamiento
+    ZonesConfigScreen(
+      uid: FirebaseAuth.instance.currentUser?.uid ?? '',
+    ),
+
+    const HeartRateMonitorView(), // 10 → Pulsómetro BLE
+
+    const TemplatesListView(),    // 11 → Mis plantillas
+
+    // 12 → Editor de plantilla
+    ValueListenableBuilder<TemplateEditorShellParams?>(
+      valueListenable: _templateEditorNotifier,
+      builder: (_, p, __) => TemplateEditorView(
+        key: ValueKey(p?.template?.id ?? 'new-${p.hashCode}'),
+        template: p?.template,
+        isWarmupCooldown: p?.isWarmupCooldown ?? false,
+      ),
+    ),
+
+    // 13 → Editor sesión atleta
+    ValueListenableBuilder<AthleteSessionShellParams?>(
+      valueListenable: _athleteSessionNotifier,
+      builder: (_, p, __) {
+        final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+        return p != null
+            ? AthleteSessionEditorView(
+                key: ValueKey('${p.date}-${p.session?.id}'),
+                uid: uid,
+                initialDate: p.date,
+                existingSession: p.session,
+              )
+            : const SizedBox.shrink();
+      },
+    ),
+
+    // 14 → Avatar customizer
+    ValueListenableBuilder<AvatarConfig?>(
+      valueListenable: _avatarConfigNotifier,
+      builder: (_, config, __) => AvatarCustomizerView(
+        key: ValueKey(config?.hashCode),
+        initialConfig: config,
+      ),
+    ),
   ];
 
+  @override
+  void dispose() {
+    _detailNotifier.dispose();
+    _groupIdNotifier.dispose();
+    _accountParamsNotifier.dispose();
+    _templateEditorNotifier.dispose();
+    _athleteSessionNotifier.dispose();
+    _avatarConfigNotifier.dispose();
+    super.dispose();
+  }
+
   void _onTabTapped(int navIndex) {
-    // navIndex 2 es el FAB — lo interceptamos arriba en onTap del item
-    if (navIndex == _tabIndex) return; // ya estamos aquí
-    setState(() => _tabIndex = navIndex);
+    if (navIndex == _tabIndex) return;
+    setState(() {
+      _previousTabIndex = _tabIndex;
+      _tabIndex = navIndex;
+    });
+  }
+
+  void navigateTo(int index, {dynamic params}) {
+    switch (index) {
+      case 5:
+        if (params is Entrenamiento) _detailNotifier.value = params;
+      case 7:
+        if (params is String) _groupIdNotifier.value = params;
+      case 8:
+        if (params is Map<String, dynamic>) _accountParamsNotifier.value = params;
+      case 12:
+        if (params is TemplateEditorShellParams) {
+          _templateEditorNotifier.value = params;
+        } else {
+          _templateEditorNotifier.value = null;
+        }
+      case 13:
+        if (params is AthleteSessionShellParams) {
+          _athleteSessionNotifier.value = params;
+        }
+      case 14:
+        _avatarConfigNotifier.value = params is AvatarConfig ? params : null;
+    }
+    setState(() {
+      _previousTabIndex = _tabIndex;
+      _tabIndex = index;
+    });
+  }
+
+  void navigateBack() {
+    setState(() {
+      final prev = _previousTabIndex;
+      _previousTabIndex = _tabIndex;
+      _tabIndex = prev;
+    });
+  }
+
+  // Mantenido para compatibilidad con código existente
+  void navigateToDetail(Entrenamiento training) {
+    navigateTo(5, params: training);
   }
 
   void _launchTraining() {
@@ -80,9 +251,11 @@ class _MainShellState extends State<MainShell> {
           SizedBox(height: MediaQuery.of(context).padding.top),
           _buildGlobalHeader(context),
           Expanded(
-            child: IndexedStack(
-              index: _tabIndex,
-              children: _screens,
+            child: ShellEmbeddingScope(
+              child: IndexedStack(
+                index: _tabIndex,
+                children: _screens,
+              ),
             ),
           ),
         ],

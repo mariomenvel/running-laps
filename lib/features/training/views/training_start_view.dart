@@ -12,6 +12,7 @@ import '../data/entrenamiento.dart';
 import '../data/training_repository.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/theme/app_theme.dart';
 import '../../../core/widgets/app_header.dart';
 import '../../../core/services/gps_service.dart';
 import '../../../core/services/ios_live_activity_service.dart';
@@ -67,7 +68,8 @@ class TrainingStartView extends StatefulWidget {
 }
 
 
-class _TrainingStartViewState extends State<TrainingStartView> {
+class _TrainingStartViewState extends State<TrainingStartView>
+    with TickerProviderStateMixin {
   // --- ViewModel ---
   final TrainingViewModel _vm = TrainingViewModel();
 
@@ -99,6 +101,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   int _restSecondsRemaining = 0;
   int _restTotalSeconds = 0;
   bool _isResting = false;
+  double _restRpe = 5.0;
   StreamSubscription<String>? _iosRestActionSubscription;
 
   // Momento de inicio de sesión (para recovery)
@@ -139,6 +142,23 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   // --- Tags (Selección al guardar) ---
   final Set<String> _selectedTags = {};
 
+  // --- Rediseño pre-entrenamiento ---
+  String? _selectedTrainingType;
+  AthleteSession? _plannedSession;
+  bool _ignoreSession = false;
+
+  // --- Configuración por tipo ---
+  final _cfgDistKmCtrl   = TextEditingController(); // rodaje/largo: dist objetivo km
+  final _cfgPaceCtrl     = TextEditingController(); // pace objetivo mm:ss
+  int    _cfgSeries      = 5;                       // series: número
+  final _cfgSeriesDistCtrl = TextEditingController(); // metros por serie
+  int    _cfgDescanso    = 90;                      // series: descanso en segundos
+  final _cfgSeriesPaceCtrl = TextEditingController(); // pace por serie
+  int    _cfgTempoDur    = 30;                      // tempo: minutos
+  final _cfgTempoPaceCtrl = TextEditingController(); // tempo: pace
+  int    _cfgFartlekDur  = 40;                      // fartlek: minutos totales
+  int    _cfgFartlekBloques = 6;                    // fartlek: bloques rápidos/lentos
+
 
   Future<void> _loadFcMax() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -151,11 +171,25 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     }
   }
 
+  Future<void> _loadPlannedSession() async {
+    if (widget.athleteSessionId == null) return;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    try {
+      final session = await AthleteSessionRepository()
+          .getSession(uid: uid, id: widget.athleteSessionId!);
+      if (mounted) setState(() => _plannedSession = session);
+    } catch (e) {
+      debugPrint('[TrainingStartView] _loadPlannedSession: $e');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _loadUserPreferences();
     _loadFcMax();
+    _loadPlannedSession();
     // CAMBIO 4: reconectar pulsómetro si hay uno guardado
     if (HeartRateService().connectionState.value ==
         HrConnectionState.disconnected) {
@@ -223,6 +257,11 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     _trainingNameController.dispose();
     _restTimer?.cancel();
     _iosRestActionSubscription?.cancel();
+    _cfgDistKmCtrl.dispose();
+    _cfgPaceCtrl.dispose();
+    _cfgSeriesDistCtrl.dispose();
+    _cfgSeriesPaceCtrl.dispose();
+    _cfgTempoPaceCtrl.dispose();
     super.dispose();
   }
 
@@ -249,6 +288,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
         }
       } else {
         timer.cancel();
+        HapticFeedback.mediumImpact();
+        _vm.updateSerieRpeAt(_vm.series.length - 1, _restRpe);
         setState(() {
           _isResting = false;
         });
@@ -262,6 +303,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
   void _skipRest() {
     _restTimer?.cancel();
+    HapticFeedback.mediumImpact();
+    _vm.updateSerieRpeAt(_vm.series.length - 1, _restRpe);
     setState(() {
       _isResting = false;
       _restSecondsRemaining = 0;
@@ -272,9 +315,6 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   }
 
 
-  String _formatRestTime() {
-    return _formatMinSec(_restSecondsRemaining);
-  }
 
 
   String _formatMinSec(int seconds) {
@@ -416,6 +456,47 @@ class _TrainingStartViewState extends State<TrainingStartView> {
     _updateAlarmInterval();
   }
 
+  void _selectType(String type) => setState(() => _selectedTrainingType = type);
+
+  /// Devuelve (min, sec) del pace de config según el tipo activo, o null.
+  (int, int)? _cfgPaceParsed() {
+    final type = _selectedTrainingType;
+    if (type == 'rodaje' || type == 'largo') return _parsePace(_cfgPaceCtrl.text);
+    if (type == 'series') return _parsePace(_cfgSeriesPaceCtrl.text);
+    if (type == 'tempo') return _parsePace(_cfgTempoPaceCtrl.text);
+    return null;
+  }
+
+  void _applyConfigToSeriesState() {
+    if (_selectedTrainingType != 'series') return;
+    final dist = int.tryParse(_cfgSeriesDistCtrl.text.trim());
+    if (dist != null && dist > 0) {
+      setState(() => _distanciaSeleccionada = dist);
+    }
+    setState(() => _descansoSeleccionado = _cfgDescanso);
+  }
+
+  void _showCountdown() {
+    _applyConfigToSeriesState();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(0.7),
+      builder: (ctx) => _CountdownDialog(
+        onComplete: () {
+          Navigator.of(ctx).pop();
+          if (_selectedTrainingType == 'libre') {
+            _startContinuousRun();
+          } else if (_selectedTrainingType == 'series') {
+            _onStartSeriesTap();
+          } else {
+            _startContinuousRunWithConfig();
+          }
+        },
+      ),
+    );
+  }
+
   void _onStartSeriesTap() async {
     // Validamos datos (aunque con los selectores es difícil que falle,
     // pero por si acaso)
@@ -446,8 +527,8 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           alarmIntervalMs:     _alarmIntervalMs,
           currentSeries:       _vm.series.length + 1,
           totalSeries:         _vm.source != null ? _vm.plannedBlocks.length : null,
-          targetPaceMinutes:   _currentBlock?.targetPaceMin,
-          targetPaceSeconds:   _currentBlock?.targetPaceSec,
+          targetPaceMinutes:   _currentBlock?.targetPaceMin ?? _cfgPaceParsed()?.$1,
+          targetPaceSeconds:   _currentBlock?.targetPaceSec ?? _cfgPaceParsed()?.$2,
           targetRpe:           _currentBlock?.targetRpe,
           targetZone:          _currentBlock?.targetZone,
           fcMax:               _fcMax,
@@ -509,6 +590,7 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           _restTotalSeconds = result.descansoSec;
           _restSecondsRemaining = remainingRest;
           _isResting = true;
+          _restRpe = result.rpe;
         });
         if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
           IOSLiveActivityService.instance.start(
@@ -1225,15 +1307,20 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        top: false,
-        bottom: false,
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(child: _buildBody()),
-          ],
-        ),
+      body: Stack(
+        children: [
+          SafeArea(
+            top: false,
+            bottom: false,
+            child: Column(
+              children: [
+                _buildHeader(),
+                Expanded(child: _buildBody()),
+              ],
+            ),
+          ),
+          if (_isResting) _buildRestScreen(),
+        ],
       ),
     );
   }
@@ -1322,6 +1409,63 @@ class _TrainingStartViewState extends State<TrainingStartView> {
       if (mounted) {
         _onFinishTrainingTap();
       }
+    }
+  }
+
+  void _startContinuousRunWithConfig() async {
+    if (_vm.series.isNotEmpty) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Iniciar nueva sesión'),
+          content: const Text('Al iniciar una carrera continua se perderán las series actuales. ¿Continuar?'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+            TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Continuar')),
+          ],
+        ),
+      ) ?? false;
+      if (!confirm) return;
+    }
+
+    _vm.clearSeries();
+    _vm.startContinuousSession();
+
+    final pace = _cfgPaceParsed();
+
+    final result = await Navigator.push(
+      context,
+      AppRoute(
+        page: TrainingSessionView(
+          gpsActivo: true,
+          distancia: 'Libre',
+          descanso:  '0',
+          fcMax:     _fcMax,
+          targetPaceMinutes: pace?.$1,
+          targetPaceSeconds: pace?.$2,
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (result != null && result is Serie) {
+      _sessionStartTime ??= DateTime.now();
+      setState(() {
+        if (result.gpsPoints != null) {
+          _collectedGpsPoints = result.gpsPoints!.map((m) => GpsPoint.fromMap(m)).toList();
+        }
+        _vm.addSerie(result);
+      });
+
+      SessionRecoveryService().saveSession(
+        series: _vm.series,
+        gpsOn: _vm.gpsOn,
+        startTime: _sessionStartTime!,
+        templateName: _vm.source?.templateSnapshot?.name,
+      );
+
+      if (mounted) _onFinishTrainingTap();
     }
   }
 
@@ -1425,6 +1569,9 @@ class _TrainingStartViewState extends State<TrainingStartView> {
   }
 
   Widget _buildBody() {
+    if (_vm.series.isEmpty && !_isResting) {
+      return _buildPreTraining();
+    }
     return Column(
       children: [
         Expanded(
@@ -1436,58 +1583,29 @@ class _TrainingStartViewState extends State<TrainingStartView> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 20.0),
-                  
-                  // Form (Distance, Rest, etc) - always visible
                   _buildFormContainer(),
-                     
                   const SizedBox(height: 24.0),
-                  
-                  // Alarm section (only if no template)
                   if (_vm.source == null) ...[
                     _buildAlarmSection(),
-                    const SizedBox(height: 20.0), 
-                  ],
-
-                  // GPS + HR toggles (only when no series yet)
-                  if (_vm.series.isEmpty) ...[
-                    _buildGpsToggle(),
-                    _buildHrToggle(),
                     const SizedBox(height: 20.0),
-
-                    // Template buttons (only when no template loaded)
-                    if (_vm.source == null) ...[
-                      _buildTemplateButtons(),
-                      const SizedBox(height: 20.0),
-                    ],
                   ],
-                  
-                  // Series list header and content (only when series exist)
-                  if (_vm.series.isNotEmpty) ...[
-                    Text(
-                      'Series Guardadas',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
+                  Text(
+                    'Series Guardadas',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
-                    Container(
-                      height: 1.0,
-                      color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-                      margin: const EdgeInsets.symmetric(vertical: 8.0),
-                    ),
-                    _buildSeriesList(),
-                    const SizedBox(height: 16),
-                  ],
-                  
-                  // Bottom section: Template summary OR Continuous run button
-                  // Continuous run button is hidden when interval series are in progress
-                  // to prevent accidentally launching a Libre session mid-interval.
-                  if (_vm.source != null && _vm.series.isEmpty) ...[
+                  ),
+                  Container(
+                    height: 1.0,
+                    color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                    margin: const EdgeInsets.symmetric(vertical: 8.0),
+                  ),
+                  _buildSeriesList(),
+                  const SizedBox(height: 16),
+                  if (_vm.source != null) ...[
                     _buildTemplateCard(),
-                    const SizedBox(height: 16),
-                  ] else if (_vm.series.isEmpty) ...[
-                    _buildContinuousRunButton(),
                     const SizedBox(height: 16),
                   ],
                 ],
@@ -1496,6 +1614,806 @@ class _TrainingStartViewState extends State<TrainingStartView> {
           ),
         ),
         _buildFooter(),
+      ],
+    );
+  }
+
+  // ── Pre-training redesign ──────────────────────────────────────────────────
+
+  Widget _buildPreTraining() {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: AppSpacing.l),
+          if (widget.athleteSessionId != null && !_ignoreSession)
+            _plannedSession != null
+                ? _buildSessionCard()
+                : const Padding(
+                    padding: EdgeInsets.all(AppSpacing.xl),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+          else if (_vm.source != null) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+              child: _buildTemplateCard(),
+            ),
+            const SizedBox(height: AppSpacing.m),
+          ] else
+            _buildTypeSelector(),
+          _buildSectionDivider(),
+          _buildSensors(),
+          _buildSectionDivider(),
+          _buildAlerts(),
+          const SizedBox(height: AppSpacing.xl),
+          _buildStartButtonNew(),
+          const SizedBox(height: AppSpacing.xl),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionDivider() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.m),
+      child: Divider(
+        color: AppColors.borderOf(context),
+        thickness: 0.5,
+        height: 0.5,
+      ),
+    );
+  }
+
+  Widget _buildSessionCard() {
+    final session = _plannedSession!;
+    const brand = AppColors.brand;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceOf(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderOf(context), width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.l),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.s),
+                  decoration: BoxDecoration(
+                    color: brand.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.calendar_today, color: brand, size: 18),
+                ),
+                const SizedBox(width: AppSpacing.m),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'SESIÓN PLANIFICADA',
+                      style: AppTypography.small.copyWith(
+                        color: brand,
+                        letterSpacing: 1.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (session.category != null)
+                      Text(
+                        session.category!,
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.textPrimary(context),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Divider(color: AppColors.borderOf(context), thickness: 0.5, height: 0.5),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.l),
+            child: Column(
+              children: [
+                if (session.warmup != null)
+                  _buildBlockRow(
+                    'Calentamiento',
+                    durationMinutes: session.warmup!.durationMinutes,
+                    icon: Icons.whatshot_outlined,
+                  ),
+                ...session.blocks.asMap().entries.map(
+                  (e) => _buildBlockRow(
+                    'Bloque ${e.key + 1}',
+                    block: e.value,
+                    icon: Icons.directions_run,
+                  ),
+                ),
+                if (session.cooldown != null)
+                  _buildBlockRow(
+                    'Vuelta calma',
+                    durationMinutes: session.cooldown!.durationMinutes,
+                    icon: Icons.self_improvement,
+                  ),
+              ],
+            ),
+          ),
+          Divider(color: AppColors.borderOf(context), thickness: 0.5, height: 0.5),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.m),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => setState(() => _ignoreSession = true),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.textSecondary(context),
+                      side: BorderSide(color: AppColors.borderOf(context)),
+                    ),
+                    child: const Text('Entrenar libre'),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.m),
+                Expanded(
+                  child: TextButton(
+                    onPressed: _onFinishTrainingTap,
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.textSecondary(context),
+                    ),
+                    child: const Text('Rellenar manual'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBlockRow(
+    String titulo, {
+    SessionBlock? block,
+    int? durationMinutes,
+    required IconData icon,
+  }) {
+    final distanceM = block?.distanceM;
+    final reps = block?.reps;
+    final paceMinMin = block?.targetPaceMinMin;
+    final paceMinSec = block?.targetPaceMinSec;
+    final paceMaxMin = block?.targetPaceMaxMin;
+    final paceMaxSec = block?.targetPaceMaxSec;
+    final targetRpe = block?.targetRpe;
+
+    String valueText;
+    if (distanceM != null && reps != null && reps > 1) {
+      valueText = '${reps}x${distanceM}m';
+    } else if (distanceM != null) {
+      valueText = '${distanceM}m';
+    } else if (durationMinutes != null) {
+      valueText = '${durationMinutes} min';
+    } else {
+      valueText = '-';
+    }
+
+    String? paceText;
+    if (paceMinMin != null && paceMaxMin != null) {
+      final t1 = '$paceMinMin:${(paceMinSec ?? 0).toString().padLeft(2, "0")}';
+      final t2 = '$paceMaxMin:${(paceMaxSec ?? 0).toString().padLeft(2, "0")}';
+      paceText = '$t1–$t2/km';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.iconMutedOf(context), size: 16),
+          const SizedBox(width: AppSpacing.m),
+          Expanded(
+            child: Text(
+              titulo,
+              style: AppTypography.small.copyWith(color: AppColors.textSecondary(context)),
+            ),
+          ),
+          Text(
+            valueText,
+            style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
+          ),
+          if (paceText != null) ...[
+            const SizedBox(width: AppSpacing.s),
+            Text(paceText, style: AppTypography.small.copyWith(color: AppColors.brand)),
+          ],
+          if (targetRpe != null) ...[
+            const SizedBox(width: AppSpacing.s),
+            Text(
+              'RPE ${targetRpe.toStringAsFixed(0)}',
+              style: AppTypography.small.copyWith(color: AppColors.textSecondary(context)),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTypeSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+          child: Text(
+            '¿Qué entrenamos hoy?',
+            style: AppTypography.h2.copyWith(color: AppColors.textPrimary(context)),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.l),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+          child: GridView.count(
+            crossAxisCount: 2,
+            crossAxisSpacing: AppSpacing.m,
+            mainAxisSpacing: AppSpacing.m,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            childAspectRatio: 1.6,
+            children: [
+              _buildTypeCard('Rodaje', Icons.directions_run, 'rodaje'),
+              _buildTypeCard('Series', Icons.repeat, 'series'),
+              _buildTypeCard('Tempo', Icons.speed, 'tempo'),
+              _buildTypeCard('Largo', Icons.landscape, 'largo'),
+              _buildTypeCard('Fartlek', Icons.shuffle, 'fartlek'),
+              _buildTypeCard('Libre', Icons.play_arrow, 'libre'),
+            ],
+          ),
+        ),
+        _buildTypeConfig(),
+        const SizedBox(height: AppSpacing.m),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.folder_outlined),
+            label: const Text('Cargar plantilla'),
+            onPressed: () => MainShell.shellKey.currentState?.navigateTo(11),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.textSecondary(context),
+              side: BorderSide(color: AppColors.borderOf(context)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ---- Helpers de configuración por tipo ----
+
+  /// Parsea "mm:ss" y devuelve (minutos, segundos). Retorna null si inválido.
+  (int, int)? _parsePace(String raw) {
+    final parts = raw.trim().split(':');
+    if (parts.length != 2) return null;
+    final m = int.tryParse(parts[0]);
+    final s = int.tryParse(parts[1]);
+    if (m == null || s == null || s >= 60) return null;
+    return (m, s);
+  }
+
+  Widget _cfgTextField(TextEditingController ctrl, String hint, {TextInputType? keyboard}) {
+    return TextField(
+      controller: ctrl,
+      keyboardType: keyboard ?? TextInputType.number,
+      style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: AppTypography.body.copyWith(color: AppColors.textSecondary(context)),
+        filled: true,
+        fillColor: AppColors.surfaceOf(context),
+        contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.m, vertical: AppSpacing.s),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: AppColors.borderOf(context), width: 0.5),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: AppColors.borderOf(context), width: 0.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: AppColors.brand, width: 1.5),
+        ),
+      ),
+    );
+  }
+
+  Widget _cfgLabel(String text) => Text(
+    text,
+    style: AppTypography.small.copyWith(
+      color: AppColors.textSecondary(context),
+      fontWeight: FontWeight.w600,
+    ),
+  );
+
+  Widget _cfgSliderRow({
+    required String label,
+    required double value,
+    required double min,
+    required double max,
+    required int divisions,
+    required String valueLabel,
+    required ValueChanged<double> onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _cfgLabel(label),
+            Text(valueLabel, style: AppTypography.body.copyWith(color: AppColors.brand, fontWeight: FontWeight.w600)),
+          ],
+        ),
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            activeTrackColor: AppColors.brand,
+            thumbColor: AppColors.brand,
+            inactiveTrackColor: AppColors.brand.withOpacity(0.2),
+            overlayColor: AppColors.brand.withOpacity(0.1),
+            trackHeight: 3,
+          ),
+          child: Slider(
+            value: value,
+            min: min,
+            max: max,
+            divisions: divisions,
+            onChanged: onChanged,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _cfgStepper({
+    required String label,
+    required int value,
+    required int min,
+    required int max,
+    required ValueChanged<int> onChanged,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _cfgLabel(label),
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.remove_circle_outline),
+              color: value <= min ? AppColors.textSecondary(context) : AppColors.brand,
+              onPressed: value <= min ? null : () => onChanged(value - 1),
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+            ),
+            SizedBox(
+              width: 36,
+              child: Text(
+                '$value',
+                textAlign: TextAlign.center,
+                style: AppTypography.body.copyWith(color: AppColors.textPrimary(context), fontWeight: FontWeight.w600),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.add_circle_outline),
+              color: value >= max ? AppColors.textSecondary(context) : AppColors.brand,
+              onPressed: value >= max ? null : () => onChanged(value + 1),
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTypeConfig() {
+    final type = _selectedTrainingType;
+    Widget content;
+
+    if (type == 'rodaje' || type == 'largo') {
+      content = Column(
+        key: ValueKey(type),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _cfgLabel('Distancia objetivo (km, opcional)'),
+          const SizedBox(height: AppSpacing.s),
+          _cfgTextField(_cfgDistKmCtrl, 'ej. 10'),
+          const SizedBox(height: AppSpacing.m),
+          _cfgLabel('Pace objetivo (mm:ss/km, opcional)'),
+          const SizedBox(height: AppSpacing.s),
+          _cfgTextField(_cfgPaceCtrl, 'ej. 5:30', keyboard: TextInputType.text),
+        ],
+      );
+    } else if (type == 'series') {
+      content = Column(
+        key: const ValueKey('series'),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _cfgStepper(
+            label: 'Número de series',
+            value: _cfgSeries,
+            min: 1,
+            max: 20,
+            onChanged: (v) => setState(() => _cfgSeries = v),
+          ),
+          const SizedBox(height: AppSpacing.m),
+          _cfgLabel('Distancia por serie (metros)'),
+          const SizedBox(height: AppSpacing.s),
+          _cfgTextField(_cfgSeriesDistCtrl, 'ej. 400'),
+          const SizedBox(height: AppSpacing.m),
+          _cfgSliderRow(
+            label: 'Descanso entre series',
+            value: _cfgDescanso.toDouble(),
+            min: 30,
+            max: 300,
+            divisions: 9,
+            valueLabel: _cfgDescanso < 60
+                ? '${_cfgDescanso}s'
+                : '${_cfgDescanso ~/ 60}min${_cfgDescanso % 60 > 0 ? ' ${_cfgDescanso % 60}s' : ''}',
+            onChanged: (v) => setState(() => _cfgDescanso = v.round()),
+          ),
+          const SizedBox(height: AppSpacing.m),
+          _cfgLabel('Pace objetivo por serie (mm:ss/km, opcional)'),
+          const SizedBox(height: AppSpacing.s),
+          _cfgTextField(_cfgSeriesPaceCtrl, 'ej. 4:15', keyboard: TextInputType.text),
+        ],
+      );
+    } else if (type == 'tempo') {
+      content = Column(
+        key: const ValueKey('tempo'),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _cfgSliderRow(
+            label: 'Duración',
+            value: _cfgTempoDur.toDouble(),
+            min: 10,
+            max: 60,
+            divisions: 10,
+            valueLabel: '${_cfgTempoDur} min',
+            onChanged: (v) => setState(() => _cfgTempoDur = v.round()),
+          ),
+          const SizedBox(height: AppSpacing.m),
+          _cfgLabel('Pace objetivo (mm:ss/km, opcional)'),
+          const SizedBox(height: AppSpacing.s),
+          _cfgTextField(_cfgTempoPaceCtrl, 'ej. 4:45', keyboard: TextInputType.text),
+        ],
+      );
+    } else if (type == 'fartlek') {
+      content = Column(
+        key: const ValueKey('fartlek'),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _cfgSliderRow(
+            label: 'Duración total',
+            value: _cfgFartlekDur.toDouble(),
+            min: 20,
+            max: 90,
+            divisions: 14,
+            valueLabel: '${_cfgFartlekDur} min',
+            onChanged: (v) => setState(() => _cfgFartlekDur = v.round()),
+          ),
+          const SizedBox(height: AppSpacing.m),
+          _cfgStepper(
+            label: 'Bloques rápidos/lentos',
+            value: _cfgFartlekBloques,
+            min: 2,
+            max: 20,
+            onChanged: (v) => setState(() => _cfgFartlekBloques = v),
+          ),
+        ],
+      );
+    } else if (type == 'libre') {
+      content = Center(
+        key: const ValueKey('libre'),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.m),
+          child: Text(
+            'Entrena sin restricciones',
+            style: AppTypography.body.copyWith(color: AppColors.textSecondary(context)),
+          ),
+        ),
+      );
+    } else {
+      content = const SizedBox.shrink(key: ValueKey('none'));
+    }
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 250),
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SizeTransition(sizeFactor: animation, child: child),
+      ),
+      child: type == null
+          ? const SizedBox.shrink(key: ValueKey('null'))
+          : Padding(
+              key: ValueKey(type),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.l, AppSpacing.m, AppSpacing.l, 0),
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.l),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceOf(context),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.borderOf(context), width: 0.5),
+                ),
+                child: content,
+              ),
+            ),
+    );
+  }
+
+  Widget _buildTypeCard(String label, IconData icon, String type) {
+    final selected = _selectedTrainingType == type;
+    const brand = AppColors.brand;
+    return GestureDetector(
+      onTap: () => _selectType(type),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(AppSpacing.l),
+        decoration: BoxDecoration(
+          color: selected ? brand.withOpacity(0.08) : AppColors.surfaceOf(context),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected ? brand : AppColors.borderOf(context),
+            width: selected ? 1.5 : 0.5,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: selected ? brand : AppColors.iconMutedOf(context), size: 28),
+            const SizedBox(height: AppSpacing.s),
+            Text(
+              label,
+              style: AppTypography.body.copyWith(
+                color: selected ? brand : AppColors.textSecondary(context),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSensors() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'SENSORES',
+            style: AppTypography.small.copyWith(
+              color: AppColors.textSecondary(context),
+              letterSpacing: 1.5,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.m),
+          _buildSensorRow(
+            icon: _vm.gpsOn ? Icons.gps_fixed : Icons.gps_off,
+            label: 'GPS',
+            subtitle: _vm.gpsOn ? 'Ubicación activa' : 'Desactivado',
+            iconColor: _vm.gpsOn ? AppColors.rpeLow : AppColors.iconMutedOf(context),
+            toggle: Switch(
+              value: _vm.gpsOn,
+              onChanged: (v) => setState(() => _vm.setGpsOn(v)),
+              activeColor: AppColors.brand,
+            ),
+          ),
+          ListenableBuilder(
+            listenable: Listenable.merge([
+              HeartRateService().connectionState,
+              HeartRateService().connectedDeviceName,
+            ]),
+            builder: (context, _) {
+              final state = HeartRateService().connectionState.value;
+              final isConnected = state == HrConnectionState.connected;
+              final deviceName = HeartRateService().connectedDeviceName.value;
+              if (deviceName == null && !isConnected) return const SizedBox.shrink();
+              return Column(
+                children: [
+                  Divider(
+                    color: AppColors.borderOf(context),
+                    thickness: 0.5,
+                    height: AppSpacing.m * 2,
+                  ),
+                  _buildSensorRow(
+                    icon: isConnected ? Icons.favorite_rounded : Icons.favorite_border,
+                    label: deviceName ?? 'Pulsómetro',
+                    subtitle: isConnected ? 'Conectado' : 'Conectando...',
+                    iconColor: isConnected ? AppColors.rpeMax : AppColors.iconMutedOf(context),
+                    toggle: Switch(
+                      value: isConnected,
+                      onChanged: (val) async {
+                        if (val) {
+                          final lastId = await HeartRateService().getLastDeviceId();
+                          if (lastId != null) {
+                            HeartRateService().connect(lastId);
+                          } else {
+                            if (!mounted) return;
+                            await Navigator.push(
+                              context,
+                              AppRoute(page: const HeartRateMonitorView()),
+                            );
+                          }
+                        } else {
+                          HeartRateService().disconnect();
+                        }
+                      },
+                      activeColor: AppColors.rpeMax,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSensorRow({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required Color iconColor,
+    required Widget toggle,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.surface2Of(context),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: iconColor, size: 20),
+          ),
+          const SizedBox(width: AppSpacing.m),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: AppTypography.body.copyWith(
+                    color: AppColors.textPrimary(context),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: AppTypography.small.copyWith(color: AppColors.textSecondary(context)),
+                ),
+              ],
+            ),
+          ),
+          toggle,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAlerts() {
+    final summary = _alarmSummaryText();
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'ALERTAS DE RITMO',
+            style: AppTypography.small.copyWith(
+              color: AppColors.textSecondary(context),
+              letterSpacing: 1.5,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.m),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Activar alertas',
+                style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
+              ),
+              Switch(
+                value: _alarmEnabled,
+                onChanged: (v) {
+                  setState(() => _alarmEnabled = v);
+                  _updateAlarmInterval();
+                },
+                activeColor: AppColors.brand,
+              ),
+            ],
+          ),
+          if (_alarmEnabled) ...[
+            const SizedBox(height: AppSpacing.s),
+            GestureDetector(
+              onTap: () => _showAlarmConfigSheet(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.m,
+                  vertical: AppSpacing.s,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceOf(context),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.brand.withOpacity(0.4), width: 0.5),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.notifications_active, color: AppColors.brand, size: 18),
+                    const SizedBox(width: AppSpacing.s),
+                    Expanded(
+                      child: Text(
+                        summary.isNotEmpty ? summary : 'Toca para configurar',
+                        style: AppTypography.small.copyWith(
+                          color: summary.isNotEmpty
+                              ? AppColors.brand
+                              : AppColors.textSecondary(context),
+                        ),
+                      ),
+                    ),
+                    const Icon(Icons.edit, color: AppColors.brand, size: 16),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStartButtonNew() {
+    return Column(
+      children: [
+        Center(
+          child: GestureDetector(
+            onTap: _showCountdown,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppColors.brand,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.brand.withOpacity(0.4),
+                    blurRadius: 20,
+                    spreadRadius: 4,
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 40),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.s),
+        Center(
+          child: Text(
+            'EMPEZAR',
+            style: AppTypography.small.copyWith(
+              color: AppColors.textSecondary(context),
+              letterSpacing: 2,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -3131,90 +4049,193 @@ class _TrainingStartViewState extends State<TrainingStartView> {
 
 
   // ===================================================================
-  // Footer Dinámico
+  // Pantalla de descanso (overlay completo)
   // ===================================================================
 
-
-  Widget _buildFooter() {
-    return _isResting ? _buildRestTimerFooter() : _buildStartButtonFooter();
+  static Color _rpeColor(double v) {
+    if (v <= 4) return AppColors.rpeLow;
+    if (v <= 7) return AppColors.rpeMid;
+    return AppColors.rpeMax;
   }
 
+  Widget _buildRestScreen() {
+    final double fillProgress = _restTotalSeconds > 0
+        ? 1.0 - (_restSecondsRemaining / _restTotalSeconds)
+        : 1.0;
 
-  Widget _buildRestTimerFooter() {
-    double progress = 0.0;
+    final Serie? lastSerie = _vm.series.isNotEmpty ? _vm.series.last : null;
 
-    if (_restTotalSeconds > 0) {
-      progress = _restSecondsRemaining / _restTotalSeconds;
+    String distText = '';
+    String timeText = '';
+    String paceText = '';
+    double? fcMedia;
+
+    if (lastSerie != null) {
+      distText = '${lastSerie.distanciaM}m';
+      final int totalSec = lastSerie.tiempoSec.round();
+      final int mm = totalSec ~/ 60;
+      final int ss = totalSec % 60;
+      timeText = '$mm:${ss.toString().padLeft(2, '0')}';
+      try {
+        paceText = lastSerie.ritmoTexto().replaceAll(' /km', '');
+      } catch (_) {
+        paceText = '--:--';
+      }
+      fcMedia = lastSerie.fcMedia;
     }
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      decoration: isDark
-          ? BoxDecoration(color: Theme.of(context).colorScheme.surface)
-          : const BoxDecoration(
-              color: Colors.white,
-              image: DecorationImage(
-                image: AssetImage('assets/images/fondo.png'),
-                fit: BoxFit.cover,
-              ),
+    final int completedIndex = _vm.series.length;
+    final bool hasNext = _distanciaSeleccionada > 0;
+    final String nextDistText = '${_distanciaSeleccionada}m';
+
+    return Positioned.fill(
+      child: Stack(
+        children: [
+          RepaintBoundary(
+            child: CustomPaint(
+              painter: _RestFillPainter(progress: fillProgress),
+              child: const SizedBox.expand(),
             ),
-      child: Column(
-        children: <Widget>[
-          Container(height: 1.0, color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: 6.0, // Reducido para mantener la altura del footer original
-              horizontal: 24.0,
-            ),
-            child: Center(
-              child: SizedBox(
-                width: 100.0, // Tamaño contenido (era 85, subimos un poco solo)
-                height: 100.0,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: <Widget>[
-                    SizedBox(
-                      width: 100.0,
-                      height: 100.0,
-                      child: CircularProgressIndicator(
-                        value: progress,
-                        strokeWidth: 6.0, // Grosor original
-                        backgroundColor: Theme.of(context).colorScheme.outline.withOpacity(0.15),
-                        valueColor: AlwaysStoppedAnimation<Color>(_brandAccentColor),
-                      ),
+          ),
+          ...List.generate(8, (i) => RepaintBoundary(child: _FloatingBubble(index: i, progress: fillProgress))),
+          SafeArea(
+            child: Column(
+              children: [
+                const Spacer(),
+                Text(
+                  '${_restSecondsRemaining}s',
+                  style: const TextStyle(
+                    fontSize: 96,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1A3A5A),
+                    height: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Descansando',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: const Color(0xFF1A3A5A).withOpacity(0.6),
+                  ),
+                ),
+                const Spacer(),
+                if (lastSerie != null)
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+                    padding: const EdgeInsets.all(AppSpacing.l),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.85),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        GestureDetector(
-                          onTap: _skipRest,
-                          child: Text(
-                            _formatRestTime(),
-                            style: TextStyle(
-                              fontSize: 22, // Tamaño ajustado
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
-                              fontFeatures: const <FontFeature>[
-                                FontFeature.tabularFigures(),
-                              ],
-                            ),
+                        Text(
+                          'SERIE $completedIndex COMPLETADA',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF378ADD),
+                            letterSpacing: 1.5,
                           ),
+                        ),
+                        const SizedBox(height: AppSpacing.m),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _RestStat('Distancia', distText),
+                            _RestStat('Tiempo', timeText),
+                            _RestStat('Pace', paceText),
+                            if (fcMedia != null)
+                              _RestStat('FC', '${fcMedia.round()} bpm'),
+                          ],
                         ),
                       ],
                     ),
-                    // FC de recuperación
-                    Positioned(
-                      bottom: 4,
-                      child: _HrRecoveryLabel(fcMax: _fcMax),
-                    ),
-                  ],
+                  ),
+                const SizedBox(height: AppSpacing.m),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'RPE de la serie',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF378ADD)),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: AppSpacing.s),
+                      SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 4,
+                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+                        ),
+                        child: Slider(
+                          value: _restRpe,
+                          min: 1,
+                          max: 10,
+                          divisions: 18,
+                          activeColor: _rpeColor(_restRpe),
+                          inactiveColor: _rpeColor(_restRpe).withOpacity(0.2),
+                          onChanged: (v) => setState(() => _restRpe = v),
+                        ),
+                      ),
+                      Text(
+                        _restRpe.toStringAsFixed(1),
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: _rpeColor(_restRpe),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+                const SizedBox(height: AppSpacing.l),
+                if (hasNext)
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+                    padding: const EdgeInsets.all(AppSpacing.m),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.6),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.skip_next, color: Color(0xFF378ADD), size: 18),
+                        const SizedBox(width: AppSpacing.s),
+                        Text(
+                          'Siguiente: Serie ${completedIndex + 1} — $nextDistText',
+                          style: const TextStyle(fontSize: 14, color: Color(0xFF1A3A5A)),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: AppSpacing.m),
+                TextButton(
+                  onPressed: _skipRest,
+                  child: const Text(
+                    'Saltar descanso',
+                    style: TextStyle(fontSize: 12, color: Color(0xFF378ADD)),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+              ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  // ===================================================================
+  // Footer Dinámico
+  // ===================================================================
+
+
+  Widget _buildFooter() {
+    return _isResting ? const SizedBox.shrink() : _buildStartButtonFooter();
   }
 
 
@@ -3506,6 +4527,221 @@ class _HrRecoveryLabel extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+// ── _RestFillPainter ──────────────────────────────────────────────────────────
+
+class _RestFillPainter extends CustomPainter {
+  final double progress; // 0.0 = inicio, 1.0 = fin descanso
+
+  const _RestFillPainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final fillHeight = size.height * progress;
+    final top = size.height - fillHeight;
+
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Paint()..color = Colors.white,
+    );
+
+    if (fillHeight <= 0) return;
+
+    final fillColor = Color.lerp(
+      const Color(0xFFE3F2FD),
+      const Color(0xFFBBDEFB),
+      progress,
+    )!;
+
+    canvas.drawRect(
+      Rect.fromLTWH(0, top, size.width, fillHeight),
+      Paint()..color = fillColor,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_RestFillPainter old) => old.progress != progress;
+}
+
+// ── _RestStat ────────────────────────────────────────────────────────────────
+
+class _RestStat extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _RestStat(this.label, this.value);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1A3A5A),
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            color: Color(0xFF378ADD),
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── _FloatingBubble ───────────────────────────────────────────────────────────
+
+class _FloatingBubble extends StatefulWidget {
+  final int index;
+  final double progress;
+
+  const _FloatingBubble({required this.index, required this.progress});
+
+  @override
+  State<_FloatingBubble> createState() => _FloatingBubbleState();
+}
+
+class _FloatingBubbleState extends State<_FloatingBubble>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  static const List<double> _xFractions = [
+    0.08, 0.22, 0.38, 0.52, 0.65, 0.78, 0.88, 0.95,
+  ];
+  static const List<double> _sizes = [8, 14, 10, 18, 12, 9, 16, 11];
+  static const List<double> _durations = [4.0, 3.5, 5.0, 3.0, 4.5, 6.0, 3.8, 5.5];
+  static const List<double> _opacities = [0.5, 0.6, 0.4, 0.7, 0.45, 0.55, 0.65, 0.4];
+
+  @override
+  void initState() {
+    super.initState();
+    final sec = _durations[widget.index % _durations.length];
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: (sec * 1000).round()),
+    )..repeat();
+    // Offset so bubbles don't all start at same position
+    _ctrl.forward(from: (widget.index * 0.13) % 1.0);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.progress < 0.05) return const SizedBox.shrink();
+
+    final size = _sizes[widget.index % _sizes.length];
+    final xFrac = _xFractions[widget.index % _xFractions.length];
+    final opacity = _opacities[widget.index % _opacities.length];
+
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, _) {
+        final screenHeight = MediaQuery.of(context).size.height;
+        final screenWidth = MediaQuery.of(context).size.width;
+        final fillStart = screenHeight * (1.0 - widget.progress);
+        final travelHeight = screenHeight * widget.progress;
+
+        final yFromTop = fillStart + travelHeight * (1.0 - _ctrl.value) - size;
+
+        return Positioned(
+          left: screenWidth * xFrac - size / 2,
+          top: yFromTop,
+          child: Opacity(
+            opacity: opacity,
+            child: Container(
+              width: size,
+              height: size,
+              decoration: const BoxDecoration(
+                color: Color(0xFF90CAF9),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CountdownDialog extends StatefulWidget {
+  final VoidCallback onComplete;
+  const _CountdownDialog({required this.onComplete});
+
+  @override
+  State<_CountdownDialog> createState() => _CountdownDialogState();
+}
+
+class _CountdownDialogState extends State<_CountdownDialog>
+    with SingleTickerProviderStateMixin {
+  int _count = 3;
+  late Timer _timer;
+  late AnimationController _animController;
+  late Animation<double> _scaleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _scaleAnim = Tween<double>(begin: 1.4, end: 0.8).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeOut),
+    );
+    _animController.forward();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_count <= 1) {
+        _timer.cancel();
+        widget.onComplete();
+      } else {
+        setState(() => _count--);
+        _animController.forward(from: 0);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    _animController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      child: Center(
+        child: ScaleTransition(
+          scale: _scaleAnim,
+          child: Text(
+            '$_count',
+            style: const TextStyle(
+              fontSize: 120,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

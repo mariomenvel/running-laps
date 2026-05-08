@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/progress_repository.dart';
-import 'package:running_laps/features/history/views/history_screen.dart';
 import 'package:running_laps/features/home/viewmodels/home_view_model.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
@@ -641,10 +641,7 @@ class _HomeViewState extends State<HomeView> {
                 ),
                 const Spacer(),
                 GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    AppRoute(page: const HistoryScreen()),
-                  ),
+                  onTap: () => MainShell.shellKey.currentState?.navigateTo(4),
                   child: Text(
                     'Ver todos',
                     style: AppTypography.small.copyWith(color: AppColors.brand),

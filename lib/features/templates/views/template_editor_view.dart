@@ -4,6 +4,8 @@ import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
+import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../data/template_models.dart';
@@ -339,7 +341,11 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
 
       if (mounted) {
         ModernSnackBar.showSuccess(context, "Plantilla guardada");
-        Navigator.pop(context, widget.isSelectionMode ? template : true); 
+        if (ShellEmbeddingScope.isEmbedded(context)) {
+          MainShell.shellKey.currentState?.navigateBack();
+        } else {
+          Navigator.pop(context, widget.isSelectionMode ? template : true);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -445,7 +451,13 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
     );
 
     if (result == true) {
-      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        if (ShellEmbeddingScope.isEmbedded(context)) {
+          MainShell.shellKey.currentState?.navigateBack();
+        } else {
+          Navigator.pop(context);
+        }
+      }
     }
   }
 

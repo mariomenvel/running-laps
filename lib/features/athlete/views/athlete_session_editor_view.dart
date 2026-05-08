@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
+import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/viewmodels/athlete_session_editor_viewmodel.dart';
 
@@ -75,7 +77,11 @@ class _AthleteSessionEditorViewState extends State<AthleteSessionEditorView> {
     final ok = await _vm.save();
     if (!mounted) return;
     if (ok) {
-      Navigator.pop(context, true); // signal refresh
+      if (ShellEmbeddingScope.isEmbedded(context)) {
+        MainShell.shellKey.currentState?.navigateBack();
+      } else {
+        Navigator.pop(context, true); // signal refresh
+      }
     } else {
       ModernSnackBar.showError(
           context, _vm.state.value.error ?? 'Error al guardar');

@@ -27,7 +27,6 @@ class TrainingRepository {
   final RateLimitService _rateLimitService = RateLimitService();
 
   TrainingRepository() {
-    _rateLimitService.registerLimit('history:getTrainings', const Duration(seconds: 2));
     _rateLimitService.registerLimit('training:save', const Duration(seconds: 3));
   }
 
@@ -114,7 +113,6 @@ class TrainingRepository {
     DocumentSnapshot? startAfter,
     int pageSize = 20,
   }) async {
-    _rateLimitService.checkLimit('history:getTrainings');
     final resolvedUid = uid ?? _requireUid();
 
     Query<Map<String, dynamic>> query = _userTrainings(resolvedUid)

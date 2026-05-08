@@ -60,17 +60,29 @@ class HistoryController {
   final TagManager _tagManager = TagManager();
   Map<String, Color> _tagColors = {};
 
+  final RateLimitService _rateLimitService = RateLimitService();
+
   HistoryController({TrainingRepository? trainingRepo})
       : _trainingRepo = TrainingRepository() {
     if (trainingRepo != null) {
       _trainingRepo = trainingRepo;
     }
+    _rateLimitService.registerLimit('history:load', const Duration(seconds: 2));
+    _rateLimitService.registerLimit('history:loadMore', const Duration(seconds: 2));
   }
 
   String? _resolveUid() => FirebaseAuth.instance.currentUser?.uid;
 
   Future<void> loadTrainings() async {
     if (isLoading.value) return;
+
+    try {
+      _rateLimitService.checkLimit('history:load');
+    } on RateLimitExceededException catch (e) {
+      debugPrint('[HistoryController] loadTrainings rate limited: $e');
+      error.value = 'Espera ${e.duration.inSeconds}s antes de recargar';
+      return;
+    }
 
     // Reset pagination
     _lastDocument = null;
@@ -97,9 +109,6 @@ class HistoryController {
       } catch (_) {}
 
       applyFilters();
-    } on RateLimitExceededException catch (e) {
-      debugPrint('[HistoryController] loadTrainings rate limited: $e');
-      error.value = 'Espera ${e.duration.inSeconds}s';
     } catch (e) {
       error.value = 'Error al cargar entrenamientos: $e';
     } finally {
@@ -112,6 +121,13 @@ class HistoryController {
 
     final uid = _resolveUid();
     if (uid == null) return;
+
+    try {
+      _rateLimitService.checkLimit('history:loadMore');
+    } on RateLimitExceededException catch (e) {
+      debugPrint('[HistoryController] loadMore rate limited: $e');
+      return;
+    }
 
     _isLoadingMore = true;
 
@@ -127,8 +143,6 @@ class HistoryController {
       _hasMore = page.hasMore;
 
       applyFilters();
-    } on RateLimitExceededException catch (e) {
-      debugPrint('[HistoryController] loadMore rate limited: $e');
     } catch (e) {
       debugPrint('[HistoryController] loadMore error: $e');
     } finally {
