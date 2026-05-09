@@ -3,7 +3,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:running_laps/config/app_theme.dart';
-import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/features/avatar/models/avatar_config.dart';
 import 'package:running_laps/features/avatar/services/avatar_generator.dart';
@@ -148,6 +147,8 @@ class _MainShellState extends State<MainShell> {
         initialConfig: config,
       ),
     ),
+
+    const TrainingStartView(), // 15 → Iniciar entrenamiento (FAB)
   ];
 
   @override
@@ -210,10 +211,7 @@ class _MainShellState extends State<MainShell> {
   }
 
   void _launchTraining() {
-    Navigator.push(
-      context,
-      AppRoute(page: const TrainingStartView()),
-    );
+    navigateTo(15);
   }
 
   Widget _buildGlobalHeader(BuildContext context) {
@@ -260,11 +258,14 @@ class _MainShellState extends State<MainShell> {
           ),
         ],
       ),
-      bottomNavigationBar: _NavBar(
-        currentIndex: _tabIndex,
-        onTabTapped: _onTabTapped,
-        onFabTapped: _launchTraining,
-      ),
+      bottomNavigationBar: _tabIndex == 15
+          ? const SizedBox.shrink()
+          : _NavBar(
+              currentIndex: _tabIndex,
+              onTabTapped: _onTabTapped,
+              onFabTapped: _launchTraining,
+              fabActive: _tabIndex == 15,
+            ),
     );
   }
 }
@@ -276,11 +277,13 @@ class _NavBar extends StatelessWidget {
     required this.currentIndex,
     required this.onTabTapped,
     required this.onFabTapped,
+    required this.fabActive,
   });
 
   final int currentIndex;
   final ValueChanged<int> onTabTapped;
   final VoidCallback onFabTapped;
+  final bool fabActive;
 
   @override
   Widget build(BuildContext context) {
@@ -313,8 +316,8 @@ class _NavBar extends StatelessWidget {
                 active: currentIndex == 1,
                 onTap: () => onTabTapped(1),
               ),
-              // FAB central — no cambia tab
-              _FabItem(onTap: onFabTapped),
+              // FAB central
+              _FabItem(onTap: onFabTapped, active: fabActive),
               _NavItem(
                 icon: Icons.bar_chart_outlined,
                 activeIcon: Icons.bar_chart_rounded,
@@ -428,9 +431,10 @@ class _LiveAvatarBadge extends StatelessWidget {
 // ─── FAB central ─────────────────────────────────────────────────────────────
 
 class _FabItem extends StatelessWidget {
-  const _FabItem({required this.onTap});
+  const _FabItem({required this.onTap, required this.active});
 
   final VoidCallback onTap;
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
@@ -442,8 +446,8 @@ class _FabItem extends StatelessWidget {
           child: Container(
             width: 52,
             height: 52,
-            decoration: const BoxDecoration(
-              color: AppColors.brand,
+            decoration: BoxDecoration(
+              color: active ? AppColors.brandDark : AppColors.brand,
               shape: BoxShape.circle,
             ),
             child: const Icon(

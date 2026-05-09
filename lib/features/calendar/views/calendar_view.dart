@@ -133,9 +133,6 @@ class _CalendarViewState extends State<CalendarView> {
           valueListenable: _vm.sessionsByDate,
           builder: (_, sessionsByDate, __) {
             final weeks = _getWeeksOfMonth(focused.year, focused.month);
-            // Precalcular volumen por semana (evitar recalcular en cada build de fila)
-            final weekVolumes = weeks.map((w) => _calcWeekVolumeKm(w, workouts)).toList();
-            final maxVol = weekVolumes.fold(0.0, (a, b) => a > b ? a : b);
 
             return Column(
               children: [
@@ -181,16 +178,19 @@ class _CalendarViewState extends State<CalendarView> {
                     ),
                     itemCount: weeks.length,
                     itemBuilder: (_, i) => _buildWeekRow(
-                      week:        weeks[i],
-                      month:       focused.month,
-                      volumeKm:    weekVolumes[i],
-                      maxVolumeKm: maxVol,
-                      sessions:    sessionsByDate,
-                      trainings:   workouts,
-                      isAthlete:   isAthlete,
+                      week:           weeks[i],
+                      month:          focused.month,
+                      trimp:          _calcWeekTrimp(weeks[i], workouts),
+                      hasCompetition: _weekHasCompetition(weeks[i], workouts, sessionsByDate),
+                      sessions:       sessionsByDate,
+                      trainings:      workouts,
+                      isAthlete:      isAthlete,
                     ),
                   ),
                 ),
+
+                // ── Leyenda ───────────────────────────────────────────
+                _buildMonthlyLegend(),
               ],
             );
           },
@@ -202,16 +202,14 @@ class _CalendarViewState extends State<CalendarView> {
   Widget _buildWeekRow({
     required List<DateTime> week,
     required int month,
-    required double volumeKm,
-    required double maxVolumeKm,
+    required double trimp,
+    required bool hasCompetition,
     required Map<String, List<AthleteSession>> sessions,
     required List<Entrenamiento> trainings,
     required bool isAthlete,
   }) {
-    final ratio    = maxVolumeKm > 0 ? (volumeKm / maxVolumeKm).clamp(0.0, 1.0) : 0.0;
-    final barColor = ratio < 0.5
-        ? Color.lerp(AppColors.rpeLow, const Color(0xFFFFCA28), ratio * 2)!
-        : Color.lerp(const Color(0xFFFFCA28), AppColors.rpeMax, (ratio - 0.5) * 2)!;
+    final barColor = _colorForWeekLoad(trimp, hasCompetition);
+    final volumeKm = _calcWeekVolumeKm(week, trainings);
 
     // Contar sesiones/entrenamientos de la semana
     int sessionCount = 0;
@@ -237,11 +235,11 @@ class _CalendarViewState extends State<CalendarView> {
         ),
         child: Column(
           children: [
-            // Barra de volumen
+            // Barra de carga TRIMP
             Container(
               height: 6,
               decoration: BoxDecoration(
-                color: volumeKm > 0 ? barColor : AppColors.borderOf(context),
+                color: (trimp > 0 || hasCompetition) ? barColor : AppColors.borderOf(context),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(AppDimens.cardRadius)),
               ),
             ),
@@ -500,14 +498,25 @@ class _CalendarViewState extends State<CalendarView> {
     final lastDay  = DateTime(year, month + 1, 0);
     final weeks    = <List<DateTime>>[];
 
-    // Empezar desde el lunes de la semana que contiene el día 1
     var weekStart = firstDay.subtract(Duration(days: firstDay.weekday - 1));
 
     while (!weekStart.isAfter(lastDay)) {
-      weeks.add(List.generate(7, (i) => weekStart.add(Duration(days: i))));
+      if (_monthForWeek(weekStart) == month) {
+        weeks.add(List.generate(7, (i) => weekStart.add(Duration(days: i))));
+      }
       weekStart = weekStart.add(const Duration(days: 7));
     }
     return weeks;
+  }
+
+  // Returns the month (1-12) this week "belongs to": whichever month has more days.
+  // weekEnd.day == days elapsed in the second month; (7 - weekEnd.day) == days in first.
+  int _monthForWeek(DateTime weekStart) {
+    final weekEnd = weekStart.add(const Duration(days: 6));
+    if (weekStart.month == weekEnd.month) return weekStart.month;
+    final daysInEndMonth   = weekEnd.day;       // e.g. 4 → 4 days in Jan
+    final daysInStartMonth = 7 - daysInEndMonth; // e.g. 3 → 3 days in Dec
+    return daysInStartMonth >= daysInEndMonth ? weekStart.month : weekEnd.month;
   }
 
   double _calcWeekVolumeKm(List<DateTime> week, List<Entrenamiento> workouts) {
@@ -961,7 +970,7 @@ class _CalendarViewState extends State<CalendarView> {
   Widget _buildMonthSection(int month, List<_WeekData> allWeeks) {
     const abbrs = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
     final monthWeeks = allWeeks.where((w) =>
-        w.weekStart.month == month || w.weekEnd.month == month).toList();
+        _monthForWeek(w.weekStart) == month).toList();
 
     if (monthWeeks.isEmpty) return const SizedBox.shrink();
 
@@ -991,9 +1000,9 @@ class _CalendarViewState extends State<CalendarView> {
   }
 
   Widget _buildWeekSquare(_WeekData week) {
-    final color  = _weekTypeColor(week.volumeKm);
-    final height = week.volumeKm > 0
-        ? (24.0 + (week.volumeKm / 100.0).clamp(0.0, 1.0) * 24.0)
+    final color  = _colorForWeekLoad(week.trimp, week.hasCompetition);
+    final height = week.trimp > 0 || week.hasCompetition
+        ? (24.0 + (week.trimp / 500.0).clamp(0.0, 1.0) * 24.0)
         : 24.0;
 
     return GestureDetector(
@@ -1026,20 +1035,70 @@ class _CalendarViewState extends State<CalendarView> {
     );
   }
 
-  Color _weekTypeColor(double volumeKm) {
-    if (volumeKm <= 0)  return AppColors.borderOf(context);
-    if (volumeKm < 30)  return AppColors.rpeLow.withOpacity(0.5);
-    if (volumeKm < 60)  return AppColors.rpeLow;
-    if (volumeKm < 90)  return AppColors.brand;
+  Color _colorForWeekLoad(double trimp, bool hasCompetition) {
+    if (hasCompetition) return AppColors.brand;
+    if (trimp <= 0)     return AppColors.borderOf(context);
+    if (trimp < 150)    return AppColors.rpeLow;
+    if (trimp < 300)    return AppColors.rpeMid;
+    if (trimp < 500)    return AppColors.effortLight;
     return AppColors.rpeMax;
   }
 
-  Widget _buildSeasonLegend() {
+  double _calcWeekTrimp(List<DateTime> week, List<Entrenamiento> workouts) {
+    double total = 0;
+    for (final day in week) {
+      final key = _normalize(day);
+      for (final w in workouts) {
+        if (_normalize(w.fecha) == key) total += _proximyLoadScore(w);
+      }
+    }
+    return total;
+  }
+
+  bool _weekHasCompetition(
+    List<DateTime> week,
+    List<Entrenamiento> workouts,
+    Map<String, List<AthleteSession>> sessions,
+  ) {
+    for (final day in week) {
+      final key = _normalize(day);
+      for (final w in workouts) {
+        if (_normalize(w.fecha) == key &&
+            w.tags != null && w.tags!.contains('competición')) return true;
+      }
+      for (final s in sessions[key] ?? []) {
+        if (s.category == 'competicion' || s.category == 'competición') return true;
+      }
+    }
+    return false;
+  }
+
+  double _proximyLoadScore(Entrenamiento t) {
+    try {
+      final distKm = t.distanciaTotalM() / 1000.0;
+      if (distKm <= 0) return 0;
+      final rpe = t.rpePromedio();
+      return distKm * (rpe > 0 ? rpe : 5.0);
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  Widget _buildSeasonLegend() => _buildLoadLegend();
+
+  Widget _buildMonthlyLegend() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l, vertical: AppSpacing.m),
+      child: _buildLoadLegend(),
+    );
+  }
+
+  Widget _buildLoadLegend() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'TIPO DE SEMANA',
+          'CARGA SEMANAL',
           style: AppTypography.small.copyWith(
             color: AppColors.textSecondary(context),
             letterSpacing: 1.5,
@@ -1051,11 +1110,12 @@ class _CalendarViewState extends State<CalendarView> {
           spacing: AppSpacing.l,
           runSpacing: AppSpacing.s,
           children: [
-            _legendItem('Sin datos', AppColors.borderOf(context)),
-            _legendItem('< 30 km',   AppColors.rpeLow.withOpacity(0.5)),
-            _legendItem('30–60 km',  AppColors.rpeLow),
-            _legendItem('60–90 km',  AppColors.brand),
-            _legendItem('> 90 km',   AppColors.rpeMax),
+            _legendItem('Sin datos',  AppColors.borderOf(context)),
+            _legendItem('Suave',      AppColors.rpeLow),
+            _legendItem('Moderada',   AppColors.rpeMid),
+            _legendItem('Carga',      AppColors.effortLight),
+            _legendItem('Pico',       AppColors.rpeMax),
+            _legendItemDiamond('Competición', AppColors.brand),
           ],
         ),
       ],
@@ -1069,6 +1129,23 @@ class _CalendarViewState extends State<CalendarView> {
         Container(
           width: 12, height: 12,
           decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
+        ),
+        const SizedBox(width: 6),
+        Text(label, style: AppTypography.small.copyWith(color: AppColors.textSecondary(context))),
+      ],
+    );
+  }
+
+  Widget _legendItemDiamond(String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Transform.rotate(
+          angle: 0.785398,
+          child: Container(
+            width: 10, height: 10,
+            decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(1)),
+          ),
         ),
         const SizedBox(width: 6),
         Text(label, style: AppTypography.small.copyWith(color: AppColors.textSecondary(context))),
@@ -1117,7 +1194,7 @@ class _CalendarViewState extends State<CalendarView> {
                   'Volumen',
                 ),
                 _MiniStat('${week.sessionCount}', 'Sesiones'),
-                _MiniStat(_weekLabel(week.volumeKm), 'Tipo'),
+                _MiniStat(_trimpLabel(week.trimp, week.hasCompetition), 'Tipo'),
               ],
             ),
             const SizedBox(height: AppSpacing.xl),
@@ -1127,11 +1204,12 @@ class _CalendarViewState extends State<CalendarView> {
     );
   }
 
-  String _weekLabel(double km) {
-    if (km <= 0)  return 'Sin datos';
-    if (km < 25)  return 'Descarga';
-    if (km < 55)  return 'Base';
-    if (km < 85)  return 'Carga';
+  String _trimpLabel(double trimp, bool hasCompetition) {
+    if (hasCompetition) return 'Competición';
+    if (trimp <= 0)     return 'Sin datos';
+    if (trimp < 150)    return 'Suave';
+    if (trimp < 300)    return 'Moderada';
+    if (trimp < 500)    return 'Carga';
     return 'Pico';
   }
 
@@ -1152,13 +1230,17 @@ class _CalendarViewState extends State<CalendarView> {
 
       // Solo semanas que solapan con el año
       if (!end.isBefore(jan1)) {
-        double vol   = 0;
-        int    count = 0;
+        double vol          = 0;
+        double weekTrimp    = 0;
+        bool   hasCompet    = false;
+        int    count        = 0;
         for (final w in workouts) {
           final d = DateTime(w.fecha.year, w.fecha.month, w.fecha.day);
           if (!d.isBefore(start) && !d.isAfter(end)) {
-            vol   += w.distanciaTotalM() / 1000.0;
+            vol        += w.distanciaTotalM() / 1000.0;
+            weekTrimp  += _proximyLoadScore(w);
             count++;
+            if (w.tags != null && w.tags!.contains('competición')) hasCompet = true;
           }
         }
         final isCurrent = !today.isBefore(start) && !today.isAfter(end);
@@ -1167,6 +1249,8 @@ class _CalendarViewState extends State<CalendarView> {
           weekStart:     start,
           weekEnd:       end,
           volumeKm:      vol,
+          trimp:         weekTrimp,
+          hasCompetition: hasCompet,
           sessionCount:  count,
           isCurrentWeek: isCurrent,
         ));
@@ -1392,23 +1476,6 @@ class _CalendarViewState extends State<CalendarView> {
     return colors.take(3).toList();
   }
 
-  String _weekTypeLabel(String weekType) {
-    switch (weekType) {
-      case 'carga':       return 'CARGA';
-      case 'base':        return 'BASE';
-      case 'descarga':    return 'DESCARGA';
-      case 'competición': return 'COMPETICIÓN';
-      default:            return 'TRANSICIÓN';
-    }
-  }
-
-  bool _isCurrentWeek(DateTime weekStart) {
-    final now    = DateTime.now();
-    final monday = now.subtract(Duration(days: now.weekday - 1));
-    final m      = DateTime(monday.year, monday.month, monday.day);
-    final w      = DateTime(weekStart.year, weekStart.month, weekStart.day);
-    return m == w;
-  }
 
   String _dayAbbr(int weekday) {
     const days = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
@@ -1503,30 +1570,14 @@ class _MiniStat extends StatelessWidget {
   }
 }
 
-class _LegendDot extends StatelessWidget {
-  const _LegendDot(this.label, this.color);
-
-  final String label;
-  final Color  color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-        const SizedBox(width: 4),
-        Text(label, style: AppTypography.small.copyWith(color: AppColors.textSecondary(context))),
-      ],
-    );
-  }
-}
 
 class _WeekData {
   final int      weekNumber;
   final DateTime weekStart;
   final DateTime weekEnd;
   final double   volumeKm;
+  final double   trimp;
+  final bool     hasCompetition;
   final int      sessionCount;
   final bool     isCurrentWeek;
 
@@ -1535,6 +1586,8 @@ class _WeekData {
     required this.weekStart,
     required this.weekEnd,
     required this.volumeKm,
+    required this.trimp,
+    required this.hasCompetition,
     required this.sessionCount,
     required this.isCurrentWeek,
   });

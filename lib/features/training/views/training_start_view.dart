@@ -13,7 +13,6 @@ import '../data/training_repository.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
-import '../../../core/widgets/app_header.dart';
 import '../../../core/services/gps_service.dart';
 import '../../../core/services/ios_live_activity_service.dart';
 import '../../../core/widgets/modern_snackbar.dart';
@@ -22,7 +21,6 @@ import '../../../core/utils/app_transitions.dart';
 
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'training_summary_screen.dart';
-import '../../profile/views/profile_menu_screen_legacy.dart';
 import '../viewmodels/training_viewmodel.dart';
 import '../data/tag_model.dart';
 import '../data/tag_manager.dart';
@@ -115,6 +113,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
   // ESTADO DE LA ALARMA
   // ===============================================================
   bool _alarmEnabled = false;
+  bool _bleEnabled = true;
   AlarmMode _alarmMode = AlarmMode.bySeconds;
 
 
@@ -1307,54 +1306,17 @@ class _TrainingStartViewState extends State<TrainingStartView>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.surface2Of(context),
       body: Stack(
         children: [
           SafeArea(
             top: false,
             bottom: false,
-            child: Column(
-              children: [
-                _buildHeader(),
-                Expanded(child: _buildBody()),
-              ],
-            ),
+            child: _buildBody(),
           ),
           if (_isResting) _buildRestScreen(),
         ],
       ),
-    );
-  }
-
-
-  Widget _buildHeader() {
-    return AppHeader(
-      onTapLeft: () {
-        if (_vm.series.isEmpty) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            AppRoute(page: const MainShell()),
-            (route) => false,
-          );
-        } else {
-          ModernSnackBar.showWarning(
-            context,
-            'Por favor, termina el entrenamiento actual antes de salir.',
-          );
-        }
-      },
-      onTapRight: () {
-        if (_vm.series.isEmpty) {
-          Navigator.push(
-            context,
-            AppRoute(page: ProfileMenuView()),
-          );
-        } else {
-          ModernSnackBar.showWarning(
-            context,
-            'Por favor, termina el entrenamiento actual antes de salir.',
-          );
-        }
-      },
     );
   }
 
@@ -2169,7 +2131,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: selected ? brand : AppColors.iconMutedOf(context), size: 28),
+            Icon(icon, color: brand, size: 28),
             const SizedBox(height: AppSpacing.s),
             Text(
               label,
@@ -2203,7 +2165,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
             icon: _vm.gpsOn ? Icons.gps_fixed : Icons.gps_off,
             label: 'GPS',
             subtitle: _vm.gpsOn ? 'Ubicación activa' : 'Desactivado',
-            iconColor: _vm.gpsOn ? AppColors.rpeLow : AppColors.iconMutedOf(context),
+            iconColor: _vm.gpsOn ? AppColors.brand : AppColors.iconMutedOf(context),
             toggle: Switch(
               value: _vm.gpsOn,
               onChanged: (v) => setState(() => _vm.setGpsOn(v)),
@@ -2214,12 +2176,26 @@ class _TrainingStartViewState extends State<TrainingStartView>
             listenable: Listenable.merge([
               HeartRateService().connectionState,
               HeartRateService().connectedDeviceName,
+              HeartRateService().heartRate,
             ]),
             builder: (context, _) {
               final state = HeartRateService().connectionState.value;
-              final isConnected = state == HrConnectionState.connected;
               final deviceName = HeartRateService().connectedDeviceName.value;
-              if (deviceName == null && !isConnected) return const SizedBox.shrink();
+              final hr = HeartRateService().heartRate.value;
+              final isConnected = state == HrConnectionState.connected;
+              final isConfigured = deviceName != null || state != HrConnectionState.disconnected;
+
+              final String subtitle;
+              if (isConnected && hr != null) {
+                subtitle = '$hr bpm';
+              } else if (isConnected) {
+                subtitle = 'Conectando...';
+              } else if (isConfigured) {
+                subtitle = 'Desconectado';
+              } else {
+                subtitle = 'No configurado — toca para configurar';
+              }
+
               return Column(
                 children: [
                   Divider(
@@ -2230,27 +2206,24 @@ class _TrainingStartViewState extends State<TrainingStartView>
                   _buildSensorRow(
                     icon: isConnected ? Icons.favorite_rounded : Icons.favorite_border,
                     label: deviceName ?? 'Pulsómetro',
-                    subtitle: isConnected ? 'Conectado' : 'Conectando...',
-                    iconColor: isConnected ? AppColors.rpeMax : AppColors.iconMutedOf(context),
+                    subtitle: subtitle,
+                    iconColor: isConnected ? AppColors.rpeLow : AppColors.iconMutedOf(context),
                     toggle: Switch(
-                      value: isConnected,
-                      onChanged: (val) async {
-                        if (val) {
+                      value: _bleEnabled && isConfigured,
+                      onChanged: (v) async {
+                        if (!isConfigured) {
+                          MainShell.shellKey.currentState?.navigateTo(10);
+                          return;
+                        }
+                        setState(() => _bleEnabled = v);
+                        if (v && !isConnected) {
                           final lastId = await HeartRateService().getLastDeviceId();
-                          if (lastId != null) {
-                            HeartRateService().connect(lastId);
-                          } else {
-                            if (!mounted) return;
-                            await Navigator.push(
-                              context,
-                              AppRoute(page: const HeartRateMonitorView()),
-                            );
-                          }
-                        } else {
+                          if (lastId != null) HeartRateService().connect(lastId);
+                        } else if (!v && isConnected) {
                           HeartRateService().disconnect();
                         }
                       },
-                      activeColor: AppColors.rpeMax,
+                      activeColor: AppColors.brand,
                     ),
                   ),
                 ],
@@ -2380,41 +2353,22 @@ class _TrainingStartViewState extends State<TrainingStartView>
   }
 
   Widget _buildStartButtonNew() {
-    return Column(
-      children: [
-        Center(
-          child: GestureDetector(
-            onTap: _showCountdown,
-            child: Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.brand,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.brand.withOpacity(0.4),
-                    blurRadius: 20,
-                    spreadRadius: 4,
-                  ),
-                ],
-              ),
-              child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 40),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+      child: Center(
+        child: GestureDetector(
+          onTap: _showCountdown,
+          child: Container(
+            width: 56,
+            height: 56,
+            decoration: const BoxDecoration(
+              color: AppColors.brand,
+              shape: BoxShape.circle,
             ),
+            child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 28),
           ),
         ),
-        const SizedBox(height: AppSpacing.s),
-        Center(
-          child: Text(
-            'EMPEZAR',
-            style: AppTypography.small.copyWith(
-              color: AppColors.textSecondary(context),
-              letterSpacing: 2,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
