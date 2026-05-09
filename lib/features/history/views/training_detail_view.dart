@@ -1058,7 +1058,12 @@ class _SerieExpansionTileState extends State<_SerieExpansionTile> {
                   getTooltipItems: (spots) => spots.map((s) {
                     final val = _showFc && fcPoints.isNotEmpty
                         ? '${s.y.round()} bpm'
-                        : '${s.y.toStringAsFixed(1)} /km';
+                        : () {
+                            final totalSec = (s.y * 60).round();
+                            final m = totalSec ~/ 60;
+                            final sec = totalSec % 60;
+                            return '$m:${sec.toString().padLeft(2, '0')} /km';
+                          }();
                     return LineTooltipItem(
                       val,
                       TextStyle(

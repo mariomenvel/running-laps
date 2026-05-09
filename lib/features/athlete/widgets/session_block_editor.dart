@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/number_picker_field.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -973,7 +974,7 @@ class _SheetTextField extends StatelessWidget {
   }
 }
 
-class _SheetNumField extends StatelessWidget {
+class _SheetNumField extends StatefulWidget {
   final TextEditingController ctrl;
   final String label;
   final String hint;
@@ -987,72 +988,96 @@ class _SheetNumField extends StatelessWidget {
   });
 
   @override
+  State<_SheetNumField> createState() => _SheetNumFieldState();
+}
+
+class _SheetNumFieldState extends State<_SheetNumField> {
+  late int _value;
+
+  @override
+  void initState() {
+    super.initState();
+    _value = int.tryParse(widget.ctrl.text) ?? 1;
+    widget.ctrl.addListener(_syncFromCtrl);
+  }
+
+  void _syncFromCtrl() {
+    final v = int.tryParse(widget.ctrl.text) ?? 1;
+    if (v != _value) setState(() => _value = v);
+  }
+
+  @override
+  void dispose() {
+    widget.ctrl.removeListener(_syncFromCtrl);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: width,
-      child: TextFormField(
-        controller:      ctrl,
-        keyboardType:    TextInputType.number,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        decoration:      InputDecoration(
-          labelText:      label,
-          hintText:       hint,
-          isDense:        true,
-          border:         OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          enabledBorder:  OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide:   BorderSide(
-                color: Theme.of(context)
-                    .colorScheme
-                    .outline
-                    .withValues(alpha: 0.5),
-              )),
-          focusedBorder:  OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide:   const BorderSide(color: AppColors.brand)),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        ),
-        style: const TextStyle(fontSize: 14),
+      width: widget.width,
+      child: NumberPickerField(
+        label:     widget.label,
+        value:     _value,
+        min:       1,
+        max:       5000,
+        step:      1,
+        unit:      '',
+        onChanged: (v) {
+          setState(() => _value = v);
+          widget.ctrl.text = v.toString();
+        },
       ),
     );
   }
 }
 
-class _PaceField extends StatelessWidget {
+class _PaceField extends StatefulWidget {
   final TextEditingController ctrl;
   final String hint;
 
   const _PaceField({required this.ctrl, required this.hint});
 
   @override
+  State<_PaceField> createState() => _PaceFieldState();
+}
+
+class _PaceFieldState extends State<_PaceField> {
+  late int _value;
+
+  @override
+  void initState() {
+    super.initState();
+    _value = int.tryParse(widget.ctrl.text) ?? 0;
+    widget.ctrl.addListener(_syncFromCtrl);
+  }
+
+  void _syncFromCtrl() {
+    final v = int.tryParse(widget.ctrl.text) ?? 0;
+    if (v != _value) setState(() => _value = v);
+  }
+
+  @override
+  void dispose() {
+    widget.ctrl.removeListener(_syncFromCtrl);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 54,
-      child: TextFormField(
-        controller:      ctrl,
-        keyboardType:    TextInputType.number,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        textAlign:       TextAlign.center,
-        decoration:      InputDecoration(
-          hintText:       hint,
-          isDense:        true,
-          border:         OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          enabledBorder:  OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide:   BorderSide(
-                color: Theme.of(context)
-                    .colorScheme
-                    .outline
-                    .withValues(alpha: 0.5),
-              )),
-          focusedBorder:  OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide:   const BorderSide(color: AppColors.brand)),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        ),
-        style: const TextStyle(fontSize: 14),
+      width: 80,
+      child: NumberPickerField(
+        label:     widget.hint,
+        value:     _value,
+        min:       0,
+        max:       59,
+        step:      1,
+        unit:      '',
+        onChanged: (v) {
+          setState(() => _value = v);
+          widget.ctrl.text = v.toString();
+        },
       ),
     );
   }

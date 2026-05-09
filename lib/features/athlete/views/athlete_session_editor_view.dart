@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/number_picker_field.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
@@ -411,39 +412,35 @@ class _WarmupCooldownEditor extends StatefulWidget {
 
 class _WarmupCooldownEditorState extends State<_WarmupCooldownEditor> {
   late final TextEditingController _descCtrl;
-  late final TextEditingController _durCtrl;
+  int? _durMin;
 
   @override
   void initState() {
     super.initState();
     _descCtrl = TextEditingController(text: widget.value?.description ?? '');
-    _durCtrl  = TextEditingController(
-        text: widget.value?.durationMinutes?.toString() ?? '');
+    _durMin   = widget.value?.durationMinutes;
   }
 
   @override
   void dispose() {
     _descCtrl.dispose();
-    _durCtrl.dispose();
     super.dispose();
   }
 
   void _notify() {
     final desc = _descCtrl.text.trim();
-    final dur  = int.tryParse(_durCtrl.text.trim());
-    if (desc.isEmpty && dur == null) {
+    if (desc.isEmpty && _durMin == null) {
       widget.onChanged(null);
     } else {
       widget.onChanged(SessionWarmupCooldown(
         description:     desc.isEmpty ? null : desc,
-        durationMinutes: dur,
+        durationMinutes: _durMin,
       ));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding:     const EdgeInsets.all(14),
       decoration:  BoxDecoration(
@@ -466,27 +463,18 @@ class _WarmupCooldownEditorState extends State<_WarmupCooldownEditor> {
           maxLines: null,
         ),
         const SizedBox(height: 8),
-        Row(children: [
-          const Icon(Icons.timer_outlined, size: 16, color: AppColors.brand),
-          const SizedBox(width: 6),
-          SizedBox(
-            width: 60,
-            child: TextField(
-              controller:    _durCtrl,
-              onChanged:     (_) => _notify(),
-              keyboardType:  TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration:    const InputDecoration(
-                hintText:      'min',
-                border:        InputBorder.none,
-                isDense:       true,
-                contentPadding: EdgeInsets.zero,
-              ),
-              style: const TextStyle(fontSize: 14),
-            ),
-          ),
-          const Text(' minutos', style: TextStyle(fontSize: 13)),
-        ]),
+        NumberPickerField(
+          label:     'Duración',
+          value:     _durMin ?? 1,
+          min:       1,
+          max:       300,
+          step:      1,
+          unit:      'min',
+          onChanged: (v) {
+            setState(() => _durMin = v);
+            _notify();
+          },
+        ),
       ]),
     );
   }
@@ -903,7 +891,7 @@ class _SessionBlockEditorState extends State<_SessionBlockEditor> {
 // Small helper widgets
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _LabeledIntField extends StatelessWidget {
+class _LabeledIntField extends StatefulWidget {
   final String label;
   final TextEditingController ctrl;
   final VoidCallback onChanged;
@@ -917,43 +905,52 @@ class _LabeledIntField extends StatelessWidget {
   });
 
   @override
+  State<_LabeledIntField> createState() => _LabeledIntFieldState();
+}
+
+class _LabeledIntFieldState extends State<_LabeledIntField> {
+  late int _value;
+
+  @override
+  void initState() {
+    super.initState();
+    _value = int.tryParse(widget.ctrl.text) ?? 1;
+    widget.ctrl.addListener(_syncFromCtrl);
+  }
+
+  void _syncFromCtrl() {
+    final v = int.tryParse(widget.ctrl.text) ?? 1;
+    if (v != _value) setState(() => _value = v);
+  }
+
+  @override
+  void dispose() {
+    widget.ctrl.removeListener(_syncFromCtrl);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label,
-          style: TextStyle(
-              fontSize: 11,
-              color: isDark
-                  ? AppColors.textSecondaryDark
-                  : AppColors.textSecondaryLight)),
-      const SizedBox(height: 4),
-      SizedBox(
-        width: width,
-        child: TextField(
-          controller:      ctrl,
-          onChanged:       (_) => onChanged(),
-          keyboardType:    TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          decoration: InputDecoration(
-            isDense:        true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            border:         OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                    color: AppColors.borderOf(context))),
-            enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                    color: AppColors.borderOf(context))),
-          ),
-          style: const TextStyle(fontSize: 14),
-        ),
+    return SizedBox(
+      width: widget.width,
+      child: NumberPickerField(
+        label:     widget.label,
+        value:     _value,
+        min:       1,
+        max:       300,
+        step:      1,
+        unit:      '',
+        onChanged: (v) {
+          setState(() => _value = v);
+          widget.ctrl.text = v.toString();
+          widget.onChanged();
+        },
       ),
-    ]);
+    );
   }
 }
 
-class _SmallIntField extends StatelessWidget {
+class _SmallIntField extends StatefulWidget {
   final TextEditingController ctrl;
   final String hint;
   final VoidCallback onChanged;
@@ -965,20 +962,44 @@ class _SmallIntField extends StatelessWidget {
   });
 
   @override
+  State<_SmallIntField> createState() => _SmallIntFieldState();
+}
+
+class _SmallIntFieldState extends State<_SmallIntField> {
+  late int _value;
+
+  @override
+  void initState() {
+    super.initState();
+    _value = int.tryParse(widget.ctrl.text) ?? 1;
+    widget.ctrl.addListener(_syncFromCtrl);
+  }
+
+  void _syncFromCtrl() {
+    final v = int.tryParse(widget.ctrl.text) ?? 1;
+    if (v != _value) setState(() => _value = v);
+  }
+
+  @override
+  void dispose() {
+    widget.ctrl.removeListener(_syncFromCtrl);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller:      ctrl,
-      onChanged:       (_) => onChanged(),
-      keyboardType:    TextInputType.number,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      textAlign:       TextAlign.center,
-      decoration:      InputDecoration(
-        hintText:       hint,
-        isDense:        true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-        border:         OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-      ),
-      style: const TextStyle(fontSize: 13),
+    return NumberPickerField(
+      label:     widget.hint,
+      value:     _value,
+      min:       0,
+      max:       59,
+      step:      1,
+      unit:      '',
+      onChanged: (v) {
+        setState(() => _value = v);
+        widget.ctrl.text = v.toString();
+        widget.onChanged();
+      },
     );
   }
 }

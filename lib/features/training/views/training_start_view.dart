@@ -20,6 +20,7 @@ import '../../../core/services/settings_service.dart';
 import '../../../core/utils/app_transitions.dart';
 
 import 'package:running_laps/core/widgets/main_shell.dart';
+import 'package:running_laps/core/widgets/number_picker_field.dart';
 import 'training_summary_screen.dart';
 import '../viewmodels/training_viewmodel.dart';
 import '../data/tag_model.dart';
@@ -150,7 +151,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
   final _cfgDistKmCtrl   = TextEditingController(); // rodaje/largo: dist objetivo km
   final _cfgPaceCtrl     = TextEditingController(); // pace objetivo mm:ss
   int    _cfgSeries      = 5;                       // series: número
-  final _cfgSeriesDistCtrl = TextEditingController(); // metros por serie
+  int    _cfgSeriesDist  = 400;                      // metros por serie
   int    _cfgDescanso    = 90;                      // series: descanso en segundos
   final _cfgSeriesPaceCtrl = TextEditingController(); // pace por serie
   int    _cfgTempoDur    = 30;                      // tempo: minutos
@@ -258,7 +259,6 @@ class _TrainingStartViewState extends State<TrainingStartView>
     _iosRestActionSubscription?.cancel();
     _cfgDistKmCtrl.dispose();
     _cfgPaceCtrl.dispose();
-    _cfgSeriesDistCtrl.dispose();
     _cfgSeriesPaceCtrl.dispose();
     _cfgTempoPaceCtrl.dispose();
     super.dispose();
@@ -468,9 +468,8 @@ class _TrainingStartViewState extends State<TrainingStartView>
 
   void _applyConfigToSeriesState() {
     if (_selectedTrainingType != 'series') return;
-    final dist = int.tryParse(_cfgSeriesDistCtrl.text.trim());
-    if (dist != null && dist > 0) {
-      setState(() => _distanciaSeleccionada = dist);
+    if (_cfgSeriesDist > 0) {
+      setState(() => _distanciaSeleccionada = _cfgSeriesDist);
     }
     setState(() => _descansoSeleccionado = _cfgDescanso);
   }
@@ -2010,7 +2009,15 @@ class _TrainingStartViewState extends State<TrainingStartView>
           const SizedBox(height: AppSpacing.m),
           _cfgLabel('Distancia por serie (metros)'),
           const SizedBox(height: AppSpacing.s),
-          _cfgTextField(_cfgSeriesDistCtrl, 'ej. 400'),
+          NumberPickerField(
+            label:     'Distancia por serie',
+            value:     _cfgSeriesDist,
+            min:       100,
+            max:       5000,
+            step:      100,
+            unit:      'm',
+            onChanged: (v) => setState(() => _cfgSeriesDist = v),
+          ),
           const SizedBox(height: AppSpacing.m),
           _cfgSliderRow(
             label: 'Descanso entre series',
