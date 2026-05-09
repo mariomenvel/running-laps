@@ -692,152 +692,191 @@ class _CalendarViewState extends State<CalendarView> {
     final now     = DateTime.now();
     final isToday = day.year == now.year && day.month == now.month && day.day == now.day;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.s),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceOf(context),
-        border: Border.all(
-          color: isToday ? AppColors.brand : AppColors.borderOf(context),
-          width: isToday ? 1.5 : 0.5,
-        ),
-        borderRadius: BorderRadius.circular(AppDimens.cardRadius),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.m),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Cabecera del día
-            Row(
-              children: [
-                SizedBox(
-                  width: 36,
-                  child: Text(
-                    _dayAbbr(day.weekday),
-                    style: AppTypography.small.copyWith(color: AppColors.textSecondary(context)),
-                  ),
-                ),
-                Text(
-                  '${day.day}',
-                  style: AppTypography.body.copyWith(
-                    color: AppColors.textPrimary(context),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (isToday) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(color: AppColors.brand, borderRadius: BorderRadius.circular(10)),
-                    child: const Text('HOY', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w600)),
-                  ),
-                ],
-                const Spacer(),
-                if (isAthlete && sessions.isEmpty)
-                  GestureDetector(
-                    onTap: () => MainShell.shellKey.currentState?.navigateTo(
-                      13,
-                      params: AthleteSessionShellParams(date: _normalize(day)),
-                    ),
-                    child: const Icon(Icons.add_circle_outline, color: AppColors.brand, size: 20),
-                  ),
-              ],
-            ),
+    void onDayTap() {
+      if (isAthlete) {
+        MainShell.shellKey.currentState?.navigateTo(
+          13,
+          params: AthleteSessionShellParams(date: _normalize(day)),
+        );
+      } else {
+        Navigator.push(context, AppRoute(page: const TrainingStartView()));
+      }
+    }
 
-            // Contenido
-            if (isAthlete) ...[
-              if (sessions.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: AppSpacing.s),
-                  child: Text(
-                    'Descanso',
-                    style: AppTypography.small.copyWith(
-                      color: AppColors.textSecondary(context),
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                )
-              else
-                ...sessions.map((s) => Padding(
-                  padding: const EdgeInsets.only(top: AppSpacing.s),
+    Widget actionButton = const SizedBox.shrink();
+    if (isAthlete) {
+      if (sessions.isEmpty) {
+        actionButton = GestureDetector(
+          onTap: onDayTap,
+          child: const Icon(Icons.add_circle_outline, color: AppColors.brand, size: 24),
+        );
+      } else if (sessions.any((s) => s.status == AthleteSessionStatus.planned)) {
+        actionButton = GestureDetector(
+          onTap: () => Navigator.push(context, AppRoute(page: const TrainingStartView())),
+          child: const Icon(Icons.play_circle_outline, color: AppColors.brand, size: 24),
+        );
+      } else if (sessions.every((s) => s.status == AthleteSessionStatus.completed)) {
+        actionButton = Container(
+          width: 24,
+          height: 24,
+          decoration: const BoxDecoration(color: AppColors.rpeLow, shape: BoxShape.circle),
+          child: const Center(
+            child: Icon(Icons.check, color: Colors.white, size: 16),
+          ),
+        );
+      }
+    }
+
+    return InkWell(
+      onTap: onDayTap,
+      borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.s),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceOf(context),
+          border: Border.all(
+            color: isToday ? AppColors.brand : AppColors.borderOf(context),
+            width: isToday ? 1.5 : 0.5,
+          ),
+          borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+        ),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // ── Contenido del día ───────────────────────────────────────
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.m),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Cabecera del día
                       Row(
                         children: [
-                          Container(
-                            width: 6, height: 6,
-                            decoration: BoxDecoration(
-                              color: _statusColor(s.status),
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
+                          SizedBox(
+                            width: 36,
                             child: Text(
-                              s.category != null
-                                  ? SessionCategoryX.fromValue(s.category!).label
-                                  : 'Entrenamiento',
-                              style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
+                              _dayAbbr(day.weekday),
+                              style: AppTypography.small.copyWith(color: AppColors.textSecondary(context)),
                             ),
                           ),
-                          if (s.status == AthleteSessionStatus.completed)
-                            const Icon(Icons.check_circle, color: AppColors.rpeLow, size: 16),
-                          if (s.status == AthleteSessionStatus.planned)
-                            GestureDetector(
-                              onTap: () => Navigator.push(context, AppRoute(page: const TrainingStartView())),
-                              child: const Icon(Icons.play_circle_outline, color: AppColors.brand, size: 20),
+                          Text(
+                            '${day.day}',
+                            style: AppTypography.body.copyWith(
+                              color: AppColors.textPrimary(context),
+                              fontWeight: FontWeight.w600,
                             ),
+                          ),
+                          if (isToday) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(color: AppColors.brand, borderRadius: BorderRadius.circular(10)),
+                              child: const Text('HOY', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w600)),
+                            ),
+                          ],
                         ],
                       ),
-                      if (s.blocks.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 14, top: 2),
-                          child: Text(
-                            _blocksDescription(s.blocks),
-                            style: AppTypography.small.copyWith(color: AppColors.textSecondary(context)),
-                          ),
-                        ),
+
+                      // Contenido
+                      if (isAthlete) ...[
+                        if (sessions.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: AppSpacing.s),
+                            child: Text(
+                              'Descanso',
+                              style: AppTypography.small.copyWith(
+                                color: AppColors.textSecondary(context),
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          )
+                        else
+                          ...sessions.map((s) => Padding(
+                            padding: const EdgeInsets.only(top: AppSpacing.s),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 6, height: 6,
+                                      decoration: BoxDecoration(
+                                        color: _statusColor(s.status),
+                                        borderRadius: BorderRadius.circular(3),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        s.category != null
+                                            ? SessionCategoryX.fromValue(s.category!).label
+                                            : 'Entrenamiento',
+                                        style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (s.blocks.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 14, top: 2),
+                                    child: Text(
+                                      _blocksDescription(s.blocks),
+                                      style: AppTypography.small.copyWith(color: AppColors.textSecondary(context)),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          )),
+                      ] else ...[
+                        if (workouts.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: AppSpacing.s),
+                            child: Text(
+                              'Sin entrenamiento',
+                              style: AppTypography.small.copyWith(
+                                color: AppColors.textSecondary(context),
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          )
+                        else
+                          ...workouts.map((w) => Padding(
+                            padding: const EdgeInsets.only(top: AppSpacing.s),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 6, height: 6,
+                                  decoration: BoxDecoration(color: AppColors.brand, borderRadius: BorderRadius.circular(3)),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    w.titulo.isNotEmpty ? w.titulo : 'Entrenamiento libre',
+                                    style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
+                                  ),
+                                ),
+                                Text(
+                                  '${(w.distanciaTotalM() / 1000).toStringAsFixed(1)} km',
+                                  style: AppTypography.small.copyWith(color: AppColors.textSecondary(context)),
+                                ),
+                              ],
+                            ),
+                          )),
+                      ],
                     ],
                   ),
-                )),
-            ] else ...[
-              if (workouts.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: AppSpacing.s),
-                  child: Text(
-                    'Sin entrenamiento',
-                    style: AppTypography.small.copyWith(
-                      color: AppColors.textSecondary(context),
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                )
-              else
-                ...workouts.map((w) => Padding(
-                  padding: const EdgeInsets.only(top: AppSpacing.s),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 6, height: 6,
-                        decoration: BoxDecoration(color: AppColors.brand, borderRadius: BorderRadius.circular(3)),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          w.titulo.isNotEmpty ? w.titulo : 'Entrenamiento libre',
-                          style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
-                        ),
-                      ),
-                      Text(
-                        '${(w.distanciaTotalM() / 1000).toStringAsFixed(1)} km',
-                        style: AppTypography.small.copyWith(color: AppColors.textSecondary(context)),
-                      ),
-                    ],
-                  ),
-                )),
+                ),
+              ),
+
+              // ── Botón centrado verticalmente respecto al card completo ──
+              Padding(
+                padding: const EdgeInsets.only(right: AppSpacing.l),
+                child: actionButton,
+              ),
             ],
-          ],
+          ),
         ),
       ),
     );
