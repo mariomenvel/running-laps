@@ -150,7 +150,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
                   training.titulo,
                   style: AppTypography.h1.copyWith(
                     color: AppColors.textPrimary(context),
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     height: 1.1,
                     fontSize: 26,
                   ),
@@ -194,7 +194,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
           style: TextStyle(
               fontSize: 12,
               color: AppColors.brand,
-              fontWeight: FontWeight.w600),
+              fontWeight: FontWeight.w400),
         ),
       );
     }
@@ -210,7 +210,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
         style: TextStyle(
             fontSize: 12,
             color: AppColors.textSecondary(context),
-            fontWeight: FontWeight.w600),
+            fontWeight: FontWeight.w400),
       ),
     );
   }
@@ -248,8 +248,10 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      child: Wrap(
+        alignment: WrapAlignment.spaceAround,
+        spacing: AppSpacing.l,
+        runSpacing: AppSpacing.s,
         children: stats
             .map((s) => _buildStatCell(s.value, s.label, s.color))
             .toList(),
@@ -264,6 +266,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
           value,
           style: AppTypography.h2.copyWith(
             fontSize: 20,
+            fontWeight: FontWeight.w500,
             color: color ?? AppColors.textPrimary(context),
           ),
         ),
@@ -290,7 +293,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
             style: AppTypography.small.copyWith(
               color: AppColors.textSecondary(context),
               letterSpacing: 1.5,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w400,
             ),
           ),
           const SizedBox(height: AppSpacing.m),
@@ -356,7 +359,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
             style: AppTypography.small.copyWith(
               color: AppColors.textSecondary(context),
               letterSpacing: 1.5,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w400,
             ),
           ),
         ),
@@ -398,7 +401,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
             style: AppTypography.small.copyWith(
               color: AppColors.textSecondary(context),
               letterSpacing: 1.5,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w400,
             ),
           ),
           const SizedBox(height: AppSpacing.l),
@@ -468,7 +471,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
                   child: Text('Z${i + 1}',
                       style: TextStyle(
                           fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w400,
                           color: color)),
                 ),
                 const SizedBox(width: 10),
@@ -542,7 +545,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
             style: AppTypography.small.copyWith(
               color: AppColors.textSecondary(context),
               letterSpacing: 1.5,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w400,
             ),
           ),
           if (category != null) ...[
@@ -640,7 +643,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
                       Text(targetPaceStr,
                           style: TextStyle(
                               fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w400,
                               color: targetPaceSec != null ? primary : muted),
                           textAlign: TextAlign.center),
                       if ((planned?['targetRpe'] as num?) != null) ...[
@@ -668,7 +671,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
                         Text(execPaceStr,
                             style: TextStyle(
                                 fontSize: 14,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w400,
                                 color: delta != null
                                     ? _deltaColor(delta)
                                     : primary),
@@ -697,7 +700,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
                               : '-${_formatPaceDelta(delta.abs())}',
                           style: TextStyle(
                               fontSize: 13,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w400,
                               color: _deltaColor(delta)),
                           textAlign: TextAlign.right)
                       : const SizedBox.shrink(),
@@ -767,7 +770,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
             style: AppTypography.small.copyWith(
               color: AppColors.textSecondary(context),
               letterSpacing: 1.5,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w400,
             ),
           ),
           const SizedBox(height: AppSpacing.s),
@@ -903,7 +906,7 @@ class _SerieExpansionTileState extends State<_SerieExpansionTile> {
                 style: const TextStyle(
                     fontSize: 11,
                     color: Colors.white,
-                    fontWeight: FontWeight.w600),
+                    fontWeight: FontWeight.w400),
               ),
             ),
             const SizedBox(width: AppSpacing.m),
@@ -926,13 +929,13 @@ class _SerieExpansionTileState extends State<_SerieExpansionTile> {
                     serie.ritmoTexto(),
                     style: AppTypography.body.copyWith(
                         color: AppColors.brand,
-                        fontWeight: FontWeight.w600),
+                        fontWeight: FontWeight.w400),
                   ),
                   if (serie.rpe > 0)
                     Text(
                       'RPE ${serie.rpe}',
                       style: AppTypography.body
-                          .copyWith(color: rpeColor, fontWeight: FontWeight.w600),
+                          .copyWith(color: rpeColor, fontWeight: FontWeight.w400),
                     ),
                 ],
               ),
@@ -1135,7 +1138,7 @@ class _ChartToggle extends StatelessWidget {
                 e.value,
                 style: TextStyle(
                   fontSize: 11,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w400,
                   color: active
                       ? Colors.white
                       : AppColors.textSecondary(context),
@@ -1165,7 +1168,7 @@ class _FcBigStat extends StatelessWidget {
         Text(
           value,
           style: TextStyle(
-              fontSize: 28, fontWeight: FontWeight.w700, color: color),
+              fontSize: 28, fontWeight: FontWeight.w500, color: color),
         ),
         const SizedBox(height: 2),
         Text(

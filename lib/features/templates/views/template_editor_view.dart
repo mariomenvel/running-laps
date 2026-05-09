@@ -101,7 +101,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
 
   Future<void> _loadWarmupOptions() async {
     try {
-      final all = await TrainingTemplatesRepository().getUserTemplates();
+      final all = await _repository.getUserTemplates();
       if (!mounted) return;
       setState(() {
         _warmupOptions = all.where((t) => t.isWarmupCooldown).toList();

@@ -180,7 +180,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                           'Manual',
                           style: TextStyle(
                             fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w400,
                             color: Theme.of(context).brightness ==
                                     Brightness.dark
                                 ? AppColors.brandLight
@@ -281,7 +281,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                 'SERIES',
                 style: TextStyle(
                   fontSize: 11,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w500,
                   color: AppColors.iconMutedOf(context),
                   letterSpacing: 1.2,
                 ),
@@ -415,7 +415,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
               '$num',
               style: TextStyle(
                 fontSize: 10,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w500,
                 color: Theme.of(context).brightness == Brightness.dark
                     ? AppColors.brandLight
                     : AppColors.brand,
@@ -543,7 +543,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                 Text('Editar etiquetas',
                     style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w400,
                         color: AppColors.textPrimary(context))),
               ],
             ),
@@ -572,7 +572,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                     Text('Descargar PDF',
                         style: TextStyle(
                             fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w400,
                             color: AppColors.textPrimary(context))),
                     Text('Guardar reporte',
                         style: TextStyle(
@@ -616,7 +616,7 @@ class _StatChip extends StatelessWidget {
               value,
               style: TextStyle(
                 fontSize: 15,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w500,
                 color: AppColors.textPrimary(context),
                 letterSpacing: -0.3,
               ),
@@ -627,7 +627,7 @@ class _StatChip extends StatelessWidget {
                 unit,
                 style: TextStyle(
                   fontSize: 10,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w400,
                   color: AppColors.textSecondary(context),
                 ),
               ),

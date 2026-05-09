@@ -75,11 +75,11 @@ class AppTheme {
 class AppTypography {
   AppTypography._();
 
-  static const h1 = TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white);
-  static const h2 = TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white);
+  static const h1 = TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -0.5);
+  static const h2 = TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -0.5);
   static const h3 = TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white);
-  static const body = TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: Colors.white);
-  static const small = TextStyle(fontSize: 12, fontWeight: FontWeight.normal, color: Color(0xFFCCCCCC));
+  static const body = TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: Colors.white, letterSpacing: -0.1);
+  static const small = TextStyle(fontSize: 12, fontWeight: FontWeight.normal, color: Color(0xFFCCCCCC), letterSpacing: -0.1);
 }
 
 /// Espaciado semántico — usar en padding, gap, margin.
