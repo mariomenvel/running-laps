@@ -220,6 +220,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
 
     final allSeries = <LineChartBarData>[];
     final allSpots  = <List<FlSpot>>[];
+    final allData   = <List<PaceDataPoint>>[];
     for (final entry in prog.entries) {
       final color = distColors[entry.key] ?? AppColors.brand;
       final spots = entry.value
@@ -228,13 +229,22 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
           .map((e) => FlSpot(e.key.toDouble(), e.value.paceSecKm))
           .toList();
       allSpots.add(spots);
+      allData.add(entry.value);
       allSeries.add(LineChartBarData(
         spots: spots,
         color: color,
         barWidth: 2,
         isCurved: true,
         curveSmoothness: 0.3,
-        dotData: const FlDotData(show: false),
+        dotData: FlDotData(
+          show: true,
+          getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+            radius: 4,
+            color: Colors.white,
+            strokeWidth: 2,
+            strokeColor: color,
+          ),
+        ),
       ));
     }
 
@@ -299,19 +309,57 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                     ),
                     borderData: FlBorderData(show: false),
                     lineTouchData: LineTouchData(
+                      handleBuiltInTouches: true,
+                      getTouchedSpotIndicator: (barData, spotIndexes) =>
+                          spotIndexes.map((i) => TouchedSpotIndicatorData(
+                                FlLine(
+                                    color: AppColors.brand,
+                                    strokeWidth: 1,
+                                    dashArray: [4, 4]),
+                                FlDotData(show: true),
+                              )).toList(),
                       touchTooltipData: LineTouchTooltipData(
                         getTooltipColor: (_) => AppColors.surfaceOf(context),
-                        getTooltipItems: (spots) => spots
-                            .map((s) => LineTooltipItem(
-                                  _fmtPace(s.y.toInt()),
-                                  TextStyle(
-                                      color: AppColors.textPrimary(context),
-                                      fontSize: 11),
-                                ))
-                            .toList(),
+                        tooltipBorder: BorderSide(
+                            color: AppColors.borderOf(context), width: 0.5),
+                        tooltipBorderRadius: BorderRadius.circular(8),
+                        tooltipPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        getTooltipItems: (spots) => spots.map((s) {
+                          final dataPoint = allData.isNotEmpty &&
+                                  s.barIndex < allData.length &&
+                                  s.x.toInt() < allData[s.barIndex].length
+                              ? allData[s.barIndex][s.x.toInt()]
+                              : null;
+                          final date = dataPoint != null
+                              ? '${dataPoint.weekStart.day}/${dataPoint.weekStart.month}'
+                              : '';
+                          return LineTooltipItem(
+                            '${_fmtPace(s.y.toInt())}/km\n',
+                            AppTypography.small.copyWith(
+                                color: AppColors.textPrimary(context),
+                                fontWeight: FontWeight.bold),
+                            children: [
+                              TextSpan(
+                                text: date,
+                                style: AppTypography.small.copyWith(
+                                    color: AppColors.iconMutedOf(context)),
+                              ),
+                            ],
+                          );
+                        }).toList(),
                       ),
                     ),
                   )),
+                ),
+                const SizedBox(height: AppSpacing.s),
+                Text(
+                  'Toca un punto para ver el detalle',
+                  style: AppTypography.small.copyWith(
+                    color: AppColors.iconMutedOf(context),
+                    fontStyle: FontStyle.italic,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppSpacing.m),
                 Wrap(
