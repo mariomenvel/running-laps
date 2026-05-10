@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
+import 'package:running_laps/features/templates/data/athlete_session_mapper.dart';
 import 'package:running_laps/features/templates/data/templates_repository.dart';
 import 'package:running_laps/features/templates/data/workout_block.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
@@ -49,7 +50,8 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
   @override
   void initState() {
     super.initState();
-    final s = widget.initialSession;
+    final mapped = mapAthleteSessionToWorkout(widget.shellParams?.session);
+    final s = widget.initialSession ?? mapped;
 
     _effectiveScheduledDate = widget.scheduledDate
         ?? _parseShellDate(widget.shellParams?.date)
