@@ -96,7 +96,7 @@ String titleFromType(WorkoutType type) {
 
 String generateTitle(WorkoutSession session) {
   final mainBlocks = session.mainBlocks;
-  if (mainBlocks.isEmpty) return _titleFromCategory(null);
+  if (mainBlocks.isEmpty) return titleFromType(session.type);
 
   final firstMain = mainBlocks.first;
   final reps = firstMain.repetitions;
@@ -106,59 +106,62 @@ String generateTitle(WorkoutSession session) {
 
   if (firstInterval == null) return titleFromType(session.type);
 
-  switch (session.type) {
-    case WorkoutType.intervals:
-    case WorkoutType.hills:
-      if (firstInterval.distanceM != null) {
-        final dist = firstInterval.distanceM!;
-        final distLabel = dist >= 1000
-            ? '${(dist / 1000).toStringAsFixed(dist % 1000 == 0 ? 0 : 1)}km'
-            : '${dist}m';
-        return reps > 1 ? '$reps×$distLabel' : distLabel;
-      } else if (firstInterval.durationSec != null) {
-        final min = firstInterval.durationSec! ~/ 60;
-        final sec = firstInterval.durationSec! % 60;
-        final timeLabel = sec == 0 ? '$min min' : "$min'$sec\"";
-        return reps > 1 ? '$reps×$timeLabel' : timeLabel;
-      }
-      return titleFromType(session.type);
+  final distM = firstInterval.distanceM;
+  final durSec = firstInterval.durationSec;
 
-    case WorkoutType.continuous:
-      final prefix = titleFromType(session.type);
-      if (firstInterval.distanceM != null) {
-        final km = firstInterval.distanceM! / 1000;
-        return '$prefix ${km.toStringAsFixed(km % 1 == 0 ? 0 : 1)}km';
-      } else if (firstInterval.durationSec != null) {
-        final min = firstInterval.durationSec! ~/ 60;
-        return '$prefix $min min';
-      }
-      return prefix;
-
-    case WorkoutType.fartlek:
-      final intervals = firstMain.segments
-          .where((s) => s.type == SegmentType.interval)
-          .take(3)
-          .toList();
-      if (intervals.isEmpty) return 'Fartlek';
-      final labels = intervals.map((s) {
-        if (s.durationSec != null) {
-          final min = s.durationSec! ~/ 60;
-          final sec = s.durationSec! % 60;
-          return sec == 0 ? "$min'" : "$min'$sec\"";
-        }
-        return '${s.distanceM}m';
-      }).join('-');
-      final suffix = firstMain.segments
-              .where((s) => s.type == SegmentType.interval)
-              .length > 3 ? '...' : '';
-      return 'Fartlek $labels$suffix';
-
-    case WorkoutType.competition:
-      return 'Competición';
-
-    case WorkoutType.free:
-      return 'Sesión libre';
+  if (session.type == WorkoutType.intervals ||
+      session.type == WorkoutType.hills) {
+    if (distM != null && distM > 0) {
+      final distLabel = distM >= 1000
+          ? '${(distM / 1000).toStringAsFixed(distM % 1000 == 0 ? 0 : 1)}km'
+          : '${distM}m';
+      return reps > 1 ? '$reps×$distLabel' : distLabel;
+    }
+    if (durSec != null && durSec > 0) {
+      final min = durSec ~/ 60;
+      final sec = durSec % 60;
+      final timeLabel = sec == 0 ? '$min min' : "$min'$sec\"";
+      return reps > 1 ? '$reps×$timeLabel' : timeLabel;
+    }
+    return titleFromType(session.type);
   }
+
+  if (session.type == WorkoutType.continuous) {
+    final prefix = titleFromType(session.type);
+    if (distM != null && distM > 0) {
+      final km = distM / 1000;
+      return '$prefix ${km.toStringAsFixed(km % 1 == 0 ? 0 : 1)}km';
+    }
+    if (durSec != null && durSec > 0) {
+      return '$prefix ${durSec ~/ 60} min';
+    }
+    return prefix;
+  }
+
+  if (session.type == WorkoutType.fartlek) {
+    final intervals = firstMain.segments
+        .where((s) => s.type == SegmentType.interval)
+        .take(3)
+        .toList();
+    if (intervals.isEmpty) return 'Fartlek';
+    final labels = intervals.map((s) {
+      if (s.durationSec != null && s.durationSec! > 0) {
+        final min = s.durationSec! ~/ 60;
+        final sec = s.durationSec! % 60;
+        return sec == 0 ? "$min'" : "$min'$sec\"";
+      }
+      return '${s.distanceM ?? 0}m';
+    }).join('-');
+    final hasMore = firstMain.segments
+        .where((s) => s.type == SegmentType.interval)
+        .length > 3;
+    return 'Fartlek $labels${hasMore ? '...' : ''}';
+  }
+
+  if (session.type == WorkoutType.competition) return 'Competición';
+  if (session.type == WorkoutType.free) return 'Sesión libre';
+
+  return titleFromType(session.type);
 }
 
 // ── Bloques ──────────────────────────────────────────────────────────────────

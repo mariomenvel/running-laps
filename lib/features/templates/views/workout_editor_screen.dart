@@ -50,6 +50,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
   DateTime? _effectiveScheduledDate;
 
   bool _titleEdited = false;
+  bool _titleIsAuto = true;
 
   @override
   void initState() {
@@ -75,7 +76,10 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
       _notesController = TextEditingController(text: _notes.value);
       _notesController.addListener(() => _notes.value = _notesController.text);
 
-      if (s?.title != null && s!.title.isNotEmpty) _titleEdited = true;
+      if (s?.title != null && s!.title.isNotEmpty) {
+        _titleEdited = true;
+        _titleIsAuto = false;
+      }
     } catch (e, st) {
       debugPrint('[WorkoutEditor] initState ERROR: $e');
       debugPrint('[WorkoutEditor] stack: $st');
@@ -131,20 +135,9 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
   void _onTypeSelected(WorkoutType type) {
     _selectedType.value = type;
     if (!_titleEdited) {
-      final tempSession = WorkoutSession(
-        id: '',
-        title: '',
-        type: type,
-        blocks: _blocks.value.isNotEmpty
-            ? _blocks.value
-            : [WorkoutBlock(role: BlockRole.main, repetitions: 1, segments: [
-                WorkoutSegment(type: SegmentType.interval, durationSec: 60),
-              ])],
-        isTemplate: false,
-      );
-      final autoTitle = generateTitle(tempSession);
-      _title.value = autoTitle;
-      _titleController.text = autoTitle;
+      _title.value = titleFromType(type);
+      _titleController.text = _title.value;
+      _titleIsAuto = true;
     }
     if (_blocks.value.isEmpty) {
       _blocks.value = [
@@ -216,15 +209,50 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
             ),
           ];
 
-    final resolvedTitle = _title.value.trim().isEmpty
-        ? generateTitle(WorkoutSession(
-            id: '',
-            title: '',
-            type: resolvedType,
-            blocks: blocks,
-            isTemplate: false,
-          ))
-        : _title.value.trim();
+    final userTitle = _title.value.trim();
+    final shouldRegenerate = userTitle.isEmpty || _titleIsAuto;
+
+    String resolvedTitle;
+    if (!shouldRegenerate) {
+      resolvedTitle = userTitle;
+    } else {
+      final mainBlock = blocks
+          .where((b) => b.role == BlockRole.main)
+          .firstOrNull;
+      final firstSeg = mainBlock?.segments
+          .where((s) => s.type == SegmentType.interval)
+          .firstOrNull;
+      final reps = mainBlock?.repetitions ?? 1;
+      final distM = firstSeg?.distanceM;
+      final durSec = firstSeg?.durationSec;
+
+      debugPrint('[WorkoutEditor] inline title: reps=$reps distM=$distM durSec=$durSec type=$resolvedType');
+
+      if ((resolvedType == WorkoutType.intervals ||
+           resolvedType == WorkoutType.hills) &&
+          distM != null && distM > 0) {
+        final distLabel = distM >= 1000
+            ? '${(distM / 1000).toStringAsFixed(distM % 1000 == 0 ? 0 : 1)}km'
+            : '${distM}m';
+        resolvedTitle = reps > 1 ? '$reps×$distLabel' : distLabel;
+      } else if ((resolvedType == WorkoutType.intervals ||
+                  resolvedType == WorkoutType.hills) &&
+                 durSec != null && durSec > 0) {
+        final min = durSec ~/ 60;
+        final sec = durSec % 60;
+        final timeLabel = sec == 0 ? '$min min' : "$min'$sec\"";
+        resolvedTitle = reps > 1 ? '$reps×$timeLabel' : timeLabel;
+      } else if (resolvedType == WorkoutType.continuous && distM != null) {
+        final km = distM / 1000;
+        resolvedTitle = 'Rodaje ${km.toStringAsFixed(km % 1 == 0 ? 0 : 1)}km';
+      } else if (resolvedType == WorkoutType.continuous && durSec != null) {
+        resolvedTitle = 'Rodaje ${durSec ~/ 60} min';
+      } else {
+        resolvedTitle = titleFromType(resolvedType);
+      }
+    }
+
+    debugPrint('[WorkoutEditor] resolvedTitle inline: $resolvedTitle');
 
     final notesValue = _notes.value.trim().isEmpty ? null : _notes.value.trim();
 
@@ -257,7 +285,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
               mapWorkoutSessionToAthlete(session, uid: uid);
           final repo = AthleteSessionRepository();
           debugPrint('[WorkoutEditor] shellParams.session?.id: ${widget.shellParams?.session?.id}');
-          debugPrint('[WorkoutEditor] session.id (WorkoutSession): ${session.id}');
+          debugPrint('[WorkoutEditor] session.id: ${session.id}');
           debugPrint('[WorkoutEditor] athleteSession.id: ${athleteSession.id}');
           debugPrint('[WorkoutEditor] uid: $uid');
           debugPrint('[WorkoutEditor] es edición: ${widget.shellParams?.session != null}');
@@ -281,7 +309,6 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
           } else {
             await repo.createSession(athleteSession);
           }
-          debugPrint('[WorkoutEditor] persistido correctamente');
         }
       } catch (e) {
         debugPrint('[WorkoutEditor] persistAthleteSession error: $e');
@@ -408,7 +435,11 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
             const SizedBox(height: AppSpacing.s),
             TextField(
               controller: _titleController,
-              onChanged: (_) => _titleEdited = true,
+              onChanged: (v) {
+              _title.value = v;
+              _titleEdited = true;
+              _titleIsAuto = false;
+            },
               maxLength: 60,
               style: TextStyle(
                 fontSize: 16,

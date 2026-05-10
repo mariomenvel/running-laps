@@ -441,9 +441,11 @@ class _CalendarViewState extends State<CalendarView> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: isAthlete
                                     ? daySessions.map((s) {
-                                        final cat = s.category != null
-                                            ? SessionCategoryX.fromValue(s.category!).label
-                                            : 'Entrenamiento';
+                                        final cat = s.title?.isNotEmpty == true
+                                            ? s.title!
+                                            : s.category != null
+                                                ? SessionCategoryX.fromValue(s.category!).label
+                                                : 'Entrenamiento';
                                         return Row(children: [
                                           Container(
                                             width: 6, height: 6,
@@ -821,9 +823,11 @@ class _CalendarViewState extends State<CalendarView> {
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        s.category != null
-                                            ? SessionCategoryX.fromValue(s.category!).label
-                                            : 'Entrenamiento',
+                                        s.title?.isNotEmpty == true
+                                            ? s.title!
+                                            : s.category != null
+                                                ? SessionCategoryX.fromValue(s.category!).label
+                                                : 'Entrenamiento',
                                         style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
                                       ),
                                     ),
@@ -1346,9 +1350,11 @@ class _CalendarViewState extends State<CalendarView> {
   Widget _buildSessionCard(AthleteSession session, DateTime day) {
     final color = _statusColor(session.status);
     final label = _statusLabel(session.status);
-    final categoryLabel = session.category != null
-        ? SessionCategoryX.fromValue(session.category!).label
-        : 'Entrenamiento';
+    final categoryLabel = session.title?.isNotEmpty == true
+        ? session.title!
+        : session.category != null
+            ? SessionCategoryX.fromValue(session.category!).label
+            : 'Entrenamiento';
 
     return Container(
       width: double.infinity,
