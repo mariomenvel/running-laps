@@ -2161,6 +2161,7 @@ class _DayActionSheet extends StatelessWidget {
             width: double.infinity,
             child: FilledButton.icon(
               onPressed: () {
+                debugPrint('🟣 Abriendo WorkoutEditorScreen desde _DayActionSheet');
                 Navigator.pop(context);
                 Navigator.push(
                   context,

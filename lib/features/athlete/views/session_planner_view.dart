@@ -457,6 +457,7 @@ class _SessionPlannerViewState extends State<SessionPlannerView> {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('🔴 SessionPlannerView abierto');
     final isDark      = Theme.of(context).brightness == Brightness.dark;
     final bgColor     = isDark ? const Color(0xFF1C1C1E) : Colors.white;
     final titleColor  = isDark ? Colors.white : const Color(0xFF1C1C1E);

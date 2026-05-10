@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 import 'workout_block.dart';
@@ -12,6 +13,8 @@ class WorkoutSession {
   final WorkoutType type;
   final List<WorkoutBlock> blocks;
   final DateTime? scheduledDate;
+  final TimeOfDay? scheduledTime;
+  final String? notes;
   final bool isTemplate;
   final String? templateId;
 
@@ -22,6 +25,8 @@ class WorkoutSession {
     required this.type,
     required this.blocks,
     this.scheduledDate,
+    this.scheduledTime,
+    this.notes,
     this.isTemplate = false,
     this.templateId,
   }) : id = id ?? const Uuid().v4(),
@@ -57,6 +62,9 @@ class WorkoutSession {
       'blocks': blocks.map((b) => b.toMap()).toList(),
       if (scheduledDate != null)
         'scheduledDate': Timestamp.fromDate(scheduledDate!),
+      if (scheduledTime != null)
+        'scheduledTime': {'hour': scheduledTime!.hour, 'minute': scheduledTime!.minute},
+      if (notes != null) 'notes': notes,
       'isTemplate': isTemplate,
       if (templateId != null) 'templateId': templateId,
     };
@@ -74,6 +82,13 @@ class WorkoutSession {
       scheduledDate: map['scheduledDate'] != null
           ? (map['scheduledDate'] as Timestamp).toDate()
           : null,
+      scheduledTime: map['scheduledTime'] != null
+          ? TimeOfDay(
+              hour: (map['scheduledTime'] as Map)['hour'] as int,
+              minute: (map['scheduledTime'] as Map)['minute'] as int,
+            )
+          : null,
+      notes: map['notes'] as String?,
       isTemplate: map['isTemplate'] as bool? ?? false,
       templateId: map['templateId'] as String?,
     );
@@ -85,6 +100,8 @@ class WorkoutSession {
     WorkoutType? type,
     List<WorkoutBlock>? blocks,
     Object? scheduledDate = _sentinel,
+    Object? scheduledTime = _sentinel,
+    Object? notes = _sentinel,
     bool? isTemplate,
     Object? templateId = _sentinel,
   }) {
@@ -98,6 +115,10 @@ class WorkoutSession {
       scheduledDate: scheduledDate == _sentinel
           ? this.scheduledDate
           : scheduledDate as DateTime?,
+      scheduledTime: scheduledTime == _sentinel
+          ? this.scheduledTime
+          : scheduledTime as TimeOfDay?,
+      notes: notes == _sentinel ? this.notes : notes as String?,
       isTemplate: isTemplate ?? this.isTemplate,
       templateId:
           templateId == _sentinel ? this.templateId : templateId as String?,

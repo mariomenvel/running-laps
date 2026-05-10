@@ -23,8 +23,8 @@ import 'package:running_laps/features/groups/views/group_screen.dart';
 import 'package:running_laps/features/templates/views/templates_list_view.dart';
 import 'package:running_laps/features/templates/views/template_editor_view.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
-import 'package:running_laps/features/athlete/views/athlete_session_editor_view.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
+import 'package:running_laps/features/templates/views/workout_editor_screen.dart';
 
 // ─── Params para tabs con parámetros ─────────────────────────────────────────
 
@@ -123,20 +123,15 @@ class _MainShellState extends State<MainShell> {
       ),
     ),
 
-    // 13 → Editor sesión atleta
+    // 13 → Editor sesión (WorkoutEditorScreen)
     ValueListenableBuilder<AthleteSessionShellParams?>(
       valueListenable: _athleteSessionNotifier,
-      builder: (_, p, __) {
-        final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-        return p != null
-            ? AthleteSessionEditorView(
-                key: ValueKey('${p.date}-${p.session?.id}'),
-                uid: uid,
-                initialDate: p.date,
-                existingSession: p.session,
-              )
-            : const SizedBox.shrink();
-      },
+      builder: (_, p, __) => p != null
+          ? WorkoutEditorScreen(
+              key: ValueKey('${p.date}-${p.session?.id}'),
+              shellParams: p,
+            )
+          : const SizedBox.shrink(),
     ),
 
     // 14 → Avatar customizer
