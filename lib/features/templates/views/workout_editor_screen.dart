@@ -6,6 +6,7 @@ import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/features/templates/data/templates_repository.dart';
 import 'package:running_laps/features/templates/data/workout_block.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
+import 'package:running_laps/features/templates/views/widgets/blocks_list_section.dart';
 import 'package:running_laps/features/templates/views/widgets/workout_type_selector.dart';
 import 'package:uuid/uuid.dart';
 
@@ -125,6 +126,15 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
       final defaultTitle = _defaultTitleFor(type);
       _title.value = defaultTitle;
       _titleController.text = defaultTitle;
+    }
+    if (_blocks.value.isEmpty) {
+      _blocks.value = [
+        WorkoutBlock(
+          role: BlockRole.main,
+          repetitions: 1,
+          segments: [],
+        ),
+      ];
     }
   }
 
@@ -364,8 +374,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                           const SizedBox(height: AppSpacing.s),
                           ValueListenableBuilder<List<WorkoutBlock>>(
                             valueListenable: _blocks,
-                            builder: (_, blocks, __) => _BlocksPlaceholder(
-                              context: context,
+                            builder: (_, blocks, __) => BlocksListSection(
                               blocks: blocks,
                               workoutType: type,
                               onBlocksChanged: (updated) =>
@@ -501,35 +510,6 @@ class _SectionLabel extends StatelessWidget {
           fontWeight: FontWeight.w500,
           letterSpacing: 1.2,
           color: AppColors.textSecondary(context),
-        ),
-      );
-}
-
-// Placeholder para _BlocksListSection (se implementará en iteración siguiente).
-class _BlocksPlaceholder extends StatelessWidget {
-  const _BlocksPlaceholder({
-    required this.context,
-    required this.blocks,
-    required this.workoutType,
-    required this.onBlocksChanged,
-  });
-
-  final BuildContext context;
-  final List<WorkoutBlock> blocks;
-  final WorkoutType workoutType;
-  final void Function(List<WorkoutBlock>) onBlocksChanged;
-
-  @override
-  Widget build(BuildContext outerContext) => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(AppSpacing.l),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceOf(outerContext),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          'Bloques — próximamente',
-          style: TextStyle(color: AppColors.textSecondary(outerContext)),
         ),
       );
 }
