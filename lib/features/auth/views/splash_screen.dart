@@ -100,13 +100,7 @@ class _SplashScreenState extends State<SplashScreen>
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          AppColors.brandPurpleLight.withOpacity(0.25),
-                          Colors.transparent,
-                        ],
-                        radius: 0.6,
-                      ),
+                      color: AppColors.brandLight.withOpacity(0.15),
                     ),
                   ),
                 ),
@@ -141,7 +135,7 @@ class _SplashScreenState extends State<SplashScreen>
                       Text(
                         'Running Laps',
                         style: TextStyle(
-                          color: AppColors.brandPurpleLight,
+                          color: AppColors.brandLight,
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),

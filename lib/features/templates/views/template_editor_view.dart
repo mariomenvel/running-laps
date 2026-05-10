@@ -4,6 +4,8 @@ import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
+import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../data/template_models.dart';
@@ -38,7 +40,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
   List<TemplateBlock> _blocks = [];
   bool _isSaving = false;
   bool _hasChanges = false;
-  int _selectedColor = 0xFF9C27B0; // Default Tema.brandPurple
+  int _selectedColor = 0xFF9C27B0; // Default AppColors.brand
 
   // FC config — cargado async en initState
   bool _hasFcConfig = false;
@@ -99,7 +101,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
 
   Future<void> _loadWarmupOptions() async {
     try {
-      final all = await TrainingTemplatesRepository().getUserTemplates();
+      final all = await _repository.getUserTemplates();
       if (!mounted) return;
       setState(() {
         _warmupOptions = all.where((t) => t.isWarmupCooldown).toList();
@@ -250,10 +252,10 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Tema.brandPurple.withOpacity(0.1),
+                      color: AppColors.brand.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.info_outline_rounded, color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 40),
+                    child: Icon(Icons.info_outline_rounded, color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 40),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -286,15 +288,11 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                       Expanded(
                         child: Container(
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Tema.brandPurple, Color(0xFFBA68C8)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                            color: AppColors.brand,
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Tema.brandPurple.withOpacity(0.3),
+                                color: AppColors.brand.withOpacity(0.3),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -343,7 +341,11 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
 
       if (mounted) {
         ModernSnackBar.showSuccess(context, "Plantilla guardada");
-        Navigator.pop(context, widget.isSelectionMode ? template : true); 
+        if (ShellEmbeddingScope.isEmbedded(context)) {
+          MainShell.shellKey.currentState?.navigateBack();
+        } else {
+          Navigator.pop(context, widget.isSelectionMode ? template : true);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -382,10 +384,10 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.orange.shade50,
+                color: AppColors.rpeMid,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700, size: 40),
+              child: Icon(Icons.warning_amber_rounded, color: AppColors.rpeMid, size: 40),
             ),
             const SizedBox(height: 16),
             Text(
@@ -418,15 +420,11 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.red.shade400, Colors.red.shade700],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: AppColors.rpeMax,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.red.shade400.withOpacity(0.3),
+                          color: AppColors.rpeMax.withOpacity(0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -453,7 +451,13 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
     );
 
     if (result == true) {
-      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        if (ShellEmbeddingScope.isEmbedded(context)) {
+          MainShell.shellKey.currentState?.navigateBack();
+        } else {
+          Navigator.pop(context);
+        }
+      }
     }
   }
 
@@ -475,10 +479,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
               title: '',
               icon: Icons.description_rounded, // Matching Templates List View
               height: 85, // Standardized height
-              gradientColors: [
-                templateColor,
-                templateColor.withOpacity(0.8),
-              ],
+              accentColor: templateColor,
               titleWidget: TextField(
                 controller: _nameController,
                 style: const TextStyle(
@@ -541,11 +542,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                     width: 4,
                     height: 18,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [templateColor, templateColor.withOpacity(0.5)],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
+                      color: templateColor,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -795,8 +792,8 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                 'Crear',
                 style: TextStyle(
                   color: Theme.of(context).brightness == Brightness.dark
-                      ? AppColors.brandPurpleLight
-                      : Tema.brandPurple,
+                      ? AppColors.brandLight
+                      : AppColors.brand,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),
@@ -937,15 +934,13 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
             Container(
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Tema.brandPurple.withOpacity(0.1), Tema.brandPurple.withOpacity(0.05)],
-                ),
+                color: AppColors.brand.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.fitness_center_rounded,
                 size: 80,
-                color: Tema.brandPurple.withOpacity(0.6),
+                color: AppColors.brand.withOpacity(0.6),
               ),
             ),
             const SizedBox(height: 24),
@@ -983,7 +978,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
         padding: const EdgeInsets.only(right: 24),
         alignment: Alignment.centerRight,
         decoration: BoxDecoration(
-          color: Colors.red.shade400,
+          color: AppColors.rpeMax,
           borderRadius: BorderRadius.circular(20),
         ),
         child: const Icon(Icons.delete_outline_rounded, color: Colors.white, size: 28),
@@ -1020,15 +1015,11 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Tema.brandPurple, const Color(0xFFBA68C8)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                        color: AppColors.brand,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Tema.brandPurple.withOpacity(0.3),
+                            color: AppColors.brand.withOpacity(0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -1078,18 +1069,18 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: Colors.orange.shade50,
+                                    color: AppColors.rpeMid,
                                     borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(color: Colors.orange.shade100),
+                                    border: Border.all(color: AppColors.rpeMid),
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.notifications_active_rounded, size: 10, color: Colors.orange.shade700),
+                                      Icon(Icons.notifications_active_rounded, size: 10, color: AppColors.rpeMid),
                                       const SizedBox(width: 2),
                                       Text(
                                         "ALERTA",
                                         style: TextStyle(
-                                          color: Colors.orange.shade700,
+                                          color: AppColors.rpeMid,
                                           fontSize: 9,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -1110,7 +1101,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                       children: [
                         _buildActionCircle(
                           icon: Icons.copy_rounded,
-                          color: Colors.blue.shade600,
+                          color: AppColors.rest,
                           onTap: () => _duplicateBlock(index),
                         ),
                         const SizedBox(width: 8),
@@ -1240,15 +1231,11 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.green.shade400, Colors.green.shade600],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: AppColors.rpeLow,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.green.shade600.withOpacity(0.3),
+                color: AppColors.rpeLow.withOpacity(0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -1309,8 +1296,8 @@ class _PickerOption extends StatelessWidget {
       trailing: isSelected
           ? Icon(Icons.check_rounded,
               color: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.brandPurpleLight
-                  : Tema.brandPurple,
+                  ? AppColors.brandLight
+                  : AppColors.brand,
               size: 20)
           : null,
       onTap: onTap,
@@ -1322,7 +1309,7 @@ class _PickerOption extends StatelessWidget {
 class _AnimatedBackButton extends StatefulWidget {
   final VoidCallback onTap;
   final Color color;
-  const _AnimatedBackButton({required this.onTap, this.color = Tema.brandPurple});
+  const _AnimatedBackButton({required this.onTap, this.color = AppColors.brand});
 
   @override
   State<_AnimatedBackButton> createState() => _AnimatedBackButtonState();

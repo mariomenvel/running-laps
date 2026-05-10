@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
-import 'package:running_laps/core/utils/app_transitions.dart';
-
-import 'package:running_laps/features/home/views/home_view.dart';
+import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 
 class AppHeader extends StatelessWidget {
   final VoidCallback? onTapLeft;
@@ -26,18 +24,14 @@ class AppHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (ShellEmbeddingScope.isEmbedded(context)) return const SizedBox.shrink();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final topPadding = MediaQuery.of(context).padding.top;
     return Container(
       decoration: isDark
           ? BoxDecoration(color: Theme.of(context).colorScheme.surface)
           : const BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment.topCenter,
-                radius: 1.2,
-                colors: <Color>[_bgGradientColor, Colors.white],
-                stops: <double>[0.0, 1.0],
-              ),
+              color: Colors.white,
               image: DecorationImage(
                 image: AssetImage('assets/images/fondo.png'),
                 fit: BoxFit.cover,
@@ -57,21 +51,10 @@ class AppHeader extends StatelessWidget {
               children: <Widget>[
                 // --- LOGO / LEADING ---
                 leading ?? GestureDetector(
-                  onTap: () {
-                    if (onTapLeft != null) {
-                      onTapLeft!();
-                    } else {
-                      // Navegación Directa al Home (Limpia stack)
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        AppRoute(page: const HomeView()),
-                        (route) => false,
-                      );
-                    }
-                  },
+                  onTap: onTapLeft,
                   child: const CircleAvatar(
                     radius: 24.0,
-                    backgroundColor: Tema.brandPurple,
+                    backgroundColor: AppColors.brand,
                     backgroundImage: AssetImage('assets/images/logo.png'),
                   ),
                 ),

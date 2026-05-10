@@ -17,7 +17,7 @@ class TrendsTab extends StatelessWidget {
       valueListenable: controller.isLoading,
       builder: (context, isLoading, _) {
         if (isLoading) {
-          return const Center(child: CircularProgressIndicator(color: Tema.brandPurple));
+          return const Center(child: CircularProgressIndicator(color: AppColors.brand));
         }
         return ValueListenableBuilder(
           valueListenable: controller.filteredData,
@@ -73,7 +73,7 @@ class TrendsTab extends StatelessWidget {
                 '400m',
                 best400m,
                 Icons.bolt,
-                Colors.amber,
+                AppColors.rpeMid,
               ),
             ),
             const SizedBox(width: 12),
@@ -83,7 +83,7 @@ class TrendsTab extends StatelessWidget {
                 '1km',
                 best1km,
                 Icons.speed,
-                Colors.blue,
+                AppColors.rest,
               ),
             ),
             const SizedBox(width: 12),
@@ -93,7 +93,7 @@ class TrendsTab extends StatelessWidget {
                 '5km',
                 best5km,
                 Icons.emoji_events,
-                Colors.purple,
+                AppColors.brand,
               ),
             ),
           ],
@@ -134,9 +134,7 @@ class TrendsTab extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [color.withOpacity(0.8), color],
-              ),
+              color: color,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
@@ -196,7 +194,7 @@ class TrendsTab extends StatelessWidget {
             border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
             boxShadow: [
               BoxShadow(
-                color: Colors.blue.withOpacity(0.1),
+                color: AppColors.rest.withOpacity(0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
                 spreadRadius: -5,
@@ -242,7 +240,7 @@ class TrendsTab extends StatelessWidget {
             border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
             boxShadow: [
               BoxShadow(
-                color: Tema.brandPurple.withOpacity(0.1),
+                color: AppColors.brand.withOpacity(0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
                 spreadRadius: -5,
@@ -310,7 +308,7 @@ class _WeeklyVolumeChart extends StatelessWidget {
           BarChartRodData(
             toY: km,
             gradient: LinearGradient(
-              colors: [Colors.blue.shade400, Colors.blue.shade600],
+              colors: [AppColors.rest, AppColors.rest],
               begin: Alignment.bottomCenter,
               end: Alignment.topCenter,
             ),
@@ -326,7 +324,7 @@ class _WeeklyVolumeChart extends StatelessWidget {
         alignment: BarChartAlignment.spaceAround,
         barTouchData: BarTouchData(
           touchTooltipData: BarTouchTooltipData(
-            getTooltipColor: (_) => Colors.blueGrey.shade900,
+            getTooltipColor: (_) => AppColors.iconMuted,
             tooltipBorderRadius: BorderRadius.circular(8),
             tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
@@ -399,7 +397,7 @@ class _PaceEvolutionChart extends StatelessWidget {
       LineChartData(
         lineTouchData: LineTouchData(
           touchTooltipData: LineTouchTooltipData(
-            getTooltipColor: (_) => Colors.blueGrey.shade900,
+            getTooltipColor: (_) => AppColors.iconMuted,
             tooltipBorderRadius: BorderRadius.circular(8),
             tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             getTooltipItems: (touchedSpots) {
@@ -409,7 +407,7 @@ class _PaceEvolutionChart extends StatelessWidget {
                 final totalSeconds = spot.y.toInt();
                 final m = totalSeconds ~/ 60;
                 final s = (totalSeconds % 60).toString().padLeft(2, '0');
-                
+
                 return LineTooltipItem(
                   "$date\n",
                   const TextStyle(
@@ -449,7 +447,7 @@ class _PaceEvolutionChart extends StatelessWidget {
             isCurved: true,
             curveSmoothness: 0.4,
             gradient: LinearGradient(
-              colors: [Tema.brandPurple, Colors.purple.shade300],
+              colors: [AppColors.brand, AppColors.brand],
             ),
             barWidth: 4,
             isStrokeCapRound: true,
@@ -458,8 +456,8 @@ class _PaceEvolutionChart extends StatelessWidget {
               show: true,
               gradient: LinearGradient(
                 colors: [
-                  Tema.brandPurple.withOpacity(0.3),
-                  Tema.brandPurple.withOpacity(0.0),
+                  AppColors.brand.withOpacity(0.3),
+                  AppColors.brand.withOpacity(0.0),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,

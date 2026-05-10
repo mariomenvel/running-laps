@@ -54,7 +54,7 @@ class _HistoryCalendarWidgetState extends State<HistoryCalendarWidget> {
             blurRadius: 20,
           ),
           BoxShadow(
-            color: AppColors.brandPurple.withOpacity(0.05),
+            color: AppColors.brand.withOpacity(0.05),
             offset: const Offset(0, 2),
             blurRadius: 8,
           ),
@@ -99,15 +99,7 @@ class _HistoryCalendarWidgetState extends State<HistoryCalendarWidget> {
                 child: Container(
                   height: 1,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.transparent,
-                        isDark
-                            ? Colors.white.withOpacity(0.08)
-                            : Colors.grey.shade200,
-                        Colors.transparent,
-                      ],
-                    ),
+                    color: AppColors.borderOf(context),
                   ),
                 ),
               ),
@@ -137,7 +129,7 @@ class _HistoryCalendarWidgetState extends State<HistoryCalendarWidget> {
     const int maxMarkers = 3;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final brandColor =
-        isDark ? AppColors.brandPurpleLight : AppColors.brandPurple;
+        isDark ? AppColors.brandLight : AppColors.brand;
     final int displayCount =
         tags.length > maxMarkers ? maxMarkers - 1 : tags.length;
     final List<Widget> markers = [];
@@ -173,7 +165,7 @@ class _HistoryCalendarWidgetState extends State<HistoryCalendarWidget> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
           decoration: BoxDecoration(
-            color: AppColors.brandPurple.withOpacity(0.15),
+            color: AppColors.brand.withOpacity(0.15),
             borderRadius: BorderRadius.circular(6),
           ),
           child: Text(

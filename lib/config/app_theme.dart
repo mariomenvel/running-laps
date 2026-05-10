@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
+export 'package:running_laps/core/theme/app_colors.dart';
 // Asegúrate de que la ruta de este import sea correcta en tu proyecto
-import 'package:running_laps/features/avatar/data/assets.dart'; 
+import 'package:running_laps/features/avatar/data/assets.dart';
 
+/// @deprecated Usar AppColors directamente desde core/theme/app_colors.dart.
 class Tema {
-  /// @deprecated Use [AppColors.brandPurple] from
-  /// `package:running_laps/core/theme/app_colors.dart` instead.
-  static const Color brandPurple = Color(0xFF8E24AA);
+  /// @deprecated Usar [AppColors.brand].
+  static const Color brandPurple = AppColors.brand;
 }
 
 class AvatarHelper {

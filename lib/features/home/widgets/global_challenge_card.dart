@@ -82,7 +82,7 @@ class _GlobalChallengeCardState extends State<GlobalChallengeCard> {
   @override
   Widget build(BuildContext context) {
     final c = widget.challenge;
-    final g = ChallengeColorHelper.gradientForMetric(c.metric).colors;
+    final accentColor = ChallengeColorHelper.accentForMetric(c.metric);
     final endDate = DateFormat('dd MMM').format(c.endAt);
 
     return GestureDetector(
@@ -98,11 +98,11 @@ class _GlobalChallengeCardState extends State<GlobalChallengeCard> {
       child: Container(
         constraints: const BoxConstraints(minHeight: 140),
         decoration: BoxDecoration(
-          gradient: ChallengeColorHelper.gradientForMetric(c.metric),
+          color: accentColor,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: g.first.withOpacity(0.35),
+              color: accentColor.withOpacity(0.35),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
@@ -231,7 +231,7 @@ class _GlobalChallengeCardState extends State<GlobalChallengeCard> {
                             : 0.0;
                         return _buildJoinedState(participant, c, progress);
                       }
-                      return _buildJoinButton(g);
+                      return _buildJoinButton();
                     },
                   ),
                 ],
@@ -243,7 +243,8 @@ class _GlobalChallengeCardState extends State<GlobalChallengeCard> {
     );
   }
 
-  Widget _buildJoinButton(List<Color> g) {
+  Widget _buildJoinButton() {
+    final accentColor = ChallengeColorHelper.accentForMetric(widget.challenge.metric);
     return GestureDetector(
       onTap: _isJoining ? null : _join,
       child: Container(
@@ -267,13 +268,13 @@ class _GlobalChallengeCardState extends State<GlobalChallengeCard> {
                   height: 16,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: g.first,
+                    color: accentColor,
                   ),
                 )
               : Text(
                   'Unirse',
                   style: TextStyle(
-                    color: g.first,
+                    color: accentColor,
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
                   ),

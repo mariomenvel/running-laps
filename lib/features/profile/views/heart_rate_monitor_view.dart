@@ -61,7 +61,7 @@ class HeartRateMonitorView extends StatelessWidget {
             if (showSettings)
               FilledButton(
                 style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brandPurple),
+                    backgroundColor: AppColors.brand),
                 onPressed: () {
                   Navigator.pop(ctx);
                   openAppSettings();
@@ -122,7 +122,7 @@ class HeartRateMonitorView extends StatelessWidget {
         bgColor = AppColors.rpeLow.withOpacity(0.1);
       case HrConnectionState.scanning:
       case HrConnectionState.connecting:
-        bgColor = AppColors.brandPurple.withOpacity(0.1);
+        bgColor = AppColors.brand.withOpacity(0.1);
       case HrConnectionState.error:
         bgColor = AppColors.rpeMax.withOpacity(0.1);
       case HrConnectionState.disconnected:
@@ -148,7 +148,7 @@ class HeartRateMonitorView extends StatelessWidget {
               width: 32,
               height: 32,
               child: CircularProgressIndicator(
-                  color: AppColors.brandPurple, strokeWidth: 3),
+                  color: AppColors.brand, strokeWidth: 3),
             ),
             title: 'Buscando pulsómetros...',
             subtitle: 'Asegúrate de que está encendido y cerca',
@@ -158,7 +158,7 @@ class HeartRateMonitorView extends StatelessWidget {
               width: 32,
               height: 32,
               child: CircularProgressIndicator(
-                  color: AppColors.brandPurple, strokeWidth: 3),
+                  color: AppColors.brand, strokeWidth: 3),
             ),
             title: 'Conectando...',
             subtitle: null,
@@ -225,7 +225,7 @@ class HeartRateMonitorView extends StatelessWidget {
       return Center(
         child: TextButton(
           style: TextButton.styleFrom(
-              foregroundColor: AppColors.brandPurple),
+              foregroundColor: AppColors.brand),
           onPressed: () => HeartRateService().stopScan(),
           child: const Text('Detener búsqueda'),
         ),
@@ -238,7 +238,7 @@ class HeartRateMonitorView extends StatelessWidget {
         width: double.infinity,
         child: FilledButton.icon(
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.brandPurple,
+            backgroundColor: AppColors.brand,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12)),
           ),
@@ -287,7 +287,7 @@ class HeartRateMonitorView extends StatelessWidget {
             ),
             child: ListTile(
               leading: const Icon(Icons.bluetooth_rounded,
-                  color: AppColors.brandPurple),
+                  color: AppColors.brand),
               title: Text(
                 device.name.isNotEmpty ? device.name : 'Dispositivo desconocido',
                 style: TextStyle(color: txtColor, fontWeight: FontWeight.w500),
@@ -298,7 +298,7 @@ class HeartRateMonitorView extends StatelessWidget {
               ),
               trailing: FilledButton(
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.brandPurple,
+                  backgroundColor: AppColors.brand,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   minimumSize: const Size(0, 32),
                   shape: RoundedRectangleBorder(

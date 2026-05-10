@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
-/// Light and dark [ThemeData] for Running Laps.
-///
-/// Usage in MaterialApp:
-///   theme: AppTheme.light(),
-///   darkTheme: AppTheme.dark(),
-///   themeMode: ThemeService.themeMode.value,
+/// ThemeData de Running Laps — dark mode por defecto.
+/// No hay light mode implementado.
 class AppTheme {
   AppTheme._();
 
@@ -18,34 +14,104 @@ class AppTheme {
   );
 
   static ThemeData light() => ThemeData(
+    fontFamily: 'GeneralSans',
     brightness: Brightness.light,
+    scaffoldBackgroundColor: AppColors.lightBackground,
     colorScheme: const ColorScheme.light(
-      primary: AppColors.brandPurple,
-      surface: AppColors.surfaceLight,
-      onPrimary: Colors.white,
-      onSurface: AppColors.textPrimaryLight,
-      outline: AppColors.borderLight,
+      primary: AppColors.brand,
+      secondary: AppColors.effort,
+      surface: AppColors.lightSurface,
+      onSurface: AppColors.lightTextPrimary,
+      outline: AppColors.lightBorder,
     ),
-    scaffoldBackgroundColor: AppColors.backgroundLight,
-    cardColor: AppColors.surfaceLight,
-    primaryColor: AppColors.brandPurple,
+    cardColor: AppColors.lightSurface,
+    primaryColor: AppColors.brand,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: AppColors.lightSurface,
+      foregroundColor: AppColors.lightTextPrimary,
+      elevation: 0,
+      centerTitle: true,
+    ),
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: AppColors.lightSurface,
+      selectedItemColor: AppColors.brand,
+      unselectedItemColor: AppColors.lightIconMuted,
+    ),
     visualDensity: VisualDensity.adaptivePlatformDensity,
     pageTransitionsTheme: _pageTransitions,
   );
 
   static ThemeData dark() => ThemeData(
+    fontFamily: 'GeneralSans',
     brightness: Brightness.dark,
+    scaffoldBackgroundColor: const Color(0xFF111111),
     colorScheme: const ColorScheme.dark(
-      primary: AppColors.brandPurpleLight,
-      surface: AppColors.surfaceDark,
+      primary: AppColors.brand,
+      secondary: AppColors.effort,
+      surface: AppColors.surface,
       onPrimary: Colors.white,
-      onSurface: AppColors.textPrimaryDark,
-      outline: AppColors.borderDark,
+      onSurface: Colors.white,
+      outline: AppColors.border,
     ),
-    scaffoldBackgroundColor: AppColors.backgroundDark,
-    cardColor: AppColors.surfaceDark,
-    primaryColor: AppColors.brandPurpleLight,
+    cardColor: AppColors.surface,
+    primaryColor: AppColors.brand,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color(0xFF111111),
+      foregroundColor: Colors.white,
+      elevation: 0,
+      centerTitle: true,
+    ),
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: Color(0xFF111111),
+      selectedItemColor: AppColors.brand,
+      unselectedItemColor: AppColors.iconMuted,
+    ),
     visualDensity: VisualDensity.adaptivePlatformDensity,
     pageTransitionsTheme: _pageTransitions,
   );
+}
+
+/// Escala tipográfica de la app.
+class AppTypography {
+  AppTypography._();
+
+  static const h1 = TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -0.5);
+  static const h2 = TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -0.5);
+  static const h3 = TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white);
+  static const body = TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: Colors.white, letterSpacing: -0.1);
+  static const small = TextStyle(fontSize: 12, fontWeight: FontWeight.normal, color: Color(0xFFCCCCCC), letterSpacing: -0.1);
+}
+
+/// Espaciado semántico — usar en padding, gap, margin.
+class AppSpacing {
+  AppSpacing._();
+
+  static const double xs  = 4;
+  static const double s   = 8;
+  static const double m   = 12;
+  static const double l   = 16;
+  static const double xl  = 24;
+  static const double xxl = 32;
+}
+
+/// Dimensiones de componentes reutilizables.
+class AppDimens {
+  AppDimens._();
+
+  static const double cardRadius      = 12;
+  static const double cardRadiusLarge = 16;
+  static const double cardPadding     = 16;
+  static final BoxShadow cardShadow   = BoxShadow(
+    color: Colors.black.withOpacity(0.3),
+    blurRadius: 12,
+    offset: const Offset(0, 4),
+  );
+
+  static const double buttonRadius    = 12;
+  static const double buttonPadding   = 16;
+  static const double buttonFontSize  = 14;
+
+  static const double iconSize        = 24;
+  static const double iconSizeSmall   = 20;
+  static const double navIconSize     = 24;
 }

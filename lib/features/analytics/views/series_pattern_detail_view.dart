@@ -21,7 +21,7 @@ class SeriesPatternDetailView extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -32,11 +32,11 @@ class SeriesPatternDetailView extends StatelessWidget {
             // KPI Header
             Row(
               children: [
-                Expanded(child: _buildKpiCard(context, "Mejor Tiempo", pattern.bestTimeFormatted, Icons.emoji_events, Colors.amber, subValue: pattern.bestPaceFormatted)),
+                Expanded(child: _buildKpiCard(context, "Mejor Tiempo", pattern.bestTimeFormatted, Icons.emoji_events, AppColors.rpeMid, subValue: pattern.bestPaceFormatted)),
                 const SizedBox(width: 12),
-                Expanded(child: _buildKpiCard(context, "Tiempo Medio", pattern.averageTimeFormatted, Icons.speed, Colors.blue, subValue: pattern.averagePaceFormatted)),
+                Expanded(child: _buildKpiCard(context, "Tiempo Medio", pattern.averageTimeFormatted, Icons.speed, AppColors.rest, subValue: pattern.averagePaceFormatted)),
                 const SizedBox(width: 12),
-                Expanded(child: _buildKpiCard(context, "Total Veces", "${pattern.count}", Icons.repeat, Colors.purple)),
+                Expanded(child: _buildKpiCard(context, "Total Veces", "${pattern.count}", Icons.repeat, AppColors.brand)),
               ],
             ),
             
@@ -151,7 +151,7 @@ class SeriesPatternDetailView extends StatelessWidget {
           Container(
              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
              decoration: BoxDecoration(
-               color: Tema.brandPurple.withOpacity(0.1),
+               color: AppColors.brand.withOpacity(0.1),
                borderRadius: BorderRadius.circular(20),
              ),
              child: Column(
@@ -160,11 +160,11 @@ class SeriesPatternDetailView extends StatelessWidget {
                children: [
                  Text(
                    SeriesPattern.formatDuration(instance.serie.tiempoSec),
-                   style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.bold, fontSize: 16),
+                   style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.bold, fontSize: 16),
                  ),
                  Text(
                    "$pace /km",
-                   style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple).withOpacity(0.6), fontSize: 11, fontWeight: FontWeight.w500),
+                   style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand).withOpacity(0.6), fontSize: 11, fontWeight: FontWeight.w500),
                  ),
                ],
              ),
@@ -205,12 +205,12 @@ class _PaceProgressionChart extends StatelessWidget {
           LineChartBarData(
             spots: spots,
             isCurved: true,
-            color: Tema.brandPurple,
+            color: AppColors.brand,
             barWidth: 3,
             dotData: const FlDotData(show: true),
             belowBarData: BarAreaData(
               show: true,
-              color: Tema.brandPurple.withOpacity(0.1),
+              color: AppColors.brand.withOpacity(0.1),
             ),
           ),
         ],

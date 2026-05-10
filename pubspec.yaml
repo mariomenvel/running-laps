@@ -96,7 +96,20 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  fonts:
+    - family: GeneralSans
+      fonts:
+        - asset: assets/fonts/GeneralSans-Regular.otf
+          weight: 400
+        - asset: assets/fonts/GeneralSans-Medium.otf
+          weight: 500
+        - asset: assets/fonts/GeneralSans-Semibold.otf
+          weight: 600
+        - asset: assets/fonts/GeneralSans-Bold.otf
+          weight: 700
+
   assets:
+    - assets/fonts/
     - assets/images/
     - assets/avatar/accessories/
     - assets/avatar/body/

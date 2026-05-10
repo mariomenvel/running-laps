@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/number_picker_field.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
+import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/viewmodels/athlete_session_editor_viewmodel.dart';
 
@@ -75,7 +78,11 @@ class _AthleteSessionEditorViewState extends State<AthleteSessionEditorView> {
     final ok = await _vm.save();
     if (!mounted) return;
     if (ok) {
-      Navigator.pop(context, true); // signal refresh
+      if (ShellEmbeddingScope.isEmbedded(context)) {
+        MainShell.shellKey.currentState?.navigateBack();
+      } else {
+        Navigator.pop(context, true); // signal refresh
+      }
     } else {
       ModernSnackBar.showError(
           context, _vm.state.value.error ?? 'Error al guardar');
@@ -195,7 +202,7 @@ class _AthleteSessionEditorViewState extends State<AthleteSessionEditorView> {
                             icon:  const Icon(Icons.add, size: 18),
                             label: const Text('Añadir'),
                             style: TextButton.styleFrom(
-                              foregroundColor: AppColors.brandPurple,
+                              foregroundColor: AppColors.brand,
                               visualDensity:   VisualDensity.compact,
                             ),
                           ),
@@ -241,7 +248,7 @@ class _AthleteSessionEditorViewState extends State<AthleteSessionEditorView> {
                         child: FilledButton(
                           onPressed: state.isSaving ? null : _save,
                           style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.brandPurple,
+                            backgroundColor: AppColors.brand,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
@@ -327,13 +334,13 @@ class _TappableField extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
-          color:        isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+          color:        AppColors.surfaceOf(context),
           borderRadius: BorderRadius.circular(12),
           border:       Border.all(
-              color: isDark ? AppColors.borderDark : AppColors.borderLight),
+              color: AppColors.borderOf(context)),
         ),
         child: Row(children: [
-          Icon(icon, size: 16, color: AppColors.brandPurple),
+          Icon(icon, size: 16, color: AppColors.brand),
           const SizedBox(width: 8),
           Expanded(
             child: Text(label,
@@ -375,11 +382,11 @@ class _CategoryPicker extends StatelessWidget {
               )),
           selected:         isSelected,
           onSelected:       (_) => onChanged(isSelected ? null : value),
-          selectedColor:    AppColors.brandPurple,
+          selectedColor:    AppColors.brand,
           backgroundColor:  Theme.of(context).colorScheme.surface,
           side:             BorderSide(
               color: isSelected
-                  ? AppColors.brandPurple
+                  ? AppColors.brand
                   : Theme.of(context).colorScheme.outline.withOpacity(0.4)),
           padding:          const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           visualDensity:    VisualDensity.compact,
@@ -405,46 +412,42 @@ class _WarmupCooldownEditor extends StatefulWidget {
 
 class _WarmupCooldownEditorState extends State<_WarmupCooldownEditor> {
   late final TextEditingController _descCtrl;
-  late final TextEditingController _durCtrl;
+  int? _durMin;
 
   @override
   void initState() {
     super.initState();
     _descCtrl = TextEditingController(text: widget.value?.description ?? '');
-    _durCtrl  = TextEditingController(
-        text: widget.value?.durationMinutes?.toString() ?? '');
+    _durMin   = widget.value?.durationMinutes;
   }
 
   @override
   void dispose() {
     _descCtrl.dispose();
-    _durCtrl.dispose();
     super.dispose();
   }
 
   void _notify() {
     final desc = _descCtrl.text.trim();
-    final dur  = int.tryParse(_durCtrl.text.trim());
-    if (desc.isEmpty && dur == null) {
+    if (desc.isEmpty && _durMin == null) {
       widget.onChanged(null);
     } else {
       widget.onChanged(SessionWarmupCooldown(
         description:     desc.isEmpty ? null : desc,
-        durationMinutes: dur,
+        durationMinutes: _durMin,
       ));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding:     const EdgeInsets.all(14),
       decoration:  BoxDecoration(
-        color:        isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        color:        AppColors.surfaceOf(context),
         borderRadius: BorderRadius.circular(12),
         border:       Border.all(
-            color: isDark ? AppColors.borderDark : AppColors.borderLight),
+            color: AppColors.borderOf(context)),
       ),
       child: Column(children: [
         TextField(
@@ -460,27 +463,18 @@ class _WarmupCooldownEditorState extends State<_WarmupCooldownEditor> {
           maxLines: null,
         ),
         const SizedBox(height: 8),
-        Row(children: [
-          const Icon(Icons.timer_outlined, size: 16, color: AppColors.brandPurple),
-          const SizedBox(width: 6),
-          SizedBox(
-            width: 60,
-            child: TextField(
-              controller:    _durCtrl,
-              onChanged:     (_) => _notify(),
-              keyboardType:  TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration:    const InputDecoration(
-                hintText:      'min',
-                border:        InputBorder.none,
-                isDense:       true,
-                contentPadding: EdgeInsets.zero,
-              ),
-              style: const TextStyle(fontSize: 14),
-            ),
-          ),
-          const Text(' minutos', style: TextStyle(fontSize: 13)),
-        ]),
+        NumberPickerField(
+          label:     'Duración',
+          value:     _durMin ?? 1,
+          min:       1,
+          max:       300,
+          step:      1,
+          unit:      'min',
+          onChanged: (v) {
+            setState(() => _durMin = v);
+            _notify();
+          },
+        ),
       ]),
     );
   }
@@ -526,10 +520,10 @@ class _NotesFieldState extends State<_NotesField> {
     return Container(
       padding:    const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color:        isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        color:        AppColors.surfaceOf(context),
         borderRadius: BorderRadius.circular(12),
         border:       Border.all(
-            color: isDark ? AppColors.borderDark : AppColors.borderLight),
+            color: AppColors.borderOf(context)),
       ),
       child: TextField(
         controller:  _ctrl,
@@ -566,15 +560,15 @@ class _EmptyBlocksHint extends StatelessWidget {
         width:  double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 28),
         decoration: BoxDecoration(
-          color:        isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+          color:        AppColors.surfaceOf(context),
           borderRadius: BorderRadius.circular(12),
           border:       Border.all(
-              color: isDark ? AppColors.borderDark : AppColors.borderLight,
+              color: AppColors.borderOf(context),
               style: BorderStyle.solid),
         ),
         child: Column(children: [
           Icon(Icons.add_circle_outline,
-              size: 32, color: AppColors.brandPurple.withOpacity(0.5)),
+              size: 32, color: AppColors.brand.withOpacity(0.5)),
           const SizedBox(height: 8),
           Text('Añadir bloque',
               style: TextStyle(fontSize: 14, color: secondary)),
@@ -733,10 +727,10 @@ class _SessionBlockEditorState extends State<_SessionBlockEditor> {
     return Container(
       margin:     const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color:        isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        color:        AppColors.surfaceOf(context),
         borderRadius: BorderRadius.circular(14),
         border:       Border.all(
-            color: isDark ? AppColors.borderDark : AppColors.borderLight),
+            color: AppColors.borderOf(context)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         // ── Header row ───────────────────────────────────────────────────────
@@ -745,8 +739,8 @@ class _SessionBlockEditorState extends State<_SessionBlockEditor> {
           child: Row(children: [
             ReorderableDragStartListener(
               index: widget.index,
-              child: const Icon(Icons.drag_handle_rounded,
-                  size: 20, color: Colors.grey),
+              child: Icon(Icons.drag_handle_rounded,
+                  size: 20, color: AppColors.iconMutedOf(context)),
             ),
             const SizedBox(width: 8),
             Text(
@@ -757,7 +751,7 @@ class _SessionBlockEditorState extends State<_SessionBlockEditor> {
             const Spacer(),
             IconButton(
               icon:           const Icon(Icons.delete_outline, size: 20),
-              color:          Colors.redAccent,
+              color:          AppColors.rpeMax,
               onPressed:      widget.onRemove,
               visualDensity:  VisualDensity.compact,
               padding:        EdgeInsets.zero,
@@ -808,14 +802,14 @@ class _SessionBlockEditorState extends State<_SessionBlockEditor> {
                     ? Icons.expand_less_rounded
                     : Icons.expand_more_rounded,
                 size: 18,
-                color: AppColors.brandPurple,
+                color: AppColors.brand,
               ),
               const SizedBox(width: 4),
               const Text('Objetivos',
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.brandPurple)),
+                      color: AppColors.brand)),
             ]),
           ),
         ),
@@ -897,7 +891,7 @@ class _SessionBlockEditorState extends State<_SessionBlockEditor> {
 // Small helper widgets
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _LabeledIntField extends StatelessWidget {
+class _LabeledIntField extends StatefulWidget {
   final String label;
   final TextEditingController ctrl;
   final VoidCallback onChanged;
@@ -911,47 +905,52 @@ class _LabeledIntField extends StatelessWidget {
   });
 
   @override
+  State<_LabeledIntField> createState() => _LabeledIntFieldState();
+}
+
+class _LabeledIntFieldState extends State<_LabeledIntField> {
+  late int _value;
+
+  @override
+  void initState() {
+    super.initState();
+    _value = int.tryParse(widget.ctrl.text) ?? 1;
+    widget.ctrl.addListener(_syncFromCtrl);
+  }
+
+  void _syncFromCtrl() {
+    final v = int.tryParse(widget.ctrl.text) ?? 1;
+    if (v != _value) setState(() => _value = v);
+  }
+
+  @override
+  void dispose() {
+    widget.ctrl.removeListener(_syncFromCtrl);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label,
-          style: TextStyle(
-              fontSize: 11,
-              color: isDark
-                  ? AppColors.textSecondaryDark
-                  : AppColors.textSecondaryLight)),
-      const SizedBox(height: 4),
-      SizedBox(
-        width: width,
-        child: TextField(
-          controller:      ctrl,
-          onChanged:       (_) => onChanged(),
-          keyboardType:    TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          decoration: InputDecoration(
-            isDense:        true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            border:         OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                    color: isDark
-                        ? AppColors.borderDark
-                        : AppColors.borderLight)),
-            enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                    color: isDark
-                        ? AppColors.borderDark
-                        : AppColors.borderLight)),
-          ),
-          style: const TextStyle(fontSize: 14),
-        ),
+    return SizedBox(
+      width: widget.width,
+      child: NumberPickerField(
+        label:     widget.label,
+        value:     _value,
+        min:       1,
+        max:       300,
+        step:      1,
+        unit:      '',
+        onChanged: (v) {
+          setState(() => _value = v);
+          widget.ctrl.text = v.toString();
+          widget.onChanged();
+        },
       ),
-    ]);
+    );
   }
 }
 
-class _SmallIntField extends StatelessWidget {
+class _SmallIntField extends StatefulWidget {
   final TextEditingController ctrl;
   final String hint;
   final VoidCallback onChanged;
@@ -963,20 +962,44 @@ class _SmallIntField extends StatelessWidget {
   });
 
   @override
+  State<_SmallIntField> createState() => _SmallIntFieldState();
+}
+
+class _SmallIntFieldState extends State<_SmallIntField> {
+  late int _value;
+
+  @override
+  void initState() {
+    super.initState();
+    _value = int.tryParse(widget.ctrl.text) ?? 1;
+    widget.ctrl.addListener(_syncFromCtrl);
+  }
+
+  void _syncFromCtrl() {
+    final v = int.tryParse(widget.ctrl.text) ?? 1;
+    if (v != _value) setState(() => _value = v);
+  }
+
+  @override
+  void dispose() {
+    widget.ctrl.removeListener(_syncFromCtrl);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller:      ctrl,
-      onChanged:       (_) => onChanged(),
-      keyboardType:    TextInputType.number,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      textAlign:       TextAlign.center,
-      decoration:      InputDecoration(
-        hintText:       hint,
-        isDense:        true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-        border:         OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-      ),
-      style: const TextStyle(fontSize: 13),
+    return NumberPickerField(
+      label:     widget.hint,
+      value:     _value,
+      min:       0,
+      max:       59,
+      step:      1,
+      unit:      '',
+      onChanged: (v) {
+        setState(() => _value = v);
+        widget.ctrl.text = v.toString();
+        widget.onChanged();
+      },
     );
   }
 }
@@ -1007,15 +1030,11 @@ class _ZonePicker extends StatelessWidget {
           border:         OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(
-                  color: isDark
-                      ? AppColors.borderDark
-                      : AppColors.borderLight)),
+                  color: AppColors.borderOf(context))),
           enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(
-                  color: isDark
-                      ? AppColors.borderDark
-                      : AppColors.borderLight)),
+                  color: AppColors.borderOf(context))),
         ),
         items: [
           const DropdownMenuItem(value: null, child: Text('—', style: TextStyle(fontSize: 14))),

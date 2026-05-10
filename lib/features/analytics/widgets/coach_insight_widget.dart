@@ -1,139 +1,91 @@
 import 'package:flutter/material.dart';
-import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/features/analytics/data/coach_insight_service.dart';
 
 class CoachInsightWidget extends StatelessWidget {
   final CoachInsight insight;
-  // slim: collapses the card to a single-line 56px banner
   final bool slim;
 
   const CoachInsightWidget({super.key, required this.insight, this.slim = false});
 
   @override
   Widget build(BuildContext context) {
-    return slim ? _buildSlimBanner() : _buildFullCard();
+    return slim ? _buildSlimBanner(context) : _buildFullCard(context);
   }
 
-  Widget _buildSlimBanner() {
+  Widget _buildSlimBanner(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? AppColors.brandSurface : const Color(0xFFF3EFFE);
+    final textColor = isDark ? Colors.white : const Color(0xFF3C3489);
+
     return Container(
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1530),
-        border: Border(
-          left: BorderSide(color: AppColors.brandPurple, width: 3),
-        ),
+        color: bgColor,
+        border: const Border(left: BorderSide(color: AppColors.brand, width: 3)),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          Icon(Icons.lightbulb_rounded, color: AppColors.brandPurpleLight, size: 18),
-          const SizedBox(width: 10),
           Expanded(
             child: Text(
               insight.message,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
+              style: TextStyle(color: textColor, fontSize: 13, fontWeight: FontWeight.w500),
             ),
           ),
-          const SizedBox(width: 6),
-          Icon(Icons.chevron_right_rounded, color: Colors.white.withOpacity(0.7), size: 18),
         ],
       ),
     );
   }
 
-  Widget _buildFullCard() {
+  Widget _buildFullCard(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? AppColors.brandSurface : const Color(0xFFF3EFFE);
+    final messageColor = isDark ? Colors.white.withOpacity(0.85) : const Color(0xFF3C3489);
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      constraints: const BoxConstraints(maxHeight: 100),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1530),
-        border: Border(
-          left: BorderSide(color: AppColors.brandPurple, width: 4),
-        ),
-        borderRadius: BorderRadius.circular(24),
+        color: bgColor,
+        border: const Border(left: BorderSide(color: AppColors.brand, width: 3)),
+        borderRadius: BorderRadius.circular(16),
       ),
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Positioned(
-            right: -20,
-            top: -20,
-            child: Icon(
-              insight.icon,
-              size: 100,
-              color: AppColors.brandPurple.withOpacity(0.12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppColors.brand.withOpacity(isDark ? 0.2 : 0.12),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              insight.typeLabel,
+              style: const TextStyle(
+                color: AppColors.brand,
+                fontSize: 9,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.2,
+              ),
             ),
           ),
-
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.brandPurple.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: AppColors.brandPurple.withOpacity(0.4)),
-                ),
-                child: Icon(
-                  insight.icon,
-                  color: AppColors.brandPurpleLight,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.brandPurple.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        insight.typeLabel,
-                        style: const TextStyle(
-                          color: AppColors.brandPurpleLight,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      insight.title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      insight.message,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.85),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          const SizedBox(height: 6),
+          Text(
+            insight.message,
+            style: TextStyle(
+              color: messageColor,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              height: 1.3,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

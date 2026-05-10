@@ -125,10 +125,10 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Tema.brandPurple.withOpacity(0.1),
+                color: AppColors.brand.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.person_outline_rounded, size: 40, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+              child: Icon(Icons.person_outline_rounded, size: 40, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
             ),
             const SizedBox(height: 24),
             Text(
@@ -161,7 +161,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
                 ),
-                prefixIcon: Icon(Icons.edit_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+                prefixIcon: Icon(Icons.edit_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
               ),
             ),
             if (!isGoogle) ...[
@@ -178,7 +178,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
                   ),
-                  prefixIcon: Icon(Icons.lock_outline, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+                  prefixIcon: Icon(Icons.lock_outline, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
                 ),
               ),
             ],
@@ -205,15 +205,11 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     builder: (context, isLoading, _) {
                       return Container(
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Tema.brandPurple.withOpacity(0.8), Tema.brandPurple],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
+                          color: AppColors.brand,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Tema.brandPurple.withOpacity(0.3),
+                              color: AppColors.brand.withOpacity(0.3),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -311,10 +307,10 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.amber.withOpacity(0.1),
+                color: AppColors.rpeMid.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.key_rounded, size: 40, color: Colors.amber),
+              child: const Icon(Icons.key_rounded, size: 40, color: AppColors.rpeMid),
             ),
             const SizedBox(height: 24),
             Text(
@@ -345,7 +341,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
                 ),
-                prefixIcon: const Icon(Icons.lock_outline, color: Colors.amber),
+                prefixIcon: const Icon(Icons.lock_outline, color: AppColors.rpeMid),
               ),
             ),
             const SizedBox(height: 12),
@@ -361,7 +357,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
                 ),
-                prefixIcon: const Icon(Icons.lock_reset_rounded, color: Colors.amber),
+                prefixIcon: const Icon(Icons.lock_reset_rounded, color: AppColors.rpeMid),
               ),
             ),
             const SizedBox(height: 12),
@@ -377,7 +373,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
                 ),
-                prefixIcon: const Icon(Icons.check_circle_outline_rounded, color: Colors.amber),
+                prefixIcon: const Icon(Icons.check_circle_outline_rounded, color: AppColors.rpeMid),
               ),
             ),
             const SizedBox(height: 16),
@@ -426,17 +422,11 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                             builder: (context, isLoading, _) {
                               return Container(
                                 decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: allMet 
-                                        ? [Colors.amber.shade400, Colors.amber.shade700]
-                                        : [Colors.grey.shade300, Colors.grey.shade500],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
+                                  color: allMet ? AppColors.rpeMid : AppColors.iconMutedOf(context),
                                   borderRadius: BorderRadius.circular(16),
                                   boxShadow: allMet ? [
                                     BoxShadow(
-                                      color: Colors.amber.withOpacity(0.3),
+                                      color: AppColors.rpeMid.withOpacity(0.3),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     ),
@@ -498,9 +488,9 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
           width: 20,
           height: 20,
           decoration: BoxDecoration(
-            color: isMet ? Colors.green : Colors.transparent,
+            color: isMet ? AppColors.rpeLow : Colors.transparent,
             border: Border.all(
-              color: isMet ? Colors.green : Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+              color: isMet ? AppColors.rpeLow : Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
             ),
             shape: BoxShape.circle,
           ),
@@ -516,7 +506,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
         Text(
           text,
           style: TextStyle(
-            color: isMet ? Colors.green : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            color: isMet ? AppColors.rpeLow : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
             fontSize: 13,
             fontWeight: isMet ? FontWeight.w600 : FontWeight.normal,
           ),
@@ -562,10 +552,10 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.red.shade50,
+                color: AppColors.rpeMax,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.delete_sweep_rounded, size: 40, color: Colors.red.shade400),
+              child: Icon(Icons.delete_sweep_rounded, size: 40, color: AppColors.rpeMax),
             ),
             const SizedBox(height: 24),
             Text(
@@ -597,19 +587,19 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
                   ),
-                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.red),
+                  prefixIcon: const Icon(Icons.lock_outline, color: AppColors.rpeMax),
                 ),
               ),
             ] else ...[
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
+                  color: AppColors.rest,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.login_rounded, color: Colors.blue.shade600),
+                    Icon(Icons.login_rounded, color: AppColors.rest),
                     const SizedBox(width: 12),
                     const Expanded(
                       child: Text(
@@ -644,15 +634,11 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     builder: (context, isLoading, _) {
                       return Container(
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Colors.red.shade400, Colors.red.shade700],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
+                          color: AppColors.rpeMax,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.red.shade400.withOpacity(0.3),
+                              color: AppColors.rpeMax.withOpacity(0.3),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -769,7 +755,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: isDestructive ? Colors.red : Theme.of(context).colorScheme.onSurface,
+                      color: isDestructive ? AppColors.rpeMax : Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -855,7 +841,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               child: Switch(
                 value: value,
                 onChanged: onChanged,
-                activeColor: Tema.brandPurple,
+                activeColor: AppColors.brand,
               ),
             ),
           ],
@@ -887,10 +873,10 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Tema.brandPurple.withOpacity(0.1),
+                color: AppColors.brand.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.style_rounded, color: isDark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 22),
+              child: Icon(Icons.style_rounded, color: isDark ? AppColors.brandLight : AppColors.brand, size: 22),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -934,7 +920,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? Tema.brandPurple : Colors.transparent,
+          color: isSelected ? AppColors.brand : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
@@ -1051,11 +1037,11 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Tema.brandPurple.withOpacity(0.1),
+                        color: AppColors.brand.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.brightness_4_rounded,
-                          color: Tema.brandPurple, size: 22),
+                          color: AppColors.brand, size: 22),
                     ),
                     const SizedBox(width: 16),
                     Text(
@@ -1099,7 +1085,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: selected ? Tema.brandPurple : Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+            color: selected ? AppColors.brand : Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -1205,7 +1191,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       decoration: BoxDecoration(
                         color: isSel
-                            ? Tema.brandPurple
+                            ? AppColors.brand
                             : Theme.of(context).colorScheme.onSurface.withOpacity(0.07),
                         borderRadius: BorderRadius.circular(24),
                       ),
@@ -1304,10 +1290,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               title: 'Configuración de cuenta',
               subtitle: 'Gestiona tu perfil y seguridad',
               icon: Icons.manage_accounts_rounded,
-              gradientColors: [
-                Colors.blueGrey.shade800,
-                Colors.blueGrey.shade400,
-              ],
+              accentColor: AppColors.surfaceOf(context),
               height: 90,
             ),
             
@@ -1324,7 +1307,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                       title: "Alarmas de ritmo",
                       subtitle: "Activar avisos por defecto al iniciar",
                       icon: Icons.notifications_active_rounded,
-                      color: Colors.orange,
+                      color: AppColors.rpeMid,
                       value: _alarmDefault,
                       onChanged: (val) {
                         setState(() => _alarmDefault = val);
@@ -1336,7 +1319,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                       title: "GPS siempre activo",
                       subtitle: "Pre-configurar registro GPS al iniciar",
                       icon: Icons.location_on_rounded,
-                      color: Colors.green,
+                      color: AppColors.rpeLow,
                       value: _gpsDefault,
                       onChanged: (val) {
                         setState(() => _gpsDefault = val);
@@ -1356,7 +1339,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     _buildMenuTile(
                       title: "Cambiar mi nombre",
                       icon: Icons.edit_rounded,
-                      color: Colors.blue,
+                      color: AppColors.rest,
                       onTap: _showChangeNameDialog,
                     ),
                     
@@ -1365,7 +1348,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                       _buildMenuTile(
                         title: "Cambiar mi contraseña",
                         icon: Icons.key_rounded,
-                        color: Colors.amber,
+                        color: AppColors.rpeMid,
                         onTap: _showChangePasswordDialog,
                       ),
                     ],
@@ -1374,7 +1357,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     _buildMenuTile(
                       title: _watchConnected ? "Reloj conectado ✓" : "Conectar reloj",
                       icon: _watchConnected ? Icons.check_circle_rounded : Icons.watch_rounded,
-                      color: _watchConnected ? Colors.green : Colors.teal,
+                      color: _watchConnected ? AppColors.rpeLow : AppColors.brand,
                       onTap: _connectWatch,
                     ),
 
@@ -1382,7 +1365,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     _buildMenuTile(
                       title: "Borrar cuenta permanentemente",
                       icon: Icons.delete_forever_rounded,
-                      color: Colors.red,
+                      color: AppColors.rpeMax,
                       isDestructive: true,
                       onTap: _showDeleteAccountDialog,
                     ),

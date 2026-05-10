@@ -18,15 +18,14 @@ import '../../../../core/widgets/modern_snackbar.dart';
 
 // Widgets
 import '../../../core/widgets/app_header.dart';
-import '../../../core/widgets/app_footer.dart';
 import '../../../core/widgets/empty_state_widget.dart';
 import '../../../core/widgets/gradient_banner.dart';
 import '../../../core/widgets/skeleton_shimmer.dart';
 
 // Navigation
-import 'group_screen.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
 import '../../training/views/training_start_view.dart';
-import '../../profile/views/profile_menu_screen.dart';
+import '../../profile/views/profile_menu_screen_legacy.dart';
 
 /// Pantalla profesional y moderna que lista todos los grupos del usuario
 /// Diseño premium con gradientes vibrantes y animaciones fluidas
@@ -79,10 +78,7 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
               title: 'Mis Grupos',
               subtitle: 'Compite con tu comunidad de corredores',
               icon: Icons.groups_3_rounded,
-              gradientColors: [
-                Colors.blueAccent,
-                Colors.lightBlue,
-              ],
+              accentColor: AppColors.restSurface,
               height: 90,
             ),
 
@@ -172,14 +168,6 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
                     ),
             ),
 
-            // 4. Footer Intacto
-            AppFooter(
-              onTap: () {
-                 Navigator.of(context).push(
-                  AppRoute(page: TrainingStartView()),
-                );
-              },
-            ),
           ],
         ),
       ),
@@ -211,7 +199,7 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
               child: ShaderMask(
                 shaderCallback: (Rect bounds) {
                   return const LinearGradient(
-                    colors: [Tema.brandPurple, Colors.pinkAccent],
+                    colors: [AppColors.brand, AppColors.brand],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ).createShader(bounds);
@@ -362,7 +350,7 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
                       ],
                     ),
                     behavior: SnackBarBehavior.floating,
-                    backgroundColor: Colors.green.shade600,
+                    backgroundColor: AppColors.rpeLow,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -374,7 +362,7 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text("Error: $e"),
-                    backgroundColor: Colors.red,
+                    backgroundColor: AppColors.rpeMax,
                   ),
                 );
               }
@@ -449,15 +437,13 @@ class _CreateGroupModal extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Tema.brandPurple, Tema.brandPurple.withOpacity(0.7)],
-                  ),
+                  color: AppColors.brand,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Icon(Icons.group_add, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 16),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -474,7 +460,7 @@ class _CreateGroupModal extends StatelessWidget {
                       "Dale un nombre genial a tu comunidad",
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.grey,
+                        color: AppColors.iconMutedOf(context),
                       ),
                     ),
                   ],
@@ -500,7 +486,7 @@ class _CreateGroupModal extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
-                borderSide: const BorderSide(color: Tema.brandPurple, width: 2),
+                borderSide: const BorderSide(color: AppColors.brand, width: 2),
               ),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 24,
@@ -574,19 +560,7 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
   bool _isPressed = false;
 
   // Paleta de colores vibrantes para los grupos
-  static const List<List<Color>> _gradientPalette = [
-    [Color(0xFF8E24AA), Color(0xFFAB47BC)], // Purple
-    [Color(0xFF1E88E5), Color(0xFF42A5F5)], // Blue
-    [Color(0xFF43A047), Color(0xFF66BB6A)], // Green
-    [Color(0xFFE53935), Color(0xFFEF5350)], // Red
-    [Color(0xFFFB8C00), Color(0xFFFFA726)], // Orange
-    [Color(0xFF00ACC1), Color(0xFF26C6DA)], // Cyan
-    [Color(0xFF5E35B1), Color(0xFF7E57C2)], // Deep Purple
-    [Color(0xFFD81B60), Color(0xFFEC407A)], // Pink
-  ];
-
-  List<Color> get _gradientColors =>
-      _gradientPalette[widget.colorIndex % _gradientPalette.length];
+  Color get _accentColor => AppColors.brand;
 
   @override
   void initState() {
@@ -638,10 +612,7 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
           onTapUp: _onTapUp,
           onTapCancel: _onTapCancel,
           onTap: () {
-            Navigator.push(
-              context,
-              AppRoute(page: GroupScreen(groupId: widget.groupId)),
-            );
+            MainShell.shellKey.currentState?.navigateTo(7, params: widget.groupId);
           },
           child: ScaleTransition(
             scale: _scaleAnimation,
@@ -651,7 +622,7 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: _gradientColors.first.withOpacity(_isPressed ? 0.2 : 0.3),
+                    color: _accentColor.withOpacity(_isPressed ? 0.2 : 0.3),
                     blurRadius: _isPressed ? 8 : 12,
                     offset: Offset(0, _isPressed ? 4 : 8),
                     spreadRadius: -2,
@@ -666,11 +637,7 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
                     Container(
                       height: 100,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: _gradientColors,
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                        color: _accentColor,
                       ),
                     ),
 
@@ -749,12 +716,12 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.people_rounded, size: 10, color: _gradientColors.first),
+                                      Icon(Icons.people_rounded, size: 10, color: _accentColor),
                                       const SizedBox(width: 2),
                                       Text(
                                         "${group.memberCount}",
                                         style: TextStyle(
-                                          color: _gradientColors.first,
+                                          color: _accentColor,
                                           fontSize: 9,
                                           fontWeight: FontWeight.w900,
                                         ),
@@ -838,7 +805,7 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
           height: 24,
           child: CircularProgressIndicator(
             strokeWidth: 2, 
-            color: Tema.brandPurple.withOpacity(0.5)
+            color: AppColors.brand.withOpacity(0.5)
           ),
         ),
       ),
@@ -876,7 +843,7 @@ class _JoinByCodeBanner extends StatelessWidget {
               color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
               borderRadius: BorderRadius.circular(22),
               border: Border.all(
-                color: isDark ? Colors.white.withOpacity(0.1) : Tema.brandPurple.withOpacity(0.15),
+                color: isDark ? Colors.white.withOpacity(0.1) : AppColors.brand.withOpacity(0.15),
               ),
             ),
             child: Row(
@@ -884,11 +851,11 @@ class _JoinByCodeBanner extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Tema.brandPurple.withOpacity(0.12),
+                    color: AppColors.brand.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: const Icon(Icons.tag_rounded,
-                      color: Tema.brandPurple, size: 20),
+                      color: AppColors.brand, size: 20),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -1010,11 +977,11 @@ class _JoinByCodeSheetState extends State<_JoinByCodeSheet> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Tema.brandPurple.withOpacity(0.1),
+                  color: AppColors.brand.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(Icons.tag_rounded,
-                    color: Tema.brandPurple, size: 22),
+                    color: AppColors.brand, size: 22),
               ),
               const SizedBox(width: 14),
               Column(
@@ -1050,7 +1017,7 @@ class _JoinByCodeSheetState extends State<_JoinByCodeSheet> {
               fontSize: 28,
               fontWeight: FontWeight.w900,
               letterSpacing: 10,
-              color: Tema.brandPurple,
+              color: AppColors.brand,
             ),
             textAlign: TextAlign.center,
             inputFormatters: [
@@ -1066,7 +1033,7 @@ class _JoinByCodeSheetState extends State<_JoinByCodeSheet> {
                 color: cs.onSurface.withOpacity(0.18),
               ),
               filled: true,
-              fillColor: Tema.brandPurple.withOpacity(0.05),
+              fillColor: AppColors.brand.withOpacity(0.05),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide: BorderSide.none,
@@ -1074,7 +1041,7 @@ class _JoinByCodeSheetState extends State<_JoinByCodeSheet> {
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide:
-                    const BorderSide(color: Tema.brandPurple, width: 2),
+                    const BorderSide(color: AppColors.brand, width: 2),
               ),
               contentPadding:
                   const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
@@ -1107,7 +1074,7 @@ class _JoinByCodeSheetState extends State<_JoinByCodeSheet> {
             child: ElevatedButton(
               onPressed: _isJoining ? null : _join,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Tema.brandPurple,
+                backgroundColor: AppColors.brand,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18)),
                 elevation: 0,
@@ -1194,7 +1161,7 @@ class _InvitationCardState extends State<_InvitationCard> {
       builder: (context, snapshot) {
         final groupName = snapshot.data?.name ?? "Cargando grupo...";
         final isDark = Theme.of(context).brightness == Brightness.dark;
-        final brandColor = Tema.brandPurple;
+        final brandColor = AppColors.brand;
 
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
@@ -1216,14 +1183,7 @@ class _InvitationCardState extends State<_InvitationCard> {
                 // 1. VIVID BACKGROUND (Different direction)
                 Container(
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomLeft,
-                      end: Alignment.topRight,
-                      colors: [
-                        brandColor,
-                        isDark ? const Color(0xFF311B92) : const Color(0xFF512DA8),
-                      ],
-                    ),
+                    color: AppColors.brandSurface,
                   ),
                 ),
 
@@ -1489,11 +1449,7 @@ class _PremiumFloatingActionButtonState extends State<_PremiumFloatingActionButt
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Colors.black, Color(0xFF333333)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: AppColors.surfaceOf(context),
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(

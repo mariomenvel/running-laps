@@ -1,6 +1,9 @@
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/services/rate_limit_service.dart';
+import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/data/training_repository.dart';
 import 'package:running_laps/features/history/viewmodels/history_analytics_view_model.dart';
@@ -57,17 +60,29 @@ class HistoryController {
   final TagManager _tagManager = TagManager();
   Map<String, Color> _tagColors = {};
 
+  final RateLimitService _rateLimitService = RateLimitService();
+
   HistoryController({TrainingRepository? trainingRepo})
       : _trainingRepo = TrainingRepository() {
     if (trainingRepo != null) {
       _trainingRepo = trainingRepo;
     }
+    _rateLimitService.registerLimit('history:load', const Duration(seconds: 2));
+    _rateLimitService.registerLimit('history:loadMore', const Duration(seconds: 2));
   }
 
   String? _resolveUid() => FirebaseAuth.instance.currentUser?.uid;
 
   Future<void> loadTrainings() async {
     if (isLoading.value) return;
+
+    try {
+      _rateLimitService.checkLimit('history:load');
+    } on RateLimitExceededException catch (e) {
+      debugPrint('[HistoryController] loadTrainings rate limited: $e');
+      error.value = 'Espera ${e.duration.inSeconds}s antes de recargar';
+      return;
+    }
 
     // Reset pagination
     _lastDocument = null;
@@ -107,6 +122,13 @@ class HistoryController {
     final uid = _resolveUid();
     if (uid == null) return;
 
+    try {
+      _rateLimitService.checkLimit('history:loadMore');
+    } on RateLimitExceededException catch (e) {
+      debugPrint('[HistoryController] loadMore rate limited: $e');
+      return;
+    }
+
     _isLoadingMore = true;
 
     try {
@@ -129,7 +151,7 @@ class HistoryController {
   }
 
   Color getColorForTag(String? tagName) {
-    if (tagName == null) return Colors.grey.shade300;
+    if (tagName == null) return AppColors.iconMuted;
     // Buscamos en tags definidos por usuario, si no, generamos uno determinista
     return _tagColors[tagName] ?? TagUtils.getColor(tagName);
   }

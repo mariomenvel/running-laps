@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/features/auth/views/auth_page.dart';
-import 'package:running_laps/features/home/views/home_view.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
@@ -16,7 +16,7 @@ class AuthWrapper extends StatelessWidget {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        if (snapshot.hasData) return HomeView(user: snapshot.data!);
+        if (snapshot.hasData) return MainShell(key: MainShell.shellKey);
         return const AuthPage();
       },
     );

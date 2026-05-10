@@ -1,3 +1,4 @@
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class InfoTooltip extends StatelessWidget {
@@ -8,7 +9,7 @@ class InfoTooltip extends StatelessWidget {
   const InfoTooltip({
     super.key,
     required this.content,
-    this.iconColor = Colors.grey,
+    this.iconColor = AppColors.iconMuted,
     this.iconSize = 16.0,
   });
 
@@ -19,7 +20,7 @@ class InfoTooltip extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        color: Colors.grey.shade900.withOpacity(0.95),
+        color: AppColors.iconMutedOf(context).withOpacity(0.95),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(

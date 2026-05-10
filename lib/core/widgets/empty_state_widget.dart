@@ -73,7 +73,7 @@ class EmptyStateWidget extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: onCta,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Tema.brandPurple,
+                    backgroundColor: AppColors.brand,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -120,19 +120,12 @@ class _EmptyIllustration extends StatelessWidget {
             height: 72,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  Tema.brandPurple.withOpacity(0.14),
-                  Tema.brandPurple.withOpacity(0.05),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: AppColors.brand.withOpacity(0.10),
             ),
             child: Icon(
               icon,
               size: 34,
-              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple).withOpacity(0.75),
+              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand).withOpacity(0.75),
             ),
           ),
         ),
@@ -157,13 +150,13 @@ class _RingsPainter extends CustomPainter {
     // Outer dashed-arc ring
     paint
       ..strokeWidth = 1.5
-      ..color = Tema.brandPurple.withOpacity(0.10);
+      ..color = AppColors.brand.withOpacity(0.10);
     canvas.drawCircle(center, size.width / 2 - 2, paint);
 
     // Inner decorative arc (270° sweep, starting top-right)
     paint
       ..strokeWidth = 2.5
-      ..color = Tema.brandPurple.withOpacity(0.16);
+      ..color = AppColors.brand.withOpacity(0.16);
     final rect = Rect.fromCircle(center: center, radius: size.width / 2 - 10);
     canvas.drawArc(rect, -pi / 4, 3 * pi / 2, false, paint);
   }

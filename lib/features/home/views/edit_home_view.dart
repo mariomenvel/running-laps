@@ -23,7 +23,7 @@ class _EditHomeViewState extends State<EditHomeView> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accentColor = isDark ? AppColors.brandPurpleLight : Tema.brandPurple;
+    final accentColor = isDark ? AppColors.brandLight : AppColors.brand;
 
     return Scaffold(
       backgroundColor: isDark
@@ -68,7 +68,7 @@ class _EditHomeViewState extends State<EditHomeView> {
         valueListenable: widget.controller.config,
         builder: (context, config, _) {
           if (config == null) {
-            return const Center(child: CircularProgressIndicator(color: Tema.brandPurple));
+            return const Center(child: CircularProgressIndicator(color: AppColors.brand));
           }
 
           final allWidgets = List<HomeWidget>.from(config.widgets)
@@ -114,7 +114,7 @@ class _EditHomeViewState extends State<EditHomeView> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: Tema.brandPurple.withOpacity(0.13),
+                color: AppColors.brand.withOpacity(0.13),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -122,7 +122,7 @@ class _EditHomeViewState extends State<EditHomeView> {
                 style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: Tema.brandPurple,
+                  color: AppColors.brand,
                 ),
               ),
             ),
@@ -308,7 +308,7 @@ class _EditHomeViewState extends State<EditHomeView> {
 
   Widget _buildCardBase(BuildContext context, HomeWidget w, {required bool dimmed}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final iconColor = isDark ? AppColors.brandPurpleLight : Tema.brandPurple;
+    final iconColor = isDark ? AppColors.brandLight : AppColors.brand;
     final title = w.config['title'] as String? ?? w.type.displayName;
 
     return Opacity(
@@ -336,7 +336,7 @@ class _EditHomeViewState extends State<EditHomeView> {
               height: 46,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: Tema.brandPurple.withOpacity(0.12),
+                color: AppColors.brand.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(_iconForWidget(w.id), size: 22, color: iconColor),
@@ -427,7 +427,7 @@ class _EditHomeViewState extends State<EditHomeView> {
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
                           color: isSel
-                              ? Tema.brandPurple
+                              ? AppColors.brand
                               : Theme.of(context).colorScheme.onSurface.withOpacity(0.07),
                           borderRadius: BorderRadius.circular(20),
                         ),
@@ -492,7 +492,7 @@ class _EditHomeViewState extends State<EditHomeView> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Sí, restablecer', style: TextStyle(color: Colors.red)),
+            child: const Text('Sí, restablecer', style: TextStyle(color: AppColors.rpeMax)),
           ),
         ],
       ),

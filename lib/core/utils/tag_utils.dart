@@ -1,28 +1,29 @@
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class TagUtils {
   static const List<Color> _palette = [
-    Colors.red,
-    Colors.pink,
-    Colors.purple,
+    AppColors.rpeMax,
+    AppColors.brand,
+    AppColors.brand,
     Colors.deepPurple,
     Colors.indigo,
-    Colors.blue,
+    AppColors.rest,
     Colors.lightBlue,
     Colors.cyan,
-    Colors.teal,
-    Colors.green,
+    AppColors.brand,
+    AppColors.rpeLow,
     Colors.lightGreen,
     Colors.lime,
-    Colors.orange, // Skip yellow as it's hard to read? Maybe darker shade.
+    AppColors.rpeMid, // Skip yellow as it's hard to read? Maybe darker shade.
     Colors.deepOrange,
     Colors.brown,
-    Colors.blueGrey,
+    AppColors.iconMuted,
   ];
 
   static Color getColor(String? tag) {
     if (tag == null || tag.trim().isEmpty) {
-      return Colors.grey.shade300; // Gris clarito para sin etiqueta
+      return AppColors.iconMuted; // Gris clarito para sin etiqueta
     }
     
     // Deterministic color based on string content

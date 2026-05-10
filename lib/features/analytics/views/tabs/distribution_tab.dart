@@ -17,7 +17,7 @@ class DistributionTab extends StatelessWidget {
       valueListenable: controller.isLoading,
       builder: (context, isLoading, _) {
         if (isLoading) {
-          return const Center(child: CircularProgressIndicator(color: Tema.brandPurple));
+          return const Center(child: CircularProgressIndicator(color: AppColors.brand));
         }
         return ValueListenableBuilder(
           valueListenable: controller.filteredData,
@@ -69,7 +69,7 @@ class DistributionTab extends StatelessWidget {
             border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
             boxShadow: [
               BoxShadow(
-                color: Tema.brandPurple.withOpacity(0.1),
+                color: AppColors.brand.withOpacity(0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
                 spreadRadius: -5,
@@ -264,7 +264,7 @@ class DistributionTab extends StatelessWidget {
             border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
             boxShadow: [
               BoxShadow(
-                color: Colors.amber.withOpacity(0.1),
+                color: AppColors.rpeMid.withOpacity(0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
                 spreadRadius: -5,
@@ -283,13 +283,11 @@ class DistributionTab extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.amber.shade400, Colors.amber.shade600],
-                  ),
+                  color: AppColors.rpeMid,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.amber.withOpacity(0.5),
+                      color: AppColors.rpeMid.withOpacity(0.5),
                       blurRadius: 12,
                       offset: const Offset(0, 6),
                     ),
@@ -303,7 +301,7 @@ class DistributionTab extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 36,
                   fontWeight: FontWeight.bold,
-                  color: Colors.amber,
+                  color: AppColors.rpeMid,
                   letterSpacing: -1,
                 ),
               ),
@@ -320,7 +318,7 @@ class DistributionTab extends StatelessWidget {
               LinearProgressIndicator(
                 value: totalKm / nextMilestone,
                 backgroundColor: onSurface.withOpacity(0.12),
-                valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber),
+                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.rpeMid),
                 minHeight: 8,
                 borderRadius: BorderRadius.circular(4),
               ),
@@ -345,9 +343,9 @@ class DistributionTab extends StatelessWidget {
   }
 
   Color _getConsistencyColor(double score) {
-    if (score >= 80) return Colors.green.shade600;
-    if (score >= 50) return Colors.orange.shade600;
-    return Colors.red.shade600;
+    if (score >= 80) return AppColors.rpeLow;
+    if (score >= 50) return AppColors.rpeMid;
+    return AppColors.rpeMax;
   }
 
   String _getConsistencyLabel(double score) {
@@ -460,7 +458,7 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
                           style: TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.w900,
-                            color: Tema.brandPurple,
+                            color: AppColors.brand,
                             letterSpacing: -1,
                             height: 1.0,
                           ),
@@ -609,7 +607,7 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
 
   Color _getTagColor(int index) {
     final colors = [
-      Tema.brandPurple,
+      AppColors.brand,
       const Color(0xFF2196F3),
       const Color(0xFF4CAF50),
       const Color(0xFFFF9800),

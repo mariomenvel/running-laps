@@ -14,8 +14,9 @@ import '../data/repositories/challenges_repository.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import '../../../../core/widgets/app_header.dart';
-import '../../../../core/widgets/app_footer.dart';
 import '../../../../core/widgets/gradient_banner.dart';
+import '../../../../core/widgets/main_shell.dart';
+import '../../../../core/widgets/shell_embedding_scope.dart';
 
 // Screens
 import 'challenge_detail_screen.dart';
@@ -27,7 +28,7 @@ import '../data/models/group_stats_model.dart';
 import 'widgets/create_challenge_modal.dart';
 import '../../../../features/groups/data/helpers/challenge_helpers.dart';
 import '../../training/views/training_start_view.dart';
-import '../../profile/views/profile_menu_screen.dart';
+import '../../profile/views/profile_menu_screen_legacy.dart';
 import '../data/repositories/invites_repository.dart';
 import '../data/helpers/invite_token_helper.dart';
 import '../../../../core/widgets/modern_snackbar.dart';
@@ -65,9 +66,9 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
 
   // Gradient colors for different challenge types
   static const Map<ChallengeMetric, List<Color>> _metricGradients = {
-    ChallengeMetric.distance: [Color(0xFF1E88E5), Color(0xFF42A5F5)],
-    ChallengeMetric.time: [Color(0xFFFB8C00), Color(0xFFFFA726)],
-    ChallengeMetric.sessions: [Color(0xFFE91E63), Color(0xFFF48FB1)],
+    ChallengeMetric.distance: [AppColors.rest, AppColors.rest],
+    ChallengeMetric.time: [AppColors.rpeMid, AppColors.rpeMid],
+    ChallengeMetric.sessions: [AppColors.brand, AppColors.brand],
   };
 
   @override
@@ -178,7 +179,11 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   child: Row(
                     children: [
-                      _AnimatedBackButton(onTap: () => Navigator.pop(context)),
+                      _AnimatedBackButton(
+                        onTap: ShellEmbeddingScope.isEmbedded(context)
+                            ? () => MainShell.shellKey.currentState?.navigateBack()
+                            : () => Navigator.pop(context),
+                      ),
                     ],
                   ),
                 ),
@@ -207,21 +212,9 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
             confettiController: _confettiController,
             blastDirectionality: BlastDirectionality.explosive,
             shouldLoop: false,
-            colors: const [Tema.brandPurple, Colors.blue, Colors.pink, Colors.orange],
+            colors: const [AppColors.brand, AppColors.rest, AppColors.brand, AppColors.rpeMid],
           ),
 
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: AppFooter(
-                onTap: () {
-                   Navigator.of(context).push(
-                    AppRoute(page: TrainingStartView()),
-                  );
-                },
-              ),
-            ),
         ],
       ),
       floatingActionButton: _isOwner && _tabController.index == 0
@@ -251,7 +244,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                     child: ShaderMask(
                       shaderCallback: (Rect bounds) {
                         return const LinearGradient(
-                          colors: [Tema.brandPurple, Colors.pinkAccent],
+                          colors: [AppColors.brand, AppColors.brand],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ).createShader(bounds);
@@ -330,11 +323,11 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
-          color: Tema.brandPurple,
+          color: AppColors.brand,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Tema.brandPurple.withOpacity(0.3),
+              color: AppColors.brand.withOpacity(0.3),
               blurRadius: 8,
               offset: const Offset(0, 3),
             ),
@@ -390,7 +383,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                           challenge: challenge,
                           participant: participant,
                           gradientColors: _metricGradients[challenge.metric] ??
-                              [Tema.brandPurple, Tema.brandPurple.withOpacity(0.7)],
+                              [AppColors.brand, AppColors.brand.withOpacity(0.7)],
                           onTap: () {
                             Navigator.of(context).push(
                               AppModalRoute(
@@ -430,7 +423,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
       builder: (context, isLoading, _) {
         if (isLoading) {
           return const Center(
-            child: CircularProgressIndicator(color: Tema.brandPurple),
+            child: CircularProgressIndicator(color: AppColors.brand),
           );
         }
 
@@ -456,11 +449,11 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Tema.brandPurple,
+                          backgroundColor: AppColors.brand,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           elevation: 4,
-                          shadowColor: Tema.brandPurple.withOpacity(0.4),
+                          shadowColor: AppColors.brand.withOpacity(0.4),
                         ),
                       ),
                     ),
@@ -532,18 +525,13 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                Container(
                  padding: const EdgeInsets.all(28),
                  decoration: BoxDecoration(
-                   gradient: LinearGradient(
-                     colors: [
-                       Colors.blue.withOpacity(0.1),
-                       Colors.blue.withOpacity(0.05),
-                     ],
-                   ),
+                   color: AppColors.rest.withOpacity(0.1),
                    shape: BoxShape.circle,
                  ),
                  child: Icon(
                    Icons.people_outline_rounded,
                    size: 56,
-                   color: Colors.blue.withOpacity(0.5),
+                   color: AppColors.rest.withOpacity(0.5),
                  ),
                ),
                const SizedBox(height: 28),
@@ -583,18 +571,13 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
             Container(
               padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Tema.brandPurple.withOpacity(0.1),
-                    Tema.brandPurple.withOpacity(0.05),
-                  ],
-                ),
+                color: AppColors.brand.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.fitness_center_outlined,
                 size: 56,
-                color: Tema.brandPurple.withOpacity(0.5),
+                color: AppColors.brand.withOpacity(0.5),
               ),
             ),
             const SizedBox(height: 28),
@@ -642,14 +625,9 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
             margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.green.shade50,
-                  Colors.green.shade100.withOpacity(0.5),
-                ],
-              ),
+              color: AppColors.rpeLow,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.green.shade200.withOpacity(0.5)),
+              border: Border.all(color: AppColors.rpeLow.withOpacity(0.5)),
             ),
             child: Row(
               children: [
@@ -660,12 +638,12 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.green.withOpacity(0.15),
+                        color: AppColors.rpeLow.withOpacity(0.15),
                         blurRadius: 8,
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.auto_awesome, color: Colors.green, size: 20),
+                  child: const Icon(Icons.auto_awesome, color: AppColors.rpeLow, size: 20),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -675,7 +653,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                       const Text(
                         'Modo Automático Activo',
                         style: TextStyle(
-                          color: Colors.green,
+                          color: AppColors.rpeLow,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
@@ -683,7 +661,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                       Text(
                         'Te unirás a nuevos retos automáticamente.',
                         style: TextStyle(
-                          color: Colors.green.shade700,
+                          color: AppColors.rpeLow,
                           fontSize: 12,
                         ),
                       ),
@@ -706,7 +684,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Row(
           children: [
-            Icon(Icons.auto_awesome, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+            Icon(Icons.auto_awesome, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
             const SizedBox(width: 12),
             const Text('Unión Automática'),
           ],
@@ -728,7 +706,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Tema.brandPurple,
+              backgroundColor: AppColors.brand,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () {
@@ -848,7 +826,7 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
               offset: Offset(0, _isPressed ? 2 : 4),
             ),
           ],
-          border: Border.all(color: Tema.brandPurple.withOpacity(0.1)),
+          border: Border.all(color: AppColors.brand.withOpacity(0.1)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -856,13 +834,13 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
             Icon(
               Icons.arrow_back_ios_new_rounded,
               size: 16,
-              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
             ),
             const SizedBox(width: 6),
             Text(
               "Volver",
               style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                 fontWeight: FontWeight.w700,
                 fontSize: 13,
               ),
@@ -944,12 +922,7 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> {
                   height: 100,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [
-                        widget.gradientColors.first.withOpacity(0.1),
-                        widget.gradientColors.last.withOpacity(0.05),
-                      ],
-                    ),
+                    color: widget.gradientColors.first.withOpacity(0.1),
                   ),
                 ),
               ),
@@ -962,15 +935,10 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> {
                     // Header del reto
                     Row(
                       children: [
-                        // Icono con gradiente
                         Container(
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: widget.gradientColors,
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                            color: widget.gradientColors.first,
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
@@ -1018,7 +986,7 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: const BoxDecoration(
-                              color: Colors.green,
+                              color: AppColors.rpeLow,
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.check, color: Colors.white, size: 14),
@@ -1051,7 +1019,7 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> {
                               fontSize: 15,
                               fontWeight: FontWeight.w900,
                               color: isCompleted
-                                  ? Colors.green
+                                  ? AppColors.rpeLow
                                   : widget.gradientColors.first,
                             ),
                           ),
@@ -1069,7 +1037,7 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> {
                               value: value,
                               backgroundColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
                               color: isCompleted
-                                  ? Colors.green
+                                  ? AppColors.rpeLow
                                   : widget.gradientColors.first,
                               minHeight: 10,
                             );
@@ -1082,7 +1050,7 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> {
                           child: Text(
                             "¡Reto completado! 🎉",
                             style: TextStyle(
-                              color: Colors.green.shade600,
+                              color: AppColors.rpeLow,
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
                             ),
@@ -1125,7 +1093,7 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> {
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                 decoration: BoxDecoration(
-                                  gradient: LinearGradient(colors: widget.gradientColors),
+                                  color: widget.gradientColors.first,
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
@@ -1209,7 +1177,7 @@ class _PremiumMemberCard extends StatelessWidget {
             border: isPodium && !isPending
                 ? Border.all(color: rankColor.withOpacity(0.3), width: 2)
                 : isPending
-                    ? Border.all(color: Colors.orange.withOpacity(0.5), width: 1.5, style: BorderStyle.solid)
+                    ? Border.all(color: AppColors.rpeMid.withOpacity(0.5), width: 1.5, style: BorderStyle.solid)
                     : null,
             boxShadow: [
               BoxShadow(
@@ -1254,10 +1222,10 @@ class _PremiumMemberCard extends StatelessWidget {
                    width: 36,
                    height: 36,
                    decoration: BoxDecoration(
-                     color: Colors.orange.withOpacity(0.1),
+                     color: AppColors.rpeMid.withOpacity(0.1),
                      shape: BoxShape.circle,
                    ),
-                   child: const Icon(Icons.hourglass_empty_rounded, color: Colors.orange, size: 18),
+                   child: const Icon(Icons.hourglass_empty_rounded, color: AppColors.rpeMid, size: 18),
                 ),
               const SizedBox(width: 14),
 
@@ -1295,7 +1263,7 @@ class _PremiumMemberCard extends StatelessWidget {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: Colors.orange.withOpacity(0.15),
+                                color: AppColors.rpeMid.withOpacity(0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Text(
@@ -1303,7 +1271,7 @@ class _PremiumMemberCard extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.orange,
+                                  color: AppColors.rpeMid,
                                 ),
                               ),
                             ),
@@ -1323,7 +1291,7 @@ class _PremiumMemberCard extends StatelessWidget {
                           Text(
                             "${member.totalKm.toStringAsFixed(1)} km",
                             style: TextStyle(
-                              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                             ),
@@ -1331,9 +1299,9 @@ class _PremiumMemberCard extends StatelessWidget {
                         ],
                       )
                     else
-                      const Text(
+                      Text(
                         "Esperando aceptación...",
-                        style: TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic),
+                        style: TextStyle(fontSize: 12, color: AppColors.iconMutedOf(context), fontStyle: FontStyle.italic),
                       ),
                   ],
                 ),
@@ -1364,7 +1332,7 @@ class _PremiumMemberCard extends StatelessWidget {
     if (rank == 1) return const Color(0xFFFFD700);
     if (rank == 2) return const Color(0xFFC0C0C0);
     if (rank == 3) return const Color(0xFFCD7F32);
-    return Colors.grey.shade300;
+    return AppColors.iconMuted;
   }
 }
 
@@ -1614,11 +1582,11 @@ class _InviteSheetState extends State<_InviteSheet> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Tema.brandPurple.withOpacity(0.1),
+                    color: AppColors.brand.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: const Icon(Icons.link_rounded,
-                      color: Tema.brandPurple, size: 22),
+                      color: AppColors.brand, size: 22),
                 ),
                 const SizedBox(width: 14),
                 Text(
@@ -1651,7 +1619,7 @@ class _InviteSheetState extends State<_InviteSheet> {
               Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 32),
-                  child: CircularProgressIndicator(color: Tema.brandPurple),
+                  child: CircularProgressIndicator(color: AppColors.brand),
                 ),
               )
             else if (_generateError != null)
@@ -1679,7 +1647,7 @@ class _InviteSheetState extends State<_InviteSheet> {
                   color: cs.onSurface.withOpacity(isDark ? 0.06 : 0.04),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                      color: Tema.brandPurple.withOpacity(0.2), width: 1.5),
+                      color: AppColors.brand.withOpacity(0.2), width: 1.5),
                 ),
                 child: Column(
                   children: [
@@ -1694,13 +1662,13 @@ class _InviteSheetState extends State<_InviteSheet> {
                             style: const TextStyle(
                               fontSize: 40,
                               fontWeight: FontWeight.w900,
-                              color: Tema.brandPurple,
+                              color: AppColors.brand,
                               letterSpacing: 8,
                             ),
                           ),
                           const SizedBox(width: 12),
                           Icon(Icons.copy_rounded,
-                              color: Tema.brandPurple.withOpacity(0.7),
+                              color: AppColors.brand.withOpacity(0.7),
                               size: 22),
                         ],
                       ),
@@ -1742,9 +1710,9 @@ class _InviteSheetState extends State<_InviteSheet> {
                             icon: const Icon(Icons.copy_rounded, size: 18),
                             label: const Text('Copiar código'),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                              foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                               side: BorderSide(
-                                  color: Tema.brandPurple.withOpacity(0.4)),
+                                  color: AppColors.brand.withOpacity(0.4)),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(14)),
                               padding:
@@ -1761,7 +1729,7 @@ class _InviteSheetState extends State<_InviteSheet> {
                             label: const Text('Compartir',
                                 style: TextStyle(color: Colors.white)),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Tema.brandPurple,
+                              backgroundColor: AppColors.brand,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(14)),
@@ -1828,7 +1796,7 @@ class _InviteSheetState extends State<_InviteSheet> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide:
-                            const BorderSide(color: Tema.brandPurple, width: 2),
+                            const BorderSide(color: AppColors.brand, width: 2),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 14),
@@ -1841,7 +1809,7 @@ class _InviteSheetState extends State<_InviteSheet> {
                   child: ElevatedButton(
                     onPressed: _isSendingEmail ? null : _sendEmailInvite,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Tema.brandPurple,
+                      backgroundColor: AppColors.brand,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16)),
                       elevation: 0,
@@ -1923,11 +1891,7 @@ class _PremiumFloatingActionButtonState extends State<_PremiumFloatingActionButt
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Colors.black, Color(0xFF333333)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: AppColors.surfaceOf(context),
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(

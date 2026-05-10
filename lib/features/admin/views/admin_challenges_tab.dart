@@ -36,9 +36,9 @@ class AdminChallengesTab extends StatelessWidget {
   // ── Status helpers ───────────────────────────────────────────────
   Color _statusColor(ChallengeStatus s) {
     switch (s) {
-      case ChallengeStatus.draft: return Colors.grey;
-      case ChallengeStatus.active: return Colors.green;
-      default: return Tema.brandPurple;
+      case ChallengeStatus.draft: return AppColors.iconMuted;
+      case ChallengeStatus.active: return AppColors.rpeLow;
+      default: return AppColors.brand;
     }
   }
 
@@ -64,7 +64,7 @@ class AdminChallengesTab extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: AppColors.rpeMax),
             child: const Text('Eliminar'),
           ),
         ],
@@ -188,8 +188,8 @@ class AdminChallengesTab extends StatelessWidget {
                 FilledButton.tonal(
                   onPressed: () => controller.publishGlobalChallenge(challenge.id),
                   style: FilledButton.styleFrom(
-                    backgroundColor: Colors.green.withOpacity(0.12),
-                    foregroundColor: Colors.green.shade700,
+                    backgroundColor: AppColors.rpeLow.withOpacity(0.12),
+                    foregroundColor: AppColors.rpeLow,
                     minimumSize: const Size(0, 34),
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     shape: RoundedRectangleBorder(
@@ -213,9 +213,9 @@ class AdminChallengesTab extends StatelessWidget {
                 onPressed: () => _confirmDelete(context, challenge),
                 icon: const Icon(Icons.delete_outline_rounded),
                 iconSize: 20,
-                color: Colors.red.shade400,
+                color: AppColors.rpeMax,
                 style: IconButton.styleFrom(
-                  backgroundColor: Colors.red.withOpacity(0.08),
+                  backgroundColor: AppColors.rpeMax.withOpacity(0.08),
                   minimumSize: const Size(34, 34),
                   padding: EdgeInsets.zero,
                   shape: RoundedRectangleBorder(
@@ -246,7 +246,7 @@ class AdminChallengesTab extends StatelessWidget {
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-                child: CircularProgressIndicator(color: Tema.brandPurple));
+                child: CircularProgressIndicator(color: AppColors.brand));
           }
 
           final challenges = snapshot.data ?? [];
@@ -278,7 +278,7 @@ class AdminChallengesTab extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Tema.brandPurple,
+        backgroundColor: AppColors.brand,
         foregroundColor: Colors.white,
         onPressed: () {
           showModalBottomSheet(

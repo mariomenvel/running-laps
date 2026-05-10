@@ -1,5 +1,124 @@
 # CHANGELOG — Running Laps
 
+## [Rediseño UI completo + Arquitectura de navegación] — Mayo 2026
+ 
+### Arquitectura de navegación — cambio fundamental
+- **Todas las pantallas secundarias son tabs ocultos del MainShell** — header global (logo + avatar) y footer (BottomNav) visibles en toda la app excepto durante sesión activa
+- `MainShell.shellKey` (GlobalKey) expuesto para navegación cross-widget
+- `navigateTo(int index, {dynamic params})` — método público para navegar a cualquier tab
+- Tabs ocultos implementados: HistoryScreen(4), TrainingStartView(15), TrainingDetailView(5), GroupsListScreen(6), GroupScreen(7), AccountSettingsView(8), ZonesConfigScreen(9), HeartRateMonitorView(10), TemplatesListView(11), TemplateEditorView(12), AthleteSessionEditorView(13), AvatarCustomizerView(14)
+- TrainingSessionView y TrainingSessionSummary mantienen Navigator.push (sin header/footer durante sesión)
+- Footer oculto en TrainingStartView (`_tabIndex == 15 ? SizedBox.shrink() : _NavBar`)
+### Avatar customizable — generador SVG propio
+- `lib/features/avatar/models/avatar_config.dart` — modelo con copyWith, toMap/fromMap, AvatarConfig.random()
+- `lib/features/avatar/services/avatar_generator.dart` — genera SVG puro sin assets externos
+- `lib/features/avatar/views/avatar_customizer_view.dart` — 11 secciones de personalización
+- Opciones: 4 formas de cabeza, 6 tonos de piel, 8 expresiones de ojos, 12 expresiones de boca, 26 estilos de pelo, 7 vello facial, 7 prendas de ropa, 5 gorros, 8 fondos, accesorios
+- `_LiveAvatarBadge` en MainShell — StreamBuilder sobre users/{uid}, actualización en tiempo real
+- Guardado en Firestore `users/{uid}.generativeAvatarConfig`
+- Fix proporciones SVG: pelo extendido a y=18 (tope real de cabeza), gorros reposicionados
+- RepaintBoundary en avatar preview para rendimiento
+### Sistema de etiquetas — predefinidas + custom
+- `lib/core/constants/training_tags.dart` — 7 tags predefinidas: rodaje, series, tempo, largo, fartlek, competición, recuperación
+- `TrainingTags.isPredefined(tag)` — detecta si es predefinida
+- TagChip: predefinidas (brand bg) vs custom (surface2 + borde)
+- TagSelectorSheet: sección predefinidas + sección custom + crear nueva
+- training_summary_screen: tags predefinidas inline seleccionables sin abrir sheet
+### Historial — rediseño completo
+- `history_screen.dart` — elimina AppHeader, GradientBanner, HistoryBottomBar
+- Header local: título + contador selección + filtro
+- SearchBar inline (pill 40px), filter chips horizontal scroll
+- Selection mode integrado en header (count + Cancelar)
+- `premium_training_card.dart` — border radius 16, borders siempre visibles, `_StatChip` component
+- Expanded content: surface2Of background, label "SERIES"
+- Footer: surface2Of + top border
+### Training Detail — rediseño + unificación
+- `training_detail_view.dart` — unifica GPS y no-GPS (parámetro `training.gps`)
+- Elimina AppHeader, GradientBanner, animaciones complejas
+- Hero: título grande + fecha + badge GPS/Manual + tags
+- Stats: números grandes sin cards/bordes
+- Series expandibles con fl_chart LineChart interactivo (pace + FC, toggle eje X tiempo/distancia)
+- Tooltips en gráfica con pace + fecha
+- Notas editables inline (tap → TextField)
+- `training_no_gps_detail_view.dart` → renombrada a TrainingNoGpsDetailViewLegacy
+### Training Summary — rediseño completo
+- Animación celebración (check icon ScaleTransition)
+- RPE slider solo si 1 serie o isManual (ya recogido por serie en múltiples)
+- Comparativa: vs planificado primero, vs similar si no hay planificado
+- Tags predefinidas + custom inline
+- Guardar / Descartar con AlertDialog de confirmación
+### Training Start — rediseño completo
+- Modo atleta: card sesión planificada con bloques
+- Grid 2×3 tipos: Rodaje, Series, Tempo, Largo, Fartlek, Libre
+- `_buildTypeConfig()` — AnimatedSwitcher con configuración específica por tipo
+- Sensores: GPS toggle + BLE toggle (condición: connectionState != disconnected)
+- BLE sin dispositivo: "No configurado — toca para configurar" → navigateTo(10)
+- Botón EMPEZAR: círculo 56×56, brand, play icon blanco, sin sombra
+- Fondo: AppColors.surface2Of(context)
+- Config series pre-rellena estado antes del countdown
+### Training Session — pantalla de descanso
+- Fondo blanco que se tiñe de azul claro de abajo hacia arriba (progreso descanso)
+- CustomPainter `_RestFillPainter` con drawRect (sin sine wave — 60fps)
+- 8 burbujas flotantes con RepaintBoundary por capa
+- RPE slider por serie durante descanso
+- Info siguiente serie en parte inferior
+- Botón "Saltar descanso" discreto
+- Al terminar: HapticFeedback.mediumImpact() + arranca automáticamente
+### Analytics — mejoras
+- Gráfica "RITMO EN SERIES" (`_buildPaceProgression()`): puntos visibles FlDotCirclePainter, tooltip con pace + fecha, hint "Toca un punto para ver el detalle"
+- CTL/ATL/TSB: ventana 180 días (era 90)
+### Calendario — fixes y rediseño
+- Vista mensual: barras semanales con color basado en carga TRIMP (no km)
+- Vista temporada: cuadraditos por semana con mismo sistema de color
+- Sistema de colores TRIMP: verde(<150) / ámbar(150-300) / coral(300-500) / rojo(>500) / morado solo competición
+- Competición detectada por tag 'competición' o athleteSession.category == 'competición'
+- Fix semanas cross-mes: cada semana aparece solo en el mes con más días
+- `_monthForWeek(DateTime weekStart)` — helper para asignar semana al mes correcto
+- Vista semanal: botones check/play/+ más grandes, centrados, tap en todo el contenedor del día
+### Inputs numéricos — CupertinoPicker iOS
+- `lib/core/widgets/number_picker_field.dart` — widget reutilizable
+- CupertinoPicker en bottom sheet con handle bar, Cancelar/Hecho
+- Sin teclado para valores numéricos en: athlete_session_editor_view, session_editor_view, session_block_editor, training_start_view
+- Rangos: duración 1-300min, distancia 100-42000m (step 100), genérico 1-100
+### Typography — ajustes globales
+- letterSpacing reducido -0.4 en h1/h2, -0.3 en body/small
+- Labels en MAYÚSCULAS (letterSpacing 1.2/1.5) sin cambios — intencionales
+- fontWeight reducido en historial y detalle (w400/w500, solo título w600)
+- Números con decimales limitados: distancia 2 dec, RPE 1 dec, FC/carga sin decimales
+### COLOR_SYSTEM.md — actualizaciones
+- Morado (brand) prohibido para indicar volumen alto — exclusivo de marca + competición en calendario
+- Calendario: verde=suave, ámbar=moderada, coral=carga, rojo=pico, morado=competición únicamente
+---
+ 
+## Archivos legacy (NO eliminados — decisión deliberada)
+- `home_view_legacy.dart`
+- `profile_menu_screen_legacy.dart`
+- `analytics_hub_screen_legacy.dart`
+- `training_no_gps_detail_view.dart` (renombrada clase a TrainingNoGpsDetailViewLegacy)
+## [Auditoría de colores — limpieza de colores ilegales] — 2026-04-29
+
+### Resumen
+Eliminados todos los colores fuera del sistema de diseño en `lib/`. El principio: "El color comunica significado, no decoración."
+
+### Cambios
+- **Material Colors ilegales eliminados**: `Colors.blueAccent` → `AppColors.rest`, `Colors.orangeAccent` → `AppColors.effort`, `Colors.deepPurple` → `AppColors.brandSurface`. Total: 11 reemplazos.
+- **Degradados de tarjetas/botones eliminados**: 10 `LinearGradient` en fondos de tarjeta/botón reemplazados por colores sólidos de `AppColors`. Se mantienen los de gráficas (fl_chart), skeleton shimmer y Paint shaders.
+- **`GradientBanner.gradientColors`** → renombrado a `accentColor` (Color sólido). Actualizadas 11 llamadas en vistas.
+- **`ChallengeColorHelper.gradientForMetric()`** eliminado — sin usos externos.
+- **Código malformado del agente anterior** corregido: `${IMPORT_LINE}` en 18 archivos, `const AppColors.brand` → `AppColors.brand`, `AppColors.rpeMax[50]` → `.withOpacity()`, BoxDecoration mal cerrado en `create_tag_dialog.dart`.
+- **0 errores** en `flutter analyze`.
+
+## [Design System — AppColors fuente de verdad] — 2026-04-28
+
+### Cambios
+- `lib/core/theme/app_colors.dart` reescrito: sistema de 3 capas (marca/esfuerzo/funcional) + helpers RPE + tokens por pantalla (serie, descanso, config, home, retos)
+- `lib/core/theme/app_theme.dart` reescrito: dark-only `AppTheme.dark()` + `AppTypography` + `AppSpacing` + `AppDimens`
+- `lib/config/app_theme.dart`: elimina `AppColors` duplicada, re-exporta desde `core/theme/app_colors.dart`, mantiene `Tema` (deprecated) y `AvatarHelper`
+- `AppColors.brandPurple` → `AppColors.brand` en todo el proyecto (52 archivos)
+- `AppTheme.light()` eliminado; `main.dart` usa `ThemeMode.dark` permanente
+- Aliases de compatibilidad añadidos para tokens legacy (`surfaceDark`, `borderDark`, `textPrimaryDark`, etc.) — marcados como deprecated para migración gradual
+- `AppColors.effortSurface` ahora es un método (RPE-aware); `effortSurfaceConst` para usos sin contexto RPE
+
 ## [GPS — EKF2D + fusión IMU] — 2026-04-23
 
 ### Mejoras GPS

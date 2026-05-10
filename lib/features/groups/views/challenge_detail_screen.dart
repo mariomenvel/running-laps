@@ -12,7 +12,7 @@ import 'package:running_laps/core/theme/app_colors.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_page_scaffold.dart';
 import '../../../../core/widgets/gradient_banner.dart';
-import '../../profile/views/profile_menu_screen.dart';
+import '../../profile/views/profile_menu_screen_legacy.dart';
 
 class ChallengeDetailScreen extends StatefulWidget {
   final String groupId;
@@ -89,7 +89,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
               builder: (context, loading, _) {
                 if (loading) {
                   return const Center(
-                    child: CircularProgressIndicator(color: Tema.brandPurple),
+                    child: CircularProgressIndicator(color: AppColors.brand),
                   );
                 }
 
@@ -104,12 +104,12 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                             Icon(
                               Icons.error_outline,
                               size: 64,
-                              color: Colors.red.shade300,
+                              color: AppColors.rpeMax,
                             ),
                             const SizedBox(height: 16),
                             Text(
                               'Error: $error',
-                              style: TextStyle(color: Colors.red.shade600),
+                              style: TextStyle(color: AppColors.rpeMax),
                             ),
                           ],
                         ),
@@ -174,7 +174,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: ChallengeColorHelper.gradientForMetric(challenge.metric),
+        color: ChallengeColorHelper.accentForMetric(challenge.metric),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -335,7 +335,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                             value: animatedProgress,
                             strokeWidth: 14,
                             strokeCap: StrokeCap.round,
-                            color: isCompleted ? Colors.green : accent,
+                            color: isCompleted ? AppColors.rpeLow : accent,
                             backgroundColor: Colors.transparent,
                           ),
                         ),
@@ -347,7 +347,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                               "$percentage%",
                               style: TextStyle(
                                 fontWeight: FontWeight.w900,
-                                color: isCompleted ? Colors.green : accent,
+                                color: isCompleted ? AppColors.rpeLow : accent,
                                 fontSize: 44,
                                 letterSpacing: -2,
                               ),
@@ -357,7 +357,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: isCompleted
-                                    ? Colors.green.withOpacity(0.7)
+                                    ? AppColors.rpeLow.withOpacity(0.7)
                                     : accent.withOpacity(0.6),
                                 fontSize: 11,
                                 letterSpacing: 1.2,
@@ -400,13 +400,11 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.green.shade400, Colors.green.shade600],
-                    ),
+                    color: AppColors.rpeLow,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.green.withOpacity(0.3),
+                        color: AppColors.rpeLow.withOpacity(0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -467,12 +465,12 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Colors.amber.shade50,
+            color: AppColors.rpeMid,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
             Icons.leaderboard_rounded,
-            color: Colors.amber.shade700,
+            color: AppColors.rpeMid,
             size: 22,
           ),
         ),
@@ -638,10 +636,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              gradient: isMe
-                  ? LinearGradient(colors: [Tema.brandPurple, accent])
-                  : null,
-              color: isMe ? null : Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
+              color: isMe ? AppColors.brandSurface : Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
               borderRadius: BorderRadius.circular(12),
               border: isMe
                   ? null
@@ -721,7 +716,7 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
               offset: Offset(0, _isPressed ? 2 : 4),
             ),
           ],
-          border: Border.all(color: Tema.brandPurple.withOpacity(0.1)),
+          border: Border.all(color: AppColors.brand.withOpacity(0.1)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -729,13 +724,13 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
             Icon(
               Icons.arrow_back_ios_new_rounded,
               size: 16,
-              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
             ),
             const SizedBox(width: 6),
             Text(
               "Volver",
               style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                 fontWeight: FontWeight.w700,
                 fontSize: 13,
               ),

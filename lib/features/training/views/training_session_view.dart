@@ -18,7 +18,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/services/gps_service.dart';
 import '../../../core/services/zones_service.dart';
 import '../../../core/services/heart_rate_service.dart';
-import '../../home/views/home_view.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
 
 
 class TrainingSessionView extends StatefulWidget {
@@ -398,9 +398,13 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     final double tiempoFinalSec = _stopwatch.elapsed.inMilliseconds / 1000.0;
 
     // FC media acumulada durante la serie
-    final double? fcMedia = _hrReadings.isNotEmpty
-        ? _hrReadings.reduce((a, b) => a + b) / _hrReadings.length
+    final List<int>? fcReadings = _hrReadings.isNotEmpty
+        ? List<int>.from(_hrReadings) : null;
+    final double? fcMedia = fcReadings != null
+        ? fcReadings.reduce((a, b) => a + b) / fcReadings.length
         : null;
+    debugPrint('[FC] Serie terminada — lecturas: ${fcReadings?.length ?? 0}, media: $fcMedia');
+    _hrReadings.clear();
 
     // 2. Crear el objeto Serie (sin GPS)
     final Serie serieTerminada = Serie(
@@ -413,6 +417,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
       gpsPoints: null,
       finishedAt: _finishedAt,
       fcMedia: fcMedia,
+      fcReadings: fcReadings,
     );
 
     // 3. Cerrar el diálogo de RPE
@@ -434,9 +439,13 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     final double tiempoFinalSec = _stopwatch.elapsed.inMilliseconds / 1000.0;
 
     // FC media acumulada durante la serie
-    final double? fcMedia = _hrReadings.isNotEmpty
-        ? _hrReadings.reduce((a, b) => a + b) / _hrReadings.length
+    final List<int>? fcReadings = _hrReadings.isNotEmpty
+        ? List<int>.from(_hrReadings) : null;
+    final double? fcMedia = fcReadings != null
+        ? fcReadings.reduce((a, b) => a + b) / fcReadings.length
         : null;
+    debugPrint('[FC] Serie GPS terminada — lecturas: ${fcReadings?.length ?? 0}, media: $fcMedia');
+    _hrReadings.clear();
 
     // 2. Convertir puntos GPS a Map
     List<Map<String, dynamic>>? gpsPointsMaps;
@@ -457,6 +466,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
       gpsPoints: gpsPointsMaps,
       finishedAt: _finishedAt,
       fcMedia: fcMedia,
+      fcReadings: fcReadings,
     );
 
     // 4. Volver a la pantalla anterior devolviendo la serie
@@ -506,7 +516,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
   // ===================================================================
 
   Color _getPaceColor(String paceString) {
-    if (paceString.contains("--")) return Colors.grey;
+    if (paceString.contains("--")) return AppColors.iconMuted;
 
     try {
       // Formato esperado "mm:ss /km" o "mm:ss"
@@ -519,11 +529,11 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
 
       // Lógica de colores simple
       if (totalSeconds < 240) { // < 4:00 min/km
-        return Colors.green.shade600;
+        return AppColors.rpeLow;
       } else if (totalSeconds < 300) { // 4:00 - 5:00 min/km
-        return Colors.orange.shade700;
+        return AppColors.rpeMid;
       } else { // > 5:00 min/km
-        return Colors.red.shade400;
+        return AppColors.rpeMax;
       }
     } catch (e) {
       return Colors.black87;
@@ -563,9 +573,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
               child: Container(
                 height: 3,
                 decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF7C3AED), Tema.brandPurple, Color(0xFF7C3AED)],
-                  ),
+                  color: AppColors.brand,
                 ),
               ),
             ),
@@ -612,7 +620,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Icon(Icons.repeat_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 20),
+                    Icon(Icons.repeat_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 20),
                     const SizedBox(width: 8),
                     Text(
                       'Serie $serieNum',
@@ -630,7 +638,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                 Container(
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Tema.brandPurple,
+                    color: AppColors.brand,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -784,8 +792,8 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
             decoration: BoxDecoration(
               color: _isRunning
-                  ? Tema.brandPurple.withOpacity(0.08)
-                  : Colors.red.withOpacity(0.08),
+                  ? AppColors.brand.withOpacity(0.08)
+                  : AppColors.rpeMax.withOpacity(0.08),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -798,7 +806,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: _isRunning ? Tema.brandPurple : Colors.red.shade600,
+                    color: _isRunning ? AppColors.brand : AppColors.rpeMax,
                     letterSpacing: 0.3,
                   ),
                 ),
@@ -821,7 +829,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
           height: 7,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: _isRunning ? Tema.brandPurple : Colors.red.shade600,
+            color: _isRunning ? AppColors.brand : AppColors.rpeMax,
           ),
         ),
       ),
@@ -907,7 +915,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                       height: 1.0,
                       fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
                       shadows: _isAlarmActive
-                          ? [Shadow(color: Tema.brandPurple.withOpacity(0.4), blurRadius: 24)]
+                          ? [Shadow(color: AppColors.brand.withOpacity(0.4), blurRadius: 24)]
                           : null,
                     ),
                   ),
@@ -953,7 +961,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Tema.brandPurple.withOpacity(0.08),
+            color: AppColors.brand.withOpacity(0.08),
             blurRadius: 24,
             offset: const Offset(0, 8),
             spreadRadius: 4,
@@ -1073,16 +1081,16 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
 
   // Green <4:30 · Amber 4:30-6:00 · Red >6:00
   Color _getArcPaceColor(String paceString) {
-    if (paceString.contains('--')) return Colors.grey.shade200;
+    if (paceString.contains('--')) return AppColors.iconMuted;
     try {
       final parts = paceString.split(' ')[0].split(':');
-      if (parts.length != 2) return Colors.grey.shade200;
+      if (parts.length != 2) return AppColors.iconMuted;
       final int totalSeconds = (int.tryParse(parts[0]) ?? 0) * 60 + (int.tryParse(parts[1]) ?? 0);
       if (totalSeconds < 270) return const Color(0xFF22C55E);  // < 4:30
       if (totalSeconds <= 360) return const Color(0xFFF59E0B); // 4:30–6:00
       return const Color(0xFFEF4444);                          // > 6:00
     } catch (_) {
-      return Colors.grey.shade200;
+      return AppColors.iconMuted;
     }
   }
 
@@ -1164,7 +1172,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                 shadows: _isAlarmActive
                     ? [
                         Shadow(
-                          color: Tema.brandPurple.withOpacity(0.5),
+                          color: AppColors.brand.withOpacity(0.5),
                           blurRadius: 30,
                         ),
                       ]
@@ -1304,7 +1312,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
         children: [
           Icon(
             icon,
-            color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+            color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
             size: large ? 24 : 18,
           ),
           SizedBox(height: large ? 14 : 8),
@@ -1315,7 +1323,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
               style: TextStyle(
                 fontSize: large ? 52 : 24,
                 fontWeight: FontWeight.bold,
-                color: large ? Tema.brandPurple : Theme.of(context).colorScheme.onSurface,
+                color: large ? AppColors.brand : Theme.of(context).colorScheme.onSurface,
                 letterSpacing: large ? -2.0 : -0.5,
                 height: 1.0,
               ),
@@ -1328,7 +1336,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: large
-                  ? Tema.brandPurple.withOpacity(0.55)
+                  ? AppColors.brand.withOpacity(0.55)
                   : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
               letterSpacing: 0.8,
             ),
@@ -1354,13 +1362,13 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
           height: 58,
           decoration: BoxDecoration(
             color: _isRunning
-                ? Tema.brandPurple
-                : Tema.brandPurple.withOpacity(0.35),
+                ? AppColors.brand
+                : AppColors.brand.withOpacity(0.35),
             borderRadius: BorderRadius.circular(16),
             boxShadow: _isRunning
                 ? [
                     BoxShadow(
-                      color: Tema.brandPurple.withOpacity(0.35),
+                      color: AppColors.brand.withOpacity(0.35),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
@@ -1483,7 +1491,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                       ),
                       CupertinoButton(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text("Listo", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontSize: 17, fontWeight: FontWeight.bold)),
+                        child: Text("Listo", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontSize: 17, fontWeight: FontWeight.bold)),
                         onPressed: () => Navigator.of(context).pop(true),
                       ),
                     ],
@@ -1552,7 +1560,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                  await Future.delayed(const Duration(seconds: 2));
                  if (mounted) {
                     Navigator.of(context).pushAndRemoveUntil(
-                      AppRoute(page: const HomeView()),
+                      AppRoute(page: const MainShell()),
                       (Route<dynamic> route) => false,
                     );
                  }
@@ -1652,7 +1660,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                          ),
                          child: Column(
                            children: [
-                             const Icon(Icons.edit_road, size: 32, color: Colors.purple),
+                             const Icon(Icons.edit_road, size: 32, color: AppColors.brand),
                              const SizedBox(height: 12),
                              Text("MANUAL", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.5), letterSpacing: 1)),
                              const SizedBox(height: 4),
@@ -1686,9 +1694,9 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                            ),
                            child: Column(
                              children: [
-                               Icon(Icons.gps_fixed, size: 32, color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+                               Icon(Icons.gps_fixed, size: 32, color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
                                const SizedBox(height: 12),
-                               Text("GPS", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, letterSpacing: 1)),
+                               Text("GPS", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, letterSpacing: 1)),
                                const SizedBox(height: 4),
                                Text("$distanciaGps m", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(ctx).colorScheme.onSurface)),
                              ],
@@ -2042,7 +2050,7 @@ class _ObjectiveChip extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.sublabel,
-    this.color = AppColors.brandPurple,
+    this.color = AppColors.brand,
   });
 
   @override
@@ -2132,14 +2140,14 @@ class _RpeStatChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: AppColors.brandPurple),
+          Icon(icon, size: 12, color: AppColors.brand),
           const SizedBox(width: 4),
           Text(
             label,
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: AppColors.brandPurpleLight,
+              color: AppColors.brandLight,
             ),
           ),
         ],

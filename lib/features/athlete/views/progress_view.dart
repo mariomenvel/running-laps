@@ -52,7 +52,7 @@ class _ProgressViewState extends State<ProgressView> {
                 if (state.isLoading) {
                   return const Center(
                     child: CircularProgressIndicator(
-                        color: AppColors.brandPurple),
+                        color: AppColors.brand),
                   );
                 }
                 if (state.errorMessage != null) {
@@ -99,7 +99,7 @@ class _ProgressViewState extends State<ProgressView> {
             FilledButton(
               onPressed: () => _vm.init(widget.uid),
               style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.brandPurple),
+                  backgroundColor: AppColors.brand),
               child: const Text('Reintentar'),
             ),
           ],
@@ -231,8 +231,8 @@ class _ProgressViewState extends State<ProgressView> {
                 icon: const Icon(Icons.calendar_month_outlined),
                 label: const Text('Planificar sesión'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.brandPurple,
-                  side: const BorderSide(color: AppColors.brandPurple),
+                  foregroundColor: AppColors.brand,
+                  side: const BorderSide(color: AppColors.brand),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
@@ -313,10 +313,10 @@ class _PersonalRecordCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight,
+        color: AppColors.surface2Of(context),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+          color: AppColors.borderOf(context),
         ),
       ),
       child: Column(
@@ -337,7 +337,7 @@ class _PersonalRecordCard extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: AppColors.brandPurple,
+                color: AppColors.brand,
               ),
             ),
             Text(
@@ -382,10 +382,10 @@ class _SeriesProgressCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        color: AppColors.surfaceOf(context),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+          color: AppColors.borderOf(context),
         ),
       ),
       child: Column(
@@ -514,14 +514,14 @@ class _MiniLinePainter extends CustomPainter {
     }
 
     final linePaint = Paint()
-      ..color       = AppColors.brandPurple
+      ..color       = AppColors.brand
       ..strokeWidth = 2
       ..style       = PaintingStyle.stroke
       ..strokeCap   = StrokeCap.round
       ..strokeJoin  = StrokeJoin.round;
 
     final dotPaint = Paint()
-      ..color = AppColors.brandPurpleLight
+      ..color = AppColors.brandLight
       ..style = PaintingStyle.fill;
 
     final path = Path();
@@ -605,7 +605,7 @@ class _VolumeChart extends StatelessWidget {
                     fontWeight:
                         isCurrent ? FontWeight.w700 : FontWeight.w400,
                     color: isCurrent
-                        ? AppColors.brandPurple
+                        ? AppColors.brand
                         : const Color(0xFFAAAAAA),
                   ),
                 ),
@@ -640,11 +640,11 @@ class _VolumePainter extends CustomPainter {
     final barPad  = barW * 0.15;
 
     final barPaint = Paint()
-      ..color = AppColors.brandPurple.withValues(alpha: 0.6)
+      ..color = AppColors.brand.withValues(alpha: 0.6)
       ..style = PaintingStyle.fill;
 
     final linePaint = Paint()
-      ..color       = AppColors.brandPurpleLight
+      ..color       = AppColors.brandLight
       ..strokeWidth = 2
       ..style       = PaintingStyle.stroke
       ..strokeCap   = StrokeCap.round
@@ -763,10 +763,10 @@ class _PveCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color:        isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        color:        AppColors.surfaceOf(context),
         borderRadius: BorderRadius.circular(14),
         border:       Border.all(
-          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+          color: AppColors.borderOf(context),
         ),
       ),
       child: Column(

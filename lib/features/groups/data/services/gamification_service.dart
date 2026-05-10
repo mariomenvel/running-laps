@@ -1,3 +1,4 @@
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 
@@ -39,35 +40,35 @@ class GamificationService {
       title: 'Primeros Pasos',
       description: 'Completa tu primer entrenamiento.',
       icon: Icons.directions_run,
-      color: Colors.green,
+      color: AppColors.rpeLow,
     ),
     Achievement(
       id: 'distance_10k',
       title: 'Fondo 10K',
       description: 'Corre 10km acumulados en total.',
       icon: Icons.map,
-      color: Colors.blue,
+      color: AppColors.rest,
     ),
     Achievement(
       id: 'distance_42k',
       title: 'Maratoniano',
       description: 'Acumula 42km totales (distancia de maratón).',
       icon: Icons.emoji_events,
-      color: Colors.amber,
+      color: AppColors.rpeMid,
     ),
     Achievement(
       id: 'consistency_3',
       title: 'Constancia',
       description: 'Registra al menos 3 entrenamientos.',
       icon: Icons.calendar_today,
-      color: Colors.purple,
+      color: AppColors.brand,
     ),
     Achievement(
       id: 'speed_demon',
       title: 'Demonio Veloz',
       description: 'Logra un ritmo medio mejor que 5:00 /km en una sesión.',
       icon: Icons.flash_on,
-      color: Colors.red,
+      color: AppColors.rpeMax,
     ),
   ];
 

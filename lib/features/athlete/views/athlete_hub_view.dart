@@ -16,6 +16,7 @@ import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
 import 'package:running_laps/features/training/views/manual_training_view.dart';
 import 'package:running_laps/core/services/notification_service.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AthleteHubView extends StatefulWidget {
@@ -73,37 +74,11 @@ class _AthleteHubViewState extends State<AthleteHubView> {
               valueListenable: _viewModel.state,
               builder: (context, state, _) => Column(
                 children: [
-                  GestureDetector(
-                    onVerticalDragEnd: (details) {
-                      if (details.primaryVelocity == null) return;
-                      if (details.primaryVelocity! < -200) {
-                        setState(() => _calendarExpanded = false);
-                      } else if (details.primaryVelocity! > 200) {
-                        setState(() => _calendarExpanded = true);
-                      }
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                      height: _calendarExpanded ? 380 : 110,
-                      child: _buildCalendarContent(state, isDark),
-                    ),
-                  ),
-                  Center(
-                    child: GestureDetector(
-                      onTap: () => setState(
-                          () => _calendarExpanded = !_calendarExpanded),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        width: _calendarExpanded ? 32 : 48,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF3A3A3C),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    height: _calendarExpanded ? 380 : 160,
+                    child: _buildCalendarContent(state, isDark),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -157,7 +132,8 @@ class _AthleteHubViewState extends State<AthleteHubView> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: TableCalendar<AthleteSession>(
+      child: ClipRect(
+        child: TableCalendar<AthleteSession>(
         firstDay: DateTime(2020, 1, 1),
         lastDay: DateTime(2027, 12, 31),
         focusedDay: state.focusedMonth,
@@ -191,20 +167,14 @@ class _AthleteHubViewState extends State<AthleteHubView> {
         headerStyle: HeaderStyle(
           formatButtonVisible: false,
           titleCentered: true,
-          titleTextStyle: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.4,
-            color: titleColor,
-          ),
           leftChevronIcon: const Icon(
             Icons.chevron_left,
-            color: AppColors.brandPurple,
+            color: AppColors.brand,
             size: 28,
           ),
           rightChevronIcon: const Icon(
             Icons.chevron_right,
-            color: AppColors.brandPurple,
+            color: AppColors.brand,
             size: 28,
           ),
           headerPadding: const EdgeInsets.symmetric(vertical: 12),
@@ -223,16 +193,16 @@ class _AthleteHubViewState extends State<AthleteHubView> {
             color: defaultTextColor,
           ),
           todayDecoration: BoxDecoration(
-            color: AppColors.brandPurple.withValues(alpha: 0.15),
+            color: AppColors.brand.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           todayTextStyle: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: AppColors.brandPurple,
+            color: AppColors.brand,
           ),
           selectedDecoration: const BoxDecoration(
-            color: AppColors.brandPurple,
+            color: AppColors.brand,
             shape: BoxShape.circle,
           ),
           selectedTextStyle: const TextStyle(
@@ -263,6 +233,38 @@ class _AthleteHubViewState extends State<AthleteHubView> {
           ),
         ),
         calendarBuilders: CalendarBuilders<AthleteSession>(
+          headerTitleBuilder: (context, day) {
+            return GestureDetector(
+              onTap: () =>
+                  setState(() => _calendarExpanded = !_calendarExpanded),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    DateFormat('MMMM yyyy', 'es_ES').format(day),
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.4,
+                      color: isDark
+                          ? Colors.white
+                          : const Color(0xFF1C1C1E),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  AnimatedRotation(
+                    turns: _calendarExpanded ? 0.0 : 0.5,
+                    duration: const Duration(milliseconds: 300),
+                    child: const Icon(
+                      Icons.keyboard_arrow_up_rounded,
+                      size: 20,
+                      color: AppColors.brand,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
           defaultBuilder: (context, day, focusedDay) {
             final sessions = _viewModel.sessionsForDay(day);
             if (sessions.isEmpty) return null;
@@ -291,6 +293,7 @@ class _AthleteHubViewState extends State<AthleteHubView> {
               sessions: sessions,
             );
           },
+        ),
         ),
       ),
     );
@@ -457,7 +460,7 @@ class _ProgressTabState extends State<_ProgressTab> {
                   height: 60,
                   child: Center(
                     child: CircularProgressIndicator(
-                        color: AppColors.brandPurple, strokeWidth: 2),
+                        color: AppColors.brand, strokeWidth: 2),
                   ),
                 );
               }
@@ -505,7 +508,7 @@ class _ProgressTabState extends State<_ProgressTab> {
                               style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.brandPurple)),
+                                  color: AppColors.brand)),
                         ],
                       ),
                     );
@@ -534,7 +537,7 @@ class _ProgressTabState extends State<_ProgressTab> {
                   height: 40,
                   child: Center(
                     child: CircularProgressIndicator(
-                        color: AppColors.brandPurple, strokeWidth: 2),
+                        color: AppColors.brand, strokeWidth: 2),
                   ),
                 );
               }
@@ -758,7 +761,7 @@ class _ExecutedSessionDetailState extends State<_ExecutedSessionDetail> {
         if (snap.connectionState == ConnectionState.waiting) {
           return const Center(
             child: CircularProgressIndicator(
-                color: AppColors.brandPurple, strokeWidth: 2),
+                color: AppColors.brand, strokeWidth: 2),
           );
         }
         final data = snap.data;
@@ -876,9 +879,16 @@ class _PlanningTabState extends State<_PlanningTab> {
   late Future<({int completed, int planned, double km})> _weekStatsFuture;
   late Future<List<WeeklyVolume>> _volumeFuture;
   late Future<AthleteSession?> _nextRaceFuture;
+  late Future<List<AthleteSession>> _upcomingFuture;
 
   String _fmt(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  bool _esHoy(String date) {
+    final today = DateTime.now();
+    final d = DateTime.parse(date);
+    return d.year == today.year && d.month == today.month && d.day == today.day;
+  }
 
   @override
   void initState() {
@@ -887,6 +897,7 @@ class _PlanningTabState extends State<_PlanningTab> {
     _volumeFuture =
         ProgressRepository().getWeeklyVolume(widget.uid, weeks: 8);
     _nextRaceFuture = _loadNextRace();
+    _upcomingFuture = _loadUpcoming();
   }
 
   Future<({int completed, int planned, double km})> _loadWeekStats() async {
@@ -940,6 +951,26 @@ class _PlanningTabState extends State<_PlanningTab> {
     }
   }
 
+  Future<List<AthleteSession>> _loadUpcoming() async {
+    try {
+      final now = DateTime.now();
+      final sessions = await AthleteSessionRepository()
+          .streamSessionsInRange(
+            uid: widget.uid,
+            startDate: _fmt(now),
+            endDate: _fmt(now.add(const Duration(days: 7))),
+          )
+          .first;
+      return sessions
+          .where((s) => s.status == AthleteSessionStatus.planned)
+          .toList()
+        ..sort((a, b) => a.date.compareTo(b.date));
+    } catch (e) {
+      debugPrint('Error cargando próximas sesiones: $e');
+      return [];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -962,7 +993,7 @@ class _PlanningTabState extends State<_PlanningTab> {
                   height: 56,
                   child: Center(
                     child: CircularProgressIndicator(
-                        color: AppColors.brandPurple, strokeWidth: 2),
+                        color: AppColors.brand, strokeWidth: 2),
                   ),
                 );
               }
@@ -980,7 +1011,7 @@ class _PlanningTabState extends State<_PlanningTab> {
                   const SizedBox(width: 8),
                   _WeekStatChip(
                     icon: Icons.calendar_today_rounded,
-                    iconColor: AppColors.brandPurple,
+                    iconColor: AppColors.brand,
                     value: '${stats.planned}',
                     label: 'Planificadas',
                     isDark: isDark,
@@ -1017,7 +1048,7 @@ class _PlanningTabState extends State<_PlanningTab> {
                   height: 80,
                   child: Center(
                     child: CircularProgressIndicator(
-                        color: AppColors.brandPurple, strokeWidth: 2),
+                        color: AppColors.brand, strokeWidth: 2),
                   ),
                 );
               }
@@ -1038,10 +1069,190 @@ class _PlanningTabState extends State<_PlanningTab> {
           FutureBuilder<AthleteSession?>(
             future: _nextRaceFuture,
             builder: (context, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                return const SizedBox(
+                  height: 20,
+                  child: Center(
+                    child: SizedBox(
+                      width: 20, height: 20,
+                      child: CircularProgressIndicator(
+                          color: AppColors.brand, strokeWidth: 2),
+                    ),
+                  ),
+                );
+              }
               final race = snap.data;
               if (race == null) return const SizedBox.shrink();
-              return _RaceCountdownCard(session: race, isDark: isDark);
+
+              final raceDate = DateTime.tryParse(race.date);
+              final days = raceDate != null
+                  ? raceDate.difference(DateTime.now()).inDays
+                  : null;
+              final badgeBg = days != null
+                  ? (days <= 7
+                      ? AppColors.rpeMax.withOpacity(0.2)
+                      : days <= 21
+                          ? AppColors.effort.withOpacity(0.2)
+                          : const Color(0xFF2C2C2E))
+                  : const Color(0xFF2C2C2E);
+              final badgeText = days != null
+                  ? (days <= 7
+                      ? AppColors.rpeMax
+                      : days <= 21
+                          ? AppColors.effort
+                          : const Color(0xFF8E8E93))
+                  : const Color(0xFF8E8E93);
+
+              final distLabel = race.raceDistanceM != null
+                  ? (race.raceDistanceM! >= 1000
+                      ? ' · ${(race.raceDistanceM! / 1000).toStringAsFixed(0)} km'
+                      : ' · ${race.raceDistanceM}m')
+                  : '';
+              final dateLabel = raceDate != null
+                  ? DateFormat('d MMM yyyy', 'es_ES').format(raceDate)
+                  : race.date;
+              final titleColor =
+                  isDark ? Colors.white : const Color(0xFF1C1C1E);
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const _SectionTitle('PRÓXIMA COMPETICIÓN'),
+                  const SizedBox(height: 10),
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 0),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.effortSurfaceConst,
+                      border: Border.all(
+                          color: AppColors.effort.withOpacity(0.4)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.flag_rounded,
+                            color: AppColors.effort, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(race.raceName ?? 'Competición',
+                                  style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: titleColor)),
+                              Text('$dateLabel$distLabel',
+                                  style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Color(0xFF8E8E93))),
+                            ],
+                          ),
+                        ),
+                        if (days != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: badgeBg,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text('${days}d',
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: badgeText)),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              );
             },
+          ),
+
+          // ── Próximos 7 días ─────────────────────────────────────────
+          const _SectionTitle('PRÓXIMOS 7 DÍAS'),
+          const SizedBox(height: 10),
+          FutureBuilder<List<AthleteSession>>(
+            future: _upcomingFuture,
+            builder: (context, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                return const SizedBox(
+                  height: 20,
+                  child: Center(
+                    child: SizedBox(
+                      width: 20, height: 20,
+                      child: CircularProgressIndicator(
+                          color: AppColors.brand, strokeWidth: 2),
+                    ),
+                  ),
+                );
+              }
+              final sessions = snap.data ?? [];
+              final surfaceColor = isDark
+                  ? const Color(0xFF1C1C1E)
+                  : const Color(0xFFF2F2F7);
+              final borderColor = AppColors.borderOf(context);
+              if (sessions.isEmpty) {
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: surfaceColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'Sin sesiones planificadas esta semana',
+                      style: TextStyle(
+                          fontSize: 14, color: Color(0xFF8E8E93)),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              }
+              return Column(
+                children: sessions
+                    .map((s) => _UpcomingSessionCard(
+                          session: s,
+                          uid: widget.uid,
+                          isDark: isDark,
+                          isToday: _esHoy(s.date),
+                          surfaceColor: surfaceColor,
+                          borderColor: borderColor,
+                        ))
+                    .toList(),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+
+          // ── Botón planificar ────────────────────────────────────────
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.brand),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              icon: const Icon(Icons.add_rounded,
+                  color: AppColors.brand),
+              label: const Text('Planificar sesión',
+                  style: TextStyle(
+                      color: AppColors.brand,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600)),
+              onPressed: () => Navigator.push(
+                context,
+                AppRoute(
+                    page: SessionPlannerView(
+                        uid: widget.uid,
+                        initialDate: DateTime.now())),
+              ),
+            ),
           ),
         ],
       ),
@@ -1145,7 +1356,7 @@ class _ExplanationSheet extends StatelessWidget {
           Row(
             children: [
               const Icon(Icons.info_outline_rounded,
-                  color: AppColors.brandPurple, size: 20),
+                  color: AppColors.brand, size: 20),
               const SizedBox(width: 8),
               Text(
                 title,
@@ -1167,7 +1378,7 @@ class _ExplanationSheet extends StatelessWidget {
             width: double.infinity,
             child: FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.brandPurple,
+                backgroundColor: AppColors.brand,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
               ),
@@ -1431,7 +1642,7 @@ class _WeeklyBarChart extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 8,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.brandPurple,
+                    color: AppColors.brand,
                   ),
                 ),
               );
@@ -1469,8 +1680,8 @@ class _WeeklyBarPainter extends CustomPainter {
       final isCurrent = v.weekStart == currentMonday;
       final barPaint = Paint()
         ..color = isCurrent
-            ? AppColors.brandPurple
-            : AppColors.brandPurple.withOpacity(0.4)
+            ? AppColors.brand
+            : AppColors.brand.withOpacity(0.4)
         ..style = PaintingStyle.fill;
       final h = max(minBarH, (v.km / maxKm) * size.height * 0.95);
       final left = i * barW + barPad;
@@ -1485,6 +1696,110 @@ class _WeeklyBarPainter extends CustomPainter {
   @override
   bool shouldRepaint(_WeeklyBarPainter old) =>
       old.volumes != volumes || old.currentMonday != currentMonday;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _UpcomingSessionCard
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _UpcomingSessionCard extends StatelessWidget {
+  final AthleteSession session;
+  final String uid;
+  final bool isDark;
+  final bool isToday;
+  final Color surfaceColor;
+  final Color borderColor;
+
+  const _UpcomingSessionCard({
+    required this.session,
+    required this.uid,
+    required this.isDark,
+    required this.isToday,
+    required this.surfaceColor,
+    required this.borderColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final titleColor = isDark ? Colors.white : const Color(0xFF1C1C1E);
+    final date = DateTime.tryParse(session.date);
+    final dayNum = date != null ? '${date.day}' : '?';
+    final monthStr = date != null
+        ? DateFormat('MMM', 'es_ES').format(date)
+        : '';
+    final categoryLabel = session.category != null
+        ? SessionCategoryX.fromValue(session.category!).label
+        : 'Sesión';
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 44,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(dayNum,
+                    style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.brand)),
+                Text(monthStr,
+                    style: const TextStyle(
+                        fontSize: 11, color: Color(0xFF8E8E93))),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          VerticalDivider(
+              color: borderColor, width: 1, thickness: 1),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(categoryLabel,
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: titleColor)),
+                if (session.blocks.isNotEmpty)
+                  Text('${session.blocks.length} series',
+                      style: const TextStyle(
+                          fontSize: 12, color: Color(0xFF8E8E93))),
+                if (session.time != null)
+                  Text(session.time!,
+                      style: const TextStyle(
+                          fontSize: 12, color: AppColors.brand)),
+              ],
+            ),
+          ),
+          if (isToday && session.blocks.isNotEmpty)
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.brand,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12),
+                minimumSize: const Size(0, 32),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () =>
+                  _launchGuidedSession(context, session, uid),
+              child: const Text('Ejecutar',
+                  style: TextStyle(fontSize: 13)),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1521,18 +1836,18 @@ class _RaceCountdownCard extends StatelessWidget {
             color: surfaceColor,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-                color: AppColors.brandPurple.withOpacity(0.3)),
+                color: AppColors.brand.withOpacity(0.3)),
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.brandPurple.withOpacity(0.12),
+                  color: AppColors.brand.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.emoji_events_rounded,
-                    color: AppColors.brandPurple, size: 20),
+                    color: AppColors.brand, size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1556,7 +1871,7 @@ class _RaceCountdownCard extends StatelessWidget {
                       style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.brandPurple),
+                          color: AppColors.brand),
                     ),
                     const Text('días',
                         style: TextStyle(
@@ -1606,14 +1921,14 @@ class _MiniLinePainter extends CustomPainter {
     }
 
     final linePaint = Paint()
-      ..color = AppColors.brandPurple
+      ..color = AppColors.brand
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
     final dotPaint = Paint()
-      ..color = AppColors.brandPurpleLight
+      ..color = AppColors.brandLight
       ..style = PaintingStyle.fill;
 
     final path = Path();
@@ -1771,7 +2086,7 @@ class _DayActionSheet extends StatelessWidget {
                         else
                           FilledButton(
                             style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.brandPurple,
+                              backgroundColor: AppColors.brand,
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 12),
                               minimumSize: const Size(0, 34),
@@ -1817,7 +2132,7 @@ class _DayActionSheet extends StatelessWidget {
               icon: const Icon(Icons.add_rounded),
               label: const Text('Planificar sesión'),
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.brandPurple,
+                backgroundColor: AppColors.brand,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -1838,8 +2153,8 @@ class _DayActionSheet extends StatelessWidget {
               icon: const Icon(Icons.edit_note_rounded, size: 18),
               label: const Text('Registrar entrenamiento'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.brandPurple,
-                side: const BorderSide(color: AppColors.brandPurple),
+                foregroundColor: AppColors.brand,
+                side: const BorderSide(color: AppColors.brand),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -1911,7 +2226,7 @@ Future<void> _launchGuidedSession(
   final template = TrainingTemplate(
     id: session.id,
     name: sessionName,
-    colorValue: AppColors.brandPurple.value,
+    colorValue: AppColors.brand.value,
     isWarmupCooldown: false,
     blocks: blocks,
     createdAt: now,
@@ -1953,7 +2268,7 @@ List<Color> _dotsForDay(
   if (hasPlanned) {
     colors.add(isSelected
         ? Colors.white.withOpacity(0.7)
-        : AppColors.brandPurple);
+        : AppColors.brand);
   }
   if (hasRace) {
     colors.add(isSelected ? Colors.white : AppColors.rpeMax);
@@ -1989,14 +2304,14 @@ class _DayCircle extends StatelessWidget {
       textColor = Colors.white;
       textWeight = FontWeight.w600;
       circleDecoration = const BoxDecoration(
-        color: AppColors.brandPurple,
+        color: AppColors.brand,
         shape: BoxShape.circle,
       );
     } else if (isToday) {
-      textColor = AppColors.brandPurple;
+      textColor = AppColors.brand;
       textWeight = FontWeight.w600;
       circleDecoration = BoxDecoration(
-        color: AppColors.brandPurple.withValues(alpha: 0.15),
+        color: AppColors.brand.withValues(alpha: 0.15),
         shape: BoxShape.circle,
       );
     } else {
@@ -2163,14 +2478,14 @@ class _EmptyCalendarHint extends StatelessWidget {
           const SizedBox(height: 16),
           OutlinedButton.icon(
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.brandPurple,
-              side: const BorderSide(color: AppColors.brandPurple),
+              foregroundColor: AppColors.brand,
+              side: const BorderSide(color: AppColors.brand),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),
-            icon: const Icon(Icons.add_rounded, color: AppColors.brandPurple),
+            icon: const Icon(Icons.add_rounded, color: AppColors.brand),
             label: const Text('Planificar sesión',
-                style: TextStyle(color: AppColors.brandPurple)),
+                style: TextStyle(color: AppColors.brand)),
             onPressed: () {
               Navigator.push(
                 context,

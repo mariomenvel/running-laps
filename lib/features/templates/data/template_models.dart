@@ -230,7 +230,7 @@ class TrainingTemplate {
     required this.blocks,
     required this.createdAt,
     required this.updatedAt,
-    this.colorValue = 0xFF9C27B0, // Default Tema.brandPurple
+    this.colorValue = 0xFF9C27B0, // Default AppColors.brand
     this.warmupTemplateId,
     this.cooldownTemplateId,
     this.category,

@@ -4,11 +4,13 @@ import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/app_header.dart'; // Using AppHeader if appropriate, or standard AppBar
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
+import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import '../data/template_models.dart';
 import '../data/templates_repository.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
 import 'template_editor_view.dart';
-import 'package:running_laps/features/profile/views/profile_menu_screen.dart';
+import 'package:running_laps/features/profile/views/profile_menu_screen_legacy.dart';
 
 class TemplatesListView extends StatefulWidget {
   final bool isSelectionMode;
@@ -63,10 +65,10 @@ class _TemplatesListViewState extends State<TemplatesListView> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.red.shade50,
+                color: AppColors.rpeMax,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.delete_sweep_rounded, size: 40, color: Colors.red.shade400),
+              child: Icon(Icons.delete_sweep_rounded, size: 40, color: AppColors.rpeMax),
             ),
             const SizedBox(height: 24),
             Text(
@@ -108,15 +110,11 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.red.shade400, Colors.red.shade700],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: AppColors.rpeMax,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.red.shade400.withOpacity(0.3),
+                          color: AppColors.rpeMax.withOpacity(0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -161,6 +159,16 @@ class _TemplatesListViewState extends State<TemplatesListView> {
   }
 
   void _navigateToEditor({TrainingTemplate? template, bool isWarmupCooldown = false}) async {
+    final embedded = ShellEmbeddingScope.isEmbedded(context);
+    if (embedded && !widget.isSelectionMode) {
+      MainShell.shellKey.currentState?.navigateTo(12,
+          params: TemplateEditorShellParams(
+            template: template,
+            isWarmupCooldown: template?.isWarmupCooldown ?? isWarmupCooldown,
+          ));
+      return;
+    }
+
     final result = await Navigator.push(
       context,
       AppModalRoute(
@@ -205,7 +213,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
               title: 'Mis Plantillas',
               subtitle: 'Sesiones personalizadas',
               icon: Icons.description_rounded,
-              gradientColors: [Colors.teal.shade400, Colors.teal.shade700],
+              accentColor: AppColors.brandSurface,
               height: 85,
             ),
             Expanded(
@@ -213,7 +221,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                 future: _templatesFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator(color: Tema.brandPurple));
+                    return const Center(child: CircularProgressIndicator(color: AppColors.brand));
                   }
                   if (snapshot.hasError) {
                     return Center(
@@ -222,7 +230,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.error_outline_rounded, size: 64, color: Colors.red.shade300),
+                            Icon(Icons.error_outline_rounded, size: 64, color: AppColors.rpeMax),
                             const SizedBox(height: 16),
                             Text(
                               'Error al cargar plantillas',
@@ -238,7 +246,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                             ElevatedButton(
                               onPressed: _refreshTemplates,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Tema.brandPurple,
+                                backgroundColor: AppColors.brand,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
                               child: const Text("Reintentar"),
@@ -344,19 +352,19 @@ class _TemplatesListViewState extends State<TemplatesListView> {
         decoration: BoxDecoration(
           color: const Color(0xFF1E1530),
           border: Border.all(
-              color: AppColors.brandPurple.withOpacity(0.4)),
+              color: AppColors.brand.withOpacity(0.4)),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.add_rounded,
-                color: AppColors.brandPurple, size: 22),
+                color: AppColors.brand, size: 22),
             const SizedBox(width: 8),
             Text(
               label.toUpperCase(),
               style: const TextStyle(
-                color: AppColors.brandPurple,
+                color: AppColors.brand,
                 fontWeight: FontWeight.w700,
                 fontSize: 13,
                 letterSpacing: 0.8,
@@ -413,11 +421,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [templateColor.withOpacity(0.2), templateColor.withOpacity(0.1)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: templateColor.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(

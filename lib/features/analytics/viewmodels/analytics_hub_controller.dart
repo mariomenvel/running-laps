@@ -1,8 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/services/rate_limit_service.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/data/training_repository.dart';
-import 'package:running_laps/features/home/views/home_view.dart';
-// Note: We reuse TimeRange from HomeView for consistency, or we could move it to a shared model file.
 
 enum AnalyticsTimeRange {
   week,
@@ -26,6 +26,8 @@ class AnalyticsHubController {
 
   // Cache de todos los datos para no recargar constantemente
   List<Entrenamiento> _allData = [];
+
+  List<Entrenamiento> get allData => List.unmodifiable(_allData);
 
   AnalyticsHubController({
     required this.userId,
@@ -53,6 +55,8 @@ class AnalyticsHubController {
       _allData = await _repository.getAllEntrenamientos(userId);
       // Ordenar por fecha desc
       _allData.sort((a, b) => b.fecha.compareTo(a.fecha));
+    } on RateLimitExceededException catch (e) {
+      debugPrint('[AnalyticsHubController] rate limited: $e');
     } catch (e) {
       // Error
     } finally {

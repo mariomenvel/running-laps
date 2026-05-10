@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:running_laps/core/services/rate_limit_service.dart';
 
 // ===================================
 // TIPOS
@@ -28,10 +29,16 @@ class HomeEstadisticaRepository {
   static final HomeEstadisticaRepository _instance =
       HomeEstadisticaRepository._internal();
   factory HomeEstadisticaRepository() => _instance;
-  HomeEstadisticaRepository._internal();
+
+  HomeEstadisticaRepository._internal() {
+    _rateLimitService.registerLimit('analytics:overview', const Duration(seconds: 3));
+    _rateLimitService.registerLimit('analytics:trends', const Duration(seconds: 4));
+    _rateLimitService.registerLimit('analytics:patterns', const Duration(seconds: 5));
+  }
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final RateLimitService _rateLimitService = RateLimitService();
 
   // --- Cache ---
   final Map<String, List<DailyMetric>> _cache = {};
@@ -90,6 +97,14 @@ class HomeEstadisticaRepository {
     final key = _cacheKey(range, metric);
     if (_isCacheValid(key)) {
       return _cache[key]!;
+    }
+
+    try {
+      _rateLimitService.checkLimit('analytics:overview');
+    } on RateLimitExceededException {
+      // Return stale cache if available, otherwise rethrow
+      if (_cache.containsKey(key)) return _cache[key]!;
+      rethrow;
     }
 
     final now = DateTime.now();

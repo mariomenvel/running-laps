@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 
-/// Banner decorativo con gradiente para secciones del módulo de grupos.
-/// Ofrece una estética premium con animaciones sutiles.
+/// Banner decorativo para secciones del módulo de grupos.
 class GradientBanner extends StatefulWidget {
   final String title;
   final Widget? titleWidget;
   final String? subtitle;
   final IconData? icon;
-  final List<Color>? gradientColors;
+  final Color? accentColor;
   final double height;
   final EdgeInsets? padding;
   final Widget? trailing;
@@ -21,7 +20,7 @@ class GradientBanner extends StatefulWidget {
     this.titleWidget,
     this.subtitle,
     this.icon,
-    this.gradientColors,
+    this.accentColor,
     this.height = 100,
     this.padding,
     this.trailing,
@@ -75,11 +74,7 @@ class _GradientBannerState extends State<GradientBanner>
 
   @override
   Widget build(BuildContext context) {
-    final colors = widget.gradientColors ??
-        [
-          Tema.brandPurple,
-          Tema.brandPurple.withOpacity(0.7),
-        ];
+    final color = widget.accentColor ?? AppColors.brandSurface;
 
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -90,20 +85,9 @@ class _GradientBannerState extends State<GradientBanner>
           margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           padding: widget.padding ?? const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: colors,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: color,
             borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: colors.first.withOpacity(0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-                spreadRadius: -4,
-              ),
-            ],
+            border: Border.all(color: AppColors.brandBorder),
           ),
           child: Row(
             children: [
@@ -113,7 +97,7 @@ class _GradientBannerState extends State<GradientBanner>
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(
@@ -166,43 +150,28 @@ class _GradientBannerState extends State<GradientBanner>
 class GradientChip extends StatelessWidget {
   final String label;
   final IconData? icon;
-  final List<Color>? gradientColors;
+  final Color? accentColor;
   final VoidCallback? onTap;
 
   const GradientChip({
     Key? key,
     required this.label,
     this.icon,
-    this.gradientColors,
+    this.accentColor,
     this.onTap,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final colors = gradientColors ??
-        [
-          Tema.brandPurple,
-          Tema.brandPurple.withOpacity(0.7),
-        ];
+    final color = accentColor ?? AppColors.brand;
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: colors,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: color,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: colors.first.withOpacity(0.25),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -225,4 +194,3 @@ class GradientChip extends StatelessWidget {
     );
   }
 }
-

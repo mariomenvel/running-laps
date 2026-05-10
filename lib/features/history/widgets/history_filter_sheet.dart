@@ -95,9 +95,8 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final brandColor =
-        isDark ? AppColors.brandPurpleLight : AppColors.brandPurple;
+        isDark ? AppColors.brandLight : AppColors.brand;
 
     return Container(
       padding: EdgeInsets.only(
@@ -107,7 +106,7 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
         bottom: MediaQuery.of(context).viewInsets.bottom + 20,
       ),
       decoration: BoxDecoration(
-        color: bgColor,
+        color: AppColors.surfaceOf(context),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -121,7 +120,7 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
               height: 4,
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                color: AppColors.borderOf(context),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -145,7 +144,7 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
                 onPressed: _clearFilters,
                 child: const Text(
                   'Limpiar',
-                  style: TextStyle(color: Colors.redAccent),
+                  style: TextStyle(color: AppColors.rpeMax),
                 ),
               ),
             ],
@@ -213,9 +212,7 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
                         return LinearProgressIndicator(
                           minHeight: 2,
                           color: brandColor,
-                          backgroundColor: isDark
-                              ? AppColors.surfaceVariantDark
-                              : AppColors.surfaceVariantLight,
+                          backgroundColor: AppColors.surface2Of(context),
                         );
                       }
                       final tags = snapshot.data!;
@@ -247,9 +244,7 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
                                 }
                               });
                             },
-                            backgroundColor: isDark
-                                ? AppColors.surfaceVariantDark
-                                : AppColors.surfaceVariantLight,
+                            backgroundColor: AppColors.surface2Of(context),
                             selectedColor: brandColor.withValues(alpha: 0.22),
                             labelStyle: TextStyle(
                               color: isSelected
@@ -265,9 +260,7 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
                             side: BorderSide(
                               color: isSelected
                                   ? brandColor.withValues(alpha: 0.5)
-                                  : (isDark
-                                      ? AppColors.borderDark
-                                      : AppColors.borderLight),
+                                  : AppColors.borderOf(context),
                               width: 1,
                             ),
                             shape: RoundedRectangleBorder(
@@ -382,12 +375,10 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
         date != null ? DateFormat('dd/MM/yyyy').format(date) : '-----';
     final isSet = date != null;
 
-    final containerBg = isDark
-        ? AppColors.surfaceVariantDark
-        : AppColors.surfaceVariantLight;
+    final containerBg = AppColors.surface2Of(context);
     final borderColor = isSet
         ? brandColor
-        : (isDark ? AppColors.borderDark : AppColors.borderLight);
+        : AppColors.borderOf(context);
     final labelColor = isDark
         ? AppColors.textTertiaryDark
         : AppColors.textTertiaryLight;
@@ -441,10 +432,8 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
     required bool isDark,
     required Color brandColor,
   }) {
-    final fillColor =
-        isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight;
-    final enabledBorderColor =
-        isDark ? AppColors.borderDark : AppColors.borderLight;
+    final fillColor = AppColors.surface2Of(context);
+    final enabledBorderColor = AppColors.borderOf(context);
 
     return TextField(
       controller: controller,

@@ -100,7 +100,7 @@ class _StandardTableCalendarState<T extends Object>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final brandColor =
-        isDark ? AppColors.brandPurpleLight : AppColors.brandPurple;
+        isDark ? AppColors.brandLight : AppColors.brand;
 
     return ValueListenableBuilder<CalendarFormat>(
       valueListenable: _format,
@@ -163,18 +163,11 @@ class _StandardTableCalendarState<T extends Object>
 
           // Selected
           selectedDecoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.brandPurple,
-                AppColors.brandPurple.withOpacity(0.8),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: AppColors.brand,
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: AppColors.brandPurple.withOpacity(0.4),
+                color: AppColors.brand.withOpacity(0.4),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -187,13 +180,13 @@ class _StandardTableCalendarState<T extends Object>
           ),
 
           // Range
-          rangeHighlightColor: AppColors.brandPurple.withOpacity(0.2),
+          rangeHighlightColor: AppColors.brand.withOpacity(0.2),
           rangeStartDecoration: const BoxDecoration(
-            color: AppColors.brandPurple,
+            color: AppColors.brand,
             shape: BoxShape.circle,
           ),
           rangeEndDecoration: const BoxDecoration(
-            color: AppColors.brandPurple,
+            color: AppColors.brand,
             shape: BoxShape.circle,
           ),
           rangeStartTextStyle: const TextStyle(

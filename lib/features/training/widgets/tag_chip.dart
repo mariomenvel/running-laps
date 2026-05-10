@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/constants/training_tags.dart';
 
-/// Widget reutilizable para mostrar una etiqueta como chip
 class TagChip extends StatelessWidget {
   final String tagName;
-  final Color color;
   final bool small;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
@@ -11,7 +10,6 @@ class TagChip extends StatelessWidget {
   const TagChip({
     Key? key,
     required this.tagName,
-    required this.color,
     this.small = false,
     this.onTap,
     this.onDelete,
@@ -19,6 +17,8 @@ class TagChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final style = TrainingTags.styleForTag(tagName, context);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -27,12 +27,9 @@ class TagChip extends StatelessWidget {
           vertical: small ? 4 : 6,
         ),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.15),
+          color: style.background,
           borderRadius: BorderRadius.circular(small ? 8 : 12),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 1,
-          ),
+          border: style.border,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -40,7 +37,7 @@ class TagChip extends StatelessWidget {
             Text(
               tagName,
               style: TextStyle(
-                color: color,
+                color: style.text,
                 fontSize: small ? 11 : 13,
                 fontWeight: FontWeight.w700,
               ),
@@ -52,7 +49,7 @@ class TagChip extends StatelessWidget {
                 child: Icon(
                   Icons.close_rounded,
                   size: small ? 14 : 16,
-                  color: color.withOpacity(0.7),
+                  color: style.text.withOpacity(0.7),
                 ),
               ),
             ],
@@ -62,4 +59,3 @@ class TagChip extends StatelessWidget {
     );
   }
 }
-

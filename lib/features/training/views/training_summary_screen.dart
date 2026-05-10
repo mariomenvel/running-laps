@@ -1,22 +1,18 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-import '../data/serie.dart';
 import '../data/entrenamiento.dart';
 import '../data/training_repository.dart';
-import '../../../../core/services/gps_service.dart';
+import '../data/tag_manager.dart';
+import '../data/tag_model.dart';
 import '../../../../core/utils/app_transitions.dart';
-import '../../home/views/home_view.dart';
-import '../../history/widgets/training_map_view.dart';
-import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Screen — post-save, informational only
-// ─────────────────────────────────────────────────────────────────────────────
+import 'package:running_laps/core/constants/training_tags.dart';
+import 'package:running_laps/core/widgets/modern_snackbar.dart';
 
 class TrainingSummaryScreen extends StatefulWidget {
-  /// The training that has already been saved to Firestore.
   final Entrenamiento entrenamiento;
 
   const TrainingSummaryScreen({
@@ -29,154 +25,107 @@ class TrainingSummaryScreen extends StatefulWidget {
 }
 
 class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
-    with TickerProviderStateMixin {
-  // ── Animations ─────────────────────────────────────────────────────────────
-  late final AnimationController _sparkleCtrl;
-  late final AnimationController _staggerCtrl;
-  late final List<Animation<double>> _sectionFades;
-  late final List<Animation<Offset>> _sectionSlides;
-
-  // ── Derived totals ─────────────────────────────────────────────────────────
-  late final int _distanciaM;
-  late final double _tiempoTotalSec;
-  late final int? _ritmoSecKm;
-  late final int? _fastestIdx;    // index into series of fastest pace
+    with SingleTickerProviderStateMixin {
+  // ── Editable state ────────────────────────────────────────────────────────
+  late double _rpe;
+  late Set<String> _selectedTags;
+  late final TextEditingController _notasController;
+  bool _isSaving = false;
+  List<TrainingTag> _customTags = [];
 
   // ── Comparison ─────────────────────────────────────────────────────────────
   Future<Entrenamiento?>? _similarFuture;
 
-  // ── Colors ─────────────────────────────────────────────────────────────────
-  static const _green = Color(0xFF10B981);
-  static const _blue  = Color(0xFF3B82F6);
-  static const _amber = Color(0xFFF59E0B);
-  static const _red   = Color(0xFFEF4444);
+  // ── Animation ─────────────────────────────────────────────────────────────
+  late final AnimationController _checkCtrl;
+  late final Animation<double> _checkScale;
 
-  Color get _adaptivePurple => Theme.of(context).brightness == Brightness.dark
-      ? AppColors.brandPurpleLight
-      : Tema.brandPurple;
+  // ── Derived ───────────────────────────────────────────────────────────────
+  late final int _distanciaM;
+  late final double _tiempoTotalSec;
+  late final int? _ritmoSecKm;
+  late final double? _fcMedia;
 
-  // ─────────────────────────────────────────────────────────────────────────
+  bool get _showRpe =>
+      widget.entrenamiento.series.length == 1 ||
+      widget.entrenamiento.isManual;
+
   @override
   void initState() {
     super.initState();
 
-    final series = widget.entrenamiento.series;
+    final e = widget.entrenamiento;
+    _rpe = e.rpePromedio().clamp(1.0, 10.0);
+    if (_rpe == 0.0) _rpe = 5.0;
+    _selectedTags = Set.from(e.tags ?? []);
+    _notasController = TextEditingController(text: e.notas ?? '');
 
-    _distanciaM     = series.fold(0,   (s, e) => s + e.distanciaM);
-    _tiempoTotalSec = series.fold(0.0, (s, e) => s + e.tiempoSec);
+    _distanciaM = e.distanciaTotalM();
+    _tiempoTotalSec = e.tiempoTotalSec();
+    _ritmoSecKm = _distanciaM > 0
+        ? (_tiempoTotalSec / (_distanciaM / 1000.0)).round()
+        : null;
+    _fcMedia = e.fcMediaSesion;
 
-    int? ritmoTemp;
-    if (_distanciaM > 0) {
-      ritmoTemp = (_tiempoTotalSec / (_distanciaM / 1000.0)).round();
-    }
-    _ritmoSecKm = ritmoTemp;
-
-    // Fastest serie = lowest sec/km
-    int? fastIdx;
-    int? fastPace;
-    for (int i = 0; i < series.length; i++) {
-      final s = series[i];
-      if (s.distanciaM > 0) {
-        final p = (s.tiempoSec / (s.distanciaM / 1000.0)).round();
-        if (fastPace == null || p < fastPace) {
-          fastPace = p;
-          fastIdx  = i;
-        }
-      }
-    }
-    _fastestIdx = fastIdx;
-
-    // Sparkle — loops while screen is alive
-    _sparkleCtrl = AnimationController(
-      duration: const Duration(milliseconds: 2400),
+    _checkCtrl = AnimationController(
       vsync: this,
-    )..repeat();
-
-    // Stagger — 5 sections, plays once
-    const kSections = 5;
-    _staggerCtrl = AnimationController(
-      duration: const Duration(milliseconds: 900),
-      vsync: this,
+      duration: const Duration(milliseconds: 600),
     );
+    _checkScale = CurvedAnimation(parent: _checkCtrl, curve: Curves.elasticOut);
+    _checkCtrl.forward();
 
-    _sectionFades = List.generate(kSections, (i) {
-      final start = (i * 0.14).clamp(0.0, 1.0);
-      final end   = (start + 0.45).clamp(0.0, 1.0);
-      return Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(
-          parent: _staggerCtrl,
-          curve: Interval(start, end, curve: Curves.easeOut),
-        ),
-      );
-    });
-
-    _sectionSlides = List.generate(kSections, (i) {
-      final start = (i * 0.14).clamp(0.0, 1.0);
-      final end   = (start + 0.45).clamp(0.0, 1.0);
-      return Tween<Offset>(
-        begin: const Offset(0, 0.06),
-        end: Offset.zero,
-      ).animate(
-        CurvedAnimation(
-          parent: _staggerCtrl,
-          curve: Interval(start, end, curve: Curves.easeOut),
-        ),
-      );
-    });
-
-    _staggerCtrl.forward();
-    _similarFuture = _fetchSimilarTraining();
+    _similarFuture = _fetchSimilar();
+    _loadCustomTags();
   }
 
   @override
   void dispose() {
-    _sparkleCtrl.dispose();
-    _staggerCtrl.dispose();
+    _checkCtrl.dispose();
+    _notasController.dispose();
     super.dispose();
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Comparison logic
-  // ─────────────────────────────────────────────────────────────────────────
+  // ── Comparison fetch ──────────────────────────────────────────────────────
 
-  Future<Entrenamiento?> _fetchSimilarTraining() async {
+  Future<Entrenamiento?> _fetchSimilar() async {
     try {
-      final all = (await TrainingRepository().getTrainings(pageSize: 500)).trainings;
+      final all =
+          (await TrainingRepository().getTrainings(pageSize: 500)).trainings;
       for (final t in all) {
-        // Skip the just-saved training itself
-        if (t.id != null &&
-            t.id == widget.entrenamiento.id) continue;
-        if (_isSimilarSession(widget.entrenamiento, t)) return t;
+        if (t.id != null && t.id == widget.entrenamiento.id) continue;
+        if (_isSimilar(t)) return t;
       }
     } catch (_) {}
     return null;
   }
 
-  /// Similar = same number of series AND every distance within ±20% (sorted).
-  bool _isSimilarSession(Entrenamiento current, Entrenamiento candidate) {
-    if (current.series.isEmpty) return false;
-    if (current.series.length != candidate.series.length) return false;
+  Future<void> _loadCustomTags() async {
+    try {
+      final all = await TagManager().getUserTags();
+      if (!mounted) return;
+      setState(() {
+        _customTags = all
+            .where((t) => !TrainingTags.isPredefined(t.name))
+            .toList();
+      });
+    } catch (_) {}
+  }
 
-    final currDists = current.series
-        .map((s) => s.distanciaM)
-        .toList()
-      ..sort();
-    final prevDists = candidate.series
-        .map((s) => s.distanciaM)
-        .toList()
-      ..sort();
-
-    for (int i = 0; i < currDists.length; i++) {
-      if (prevDists[i] == 0) return false;
-      final ratio = currDists[i] / prevDists[i];
-      if (ratio < 0.80 || ratio > 1.25) return false;
+  bool _isSimilar(Entrenamiento candidate) {
+    final curr = widget.entrenamiento;
+    if (curr.series.isEmpty) return false;
+    if (curr.series.length != candidate.series.length) return false;
+    final cd = curr.series.map((s) => s.distanciaM).toList()..sort();
+    final pd = candidate.series.map((s) => s.distanciaM).toList()..sort();
+    for (int i = 0; i < cd.length; i++) {
+      if (pd[i] == 0) return false;
+      final r = cd[i] / pd[i];
+      if (r < 0.80 || r > 1.25) return false;
     }
     return true;
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Helpers
-  // ─────────────────────────────────────────────────────────────────────────
+  // ── Helpers ───────────────────────────────────────────────────────────────
 
   String _formatPace(int secKm) {
     final m = secKm ~/ 60;
@@ -184,25 +133,15 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
     return '$m:${s.toString().padLeft(2, '0')}';
   }
 
-  String _timeValue() {
-    final total = _tiempoTotalSec.round();
-    final h = total ~/ 3600;
-    final m = (total % 3600) ~/ 60;
-    final s = total % 60;
-    if (h > 0) return '$h:${m.toString().padLeft(2, '0')}';
-    return '$m:${s.toString().padLeft(2, '0')}';
-  }
-
-  String _timeUnit() => (_tiempoTotalSec ~/ 3600) > 0 ? 'h:min' : 'min:seg';
-
-  String _formatDate(DateTime d) {
-    const months = [
-      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
-    ];
-    final h   = d.hour.toString().padLeft(2, '0');
-    final min = d.minute.toString().padLeft(2, '0');
-    return '${d.day} de ${months[d.month - 1]} · $h:$min';
+  String _formatDuration(double totalSec) {
+    final t = totalSec.round();
+    final h = t ~/ 3600;
+    final m = (t % 3600) ~/ 60;
+    final s = t % 60;
+    if (h > 0) {
+      return '$h:${m.toString().padLeft(2, '0')} h';
+    }
+    return '$m:${s.toString().padLeft(2, '0')} min';
   }
 
   String _formatDateShort(DateTime d) {
@@ -213,664 +152,902 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
     return '${d.day} ${months[d.month - 1]}';
   }
 
-  Color _rpeColor(double rpe) {
-    if (rpe <= 4) return _green;
-    if (rpe <= 7) return _amber;
-    return _red;
+  Color _rpeColor(double rpe) => AppColors.effortColor(rpe);
+
+  Widget _divider() => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Divider(
+          color: AppColors.borderOf(context),
+          thickness: 0.5,
+        ),
+      );
+
+  // ── Save / Discard ────────────────────────────────────────────────────────
+
+  Future<void> _saveTraining() async {
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
+
+    try {
+      final id = widget.entrenamiento.id;
+      if (id == null) throw Exception('Training ID missing');
+
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) throw Exception('No user');
+
+      final updates = <String, dynamic>{
+        'tags': _selectedTags.toList(),
+        'notas': _notasController.text.trim(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      if (_showRpe) {
+        // Update RPE on the single serie
+        final serie = widget.entrenamiento.series.first;
+        final updatedSerie = serie.copyWith(rpe: _rpe);
+        updates['series'] = [updatedSerie.toMap()];
+        updates['rpePromedio'] = _rpe;
+      }
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('trainings')
+          .doc(id)
+          .update(updates);
+
+      if (!mounted) return;
+
+      // Pop to root (MainShell from AuthWrapper) then switch to History tab
+      Navigator.popUntil(context, (route) => route.isFirst);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        MainShell.shellKey.currentState?.navigateTo(4);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      ModernSnackBar.showError(context, 'Error al guardar: $e');
+    }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Build
-  // ─────────────────────────────────────────────────────────────────────────
+  Future<void> _confirmDiscard() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          '¿Descartar entrenamiento?',
+          style: TextStyle(
+            color: AppColors.textPrimary(context),
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: Text(
+          'Esta acción no se puede deshacer.',
+          style: TextStyle(
+            color: AppColors.textSecondary(context),
+            fontSize: 14,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'Cancelar',
+              style: TextStyle(color: AppColors.textSecondary(context)),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text(
+              'Descartar',
+              style: TextStyle(color: AppColors.rpeMax, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    // Delete from Firestore if saved
+    final id = widget.entrenamiento.id;
+    if (id != null) {
+      try {
+        final uid = FirebaseAuth.instance.currentUser?.uid;
+        if (uid != null) {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .collection('trainings')
+              .doc(id)
+              .delete();
+        }
+      } catch (_) {}
+    }
+
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      AppRoute(page: const MainShell()),
+      (route) => false,
+    );
+  }
+
+  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    final hasGps = widget.entrenamiento.trackPoints.isNotEmpty;
-
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
-      body: SafeArea(
+      backgroundColor: AppColors.background(context),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 28),
-                    _section(0, _buildHeader()),
-                    const SizedBox(height: 24),
-                    _section(1, _buildHeroMetrics()),
-                    const SizedBox(height: 14),
-                    _section(2, _buildSeriesCard()),
-                    if (hasGps) ...[
-                      const SizedBox(height: 14),
-                      _section(3, _buildMapCard()),
-                    ],
-                    const SizedBox(height: 14),
-                    _section(4, _buildComparisonCard()),
-                    const SizedBox(height: 28),
-                  ],
-                ),
-              ),
-            ),
+            _buildTop(),
+            _divider(),
+            _buildStats(),
+            _divider(),
+            if (_showRpe) ...[
+              _buildRpeSlider(),
+              _divider(),
+            ],
+            _buildComparison(),
+            _divider(),
+            _buildTags(),
+            _divider(),
+            _buildNotas(),
+            const SizedBox(height: 32),
             _buildActions(),
+            const SizedBox(height: 32),
           ],
         ),
       ),
     );
   }
 
-  Widget _section(int i, Widget child) => FadeTransition(
-        opacity: _sectionFades[i],
-        child: SlideTransition(position: _sectionSlides[i], child: child),
-      );
+  // ── _buildTop ─────────────────────────────────────────────────────────────
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Header
-  // ─────────────────────────────────────────────────────────────────────────
-
-  Widget _buildHeader() {
+  Widget _buildTop() {
     return Column(
       children: [
-        SizedBox(
-          height: 56,
-          width: double.infinity,
-          child: AnimatedBuilder(
-            animation: _sparkleCtrl,
-            builder: (_, __) => CustomPaint(
-              painter: _SparklePainter(progress: _sparkleCtrl.value),
-            ),
+        const SizedBox(height: 32),
+        ScaleTransition(
+          scale: _checkScale,
+          child: const Icon(
+            Icons.check_circle_rounded,
+            color: AppColors.rpeLow,
+            size: 72,
           ),
         ),
-        const SizedBox(height: 4),
-        const Text(
-          '¡Entrenamiento\ncompletado!',
+        const SizedBox(height: 16),
+        Text(
+          '¡Completado!',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Colors.white,
-            fontSize: 30,
+            color: AppColors.textPrimary(context),
+            fontSize: 28,
             fontWeight: FontWeight.w900,
-            height: 1.1,
-            letterSpacing: -0.8,
+            letterSpacing: -0.5,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
+        if (widget.entrenamiento.titulo.isNotEmpty)
+          Text(
+            widget.entrenamiento.titulo,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppColors.textSecondary(context),
+              fontSize: 15,
+            ),
+          ),
         Text(
-          _formatDate(widget.entrenamiento.fecha),
+          _formatDuration(_tiempoTotalSec),
+          textAlign: TextAlign.center,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.4),
+            color: AppColors.textSecondary(context),
             fontSize: 13,
           ),
         ),
-        if (widget.entrenamiento.titulo.isNotEmpty) ...[
-          const SizedBox(height: 6),
-          Text(
-            widget.entrenamiento.titulo,
-            style: TextStyle(
-              color: _adaptivePurple.withOpacity(0.85),
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
       ],
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Hero metrics
-  // ─────────────────────────────────────────────────────────────────────────
+  // ── _buildStats ───────────────────────────────────────────────────────────
 
-  Widget _buildHeroMetrics() {
-    final distValue = _distanciaM >= 1000
+  Widget _buildStats() {
+    final distText = _distanciaM >= 1000
         ? (_distanciaM / 1000).toStringAsFixed(2)
         : '$_distanciaM';
     final distUnit = _distanciaM >= 1000 ? 'km' : 'm';
+    final timeH = _tiempoTotalSec.round() ~/ 3600;
+    final timeM = (_tiempoTotalSec.round() % 3600) ~/ 60;
+    final timeS = _tiempoTotalSec.round() % 60;
+    final timeText = timeH > 0
+        ? '$timeH:${timeM.toString().padLeft(2, '0')}'
+        : '$timeM:${timeS.toString().padLeft(2, '0')}';
+    final rpeAvg = widget.entrenamiento.rpePromedio();
 
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        Expanded(
-          child: _MetricCard(
-            label: 'Distancia',
-            value: distValue,
-            unit: distUnit,
-            accent: _green,
-          ),
+        _statItem(distText, distUnit, 'Distancia'),
+        _statItem(timeText, '', 'Tiempo'),
+        if (_ritmoSecKm != null)
+          _statItem(_formatPace(_ritmoSecKm), '/km', 'Pace'),
+        _statItem(
+          rpeAvg.toStringAsFixed(1),
+          '',
+          'RPE',
+          valueColor: _rpeColor(rpeAvg),
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _MetricCard(
-            label: 'Tiempo',
-            value: _timeValue(),
-            unit: _timeUnit(),
-            accent: _adaptivePurple,
-          ),
+        if (_fcMedia != null)
+          _statItem(_fcMedia.round().toString(), 'bpm', 'FC media'),
+      ],
+    );
+  }
+
+  Widget _statItem(String value, String unit, String label,
+      {Color? valueColor}) {
+    final textColor = valueColor ?? AppColors.textPrimary(context);
+    return Column(
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                color: textColor,
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+              ),
+            ),
+            if (unit.isNotEmpty) ...[
+              const SizedBox(width: 2),
+              Text(
+                unit,
+                style: TextStyle(
+                  color: textColor.withOpacity(0.7),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ],
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _MetricCard(
-            label: 'Ritmo medio',
-            value: _ritmoSecKm != null ? _formatPace(_ritmoSecKm!) : '—',
-            unit: _ritmoSecKm != null ? '/km' : '',
-            accent: _blue,
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            color: AppColors.textSecondary(context),
+            fontSize: 11,
           ),
         ),
       ],
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Smart series card
-  // ─────────────────────────────────────────────────────────────────────────
+  // ── _buildRpeSlider ───────────────────────────────────────────────────────
 
-  Widget _buildSeriesCard() {
-    final series = widget.entrenamiento.series;
-    final count  = series.length;
-
-    // Group by distance for summary line
-    final Map<int, int> groups = {};
-    for (final s in series) {
-      groups[s.distanciaM] = (groups[s.distanciaM] ?? 0) + 1;
-    }
-    final sortedGroups = groups.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
-    final groupText = sortedGroups
-        .map((e) => '${e.value} × ${e.key}m')
-        .join(' · ');
-
-    return _GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Header ──────────────────────────────────────────────────────
-          Row(
-            children: [
-              Icon(Icons.check_circle_rounded,
-                  color: _adaptivePurple, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                '$count ${count == 1 ? 'serie completada' : 'series completadas'}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
+  Widget _buildRpeSlider() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '¿CÓMO TE HAS SENTIDO?',
+          style: TextStyle(
+            color: AppColors.textSecondary(context),
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1.5,
           ),
-          const SizedBox(height: 6),
-          Text(
-            groupText,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.45),
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-
-          const Divider(
-              color: Colors.white12, height: 24, thickness: 0.5),
-
-          // ── Per-serie rows ───────────────────────────────────────────────
-          ...List.generate(series.length, (i) {
-            final s         = series[i];
-            final isFastest = i == _fastestIdx;
-
-            int? paceSecKm;
-            String paceText = '—';
-            if (s.distanciaM > 0) {
-              paceSecKm = (s.tiempoSec / (s.distanciaM / 1000.0)).round();
-              paceText  = _formatPace(paceSecKm);
-            }
-
-            final rpeClr = _rpeColor(s.rpe);
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                children: [
-                  // Serie label
-                  SizedBox(
-                    width: 26,
-                    child: Text(
-                      'S${i + 1}',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.38),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  // Distance
-                  SizedBox(
-                    width: 48,
-                    child: Text(
-                      '${s.distanciaM}m',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.55),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  // Pace + fastest badge
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Text(
-                          '$paceText/km',
-                          style: TextStyle(
-                            color: isFastest ? _green : Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        if (isFastest) ...[
-                          const SizedBox(width: 4),
-                          const Icon(Icons.flash_on_rounded,
-                              size: 13, color: _green),
-                        ],
-                      ],
-                    ),
-                  ),
-                  // RPE dot + value
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: BoxDecoration(
-                          color: rpeClr,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        s.rpe.toStringAsFixed(1),
-                        style: TextStyle(
-                          color: rpeClr.withOpacity(0.9),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // GPS map (unchanged)
-  // ─────────────────────────────────────────────────────────────────────────
-
-  Widget _buildMapCard() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        height: 220,
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
-          borderRadius: BorderRadius.circular(16),
         ),
-        child: TrainingMapView(points: widget.entrenamiento.trackPoints),
-      ),
+        const SizedBox(height: 20),
+        Slider(
+          value: _rpe,
+          min: 1,
+          max: 10,
+          divisions: 18,
+          activeColor: _rpeColor(_rpe),
+          inactiveColor: AppColors.borderOf(context),
+          onChanged: (v) => setState(() => _rpe = v),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Muy fácil',
+              style: TextStyle(
+                color: AppColors.textSecondary(context),
+                fontSize: 11,
+              ),
+            ),
+            Text(
+              _rpe.toStringAsFixed(1),
+              style: TextStyle(
+                color: _rpeColor(_rpe),
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            Text(
+              'Máximo esfuerzo',
+              style: TextStyle(
+                color: AppColors.textSecondary(context),
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Smart comparison card
-  // ─────────────────────────────────────────────────────────────────────────
+  // ── _buildComparison ──────────────────────────────────────────────────────
 
-  Widget _buildComparisonCard() {
+  Widget _buildComparison() {
+    // Check planned comparison first
+    final planned = widget.entrenamiento.plannedComparison;
+    if (planned != null) {
+      return _buildPlannedComparison(planned);
+    }
+
     return FutureBuilder<Entrenamiento?>(
       future: _similarFuture,
       builder: (context, snapshot) {
-        // Hide while loading or if no similar session found
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting ||
+            snapshot.data == null) {
           return const SizedBox.shrink();
         }
-        final similar = snapshot.data;
-        if (similar == null) return const SizedBox.shrink();
-
-        final currSeries = widget.entrenamiento.series;
-        final prevSeries = similar.series;
-
-        // Sort both by distance ascending for a meaningful side-by-side
-        final currSorted = [...currSeries]
-          ..sort((a, b) => a.distanciaM.compareTo(b.distanciaM));
-        final prevSorted = [...prevSeries]
-          ..sort((a, b) => a.distanciaM.compareTo(b.distanciaM));
-
-        // Build per-distance rows (only where both have distance > 0)
-        final rows = <Widget>[];
-        for (int i = 0; i < currSorted.length; i++) {
-          final curr = currSorted[i];
-          final prev = prevSorted[i];
-          if (curr.distanciaM == 0 || prev.distanciaM == 0) continue;
-
-          final currPace =
-              (curr.tiempoSec / (curr.distanciaM / 1000.0)).round();
-          final prevPace =
-              (prev.tiempoSec / (prev.distanciaM / 1000.0)).round();
-          final diff     = currPace - prevPace; // negative = faster
-          final diffClr  = diff <= 0 ? _green : _red;
-          final sign     = diff <= 0 ? '−' : '+';
-          final diffText = '$sign${_formatPace(diff.abs())} /km';
-
-          rows.add(
-            Padding(
-              padding: const EdgeInsets.only(bottom: 9),
-              child: Row(
-                children: [
-                  // Distance label
-                  SizedBox(
-                    width: 46,
-                    child: Text(
-                      '${curr.distanciaM}m',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.4),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  // Current pace vs previous pace
-                  Text(
-                    '${_formatPace(currPace)} vs ${_formatPace(prevPace)}',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: 12,
-                    ),
-                  ),
-                  const Spacer(),
-                  // Diff badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: diffClr.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(6),
-                      border:
-                          Border.all(color: diffClr.withOpacity(0.3)),
-                    ),
-                    child: Text(
-                      diffText,
-                      style: TextStyle(
-                        color: diffClr,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        if (rows.isEmpty) return const SizedBox.shrink();
-
-        return _GlassCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.analytics_outlined,
-                      color: _adaptivePurple.withOpacity(0.7), size: 16),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Comparativa con sesión similar',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  Icon(Icons.arrow_forward_rounded,
-                      color: Colors.white.withOpacity(0.28), size: 12),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      '${similar.titulo.isNotEmpty ? similar.titulo : 'Sesión sin nombre'} · ${_formatDateShort(similar.fecha)} ${similar.fecha.year}',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.45),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'SESIÓN ANTERIOR',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.28),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              const SizedBox(height: 8),
-              ...rows,
-            ],
-          ),
-        );
+        return _buildSimilarComparison(snapshot.data!);
       },
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Single action button
-  // ─────────────────────────────────────────────────────────────────────────
-
-  Widget _buildActions() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.background,
-        border: Border(
-          top: BorderSide(color: Colors.white.withOpacity(0.07)),
-        ),
-      ),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Tema.brandPurple,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14)),
-            elevation: 0,
-          ),
-          onPressed: () => Navigator.pushAndRemoveUntil(
-            context,
-            AppRoute(page: const HomeView()),
-            (route) => false,
-          ),
-          child: const Text(
-            'Volver al inicio',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+  Widget _buildPlannedComparison(Map<String, dynamic> planned) {
+    final series = widget.entrenamiento.series;
+    // planned is a map with per-serie data; render a simple table
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'COMPARATIVA',
+          style: TextStyle(
+            color: AppColors.textSecondary(context),
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1.5,
           ),
         ),
-      ),
+        const SizedBox(height: 16),
+        // Header row
+        Row(
+          children: [
+            SizedBox(
+              width: 40,
+              child: Text('Serie',
+                  style: TextStyle(
+                      color: AppColors.textSecondary(context), fontSize: 11)),
+            ),
+            Expanded(
+              child: Text('Planificado',
+                  style: TextStyle(
+                      color: AppColors.textSecondary(context), fontSize: 11)),
+            ),
+            Expanded(
+              child: Text('Real',
+                  style: TextStyle(
+                      color: AppColors.textSecondary(context), fontSize: 11)),
+            ),
+            SizedBox(
+              width: 56,
+              child: Text('Delta',
+                  textAlign: TextAlign.end,
+                  style: TextStyle(
+                      color: AppColors.textSecondary(context), fontSize: 11)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ...List.generate(series.length, (i) {
+          final s = series[i];
+          if (s.distanciaM == 0) return const SizedBox.shrink();
+          final realPace =
+              (s.tiempoSec / (s.distanciaM / 1000.0)).round();
+          // Try to get planned pace from plannedComparison map
+          final planEntry = planned['series'] is List
+              ? (planned['series'] as List).elementAtOrNull(i)
+              : null;
+          final planPaceSec = planEntry != null
+              ? (planEntry['paceSecKm'] as num?)?.toInt()
+              : null;
+          final delta =
+              planPaceSec != null ? realPace - planPaceSec : null;
+          final deltaColor = delta == null
+              ? AppColors.textSecondary(context)
+              : (delta <= 0 ? AppColors.rpeLow : AppColors.rpeMax);
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 40,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.brandSurface,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'S${i + 1}',
+                      style: const TextStyle(
+                          color: AppColors.brandLight,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    planPaceSec != null
+                        ? '${_formatPace(planPaceSec)}/km'
+                        : '—',
+                    style: TextStyle(
+                        color: AppColors.textSecondary(context), fontSize: 13),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    '${_formatPace(realPace)}/km',
+                    style: TextStyle(
+                        color: AppColors.textPrimary(context),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ),
+                SizedBox(
+                  width: 56,
+                  child: Text(
+                    delta == null
+                        ? '—'
+                        : '${delta <= 0 ? '−' : '+'}${_formatPace(delta.abs())}',
+                    textAlign: TextAlign.end,
+                    style: TextStyle(
+                        color: deltaColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
     );
   }
-}
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Glass card
-// ─────────────────────────────────────────────────────────────────────────────
+  Widget _buildSimilarComparison(Entrenamiento similar) {
+    final currPace = _ritmoSecKm;
+    int? prevPace;
+    final prevDist = similar.distanciaTotalM();
+    final prevTime = similar.tiempoTotalSec();
+    if (prevDist > 0) prevPace = (prevTime / (prevDist / 1000.0)).round();
 
-class _GlassCard extends StatelessWidget {
-  final Widget child;
+    if (currPace == null || prevPace == null) return const SizedBox.shrink();
 
-  const _GlassCard({required this.child});
+    final diff = currPace - prevPace;
+    final improved = diff <= 0;
+    final diffColor = improved ? AppColors.rpeLow : AppColors.rpeMax;
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.10)),
-      ),
-      child: child,
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Metric card
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _MetricCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final String unit;
-  final Color  accent;
-
-  const _MetricCard({
-    required this.label,
-    required this.value,
-    required this.unit,
-    required this.accent,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 18, 14, 16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.10)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 28,
-            height: 3,
-            decoration: BoxDecoration(
-              color: accent,
-              borderRadius: BorderRadius.circular(2),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'COMPARATIVA',
+          style: TextStyle(
+            color: AppColors.textSecondary(context),
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1.5,
           ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.5,
-              height: 1.0,
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Entrenamiento anterior',
+                    style: TextStyle(
+                        color: AppColors.textSecondary(context), fontSize: 11),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _formatDateShort(similar.fecha),
+                    style: TextStyle(
+                        color: AppColors.textSecondary(context), fontSize: 12),
+                  ),
+                  Text(
+                    '${_formatPace(prevPace)}/km',
+                    style: TextStyle(
+                        color: AppColors.textPrimary(context),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
             ),
-          ),
-          if (unit.isNotEmpty) ...[
-            const SizedBox(height: 3),
-            Text(
-              unit,
-              style: TextStyle(
-                color: accent.withOpacity(0.75),
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
+            Icon(
+              improved
+                  ? Icons.arrow_forward_rounded
+                  : Icons.arrow_forward_rounded,
+              color: diffColor,
+              size: 28,
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'Este entreno',
+                    style: TextStyle(
+                        color: AppColors.textSecondary(context), fontSize: 11),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'hoy',
+                    style: TextStyle(
+                        color: AppColors.textSecondary(context), fontSize: 12),
+                  ),
+                  Text(
+                    '${_formatPace(currPace)}/km',
+                    style: TextStyle(
+                        color: diffColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700),
+                  ),
+                ],
               ),
             ),
           ],
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.38),
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-            ),
+        ),
+      ],
+    );
+  }
+
+  // ── _buildTags ────────────────────────────────────────────────────────────
+
+  Widget _buildTagChip(String name, {required bool isPredefined}) {
+    final isSelected = _selectedTags.contains(name);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeText = isDark ? AppColors.brandLight : AppColors.brand;
+    return GestureDetector(
+      onTap: () => setState(() {
+        if (isSelected) {
+          _selectedTags.remove(name);
+        } else {
+          if (_selectedTags.length >= 5) {
+            ModernSnackBar.showWarning(
+                context, 'Máximo 5 etiquetas por entrenamiento');
+            return;
+          }
+          _selectedTags.add(name);
+        }
+      }),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.brand.withOpacity(0.15)
+              : isPredefined
+                  ? AppColors.brand.withOpacity(0.05)
+                  : AppColors.surface2Of(context),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color:
+                isSelected ? AppColors.brand : AppColors.borderOf(context),
+            width: isSelected ? 1.5 : 0.5,
           ),
-        ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isSelected) ...[
+              Icon(Icons.check_circle_rounded, size: 14, color: activeText),
+              const SizedBox(width: 5),
+            ],
+            Text(
+              name,
+              style: TextStyle(
+                color: isSelected
+                    ? activeText
+                    : AppColors.textSecondary(context),
+                fontWeight:
+                    isSelected ? FontWeight.w700 : FontWeight.w500,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
-}
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Sparkle painter — deterministic particles that loop indefinitely
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _SparklePainter extends CustomPainter {
-  final double progress;
-
-  static const List<Color> _colors = [
-    Color(0xFF8E24AA),
-    Color(0xFF10B981),
-    Color(0xFF3B82F6),
-    Color(0xFFF59E0B),
-    Colors.white,
-  ];
-
-  static final _r = math.Random(42);
-  static final List<_Particle> _particles = List.generate(20, (i) {
-    return _Particle(
-      bx:    _r.nextDouble(),
-      by:    _r.nextDouble() * 0.65,
-      size:  2.0 + _r.nextDouble() * 3.5,
-      ci:    i % _colors.length,
-      phase: _r.nextDouble(),
-      speed: 0.35 + _r.nextDouble() * 0.65,
+  Widget _buildTags() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final createColor = isDark ? AppColors.brandLight : AppColors.brand;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'ETIQUETAS',
+          style: TextStyle(
+            color: AppColors.textSecondary(context),
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1.5,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: TrainingTags.predefined
+              .map((tag) => _buildTagChip(tag, isPredefined: true))
+              .toList(),
+        ),
+        if (_customTags.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _customTags
+                .map((t) => _buildTagChip(t.name, isPredefined: false))
+                .toList(),
+          ),
+        ],
+        const SizedBox(height: 12),
+        GestureDetector(
+          onTap: _showCreateTagSheet,
+          child: Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.brand.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.brand, width: 1),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.add_circle_outline, size: 16, color: createColor),
+                const SizedBox(width: 6),
+                Text(
+                  '+ Crear etiqueta',
+                  style: TextStyle(
+                    color: createColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
-  });
-
-  const _SparklePainter({required this.progress});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (final p in _particles) {
-      final t       = ((progress + p.phase) % 1.0);
-      final opacity = math.sin(t * math.pi);
-      final dx      = math.cos(p.phase * math.pi * 2) * 28.0 * t;
-      final dy      = -52.0 * t * p.speed;
-      final paint   = Paint()
-        ..color = _colors[p.ci].withOpacity(opacity * 0.65)
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(
-        Offset(size.width * p.bx + dx, size.height * p.by + dy),
-        p.size * (1 - t * 0.35),
-        paint,
-      );
-    }
   }
 
-  @override
-  bool shouldRepaint(covariant _SparklePainter old) =>
-      old.progress != progress;
-}
+  Future<void> _showCreateTagSheet() async {
+    final controller = TextEditingController();
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Padding(
+          padding:
+              EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceOf(ctx),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Nueva etiqueta',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary(ctx),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.none,
+                  style: TextStyle(
+                      fontSize: 14, color: AppColors.textPrimary(ctx)),
+                  decoration: InputDecoration(
+                    hintText: 'Nombre de etiqueta',
+                    hintStyle:
+                        TextStyle(color: AppColors.textSecondary(ctx)),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                          color: AppColors.borderOf(ctx), width: 0.5),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                          color: AppColors.borderOf(ctx), width: 0.5),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                          color: AppColors.brand, width: 1.5),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      final name =
+                          controller.text.trim().toLowerCase();
+                      if (name.isEmpty) return;
+                      if (name.length > 20) {
+                        ModernSnackBar.showWarning(
+                            ctx, 'Máximo 20 caracteres');
+                        return;
+                      }
+                      try {
+                        await TagManager().createTag(
+                          TrainingTag(name: name, colorValue: 0xFF9E9E9E),
+                        );
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      } catch (_) {
+                        if (ctx.mounted) {
+                          ModernSnackBar.showError(
+                              ctx, 'Error al crear etiqueta');
+                        }
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.brand,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                    ),
+                    child: const Text('Crear',
+                        style: TextStyle(fontWeight: FontWeight.w600)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    controller.dispose();
+    if (mounted) _loadCustomTags();
+  }
 
-class _Particle {
-  final double bx, by, size, phase, speed;
-  final int ci;
-  const _Particle({
-    required this.bx,
-    required this.by,
-    required this.size,
-    required this.ci,
-    required this.phase,
-    required this.speed,
-  });
+  // ── _buildNotas ───────────────────────────────────────────────────────────
+
+  Widget _buildNotas() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'NOTAS',
+          style: TextStyle(
+            color: AppColors.textSecondary(context),
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1.5,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _notasController,
+          maxLines: 4,
+          style: TextStyle(
+            color: AppColors.textPrimary(context),
+            fontSize: 15,
+          ),
+          decoration: InputDecoration(
+            hintText: '¿Algo que destacar de este entrenamiento?',
+            hintStyle: TextStyle(
+              color: AppColors.textSecondary(context),
+              fontSize: 15,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide:
+                  BorderSide(color: AppColors.borderOf(context), width: 0.5),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide:
+                  BorderSide(color: AppColors.borderOf(context), width: 0.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide:
+                  const BorderSide(color: AppColors.brand, width: 1),
+            ),
+            contentPadding: const EdgeInsets.all(16),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── _buildActions ─────────────────────────────────────────────────────────
+
+  Widget _buildActions() {
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: _isSaving ? null : _saveTraining,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.brand,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: AppColors.brand.withOpacity(0.5),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              elevation: 0,
+            ),
+            child: _isSaving
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white),
+                  )
+                : const Text(
+                    'Guardar entrenamiento',
+                    style:
+                        TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextButton(
+          onPressed: _isSaving ? null : _confirmDiscard,
+          style: TextButton.styleFrom(
+              foregroundColor: AppColors.rpeMax),
+          child: const Text('Descartar entrenamiento'),
+        ),
+      ],
+    );
+  }
 }

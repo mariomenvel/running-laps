@@ -3,14 +3,13 @@ import 'package:running_laps/core/utils/app_transitions.dart';
 import '../../../config/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_header.dart';
-import '../../../core/widgets/app_footer.dart';
 import '../../../core/widgets/gradient_banner.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import '../data/repositories/group_detail_repository.dart';
 import '../data/services/gamification_service.dart';
 import '../data/models/group_stats_model.dart';
-import '../../home/views/home_view.dart';
-import '../../profile/views/profile_menu_screen.dart';
+import '../../home/views/home_view_legacy.dart';
+import '../../profile/views/profile_menu_screen_legacy.dart';
 
 class ParticipantProfileScreen extends StatefulWidget {
   final String uid;
@@ -110,7 +109,7 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
               title: "Perfil de Corredor",
               subtitle: widget.name,
               icon: Icons.verified_user_rounded,
-              gradientColors: const [Colors.deepPurple, Colors.purpleAccent],
+              accentColor: AppColors.brandSurface,
               height: 90,
             ),
 
@@ -153,10 +152,10 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: Tema.brandPurple.withOpacity(0.1),
+                                      color: AppColors.brand.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    child: Text("Corredor/a", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.bold, fontSize: 12)),
+                                    child: Text("Corredor/a", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.bold, fontSize: 12)),
                                   ),
                                   const SizedBox(height: 20),
                                   // STATS ROW
@@ -223,8 +222,6 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
                   ),
             ),
 
-            // 3. FOOTER
-            AppFooter(isLoading: false, onTap: () {}),
           ],
         ),
       ),

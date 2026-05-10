@@ -57,9 +57,9 @@ class _AnalyticsHubViewState extends State<AnalyticsHubView> with SingleTickerPr
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true, // Allow scrolling if needed on small screens
-          labelColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+          labelColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
           unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-          indicatorColor: Tema.brandPurple,
+          indicatorColor: AppColors.brand,
           indicatorWeight: 3,
           labelStyle: const TextStyle(fontWeight: FontWeight.bold),
           tabs: const [
@@ -74,7 +74,7 @@ class _AnalyticsHubViewState extends State<AnalyticsHubView> with SingleTickerPr
         valueListenable: _controller.isLoading,
         builder: (context, isLoading, child) {
           if (isLoading) {
-            return const Center(child: CircularProgressIndicator(color: Tema.brandPurple));
+            return const Center(child: CircularProgressIndicator(color: AppColors.brand));
           }
           
           return TabBarView(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/number_picker_field.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/viewmodels/session_editor_viewmodel.dart';
@@ -54,7 +55,7 @@ class _SessionEditorViewState extends State<SessionEditorView> {
   // Race fields (only when category == competicion)
   final TextEditingController _raceNameCtrl        = TextEditingController();
   int? _standardDistanceM;   // null = none, -1 = custom, else one of the std values
-  final TextEditingController _customDistanceCtrl  = TextEditingController();
+  int _customDistanceM = 1000;
   final TextEditingController _targetHCtrl         = TextEditingController();
   final TextEditingController _targetMCtrl         = TextEditingController();
   final TextEditingController _targetSCtrl         = TextEditingController();
@@ -119,7 +120,7 @@ class _SessionEditorViewState extends State<SessionEditorView> {
           _standardDistanceM = dist;
         } else {
           _standardDistanceM = -1;
-          _customDistanceCtrl.text = dist.toString();
+          _customDistanceM = dist;
         }
       }
       final t = s.targetTimeSeconds;
@@ -140,7 +141,6 @@ class _SessionEditorViewState extends State<SessionEditorView> {
     _planningNotesCtrl.dispose();
     _executionNotesCtrl.dispose();
     _raceNameCtrl.dispose();
-    _customDistanceCtrl.dispose();
     _targetHCtrl.dispose();
     _targetMCtrl.dispose();
     _targetSCtrl.dispose();
@@ -226,7 +226,7 @@ class _SessionEditorViewState extends State<SessionEditorView> {
           ? _raceNameCtrl.text.trim() : null,
       raceDistanceM: isComp
           ? (_standardDistanceM == -1
-              ? int.tryParse(_customDistanceCtrl.text.trim())
+              ? _customDistanceM
               : _standardDistanceM)
           : null,
       targetTimeSeconds: isComp ? _buildTargetSeconds() : null,
@@ -290,7 +290,7 @@ class _SessionEditorViewState extends State<SessionEditorView> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: AppColors.rpeMax),
             child: const Text('Eliminar'),
           ),
         ],
@@ -371,7 +371,7 @@ class _SessionEditorViewState extends State<SessionEditorView> {
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppColors.brandPurple,
+                        color: AppColors.brand,
                       ),
                     ),
                   ),
@@ -382,7 +382,7 @@ class _SessionEditorViewState extends State<SessionEditorView> {
                   child: const Text(
                     'Guardar',
                     style: TextStyle(
-                      color:      AppColors.brandPurple,
+                      color:      AppColors.brand,
                       fontWeight: FontWeight.w700,
                       fontSize:   16,
                     ),
@@ -392,7 +392,7 @@ class _SessionEditorViewState extends State<SessionEditorView> {
           ),
           body: state.isLoading
               ? const Center(
-                  child: CircularProgressIndicator(color: AppColors.brandPurple),
+                  child: CircularProgressIndicator(color: AppColors.brand),
                 )
               : SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
@@ -535,11 +535,14 @@ class _SessionEditorViewState extends State<SessionEditorView> {
         ),
         if (_standardDistanceM == -1) ...[
           const SizedBox(height: 10),
-          TextFormField(
-            controller: _customDistanceCtrl,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: _inputDecoration(hint: 'Distancia en metros'),
+          NumberPickerField(
+            label:     'Distancia',
+            value:     _customDistanceM,
+            min:       100,
+            max:       42000,
+            step:      100,
+            unit:      'm',
+            onChanged: (v) => setState(() => _customDistanceM = v),
           ),
         ],
         const SizedBox(height: 12),
@@ -575,8 +578,8 @@ class _SessionEditorViewState extends State<SessionEditorView> {
             icon:  const Icon(Icons.add, size: 18),
             label: const Text('Añadir calentamiento'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.brandPurple,
-              side:            const BorderSide(color: AppColors.brandPurple),
+              foregroundColor: AppColors.brand,
+              side:            const BorderSide(color: AppColors.brand),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -629,8 +632,8 @@ class _SessionEditorViewState extends State<SessionEditorView> {
             icon:  const Icon(Icons.add, size: 18),
             label: const Text('Añadir vuelta a la calma'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.brandPurple,
-              side:            const BorderSide(color: AppColors.brandPurple),
+              foregroundColor: AppColors.brand,
+              side:            const BorderSide(color: AppColors.brand),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -698,11 +701,11 @@ class _SessionEditorViewState extends State<SessionEditorView> {
           icon:  const Icon(Icons.file_copy_outlined, size: 18),
           label: const Text('Partir de plantilla existente'),
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.brandPurple,
+            foregroundColor: AppColors.brand,
             side: BorderSide(
               color: state.availableTemplates.isEmpty
                   ? const Color(0xFFAAAAAA)
-                  : AppColors.brandPurple,
+                  : AppColors.brand,
             ),
             padding: const EdgeInsets.symmetric(vertical: 12),
             shape: RoundedRectangleBorder(
@@ -724,11 +727,11 @@ class _SessionEditorViewState extends State<SessionEditorView> {
           icon:  const Icon(Icons.bookmark_add_outlined, size: 18),
           label: const Text('Guardar como plantilla'),
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.brandPurple,
+            foregroundColor: AppColors.brand,
             side: BorderSide(
               color: (_currentBlocks.isEmpty && !_hasWarmup && !_hasCooldown)
                   ? const Color(0xFFAAAAAA)
-                  : AppColors.brandPurple,
+                  : AppColors.brand,
             ),
             padding: const EdgeInsets.symmetric(vertical: 12),
             shape: RoundedRectangleBorder(
@@ -741,7 +744,7 @@ class _SessionEditorViewState extends State<SessionEditorView> {
             onPressed: state.isSaving ? null : _confirmDelete,
             child: const Text(
               'Eliminar sesión',
-              style: TextStyle(color: Colors.red, fontSize: 15),
+              style: TextStyle(color: AppColors.rpeMax, fontSize: 15),
             ),
           ),
         ],
@@ -767,7 +770,7 @@ class _SessionEditorViewState extends State<SessionEditorView> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide:   const BorderSide(color: AppColors.brandPurple),
+        borderSide:   const BorderSide(color: AppColors.brand),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     );
@@ -821,14 +824,14 @@ class _RowField extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
         decoration: BoxDecoration(
-          color:        isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+          color:        AppColors.surfaceOf(context),
           borderRadius: BorderRadius.circular(10),
           border:       Border.all(
             color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
           ),
         ),
         child: Row(children: [
-          Icon(icon, size: 18, color: AppColors.brandPurple),
+          Icon(icon, size: 18, color: AppColors.brand),
           const SizedBox(width: 10),
           Text(label, style: const TextStyle(fontSize: 15)),
         ]),
@@ -841,7 +844,7 @@ class _RowField extends StatelessWidget {
 // _WarmupCooldownForm
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _WarmupCooldownForm extends StatelessWidget {
+class _WarmupCooldownForm extends StatefulWidget {
   final TextEditingController descCtrl;
   final TextEditingController durCtrl;
   final String hint;
@@ -855,15 +858,40 @@ class _WarmupCooldownForm extends StatelessWidget {
   });
 
   @override
+  State<_WarmupCooldownForm> createState() => _WarmupCooldownFormState();
+}
+
+class _WarmupCooldownFormState extends State<_WarmupCooldownForm> {
+  late int _durMin;
+
+  @override
+  void initState() {
+    super.initState();
+    _durMin = int.tryParse(widget.durCtrl.text) ?? 1;
+    widget.durCtrl.addListener(_syncFromCtrl);
+  }
+
+  void _syncFromCtrl() {
+    final v = int.tryParse(widget.durCtrl.text) ?? 1;
+    if (v != _durMin) setState(() => _durMin = v);
+  }
+
+  @override
+  void dispose() {
+    widget.durCtrl.removeListener(_syncFromCtrl);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TextFormField(
-          controller: descCtrl,
+          controller: widget.descCtrl,
           maxLines:   null,
           decoration: InputDecoration(
-            hintText:       hint,
+            hintText:       widget.hint,
             isDense:        true,
             border:         OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10)),
@@ -877,7 +905,7 @@ class _WarmupCooldownForm extends StatelessWidget {
                 )),
             focusedBorder:  OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide:   const BorderSide(color: AppColors.brandPurple)),
+                borderSide:   const BorderSide(color: AppColors.brand)),
             contentPadding: const EdgeInsets.symmetric(
                 horizontal: 14, vertical: 12),
           ),
@@ -885,48 +913,29 @@ class _WarmupCooldownForm extends StatelessWidget {
         const SizedBox(height: 10),
         Row(
           children: [
-            const Icon(Icons.timer_outlined, size: 16, color: AppColors.brandPurple),
+            const Icon(Icons.timer_outlined, size: 16, color: AppColors.brand),
             const SizedBox(width: 6),
-            SizedBox(
-              width: 70,
-              child: TextFormField(
-                controller:      durCtrl,
-                keyboardType:    TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: InputDecoration(
-                  hintText:       'min',
-                  isDense:        true,
-                  border:         OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                  enabledBorder:  OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide:   BorderSide(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .outline
-                            .withValues(alpha: 0.5),
-                      )),
-                  focusedBorder:  OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide:   const BorderSide(
-                          color: AppColors.brandPurple)),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                ),
-                style: const TextStyle(fontSize: 14),
+            Expanded(
+              child: NumberPickerField(
+                label:     'Duración',
+                value:     _durMin,
+                min:       1,
+                max:       300,
+                step:      1,
+                unit:      'min',
+                onChanged: (v) {
+                  setState(() => _durMin = v);
+                  widget.durCtrl.text = v.toString();
+                },
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.only(left: 6),
-              child: Text('minutos', style: TextStyle(fontSize: 13)),
-            ),
-            const Spacer(),
+            const SizedBox(width: 8),
             TextButton.icon(
-              onPressed:  onRemove,
+              onPressed:  widget.onRemove,
               icon:        const Icon(Icons.close, size: 16),
               label:       const Text('Quitar'),
               style:       TextButton.styleFrom(
-                foregroundColor: Colors.red,
+                foregroundColor: AppColors.rpeMax,
                 visualDensity:   VisualDensity.compact,
               ),
             ),
@@ -941,11 +950,36 @@ class _WarmupCooldownForm extends StatelessWidget {
 // _TimePartField  (h / min / seg for target time)
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _TimePartField extends StatelessWidget {
+class _TimePartField extends StatefulWidget {
   final TextEditingController ctrl;
   final String label;
 
   const _TimePartField({required this.ctrl, required this.label});
+
+  @override
+  State<_TimePartField> createState() => _TimePartFieldState();
+}
+
+class _TimePartFieldState extends State<_TimePartField> {
+  late int _value;
+
+  @override
+  void initState() {
+    super.initState();
+    _value = int.tryParse(widget.ctrl.text) ?? 0;
+    widget.ctrl.addListener(_syncFromCtrl);
+  }
+
+  void _syncFromCtrl() {
+    final v = int.tryParse(widget.ctrl.text) ?? 0;
+    if (v != _value) setState(() => _value = v);
+  }
+
+  @override
+  void dispose() {
+    widget.ctrl.removeListener(_syncFromCtrl);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -953,36 +987,22 @@ class _TimePartField extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          width: 52,
-          child: TextFormField(
-            controller:      ctrl,
-            keyboardType:    TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            textAlign:       TextAlign.center,
-            decoration: InputDecoration(
-              hintText: '0',
-              isDense:  true,
-              border:        OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8)),
-              enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .outline
-                        .withValues(alpha: 0.5),
-                  )),
-              focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.brandPurple)),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-            ),
-            style: const TextStyle(fontSize: 15),
+          width: 80,
+          child: NumberPickerField(
+            label:     widget.label,
+            value:     _value,
+            min:       0,
+            max:       59,
+            step:      1,
+            unit:      '',
+            onChanged: (v) {
+              setState(() => _value = v);
+              widget.ctrl.text = v.toString();
+            },
           ),
         ),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 13)),
+        Text(widget.label, style: const TextStyle(fontSize: 13)),
       ],
     );
   }
@@ -1054,9 +1074,7 @@ class _TemplateSelectorSheet extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  tileColor: isDark
-                      ? AppColors.surfaceDark
-                      : AppColors.surfaceLight,
+                  tileColor: AppColors.surfaceOf(context),
                   onTap: () => onSelected(t),
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 4),

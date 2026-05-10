@@ -25,13 +25,19 @@ class TrainingLoadService {
     double? fcMax,
     double? fcRest,
   }) {
-    if (fcAvgBpm != null && fcMax != null && fcRest != null) {
-      return _trimp(
-        durationMinutes: durationMinutes,
-        fcAvg:           fcAvgBpm,
-        fcMax:           fcMax,
-        fcRest:          fcRest,
-      );
+    if (fcAvgBpm != null && fcMax != null) {
+      // fcRest fallback: 40 bpm (adulto activo típico).
+      // Menos preciso que el valor real pero mejor que ignorar la FC completamente.
+      final effectiveFcRest = fcRest ?? 40.0;
+      final ratio = (fcAvgBpm - effectiveFcRest) / (fcMax - effectiveFcRest);
+      if (ratio > 0) {
+        return _trimp(
+          durationMinutes: durationMinutes,
+          fcAvg:           fcAvgBpm,
+          fcMax:           fcMax,
+          fcRest:          effectiveFcRest,
+        );
+      }
     }
     return _proxyLoad(
       distanceKm: distanceKm,

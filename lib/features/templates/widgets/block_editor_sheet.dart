@@ -142,7 +142,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Tema.brandPurple,
+                  backgroundColor: AppColors.brand,
                   minimumSize: const Size(double.infinity, 48),
                 ),
                 child: const Text('Listo', style: TextStyle(color: Colors.white)),
@@ -199,7 +199,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Tema.brandPurple,
+                  backgroundColor: AppColors.brand,
                   minimumSize: const Size(double.infinity, 48),
                 ),
                 child: const Text('Listo', style: TextStyle(color: Colors.white)),
@@ -280,7 +280,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: _objectivesExpanded || hasObjective
-                          ? AppColors.brandPurple.withOpacity(0.1)
+                          ? AppColors.brand.withOpacity(0.1)
                           : cs.onSurface.withOpacity(0.08),
                       shape: BoxShape.circle,
                     ),
@@ -288,7 +288,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                       Icons.flag_outlined,
                       size: 18,
                       color: _objectivesExpanded || hasObjective
-                          ? AppColors.brandPurple
+                          ? AppColors.brand
                           : cs.onSurface.withOpacity(0.4),
                     ),
                   ),
@@ -309,7 +309,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                       width: 8,
                       height: 8,
                       decoration: const BoxDecoration(
-                        color: AppColors.brandPurple,
+                        color: AppColors.brand,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -665,12 +665,12 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                           value: _alertsEnabled,
                           onChanged: (v) =>
                               setState(() => _alertsEnabled = v),
-                          activeColor: Tema.brandPurple,
+                          activeColor: AppColors.brand,
                           secondary: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: _alertsEnabled
-                                  ? Tema.brandPurple.withOpacity(0.1)
+                                  ? AppColors.brand.withOpacity(0.1)
                                   : cs.onSurface.withOpacity(0.08),
                               shape: BoxShape.circle,
                             ),
@@ -680,8 +680,8 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                                   : Icons.notifications_none_rounded,
                               color: _alertsEnabled
                                   ? (isDark
-                                      ? AppColors.brandPurpleLight
-                                      : Tema.brandPurple)
+                                      ? AppColors.brandLight
+                                      : AppColors.brand)
                                   : cs.onSurface.withOpacity(0.4),
                               size: 20,
                             ),
@@ -713,15 +713,15 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                             trailing: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: Tema.brandPurple.withOpacity(0.05),
+                                color: AppColors.brand.withOpacity(0.05),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
                                 Icons.settings_suggest_rounded,
                                 size: 20,
                                 color: isDark
-                                    ? AppColors.brandPurpleLight
-                                    : Tema.brandPurple,
+                                    ? AppColors.brandLight
+                                    : AppColors.brand,
                               ),
                             ),
                             onTap: _openAlarmConfig,
@@ -737,12 +737,10 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
-                      gradient: const LinearGradient(
-                        colors: [Tema.brandPurple, Color(0xFF6A1B9A)],
-                      ),
+                      color: AppColors.brand,
                       boxShadow: [
                         BoxShadow(
-                          color: Tema.brandPurple.withOpacity(0.3),
+                          color: AppColors.brand.withOpacity(0.3),
                           blurRadius: 12,
                           offset: const Offset(0, 6),
                         ),

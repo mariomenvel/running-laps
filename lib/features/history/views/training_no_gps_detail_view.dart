@@ -1,22 +1,28 @@
+import 'dart:math' show max, min;
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/features/profile/data/zones_repository.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/app_page_scaffold.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 
-class TrainingNoGpsDetailView extends StatefulWidget {
+// ignore: unused_element
+class TrainingNoGpsDetailViewLegacy extends StatefulWidget {
   final Entrenamiento training;
 
-  const TrainingNoGpsDetailView({Key? key, required this.training}) : super(key: key);
+  const TrainingNoGpsDetailViewLegacy({Key? key, required this.training}) : super(key: key);
 
   @override
-  State<TrainingNoGpsDetailView> createState() => _TrainingNoGpsDetailViewState();
+  State<TrainingNoGpsDetailViewLegacy> createState() => _TrainingNoGpsDetailViewLegacyState();
 }
 
-class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
+class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewLegacy>
     with SingleTickerProviderStateMixin {
   Entrenamiento get training => widget.training;
 
@@ -27,6 +33,8 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
   late final Animation<double> _aSeries;      // 200ms – fade + slide bottom
   late final Animation<double> _aComparison;  // 350ms – fade + slide bottom
   // ────────────────────────────────────────────────────────────────
+
+  late final Future<int?> _fcMaxFuture;
 
   @override
   void initState() {
@@ -40,6 +48,19 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
     _aSeries     = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.167, 0.683, curve: Curves.easeOutQuart));
     _aComparison = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.292, 0.808, curve: Curves.easeOutQuart));
     _entranceCtrl.forward();
+    _fcMaxFuture = _loadFcMax();
+  }
+
+  Future<int?> _loadFcMax() async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return null;
+      final profile = await ZonesRepository().getUserProfile(uid);
+      return profile?.fcMax;
+    } catch (e) {
+      debugPrint('[TrainingNoGpsDetailView] error cargando fcMax: $e');
+      return null;
+    }
   }
 
   @override
@@ -60,7 +81,7 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
               title: training.titulo,
               subtitle: "Análisis del Entrenamiento",
               icon: Icons.analytics_rounded,
-              gradientColors: const [Tema.brandPurple, Color(0xFF8E44AD)],
+              accentColor: AppColors.brandSurface,
               height: 100,
             )),
             Padding(
@@ -81,6 +102,10 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
                     _scaleIn(_aStats, _buildStatsGrid()),
                     const SizedBox(height: 32),
                     _slideFromBottom(_aSeries, _buildSeriesSection()),
+                    if (_hasFcData()) ...[
+                      const SizedBox(height: 32),
+                      _slideFromBottom(_aSeries, _buildFcChart()),
+                    ],
                     if (training.notas != null && training.notas!.isNotEmpty) ...[
                       const SizedBox(height: 32),
                       _slideFromBottom(_aSeries, _buildNotasSection()),
@@ -150,17 +175,17 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
       children: [
         Row(
           children: [
-            Expanded(child: _buildStatCard("Distancia", "${distKm.toStringAsFixed(2)} km", Icons.straighten, Colors.blue)),
+            Expanded(child: _buildStatCard("Distancia", "${distKm.toStringAsFixed(2)} km", Icons.straighten, AppColors.rest)),
             const SizedBox(width: 16),
-            Expanded(child: _buildStatCard("Tiempo", timeStr, Icons.timer, Colors.orange)),
+            Expanded(child: _buildStatCard("Tiempo", timeStr, Icons.timer, AppColors.rpeMid)),
           ],
         ),
         const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(child: _buildStatCard("Ritmo Medio", paceStr, Icons.speed, Colors.green)),
+            Expanded(child: _buildStatCard("Ritmo Medio", paceStr, Icons.speed, AppColors.rpeLow)),
             const SizedBox(width: 16),
-            Expanded(child: _buildStatCard("RPE Promedio", rpe.toStringAsFixed(1), Icons.bolt, Colors.red)),
+            Expanded(child: _buildStatCard("RPE Promedio", rpe.toStringAsFixed(1), Icons.bolt, AppColors.rpeMax)),
           ],
         ),
         if (training.fcMediaSesion != null) ...[
@@ -193,11 +218,11 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.brandPurple.withOpacity(0.1),
+                color: AppColors.brand.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(Icons.notes_rounded,
-                  color: isDark ? AppColors.brandPurpleLight : AppColors.brandPurple,
+                  color: isDark ? AppColors.brandLight : AppColors.brand,
                   size: 20),
             ),
             const SizedBox(width: 12),
@@ -294,10 +319,10 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Tema.brandPurple.withOpacity(0.1),
+                color: AppColors.brand.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.list_alt_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 20),
+              child: Icon(Icons.list_alt_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 20),
             ),
             const SizedBox(width: 12),
             Text(
@@ -333,14 +358,14 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
                   height: 32,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: Tema.brandPurple.withOpacity(0.1),
+                    color: AppColors.brand.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Text(
                     "${index + 1}",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                       fontSize: 13,
                     ),
                   ),
@@ -368,18 +393,18 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
                         children: [
                           Text(
                             serie.ritmoTexto(),
-                            style: TextStyle(fontSize: 13, color: Colors.green.shade600, fontWeight: FontWeight.w600),
+                            style: TextStyle(fontSize: 13, color: AppColors.rpeLow, fontWeight: FontWeight.w600),
                           ),
                           if (serie.rpe > 0)
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.1),
+                                color: AppColors.rpeMax.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
                                 "RPE ${serie.rpe}",
-                                style: const TextStyle(fontSize: 11, color: Colors.red, fontWeight: FontWeight.bold),
+                                style: const TextStyle(fontSize: 11, color: AppColors.rpeMax, fontWeight: FontWeight.bold),
                               ),
                             ),
                         ],
@@ -489,7 +514,7 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
           if (category != null) ...[
             const SizedBox(height: 8),
             Text(SessionCategoryX.fromValue(category).label,
-                style: const TextStyle(fontSize: 13, color: AppColors.brandPurpleLight)),
+                style: const TextStyle(fontSize: 13, color: AppColors.brandLight)),
           ],
           const SizedBox(height: 16),
           Row(
@@ -646,6 +671,230 @@ class _TrainingNoGpsDetailViewState extends State<TrainingNoGpsDetailView>
     if (rpe <= 7) return AppColors.rpeMid;
     return AppColors.rpeMax;
   }
+
+  bool _hasFcData() => training.series.any(
+      (s) => s.fcReadings != null && s.fcReadings!.isNotEmpty);
+
+  Widget _buildFcChart() {
+    final allReadings = training.series
+        .where((s) => s.fcReadings != null && s.fcReadings!.isNotEmpty)
+        .expand((s) => s.fcReadings!)
+        .toList();
+    if (allReadings.isEmpty) return const SizedBox.shrink();
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final maxBpm = allReadings.reduce(max).toDouble();
+    final minBpm = allReadings.reduce(min).toDouble();
+    final avgBpm = (allReadings.reduce((a, b) => a + b) / allReadings.length).round();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text('FRECUENCIA CARDÍACA',
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.8,
+                  color: isDark ? const Color(0xFF8E8E93) : const Color(0xFF6C6C70))),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1C1C1E) : const Color(0xFFF2F2F7),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _FcStat('Máx', '${maxBpm.round()} ppm', AppColors.rpeMax),
+                  _FcStat('Media', '$avgBpm ppm', AppColors.brand),
+                  _FcStat('Mín', '${minBpm.round()} ppm', AppColors.rpeLow),
+                ],
+              ),
+              FutureBuilder<int?>(
+                future: _fcMaxFuture,
+                builder: (context, snap) {
+                  final fcMax = snap.data;
+                  if (fcMax == null) return const SizedBox.shrink();
+                  return _buildZoneDistribution(allReadings, fcMax);
+                },
+              ),
+              const SizedBox(height: 12),
+              if (allReadings.length > 1)
+                SizedBox(
+                  height: 80,
+                  child: CustomPaint(
+                    painter: _FcChartPainter(
+                      readings: allReadings,
+                      maxBpm: maxBpm,
+                      minBpm: minBpm,
+                      seriesBoundaries: _getSeriesBoundaries(training.series),
+                    ),
+                    size: Size.infinite,
+                  ),
+                )
+              else
+                Text('${allReadings.first} ppm',
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              const Text('Líneas verticales = cambio de serie',
+                  style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildZoneDistribution(List<int> readings, int fcMax) {
+    final zones = ZonesService().zonesFor(fcMax);
+    final zoneCounts = List<int>.filled(5, 0);
+    for (final bpm in readings) {
+      final z = ZonesService().zoneFor(bpm, fcMax);
+      zoneCounts[(z ?? 1) - 1]++;
+    }
+    final total = readings.length;
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Column(
+        children: List.generate(5, (i) {
+          if (zoneCounts[i] == 0) return const SizedBox.shrink();
+          final color = zones[i].color;
+          final pct = zoneCounts[i] / total;
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 28,
+                  child: Text('Z${i + 1}',
+                      style: TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      Container(
+                          height: 8,
+                          decoration: BoxDecoration(
+                              color: AppColors.borderOf(context).withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(4))),
+                      FractionallySizedBox(
+                        widthFactor: pct,
+                        child: Container(
+                            height: 8,
+                            decoration: BoxDecoration(
+                                color: color,
+                                borderRadius: BorderRadius.circular(4))),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 36,
+                  child: Text('${(pct * 100).round()}%',
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(
+                          fontSize: 12, color: Color(0xFF8E8E93))),
+                ),
+              ],
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  List<int> _getSeriesBoundaries(List<dynamic> series) {
+    final boundaries = <int>[];
+    int idx = 0;
+    for (int i = 0; i < series.length - 1; i++) {
+      idx += (series[i].fcReadings?.length ?? 0) as int;
+      if (idx > 0) boundaries.add(idx);
+    }
+    return boundaries;
+  }
+}
+
+class _FcStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  const _FcStat(this.label, this.value, this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label,
+            style: const TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
+        const SizedBox(height: 2),
+        Text(value,
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: color)),
+      ],
+    );
+  }
+}
+
+class _FcChartPainter extends CustomPainter {
+  final List<int> readings;
+  final double maxBpm;
+  final double minBpm;
+  final List<int> seriesBoundaries;
+
+  const _FcChartPainter({
+    required this.readings,
+    required this.maxBpm,
+    required this.minBpm,
+    required this.seriesBoundaries,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (readings.length < 2) return;
+
+    final range = (maxBpm - minBpm) + 1;
+    final points = List.generate(readings.length, (i) {
+      final x = i / (readings.length - 1) * size.width;
+      final y = (1 - (readings[i] - minBpm) / range) * size.height;
+      return Offset(x, y);
+    });
+
+    final dividerPaint = Paint()
+      ..color = const Color(0xFF3A3A3C)
+      ..strokeWidth = 1.0;
+    for (final b in seriesBoundaries) {
+      final x = b / readings.length * size.width;
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), dividerPaint);
+    }
+
+    final linePaint = Paint()
+      ..color = AppColors.rpeMax
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final path = Path()..moveTo(points[0].dx, points[0].dy);
+    for (int i = 1; i < points.length; i++) {
+      final midX = (points[i - 1].dx + points[i].dx) / 2;
+      path.cubicTo(
+          midX, points[i - 1].dy, midX, points[i].dy, points[i].dx, points[i].dy);
+    }
+    canvas.drawPath(path, linePaint);
+  }
+
+  @override
+  bool shouldRepaint(_FcChartPainter old) =>
+      old.readings != readings || old.maxBpm != maxBpm || old.minBpm != minBpm;
 }
 
 class _AnimatedBackButton extends StatefulWidget {
@@ -685,7 +934,7 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
               offset: Offset(0, _isPressed ? 2 : 4),
             ),
           ],
-          border: Border.all(color: Tema.brandPurple.withOpacity(0.1)),
+          border: Border.all(color: AppColors.brand.withOpacity(0.1)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -694,16 +943,16 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
               Icons.arrow_back_ios_new_rounded,
               size: 16,
               color: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.brandPurpleLight
-                  : Tema.brandPurple,
+                  ? AppColors.brandLight
+                  : AppColors.brand,
             ),
             const SizedBox(width: 6),
             Text(
               "Volver",
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.brandPurpleLight
-                    : Tema.brandPurple,
+                    ? AppColors.brandLight
+                    : AppColors.brand,
                 fontWeight: FontWeight.w700,
                 fontSize: 13,
               ),

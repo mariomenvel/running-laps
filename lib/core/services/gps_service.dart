@@ -1,3 +1,4 @@
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' show Color;
@@ -361,13 +362,13 @@ class GPSService with WidgetsBindingObserver {
       notificationText: '0.00 km  ·  00:00  ·  --:-- /km',
       notificationIcon: const NotificationIcon(
         metaDataName: 'com.runninglaps.foreground_icon',
-        backgroundColor: Color(0xFF8E24AA),
+        backgroundColor: AppColors.brand,
       ),
       notificationButtons: [
         NotificationButton(
           id: buttonId,
           text: buttonLabel,
-          textColor: const Color(0xFF8E24AA),
+          textColor: AppColors.brand,
         ),
       ],
       callback: trackingServiceCallback,

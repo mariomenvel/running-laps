@@ -107,6 +107,19 @@ class UserService {
   }
 
   // ==========================================
+  // ATHLETE MODE
+  // ==========================================
+
+  Future<bool> getIsAthleteMode(String uid) async {
+    final doc = await _db.collection('users').doc(uid).get();
+    return doc.data()?['isAthleteMode'] as bool? ?? false;
+  }
+
+  Future<void> setAthleteMode(String uid, {required bool value}) async {
+    await _db.collection('users').doc(uid).update({'isAthleteMode': value});
+  }
+
+  // ==========================================
   // ACCOUNT DELETION
   // ==========================================
 

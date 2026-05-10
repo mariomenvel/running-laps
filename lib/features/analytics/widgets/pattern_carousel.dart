@@ -1,3 +1,4 @@
+import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 /// Generic carousel for swiping between items with page indicators
@@ -87,16 +88,8 @@ class _PatternCarouselState<T> extends State<PatternCarousel<T>> {
                     width: _currentPage == index ? 32 : 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      gradient: _currentPage == index
-                          ? LinearGradient(
-                              colors: [
-                                Theme.of(context).primaryColor,
-                                Theme.of(context).primaryColor.withOpacity(0.7),
-                              ],
-                            )
-                          : null,
                       color: _currentPage == index
-                          ? null
+                          ? AppColors.brand
                           : Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(4),
                       boxShadow: _currentPage == index

@@ -56,7 +56,7 @@ class AdminDashboardTab extends StatelessWidget {
                     onPressed: () => _showExportDialog(context, controller),
                     icon: const Icon(Icons.picture_as_pdf, size: 20),
                     label: const Text("Exportar"),
-                    style: TextButton.styleFrom(foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+                    style: TextButton.styleFrom(foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
                   ),
                 ],
               ),
@@ -94,7 +94,7 @@ class AdminDashboardTab extends StatelessWidget {
                     usuarios.toString(),
                     "Registrados en la plataforma",
                     Icons.people,
-                    Colors.blue,
+                    AppColors.rest,
                   ),
                   const SizedBox(width: 16),
                   Builder(
@@ -122,7 +122,7 @@ class AdminDashboardTab extends StatelessWidget {
                     "${conversionRate.toStringAsFixed(1)}%",
                     "% Usuarios que completan perfil",
                     Icons.verified_user,
-                    conversionRate > 50 ? Colors.green : Colors.amber,
+                    conversionRate > 50 ? AppColors.rpeLow : AppColors.rpeMid,
                   ),
                   const Spacer(),
                 ],
@@ -142,7 +142,7 @@ class AdminDashboardTab extends StatelessWidget {
                     retos.toString(),
                     "Desafíos globales activos",
                     Icons.public,
-                    Colors.purple,
+                    AppColors.brand,
                   ),
                   const SizedBox(width: 16),
                    _buildStatCard(
@@ -163,7 +163,7 @@ class AdminDashboardTab extends StatelessWidget {
                     "${(stats['globalParticipationRate'] as double? ?? 0).toStringAsFixed(1)}%",
                     "% Activos en retos globales",
                     Icons.public,
-                    Colors.purpleAccent,
+                    AppColors.brand,
                   ),
                   const SizedBox(width: 16),
                    _buildStatCard(
@@ -183,7 +183,7 @@ class AdminDashboardTab extends StatelessWidget {
                     "${(stats['globalCompletionRate'] as double? ?? 0).toStringAsFixed(1)}%",
                     "% Aceptados que se completan",
                     Icons.flag,
-                    Colors.green,
+                    AppColors.rpeLow,
                   ),
                   const SizedBox(width: 16),
                    _buildStatCard(
@@ -191,7 +191,7 @@ class AdminDashboardTab extends StatelessWidget {
                     "${(stats['groupCompletionRate'] as double? ?? 0).toStringAsFixed(1)}%",
                     "% Aceptados que se completan",
                     Icons.sports_score,
-                    Colors.teal,
+                    AppColors.brand,
                   ),
                 ],
               ),
@@ -210,7 +210,7 @@ class AdminDashboardTab extends StatelessWidget {
                     stats['peakHour'] ?? "N/A",
                     "Franja horaria con más actividad en la comunidad",
                     Icons.access_time_filled,
-                    Colors.amber.shade700,
+                    AppColors.rpeMid,
                   ),
                   const SizedBox(width: 16),
                    _buildStatCard(
@@ -230,7 +230,7 @@ class AdminDashboardTab extends StatelessWidget {
                     "${(stats['retentionRate'] as num? ?? 0).toStringAsFixed(1)}%",
                     "% de usuarios que repiten entre periodos (Sticky)",
                     Icons.favorite,
-                    Colors.pinkAccent,
+                    AppColors.brand,
                   ),
                   const SizedBox(width: 16),
                    _buildStatCard(
@@ -238,7 +238,7 @@ class AdminDashboardTab extends StatelessWidget {
                     "${(stats['momGrowthKm'] as num? ?? 0) >= 0 ? "+" : ""}${(stats['momGrowthKm'] as num? ?? 0).toStringAsFixed(1)}%",
                     "Evolución de kilómetros vs periodo anterior",
                     Icons.trending_up,
-                    (stats['momGrowthKm'] as num? ?? 0) >= 0 ? Colors.green : Colors.red,
+                    (stats['momGrowthKm'] as num? ?? 0) >= 0 ? AppColors.rpeLow : AppColors.rpeMax,
                   ),
                 ],
               ),
@@ -258,7 +258,7 @@ class AdminDashboardTab extends StatelessWidget {
                     "${(stats['consistencyRate'] as double? ?? 0).toStringAsFixed(1)} /sem",
                     "Entrenamientos promedio por usuario (activo) semanal",
                     Icons.repeat,
-                    Colors.blueGrey,
+                    AppColors.iconMutedOf(context),
                   ),
                   const SizedBox(width: 16),
                    _buildStatCard(
@@ -266,7 +266,7 @@ class AdminDashboardTab extends StatelessWidget {
                     "${totalKm.toStringAsFixed(1)}k",
                      "Distancia total de la comunidad",
                     Icons.directions_run,
-                    Colors.orange,
+                    AppColors.rpeMid,
                   ),
                 ],
               ),
@@ -278,7 +278,7 @@ class AdminDashboardTab extends StatelessWidget {
                     preferredDay,
                     "Día con más actividad (Muestra reciente)",
                     Icons.calendar_today,
-                    Colors.teal,
+                    AppColors.brand,
                   ),
                   const SizedBox(width: 16),
                   _buildStatCard(
@@ -318,7 +318,7 @@ class AdminDashboardTab extends StatelessWidget {
                     (stats['avgRpe'] as double? ?? 0).toStringAsFixed(1),
                     "Nivel de intensidad percibida (Escala 1-10)",
                     Icons.bolt,
-                    Colors.redAccent,
+                    AppColors.rpeMax,
                   ),
                   const Spacer(),
                 ],
@@ -329,11 +329,11 @@ class AdminDashboardTab extends StatelessWidget {
               // CARD SISTEMA
               Card(
                 elevation: 0,
-                color: Colors.green.withOpacity(0.1),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.green.withOpacity(0.3))),
+                color: AppColors.rpeLow.withOpacity(0.1),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: AppColors.rpeLow.withOpacity(0.3))),
                 child: const ListTile(
-                  leading: Icon(Icons.check_circle, color: Colors.green),
-                  title: Text("Sistema Operacional", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                  leading: Icon(Icons.check_circle, color: AppColors.rpeLow),
+                  title: Text("Sistema Operacional", style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.rpeLow)),
                   subtitle: Text("Todos los servicios funcionando correctamente"),
                 ),
               ),
@@ -641,20 +641,20 @@ class AdminDashboardTab extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Tema.brandPurple.withOpacity(0.08),
+                          color: AppColors.brand.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(15),
-                          border: Border.all(color: Tema.brandPurple.withOpacity(0.2)),
+                          border: Border.all(color: AppColors.brand.withOpacity(0.2)),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.calendar_today, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 20),
+                            Icon(Icons.calendar_today, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 20),
                             const SizedBox(width: 12),
                             Text(
                               "${DateFormat('dd/MM/yyyy').format(exportRange.start)} - ${DateFormat('dd/MM/yyyy').format(exportRange.end)}",
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+                              style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
                             ),
                             const Spacer(),
-                            Icon(Icons.edit, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 18),
+                            Icon(Icons.edit, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 18),
                           ],
                         ),
                       ),
@@ -705,7 +705,7 @@ class AdminDashboardTab extends StatelessWidget {
                               color: isSelected ? cs.surface : cs.onSurface.withOpacity(0.04),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: isSelected ? Tema.brandPurple.withOpacity(0.3) : cs.outline.withOpacity(0.2),
+                                color: isSelected ? AppColors.brand.withOpacity(0.3) : cs.outline.withOpacity(0.2),
                                 width: isSelected ? 2 : 1,
                               ),
                             ),
@@ -713,7 +713,7 @@ class AdminDashboardTab extends StatelessWidget {
                               children: [
                                 Icon(
                                   isSelected ? Icons.check_circle : Icons.circle_outlined,
-                                  color: isSelected ? Tema.brandPurple : cs.onSurface.withOpacity(0.4),
+                                  color: isSelected ? AppColors.brand : cs.onSurface.withOpacity(0.4),
                                   size: 22,
                                 ),
                                 const SizedBox(width: 12),
@@ -743,7 +743,7 @@ class AdminDashboardTab extends StatelessWidget {
                     height: 55,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Tema.brandPurple,
+                        backgroundColor: AppColors.brand,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                         elevation: 0,
                       ),

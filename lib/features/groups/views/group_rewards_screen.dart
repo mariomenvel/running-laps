@@ -7,7 +7,7 @@ import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/app_page_scaffold.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
-import '../../profile/views/profile_menu_screen.dart';
+import '../../profile/views/profile_menu_screen_legacy.dart';
 import '../viewmodels/group_rewards_controller.dart';
 import '../data/models/rewards_models.dart';
 import '../data/models/enums.dart';
@@ -47,10 +47,7 @@ class GroupRewardsScreen extends StatelessWidget {
             subtitle: "Medallero y logros del grupo",
             icon: Icons.emoji_events_rounded,
             height: 85,
-            gradientColors: [
-              Tema.brandPurple,
-              Tema.brandPurple.withOpacity(0.7),
-            ],
+            accentColor: AppColors.brandSurface,
           ),
           Expanded(child: GroupRewardsBody(groupId: groupId)),
         ],
@@ -106,16 +103,11 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
             controller: _tabController,
             indicatorSize: TabBarIndicatorSize.tab,
             indicator: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Tema.brandPurple,
-                  Tema.brandPurple.withOpacity(0.8),
-                ],
-              ),
+              color: AppColors.brand,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Tema.brandPurple.withOpacity(0.3),
+                  color: AppColors.brand.withOpacity(0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -145,7 +137,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
             builder: (context, loading, _) {
               if (loading) {
                 return const Center(
-                  child: CircularProgressIndicator(color: Tema.brandPurple),
+                  child: CircularProgressIndicator(color: AppColors.brand),
                 );
               }
 
@@ -288,7 +280,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
                     index: entry.key,
                     child: _buildHistoryItem(
                       iconWidget: const _BadgeIcon(),
-                      accentColor: Tema.brandPurple,
+                      accentColor: AppColors.brand,
                       title: entry.value.challengeTitle,
                       date: entry.value.awardedAt,
                       trailing: entry.value.periodKey,
@@ -307,7 +299,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
     final String? myUid = FirebaseAuth.instance.currentUser?.uid;
     final bool isMe = item.uid == myUid;
     final Color accentColor =
-        item.isMedal ? _getMedalColor(item.medal!.medal) : Tema.brandPurple;
+        item.isMedal ? _getMedalColor(item.medal!.medal) : AppColors.brand;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -350,7 +342,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
                     color: isMe
-                        ? Tema.brandPurple
+                        ? AppColors.brand
                         : Theme.of(context).colorScheme.onSurface,
                   ),
                   maxLines: 1,
@@ -405,10 +397,10 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Tema.brandPurple.withOpacity(0.1),
+            color: AppColors.brand.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, size: 18, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+          child: Icon(icon, size: 18, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
         ),
         const SizedBox(width: 12),
         Text(
@@ -443,15 +435,10 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Tema.brandPurple.withOpacity(0.1),
-                    Tema.brandPurple.withOpacity(0.05),
-                  ],
-                ),
+                color: AppColors.brand.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 56, color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple).withOpacity(0.5)),
+              child: Icon(icon, size: 56, color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand).withOpacity(0.5)),
             ),
             const SizedBox(height: 20),
             Text(
@@ -613,15 +600,8 @@ class _PremiumMedalCard extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              gradient: isTop3
-                  ? LinearGradient(
-                      colors: [rankColor, rankColor.withOpacity(0.7)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    )
-                  : null,
               color: isTop3
-                  ? null
+                  ? rankColor
                   : Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
               shape: BoxShape.circle,
               boxShadow: isTop3
@@ -677,7 +657,7 @@ class _PremiumMedalCard extends StatelessWidget {
                               isMe ? FontWeight.w900 : FontWeight.bold,
                           fontSize: 16,
                           color: isMe
-                              ? Tema.brandPurple
+                              ? AppColors.brand
                               : Theme.of(context).colorScheme.onSurface,
                         ),
                         maxLines: 1,
@@ -716,16 +696,11 @@ class _PremiumMedalCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Tema.brandPurple,
-                      Tema.brandPurple.withOpacity(0.7)
-                    ],
-                  ),
+                  color: AppColors.brand,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Tema.brandPurple.withOpacity(0.3),
+                      color: AppColors.brand.withOpacity(0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -761,7 +736,7 @@ class _PremiumMedalCard extends StatelessWidget {
     if (rank == 1) return _MedalIcon._color(MedalType.gold);
     if (rank == 2) return _MedalIcon._color(MedalType.silver);
     if (rank == 3) return _MedalIcon._color(MedalType.bronze);
-    return Colors.grey.shade400;
+    return AppColors.iconMuted;
   }
 }
 
@@ -784,7 +759,7 @@ class _PremiumBadgeCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: Tema.brandPurple.withOpacity(0.08),
+            color: AppColors.brand.withOpacity(0.08),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -796,13 +771,11 @@ class _PremiumBadgeCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Tema.brandPurple, Tema.brandPurple.withOpacity(0.7)],
-              ),
+              color: AppColors.brand,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Tema.brandPurple.withOpacity(0.3),
+                  color: AppColors.brand.withOpacity(0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -838,7 +811,7 @@ class _PremiumBadgeCard extends StatelessWidget {
                               isMe ? FontWeight.w900 : FontWeight.bold,
                           fontSize: 16,
                           color: isMe
-                              ? Tema.brandPurple
+                              ? AppColors.brand
                               : Theme.of(context).colorScheme.onSurface,
                         ),
                         maxLines: 1,
@@ -865,16 +838,11 @@ class _PremiumBadgeCard extends StatelessWidget {
             padding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Tema.brandPurple,
-                  Tema.brandPurple.withOpacity(0.7)
-                ],
-              ),
+              color: AppColors.brand,
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
-                  color: Tema.brandPurple.withOpacity(0.3),
+                  color: AppColors.brand.withOpacity(0.3),
                   blurRadius: 8,
                 ),
               ],
@@ -897,7 +865,7 @@ class _PremiumBadgeCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: Tema.brandPurple.withOpacity(0.1),
+        color: AppColors.brand.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -906,7 +874,7 @@ class _PremiumBadgeCard extends StatelessWidget {
             value,
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
               fontSize: 13,
             ),
           ),
@@ -914,7 +882,7 @@ class _PremiumBadgeCard extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple).withOpacity(0.7),
+              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand).withOpacity(0.7),
               fontSize: 11,
             ),
           ),
@@ -938,9 +906,7 @@ class _MedalCounter extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color.withOpacity(0.15), color.withOpacity(0.08)],
-        ),
+        color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: color.withOpacity(0.3)),
         boxShadow: type == MedalType.gold
@@ -1028,11 +994,11 @@ class _BadgeIcon extends StatelessWidget {
       width: size + 16,
       height: size + 16,
       decoration: BoxDecoration(
-        color: Tema.brandPurple.withOpacity(0.12),
+        color: AppColors.brand.withOpacity(0.12),
         shape: BoxShape.circle,
       ),
       child: Center(
-        child: Icon(Icons.verified_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: size),
+        child: Icon(Icons.verified_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: size),
       ),
     );
   }
@@ -1128,7 +1094,7 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
               offset: Offset(0, _isPressed ? 2 : 4),
             ),
           ],
-          border: Border.all(color: Tema.brandPurple.withOpacity(0.1)),
+          border: Border.all(color: AppColors.brand.withOpacity(0.1)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1136,13 +1102,13 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
             Icon(
               Icons.arrow_back_ios_new_rounded,
               size: 16,
-              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
             ),
             const SizedBox(width: 6),
             Text(
               "Volver",
               style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                 fontWeight: FontWeight.w700,
                 fontSize: 13,
               ),

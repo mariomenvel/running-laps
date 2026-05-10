@@ -72,7 +72,7 @@ class _StatsCarouselState extends State<StatsCarousel> {
               width: _currentPage == index ? 24 : 8,
               height: 8,
               decoration: BoxDecoration(
-                color: _currentPage == index ? Tema.brandPurple : Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                color: _currentPage == index ? AppColors.brand : Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(4),
               ),
             );
@@ -116,7 +116,7 @@ class _StatsCarouselState extends State<StatsCarousel> {
            barRods: [
              BarChartRodData(
                toY: val,
-               color: i == 0 ? Tema.brandPurple : Tema.brandPurple.withOpacity(0.3), // Highlight this week
+               color: i == 0 ? AppColors.brand : AppColors.brand.withOpacity(0.3), // Highlight this week
                width: 12,
                borderRadius: BorderRadius.circular(4),
              )
@@ -154,7 +154,7 @@ class _StatsCarouselState extends State<StatsCarousel> {
         title: "Tendencia de Ritmo",
         subtitle: "Necesitas más datos",
         icon: Icons.show_chart_rounded,
-        child: const Center(child: Text("Sigue entrenando...", style: TextStyle(color: Colors.grey))),
+        child: const Center(child: Text("Sigue entrenando...", style: TextStyle(color: AppColors.iconMuted))),
       );
     }
 
@@ -191,12 +191,12 @@ class _StatsCarouselState extends State<StatsCarousel> {
             LineChartBarData(
               spots: spots,
               isCurved: true,
-              color: Colors.green.shade400,
+              color: AppColors.rpeLow,
               barWidth: 3,
               dotData: FlDotData(show: false),
               belowBarData: BarAreaData(
                 show: true, 
-                color: Colors.green.withOpacity(0.1)
+                color: AppColors.rpeLow.withOpacity(0.1)
               ),
             ),
           ],
@@ -229,7 +229,7 @@ class _StatsCarouselState extends State<StatsCarousel> {
         children: [
           const Row(
             children: [
-              Icon(Icons.auto_awesome, size: 20, color: Colors.orange),
+              Icon(Icons.auto_awesome, size: 20, color: AppColors.rpeMid),
               SizedBox(width: 8),
               Text("Explora tus Datos", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             ],
@@ -243,8 +243,8 @@ class _StatsCarouselState extends State<StatsCarousel> {
               for (var dist in frequentDist)
                 ActionChip(
                   label: Text("${dist}m"),
-                  backgroundColor: Tema.brandPurple.withOpacity(0.1),
-                  labelStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.bold),
+                  backgroundColor: AppColors.brand.withOpacity(0.1),
+                  labelStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.bold),
                   onPressed: () {
                     // TODO: Navegar a Detalle Distancia
                     // Callback(type: distance, val: dist)
@@ -253,8 +253,8 @@ class _StatsCarouselState extends State<StatsCarousel> {
               for (var sig in frequentWorkouts)
                  ActionChip(
                   label: Text(sig),
-                  backgroundColor: Colors.blue.shade50,
-                  labelStyle: TextStyle(color: Colors.blue.shade700, fontWeight: FontWeight.bold),
+                  backgroundColor: AppColors.rest,
+                  labelStyle: TextStyle(color: AppColors.rest, fontWeight: FontWeight.bold),
                   onPressed: () {
                     // TODO: Navegar a Detalle Workout
                   },

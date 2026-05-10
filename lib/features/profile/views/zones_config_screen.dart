@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/features/profile/viewmodels/zones_viewmodel.dart';
 
 class ZonesConfigScreen extends StatefulWidget {
@@ -112,16 +113,18 @@ class _ZonesConfigScreenState extends State<ZonesConfigScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Zonas de entrenamiento'),
-        centerTitle: true,
-      ),
+      appBar: ShellEmbeddingScope.isEmbedded(context)
+          ? null
+          : AppBar(
+              title: const Text('Zonas de entrenamiento'),
+              centerTitle: true,
+            ),
       body: ValueListenableBuilder<ZonesViewModelState>(
         valueListenable: _vm.state,
         builder: (context, vmState, _) {
           if (vmState.profile == null && vmState.errorMessage == null) {
             return const Center(
-              child: CircularProgressIndicator(color: AppColors.brandPurple),
+              child: CircularProgressIndicator(color: AppColors.brand),
             );
           }
 
@@ -194,7 +197,7 @@ class _ZonesConfigScreenState extends State<ZonesConfigScreen> {
                     child: FilledButton(
                       onPressed: vmState.isSaving ? null : _save,
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.brandPurple,
+                        backgroundColor: AppColors.brand,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -458,7 +461,7 @@ class _OnboardingSheetState extends State<_OnboardingSheet> {
               child: Row(
                 children: [
                   Icon(Icons.cake_outlined,
-                      color: AppColors.brandPurple, size: 20),
+                      color: AppColors.brand, size: 20),
                   const SizedBox(width: 12),
                   Text(
                     _selectedDate != null
@@ -526,7 +529,7 @@ class _OnboardingSheetState extends State<_OnboardingSheet> {
                 child: FilledButton(
                   onPressed: _saving ? null : _confirm,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brandPurple,
+                    backgroundColor: AppColors.brand,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -567,9 +570,9 @@ class _SexButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? AppColors.brandPurple : Colors.transparent;
+    final color = selected ? AppColors.brand : Colors.transparent;
     final borderColor = selected
-        ? AppColors.brandPurple
+        ? AppColors.brand
         : Theme.of(context).colorScheme.outline;
     return GestureDetector(
       onTap: onTap,
@@ -589,7 +592,7 @@ class _SexButton extends StatelessWidget {
             fontWeight:
                 selected ? FontWeight.w700 : FontWeight.w500,
             color: selected
-                ? AppColors.brandPurple
+                ? AppColors.brand
                 : Theme.of(context).colorScheme.onSurface,
           ),
         ),

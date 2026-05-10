@@ -110,7 +110,7 @@ class _CreateTagDialogState extends State<CreateTagDialog> with SingleTickerProv
               height: 4,
               margin: const EdgeInsets.only(bottom: 24),
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.surface2,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -133,25 +133,25 @@ class _CreateTagDialogState extends State<CreateTagDialog> with SingleTickerProv
             decoration: InputDecoration(
               labelText: 'Nombre',
               hintText: 'ej: Competición',
-              hintStyle: TextStyle(color: Colors.grey.shade400),
-              labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+              hintStyle: TextStyle(color: AppColors.iconMuted),
+              labelStyle: TextStyle(color: AppColors.iconMuted, fontSize: 14),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: Colors.grey.shade200),
+                borderSide: BorderSide(color: AppColors.iconMuted),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: Colors.grey.shade200),
+                borderSide: BorderSide(color: AppColors.iconMuted),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(color: Tema.brandPurple, width: 2),
+                borderSide: const BorderSide(color: AppColors.brand, width: 2),
               ),
               filled: true,
-              fillColor: Colors.grey.shade50,
+              fillColor: AppColors.iconMuted,
               counterText:
                   '${_nameController.text.length}/${TagManager.maxTagNameLength}',
-              counterStyle: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+              counterStyle: TextStyle(color: AppColors.iconMuted, fontSize: 12),
               contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             ),
             maxLength: TagManager.maxTagNameLength,
@@ -189,14 +189,7 @@ class _CreateTagDialogState extends State<CreateTagDialog> with SingleTickerProv
                   width: _selectedColorIndex == index ? 50 : 46,
                   height: _selectedColorIndex == index ? 50 : 46,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        TagColors.palette[index],
-                        TagColors.palette[index].withOpacity(0.8),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: TagColors.palette[index],
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: _selectedColorIndex == index
@@ -235,19 +228,19 @@ class _CreateTagDialogState extends State<CreateTagDialog> with SingleTickerProv
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.red.shade50,
+                color: AppColors.rpeMax,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.red.shade200),
+                border: Border.all(color: AppColors.rpeMax),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.error_outline, color: Colors.red.shade700, size: 22),
+                  Icon(Icons.error_outline, color: AppColors.rpeMax, size: 22),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       _errorMessage!,
                       style: TextStyle(
-                        color: Colors.red.shade700,
+                        color: AppColors.rpeMax,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -271,14 +264,14 @@ class _CreateTagDialogState extends State<CreateTagDialog> with SingleTickerProv
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    side: BorderSide(color: Colors.grey.shade300),
+                    side: BorderSide(color: AppColors.iconMuted),
                   ),
                   child: Text(
                     'Cancelar',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade700,
+                      color: AppColors.iconMuted,
                     ),
                   ),
                 ),
@@ -289,14 +282,14 @@ class _CreateTagDialogState extends State<CreateTagDialog> with SingleTickerProv
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _createTag,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Tema.brandPurple,
+                    backgroundColor: AppColors.brand,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
                     elevation: 4,
-                    shadowColor: Tema.brandPurple.withOpacity(0.4),
+                    shadowColor: AppColors.brand.withOpacity(0.4),
                   ),
                   child: _isLoading
                       ? const SizedBox(

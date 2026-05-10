@@ -37,9 +37,9 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
 
   // Gradient colors: brandPurple → metric accent (consistent with ChallengeColorHelper)
   static const Map<GoalKind, List<Color>> _kindGradients = {
-    GoalKind.distance: [Tema.brandPurple, Color(0xFF10B981)],
-    GoalKind.time: [Tema.brandPurple, Color(0xFFF59E0B)],
-    GoalKind.sessions: [Tema.brandPurple, Color(0xFF3B82F6)],
+    GoalKind.distance: [AppColors.rest, AppColors.rest],
+    GoalKind.time: [AppColors.rpeMid, AppColors.rpeMid],
+    GoalKind.sessions: [AppColors.brand, AppColors.brand],
   };
 
   static const Map<GoalKind, IconData> _kindIcons = {
@@ -154,7 +154,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
           curve: Curves.easeInOut,
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            gradient: LinearGradient(colors: gradient),
+            color: gradient.first,
             borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
@@ -244,7 +244,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: Tema.brandPurple, width: 2),
+          borderSide: const BorderSide(color: AppColors.brand, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         prefixIcon: Padding(
@@ -272,8 +272,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
                 curve: Curves.easeOutCubic,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 decoration: BoxDecoration(
-                  gradient: isSelected ? LinearGradient(colors: gradient) : null,
-                  color: isSelected ? null : cs.onSurface.withOpacity(0.05),
+                  color: isSelected ? gradient.first : cs.onSurface.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(18),
                   border: isSelected
                       ? null
@@ -390,7 +389,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
             return Theme(
               data: Theme.of(context).copyWith(
                 colorScheme: ColorScheme.light(
-                  primary: Tema.brandPurple,
+                  primary: AppColors.brand,
                   onPrimary: Colors.white,
                   surface: Colors.white,
                   onSurface: Colors.black87,
@@ -458,11 +457,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
         duration: const Duration(milliseconds: 200),
         height: 60,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: _isCreating
-                ? [Colors.grey.shade400, Colors.grey.shade500]
-                : [Colors.black, Colors.grey.shade800],
-          ),
+          color: _isCreating ? AppColors.iconMuted : Colors.black,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -539,7 +534,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
             Text(msg),
           ],
         ),
-        backgroundColor: Colors.red.shade500,
+        backgroundColor: AppColors.rpeMax,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),

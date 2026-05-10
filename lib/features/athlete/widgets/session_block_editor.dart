@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/number_picker_field.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -14,7 +15,7 @@ Color _zoneColor(int zone) {
     case 3:  return AppColors.rpeMid;
     case 4:  return AppColors.effort;
     case 5:  return AppColors.rpeMax;
-    default: return AppColors.brandPurple;
+    default: return AppColors.brand;
   }
 }
 
@@ -179,7 +180,7 @@ class _SessionBlockEditorState extends State<SessionBlockEditor> {
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(d, true),
-                        style: TextButton.styleFrom(foregroundColor: Colors.red),
+                        style: TextButton.styleFrom(foregroundColor: AppColors.rpeMax),
                         child: const Text('Eliminar'),
                       ),
                     ],
@@ -191,7 +192,7 @@ class _SessionBlockEditorState extends State<SessionBlockEditor> {
                   padding:     const EdgeInsets.only(right: 20),
                   margin:      const EdgeInsets.only(bottom: 10),
                   decoration:  BoxDecoration(
-                    color:        Colors.red,
+                    color:        AppColors.rpeMax,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.delete_outline, color: Colors.white),
@@ -271,8 +272,8 @@ class _AddBlockButton extends StatelessWidget {
     return OutlinedButton(
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.brandPurple,
-        side:            const BorderSide(color: AppColors.brandPurple),
+        foregroundColor: AppColors.brand,
+        side:            const BorderSide(color: AppColors.brand),
         padding:         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         visualDensity:   VisualDensity.compact,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -300,9 +301,9 @@ class _BlockCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final brandChipBg = AppColors.brandPurple.withValues(alpha: 0.12);
+    final brandChipBg = AppColors.brand.withValues(alpha: 0.12);
     final brandChipText =
-        isDark ? AppColors.brandPurpleLight : AppColors.brandPurple;
+        isDark ? AppColors.brandLight : AppColors.brand;
 
     return GestureDetector(
       onTap: onTap,
@@ -310,10 +311,10 @@ class _BlockCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+          color: AppColors.surfaceOf(context),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isDark ? AppColors.borderDark : AppColors.borderLight,
+            color: AppColors.borderOf(context),
           ),
         ),
         child: Column(
@@ -707,7 +708,7 @@ class _BlockEditorSheetState extends State<_BlockEditorSheet> {
                           fontWeight:    FontWeight.w700,
                           letterSpacing: 0.8,
                           color: _showObjectives
-                              ? AppColors.brandPurple
+                              ? AppColors.brand
                               : const Color(0xFFAAAAAA),
                         ),
                       ),
@@ -718,7 +719,7 @@ class _BlockEditorSheetState extends State<_BlockEditorSheet> {
                             : Icons.expand_more_rounded,
                         size: 18,
                         color: _showObjectives
-                            ? AppColors.brandPurple
+                            ? AppColors.brand
                             : const Color(0xFFAAAAAA),
                       ),
                     ]),
@@ -737,7 +738,7 @@ class _BlockEditorSheetState extends State<_BlockEditorSheet> {
                     child: FilledButton(
                       onPressed: _trySave,
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.brandPurple,
+                        backgroundColor: AppColors.brand,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -844,7 +845,7 @@ class _BlockEditorSheetState extends State<_BlockEditorSheet> {
             label: const Text('Añadir RPE objetivo',
                 style: TextStyle(fontSize: 13)),
             style: TextButton.styleFrom(
-                foregroundColor: AppColors.brandPurple,
+                foregroundColor: AppColors.brand,
                 visualDensity:   VisualDensity.compact),
           )
         else ...[
@@ -965,7 +966,7 @@ class _SheetTextField extends StatelessWidget {
             )),
         focusedBorder:  OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide:   const BorderSide(color: AppColors.brandPurple)),
+            borderSide:   const BorderSide(color: AppColors.brand)),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       ),
@@ -973,7 +974,7 @@ class _SheetTextField extends StatelessWidget {
   }
 }
 
-class _SheetNumField extends StatelessWidget {
+class _SheetNumField extends StatefulWidget {
   final TextEditingController ctrl;
   final String label;
   final String hint;
@@ -987,72 +988,96 @@ class _SheetNumField extends StatelessWidget {
   });
 
   @override
+  State<_SheetNumField> createState() => _SheetNumFieldState();
+}
+
+class _SheetNumFieldState extends State<_SheetNumField> {
+  late int _value;
+
+  @override
+  void initState() {
+    super.initState();
+    _value = int.tryParse(widget.ctrl.text) ?? 1;
+    widget.ctrl.addListener(_syncFromCtrl);
+  }
+
+  void _syncFromCtrl() {
+    final v = int.tryParse(widget.ctrl.text) ?? 1;
+    if (v != _value) setState(() => _value = v);
+  }
+
+  @override
+  void dispose() {
+    widget.ctrl.removeListener(_syncFromCtrl);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: width,
-      child: TextFormField(
-        controller:      ctrl,
-        keyboardType:    TextInputType.number,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        decoration:      InputDecoration(
-          labelText:      label,
-          hintText:       hint,
-          isDense:        true,
-          border:         OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          enabledBorder:  OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide:   BorderSide(
-                color: Theme.of(context)
-                    .colorScheme
-                    .outline
-                    .withValues(alpha: 0.5),
-              )),
-          focusedBorder:  OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide:   const BorderSide(color: AppColors.brandPurple)),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        ),
-        style: const TextStyle(fontSize: 14),
+      width: widget.width,
+      child: NumberPickerField(
+        label:     widget.label,
+        value:     _value,
+        min:       1,
+        max:       5000,
+        step:      1,
+        unit:      '',
+        onChanged: (v) {
+          setState(() => _value = v);
+          widget.ctrl.text = v.toString();
+        },
       ),
     );
   }
 }
 
-class _PaceField extends StatelessWidget {
+class _PaceField extends StatefulWidget {
   final TextEditingController ctrl;
   final String hint;
 
   const _PaceField({required this.ctrl, required this.hint});
 
   @override
+  State<_PaceField> createState() => _PaceFieldState();
+}
+
+class _PaceFieldState extends State<_PaceField> {
+  late int _value;
+
+  @override
+  void initState() {
+    super.initState();
+    _value = int.tryParse(widget.ctrl.text) ?? 0;
+    widget.ctrl.addListener(_syncFromCtrl);
+  }
+
+  void _syncFromCtrl() {
+    final v = int.tryParse(widget.ctrl.text) ?? 0;
+    if (v != _value) setState(() => _value = v);
+  }
+
+  @override
+  void dispose() {
+    widget.ctrl.removeListener(_syncFromCtrl);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 54,
-      child: TextFormField(
-        controller:      ctrl,
-        keyboardType:    TextInputType.number,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        textAlign:       TextAlign.center,
-        decoration:      InputDecoration(
-          hintText:       hint,
-          isDense:        true,
-          border:         OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          enabledBorder:  OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide:   BorderSide(
-                color: Theme.of(context)
-                    .colorScheme
-                    .outline
-                    .withValues(alpha: 0.5),
-              )),
-          focusedBorder:  OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide:   const BorderSide(color: AppColors.brandPurple)),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        ),
-        style: const TextStyle(fontSize: 14),
+      width: 80,
+      child: NumberPickerField(
+        label:     widget.hint,
+        value:     _value,
+        min:       0,
+        max:       59,
+        step:      1,
+        unit:      '',
+        onChanged: (v) {
+          setState(() => _value = v);
+          widget.ctrl.text = v.toString();
+        },
       ),
     );
   }

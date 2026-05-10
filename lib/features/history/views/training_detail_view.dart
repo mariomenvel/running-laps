@@ -1,11 +1,16 @@
+import 'dart:math' show max, min;
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-// fl_chart was here
-import 'package:running_laps/config/app_theme.dart';
+import 'package:intl/intl.dart';
+import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/theme/app_theme.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
+import 'package:running_laps/features/profile/data/zones_repository.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
-import 'package:running_laps/core/widgets/gradient_banner.dart';
-import 'package:running_laps/core/widgets/app_header.dart';
-import 'package:running_laps/core/widgets/app_page_scaffold.dart';
+import 'package:running_laps/features/training/widgets/tag_chip.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 
 import '../widgets/training_map_view.dart';
@@ -19,518 +24,700 @@ class TrainingDetailView extends StatefulWidget {
   State<TrainingDetailView> createState() => _TrainingDetailViewState();
 }
 
-class _TrainingDetailViewState extends State<TrainingDetailView>
-    with SingleTickerProviderStateMixin {
+class _TrainingDetailViewState extends State<TrainingDetailView> {
   Entrenamiento get training => widget.training;
 
-  // ── Entrance animation ──────────────────────────────────────────
-  late final AnimationController _entranceCtrl;
-  late final Animation<double> _aBanner;      // 0ms   – fade + slide left
-  late final Animation<double> _aStats;       // 100ms – scale in
-  late final Animation<double> _aMap;         // 200ms – fade + slide bottom
-  late final Animation<double> _aSeries;      // 350ms – fade + slide bottom
-  late final Animation<double> _aComparison;  // 500ms – fade + slide bottom
-  // ────────────────────────────────────────────────────────────────
+  late final Future<int?> _fcMaxFuture;
+  final _editingNotes = ValueNotifier<bool>(false);
+  late final TextEditingController _notasController;
 
   @override
   void initState() {
     super.initState();
-    _entranceCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
-    _aBanner     = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.000, 0.517, curve: Curves.easeOutQuart));
-    _aStats      = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.083, 0.600, curve: Curves.easeOutQuart));
-    _aMap        = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.167, 0.683, curve: Curves.easeOutQuart));
-    _aSeries     = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.292, 0.808, curve: Curves.easeOutQuart));
-    _aComparison = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.417, 0.933, curve: Curves.easeOutQuart));
-    _entranceCtrl.forward();
+    _fcMaxFuture = _loadFcMax();
+    _notasController = TextEditingController(text: training.notas ?? '');
   }
 
   @override
   void dispose() {
-    _entranceCtrl.dispose();
+    _editingNotes.dispose();
+    _notasController.dispose();
     super.dispose();
+  }
+
+  Future<int?> _loadFcMax() async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return null;
+      final profile = await ZonesRepository().getUserProfile(uid);
+      return profile?.fcMax;
+    } catch (e) {
+      debugPrint('[TrainingDetailView] error cargando fcMax: $e');
+      return null;
+    }
+  }
+
+  void _saveNotas() {
+    _editingNotes.value = false;
   }
 
   @override
   Widget build(BuildContext context) {
-    return AppPageScaffold(
-      header: const AppHeader(
-        showBottomDivider: false,
-      ),
-      body: Column(
+    final sections = <Widget>[
+      _buildHero(),
+      _buildDivider(),
+      _buildStatsRow(),
+      _buildDivider(),
+      if (training.gps) ...[
+        _buildMap(),
+        _buildDivider(),
+      ],
+      _buildSeriesSection(),
+      if (_hasFcData()) ...[
+        _buildDivider(),
+        _buildFcSection(),
+      ],
+      if (training.plannedComparison != null) ...[
+        _buildDivider(),
+        _buildComparisonSection(),
+      ],
+      if (training.notas != null && training.notas!.isNotEmpty) ...[
+        _buildDivider(),
+        _buildNotasSection(),
+      ],
+      const SizedBox(height: 40),
+    ];
+
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        SliverList(
+          delegate: SliverChildListDelegate(sections),
+        ),
+      ],
+    );
+  }
+
+  // ── Divider ───────────────────────────────────────────────────────
+
+  Widget _buildDivider() => Padding(
+        padding: const EdgeInsets.symmetric(
+            vertical: AppSpacing.l, horizontal: AppSpacing.l),
+        child: Divider(
+          color: AppColors.borderOf(context),
+          thickness: 0.5,
+          height: 0,
+        ),
+      );
+
+  // ── Sección 1 — Hero ──────────────────────────────────────────────
+
+  Widget _buildHero() {
+    final dateStr = DateFormat('d MMM yyyy', 'es').format(training.fecha);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.l, AppSpacing.l, AppSpacing.l, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-            _slideFromLeft(_aBanner, GradientBanner(
-              title: training.titulo,
-              subtitle: "Análisis con Mapa GPS",
-              icon: Icons.map_rounded,
-              gradientColors: const [Tema.brandPurple, Color(0xFF6A1B9A)],
-              height: 100,
-            )),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          // Back button
+          GestureDetector(
+            onTap: () => MainShell.shellKey.currentState?.navigateBack(),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.l),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  _AnimatedBackButton(onTap: () => Navigator.pop(context)),
+                  Icon(Icons.chevron_left, color: AppColors.brand, size: 22),
+                  Text(
+                    'Historial',
+                    style: TextStyle(
+                        fontSize: 15,
+                        color: AppColors.brand,
+                        fontWeight: FontWeight.w500),
+                  ),
                 ],
               ),
             ),
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _scaleIn(_aStats, _buildStatsGrid()),
-                    const SizedBox(height: 24),
-                    _slideFromBottom(_aMap, _buildMapCard()),
-                    const SizedBox(height: 32),
-                    _slideFromBottom(_aSeries, _buildSeriesSection()),
-                    if (training.notas != null && training.notas!.isNotEmpty) ...[
-                      const SizedBox(height: 32),
-                      _slideFromBottom(_aSeries, _buildNotasSection()),
-                    ],
-                    if (training.plannedComparison != null) ...[
-                      const SizedBox(height: 32),
-                      _slideFromBottom(_aComparison, _buildComparisonSection()),
-                      const SizedBox(height: 32),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ],
-      ),
-    );
-  }
-
-  // ── Entrance animation helpers ────────────────────────────────────
-  Widget _slideFromLeft(Animation<double> anim, Widget child) {
-    return AnimatedBuilder(
-      animation: anim,
-      builder: (_, __) => Opacity(
-        opacity: anim.value,
-        child: Transform.translate(
-          offset: Offset(-24 * (1 - anim.value), 0),
-          child: child,
-        ),
-      ),
-    );
-  }
-
-  Widget _slideFromBottom(Animation<double> anim, Widget child) {
-    return AnimatedBuilder(
-      animation: anim,
-      builder: (_, __) => Opacity(
-        opacity: anim.value,
-        child: Transform.translate(
-          offset: Offset(0, 24 * (1 - anim.value)),
-          child: child,
-        ),
-      ),
-    );
-  }
-
-  Widget _scaleIn(Animation<double> anim, Widget child) {
-    return AnimatedBuilder(
-      animation: anim,
-      builder: (_, __) => Opacity(
-        opacity: anim.value,
-        child: Transform.scale(
-          scale: 0.85 + 0.15 * anim.value,
-          child: child,
-        ),
-      ),
-    );
-  }
-  // ─────────────────────────────────────────────────────────────────
-
-  Widget _buildMapCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.transparent
-                : Colors.black.withOpacity(0.04),
-            offset: const Offset(0, 6),
-            blurRadius: 16,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.purple.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Icons.route_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 18),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  "Mapa de Ruta",
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
-                ),
-              ],
-            ),
-          ),
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
-            child: SizedBox(
-              height: 300, // Slightly taller for better map view
-              child: _buildRouteMap(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRouteMap() {
-    if (training.trackPoints.isEmpty) {
-      return Container(
-        color: const Color(0xFFE5E3DF),
-        child: const Center(
-          child: Text(
-            "Sin datos de mapa",
-            style: TextStyle(color: Colors.black54, fontWeight: FontWeight.bold),
-          ),
-        ),
-      );
-    }
-
-    return TrainingMapView(points: training.trackPoints);
-  }
-
-  Widget _buildStatsGrid() {
-    final double distKm = training.distanciaTotalM() / 1000.0;
-    final String timeStr = _formatDuration(training.tiempoTotalSec().round());
-    final String paceStr = training.ritmoMedioTexto();
-    final double rpe = training.rpePromedio();
-
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(child: _buildStatCard("Distancia", "${distKm.toStringAsFixed(2)} km", Icons.straighten, Colors.blue)),
-            const SizedBox(width: 16),
-            Expanded(child: _buildStatCard("Tiempo", timeStr, Icons.timer, Colors.orange)),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(child: _buildStatCard("Ritmo Medio", paceStr, Icons.speed, Colors.green)),
-            const SizedBox(width: 16),
-            Expanded(child: _buildStatCard("RPE Promedio", rpe.toStringAsFixed(1), Icons.bolt, Colors.red)),
-          ],
-        ),
-        if (training.fcMediaSesion != null) ...[
-          const SizedBox(height: 16),
+          // Título + badge GPS/Manual
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: _buildStatCard(
-                  "FC media",
-                  "${training.fcMediaSesion!.round()} ppm",
-                  Icons.favorite_rounded,
-                  AppColors.rpeMax,
+                child: Text(
+                  training.titulo,
+                  style: AppTypography.h1.copyWith(
+                    color: AppColors.textPrimary(context),
+                    fontWeight: FontWeight.w600,
+                    height: 1.1,
+                    fontSize: 26,
+                  ),
                 ),
               ),
-              const Expanded(child: SizedBox()),
+              const SizedBox(width: AppSpacing.s),
+              _buildGpsBadge(),
             ],
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildNotasSection() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.brandPurple.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(Icons.notes_rounded,
-                  color: isDark ? AppColors.brandPurpleLight : AppColors.brandPurple,
-                  size: 20),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'NOTAS',
-              style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1C1C1E) : const Color(0xFFF2F2F7),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isDark ? const Color(0xFF38383A) : const Color(0xFFE5E7EB),
-            ),
-          ),
-          child: Text(
-            training.notas!,
-            style: TextStyle(
-              fontSize: 15,
-              height: 1.5,
-              color: isDark ? const Color(0xFFEBEBF5) : const Color(0xFF3A3A3C),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.transparent
-                : Colors.black.withOpacity(0.04),
-            offset: const Offset(0, 6),
-            blurRadius: 16,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 18, color: color),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            label.toUpperCase(),
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-              letterSpacing: 0.8,
-            ),
           ),
           const SizedBox(height: 4),
           Text(
-            value,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface,
+            dateStr,
+            style: AppTypography.body.copyWith(
+                color: AppColors.textSecondary(context)),
+          ),
+          if (training.tags != null && training.tags!.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.s),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: training.tags!
+                  .map((t) => TagChip(tagName: t, small: true))
+                  .toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGpsBadge() {
+    if (training.gps) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.brand.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          'GPS',
+          style: TextStyle(
+              fontSize: 12,
+              color: AppColors.brand,
+              fontWeight: FontWeight.w400),
+        ),
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.surface2Of(context),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.borderOf(context)),
+      ),
+      child: Text(
+        'Manual',
+        style: TextStyle(
+            fontSize: 12,
+            color: AppColors.textSecondary(context),
+            fontWeight: FontWeight.w400),
+      ),
+    );
+  }
+
+  // ── Sección 2 — Stats row ─────────────────────────────────────────
+
+  Widget _buildStatsRow() {
+    final distKm = training.distanciaTotalM() / 1000.0;
+    final timeStr = _formatDuration(training.tiempoTotalSec().round());
+    final paceStr = training.ritmoMedioTexto();
+    final rpe = training.rpePromedio();
+    final isSingle = training.series.length == 1;
+
+    final stats = <_StatItem>[];
+
+    if (isSingle) {
+      stats.add(_StatItem(timeStr, 'Tiempo'));
+    } else {
+      stats.add(_StatItem('${training.series.length}', 'Series'));
+    }
+    stats.add(_StatItem('${distKm.toStringAsFixed(2)} km', 'Distancia'));
+    stats.add(_StatItem(paceStr, 'Pace medio', color: AppColors.brand));
+    stats.add(_StatItem(
+      rpe.toStringAsFixed(1),
+      'RPE medio',
+      color: AppColors.effortColor(rpe),
+    ));
+    if (training.fcMediaSesion != null) {
+      stats.add(_StatItem(
+        '${training.fcMediaSesion!.round()}',
+        'FC media',
+        color: AppColors.rpeMax,
+      ));
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+      child: Wrap(
+        alignment: WrapAlignment.spaceAround,
+        spacing: AppSpacing.l,
+        runSpacing: AppSpacing.s,
+        children: stats
+            .map((s) => _buildStatCell(s.value, s.label, s.color))
+            .toList(),
+      ),
+    );
+  }
+
+  Widget _buildStatCell(String value, String label, [Color? color]) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: AppTypography.h2.copyWith(
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+            color: color ?? AppColors.textPrimary(context),
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: AppTypography.small.copyWith(
+              color: AppColors.textSecondary(context)),
+        ),
+      ],
+    );
+  }
+
+  // ── Sección 3 — Mapa ──────────────────────────────────────────────
+
+  Widget _buildMap() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'MAPA DE RUTA',
+            style: AppTypography.small.copyWith(
+              color: AppColors.textSecondary(context),
+              letterSpacing: 1.5,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.m),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: SizedBox(
+              height: 220,
+              child: training.trackPoints.isEmpty
+                  ? Container(
+                      color: AppColors.surface2Of(context),
+                      child: Center(
+                        child: Text(
+                          'Sin datos de mapa',
+                          style: TextStyle(
+                              color: AppColors.iconMutedOf(context)),
+                        ),
+                      ),
+                    )
+                  : Stack(
+                      children: [
+                        TrainingMapView(points: training.trackPoints),
+                        Positioned(
+                          bottom: 8,
+                          right: 8,
+                          child: GestureDetector(
+                            onTap: () {
+                              // TODO: expand map
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceOf(context)
+                                    .withOpacity(0.85),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.fullscreen,
+                                color: AppColors.textPrimary(context),
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
             ),
           ),
         ],
       ),
     );
   }
+
+  // ── Sección 4 — Series ────────────────────────────────────────────
 
   Widget _buildSeriesSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Tema.brandPurple.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(Icons.list_alt_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, size: 20),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+          child: Text(
+            'SERIES',
+            style: AppTypography.small.copyWith(
+              color: AppColors.textSecondary(context),
+              letterSpacing: 1.5,
+              fontWeight: FontWeight.w400,
             ),
-            const SizedBox(width: 12),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.s),
+        ...training.series.asMap().entries.map((entry) {
+          final i = entry.key;
+          final serie = entry.value;
+          return _SerieExpansionTile(
+            index: i,
+            serie: serie,
+            context: context,
+          );
+        }),
+      ],
+    );
+  }
+
+  // ── Sección 5 — FC ────────────────────────────────────────────────
+
+  Widget _buildFcSection() {
+    final allReadings = training.series
+        .where((s) => s.fcReadings != null && s.fcReadings!.isNotEmpty)
+        .expand((s) => s.fcReadings!)
+        .toList();
+    if (allReadings.isEmpty) return const SizedBox.shrink();
+
+    final maxBpm = allReadings.reduce(max).toDouble();
+    final minBpm = allReadings.reduce(min).toDouble();
+    final avgBpm =
+        (allReadings.reduce((a, b) => a + b) / allReadings.length).round();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'FRECUENCIA CARDÍACA',
+            style: AppTypography.small.copyWith(
+              color: AppColors.textSecondary(context),
+              letterSpacing: 1.5,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.l),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _FcBigStat('Mín', '${minBpm.round()}', AppColors.rpeLow),
+              _FcBigStat('Media', '$avgBpm', AppColors.brand),
+              _FcBigStat('Máx', '${maxBpm.round()}', AppColors.rpeMax),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.l),
+          if (allReadings.length > 1) ...[
+            SizedBox(
+              height: 72,
+              child: CustomPaint(
+                painter: _FcChartPainter(
+                  readings: allReadings,
+                  maxBpm: maxBpm,
+                  minBpm: minBpm,
+                  seriesBoundaries: _getSeriesBoundaries(training.series),
+                ),
+                size: Size.infinite,
+              ),
+            ),
+            const SizedBox(height: 6),
             Text(
-              "Desglose de Series",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
+              'Líneas verticales = cambio de serie',
+              style: TextStyle(
+                  fontSize: 11, color: AppColors.iconMutedOf(context)),
             ),
           ],
-        ),
-        const SizedBox(height: 16),
-        ...training.series.asMap().entries.map((entry) {
-          final index = entry.key;
-          final serie = entry.value;
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.transparent
-                      : Colors.black.withOpacity(0.03),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
+          FutureBuilder<int?>(
+            future: _fcMaxFuture,
+            builder: (context, snap) {
+              final fcMax = snap.data;
+              if (fcMax == null) return const SizedBox.shrink();
+              return _buildZoneDistribution(allReadings, fcMax);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildZoneDistribution(List<int> readings, int fcMax) {
+    final zones = ZonesService().zonesFor(fcMax);
+    final zoneCounts = List<int>.filled(5, 0);
+    for (final bpm in readings) {
+      final z = ZonesService().zoneFor(bpm, fcMax);
+      zoneCounts[(z ?? 1) - 1]++;
+    }
+    final total = readings.length;
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.l),
+      child: Column(
+        children: List.generate(5, (i) {
+          if (zoneCounts[i] == 0) return const SizedBox.shrink();
+          final color = zones[i].color;
+          final pct = zoneCounts[i] / total;
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 5),
             child: Row(
               children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: Tema.brandPurple.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    "${index + 1}",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
-                      fontSize: 13,
-                    ),
-                  ),
+                SizedBox(
+                  width: 24,
+                  child: Text('Z${i + 1}',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          color: color)),
                 ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 10),
                 Expanded(
-                  child: Column(
+                  child: Stack(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "${serie.distanciaM}m",
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            _formatDuration(serie.tiempoSec.round()),
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                        ],
+                      Container(
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: AppColors.borderOf(context),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
                       ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            serie.ritmoTexto(),
-                            style: TextStyle(fontSize: 13, color: Colors.green.shade600, fontWeight: FontWeight.w600),
+                      FractionallySizedBox(
+                        widthFactor: pct,
+                        child: Container(
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: color,
+                            borderRadius: BorderRadius.circular(3),
                           ),
-                          if (serie.rpe > 0)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                "RPE ${serie.rpe}",
-                                style: const TextStyle(fontSize: 11, color: Colors.red, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                        ],
+                        ),
                       ),
                     ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                SizedBox(
+                  width: 36,
+                  child: Text(
+                    '${(pct * 100).round()}%',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary(context),
+                    ),
                   ),
                 ),
               ],
             ),
           );
-        }).toList(),
-      ],
+        }),
+      ),
     );
   }
 
-  String _formatDuration(int totalSeconds) {
-    if (totalSeconds < 60) return "${totalSeconds}s";
-    final int minutes = totalSeconds ~/ 60;
-    final int seconds = totalSeconds % 60;
-    if (minutes > 60) {
-      final int hours = minutes ~/ 60;
-      final int mins = minutes % 60;
-      return "${hours}h ${mins}m";
+  List<int> _getSeriesBoundaries(List<dynamic> series) {
+    final boundaries = <int>[];
+    int idx = 0;
+    for (int i = 0; i < series.length - 1; i++) {
+      idx += (series[i].fcReadings?.length ?? 0) as int;
+      if (idx > 0) boundaries.add(idx);
     }
-    return "${minutes}m ${seconds.toString().padLeft(2, '0')}s";
+    return boundaries;
   }
 
-  // ── Comparativa planificado vs ejecutado ─────────────────────────
+  // ── Sección 6 — Comparativa ───────────────────────────────────────
 
   Widget _buildComparisonSection() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final comp = training.plannedComparison!;
     final blocks = (comp['blocks'] as List<dynamic>? ?? []);
-
-    Widget header = Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.rpeMid.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: const Icon(Icons.compare_arrows_rounded,
-              color: AppColors.rpeMid, size: 18),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          'PLANIFICADO VS EJECUTADO',
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-      ],
-    );
-
     final category = comp['sessionCategory'] as String?;
 
-    if (blocks.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            header,
-            const SizedBox(height: 16),
-            const Text('Sin datos de comparativa',
-                style: TextStyle(fontSize: 13, color: Color(0xFF8E8E93))),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'PLANIFICADO VS EJECUTADO',
+            style: AppTypography.small.copyWith(
+              color: AppColors.textSecondary(context),
+              letterSpacing: 1.5,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+          if (category != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              SessionCategoryX.fromValue(category).label,
+              style: const TextStyle(fontSize: 13, color: AppColors.brandLight),
+            ),
           ],
-        ),
-      );
-    }
+          if (blocks.isEmpty) ...[
+            const SizedBox(height: AppSpacing.m),
+            Text(
+              'Sin datos de comparativa',
+              style: TextStyle(
+                  fontSize: 14, color: AppColors.textSecondary(context)),
+            ),
+          ] else ...[
+            const SizedBox(height: AppSpacing.l),
+            Row(
+              children: [
+                const SizedBox(width: 60),
+                Expanded(
+                  child: Text('Plan',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary(context))),
+                ),
+                Expanded(
+                  child: Text('Real',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary(context))),
+                ),
+                SizedBox(
+                  width: 52,
+                  child: Text('Delta',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary(context))),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Divider(
+                color: AppColors.borderOf(context),
+                thickness: 0.5,
+                height: 1),
+            ..._buildComparisonRows(blocks),
+            ..._buildComparisonSummary(blocks),
+          ],
+        ],
+      ),
+    );
+  }
 
+  List<Widget> _buildComparisonRows(List<dynamic> blocks) {
+    return blocks.map((b) {
+      final planned = b['planned'] as Map?;
+      final executed = b['executed'] as Map?;
+      final order = (b['order'] as num?)?.toInt() ?? 0;
+      final targetPaceSec = (planned?['targetPaceSec'] as num?)?.toDouble();
+      final execPaceSec = (executed?['paceSec'] as num?)?.toDouble();
+      final targetPaceStr =
+          targetPaceSec != null ? _formatPace(targetPaceSec) : '—';
+      final execPaceStr = execPaceSec != null ? _formatPace(execPaceSec) : '—';
+      double? delta;
+      if (targetPaceSec != null && execPaceSec != null) {
+        delta = execPaceSec - targetPaceSec;
+      }
+      final primary = AppColors.textPrimary(context);
+      final muted = AppColors.textSecondary(context);
+
+      return Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 60,
+                  child: Text(
+                    'Serie ${order + 1}',
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: primary),
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(targetPaceStr,
+                          style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                              color: targetPaceSec != null ? primary : muted),
+                          textAlign: TextAlign.center),
+                      if ((planned?['targetRpe'] as num?) != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          'RPE ${(planned!['targetRpe'] as num).toStringAsFixed(1)}',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.effortColor(
+                                  (planned['targetRpe'] as num).toDouble())),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      if (executed == null)
+                        Text('—',
+                            style: TextStyle(fontSize: 14, color: muted),
+                            textAlign: TextAlign.center)
+                      else ...[
+                        Text(execPaceStr,
+                            style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: delta != null
+                                    ? _deltaColor(delta)
+                                    : primary),
+                            textAlign: TextAlign.center),
+                        if ((executed['rpe'] as num?) != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            'RPE ${(executed['rpe'] as num).toStringAsFixed(1)}',
+                            style: TextStyle(
+                                fontSize: 11,
+                                color: AppColors.effortColor(
+                                    (executed['rpe'] as num).toDouble())),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ],
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  width: 52,
+                  child: delta != null
+                      ? Text(
+                          delta >= 0
+                              ? '+${_formatPaceDelta(delta)}'
+                              : '-${_formatPaceDelta(delta.abs())}',
+                          style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w400,
+                              color: _deltaColor(delta)),
+                          textAlign: TextAlign.right)
+                      : const SizedBox.shrink(),
+                ),
+              ],
+            ),
+          ),
+          Divider(
+              color: AppColors.borderOf(context),
+              thickness: 0.5,
+              height: 1),
+        ],
+      );
+    }).toList();
+  }
+
+  List<Widget> _buildComparisonSummary(List<dynamic> blocks) {
     final deltas = <double>[];
     for (final b in blocks) {
       final planned = b['planned'] as Map?;
@@ -539,249 +726,104 @@ class _TrainingDetailViewState extends State<TrainingDetailView>
       final eps = (executed?['paceSec'] as num?)?.toDouble();
       if (tps != null && eps != null) deltas.add(eps - tps);
     }
-    final avgDelta =
-        deltas.isEmpty ? null : deltas.reduce((a, b) => a + b) / deltas.length;
+    if (deltas.isEmpty) return [];
+    final avgDelta = deltas.reduce((a, b) => a + b) / deltas.length;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.transparent
-                : Colors.black.withOpacity(0.04),
-            offset: const Offset(0, 6),
-            blurRadius: 16,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          header,
-          if (category != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              SessionCategoryX.fromValue(category).label,
-              style: const TextStyle(
-                  fontSize: 13, color: AppColors.brandPurpleLight),
-            ),
-          ],
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              const SizedBox(
-                width: 64,
-                child: Text('Serie',
-                    style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
-              ),
-              const Expanded(
-                child: Text('Planificado',
-                    style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
-                    textAlign: TextAlign.center),
-              ),
-              const Expanded(
-                child: Text('Ejecutado',
-                    style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
-                    textAlign: TextAlign.center),
-              ),
-              const SizedBox(
-                width: 52,
-                child: Text('Delta',
-                    style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
-                    textAlign: TextAlign.right),
-              ),
-            ],
-          ),
-          const Divider(color: Color(0xFF3A3A3C), height: 20),
-          ...blocks.map((b) {
-            final planned = b['planned'] as Map?;
-            final executed = b['executed'] as Map?;
-            final order = (b['order'] as num?)?.toInt() ?? 0;
-
-            final targetPaceSec =
-                (planned?['targetPaceSec'] as num?)?.toDouble();
-            final execPaceSec =
-                (executed?['paceSec'] as num?)?.toDouble();
-
-            final targetPaceStr =
-                targetPaceSec != null ? _formatPace(targetPaceSec) : '—';
-            final execPaceStr =
-                execPaceSec != null ? _formatPace(execPaceSec) : '—';
-
-            double? delta;
-            if (targetPaceSec != null && execPaceSec != null) {
-              delta = execPaceSec - targetPaceSec;
-            }
-
-            final onSurface = Theme.of(context).colorScheme.onSurface;
-
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 64,
-                        child: Text(
-                          'Serie ${order + 1}',
-                          style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: onSurface),
-                        ),
-                      ),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Text(
-                              targetPaceStr,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: targetPaceSec != null
-                                    ? onSurface
-                                    : const Color(0xFF8E8E93),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            if ((planned?['targetRpe'] as num?) != null) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                'RPE ${(planned!['targetRpe'] as num).toStringAsFixed(1)}',
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    color: _rpeColor((planned['targetRpe']
-                                            as num)
-                                        .toDouble())),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            if (executed == null)
-                              const Text(
-                                'No ejecutada',
-                                style: TextStyle(
-                                    fontSize: 12, color: Color(0xFF8E8E93)),
-                                textAlign: TextAlign.center,
-                              )
-                            else ...[
-                              Text(
-                                execPaceStr,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: delta != null
-                                      ? _deltaColor(delta)
-                                      : onSurface,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              if ((executed['rpe'] as num?) != null) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  'RPE ${(executed['rpe'] as num).toStringAsFixed(1)}',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      color: _rpeColor(
-                                          (executed['rpe'] as num)
-                                              .toDouble())),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ],
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                        width: 52,
-                        child: delta != null
-                            ? Text(
-                                delta >= 0
-                                    ? '+${_formatPaceDelta(delta)}'
-                                    : '-${_formatPaceDelta(delta.abs())}',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: _deltaColor(delta),
-                                ),
-                                textAlign: TextAlign.right,
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                    ],
-                  ),
-                ),
-                Divider(
-                    color: const Color(0xFF3A3A3C).withOpacity(0.5),
-                    height: 1),
-              ],
-            );
-          }),
-          if (avgDelta != null) ...[
-            const SizedBox(height: 12),
-            _buildComparisonSummary(avgDelta),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildComparisonSummary(double avgDelta) {
     String text;
-    IconData icon;
     Color color;
-
     if (avgDelta < -15) {
       text = 'Fuiste más rápido de lo planeado 🔥';
-      icon = Icons.bolt_rounded;
       color = AppColors.rpeLow;
     } else if (avgDelta < 15) {
       text = 'Muy ajustado al plan ✓';
-      icon = Icons.check_circle_outline_rounded;
       color = AppColors.rpeLow;
     } else if (avgDelta < 30) {
       text = 'Algo por encima del objetivo';
-      icon = Icons.warning_amber_rounded;
       color = AppColors.rpeMid;
     } else {
       text = 'Bastante por encima del objetivo';
-      icon = Icons.error_outline_rounded;
       color = AppColors.rpeMax;
     }
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
+    return [
+      Padding(
+        padding: const EdgeInsets.only(top: AppSpacing.l),
+        child: Text(
+          text,
+          style: TextStyle(
+              fontSize: 13, fontWeight: FontWeight.w500, color: color),
+        ),
       ),
-      child: Row(
+    ];
+  }
+
+  // ── Sección 7 — Notas ─────────────────────────────────────────────
+
+  Widget _buildNotasSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 16),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(text,
-                style: TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w500, color: color)),
+          Text(
+            'NOTAS',
+            style: AppTypography.small.copyWith(
+              color: AppColors.textSecondary(context),
+              letterSpacing: 1.5,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s),
+          ValueListenableBuilder<bool>(
+            valueListenable: _editingNotes,
+            builder: (context, editing, _) {
+              if (editing) {
+                return TextField(
+                  controller: _notasController,
+                  style: AppTypography.body
+                      .copyWith(color: AppColors.textPrimary(context)),
+                  maxLines: null,
+                  autofocus: true,
+                  decoration: const InputDecoration(border: InputBorder.none),
+                  onEditingComplete: _saveNotas,
+                  onTapOutside: (_) => _saveNotas(),
+                );
+              }
+              return GestureDetector(
+                onTap: () => _editingNotes.value = true,
+                child: Text(
+                  training.notas!,
+                  style: AppTypography.body.copyWith(
+                    color: AppColors.textSecondary(context),
+                    height: 1.6,
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
     );
   }
 
+  // ── Helpers ───────────────────────────────────────────────────────
+
+  String _formatDuration(int totalSeconds) {
+    if (totalSeconds < 60) return '${totalSeconds}s';
+    final int minutes = totalSeconds ~/ 60;
+    final int seconds = totalSeconds % 60;
+    if (minutes >= 60) {
+      final int hours = minutes ~/ 60;
+      final int mins = minutes % 60;
+      return '${hours}h ${mins}m';
+    }
+    return '${minutes}m ${seconds.toString().padLeft(2, '0')}s';
+  }
+
   String _formatPace(double secPerKm) {
-    final min = secPerKm ~/ 60;
-    final sec = (secPerKm % 60).round();
-    return '$min:${sec.toString().padLeft(2, '0')} /km';
+    final m = secPerKm ~/ 60;
+    final s = (secPerKm % 60).round();
+    return '$m:${s.toString().padLeft(2, '0')} /km';
   }
 
   String _formatPaceDelta(double sec) {
@@ -795,76 +837,405 @@ class _TrainingDetailViewState extends State<TrainingDetailView>
     return AppColors.rpeMax;
   }
 
-  Color _rpeColor(double rpe) {
-    if (rpe <= 4) return AppColors.rpeLow;
-    if (rpe <= 7) return AppColors.rpeMid;
-    return AppColors.rpeMax;
-  }
+  bool _hasFcData() =>
+      training.series.any((s) => s.fcReadings != null && s.fcReadings!.isNotEmpty);
 }
 
-class _AnimatedBackButton extends StatefulWidget {
-  final VoidCallback onTap;
-  const _AnimatedBackButton({required this.onTap});
+// ── Helper data class ─────────────────────────────────────────────
+
+class _StatItem {
+  final String value;
+  final String label;
+  final Color? color;
+  const _StatItem(this.value, this.label, {this.color});
+}
+
+// ── Serie ExpansionTile con gráfica fl_chart ──────────────────────
+
+class _SerieExpansionTile extends StatefulWidget {
+  final int index;
+  final dynamic serie;
+  final BuildContext context;
+
+  const _SerieExpansionTile({
+    required this.index,
+    required this.serie,
+    required this.context,
+  });
 
   @override
-  State<_AnimatedBackButton> createState() => _AnimatedBackButtonState();
+  State<_SerieExpansionTile> createState() => _SerieExpansionTileState();
 }
 
-class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
-  bool _isPressed = false;
+class _SerieExpansionTileState extends State<_SerieExpansionTile> {
+  bool _showFc = false;
+
+  String _formatDuration(int s) {
+    if (s < 60) return '${s}s';
+    final m = s ~/ 60;
+    final sec = s % 60;
+    return '${m}m ${sec.toString().padLeft(2, '0')}s';
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _isPressed = true),
-      onTapUp: (_) {
-        setState(() => _isPressed = false);
-        widget.onTap();
-      },
-      onTapCancel: () => setState(() => _isPressed = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: _isPressed
-              ? Theme.of(context).colorScheme.onSurface.withOpacity(0.08)
-              : Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.transparent
-                  : Colors.black.withOpacity(_isPressed ? 0.03 : 0.06),
-              blurRadius: _isPressed ? 4 : 12,
-              offset: Offset(0, _isPressed ? 2 : 4),
-            ),
-          ],
-          border: Border.all(color: Tema.brandPurple.withOpacity(0.1)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+    final serie = widget.serie;
+    final i = widget.index;
+    final rpeColor = AppColors.effortColor(serie.rpe.toDouble());
+    final hasFc = serie.fcReadings != null &&
+        (serie.fcReadings as List).isNotEmpty;
+
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.l, vertical: 0),
+        childrenPadding: EdgeInsets.zero,
+        title: Row(
           children: [
-            Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: 16,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.brandPurpleLight
-                  : Tema.brandPurple,
+            Container(
+              width: 24,
+              height: 24,
+              decoration: const BoxDecoration(
+                color: AppColors.brand,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                '${i + 1}',
+                style: const TextStyle(
+                    fontSize: 11,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w400),
+              ),
             ),
-            const SizedBox(width: 6),
-            Text(
-              "Volver",
-              style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.brandPurpleLight
-                    : Tema.brandPurple,
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
+            const SizedBox(width: AppSpacing.m),
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${serie.distanciaM} m',
+                    style: AppTypography.body.copyWith(
+                        color: AppColors.textPrimary(context),
+                        fontWeight: FontWeight.w500),
+                  ),
+                  Text(
+                    _formatDuration(serie.tiempoSec.round()),
+                    style: AppTypography.body.copyWith(
+                        color: AppColors.textPrimary(context)),
+                  ),
+                  Text(
+                    serie.ritmoTexto(),
+                    style: AppTypography.body.copyWith(
+                        color: AppColors.brand,
+                        fontWeight: FontWeight.w400),
+                  ),
+                  if (serie.rpe > 0)
+                    Text(
+                      'RPE ${serie.rpe}',
+                      style: AppTypography.body
+                          .copyWith(color: rpeColor, fontWeight: FontWeight.w400),
+                    ),
+                ],
               ),
             ),
           ],
         ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.l, 0, AppSpacing.l, AppSpacing.m),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSerieChart(context, serie, hasFc),
+                if (serie.descansoSec > 0) ...[
+                  const SizedBox(height: AppSpacing.m),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.pause_circle_outline,
+                          color: AppColors.iconMutedOf(context), size: 14),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Descanso ${_formatDuration(serie.descansoSec.round())}',
+                        style: AppTypography.small.copyWith(
+                            color: AppColors.textSecondary(context)),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
+
+  Widget _buildSerieChart(BuildContext context, dynamic serie, bool hasFc) {
+    final fcReadings = hasFc ? (serie.fcReadings as List<int>) : <int>[];
+
+    // Build pace points from GPS points if available, otherwise skip pace chart
+    final gpsPoints = serie.gpsPoints as List?;
+    final pacePoints = <FlSpot>[];
+
+    if (gpsPoints != null && gpsPoints.length >= 3) {
+      for (int j = 0; j < gpsPoints.length; j++) {
+        final pt = gpsPoints[j];
+        final speed = (pt.speed as num?)?.toDouble() ?? 0.0;
+        if (speed > 0.3) {
+          final pace = 1000 / speed / 60; // min/km
+          pacePoints.add(FlSpot(j.toDouble(), pace.clamp(2.0, 10.0)));
+        }
+      }
+    }
+
+    final fcPoints = <FlSpot>[];
+    if (fcReadings.length >= 3) {
+      for (int j = 0; j < fcReadings.length; j++) {
+        fcPoints.add(FlSpot(j.toDouble(), fcReadings[j].toDouble()));
+      }
+    }
+
+    final hasChart = pacePoints.length >= 3 || fcPoints.length >= 3;
+    if (!hasChart) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.m),
+        child: Text(
+          'Sin datos de gráfica',
+          style: AppTypography.small
+              .copyWith(color: AppColors.textSecondary(context)),
+        ),
+      );
+    }
+
+    // Toggle FC/Pace when both available
+    final showFcToggle = pacePoints.length >= 3 && fcPoints.length >= 3;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (showFcToggle) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              _ChartToggle(
+                labels: const ['Pace', 'FC'],
+                selected: _showFc ? 1 : 0,
+                onChanged: (v) => setState(() => _showFc = v == 1),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.s),
+        ],
+        SizedBox(
+          height: 120,
+          child: LineChart(
+            LineChartData(
+              gridData: FlGridData(
+                show: true,
+                drawVerticalLine: false,
+                getDrawingHorizontalLine: (_) => FlLine(
+                  color: AppColors.borderOf(context),
+                  strokeWidth: 0.5,
+                ),
+              ),
+              borderData: FlBorderData(show: false),
+              titlesData: FlTitlesData(
+                leftTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                bottomTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false)),
+              ),
+              lineTouchData: LineTouchData(
+                touchTooltipData: LineTouchTooltipData(
+                  getTooltipItems: (spots) => spots.map((s) {
+                    final val = _showFc && fcPoints.isNotEmpty
+                        ? '${s.y.round()} bpm'
+                        : () {
+                            final totalSec = (s.y * 60).round();
+                            final m = totalSec ~/ 60;
+                            final sec = totalSec % 60;
+                            return '$m:${sec.toString().padLeft(2, '0')} /km';
+                          }();
+                    return LineTooltipItem(
+                      val,
+                      TextStyle(
+                          color: AppColors.textPrimary(context), fontSize: 11),
+                    );
+                  }).toList(),
+                ),
+              ),
+              lineBarsData: [
+                if (!_showFc && pacePoints.length >= 3)
+                  LineChartBarData(
+                    spots: pacePoints,
+                    isCurved: true,
+                    color: AppColors.brand,
+                    barWidth: 2,
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: AppColors.brand.withOpacity(0.08),
+                    ),
+                  ),
+                if (_showFc && fcPoints.length >= 3)
+                  LineChartBarData(
+                    spots: fcPoints,
+                    isCurved: true,
+                    color: AppColors.rpeMax,
+                    barWidth: 2,
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: AppColors.rpeMax.withOpacity(0.08),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Chart toggle widget ───────────────────────────────────────────
+
+class _ChartToggle extends StatelessWidget {
+  final List<String> labels;
+  final int selected;
+  final ValueChanged<int> onChanged;
+
+  const _ChartToggle({
+    required this.labels,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface2Of(context),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.borderOf(context)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: labels.asMap().entries.map((e) {
+          final active = e.key == selected;
+          return GestureDetector(
+            onTap: () => onChanged(e.key),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: active ? AppColors.brand : Colors.transparent,
+                borderRadius: BorderRadius.circular(7),
+              ),
+              child: Text(
+                e.value,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w400,
+                  color: active
+                      ? Colors.white
+                      : AppColors.textSecondary(context),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+// ── FC big stat ───────────────────────────────────────────────────
+
+class _FcBigStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const _FcBigStat(this.label, this.value, this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+              fontSize: 28, fontWeight: FontWeight.w500, color: color),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+              fontSize: 11, color: AppColors.textSecondary(context)),
+        ),
+      ],
+    );
+  }
+}
+
+// ── FC chart painter ──────────────────────────────────────────────
+
+class _FcChartPainter extends CustomPainter {
+  final List<int> readings;
+  final double maxBpm;
+  final double minBpm;
+  final List<int> seriesBoundaries;
+
+  const _FcChartPainter({
+    required this.readings,
+    required this.maxBpm,
+    required this.minBpm,
+    required this.seriesBoundaries,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (readings.length < 2) return;
+
+    final range = (maxBpm - minBpm) + 1;
+    final points = List.generate(readings.length, (i) {
+      final x = i / (readings.length - 1) * size.width;
+      final y = (1 - (readings[i] - minBpm) / range) * size.height;
+      return Offset(x, y);
+    });
+
+    final dividerPaint = Paint()
+      ..color = AppColors.border
+      ..strokeWidth = 1.0;
+    for (final b in seriesBoundaries) {
+      final x = b / readings.length * size.width;
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), dividerPaint);
+    }
+
+    final linePaint = Paint()
+      ..color = AppColors.rpeMax
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final path = Path()..moveTo(points[0].dx, points[0].dy);
+    for (int i = 1; i < points.length; i++) {
+      final midX = (points[i - 1].dx + points[i].dx) / 2;
+      path.cubicTo(
+          midX, points[i - 1].dy, midX, points[i].dy, points[i].dx, points[i].dy);
+    }
+    canvas.drawPath(path, linePaint);
+  }
+
+  @override
+  bool shouldRepaint(_FcChartPainter old) =>
+      old.readings != readings || old.maxBpm != maxBpm || old.minBpm != minBpm;
 }

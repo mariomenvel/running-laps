@@ -23,7 +23,7 @@ class FilterBadgeButton extends StatelessWidget {
           onPressed: onTap,
           icon: Icon(
             Icons.tune_rounded,
-            color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple,
+            color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
           ),
           tooltip: 'Filtros avanzados',
         ),
@@ -36,11 +36,11 @@ class FilterBadgeButton extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: Tema.brandPurple,
+                color: AppColors.brand,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Tema.brandPurple.withOpacity(0.3),
+                    color: AppColors.brand.withOpacity(0.3),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),

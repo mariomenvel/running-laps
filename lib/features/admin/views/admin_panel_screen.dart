@@ -8,7 +8,7 @@ import '../../../../config/app_theme.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/app_page_scaffold.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
-import 'package:running_laps/features/profile/views/profile_menu_screen.dart';
+import 'package:running_laps/features/profile/views/profile_menu_screen_legacy.dart';
 
 class AdminPanelScreen extends StatefulWidget {
   const AdminPanelScreen({super.key});
@@ -47,13 +47,13 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
       ),
       body: Column(
         children: [
-          const GradientBanner(
+          Builder(builder: (context) => GradientBanner(
             title: "Panel de Control",
-            subtitle: "Gestiona retos globales y visualiza estadÃ­sticas",
+            subtitle: "Gestiona retos globales y visualiza estadísticas",
             icon: Icons.admin_panel_settings_rounded,
-            gradientColors: [Colors.black87, Colors.black54],
+            accentColor: AppColors.surfaceOf(context),
             height: 85,
-          ),
+          )),
           Builder(
             builder: (context) {
               final isDark = Theme.of(context).brightness == Brightness.dark;

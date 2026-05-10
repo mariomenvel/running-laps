@@ -128,12 +128,12 @@ class ConfigurableWidgetRenderer extends StatelessWidget {
           LineChartBarData(
             spots: points,
             isCurved: true,
-            color: Tema.brandPurple,
+            color: AppColors.brand,
             barWidth: 3,
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
-              color: Tema.brandPurple.withOpacity(0.1),
+              color: AppColors.brand.withOpacity(0.1),
             ),
           ),
         ],
@@ -165,7 +165,7 @@ class ConfigurableWidgetRenderer extends StatelessWidget {
                  barRods: [
                     BarChartRodData(
                         toY: yVal,
-                        color: Colors.blueAccent,
+                        color: AppColors.rest,
                         borderRadius: BorderRadius.circular(4),
                         width: 16,
                     )
@@ -259,7 +259,7 @@ class ConfigurableWidgetRenderer extends StatelessWidget {
                        ),
                        Text(
                            e.ritmoMedioTexto(),
-                           style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple, fontWeight: FontWeight.w600),
+                           style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.w600),
                        ),
                    ],
                 ),
@@ -274,7 +274,7 @@ class ConfigurableWidgetRenderer extends StatelessWidget {
     return KpiCardWithDelta(
       title: config.config['title'] as String? ?? 'KPI',
       value: '-',
-      primaryColor: Tema.brandPurple,
+      primaryColor: AppColors.brand,
       icon: Icons.bar_chart_rounded,
       compact: true,
     );

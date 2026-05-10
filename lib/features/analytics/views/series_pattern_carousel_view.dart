@@ -23,7 +23,7 @@ class SeriesPatternCarouselView extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandPurpleLight : Tema.brandPurple),
+          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
           onPressed: () => Navigator.pop(context),
         ),
         titleTextStyle: TextStyle(
@@ -61,11 +61,7 @@ class _SeriesPatternContent extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Tema.brandPurple.withOpacity(0.1), Colors.transparent],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
+              color: AppColors.brand.withOpacity(0.08),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Column(
@@ -77,7 +73,7 @@ class _SeriesPatternContent extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     foreground: Paint()
                       ..shader = LinearGradient(
-                        colors: [Tema.brandPurple, Colors.blue.shade600],
+                        colors: [AppColors.brand, AppColors.rest],
                       ).createShader(const Rect.fromLTWH(0, 0, 200, 70)),
                     letterSpacing: -1,
                   ),
@@ -105,7 +101,7 @@ class _SeriesPatternContent extends StatelessWidget {
                   "Mejor Ritmo",
                   pattern.bestPaceFormatted,
                   Icons.emoji_events,
-                  Colors.amber,
+                  AppColors.rpeMid,
                 ),
               ),
               const SizedBox(width: 12),
@@ -115,7 +111,7 @@ class _SeriesPatternContent extends StatelessWidget {
                   "Ritmo Medio",
                   pattern.averagePaceFormatted,
                   Icons.speed,
-                  Colors.blue,
+                  AppColors.rest,
                 ),
               ),
               const SizedBox(width: 12),
@@ -125,7 +121,7 @@ class _SeriesPatternContent extends StatelessWidget {
                   "Total Veces",
                   "${pattern.count}",
                   Icons.repeat,
-                  Colors.purple,
+                  AppColors.brand,
                 ),
               ),
             ],
@@ -142,7 +138,7 @@ class _SeriesPatternContent extends StatelessWidget {
               border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
               boxShadow: [
                 BoxShadow(
-                  color: Tema.brandPurple.withOpacity(0.08),
+                  color: AppColors.brand.withOpacity(0.08),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                   spreadRadius: -4,
@@ -232,11 +228,7 @@ class _SeriesPatternContent extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [color.withOpacity(0.8), color],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: color,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
@@ -322,19 +314,14 @@ class _SeriesPatternContent extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Tema.brandPurple.withOpacity(0.15),
-                  Tema.brandPurple.withOpacity(0.08),
-                ],
-              ),
+              color: AppColors.brand.withOpacity(0.12),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Tema.brandPurple.withOpacity(0.3)),
+              border: Border.all(color: AppColors.brand.withOpacity(0.3)),
             ),
             child: Text(
               "$pace /km",
               style: const TextStyle(
-                color: Tema.brandPurple,
+                color: AppColors.brand,
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
                 letterSpacing: -0.3,
@@ -377,12 +364,12 @@ class _PaceProgressionChart extends StatelessWidget {
           LineChartBarData(
             spots: spots,
             isCurved: true,
-            color: Tema.brandPurple,
+            color: AppColors.brand,
             barWidth: 3,
             dotData: const FlDotData(show: true),
             belowBarData: BarAreaData(
               show: true,
-              color: Tema.brandPurple.withOpacity(0.1),
+              color: AppColors.brand.withOpacity(0.1),
             ),
           ),
         ],
