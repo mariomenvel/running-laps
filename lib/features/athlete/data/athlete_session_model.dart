@@ -147,16 +147,19 @@ class SessionBlock {
 class SessionWarmupCooldown {
   final String? description;
   final int? durationMinutes;
+  final int? distanceM;
 
   const SessionWarmupCooldown({
     this.description,
     this.durationMinutes,
+    this.distanceM,
   });
 
   factory SessionWarmupCooldown.fromMap(Map<String, dynamic> map) {
     return SessionWarmupCooldown(
       description:     map['description'] as String?,
       durationMinutes: map['durationMinutes'] as int?,
+      distanceM:       map['distanceM'] as int?,
     );
   }
 
@@ -164,16 +167,19 @@ class SessionWarmupCooldown {
     return {
       if (description     != null) 'description':     description,
       if (durationMinutes != null) 'durationMinutes': durationMinutes,
+      if (distanceM       != null) 'distanceM':       distanceM,
     };
   }
 
   SessionWarmupCooldown copyWith({
     Object? description     = _sentinel,
     Object? durationMinutes = _sentinel,
+    Object? distanceM       = _sentinel,
   }) {
     return SessionWarmupCooldown(
       description:     description     == _sentinel ? this.description     : description     as String?,
       durationMinutes: durationMinutes == _sentinel ? this.durationMinutes : durationMinutes as int?,
+      distanceM:       distanceM       == _sentinel ? this.distanceM       : distanceM       as int?,
     );
   }
 }

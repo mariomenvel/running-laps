@@ -189,19 +189,30 @@ List<WorkoutBlock> _mapBlocks(
 
 WorkoutBlock? _mapWarmupCooldown(SessionWarmupCooldown? wc, BlockRole role) {
   if (wc == null) return null;
-  final durationSec = (wc.durationMinutes ?? 0) * 60;
-  if (durationSec <= 0) return null;
+
+  final durationSec = wc.durationMinutes != null ? wc.durationMinutes! * 60 : null;
+  final distM = wc.distanceM;
+
+  if ((durationSec == null || durationSec <= 0) && (distM == null || distM <= 0)) {
+    return null;
+  }
+
+  final seg = durationSec != null && durationSec > 0
+      ? WorkoutSegment(
+          type: SegmentType.interval,
+          durationSec: durationSec,
+          target: const TargetConfig(zone: HeartRateZone.z1),
+        )
+      : WorkoutSegment(
+          type: SegmentType.interval,
+          distanceM: distM,
+          target: const TargetConfig(zone: HeartRateZone.z1),
+        );
 
   return WorkoutBlock(
     role: role,
     repetitions: 1,
-    segments: [
-      WorkoutSegment(
-        type: SegmentType.interval,
-        durationSec: durationSec,
-        target: const TargetConfig(zone: HeartRateZone.z1),
-      ),
-    ],
+    segments: [seg],
   );
 }
 
@@ -377,12 +388,18 @@ SessionWarmupCooldown? _extractWarmupCooldown(
   if (intervalSeg == null) return null;
 
   final durationMin = intervalSeg.durationSec != null
-      ? intervalSeg.durationSec! ~/ 60
+      ? (intervalSeg.durationSec! ~/ 60).clamp(1, 999)
       : null;
+  final distM = intervalSeg.distanceM;
 
-  if (durationMin == null || durationMin <= 0) return null;
+  if ((durationMin == null || durationMin <= 0) && (distM == null || distM <= 0)) {
+    return null;
+  }
 
-  return SessionWarmupCooldown(durationMinutes: durationMin);
+  return SessionWarmupCooldown(
+    durationMinutes: durationMin,
+    distanceM: distM,
+  );
 }
 
 // ── Bloques principales → SessionBlock ───────────────────────────────────────
