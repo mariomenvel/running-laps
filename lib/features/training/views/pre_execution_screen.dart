@@ -13,7 +13,6 @@ import '../../templates/data/workout_session.dart';
 import '../../athlete/data/athlete_session_model.dart';
 import 'training_start_view.dart';
 import 'widgets/countdown_dialog.dart';
-import '../../templates/views/workout_editor_screen.dart';
 
 class PreExecutionScreen extends StatefulWidget {
   final WorkoutSession session;
@@ -32,6 +31,7 @@ class PreExecutionScreen extends StatefulWidget {
 }
 
 class _PreExecutionScreenState extends State<PreExecutionScreen> {
+  late WorkoutSession _originalSession;
   late WorkoutSession _session;
   bool _gpsOn = true;
   int? _fcMax;
@@ -40,6 +40,7 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
   @override
   void initState() {
     super.initState();
+    _originalSession = widget.session;
     _session = widget.session;
     _loadFcMax();
     HeartRateService()
@@ -124,24 +125,6 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
   }
 
   // ─── Actions ────────────────────────────────────────────────────────────────
-
-  Future<void> _onEdit() async {
-    final updated = await Navigator.push<WorkoutSession>(
-      context,
-      AppRoute(
-        page: WorkoutEditorScreen(
-          initialSession: _session,
-          scheduledDate: widget.athleteSession?.date != null
-              ? DateTime.tryParse(widget.athleteSession!.date)
-              : null,
-          onSave: (session) => Navigator.pop(context, session),
-        ),
-      ),
-    );
-    if (updated != null && mounted) {
-      setState(() => _session = updated);
-    }
-  }
 
   void _onStart() {
     showDialog(
@@ -241,11 +224,6 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
           ),
-          IconButton(
-            icon: const Icon(Icons.edit_outlined, size: 20),
-            color: AppColors.iconMutedOf(context),
-            onPressed: _onEdit,
-          ),
           Expanded(
             child: Text(
               _session.title,
@@ -282,17 +260,20 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
       trailing: Switch(
         value: hasWarmup,
         activeThumbColor: AppColors.brand,
-        onChanged: (v) {
+        onChanged: (v) => setState(() {
           if (!v) {
-            setState(() {
-              _session = _session.copyWith(
-                blocks: _session.blocks
-                    .where((b) => b.role != BlockRole.warmup)
-                    .toList(),
-              );
-            });
+            _session = _session.copyWith(
+              blocks: _session.blocks
+                  .where((b) => b.role != BlockRole.warmup)
+                  .toList(),
+            );
+          } else {
+            final original = _originalSession.warmupBlock;
+            if (original != null && _session.warmupBlock == null) {
+              _session = _session.copyWith(blocks: [original, ..._session.blocks]);
+            }
           }
-        },
+        }),
       ),
     );
   }
@@ -422,17 +403,20 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
       trailing: Switch(
         value: hasCooldown,
         activeThumbColor: AppColors.brand,
-        onChanged: (v) {
+        onChanged: (v) => setState(() {
           if (!v) {
-            setState(() {
-              _session = _session.copyWith(
-                blocks: _session.blocks
-                    .where((b) => b.role != BlockRole.cooldown)
-                    .toList(),
-              );
-            });
+            _session = _session.copyWith(
+              blocks: _session.blocks
+                  .where((b) => b.role != BlockRole.cooldown)
+                  .toList(),
+            );
+          } else {
+            final original = _originalSession.cooldownBlock;
+            if (original != null && _session.cooldownBlock == null) {
+              _session = _session.copyWith(blocks: [..._session.blocks, original]);
+            }
           }
-        },
+        }),
       ),
     );
   }

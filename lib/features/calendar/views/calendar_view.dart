@@ -864,9 +864,9 @@ class _CalendarViewState extends State<CalendarView> {
                                     ),
                                     if (s.status == AthleteSessionStatus.planned)
                                       IconButton(
-                                        icon: const Icon(Icons.edit_outlined, size: 16),
+                                        icon: const Icon(Icons.edit_outlined, size: 24),
                                         color: AppColors.iconMutedOf(context),
-                                        padding: EdgeInsets.zero,
+                                        padding: const EdgeInsets.all(4),
                                         constraints: const BoxConstraints(),
                                         onPressed: () {
                                           MainShell.shellKey.currentState?.navigateTo(
