@@ -49,7 +49,11 @@ class _AvatarCustomizerViewState extends State<AvatarCustomizerView> {
       }, SetOptions(merge: true));
       if (mounted) {
         ModernSnackBar.showSuccess(context, 'Avatar guardado');
-        Navigator.pop(context, _config);
+        if (ShellEmbeddingScope.isEmbedded(context)) {
+          MainShell.shellKey.currentState?.navigateBack();
+        } else {
+          Navigator.pop(context, _config);
+        }
       }
     } catch (e) {
       if (mounted) ModernSnackBar.showError(context, 'Error al guardar: $e');
