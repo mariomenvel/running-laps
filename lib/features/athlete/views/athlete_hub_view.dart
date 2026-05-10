@@ -12,7 +12,6 @@ import 'package:running_laps/features/athlete/data/athlete_session_repository.da
 import 'package:running_laps/features/athlete/data/progress_repository.dart';
 import 'package:running_laps/features/athlete/viewmodels/athlete_calendar_viewmodel.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:running_laps/features/athlete/views/session_planner_view.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/features/templates/data/templates_repository.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
@@ -1252,9 +1251,12 @@ class _PlanningTabState extends State<_PlanningTab> {
               onPressed: () => Navigator.push(
                 context,
                 AppRoute(
-                    page: SessionPlannerView(
-                        uid: widget.uid,
-                        initialDate: DateTime.now())),
+                  page: WorkoutEditorScreen(
+                    scheduledDate: DateTime.now(),
+                    onSave: (session) =>
+                        _onWorkoutSaved(context, session, widget.uid),
+                  ),
+                ),
               ),
             ),
           ),
@@ -2577,9 +2579,10 @@ class _EmptyCalendarHint extends StatelessWidget {
               Navigator.push(
                 context,
                 AppRoute(
-                  page: SessionPlannerView(
-                    uid: uid,
-                    initialDate: DateTime.now(),
+                  page: WorkoutEditorScreen(
+                    scheduledDate: DateTime.now(),
+                    onSave: (session) =>
+                        _onWorkoutSaved(context, session, uid),
                   ),
                 ),
               );
