@@ -11,8 +11,12 @@ import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 import 'package:running_laps/features/athlete/data/progress_repository.dart';
 import 'package:running_laps/features/athlete/viewmodels/athlete_calendar_viewmodel.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/features/athlete/views/session_planner_view.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
+import 'package:running_laps/features/templates/data/templates_repository.dart';
+import 'package:running_laps/features/templates/data/workout_session.dart';
+import 'package:running_laps/features/templates/views/workout_editor_screen.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
 import 'package:running_laps/features/training/views/manual_training_view.dart';
 import 'package:running_laps/core/services/notification_service.dart';
@@ -2084,22 +2088,59 @@ class _DayActionSheet extends StatelessWidget {
                             ],
                           )
                         else
-                          FilledButton(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.brand,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12),
-                              minimumSize: const Size(0, 34),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.brand,
+                                  side: const BorderSide(
+                                      color: AppColors.brand, width: 0.8),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12),
+                                  minimumSize: const Size(0, 34),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  final sessionDate =
+                                      DateTime.tryParse(s.date);
+                                  Navigator.push(
+                                    context,
+                                    AppRoute(
+                                      page: WorkoutEditorScreen(
+                                        scheduledDate: sessionDate,
+                                        onSave: (session) =>
+                                            _onWorkoutSaved(
+                                                context, session, uid),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: const Text('Editar',
+                                    style: TextStyle(fontSize: 13)),
                               ),
-                            ),
-                            onPressed: () {
-                              Navigator.pop(context);
-                              _launchGuidedSession(context, s, uid);
-                            },
-                            child: const Text('Ejecutar',
-                                style: TextStyle(fontSize: 13)),
+                              const SizedBox(width: 8),
+                              FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.brand,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12),
+                                  minimumSize: const Size(0, 34),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  _launchGuidedSession(context, s, uid);
+                                },
+                                child: const Text('Ejecutar',
+                                    style: TextStyle(fontSize: 13)),
+                              ),
+                            ],
                           ),
                       ],
                     ),
@@ -2122,9 +2163,10 @@ class _DayActionSheet extends StatelessWidget {
                 Navigator.push(
                   context,
                   AppRoute(
-                    page: SessionPlannerView(
-                      uid: uid,
-                      initialDate: day,
+                    page: WorkoutEditorScreen(
+                      scheduledDate: day,
+                      onSave: (session) =>
+                          _onWorkoutSaved(context, session, uid),
                     ),
                   ),
                 );
@@ -2175,6 +2217,51 @@ class _DayActionSheet extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _onWorkoutSaved — persiste WorkoutSession y crea AthleteSession planificada
+// ─────────────────────────────────────────────────────────────────────────────
+
+Future<void> _onWorkoutSaved(
+  BuildContext context,
+  WorkoutSession session,
+  String uid,
+) async {
+  // Persiste la estructura completa del workout (colección templates).
+  try {
+    await TrainingTemplatesRepository().saveWorkoutSession(session);
+  } catch (e) {
+    debugPrint('[_onWorkoutSaved] saveWorkoutSession error: $e');
+  }
+
+  // Si tiene fecha planificada, crea también un AthleteSession para que
+  // el calendario lo muestre. El stream del viewmodel lo recoge automáticamente.
+  final scheduledDate = session.scheduledDate;
+  if (scheduledDate == null) return;
+
+  final String dateStr =
+      '${scheduledDate.year}-'
+      '${scheduledDate.month.toString().padLeft(2, '0')}-'
+      '${scheduledDate.day.toString().padLeft(2, '0')}';
+
+  final athleteSession = AthleteSession(
+    id: session.id,
+    uid: uid,
+    date: dateStr,
+    status: AthleteSessionStatus.planned,
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+  );
+
+  try {
+    await AthleteSessionRepository().createSession(athleteSession);
+  } catch (e) {
+    debugPrint('[_onWorkoutSaved] createSession error: $e');
+    if (context.mounted) {
+      ModernSnackBar.showError(context, 'Error al guardar la sesión planificada');
+    }
   }
 }
 
