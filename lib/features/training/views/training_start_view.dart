@@ -30,6 +30,10 @@ import 'training_session_view.dart';
 import '../../templates/views/templates_list_view.dart';
 import '../../templates/data/template_models.dart';
 import '../../templates/views/template_editor_view.dart';
+import '../../templates/data/workout_block.dart';
+import '../../templates/data/workout_segment.dart';
+import '../../templates/data/workout_session.dart';
+import '../../templates/views/workout_editor_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
@@ -456,6 +460,73 @@ class _TrainingStartViewState extends State<TrainingStartView>
   }
 
   void _selectType(String type) => setState(() => _selectedTrainingType = type);
+
+  /// Mapea el tipo legacy al WorkoutType del nuevo editor.
+  WorkoutType _workoutTypeFor(String type) {
+    switch (type) {
+      case 'series':
+        return WorkoutType.intervals;
+      case 'fartlek':
+        return WorkoutType.fartlek;
+      case 'libre':
+        return WorkoutType.free;
+      default: // rodaje, tempo, largo
+        return WorkoutType.continuous;
+    }
+  }
+
+  /// Abre WorkoutEditorScreen en modo quick-start con el tipo preseleccionado.
+  void _openWorkoutEditor(String type) {
+    final workoutType = _workoutTypeFor(type);
+
+    // Sesión mínima con el tipo preseleccionado y un bloque principal vacío.
+    final initialSession = WorkoutSession(
+      title: _labelForType(type),
+      type: workoutType,
+      blocks: [
+        WorkoutBlock(
+          role: BlockRole.main,
+          repetitions: 1,
+          segments: [
+            WorkoutSegment(
+              type: SegmentType.interval,
+              distanceM: 1000,
+            ),
+          ],
+        ),
+      ],
+      isTemplate: false,
+    );
+
+    Navigator.push(
+      context,
+      AppRoute(
+        page: WorkoutEditorScreen(
+          isQuickStart: true,
+          initialSession: initialSession,
+          onSave: (session) {
+            // TODO: TrainingSessionView aún no acepta WorkoutSession.
+            // Cuando se integre, lanzar la sesión activa aquí.
+            debugPrint(
+              '[WorkoutEditor] quickStart session pendiente de integración: '
+              'type=${session.type.name} blocks=${session.blocks.length}',
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  String _labelForType(String type) {
+    switch (type) {
+      case 'series':  return 'Series';
+      case 'tempo':   return 'Tempo';
+      case 'fartlek': return 'Fartlek';
+      case 'largo':   return 'Largo';
+      case 'libre':   return 'Sesión libre';
+      default:        return 'Rodaje';
+    }
+  }
 
   /// Devuelve (min, sec) del pace de config según el tipo activo, o null.
   (int, int)? _cfgPaceParsed() {
@@ -2123,7 +2194,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
     final selected = _selectedTrainingType == type;
     const brand = AppColors.brand;
     return GestureDetector(
-      onTap: () => _selectType(type),
+      onTap: () => _openWorkoutEditor(type),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(AppSpacing.l),
