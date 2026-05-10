@@ -11,6 +11,8 @@ import 'package:running_laps/features/athlete/data/progress_repository.dart';
 import 'package:running_laps/features/home/viewmodels/home_view_model.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
+import 'package:running_laps/features/training/views/pre_execution_screen.dart';
+import 'package:running_laps/features/templates/data/athlete_session_mapper.dart';
 
 // Zone color helpers — Z1..Z5 matching ZonesService thresholds
 Color _zoneColor(int zone) {
@@ -232,10 +234,19 @@ class _HomeViewState extends State<HomeView> {
                         borderRadius: BorderRadius.circular(AppDimens.buttonRadius),
                       ),
                     ),
-                    onPressed: () => Navigator.push(
-                      context,
-                      AppRoute(page: const TrainingStartView()),
-                    ),
+                    onPressed: () {
+                      final workoutSession = mapAthleteSessionToWorkout(session);
+                      if (workoutSession != null) {
+                        Navigator.push(context, AppRoute(
+                          page: PreExecutionScreen(
+                            session: workoutSession,
+                            athleteSession: session,
+                          ),
+                        ));
+                      } else {
+                        Navigator.push(context, AppRoute(page: const TrainingStartView()));
+                      }
+                    },
                     child: const Text('EMPEZAR ENTRENAMIENTO'),
                   ),
                 ),

@@ -11,6 +11,8 @@ import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
+import 'package:running_laps/features/training/views/pre_execution_screen.dart';
+import 'package:running_laps/features/templates/data/athlete_session_mapper.dart';
 
 class CalendarView extends StatefulWidget {
   const CalendarView({super.key});
@@ -725,7 +727,24 @@ class _CalendarViewState extends State<CalendarView> {
         );
       } else if (sessions.any((s) => s.status == AthleteSessionStatus.planned)) {
         actionButton = GestureDetector(
-          onTap: () => Navigator.push(context, AppRoute(page: const TrainingStartView())),
+          onTap: () {
+            final planned = sessions
+                .where((s) => s.status == AthleteSessionStatus.planned)
+                .firstOrNull;
+            if (planned != null) {
+              final workoutSession = mapAthleteSessionToWorkout(planned);
+              if (workoutSession != null) {
+                Navigator.push(context, AppRoute(
+                  page: PreExecutionScreen(
+                    session: workoutSession,
+                    athleteSession: planned,
+                  ),
+                ));
+                return;
+              }
+            }
+            Navigator.push(context, AppRoute(page: const TrainingStartView()));
+          },
           child: const Icon(Icons.play_circle_outline, color: AppColors.brand, size: 24),
         );
       } else if (sessions.every((s) => s.status == AthleteSessionStatus.completed)) {
@@ -1395,7 +1414,19 @@ class _CalendarViewState extends State<CalendarView> {
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.buttonRadius)),
                     ),
-                    onPressed: () => Navigator.push(context, AppRoute(page: const TrainingStartView())),
+                    onPressed: () {
+                      final workoutSession = mapAthleteSessionToWorkout(session);
+                      if (workoutSession != null) {
+                        Navigator.push(context, AppRoute(
+                          page: PreExecutionScreen(
+                            session: workoutSession,
+                            athleteSession: session,
+                          ),
+                        ));
+                      } else {
+                        Navigator.push(context, AppRoute(page: const TrainingStartView()));
+                      }
+                    },
                     child: const Text('EMPEZAR'),
                   ),
                 ),
