@@ -133,9 +133,15 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
       final paceMax = _paceMaxMin != null
           ? _paceMaxMin! * 60 + (_paceMaxSec ?? 0)
           : null;
+      int? finalPaceMin = paceMin;
+      int? finalPaceMax = paceMax;
+      if (paceMin != null && paceMax != null && paceMin > paceMax) {
+        finalPaceMin = paceMax;
+        finalPaceMax = paceMin;
+      }
       target = TargetConfig(
-        paceMinSecPerKm: paceMin,
-        paceMaxSecPerKm: paceMax,
+        paceMinSecPerKm: finalPaceMin,
+        paceMaxSecPerKm: finalPaceMax,
         zone: _zone,
         rpe: _rpe,
       );
@@ -698,6 +704,22 @@ class _PaceRow extends StatelessWidget {
             ],
           ],
         ),
+        Builder(builder: (context) {
+          final minVal = (minMin ?? 4) * 60 + (minSec ?? 0);
+          final maxVal = (maxMin ?? 4) * 60 + (maxSec ?? 0);
+          final invalid = minMin != null && maxMin != null && minVal > maxVal;
+          if (!invalid) return const SizedBox.shrink();
+          return Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              'El ritmo "De" debe ser más rápido (menor) que el "A"',
+              style: TextStyle(
+                fontSize: 11,
+                color: AppColors.rpeMax,
+              ),
+            ),
+          );
+        }),
       ],
     );
   }

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
+import 'package:running_laps/features/templates/data/saved_block.dart';
+import 'package:running_laps/features/templates/data/saved_blocks_repository.dart';
 import 'package:running_laps/features/templates/data/workout_block.dart';
 import 'package:running_laps/features/templates/data/workout_segment.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
 import 'package:running_laps/features/templates/views/widgets/segment_bottom_sheet.dart';
+import 'package:uuid/uuid.dart';
 
 // ── BlocksListSection ────────────────────────────────────────────────────────
 
@@ -112,6 +115,114 @@ class _BlocksListSectionState extends State<BlocksListSection> {
     _updateBlock(block.copyWith(segments: segments));
   }
 
+  Future<void> _onSaveBlock(
+    BuildContext context,
+    WorkoutBlock block,
+    void Function(WorkoutBlock) onChanged,
+  ) async {
+    final name = await showDialog<String>(
+      context: context,
+      builder: (_) => _SaveBlockDialog(
+        defaultName: _defaultBlockName(block),
+      ),
+    );
+    if (name == null || name.trim().isEmpty) return;
+
+    try {
+      final count = await SavedBlocksRepository().getCount();
+      if (count >= SavedBlocksRepository.freeLimit) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(
+              'Límite de ${SavedBlocksRepository.freeLimit} bloques guardados alcanzado',
+            )),
+          );
+        }
+        return;
+      }
+
+      final saved = SavedBlock(
+        id: const Uuid().v4(),
+        name: name.trim(),
+        role: block.role,
+        block: block,
+        createdAt: DateTime.now(),
+      );
+      await SavedBlocksRepository().saveBlock(saved);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Bloque guardado')),
+        );
+      }
+    } catch (e) {
+      debugPrint('[BlocksList] saveBlock error: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al guardar: $e')),
+        );
+      }
+    }
+  }
+
+  String _defaultBlockName(WorkoutBlock block) {
+    switch (block.role) {
+      case BlockRole.warmup:
+        return 'Calentamiento';
+      case BlockRole.cooldown:
+        return 'Vuelta a la calma';
+      case BlockRole.main:
+      case BlockRole.custom:
+        final seg = block.segments
+            .where((s) => s.type == SegmentType.interval)
+            .firstOrNull;
+        if (seg == null) return 'Bloque';
+        final reps = block.repetitions;
+        if (seg.distanceM != null) {
+          return reps > 1 ? '$reps×${seg.distanceM}m' : '${seg.distanceM}m';
+        }
+        if (seg.durationSec != null) {
+          final min = seg.durationSec! ~/ 60;
+          return reps > 1 ? '$reps×$min min' : '$min min';
+        }
+        return 'Bloque';
+    }
+  }
+
+  Future<void> _onLoadSavedBlock(BuildContext context) async {
+    final saved = await showModalBottomSheet<SavedBlock>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surfaceOf(context),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _SavedBlocksSheet(
+        workoutType: widget.workoutType,
+      ),
+    );
+    if (saved == null) return;
+
+    final current = List<WorkoutBlock>.from(widget.blocks);
+    final cooldownIdx = current.indexWhere((b) => b.role == BlockRole.cooldown);
+    final newBlock = WorkoutBlock(
+      role: saved.block.role,
+      repetitions: saved.block.repetitions,
+      segments: saved.block.segments,
+      label: saved.block.label,
+    );
+
+    if (cooldownIdx >= 0) {
+      current.insert(cooldownIdx, newBlock);
+    } else {
+      current.add(newBlock);
+    }
+
+    SavedBlocksRepository().incrementUsage(saved.id);
+
+    widget.onBlocksChanged(current);
+  }
+
   @override
   Widget build(BuildContext context) {
     final ordered = _ordered;
@@ -137,10 +248,21 @@ class _BlocksListSectionState extends State<BlocksListSection> {
                 onDelete: () => _deleteBlock(block),
                 onAddSegment: () => _addSegment(block),
                 onEditSegment: (seg) => _editSegment(block, seg),
+                onSave: () => _onSaveBlock(context, block, _updateBlock),
               ),
             )),
 
-        // 3. Botón añadir bloque
+        // 3. Botón cargar bloque guardado
+        TextButton.icon(
+          icon: const Icon(Icons.bookmark_border, size: 18),
+          label: const Text('Cargar bloque guardado'),
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.brand,
+          ),
+          onPressed: () => _onLoadSavedBlock(context),
+        ),
+
+        // 4. Botón añadir bloque
         if (_showAddBlock)
           _GhostButton(
             label: 'Añadir bloque',
@@ -149,7 +271,7 @@ class _BlocksListSectionState extends State<BlocksListSection> {
             color: AppColors.brand,
           ),
 
-        // 4. Botón añadir vuelta a la calma
+        // 5. Botón añadir vuelta a la calma
         if (!_hasCooldown && _showWarmupCooldownButtons)
           _GhostButton(
             label: 'Añadir vuelta a la calma',
@@ -206,6 +328,7 @@ class _WorkoutBlockCard extends StatelessWidget {
     required this.onDelete,
     required this.onAddSegment,
     required this.onEditSegment,
+    required this.onSave,
   });
 
   final WorkoutBlock block;
@@ -214,6 +337,7 @@ class _WorkoutBlockCard extends StatelessWidget {
   final VoidCallback onDelete;
   final VoidCallback onAddSegment;
   final void Function(WorkoutSegment) onEditSegment;
+  final VoidCallback onSave;
 
   bool get _showRepetitions =>
       (block.role == BlockRole.main || block.role == BlockRole.custom) &&
@@ -252,6 +376,14 @@ class _WorkoutBlockCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
+              IconButton(
+                icon: Icon(Icons.bookmark_outline,
+                    size: 20, color: AppColors.iconMutedOf(context)),
+                tooltip: 'Guardar bloque',
+                onPressed: onSave,
+                constraints: const BoxConstraints(),
+                padding: const EdgeInsets.only(right: AppSpacing.s),
+              ),
               if (block.role != BlockRole.warmup &&
                   block.role != BlockRole.cooldown)
                 IconButton(
@@ -433,6 +565,289 @@ class _WorkoutBlockCard extends StatelessWidget {
   }
 }
 
+// ── _SaveBlockDialog ──────────────────────────────────────────────────────────
+
+class _SaveBlockDialog extends StatefulWidget {
+  const _SaveBlockDialog({required this.defaultName});
+
+  final String defaultName;
+
+  @override
+  State<_SaveBlockDialog> createState() => _SaveBlockDialogState();
+}
+
+class _SaveBlockDialogState extends State<_SaveBlockDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.defaultName);
+    _controller.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final canSave = _controller.text.trim().isNotEmpty;
+    return AlertDialog(
+      title: const Text('Guardar bloque'),
+      content: TextField(
+        autofocus: true,
+        controller: _controller,
+        maxLength: 50,
+        decoration: const InputDecoration(hintText: 'Nombre del bloque'),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, null),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: canSave ? () => Navigator.pop(context, _controller.text) : null,
+          child: const Text('Guardar'),
+        ),
+      ],
+    );
+  }
+}
+
+// ── _SavedBlocksSheet ─────────────────────────────────────────────────────────
+
+class _SavedBlocksSheet extends StatefulWidget {
+  const _SavedBlocksSheet({required this.workoutType});
+
+  final WorkoutType workoutType;
+
+  @override
+  State<_SavedBlocksSheet> createState() => _SavedBlocksSheetState();
+}
+
+class _SavedBlocksSheetState extends State<_SavedBlocksSheet> {
+  List<SavedBlock> _blocks = [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final blocks = await SavedBlocksRepository().getSavedBlocks();
+      if (!mounted) return;
+      setState(() {
+        _blocks = blocks;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _delete(SavedBlock block) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Eliminar bloque'),
+        content: Text('¿Eliminar "${block.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await SavedBlocksRepository().deleteBlock(block.id);
+    if (!mounted) return;
+    setState(() => _blocks.removeWhere((b) => b.id == block.id));
+  }
+
+  String _blockDescription(SavedBlock saved) {
+    final block = saved.block;
+    final seg = block.segments
+        .where((s) => s.type == SegmentType.interval)
+        .firstOrNull;
+    if (seg == null) return '${block.repetitions}× —';
+    if (seg.distanceM != null) {
+      return '${block.repetitions}× ${seg.distanceM}m';
+    }
+    if (seg.durationSec != null) {
+      final min = seg.durationSec! ~/ 60;
+      final sec = seg.durationSec! % 60;
+      final dur = sec == 0 ? '$min min' : '$min min $sec seg';
+      return '${block.repetitions}× $dur';
+    }
+    return '${block.repetitions}× —';
+  }
+
+  IconData _roleIcon(BlockRole role) {
+    switch (role) {
+      case BlockRole.warmup:
+        return Icons.waves;
+      case BlockRole.main:
+        return Icons.bolt;
+      case BlockRole.cooldown:
+        return Icons.waves;
+      case BlockRole.custom:
+        return Icons.add_circle_outline;
+    }
+  }
+
+  Color _roleColor(BlockRole role) {
+    switch (role) {
+      case BlockRole.warmup:
+      case BlockRole.cooldown:
+        return AppColors.rest;
+      case BlockRole.main:
+        return AppColors.effort;
+      case BlockRole.custom:
+        return AppColors.brand;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          margin: const EdgeInsets.only(top: 12),
+          width: 40,
+          height: 4,
+          decoration: BoxDecoration(
+            color: AppColors.borderOf(context),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.l, AppSpacing.l, AppSpacing.l, AppSpacing.s),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Mis bloques guardados',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary(context),
+              ),
+            ),
+          ),
+        ),
+        if (_loading)
+          const Padding(
+            padding: EdgeInsets.all(AppSpacing.xl),
+            child: CircularProgressIndicator(),
+          )
+        else if (_error != null)
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.l),
+            child: Text(
+              'Error al cargar: $_error',
+              style: TextStyle(color: AppColors.textSecondary(context)),
+            ),
+          )
+        else if (_blocks.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Center(
+              child: Text(
+                'No tienes bloques guardados',
+                style: TextStyle(
+                    fontSize: 14, color: AppColors.textSecondary(context)),
+              ),
+            ),
+          )
+        else
+          Flexible(
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: _blocks.length,
+              itemBuilder: (context, i) {
+                final saved = _blocks[i];
+                return _SavedBlockTile(
+                  saved: saved,
+                  description: _blockDescription(saved),
+                  icon: _roleIcon(saved.role),
+                  iconColor: _roleColor(saved.role),
+                  onTap: () => Navigator.pop(context, saved),
+                  onDelete: () => _delete(saved),
+                );
+              },
+            ),
+          ),
+        const SizedBox(height: AppSpacing.l),
+      ],
+    );
+  }
+}
+
+// ── _SavedBlockTile ───────────────────────────────────────────────────────────
+
+class _SavedBlockTile extends StatelessWidget {
+  const _SavedBlockTile({
+    required this.saved,
+    required this.description,
+    required this.icon,
+    required this.iconColor,
+    required this.onTap,
+    required this.onDelete,
+  });
+
+  final SavedBlock saved;
+  final String description;
+  final IconData icon;
+  final Color iconColor;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(icon, color: iconColor, size: 22),
+      title: Text(
+        saved.name,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textPrimary(context),
+        ),
+      ),
+      subtitle: Text(
+        description,
+        style: TextStyle(
+          fontSize: 12,
+          color: AppColors.textSecondary(context),
+        ),
+      ),
+      trailing: IconButton(
+        icon: Icon(Icons.delete_outline,
+            size: 20, color: AppColors.iconMutedOf(context)),
+        onPressed: onDelete,
+      ),
+      onTap: onTap,
+    );
+  }
+}
+
 // ── _SegmentChip ─────────────────────────────────────────────────────────────
 
 class _SegmentChip extends StatelessWidget {
@@ -514,7 +929,6 @@ class _SegmentChip extends StatelessWidget {
   String _targetLabel() {
     final t = segment.target;
     if (t == null) return '';
-    // Prioridad: pace > zone > rpe
     if (t.paceMinSecPerKm != null || t.paceMaxSecPerKm != null) {
       if (t.paceMinSecPerKm != null && t.paceMaxSecPerKm != null) {
         return '${_formatPace(t.paceMinSecPerKm!)}–${_formatPace(t.paceMaxSecPerKm!)}/km';
