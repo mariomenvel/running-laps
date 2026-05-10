@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
+import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/features/templates/data/athlete_session_mapper.dart';
 import 'package:running_laps/features/templates/data/templates_repository.dart';
 import 'package:running_laps/features/templates/data/workout_block.dart';
@@ -88,6 +89,14 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 
+  void _navigateBack() {
+    if (ShellEmbeddingScope.isEmbedded(context)) {
+      MainShell.shellKey.currentState?.navigateBack();
+    } else {
+      Navigator.of(context).pop();
+    }
+  }
+
   static DateTime? _parseShellDate(String? date) {
     if (date == null) return null;
     return DateTime.tryParse(date);
@@ -150,7 +159,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
 
   Future<void> _onClose() async {
     if (!_hasChanges()) {
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) _navigateBack();
       return;
     }
     final leave = await showDialog<bool>(
@@ -180,7 +189,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
         ],
       ),
     );
-    if ((leave ?? false) && mounted) Navigator.of(context).pop();
+    if ((leave ?? false) && mounted) _navigateBack();
   }
 
   Future<void> _onSave() async {
@@ -225,7 +234,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
     }
 
     widget.onSave?.call(session);
-    if (mounted) Navigator.of(context).pop();
+    if (mounted) _navigateBack();
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────
