@@ -243,6 +243,20 @@ class _BlocksListSectionState extends State<BlocksListSection> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           buildDefaultDragHandles: false,
+          proxyDecorator: (child, index, animation) {
+            return AnimatedBuilder(
+              animation: animation,
+              builder: (context, child) {
+                return Material(
+                  elevation: 4,
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(16),
+                  child: child,
+                );
+              },
+              child: child,
+            );
+          },
           onReorder: (oldIndex, newIndex) {
             final updated = List<WorkoutBlock>.from(_ordered);
             if (newIndex > oldIndex) newIndex--;
@@ -499,6 +513,20 @@ class _WorkoutBlockCard extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               buildDefaultDragHandles: false,
+              proxyDecorator: (child, index, animation) {
+                return AnimatedBuilder(
+                  animation: animation,
+                  builder: (context, child) {
+                    return Material(
+                      elevation: 4,
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(16),
+                      child: child,
+                    );
+                  },
+                  child: child,
+                );
+              },
               onReorder: (oldIndex, newIndex) {
                 final segments = List<WorkoutSegment>.of(block.segments);
                 if (newIndex > oldIndex) newIndex--;
