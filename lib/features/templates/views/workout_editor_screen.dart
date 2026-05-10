@@ -76,9 +76,12 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
       _notesController = TextEditingController(text: _notes.value);
       _notesController.addListener(() => _notes.value = _notesController.text);
 
-      if (s?.title != null && s!.title.isNotEmpty) {
+      if (s != null && s.title.isNotEmpty) {
         _titleEdited = true;
-        _titleIsAuto = false;
+        final autoTitle = generateTitle(s);
+        _titleIsAuto = s.title == autoTitle || s.title == titleFromType(s.type);
+      } else {
+        _titleIsAuto = true;
       }
     } catch (e, st) {
       debugPrint('[WorkoutEditor] initState ERROR: $e');
