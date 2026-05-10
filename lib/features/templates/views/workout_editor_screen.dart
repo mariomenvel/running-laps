@@ -229,8 +229,6 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
       final distM = firstSeg?.distanceM;
       final durSec = firstSeg?.durationSec;
 
-      debugPrint('[WorkoutEditor] inline title: reps=$reps distM=$distM durSec=$durSec type=$resolvedType');
-
       if ((resolvedType == WorkoutType.intervals ||
            resolvedType == WorkoutType.hills) &&
           distM != null && distM > 0) {
@@ -254,8 +252,6 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
         resolvedTitle = titleFromType(resolvedType);
       }
     }
-
-    debugPrint('[WorkoutEditor] resolvedTitle inline: $resolvedTitle');
 
     final notesValue = _notes.value.trim().isEmpty ? null : _notes.value.trim();
 
@@ -287,11 +283,6 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
           final athleteSession =
               mapWorkoutSessionToAthlete(session, uid: uid);
           final repo = AthleteSessionRepository();
-          debugPrint('[WorkoutEditor] shellParams.session?.id: ${widget.shellParams?.session?.id}');
-          debugPrint('[WorkoutEditor] session.id: ${session.id}');
-          debugPrint('[WorkoutEditor] athleteSession.id: ${athleteSession.id}');
-          debugPrint('[WorkoutEditor] uid: $uid');
-          debugPrint('[WorkoutEditor] es edición: ${widget.shellParams?.session != null}');
           if (widget.shellParams?.session != null) {
             final originalId = widget.shellParams!.session!.id;
             final sessionWithId = WorkoutSession(

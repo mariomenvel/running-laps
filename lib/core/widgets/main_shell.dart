@@ -181,7 +181,6 @@ class _MainShellState extends State<MainShell> {
         }
       case 13:
         if (params is AthleteSessionShellParams) {
-          debugPrint('[Shell] navigateTo(13) date=${params.date} session=${params.session?.id}');
           _athleteSessionNotifier.value = params;
         }
       case 14:
