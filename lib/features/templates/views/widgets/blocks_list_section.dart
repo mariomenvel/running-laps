@@ -238,19 +238,36 @@ class _BlocksListSectionState extends State<BlocksListSection> {
             context: context,
           ),
 
-        // 2. Lista de bloques
-        ...ordered.map((block) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.s),
-              child: _WorkoutBlockCard(
-                block: block,
-                workoutType: widget.workoutType,
-                onChanged: _updateBlock,
-                onDelete: () => _deleteBlock(block),
-                onAddSegment: () => _addSegment(block),
-                onEditSegment: (seg) => _editSegment(block, seg),
-                onSave: () => _onSaveBlock(context, block, _updateBlock),
+        // 2. Lista de bloques reordenable
+        ReorderableListView(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          buildDefaultDragHandles: false,
+          onReorder: (oldIndex, newIndex) {
+            final updated = List<WorkoutBlock>.from(_ordered);
+            if (newIndex > oldIndex) newIndex--;
+            final item = updated.removeAt(oldIndex);
+            updated.insert(newIndex, item);
+            widget.onBlocksChanged(updated);
+          },
+          children: [
+            for (int i = 0; i < ordered.length; i++)
+              Padding(
+                key: ValueKey(ordered[i].id),
+                padding: const EdgeInsets.only(bottom: AppSpacing.s),
+                child: _WorkoutBlockCard(
+                  index: i,
+                  block: ordered[i],
+                  workoutType: widget.workoutType,
+                  onChanged: _updateBlock,
+                  onDelete: () => _deleteBlock(ordered[i]),
+                  onAddSegment: () => _addSegment(ordered[i]),
+                  onEditSegment: (seg) => _editSegment(ordered[i], seg),
+                  onSave: () => _onSaveBlock(context, ordered[i], _updateBlock),
+                ),
               ),
-            )),
+          ],
+        ),
 
         // 3. Botón cargar bloque guardado
         TextButton.icon(
@@ -322,6 +339,7 @@ class _GhostButton extends StatelessWidget {
 
 class _WorkoutBlockCard extends StatelessWidget {
   const _WorkoutBlockCard({
+    required this.index,
     required this.block,
     required this.workoutType,
     required this.onChanged,
@@ -331,6 +349,7 @@ class _WorkoutBlockCard extends StatelessWidget {
     required this.onSave,
   });
 
+  final int index;
   final WorkoutBlock block;
   final WorkoutType workoutType;
   final void Function(WorkoutBlock) onChanged;
@@ -364,6 +383,17 @@ class _WorkoutBlockCard extends StatelessWidget {
           // Header
           Row(
             children: [
+              ReorderableDragStartListener(
+                index: index,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.s),
+                  child: Icon(
+                    Icons.drag_handle,
+                    size: 20,
+                    color: AppColors.iconMutedOf(context),
+                  ),
+                ),
+              ),
               Icon(_roleIcon, color: _roleColor, size: 20),
               const SizedBox(width: AppSpacing.s),
               Text(
@@ -468,6 +498,7 @@ class _WorkoutBlockCard extends StatelessWidget {
             ReorderableListView(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
+              buildDefaultDragHandles: false,
               onReorder: (oldIndex, newIndex) {
                 final segments = List<WorkoutSegment>.of(block.segments);
                 if (newIndex > oldIndex) newIndex--;
@@ -476,14 +507,15 @@ class _WorkoutBlockCard extends StatelessWidget {
                 onChanged(block.copyWith(segments: segments));
               },
               children: [
-                for (final seg in block.segments)
+                for (int i = 0; i < block.segments.length; i++)
                   _SegmentChip(
-                    key: ValueKey(seg.id),
-                    segment: seg,
-                    onEdit: () => onEditSegment(seg),
+                    key: ValueKey(block.segments[i].id),
+                    index: i,
+                    segment: block.segments[i],
+                    onEdit: () => onEditSegment(block.segments[i]),
                     onDelete: () {
                       final segs = block.segments
-                          .where((s) => s.id != seg.id)
+                          .where((s) => s.id != block.segments[i].id)
                           .toList();
                       onChanged(block.copyWith(segments: segs));
                     },
@@ -492,18 +524,20 @@ class _WorkoutBlockCard extends StatelessWidget {
             )
           else
             Column(
-              children: block.segments
-                  .map((seg) => _SegmentChip(
-                        segment: seg,
-                        onEdit: () => onEditSegment(seg),
-                        onDelete: () {
-                          final segs = block.segments
-                              .where((s) => s.id != seg.id)
-                              .toList();
-                          onChanged(block.copyWith(segments: segs));
-                        },
-                      ))
-                  .toList(),
+              children: [
+                for (int i = 0; i < block.segments.length; i++)
+                  _SegmentChip(
+                    index: i,
+                    segment: block.segments[i],
+                    onEdit: () => onEditSegment(block.segments[i]),
+                    onDelete: () {
+                      final segs = block.segments
+                          .where((s) => s.id != block.segments[i].id)
+                          .toList();
+                      onChanged(block.copyWith(segments: segs));
+                    },
+                  ),
+              ],
             ),
 
           // Add segment button
@@ -723,8 +757,57 @@ class _SavedBlocksSheetState extends State<_SavedBlocksSheet> {
     }
   }
 
+  List<SavedBlock> _blocksForRole(BlockRole role) =>
+      _blocks.where((b) => b.role == role).toList();
+
+  Widget _sectionHeader(BuildContext context, String label, Color color) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.l, AppSpacing.s, AppSpacing.l, AppSpacing.xs),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 1.2,
+          color: color,
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _roleSection(
+    BuildContext context,
+    BlockRole role,
+    String label,
+  ) {
+    final blocks = _blocksForRole(role);
+    if (blocks.isEmpty) return [];
+    return [
+      _sectionHeader(context, label, _roleColor(role)),
+      for (final saved in blocks)
+        _SavedBlockTile(
+          saved: saved,
+          description: _blockDescription(saved),
+          icon: _roleIcon(saved.role),
+          iconColor: _roleColor(saved.role),
+          onTap: () => Navigator.pop(context, saved),
+          onDelete: () => _delete(saved),
+        ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
+    final sections = _loading || _error != null || _blocks.isEmpty
+        ? <Widget>[]
+        : [
+            ..._roleSection(context, BlockRole.warmup, 'CALENTAMIENTOS'),
+            ..._roleSection(context, BlockRole.main, 'BLOQUES PRINCIPALES'),
+            ..._roleSection(context, BlockRole.custom, 'BLOQUES ADICIONALES'),
+            ..._roleSection(context, BlockRole.cooldown, 'VUELTA A LA CALMA'),
+          ];
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -768,30 +851,30 @@ class _SavedBlocksSheetState extends State<_SavedBlocksSheet> {
         else if (_blocks.isEmpty)
           Padding(
             padding: const EdgeInsets.all(AppSpacing.xl),
-            child: Center(
-              child: Text(
-                'No tienes bloques guardados',
-                style: TextStyle(
-                    fontSize: 14, color: AppColors.textSecondary(context)),
-              ),
+            child: Column(
+              children: [
+                Icon(Icons.bookmark_border,
+                    size: 48, color: AppColors.iconMutedOf(context)),
+                const SizedBox(height: AppSpacing.m),
+                Text(
+                  'No tienes bloques guardados',
+                  style: TextStyle(
+                      fontSize: 14, color: AppColors.textSecondary(context)),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Guarda un bloque desde el editor',
+                  style: TextStyle(
+                      fontSize: 12, color: AppColors.textSecondary(context)),
+                ),
+              ],
             ),
           )
         else
           Flexible(
-            child: ListView.builder(
+            child: ListView(
               shrinkWrap: true,
-              itemCount: _blocks.length,
-              itemBuilder: (context, i) {
-                final saved = _blocks[i];
-                return _SavedBlockTile(
-                  saved: saved,
-                  description: _blockDescription(saved),
-                  icon: _roleIcon(saved.role),
-                  iconColor: _roleColor(saved.role),
-                  onTap: () => Navigator.pop(context, saved),
-                  onDelete: () => _delete(saved),
-                );
-              },
+              children: sections,
             ),
           ),
         const SizedBox(height: AppSpacing.l),
@@ -853,11 +936,13 @@ class _SavedBlockTile extends StatelessWidget {
 class _SegmentChip extends StatelessWidget {
   const _SegmentChip({
     super.key,
+    required this.index,
     required this.segment,
     required this.onEdit,
     required this.onDelete,
   });
 
+  final int index;
   final WorkoutSegment segment;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -898,6 +983,17 @@ class _SegmentChip extends StatelessWidget {
             onPressed: onDelete,
             constraints: const BoxConstraints(),
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          ),
+          ReorderableDragStartListener(
+            index: index,
+            child: Padding(
+              padding: const EdgeInsets.only(left: AppSpacing.xs),
+              child: Icon(
+                Icons.drag_handle,
+                size: 18,
+                color: AppColors.iconMutedOf(context),
+              ),
+            ),
           ),
         ],
       ),
