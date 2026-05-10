@@ -1,5 +1,31 @@
 # CHANGELOG — Running Laps
 
+## [feature/workout-types] — Mayo 2026
+
+### Añadido
+- Sistema completo de tipos de entrenamiento (WorkoutType: continuous,
+  intervals, fartlek, hills, competition, free)
+- Modelos: WorkoutSession, WorkoutBlock, WorkoutSegment, TargetConfig,
+  SavedBlock con toMap/fromMap/copyWith y 37 tests unitarios
+- Repositorios: templates (WorkoutSession), savedBlocks con límite 30
+- Reglas Firestore: users/{uid}/savedBlocks
+- Editor de sesiones completo con calentamiento, bloques, vuelta a la calma
+- Títulos autogenerados desde contenido ("5×1km", "Rodaje 45 min")
+- Biblioteca de bloques guardables por usuario (guardar, cargar, eliminar)
+- Bloques guardados agrupados por categoría en el sheet
+- Reordenación de bloques y segmentos con drag & drop
+- Validación rango pace (mín siempre < máx) con feedback visual
+- Mapeadores bidireccionales AthleteSession ↔ WorkoutSession
+- Conexión completa con calendario (crear, editar, persistir, título visible)
+- SessionWarmupCooldown: campo distanceM añadido (retrocompatible)
+- AthleteSession: campo title añadido (retrocompatible)
+
+### Pendiente (próximas ramas)
+- feature/workout-execution: integrar WorkoutSession con TrainingSessionView
+- chore/remove-legacy-views: eliminar vistas huérfanas
+
+---
+
 ## [Rediseño UI completo + Arquitectura de navegación] — Mayo 2026
  
 ### Arquitectura de navegación — cambio fundamental
