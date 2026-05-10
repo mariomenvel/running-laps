@@ -693,13 +693,24 @@ class _CalendarViewState extends State<CalendarView> {
     final isToday = day.year == now.year && day.month == now.month && day.day == now.day;
 
     void onDayTap() {
-      if (isAthlete) {
-        MainShell.shellKey.currentState?.navigateTo(
-          13,
-          params: AthleteSessionShellParams(date: _normalize(day)),
-        );
-      } else {
-        Navigator.push(context, AppRoute(page: const TrainingStartView()));
+      try {
+        if (isAthlete) {
+          final plannedSession = sessions
+              .where((s) => s.status == AthleteSessionStatus.planned)
+              .firstOrNull;
+          MainShell.shellKey.currentState?.navigateTo(
+            13,
+            params: AthleteSessionShellParams(
+              date: _normalize(day),
+              session: plannedSession,
+            ),
+          );
+        } else {
+          Navigator.push(context, AppRoute(page: const TrainingStartView()));
+        }
+      } catch (e, st) {
+        debugPrint('[CalendarView] onDayTap ERROR: $e');
+        debugPrint('[CalendarView] stack: $st');
       }
     }
 

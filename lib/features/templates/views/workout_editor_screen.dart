@@ -53,27 +53,32 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
   @override
   void initState() {
     super.initState();
-    final mapped = mapAthleteSessionToWorkout(widget.shellParams?.session);
-    final s = widget.initialSession ?? mapped;
+    try {
+      final mapped = mapAthleteSessionToWorkout(widget.shellParams?.session);
+      final s = widget.initialSession ?? mapped;
 
-    _effectiveScheduledDate = widget.scheduledDate
-        ?? _parseShellDate(widget.shellParams?.date)
-        ?? s?.scheduledDate;
+      _effectiveScheduledDate = widget.scheduledDate
+          ?? _parseShellDate(widget.shellParams?.date)
+          ?? s?.scheduledDate;
 
-    _selectedType    = ValueNotifier(s?.type);
-    _title           = ValueNotifier(s?.title ?? '');
-    _blocks          = ValueNotifier(List.of(s?.blocks ?? []));
-    _saveAsTemplate  = ValueNotifier(s?.isTemplate ?? false);
-    _scheduledTime   = ValueNotifier(s?.scheduledTime);
-    _notes           = ValueNotifier(s?.notes ?? '');
+      _selectedType    = ValueNotifier(s?.type);
+      _title           = ValueNotifier(s?.title ?? '');
+      _blocks          = ValueNotifier(List.of(s?.blocks ?? []));
+      _saveAsTemplate  = ValueNotifier(s?.isTemplate ?? false);
+      _scheduledTime   = ValueNotifier(s?.scheduledTime);
+      _notes           = ValueNotifier(s?.notes ?? '');
 
-    _titleController = TextEditingController(text: _title.value);
-    _titleController.addListener(() => _title.value = _titleController.text);
+      _titleController = TextEditingController(text: _title.value);
+      _titleController.addListener(() => _title.value = _titleController.text);
 
-    _notesController = TextEditingController(text: _notes.value);
-    _notesController.addListener(() => _notes.value = _notesController.text);
+      _notesController = TextEditingController(text: _notes.value);
+      _notesController.addListener(() => _notes.value = _notesController.text);
 
-    if (s?.title != null && s!.title.isNotEmpty) _titleEdited = true;
+      if (s?.title != null && s!.title.isNotEmpty) _titleEdited = true;
+    } catch (e, st) {
+      debugPrint('[WorkoutEditor] initState ERROR: $e');
+      debugPrint('[WorkoutEditor] stack: $st');
+    }
   }
 
   @override
@@ -243,6 +248,11 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
           final athleteSession =
               mapWorkoutSessionToAthlete(session, uid: uid);
           final repo = AthleteSessionRepository();
+          debugPrint('[WorkoutEditor] shellParams.session?.id: ${widget.shellParams?.session?.id}');
+          debugPrint('[WorkoutEditor] session.id (WorkoutSession): ${session.id}');
+          debugPrint('[WorkoutEditor] athleteSession.id: ${athleteSession.id}');
+          debugPrint('[WorkoutEditor] uid: $uid');
+          debugPrint('[WorkoutEditor] es edición: ${widget.shellParams?.session != null}');
           if (widget.shellParams?.session != null) {
             await repo.updateSession(
               athleteSession.copyWith(id: widget.shellParams!.session!.id),
@@ -250,6 +260,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
           } else {
             await repo.createSession(athleteSession);
           }
+          debugPrint('[WorkoutEditor] persistido correctamente');
         }
       } catch (e) {
         debugPrint('[WorkoutEditor] persistAthleteSession error: $e');
