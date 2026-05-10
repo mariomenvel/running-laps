@@ -216,6 +216,8 @@ class AthleteSession {
   final List<SessionBlock> blocks;
   final SessionWarmupCooldown? cooldown;
 
+  final String? title;
+
   final String? planningNotes;
   final String? executionNotes;
 
@@ -239,6 +241,7 @@ class AthleteSession {
     this.warmup,
     this.blocks = const [],
     this.cooldown,
+    this.title,
     this.planningNotes,
     this.executionNotes,
     this.raceName,
@@ -272,6 +275,7 @@ class AthleteSession {
                               ? SessionWarmupCooldown.fromMap(
                                   map['cooldown'] as Map<String, dynamic>)
                               : null,
+      title:                map['title'] as String?,
       planningNotes:        map['planningNotes'] as String?,
       executionNotes:       map['executionNotes'] as String?,
       raceName:             map['raceName']          as String?,
@@ -296,6 +300,7 @@ class AthleteSession {
       if (skippedReason        != null) 'skippedReason':        skippedReason,
       if (warmup               != null) 'warmup':               warmup!.toMap(),
       if (cooldown             != null) 'cooldown':             cooldown!.toMap(),
+      if (title                != null) 'title':                title,
       if (planningNotes        != null) 'planningNotes':        planningNotes,
       if (executionNotes       != null) 'executionNotes':       executionNotes,
       if (raceName             != null) 'raceName':             raceName,
@@ -316,6 +321,7 @@ class AthleteSession {
     Object? warmup              = _sentinel,
     List<SessionBlock>? blocks,
     Object? cooldown            = _sentinel,
+    Object? title               = _sentinel,
     Object? planningNotes       = _sentinel,
     Object? executionNotes      = _sentinel,
     Object? raceName            = _sentinel,
@@ -336,6 +342,7 @@ class AthleteSession {
       warmup:              warmup              == _sentinel ? this.warmup              : warmup              as SessionWarmupCooldown?,
       blocks:              blocks              ?? this.blocks,
       cooldown:            cooldown            == _sentinel ? this.cooldown            : cooldown            as SessionWarmupCooldown?,
+      title:               title               == _sentinel ? this.title               : title               as String?,
       planningNotes:       planningNotes       == _sentinel ? this.planningNotes       : planningNotes       as String?,
       executionNotes:      executionNotes      == _sentinel ? this.executionNotes      : executionNotes      as String?,
       raceName:            raceName            == _sentinel ? this.raceName            : raceName            as String?,

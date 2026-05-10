@@ -31,7 +31,7 @@ WorkoutSession? mapAthleteSessionToWorkout(AthleteSession? session) {
 
   return WorkoutSession(
     id:            session.id,
-    title:         _titleFromCategory(session.category),
+    title:         session.title ?? _titleFromCategory(session.category),
     type:          _mapCategory(session.category),
     blocks:        mappedBlocks,
     scheduledDate: DateTime.tryParse(session.date),
@@ -80,6 +80,84 @@ String _titleFromCategory(String? category) {
     case 'test':            return 'Test';
     case 'gimnasio_fuerza': return 'Gimnasio / fuerza';
     default:                return 'Sesión planificada';
+  }
+}
+
+String titleFromType(WorkoutType type) {
+  switch (type) {
+    case WorkoutType.continuous:  return 'Rodaje';
+    case WorkoutType.intervals:   return 'Series';
+    case WorkoutType.fartlek:     return 'Fartlek';
+    case WorkoutType.hills:       return 'Cuestas';
+    case WorkoutType.competition: return 'Competición';
+    case WorkoutType.free:        return 'Sesión libre';
+  }
+}
+
+String generateTitle(WorkoutSession session) {
+  final mainBlocks = session.mainBlocks;
+  if (mainBlocks.isEmpty) return _titleFromCategory(null);
+
+  final firstMain = mainBlocks.first;
+  final reps = firstMain.repetitions;
+  final firstInterval = firstMain.segments
+      .where((s) => s.type == SegmentType.interval)
+      .firstOrNull;
+
+  if (firstInterval == null) return titleFromType(session.type);
+
+  switch (session.type) {
+    case WorkoutType.intervals:
+    case WorkoutType.hills:
+      if (firstInterval.distanceM != null) {
+        final dist = firstInterval.distanceM!;
+        final distLabel = dist >= 1000
+            ? '${(dist / 1000).toStringAsFixed(dist % 1000 == 0 ? 0 : 1)}km'
+            : '${dist}m';
+        return reps > 1 ? '$reps×$distLabel' : distLabel;
+      } else if (firstInterval.durationSec != null) {
+        final min = firstInterval.durationSec! ~/ 60;
+        final sec = firstInterval.durationSec! % 60;
+        final timeLabel = sec == 0 ? '$min min' : "$min'$sec\"";
+        return reps > 1 ? '$reps×$timeLabel' : timeLabel;
+      }
+      return titleFromType(session.type);
+
+    case WorkoutType.continuous:
+      final prefix = titleFromType(session.type);
+      if (firstInterval.distanceM != null) {
+        final km = firstInterval.distanceM! / 1000;
+        return '$prefix ${km.toStringAsFixed(km % 1 == 0 ? 0 : 1)}km';
+      } else if (firstInterval.durationSec != null) {
+        final min = firstInterval.durationSec! ~/ 60;
+        return '$prefix $min min';
+      }
+      return prefix;
+
+    case WorkoutType.fartlek:
+      final intervals = firstMain.segments
+          .where((s) => s.type == SegmentType.interval)
+          .take(3)
+          .toList();
+      if (intervals.isEmpty) return 'Fartlek';
+      final labels = intervals.map((s) {
+        if (s.durationSec != null) {
+          final min = s.durationSec! ~/ 60;
+          final sec = s.durationSec! % 60;
+          return sec == 0 ? "$min'" : "$min'$sec\"";
+        }
+        return '${s.distanceM}m';
+      }).join('-');
+      final suffix = firstMain.segments
+              .where((s) => s.type == SegmentType.interval)
+              .length > 3 ? '...' : '';
+      return 'Fartlek $labels$suffix';
+
+    case WorkoutType.competition:
+      return 'Competición';
+
+    case WorkoutType.free:
+      return 'Sesión libre';
   }
 }
 
@@ -245,6 +323,7 @@ AthleteSession mapWorkoutSessionToAthlete(
   return AthleteSession(
     id:            session.id,
     uid:           uid,
+    title:         session.title,
     date:          _formatDate(session.scheduledDate ?? now),
     time:          _formatTime(session.scheduledTime),
     category:      _workoutTypeToCategory(session.type),

@@ -9,6 +9,7 @@ import 'package:running_laps/features/athlete/data/athlete_session_repository.da
 import 'package:running_laps/features/templates/data/athlete_session_mapper.dart';
 import 'package:running_laps/features/templates/data/templates_repository.dart';
 import 'package:running_laps/features/templates/data/workout_block.dart';
+import 'package:running_laps/features/templates/data/workout_segment.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
 import 'package:running_laps/features/templates/views/widgets/blocks_list_section.dart';
 import 'package:running_laps/features/templates/views/widgets/workout_type_selector.dart';
@@ -109,17 +110,6 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
     return DateTime.tryParse(date);
   }
 
-  String _defaultTitleFor(WorkoutType type) {
-    switch (type) {
-      case WorkoutType.continuous:  return 'Rodaje';
-      case WorkoutType.intervals:   return 'Series';
-      case WorkoutType.fartlek:     return 'Fartlek';
-      case WorkoutType.hills:       return 'Cuestas';
-      case WorkoutType.competition: return 'Competición';
-      case WorkoutType.free:        return 'Sesión libre';
-    }
-  }
-
   bool _hasChanges() {
     final s = widget.initialSession;
     if (s == null) {
@@ -141,9 +131,20 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
   void _onTypeSelected(WorkoutType type) {
     _selectedType.value = type;
     if (!_titleEdited) {
-      final defaultTitle = _defaultTitleFor(type);
-      _title.value = defaultTitle;
-      _titleController.text = defaultTitle;
+      final tempSession = WorkoutSession(
+        id: '',
+        title: '',
+        type: type,
+        blocks: _blocks.value.isNotEmpty
+            ? _blocks.value
+            : [WorkoutBlock(role: BlockRole.main, repetitions: 1, segments: [
+                WorkoutSegment(type: SegmentType.interval, durationSec: 60),
+              ])],
+        isTemplate: false,
+      );
+      final autoTitle = generateTitle(tempSession);
+      _title.value = autoTitle;
+      _titleController.text = autoTitle;
     }
     if (_blocks.value.isEmpty) {
       _blocks.value = [
@@ -204,9 +205,6 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
     if (type == null && _blocks.value.isEmpty && !widget.isQuickStart) return;
 
     final resolvedType = type ?? WorkoutType.free;
-    final resolvedTitle = _title.value.trim().isEmpty
-        ? _defaultTitleFor(resolvedType)
-        : _title.value.trim();
 
     final blocks = _blocks.value.isNotEmpty
         ? _blocks.value
@@ -217,6 +215,16 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
               segments: [],
             ),
           ];
+
+    final resolvedTitle = _title.value.trim().isEmpty
+        ? generateTitle(WorkoutSession(
+            id: '',
+            title: '',
+            type: resolvedType,
+            blocks: blocks,
+            isTemplate: false,
+          ))
+        : _title.value.trim();
 
     final notesValue = _notes.value.trim().isEmpty ? null : _notes.value.trim();
 
@@ -254,8 +262,21 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
           debugPrint('[WorkoutEditor] uid: $uid');
           debugPrint('[WorkoutEditor] es edición: ${widget.shellParams?.session != null}');
           if (widget.shellParams?.session != null) {
+            final originalId = widget.shellParams!.session!.id;
+            final sessionWithId = WorkoutSession(
+              id:            originalId,
+              title:         session.title,
+              description:   session.description,
+              type:          session.type,
+              blocks:        session.blocks,
+              scheduledDate: session.scheduledDate,
+              scheduledTime: session.scheduledTime,
+              notes:         session.notes,
+              isTemplate:    session.isTemplate,
+              templateId:    session.templateId,
+            );
             await repo.updateSession(
-              athleteSession.copyWith(id: widget.shellParams!.session!.id),
+              mapWorkoutSessionToAthlete(sessionWithId, uid: uid),
             );
           } else {
             await repo.createSession(athleteSession);
