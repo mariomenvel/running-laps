@@ -1,9 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
+import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 import 'package:running_laps/features/templates/data/athlete_session_mapper.dart';
 import 'package:running_laps/features/templates/data/templates_repository.dart';
 import 'package:running_laps/features/templates/data/workout_block.dart';
@@ -230,6 +232,27 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
         await TrainingTemplatesRepository().saveWorkoutSession(session);
       } catch (e) {
         debugPrint('[WorkoutEditor] saveWorkoutSession error: $e');
+      }
+    }
+
+    // Persiste como sesión planificada en Firestore si viene del calendario.
+    if (widget.shellParams != null || widget.scheduledDate != null) {
+      try {
+        final uid = FirebaseAuth.instance.currentUser?.uid;
+        if (uid != null) {
+          final athleteSession =
+              mapWorkoutSessionToAthlete(session, uid: uid);
+          final repo = AthleteSessionRepository();
+          if (widget.shellParams?.session != null) {
+            await repo.updateSession(
+              athleteSession.copyWith(id: widget.shellParams!.session!.id),
+            );
+          } else {
+            await repo.createSession(athleteSession);
+          }
+        }
+      } catch (e) {
+        debugPrint('[WorkoutEditor] persistAthleteSession error: $e');
       }
     }
 
