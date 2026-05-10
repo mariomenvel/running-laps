@@ -13,6 +13,7 @@ import '../../templates/data/workout_session.dart';
 import '../../athlete/data/athlete_session_model.dart';
 import 'training_start_view.dart';
 import 'widgets/countdown_dialog.dart';
+import '../../templates/views/workout_editor_screen.dart';
 
 class PreExecutionScreen extends StatefulWidget {
   final WorkoutSession session;
@@ -124,6 +125,24 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
 
   // ─── Actions ────────────────────────────────────────────────────────────────
 
+  Future<void> _onEdit() async {
+    final updated = await Navigator.push<WorkoutSession>(
+      context,
+      AppRoute(
+        page: WorkoutEditorScreen(
+          initialSession: _session,
+          scheduledDate: widget.athleteSession?.date != null
+              ? DateTime.tryParse(widget.athleteSession!.date)
+              : null,
+          onSave: (session) => Navigator.pop(context, session),
+        ),
+      ),
+    );
+    if (updated != null && mounted) {
+      setState(() => _session = updated);
+    }
+  }
+
   void _onStart() {
     showDialog(
       context: context,
@@ -221,6 +240,11 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
           IconButton(
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.edit_outlined, size: 20),
+            color: AppColors.iconMutedOf(context),
+            onPressed: _onEdit,
           ),
           Expanded(
             child: Text(

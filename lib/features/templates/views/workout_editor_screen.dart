@@ -309,8 +309,12 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
       }
     }
 
-    widget.onSave?.call(session);
-    if (mounted) _navigateBack();
+    if (widget.onSave != null) {
+      widget.onSave!(session);
+      // onSave es responsable del pop — no llamar _navigateBack()
+    } else {
+      if (mounted) _navigateBack();
+    }
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────
