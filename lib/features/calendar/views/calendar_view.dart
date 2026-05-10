@@ -699,14 +699,26 @@ class _CalendarViewState extends State<CalendarView> {
     void onDayTap() {
       try {
         if (isAthlete) {
-          final plannedSession = sessions
+          final planned = sessions
               .where((s) => s.status == AthleteSessionStatus.planned)
               .firstOrNull;
+          if (planned != null) {
+            final workoutSession = mapAthleteSessionToWorkout(planned);
+            if (workoutSession != null && context.mounted) {
+              Navigator.push(context, AppRoute(
+                page: PreExecutionScreen(
+                  session: workoutSession,
+                  athleteSession: planned,
+                ),
+              ));
+              return;
+            }
+          }
           MainShell.shellKey.currentState?.navigateTo(
             13,
             params: AthleteSessionShellParams(
               date: _normalize(day),
-              session: plannedSession,
+              session: null,
             ),
           );
         } else {
@@ -850,6 +862,22 @@ class _CalendarViewState extends State<CalendarView> {
                                         style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
                                       ),
                                     ),
+                                    if (s.status == AthleteSessionStatus.planned)
+                                      IconButton(
+                                        icon: const Icon(Icons.edit_outlined, size: 16),
+                                        color: AppColors.iconMutedOf(context),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                        onPressed: () {
+                                          MainShell.shellKey.currentState?.navigateTo(
+                                            13,
+                                            params: AthleteSessionShellParams(
+                                              date: _normalize(day),
+                                              session: s,
+                                            ),
+                                          );
+                                        },
+                                      ),
                                   ],
                                 ),
                                 if (s.blocks.isNotEmpty)
