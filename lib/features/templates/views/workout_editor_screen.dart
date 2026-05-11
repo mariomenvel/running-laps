@@ -197,6 +197,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
   }
 
   Future<void> _onSave() async {
+    debugPrint('[WorkoutEditor] _onSave CALLED — shellParams=${widget.shellParams?.date} scheduledDate=$widget.scheduledDate}');
     final type = _selectedType.value;
     if (type == null && _blocks.value.isEmpty && !widget.isQuickStart) return;
 
