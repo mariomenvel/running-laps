@@ -6,6 +6,7 @@ import '../../../core/services/settings_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/app_transitions.dart';
+import '../../../config/app_theme.dart' show AvatarHelper;
 import '../../profile/data/zones_repository.dart';
 import '../../templates/data/workout_block.dart';
 import '../../templates/data/workout_segment.dart';
@@ -34,14 +35,17 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
   late WorkoutSession _originalSession;
   late WorkoutSession _session;
   bool _gpsOn = true;
+  bool _warmupEnabled = true;
+  bool _cooldownEnabled = true;
   int? _fcMax;
-  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
     _originalSession = widget.session;
     _session = widget.session;
+    _warmupEnabled = _originalSession.warmupBlock != null;
+    _cooldownEnabled = _originalSession.cooldownBlock != null;
     _loadFcMax();
     HeartRateService()
         .autoReconnect()
@@ -56,21 +60,12 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
 
   Future<void> _loadFcMax() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      if (mounted) setState(() => _loading = false);
-      return;
-    }
+    if (uid == null) return;
     try {
       final profile = await ZonesRepository().getUserProfile(uid);
-      if (mounted) {
-        setState(() {
-          _fcMax = profile?.fcMax;
-          _loading = false;
-        });
-      }
+      if (mounted) setState(() => _fcMax = profile?.fcMax);
     } catch (e) {
       debugPrint('[PreExecutionScreen] _loadFcMax: $e');
-      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -167,9 +162,9 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    if (_session.warmupBlock != null) _buildWarmupRow(),
+                    if (_originalSession.warmupBlock != null) _buildWarmupRow(),
                     ..._session.mainBlocks.map(_buildMainBlock),
-                    if (_session.cooldownBlock != null) _buildCooldownRow(),
+                    if (_originalSession.cooldownBlock != null) _buildCooldownRow(),
                   ],
                 ),
               ),
@@ -194,7 +189,7 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: _loading ? null : _onStart,
+                  onPressed: _onStart,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.brand,
                     foregroundColor: Colors.white,
@@ -217,36 +212,53 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s, vertical: AppSpacing.s),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.l,
+        vertical: AppSpacing.m,
+      ),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () => Navigator.pop(context),
+          CircleAvatar(
+            radius: 22,
+            backgroundColor: AppColors.brand,
+            backgroundImage: const AssetImage('assets/images/logo.png'),
           ),
+          const SizedBox(width: AppSpacing.m),
           Expanded(
-            child: Text(
-              _session.title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _session.title,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  _estimatedDuration(),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary(context),
+                  ),
+                ),
+              ],
             ),
           ),
-          Text(
-            _estimatedDuration(),
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary(context),
-            ),
-          ),
+          AvatarHelper.construirImagenPerfil(radius: 20),
           const SizedBox(width: AppSpacing.s),
+          IconButton(
+            icon: const Icon(Icons.close, size: 22),
+            onPressed: () => Navigator.pop(context),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildWarmupRow() {
-    final warmup = _session.warmupBlock!;
-    final hasWarmup = _session.warmupBlock != null;
+    final warmup = _originalSession.warmupBlock!;
     return ListTile(
       dense: true,
       leading: const Icon(Icons.waves, color: AppColors.rest, size: 20),
@@ -258,9 +270,11 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
             )
           : null,
       trailing: Switch(
-        value: hasWarmup,
+        value: _warmupEnabled,
         activeThumbColor: AppColors.brand,
+        activeTrackColor: AppColors.brand.withValues(alpha: 0.4),
         onChanged: (v) => setState(() {
+          _warmupEnabled = v;
           if (!v) {
             _session = _session.copyWith(
               blocks: _session.blocks
@@ -388,8 +402,7 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
   }
 
   Widget _buildCooldownRow() {
-    final cooldown = _session.cooldownBlock!;
-    final hasCooldown = _session.cooldownBlock != null;
+    final cooldown = _originalSession.cooldownBlock!;
     return ListTile(
       dense: true,
       leading: const Icon(Icons.self_improvement, color: AppColors.rest, size: 20),
@@ -401,9 +414,11 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
             )
           : null,
       trailing: Switch(
-        value: hasCooldown,
+        value: _cooldownEnabled,
         activeThumbColor: AppColors.brand,
+        activeTrackColor: AppColors.brand.withValues(alpha: 0.4),
         onChanged: (v) => setState(() {
+          _cooldownEnabled = v;
           if (!v) {
             _session = _session.copyWith(
               blocks: _session.blocks

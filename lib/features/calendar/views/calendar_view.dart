@@ -862,22 +862,6 @@ class _CalendarViewState extends State<CalendarView> {
                                         style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
                                       ),
                                     ),
-                                    if (s.status == AthleteSessionStatus.planned)
-                                      IconButton(
-                                        icon: const Icon(Icons.edit_outlined, size: 24),
-                                        color: AppColors.iconMutedOf(context),
-                                        padding: const EdgeInsets.all(4),
-                                        constraints: const BoxConstraints(),
-                                        onPressed: () {
-                                          MainShell.shellKey.currentState?.navigateTo(
-                                            13,
-                                            params: AthleteSessionShellParams(
-                                              date: _normalize(day),
-                                              session: s,
-                                            ),
-                                          );
-                                        },
-                                      ),
                                   ],
                                 ),
                                 if (s.blocks.isNotEmpty)
@@ -932,10 +916,37 @@ class _CalendarViewState extends State<CalendarView> {
                 ),
               ),
 
-              // ── Botón centrado verticalmente respecto al card completo ──
+              // ── Botones derecha: lápiz (si hay planned) + play/add/check ──
               Padding(
                 padding: const EdgeInsets.only(right: AppSpacing.l),
-                child: actionButton,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (isAthlete &&
+                        sessions.any((s) => s.status == AthleteSessionStatus.planned))
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined, size: 24),
+                        color: AppColors.iconMutedOf(context),
+                        padding: const EdgeInsets.all(4),
+                        constraints: const BoxConstraints(),
+                        onPressed: () {
+                          final planned = sessions
+                              .where((s) => s.status == AthleteSessionStatus.planned)
+                              .firstOrNull;
+                          if (planned == null) return;
+                          MainShell.shellKey.currentState?.navigateTo(
+                            13,
+                            params: AthleteSessionShellParams(
+                              date: _normalize(day),
+                              session: planned,
+                            ),
+                          );
+                        },
+                      ),
+                    actionButton,
+                  ],
+                ),
               ),
             ],
           ),
