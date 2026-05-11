@@ -107,7 +107,9 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
         _warmupOptions = all.where((t) => t.isWarmupCooldown).toList();
       });
     } catch (e) {
-      debugPrint('TemplateEditorView._loadWarmupOptions error: $e');
+      debugPrint('[TemplateEditor] _loadWarmupOptions error (ignored): $e');
+      // Silencia el error — el editor funciona sin las opciones de warmup
+      if (mounted) setState(() => _warmupOptions = []);
     }
   }
   

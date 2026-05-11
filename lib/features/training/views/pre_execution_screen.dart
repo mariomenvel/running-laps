@@ -6,7 +6,6 @@ import '../../../core/services/settings_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/app_transitions.dart';
-import '../../../config/app_theme.dart' show AvatarHelper;
 import '../../profile/data/zones_repository.dart';
 import '../../templates/data/workout_block.dart';
 import '../../templates/data/workout_segment.dart';
@@ -156,7 +155,26 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildHeader(),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.l),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _session.title,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    _estimatedDuration(),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Divider(color: AppColors.borderOf(context), thickness: 0.5, height: 0.5),
             Expanded(
               child: SingleChildScrollView(
@@ -210,52 +228,6 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
     );
   }
 
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.l,
-        vertical: AppSpacing.m,
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: AppColors.brand,
-            backgroundImage: const AssetImage('assets/images/logo.png'),
-          ),
-          const SizedBox(width: AppSpacing.m),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _session.title,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  _estimatedDuration(),
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary(context),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          AvatarHelper.construirImagenPerfil(radius: 20),
-          const SizedBox(width: AppSpacing.s),
-          IconButton(
-            icon: const Icon(Icons.close, size: 22),
-            onPressed: () => Navigator.pop(context),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildWarmupRow() {
     final warmup = _originalSession.warmupBlock!;
