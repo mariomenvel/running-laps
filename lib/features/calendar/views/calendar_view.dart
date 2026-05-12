@@ -11,7 +11,6 @@ import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
-import 'package:running_laps/features/training/views/pre_execution_screen.dart';
 import 'package:running_laps/features/templates/data/athlete_session_mapper.dart';
 
 class CalendarView extends StatefulWidget {
@@ -704,13 +703,14 @@ class _CalendarViewState extends State<CalendarView> {
               .firstOrNull;
           if (planned != null) {
             final workoutSession = mapAthleteSessionToWorkout(planned);
-            if (workoutSession != null && context.mounted) {
-              Navigator.push(context, AppRoute(
-                page: PreExecutionScreen(
+            if (workoutSession != null) {
+              MainShell.shellKey.currentState?.navigateTo(
+                16,
+                params: PreExecutionShellParams(
                   session: workoutSession,
                   athleteSession: planned,
                 ),
-              ));
+              );
               return;
             }
           }
@@ -746,12 +746,13 @@ class _CalendarViewState extends State<CalendarView> {
             if (planned != null) {
               final workoutSession = mapAthleteSessionToWorkout(planned);
               if (workoutSession != null) {
-                Navigator.push(context, AppRoute(
-                  page: PreExecutionScreen(
+                MainShell.shellKey.currentState?.navigateTo(
+                  16,
+                  params: PreExecutionShellParams(
                     session: workoutSession,
                     athleteSession: planned,
                   ),
-                ));
+                );
                 return;
               }
             }
@@ -1456,12 +1457,13 @@ class _CalendarViewState extends State<CalendarView> {
                     onPressed: () {
                       final workoutSession = mapAthleteSessionToWorkout(session);
                       if (workoutSession != null) {
-                        Navigator.push(context, AppRoute(
-                          page: PreExecutionScreen(
+                        MainShell.shellKey.currentState?.navigateTo(
+                          16,
+                          params: PreExecutionShellParams(
                             session: workoutSession,
                             athleteSession: session,
                           ),
-                        ));
+                        );
                       } else {
                         Navigator.push(context, AppRoute(page: const TrainingStartView()));
                       }

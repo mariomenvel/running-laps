@@ -6,6 +6,8 @@ import '../../../core/services/settings_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/app_transitions.dart';
+import '../../../core/widgets/main_shell.dart';
+import '../../../core/widgets/shell_embedding_scope.dart';
 import '../../profile/data/zones_repository.dart';
 import '../../templates/data/workout_block.dart';
 import '../../templates/data/workout_segment.dart';
@@ -119,6 +121,16 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
     return '~$mins min';
   }
 
+  // ─── Navigation ─────────────────────────────────────────────────────────────
+
+  void _navigateBack() {
+    if (ShellEmbeddingScope.isEmbedded(context)) {
+      MainShell.shellKey.currentState?.navigateBack();
+    } else if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    }
+  }
+
   // ─── Actions ────────────────────────────────────────────────────────────────
 
   Future<void> _onEdit() async {
@@ -176,20 +188,33 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.all(AppSpacing.l),
-              child: Column(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    _session.title,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    _estimatedDuration(),
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary(context),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _session.title,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          _estimatedDuration(),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary(context),
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: _navigateBack,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                   ),
                 ],
               ),

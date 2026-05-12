@@ -40,6 +40,7 @@ El FAB central (Entrenar) no tiene índice fijo — navega a índice 15.
 | 13 | AthleteSessionEditorView | CalendarView |
 | 14 | AvatarCustomizerView | ProfileView |
 | 15 | TrainingStartView | FAB central |
+| 16 | PreExecutionScreen | CalendarView + HomeView |
  
 ---
  
@@ -73,14 +74,14 @@ MainShell.shellKey.currentState?.navigateBack();
  
 ## Casos especiales
  
-### Footer oculto en TrainingStartView
+### Footer oculto en TrainingStartView y PreExecutionScreen
 ```dart
 // En main_shell.dart
-bottomNavigationBar: _tabIndex == 15
+bottomNavigationBar: (_tabIndex == 15 || _tabIndex == 16)
     ? const SizedBox.shrink()
     : _NavBar(fabActive: _tabIndex == 15)
 ```
-El footer se oculta durante TrainingStartView para no confundir al usuario antes de iniciar.
+El footer se oculta en índice 15 (TrainingStartView) y 16 (PreExecutionScreen).
  
 ### Pantallas con parámetros
 Las pantallas que necesitan datos del tab anterior reciben params via `_shellParams`:
