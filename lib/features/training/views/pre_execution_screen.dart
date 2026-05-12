@@ -35,7 +35,6 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
   bool _warmupEnabled = true;
   bool _cooldownEnabled = true;
   bool _gpsOn = true;
-  // ignore: unused_field
   double? _fcMax;
 
   @override
@@ -86,6 +85,8 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
           page: WorkoutExecutionScreen(
             session: _session,
             athleteSession: widget.athleteSession,
+            gpsActivo: _gpsOn,
+            fcMax: _fcMax,
             onCompleted: () {
               if (mounted) {
                 MainShell.shellKey.currentState?.navigateBack();

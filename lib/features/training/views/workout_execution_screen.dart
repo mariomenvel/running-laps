@@ -20,12 +20,16 @@ class WorkoutExecutionScreen extends StatefulWidget {
   final WorkoutSession session;
   final AthleteSession? athleteSession;
   final VoidCallback? onCompleted;
+  final bool gpsActivo;
+  final double? fcMax;
 
   const WorkoutExecutionScreen({
     super.key,
     required this.session,
     this.athleteSession,
     this.onCompleted,
+    this.gpsActivo = true,
+    this.fcMax,
   });
 
   @override
@@ -74,7 +78,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
         page: TrainingSessionView(
           distancia: params['distancia'] as String,
           descanso: params['descanso'] as String,
-          gpsActivo: true, // TODO: recibir desde caller
+          gpsActivo: widget.gpsActivo,
           currentSeries: params['currentSeries'] as int,
           totalSeries: params['totalSeries'] as int,
           targetPaceMinutes: params['targetPaceMinutes'] as int?,
@@ -83,7 +87,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
           targetPaceMaxSeconds: params['targetPaceMaxSeconds'] as int?,
           targetRpe: (params['targetRpe'] as int?)?.toDouble(),
           targetZone: params['targetZone'] as int?,
-          fcMax: 190, // TODO: recibir desde caller
+          fcMax: widget.fcMax?.round(),
         ),
       ),
     );
@@ -129,7 +133,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
             page: TrainingSessionView(
               distancia: params['distancia'],
               descanso: params['descanso'],
-              gpsActivo: true, // TODO: pasar desde PreExecutionScreen
+              gpsActivo: widget.gpsActivo,
               currentSeries: params['currentSeries'],
               totalSeries: params['totalSeries'],
               targetPaceMinutes: params['targetPaceMinutes'],
@@ -138,7 +142,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
               targetPaceMaxSeconds: params['targetPaceMaxSeconds'],
               targetRpe: params['targetRpe'],
               targetZone: params['targetZone'],
-              fcMax: 190, // TODO: pasar desde PreExecutionScreen
+              fcMax: widget.fcMax?.round(),
             ),
           ),
         ).then((result) {
