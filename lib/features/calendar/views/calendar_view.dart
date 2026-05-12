@@ -11,6 +11,7 @@ import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
+import 'package:running_laps/features/templates/data/athlete_session_mapper.dart';
 
 class CalendarView extends StatefulWidget {
   const CalendarView({super.key});
@@ -697,14 +698,28 @@ class _CalendarViewState extends State<CalendarView> {
     void onDayTap() {
       try {
         if (isAthlete) {
-          final plannedSession = sessions
+          final planned = sessions
               .where((s) => s.status == AthleteSessionStatus.planned)
               .firstOrNull;
+          if (planned != null) {
+            final workoutSession = mapAthleteSessionToWorkout(planned);
+            if (workoutSession != null) {
+              MainShell.shellKey.currentState?.navigateTo(
+                16,
+                params: PreExecutionShellParams(
+                  session: workoutSession,
+                  athleteSession: planned,
+                ),
+              );
+              return;
+            }
+          }
+          // Sin sesión planificada → editor para crear nueva
           MainShell.shellKey.currentState?.navigateTo(
             13,
             params: AthleteSessionShellParams(
               date: _normalize(day),
-              session: plannedSession,
+              session: null,
             ),
           );
         } else {
@@ -725,8 +740,27 @@ class _CalendarViewState extends State<CalendarView> {
         );
       } else if (sessions.any((s) => s.status == AthleteSessionStatus.planned)) {
         actionButton = GestureDetector(
-          onTap: () => Navigator.push(context, AppRoute(page: const TrainingStartView())),
-          child: const Icon(Icons.play_circle_outline, color: AppColors.brand, size: 24),
+          onTap: () {
+            final planned = sessions
+                .where((s) => s.status == AthleteSessionStatus.planned)
+                .firstOrNull;
+            if (planned != null) {
+              final workoutSession = mapAthleteSessionToWorkout(planned);
+              if (workoutSession != null) {
+                MainShell.shellKey.currentState?.navigateTo(
+                  16,
+                  params: PreExecutionShellParams(
+                    session: workoutSession,
+                    athleteSession: planned,
+                  ),
+                );
+                return;
+              }
+            }
+            // Fallback si no hay sesión planificada o mapeo falla
+            Navigator.push(context, AppRoute(page: const TrainingStartView()));
+          },
+          child: const Icon(Icons.play_circle_outline, color: AppColors.brand, size: 28),
         );
       } else if (sessions.every((s) => s.status == AthleteSessionStatus.completed)) {
         actionButton = Container(
@@ -1395,7 +1429,18 @@ class _CalendarViewState extends State<CalendarView> {
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.buttonRadius)),
                     ),
-                    onPressed: () => Navigator.push(context, AppRoute(page: const TrainingStartView())),
+                    onPressed: () {
+                      final workoutSession = mapAthleteSessionToWorkout(session);
+                      if (workoutSession != null) {
+                        MainShell.shellKey.currentState?.navigateTo(
+                          16,
+                          params: PreExecutionShellParams(
+                            session: workoutSession,
+                            athleteSession: session,
+                          ),
+                        );
+                      }
+                    },
                     child: const Text('EMPEZAR'),
                   ),
                 ),
