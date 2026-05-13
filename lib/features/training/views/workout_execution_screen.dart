@@ -39,82 +39,66 @@ class WorkoutExecutionScreen extends StatefulWidget {
 
 class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
   late WorkoutExecutionController _controller;
-  bool _serieInProgress = false;
-  bool _isLaunched = false;
 
   @override
   void initState() {
     super.initState();
     _controller = WorkoutExecutionController(widget.session);
     // Lanzar la primera serie tras el primer frame
-    WidgetsBinding.instance.addPostFrameCallback((_) => _launchCurrentSerie());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _launchCurrentRep();
+    });
+    // Escucha cambios de fase para lanzar siguiente rep
+    _controller.addListener(_onPhaseChanged);
   }
 
   @override
   void dispose() {
-    _isLaunched = false;
+    _controller.removeListener(_onPhaseChanged);
     _controller.dispose();
     super.dispose();
   }
 
-  // ──────────────────────────────────────────────────────────────
-  // Lanzar TrainingSessionView para la rep actual
-  // ──────────────────────────────────────────────────────────────
-
-  Future<void> _launchCurrentSerie() async {
-    if (!mounted || _serieInProgress) return;
-    final state = _controller.value;
-    if (state.phase == ExecutionPhase.transition ||
-        state.phase == ExecutionPhase.done) {
-      return;
+  void _onPhaseChanged() {
+    final phase = _controller.value.phase;
+    if (phase == ExecutionPhase.warmup ||
+        phase == ExecutionPhase.main ||
+        phase == ExecutionPhase.cooldown) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _launchCurrentRep();
+      });
     }
+  }
 
-    _serieInProgress = true;
+  Future<void> _launchCurrentRep() async {
+    if (!mounted) return;
     final params = _controller.paramsForCurrentRep();
-
-    final result = await Navigator.push<Serie>(
-      context,
+    final result = await Navigator.of(context).push<Serie>(
       AppRoute(
         page: TrainingSessionView(
-          distancia: params['distancia'] as String,
-          descanso: params['descanso'] as String,
+          distancia: params['distancia'],
+          descanso: params['descanso'],
           gpsActivo: widget.gpsActivo,
-          currentSeries: params['currentSeries'] as int,
-          totalSeries: params['totalSeries'] as int,
-          targetPaceMinutes: params['targetPaceMinutes'] as int?,
-          targetPaceSeconds: params['targetPaceSeconds'] as int?,
-          targetPaceMaxMinutes: params['targetPaceMaxMinutes'] as int?,
-          targetPaceMaxSeconds: params['targetPaceMaxSeconds'] as int?,
-          targetRpe: (params['targetRpe'] as int?)?.toDouble(),
-          targetZone: params['targetZone'] as int?,
+          currentSeries: params['currentSeries'],
+          totalSeries: params['totalSeries'],
+          targetPaceMinutes: params['targetPaceMinutes'],
+          targetPaceSeconds: params['targetPaceSeconds'],
+          targetPaceMaxMinutes: params['targetPaceMaxMinutes'],
+          targetPaceMaxSeconds: params['targetPaceMaxSeconds'],
+          targetRpe: params['targetRpe'],
+          targetZone: params['targetZone'],
           fcMax: widget.fcMax?.round(),
         ),
       ),
     );
-
-    _serieInProgress = false;
-    if (!mounted) return;
-
-    if (result != null) {
-      _controller.recordSerie(result);
-      final nextPhase = _controller.value.phase;
-      if (nextPhase != ExecutionPhase.transition &&
-          nextPhase != ExecutionPhase.done) {
-        _launchCurrentSerie();
-      }
-    } else {
-      _controller.finishEarly();
+    if (result is Serie && mounted) {
+      _onSerieComplete(result);
     }
   }
 
+
   void _onSerieComplete(Serie serie) {
     _controller.recordSerie(serie);
-    final nextPhase = _controller.value.phase;
-    if (nextPhase != ExecutionPhase.transition &&
-        nextPhase != ExecutionPhase.done) {
-      _isLaunched = false;
-      _launchCurrentSerie();
-    }
   }
 
   // ──────────────────────────────────────────────────────────────
@@ -123,36 +107,6 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
 
   Widget _buildExecutingPhase(
       BuildContext context, WorkoutExecutionState state) {
-    final params = _controller.paramsForCurrentRep();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_isLaunched) {
-        _isLaunched = true;
-        Navigator.of(context).push(
-          AppRoute(
-            page: TrainingSessionView(
-              distancia: params['distancia'],
-              descanso: params['descanso'],
-              gpsActivo: widget.gpsActivo,
-              currentSeries: params['currentSeries'],
-              totalSeries: params['totalSeries'],
-              targetPaceMinutes: params['targetPaceMinutes'],
-              targetPaceSeconds: params['targetPaceSeconds'],
-              targetPaceMaxMinutes: params['targetPaceMaxMinutes'],
-              targetPaceMaxSeconds: params['targetPaceMaxSeconds'],
-              targetRpe: params['targetRpe'],
-              targetZone: params['targetZone'],
-              fcMax: widget.fcMax?.round(),
-            ),
-          ),
-        ).then((result) {
-          if (result is Serie && mounted) {
-            _onSerieComplete(result);
-          }
-        });
-      }
-    });
-
     return const Scaffold(
       body: Center(
         child: Text('Ejecutando entrenamiento...'),
@@ -176,10 +130,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
               completedBlock: state.currentBlock,
               nextBlock: state.nextBlock!,
               onContinue: () {
-                _isLaunched = false;
                 _controller.advanceToNextBlock();
-                WidgetsBinding.instance
-                    .addPostFrameCallback((_) => _launchCurrentSerie());
               },
               onFinishEarly: () => _controller.finishEarly(),
             );

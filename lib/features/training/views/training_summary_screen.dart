@@ -189,12 +189,18 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
         updates['rpePromedio'] = _rpe;
       }
 
-      await FirebaseFirestore.instance
+      final docRef = FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
           .collection('trainings')
-          .doc(id)
-          .update(updates);
+          .doc(id);
+
+      final fullData = {
+        ...widget.entrenamiento.toMap(),
+        ...updates,
+      };
+
+      await docRef.set(fullData);
 
       if (!mounted) return;
 
