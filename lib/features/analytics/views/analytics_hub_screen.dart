@@ -18,36 +18,47 @@ class AnalyticsHubScreen extends StatefulWidget {
 
 class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
     with SingleTickerProviderStateMixin {
-  late final AnalyticsHubController _ctrl;
+  AnalyticsHubController? _ctrl;
+  bool _ctrlReady = false;
   late final AnalyticsViewModel _vm;
   late final TabController _tabCtrl;
 
   @override
   void initState() {
     super.initState();
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-    _ctrl = AnalyticsHubController(userId: uid);
-    _vm   = AnalyticsViewModel();
+    _vm      = AnalyticsViewModel();
     _tabCtrl = TabController(length: 3, vsync: this);
+    _initWithAuth();
+  }
 
-    _ctrl.isLoading.addListener(_onStateChanged);
-    _ctrl.filteredData.addListener(_onFilteredChanged);
-    _ctrl.initialize(initialData: widget.preFilteredData);
+  Future<void> _initWithAuth() async {
+    final user = FirebaseAuth.instance.currentUser ??
+        await FirebaseAuth.instance.authStateChanges()
+            .firstWhere((u) => u != null);
+    if (!mounted) return;
+    final ctrl = AnalyticsHubController(userId: user!.uid);
+    setState(() {
+      _ctrl = ctrl;
+      _ctrlReady = true;
+    });
+    _ctrl!.isLoading.addListener(_onStateChanged);
+    _ctrl!.filteredData.addListener(_onFilteredChanged);
+    _ctrl!.initialize(initialData: widget.preFilteredData);
   }
 
   void _onStateChanged() { if (mounted) setState(() {}); }
 
   void _onFilteredChanged() {
-    _vm.compute(_ctrl.filteredData.value, _ctrl.allData, _ctrl.selectedRange.value);
+    _vm.compute(_ctrl!.filteredData.value, _ctrl!.allData, _ctrl!.selectedRange.value);
     if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
-    _ctrl.isLoading.removeListener(_onStateChanged);
-    _ctrl.filteredData.removeListener(_onFilteredChanged);
+    _ctrl?.isLoading.removeListener(_onStateChanged);
+    _ctrl?.filteredData.removeListener(_onFilteredChanged);
     _vm.dispose();
-    _ctrl.dispose();
+    _ctrl?.dispose();
     _tabCtrl.dispose();
     super.dispose();
   }
@@ -56,6 +67,9 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (!_ctrlReady) {
+      return const Center(child: CircularProgressIndicator(color: AppColors.brand));
+    }
     return Column(
       children: [
         // Header
@@ -72,7 +86,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                       .copyWith(color: AppColors.textPrimary(context)),
                 ),
                 const Spacer(),
-                _RangeChip(ctrl: _ctrl, onChanged: _onFilteredChanged),
+                _RangeChip(ctrl: _ctrl!, onChanged: _onFilteredChanged),
               ],
             ),
           ),
@@ -106,10 +120,10 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
   }
 
   Widget _buildContent() {
-    if (_ctrl.isLoading.value) {
+    if (_ctrl!.isLoading.value) {
       return const Center(child: CircularProgressIndicator(color: AppColors.brand));
     }
-    final data = _ctrl.filteredData.value;
+    final data = _ctrl!.filteredData.value;
     if (data.isEmpty) {
       return Center(
         child: Column(
@@ -444,7 +458,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
           const SizedBox(height: AppSpacing.xxl),
           _buildConsistency(),
           if (_vm.sessionsByType.value.length > 1 &&
-              _ctrl.filteredData.value.length > 4) ...[
+              _ctrl!.filteredData.value.length > 4) ...[
             const SizedBox(height: AppSpacing.xxl),
             _buildSessionsByType(),
           ],

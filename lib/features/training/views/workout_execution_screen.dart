@@ -73,6 +73,14 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
   Future<void> _launchCurrentRep() async {
     if (!mounted) return;
     final params = _controller.paramsForCurrentRep();
+
+    final currentSegment = _controller.value.currentBlock?.block.segments
+        .where((s) => s.type == SegmentType.interval)
+        .firstOrNull;
+    final alarmIntervalMs = currentSegment?.alerts?.enabled == true
+        ? currentSegment!.alerts!.toAlarmIntervalMs()
+        : null;
+
     final result = await Navigator.of(context).push<Serie>(
       AppRoute(
         page: TrainingSessionView(
@@ -88,6 +96,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
           targetRpe: params['targetRpe'],
           targetZone: params['targetZone'],
           fcMax: widget.fcMax?.round(),
+          alarmIntervalMs: alarmIntervalMs,
         ),
       ),
     );
@@ -98,7 +107,9 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
 
 
   void _onSerieComplete(Serie serie) {
+    debugPrint('[Execution] recordSerie: distancia=${serie.distanciaM} rpe=${serie.rpe}');
     _controller.recordSerie(serie);
+    debugPrint('[Execution] after record, totalCompletedReps=${_controller.value.totalCompletedReps}');
   }
 
   // ──────────────────────────────────────────────────────────────
@@ -138,6 +149,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
           case ExecutionPhase.done:
             return _DoneLoader(
               state: state,
+              session: widget.session,
               athleteSession: widget.athleteSession,
               onCompleted: widget.onCompleted,
             );
@@ -153,11 +165,13 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
 
 class _DoneLoader extends StatefulWidget {
   final WorkoutExecutionState state;
+  final WorkoutSession session;
   final AthleteSession? athleteSession;
   final VoidCallback? onCompleted;
 
   const _DoneLoader({
     required this.state,
+    required this.session,
     required this.athleteSession,
     required this.onCompleted,
   });
@@ -202,7 +216,37 @@ class _DoneLoaderState extends State<_DoneLoader> {
     }
   }
 
+  Map<String, dynamic> _buildPlannedComparison(WorkoutSession session) {
+    return {
+      'plannedTitle': session.title,
+      'blocks': session.blocks.map((block) => {
+        'role': block.role.name,
+        'plannedReps': block.repetitions,
+        'segments': block.segments
+            .where((s) => s.type == SegmentType.interval)
+            .map((seg) => {
+              'plannedDistanceM': seg.distanceM,
+              'plannedDurationSec': seg.durationSec,
+              'target': {
+                'paceMinSecPerKm': seg.target?.paceMinSecPerKm,
+                'paceMaxSecPerKm': seg.target?.paceMaxSecPerKm,
+                'rpe': seg.target?.rpe,
+                'zone': seg.target?.zone?.index != null
+                    ? seg.target!.zone!.index + 1
+                    : null,
+              },
+            })
+            .toList(),
+      }).toList(),
+    };
+  }
+
   Entrenamiento _buildEntrenamiento(WorkoutExecutionState state) {
+    debugPrint('[Execution] state.blocks.length=${state.blocks.length}');
+    for (final b in state.blocks) {
+      debugPrint('[Execution] block role=${b.block.role} completedReps=${b.completedReps} series.length=${b.series.length}');
+    }
+    debugPrint('[Execution] state.allSeries.length=${state.allSeries.length}');
     final allSeries = state.allSeries;
     final gpsUsed = allSeries.any((s) => s.usedGps == true);
     final fcMediaValues =
@@ -221,6 +265,7 @@ class _DoneLoaderState extends State<_DoneLoader> {
       fcMediaSesion: fcMediaSesion,
       notas: '',
       tags: _tagsFromSession(state.session),
+      plannedComparison: _buildPlannedComparison(widget.session),
     );
   }
 

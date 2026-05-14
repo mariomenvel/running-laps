@@ -46,9 +46,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
   late final int? _ritmoSecKm;
   late final double? _fcMedia;
 
-  bool get _showRpe =>
-      widget.entrenamiento.series.length == 1 ||
-      widget.entrenamiento.isManual;
+  bool get _showRpe => widget.entrenamiento.series.length == 1;
 
   @override
   void initState() {
@@ -181,8 +179,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
-      if (_showRpe) {
-        // Update RPE on the single serie
+      if (_showRpe && widget.entrenamiento.series.length == 1) {
         final serie = widget.entrenamiento.series.first;
         final updatedSerie = serie.copyWith(rpe: _rpe);
         updates['series'] = [updatedSerie.toMap()];
@@ -200,13 +197,12 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
         ...updates,
       };
 
-      debugPrint('[Summary] saving training id=${widget.entrenamiento.id}');
-      debugPrint('[Summary] uid=$uid');
-      debugPrint('[Summary] fullData keys=${fullData.keys.toList()}');
+      debugPrint('[Summary] series para guardar:');
+      for (final s in fullData['series'] as List) {
+        debugPrint('  - distanciaM=${s['distanciaM']}, tiempoSec=${s['tiempoSec']}, rpe=${s['rpe']}');
+      }
 
       await docRef.set(fullData);
-
-      debugPrint('[Summary] set() completed OK');
 
       if (!mounted) return;
 
@@ -940,7 +936,9 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
                           TrainingTag(name: name, colorValue: 0xFF9E9E9E),
                         );
                         if (ctx.mounted) Navigator.pop(ctx);
-                      } catch (_) {
+                      } catch (e, st) {
+                        debugPrint('[CreateTag] error: $e');
+                        debugPrint('[CreateTag] stack: $st');
                         if (ctx.mounted) {
                           ModernSnackBar.showError(
                               ctx, 'Error al crear etiqueta');
@@ -965,8 +963,9 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
         );
       },
     );
-    if (!mounted) return;
-    controller.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.dispose();
+    });
     if (mounted) _loadCustomTags();
   }
 

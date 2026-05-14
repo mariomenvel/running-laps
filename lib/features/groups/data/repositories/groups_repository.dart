@@ -10,10 +10,8 @@ class GroupsRepository {
 
   GroupsRepository({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance {
-    _rateLimitService.registerLimit('groups:getAll', const Duration(seconds: 2));
     _rateLimitService.registerLimit('groups:create', const Duration(seconds: 5));
     _rateLimitService.registerLimit('groups:join', const Duration(seconds: 3));
-    _rateLimitService.registerLimit('groups:ranking', const Duration(seconds: 3));
   }
 
   // ============================================
@@ -56,7 +54,6 @@ class GroupsRepository {
 
   /// Obtiene un grupo por su ID
   Future<Group?> getGroupById(String groupId) async {
-    _rateLimitService.checkLimit('groups:getAll');
     try {
       final doc = await _firestore.collection('groups').doc(groupId).get();
       if (!doc.exists) return null;

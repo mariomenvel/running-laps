@@ -733,7 +733,17 @@ class _CalendarViewState extends State<CalendarView> {
       );
     }
 
-    void _showPlannedSessionsSheet(List<AthleteSession> plannedSessions) {
+    void _navigateToEditSession(AthleteSession session) {
+      MainShell.shellKey.currentState?.navigateTo(
+        13,
+        params: AthleteSessionShellParams(
+          date: _normalize(day),
+          session: session,
+        ),
+      );
+    }
+
+    void _showDaySessionsSheet(List<AthleteSession> plannedSessions) {
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
@@ -828,6 +838,14 @@ class _CalendarViewState extends State<CalendarView> {
                         GestureDetector(
                           onTap: () {
                             Navigator.pop(context);
+                            _navigateToEditSession(s);
+                          },
+                          child: Icon(Icons.edit_outlined, color: AppColors.textSecondary(context), size: 22),
+                        ),
+                        const SizedBox(width: AppSpacing.m),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
                             _navigateToSession(s);
                           },
                           child: const Icon(Icons.play_circle_outline, color: AppColors.brand, size: 28),
@@ -849,13 +867,19 @@ class _CalendarViewState extends State<CalendarView> {
                       border: Border.all(color: AppColors.brand),
                       borderRadius: BorderRadius.circular(AppDimens.cardRadius),
                     ),
-                    child: Text(
-                      'Nueva sesión',
-                      style: AppTypography.body.copyWith(
-                        color: AppColors.brand,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      textAlign: TextAlign.center,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.add_rounded, color: AppColors.brand, size: 18),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Nueva sesión',
+                          style: AppTypography.body.copyWith(
+                            color: AppColors.brand,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -867,22 +891,18 @@ class _CalendarViewState extends State<CalendarView> {
       );
     }
 
+    final plannedSessions = sessions
+        .where((s) => s.status == AthleteSessionStatus.planned)
+        .toList();
+
     void onDayTap() {
       try {
         if (isAthlete) {
-          final plannedSessions = sessions
-              .where((s) => s.status == AthleteSessionStatus.planned)
-              .toList();
-          if (plannedSessions.length > 1) {
-            _showPlannedSessionsSheet(plannedSessions);
-            return;
+          if (plannedSessions.isNotEmpty) {
+            _showDaySessionsSheet(plannedSessions);
+          } else {
+            _navigateToNewSession();
           }
-          if (plannedSessions.length == 1) {
-            _navigateToSession(plannedSessions.first);
-            return;
-          }
-          // Sin sesión planificada → editor para crear nueva
-          _navigateToNewSession();
         } else {
           Navigator.push(context, AppRoute(page: const TrainingStartView()));
         }
@@ -894,24 +914,15 @@ class _CalendarViewState extends State<CalendarView> {
 
     Widget actionButton = const SizedBox.shrink();
     if (isAthlete) {
-      if (sessions.isEmpty) {
+      if (plannedSessions.isNotEmpty) {
+        actionButton = GestureDetector(
+          onTap: () => _showDaySessionsSheet(plannedSessions),
+          child: Icon(Icons.calendar_today_outlined, color: AppColors.brand, size: 22),
+        );
+      } else if (sessions.isEmpty) {
         actionButton = GestureDetector(
           onTap: onDayTap,
           child: const Icon(Icons.add_circle_outline, color: AppColors.brand, size: 24),
-        );
-      } else if (sessions.any((s) => s.status == AthleteSessionStatus.planned)) {
-        final plannedSessions = sessions
-            .where((s) => s.status == AthleteSessionStatus.planned)
-            .toList();
-        actionButton = GestureDetector(
-          onTap: () {
-            if (plannedSessions.length > 1) {
-              _showPlannedSessionsSheet(plannedSessions);
-            } else {
-              _navigateToSession(plannedSessions.first);
-            }
-          },
-          child: const Icon(Icons.play_circle_outline, color: AppColors.brand, size: 28),
         );
       } else if (sessions.every((s) => s.status == AthleteSessionStatus.completed)) {
         actionButton = Container(

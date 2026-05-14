@@ -65,6 +65,20 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
   // Slider position independent of whether _rpe is actually set
   double _rpeSliderValue = 5;
 
+  // Metrónomo
+  bool _alertEnabled = false;
+  bool _alertByTime = true; // true = time mode, false = pace mode
+  int _alertTimeMin = 0;
+  double _alertTimeSec = 30;
+  int _alertPaceMin = 5;
+  int _alertPaceSec = 0;
+  int _alertDistanceM = 400;
+
+  static const _alertDistances = [100, 200, 300, 400, 500, 1000];
+  static const _alertTimeSecOptions = [
+    0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 45.0,
+  ];
+
   static const _distances = [
     100, 200, 300, 400, 500, 600, 800, 1000,
     1200, 1500, 2000, 3000, 5000, 10000,
@@ -84,6 +98,19 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
     _durationMin = totalSec ~/ 60;
     _durationSec = _nearestSecOption(totalSec % 60);
     _recoveryType = s?.recoveryType ?? RecoveryType.active;
+
+    final a = s?.alerts;
+    if (a != null) {
+      _alertEnabled = a.enabled;
+      _alertByTime = a.mode == 'time';
+      _alertTimeMin = a.timeMin;
+      _alertTimeSec = a.timeSec;
+      _alertPaceMin = a.paceMin;
+      _alertPaceSec = a.paceSec;
+      if (_alertDistances.contains(a.segmentDistanceM)) {
+        _alertDistanceM = a.segmentDistanceM;
+      }
+    }
 
     final t = s?.target;
     if (t != null) {
@@ -147,6 +174,16 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
       );
     }
 
+    final alerts = SegmentAlerts(
+      enabled: _alertEnabled,
+      mode: _alertByTime ? 'time' : 'pace',
+      timeMin: _alertTimeMin,
+      timeSec: _alertTimeSec,
+      paceMin: _alertPaceMin,
+      paceSec: _alertPaceSec,
+      segmentDistanceM: _alertDistanceM,
+    );
+
     return WorkoutSegment(
       id: widget.initialSegment?.id ?? const Uuid().v4(),
       type: _type,
@@ -154,7 +191,26 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
       distanceM: distanceM,
       recoveryType: _type == SegmentType.recovery ? _recoveryType : null,
       target: target,
+      alerts: alerts,
     );
+  }
+
+  String _alertPreviewText() {
+    if (!_alertEnabled) return '';
+    final ms = SegmentAlerts(
+      enabled: true,
+      mode: _alertByTime ? 'time' : 'pace',
+      timeMin: _alertTimeMin,
+      timeSec: _alertTimeSec,
+      paceMin: _alertPaceMin,
+      paceSec: _alertPaceSec,
+      segmentDistanceM: _alertDistanceM,
+    ).toAlarmIntervalMs();
+    final totalSec = ms / 1000.0;
+    if (totalSec < 60) return '= beep cada ${totalSec.toStringAsFixed(1)} seg';
+    final m = (totalSec ~/ 60);
+    final s = (totalSec % 60).toStringAsFixed(0).padLeft(2, '0');
+    return '= beep cada ${m}:$s min';
   }
 
   // ── Build ──────────────────────────────────────────────────────────────────
@@ -343,6 +399,29 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
                       _rpe = v.round();
                     }),
                     onClear: () => setState(() => _rpe = null),
+                    context: context,
+                  ),
+                  const SizedBox(height: AppSpacing.l),
+
+                  // ── Metrónomo ──
+                  _AlertSection(
+                    enabled: _alertEnabled,
+                    byTime: _alertByTime,
+                    timeMin: _alertTimeMin,
+                    timeSec: _alertTimeSec,
+                    paceMin: _alertPaceMin,
+                    paceSec: _alertPaceSec,
+                    distanceM: _alertDistanceM,
+                    previewText: _alertPreviewText(),
+                    alertDistances: _alertDistances,
+                    alertTimeSecOptions: _alertTimeSecOptions,
+                    onToggleEnabled: (v) => setState(() => _alertEnabled = v),
+                    onToggleMode: (byTime) => setState(() => _alertByTime = byTime),
+                    onTimeMinChanged: (v) => setState(() => _alertTimeMin = v),
+                    onTimeSecChanged: (v) => setState(() => _alertTimeSec = v),
+                    onPaceMinChanged: (v) => setState(() => _alertPaceMin = v),
+                    onPaceSecChanged: (v) => setState(() => _alertPaceSec = v),
+                    onDistanceChanged: (v) => setState(() => _alertDistanceM = v),
                     context: context,
                   ),
                   const SizedBox(height: AppSpacing.xl),
@@ -778,6 +857,277 @@ class _MiniWheelPickerState extends State<_MiniWheelPicker> {
             final label = widget.pad
                 ? widget.values[i].toString().padLeft(2, '0')
                 : '${widget.values[i]}';
+            return Center(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary(ctx),
+                ),
+              ),
+            );
+          },
+          childCount: widget.values.length,
+        ),
+      ),
+    );
+  }
+}
+
+// ── _AlertSection ─────────────────────────────────────────────────────────────
+
+class _AlertSection extends StatelessWidget {
+  const _AlertSection({
+    required this.enabled,
+    required this.byTime,
+    required this.timeMin,
+    required this.timeSec,
+    required this.paceMin,
+    required this.paceSec,
+    required this.distanceM,
+    required this.previewText,
+    required this.alertDistances,
+    required this.alertTimeSecOptions,
+    required this.onToggleEnabled,
+    required this.onToggleMode,
+    required this.onTimeMinChanged,
+    required this.onTimeSecChanged,
+    required this.onPaceMinChanged,
+    required this.onPaceSecChanged,
+    required this.onDistanceChanged,
+    required this.context,
+  });
+
+  final bool enabled;
+  final bool byTime;
+  final int timeMin;
+  final double timeSec;
+  final int paceMin;
+  final int paceSec;
+  final int distanceM;
+  final String previewText;
+  final List<int> alertDistances;
+  final List<double> alertTimeSecOptions;
+  final void Function(bool) onToggleEnabled;
+  final void Function(bool) onToggleMode;
+  final void Function(int) onTimeMinChanged;
+  final void Function(double) onTimeSecChanged;
+  final void Function(int) onPaceMinChanged;
+  final void Function(int) onPaceSecChanged;
+  final void Function(int) onDistanceChanged;
+  final BuildContext context;
+
+  static const _paceMinOptions = [3, 4, 5, 6, 7, 8, 9, 10];
+  static const _paceSecOptions = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+
+  @override
+  Widget build(BuildContext outerContext) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header con toggle ON/OFF
+        Row(
+          children: [
+            _sectionLabel(outerContext, 'METRÓNOMO'),
+            const SizedBox(width: AppSpacing.s),
+            Text(
+              '· opcional',
+              style: TextStyle(fontSize: 11, color: AppColors.textSecondary(outerContext)),
+            ),
+            const Spacer(),
+            Switch(
+              value: enabled,
+              onChanged: onToggleEnabled,
+              activeColor: AppColors.brand,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ],
+        ),
+
+        if (enabled) ...[
+          const SizedBox(height: AppSpacing.m),
+
+          // Modo: Tiempo / Ritmo
+          _BoolToggle(
+            labelA: 'Por tiempo',
+            labelB: 'Por ritmo',
+            value: byTime,
+            onChanged: onToggleMode,
+            context: outerContext,
+          ),
+          const SizedBox(height: AppSpacing.m),
+
+          if (byTime) ...[
+            // Modo tiempo: beep cada MM:SS.S
+            _sectionLabel(outerContext, 'Beep cada', small: true),
+            const SizedBox(height: AppSpacing.s),
+            Row(
+              children: [
+                _MiniWheelPicker(
+                  values: List.generate(60, (i) => i),
+                  selected: timeMin,
+                  onChanged: onTimeMinChanged,
+                  context: outerContext,
+                ),
+                Text(
+                  ' min  ',
+                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary(outerContext)),
+                ),
+                _MiniWheelPickerDouble(
+                  values: alertTimeSecOptions,
+                  selected: timeSec,
+                  onChanged: onTimeSecChanged,
+                  context: outerContext,
+                ),
+                Text(
+                  ' seg',
+                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary(outerContext)),
+                ),
+              ],
+            ),
+          ] else ...[
+            // Modo ritmo: pace + distancia
+            _sectionLabel(outerContext, 'Pace objetivo', small: true),
+            const SizedBox(height: AppSpacing.s),
+            Row(
+              children: [
+                _MiniWheelPicker(
+                  values: _paceMinOptions,
+                  selected: paceMin,
+                  onChanged: onPaceMinChanged,
+                  context: outerContext,
+                ),
+                Text(
+                  ' : ',
+                  style: TextStyle(fontSize: 16, color: AppColors.textPrimary(outerContext)),
+                ),
+                _MiniWheelPicker(
+                  values: _paceSecOptions,
+                  selected: paceSec,
+                  onChanged: onPaceSecChanged,
+                  context: outerContext,
+                  pad: true,
+                ),
+                Text(
+                  '  /km',
+                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary(outerContext)),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.m),
+            _sectionLabel(outerContext, 'Cada', small: true),
+            const SizedBox(height: AppSpacing.s),
+            Wrap(
+              spacing: AppSpacing.s,
+              children: alertDistances.map((d) {
+                final isSelected = d == distanceM;
+                return GestureDetector(
+                  onTap: () => onDistanceChanged(d),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.m,
+                      vertical: AppSpacing.s,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.brand.withValues(alpha: 0.08)
+                          : AppColors.surfaceOf(outerContext),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isSelected ? AppColors.brand : AppColors.borderOf(outerContext),
+                        width: isSelected ? 1.5 : 0.5,
+                      ),
+                    ),
+                    child: Text(
+                      '${d}m',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: isSelected
+                            ? AppColors.brand
+                            : AppColors.textSecondary(outerContext),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+
+          // Preview en tiempo real
+          if (previewText.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.s),
+            Text(
+              previewText,
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.brand,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ],
+      ],
+    );
+  }
+}
+
+// ── _MiniWheelPickerDouble ────────────────────────────────────────────────────
+
+class _MiniWheelPickerDouble extends StatefulWidget {
+  const _MiniWheelPickerDouble({
+    required this.values,
+    required this.selected,
+    required this.onChanged,
+    required this.context,
+  });
+
+  final List<double> values;
+  final double selected;
+  final void Function(double) onChanged;
+  final BuildContext context;
+
+  @override
+  State<_MiniWheelPickerDouble> createState() => _MiniWheelPickerDoubleState();
+}
+
+class _MiniWheelPickerDoubleState extends State<_MiniWheelPickerDouble> {
+  late final FixedExtentScrollController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    final idx = widget.values.indexOf(widget.selected);
+    _ctrl = FixedExtentScrollController(initialItem: idx < 0 ? 0 : idx);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 40,
+      height: 44,
+      child: ListWheelScrollView.useDelegate(
+        controller: _ctrl,
+        itemExtent: 32,
+        perspective: 0.003,
+        diameterRatio: 1.8,
+        physics: const FixedExtentScrollPhysics(),
+        onSelectedItemChanged: (i) => widget.onChanged(widget.values[i]),
+        childDelegate: ListWheelChildBuilderDelegate(
+          builder: (ctx, i) {
+            if (i < 0 || i >= widget.values.length) return null;
+            final v = widget.values[i];
+            final label = v == v.truncateToDouble()
+                ? v.toInt().toString().padLeft(2, '0')
+                : v.toStringAsFixed(1);
             return Center(
               child: Text(
                 label,

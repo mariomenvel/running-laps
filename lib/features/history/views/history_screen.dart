@@ -54,7 +54,7 @@ class _HistoryScreenState extends State<HistoryScreen>
     _controller = HistoryController();
     _scrollController = ScrollController()..addListener(_onScroll);
     HistoryController.needsReload.addListener(_onNeedsReload);
-    _controller.loadTrainings();
+    _controller.loadWhenReady();
     _entranceCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 900));
     _aItem0 = CurvedAnimation(

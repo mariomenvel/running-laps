@@ -119,8 +119,7 @@ service cloud.firestore {
         // Tag names are non-sensitive data.
         allow read: if isOwner(uid) || request.auth == null;
         allow create, update: if isOwner(uid)
-            && request.resource.data.keys().size() < 10
-            && request.resource.data.toString().size() < 500;
+            && request.resource.data.keys().size() < 10;
         allow delete: if isOwner(uid);
       }
 
