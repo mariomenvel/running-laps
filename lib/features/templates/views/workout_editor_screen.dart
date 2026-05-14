@@ -135,6 +135,75 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
+  List<WorkoutBlock> _defaultBlocksForType(WorkoutType type) {
+    switch (type) {
+      case WorkoutType.continuous:
+        return [
+          WorkoutBlock(role: BlockRole.warmup, repetitions: 1,
+            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 600)]),
+          WorkoutBlock(role: BlockRole.main, repetitions: 1,
+            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 2700)]),
+          WorkoutBlock(role: BlockRole.cooldown, repetitions: 1,
+            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 600)]),
+        ];
+
+      case WorkoutType.intervals:
+        return [
+          WorkoutBlock(role: BlockRole.warmup, repetitions: 1,
+            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 600)]),
+          WorkoutBlock(role: BlockRole.main, repetitions: 5,
+            segments: [
+              WorkoutSegment(type: SegmentType.interval, distanceM: 1000),
+              WorkoutSegment(type: SegmentType.rest, durationSec: 90),
+            ]),
+          WorkoutBlock(role: BlockRole.cooldown, repetitions: 1,
+            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 600)]),
+        ];
+
+      case WorkoutType.fartlek:
+        return [
+          WorkoutBlock(role: BlockRole.warmup, repetitions: 1,
+            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 600)]),
+          WorkoutBlock(role: BlockRole.main, repetitions: 4,
+            segments: [
+              WorkoutSegment(type: SegmentType.interval, durationSec: 180),
+              WorkoutSegment(type: SegmentType.rest, durationSec: 120),
+            ]),
+          WorkoutBlock(role: BlockRole.cooldown, repetitions: 1,
+            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 600)]),
+        ];
+
+      case WorkoutType.hills:
+        return [
+          WorkoutBlock(role: BlockRole.warmup, repetitions: 1,
+            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 600)]),
+          WorkoutBlock(role: BlockRole.main, repetitions: 8,
+            segments: [
+              WorkoutSegment(type: SegmentType.interval, durationSec: 60),
+              WorkoutSegment(type: SegmentType.rest, durationSec: 90),
+            ]),
+          WorkoutBlock(role: BlockRole.cooldown, repetitions: 1,
+            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 600)]),
+        ];
+
+      case WorkoutType.competition:
+        return [
+          WorkoutBlock(role: BlockRole.warmup, repetitions: 1,
+            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 900)]),
+          WorkoutBlock(role: BlockRole.main, repetitions: 1,
+            segments: [WorkoutSegment(type: SegmentType.interval, distanceM: 5000)]),
+          WorkoutBlock(role: BlockRole.cooldown, repetitions: 1,
+            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 600)]),
+        ];
+
+      case WorkoutType.free:
+        return [
+          WorkoutBlock(role: BlockRole.main, repetitions: 1,
+            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 3600)]),
+        ];
+    }
+  }
+
   void _onTypeSelected(WorkoutType type) {
     _selectedType.value = type;
     if (!_titleEdited) {
@@ -142,14 +211,15 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
       _titleController.text = _title.value;
       _titleIsAuto = true;
     }
-    if (_blocks.value.isEmpty) {
-      _blocks.value = [
-        WorkoutBlock(
-          role: BlockRole.main,
-          repetitions: 1,
-          segments: [],
-        ),
-      ];
+
+    final blocks = _blocks.value;
+    final isEmpty = blocks.isEmpty ||
+        (blocks.length == 1 &&
+         blocks.first.role == BlockRole.main &&
+         blocks.first.segments.isEmpty);
+
+    if (isEmpty) {
+      _blocks.value = _defaultBlocksForType(type);
     }
   }
 
