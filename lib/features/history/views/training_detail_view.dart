@@ -77,10 +77,6 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
         _buildDivider(),
         _buildFcSection(),
       ],
-      if (training.plannedComparison != null) ...[
-        _buildDivider(),
-        _buildComparisonSection(),
-      ],
       if (training.notas != null && training.notas!.isNotEmpty) ...[
         _buildDivider(),
         _buildNotasSection(),
@@ -349,6 +345,9 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
   // ── Sección 4 — Series ────────────────────────────────────────────
 
   Widget _buildSeriesSection() {
+    // Build a flat list of planned targets (one per serie, same order as series list)
+    final plannedTargets = _extractPlannedTargets();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -371,10 +370,32 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
             index: i,
             serie: serie,
             context: context,
+            plannedTarget: i < plannedTargets.length ? plannedTargets[i] : null,
           );
         }),
       ],
     );
+  }
+
+  /// Returns one target map per serie index, extracted from plannedComparison blocks.
+  List<Map<String, dynamic>?> _extractPlannedTargets() {
+    final comp = training.plannedComparison;
+    if (comp == null) return [];
+    final allBlocks = (comp['blocks'] as List<dynamic>? ?? []);
+    final mainBlocks = allBlocks.where((b) => (b['role'] as String?) == 'main').toList();
+
+    final targets = <Map<String, dynamic>?>[];
+    for (final block in mainBlocks) {
+      final reps = (block['plannedReps'] as num?)?.toInt() ?? 1;
+      final segments = (block['segments'] as List<dynamic>? ?? []);
+      for (int rep = 0; rep < reps; rep++) {
+        for (final seg in segments) {
+          final target = (seg as Map<dynamic, dynamic>?)?['target'];
+          targets.add(target != null ? Map<String, dynamic>.from(target as Map) : null);
+        }
+      }
+    }
+    return targets;
   }
 
   // ── Sección 5 — FC ────────────────────────────────────────────────
@@ -528,236 +549,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
     return boundaries;
   }
 
-  // ── Sección 6 — Comparativa ───────────────────────────────────────
-
-  Widget _buildComparisonSection() {
-    final comp = training.plannedComparison!;
-    final blocks = (comp['blocks'] as List<dynamic>? ?? []);
-    final category = comp['sessionCategory'] as String?;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'PLANIFICADO VS EJECUTADO',
-            style: AppTypography.small.copyWith(
-              color: AppColors.textSecondary(context),
-              letterSpacing: 1.5,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-          if (category != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              SessionCategoryX.fromValue(category).label,
-              style: const TextStyle(fontSize: 13, color: AppColors.brandLight),
-            ),
-          ],
-          if (blocks.isEmpty) ...[
-            const SizedBox(height: AppSpacing.m),
-            Text(
-              'Sin datos de comparativa',
-              style: TextStyle(
-                  fontSize: 14, color: AppColors.textSecondary(context)),
-            ),
-          ] else ...[
-            const SizedBox(height: AppSpacing.l),
-            Row(
-              children: [
-                const SizedBox(width: 60),
-                Expanded(
-                  child: Text('Plan',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.textSecondary(context))),
-                ),
-                Expanded(
-                  child: Text('Real',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.textSecondary(context))),
-                ),
-                SizedBox(
-                  width: 52,
-                  child: Text('Delta',
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.textSecondary(context))),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Divider(
-                color: AppColors.borderOf(context),
-                thickness: 0.5,
-                height: 1),
-            ..._buildComparisonRows(blocks),
-            ..._buildComparisonSummary(blocks),
-          ],
-        ],
-      ),
-    );
-  }
-
-  List<Widget> _buildComparisonRows(List<dynamic> blocks) {
-    return blocks.map((b) {
-      final planned = b['planned'] as Map?;
-      final executed = b['executed'] as Map?;
-      final order = (b['order'] as num?)?.toInt() ?? 0;
-      final targetPaceSec = (planned?['targetPaceSec'] as num?)?.toDouble();
-      final execPaceSec = (executed?['paceSec'] as num?)?.toDouble();
-      final targetPaceStr =
-          targetPaceSec != null ? _formatPace(targetPaceSec) : '—';
-      final execPaceStr = execPaceSec != null ? _formatPace(execPaceSec) : '—';
-      double? delta;
-      if (targetPaceSec != null && execPaceSec != null) {
-        delta = execPaceSec - targetPaceSec;
-      }
-      final primary = AppColors.textPrimary(context);
-      final muted = AppColors.textSecondary(context);
-
-      return Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 60,
-                  child: Text(
-                    'Serie ${order + 1}',
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: primary),
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    children: [
-                      Text(targetPaceStr,
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
-                              color: targetPaceSec != null ? primary : muted),
-                          textAlign: TextAlign.center),
-                      if ((planned?['targetRpe'] as num?) != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          'RPE ${(planned!['targetRpe'] as num).toStringAsFixed(1)}',
-                          style: TextStyle(
-                              fontSize: 11,
-                              color: AppColors.effortColor(
-                                  (planned['targetRpe'] as num).toDouble())),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    children: [
-                      if (executed == null)
-                        Text('—',
-                            style: TextStyle(fontSize: 14, color: muted),
-                            textAlign: TextAlign.center)
-                      else ...[
-                        Text(execPaceStr,
-                            style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400,
-                                color: delta != null
-                                    ? _deltaColor(delta)
-                                    : primary),
-                            textAlign: TextAlign.center),
-                        if ((executed['rpe'] as num?) != null) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            'RPE ${(executed['rpe'] as num).toStringAsFixed(1)}',
-                            style: TextStyle(
-                                fontSize: 11,
-                                color: AppColors.effortColor(
-                                    (executed['rpe'] as num).toDouble())),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ],
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  width: 52,
-                  child: delta != null
-                      ? Text(
-                          delta >= 0
-                              ? '+${_formatPaceDelta(delta)}'
-                              : '-${_formatPaceDelta(delta.abs())}',
-                          style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w400,
-                              color: _deltaColor(delta)),
-                          textAlign: TextAlign.right)
-                      : const SizedBox.shrink(),
-                ),
-              ],
-            ),
-          ),
-          Divider(
-              color: AppColors.borderOf(context),
-              thickness: 0.5,
-              height: 1),
-        ],
-      );
-    }).toList();
-  }
-
-  List<Widget> _buildComparisonSummary(List<dynamic> blocks) {
-    final deltas = <double>[];
-    for (final b in blocks) {
-      final planned = b['planned'] as Map?;
-      final executed = b['executed'] as Map?;
-      final tps = (planned?['targetPaceSec'] as num?)?.toDouble();
-      final eps = (executed?['paceSec'] as num?)?.toDouble();
-      if (tps != null && eps != null) deltas.add(eps - tps);
-    }
-    if (deltas.isEmpty) return [];
-    final avgDelta = deltas.reduce((a, b) => a + b) / deltas.length;
-
-    String text;
-    Color color;
-    if (avgDelta < -15) {
-      text = 'Fuiste más rápido de lo planeado 🔥';
-      color = AppColors.rpeLow;
-    } else if (avgDelta < 15) {
-      text = 'Muy ajustado al plan ✓';
-      color = AppColors.rpeLow;
-    } else if (avgDelta < 30) {
-      text = 'Algo por encima del objetivo';
-      color = AppColors.rpeMid;
-    } else {
-      text = 'Bastante por encima del objetivo';
-      color = AppColors.rpeMax;
-    }
-
-    return [
-      Padding(
-        padding: const EdgeInsets.only(top: AppSpacing.l),
-        child: Text(
-          text,
-          style: TextStyle(
-              fontSize: 13, fontWeight: FontWeight.w500, color: color),
-        ),
-      ),
-    ];
-  }
-
-  // ── Sección 7 — Notas ─────────────────────────────────────────────
+  // ── Sección 6 — Notas ────────────────────────────────────────────
 
   Widget _buildNotasSection() {
     return Padding(
@@ -826,17 +618,6 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
     return '$m:${s.toString().padLeft(2, '0')} /km';
   }
 
-  String _formatPaceDelta(double sec) {
-    if (sec < 60) return '${sec.round()}s';
-    return '${(sec / 60).toStringAsFixed(1)}min';
-  }
-
-  Color _deltaColor(double delta) {
-    if (delta.abs() <= 15) return AppColors.rpeLow;
-    if (delta.abs() <= 30) return AppColors.rpeMid;
-    return AppColors.rpeMax;
-  }
-
   bool _hasFcData() =>
       training.series.any((s) => s.fcReadings != null && s.fcReadings!.isNotEmpty);
 }
@@ -856,11 +637,13 @@ class _SerieExpansionTile extends StatefulWidget {
   final int index;
   final dynamic serie;
   final BuildContext context;
+  final Map<String, dynamic>? plannedTarget;
 
   const _SerieExpansionTile({
     required this.index,
     required this.serie,
     required this.context,
+    this.plannedTarget,
   });
 
   @override
@@ -877,10 +660,141 @@ class _SerieExpansionTileState extends State<_SerieExpansionTile> {
     return '${m}m ${sec.toString().padLeft(2, '0')}s';
   }
 
+  String _formatPace(double secPerKm) {
+    final m = secPerKm ~/ 60;
+    final s = (secPerKm % 60).round();
+    return '$m:${s.toString().padLeft(2, '0')} /km';
+  }
+
+  Widget _buildPlannedTargetRow(BuildContext ctx, Map<String, dynamic> target, dynamic serie) {
+    debugPrint('[PlannedTarget] rendering target=$target');
+    final paceMin = (target['paceMinSecPerKm'] as num?)?.toDouble();
+    final paceMax = (target['paceMaxSecPerKm'] as num?)?.toDouble();
+    final targetRpe = (target['rpe'] as num?)?.toDouble();
+    final targetZone = (target['zone'] as num?)?.toInt();
+
+    final hasPace = paceMin != null || paceMax != null;
+    if (!hasPace && targetRpe == null && targetZone == null) {
+      return const SizedBox.shrink();
+    }
+
+    // Ejecutado
+    final distM = (serie.distanciaM as num).toInt();
+    final tiempoSec = (serie.tiempoSec as num).toDouble();
+    final execPaceSec = tiempoSec > 0 && distM > 0
+        ? tiempoSec * 1000.0 / distM
+        : null;
+    final execRpe = (serie.rpe as num).toDouble();
+
+    final secondary = AppColors.textSecondary(ctx);
+    final primary = AppColors.textPrimary(ctx);
+
+    final labelStyle = AppTypography.small.copyWith(color: secondary, fontSize: 12);
+    final valueStyle = AppTypography.small.copyWith(
+        color: primary, fontSize: 13, fontWeight: FontWeight.w500);
+
+    Widget arrowIcon() => Icon(Icons.arrow_forward,
+        size: 14, color: AppColors.iconMutedOf(ctx));
+
+    Widget row(String label, Widget planWidget, Widget execWidget) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        child: Row(
+          children: [
+            SizedBox(width: 44, child: Text(label, style: labelStyle)),
+            const SizedBox(width: 8),
+            Expanded(child: planWidget),
+            const SizedBox(width: 6),
+            arrowIcon(),
+            const SizedBox(width: 6),
+            Expanded(child: execWidget),
+          ],
+        ),
+      );
+    }
+
+    Color _paceColor(double? execSec) {
+      if (execSec == null || paceMin == null) return primary;
+      final ref = paceMax ?? paceMin;
+      final delta = execSec - ref;
+      if (delta.abs() <= 15) return AppColors.rpeLow;
+      if (delta.abs() <= 30) return AppColors.rpeMid;
+      return AppColors.rpeMax;
+    }
+
+    final rows = <Widget>[];
+
+    if (hasPace) {
+      final planStr = (paceMin != null && paceMax != null)
+          ? '${_formatPace(paceMin)} – ${_formatPace(paceMax)}'
+          : _formatPace((paceMin ?? paceMax)!);
+      final execStr = execPaceSec != null ? _formatPace(execPaceSec) : '—';
+      final execColor = _paceColor(execPaceSec);
+      rows.add(row(
+        'Pace',
+        Text(planStr, style: valueStyle),
+        Text(execStr, style: valueStyle.copyWith(color: execColor)),
+      ));
+    }
+
+    if (targetRpe != null) {
+      rows.add(row(
+        'RPE',
+        Text(targetRpe.toStringAsFixed(0),
+            style: valueStyle.copyWith(color: AppColors.effortColor(targetRpe))),
+        Text(execRpe > 0 ? execRpe.toStringAsFixed(0) : '—',
+            style: valueStyle.copyWith(
+                color: execRpe > 0 ? AppColors.effortColor(execRpe) : secondary)),
+      ));
+    }
+
+    if (targetZone != null) {
+      rows.add(row(
+        'Zona',
+        Text('Z$targetZone', style: valueStyle),
+        Text('—', style: valueStyle.copyWith(color: secondary)),
+      ));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(0, AppSpacing.s, 0, AppSpacing.s),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'OBJETIVO VS EJECUTADO',
+                      style: AppTypography.small.copyWith(
+                        color: secondary,
+                        letterSpacing: 1.2,
+                        fontWeight: FontWeight.w400,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.s),
+              ...rows,
+            ],
+          ),
+        ),
+        Divider(color: AppColors.borderOf(ctx), height: 1, thickness: 0.5),
+        const SizedBox(height: AppSpacing.s),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final serie = widget.serie;
     final i = widget.index;
+    debugPrint('[SerieExpansionTile] serieIndex=$i, plannedTarget=${widget.plannedTarget}');
     final rpeColor = AppColors.effortColor(serie.rpe.toDouble());
     final hasFc = serie.fcReadings != null &&
         (serie.fcReadings as List).isNotEmpty;
@@ -949,6 +863,8 @@ class _SerieExpansionTileState extends State<_SerieExpansionTile> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (widget.plannedTarget != null)
+                  _buildPlannedTargetRow(context, widget.plannedTarget!, widget.serie),
                 _buildSerieChart(context, serie, hasFc),
                 if (serie.descansoSec > 0) ...[
                   const SizedBox(height: AppSpacing.m),
@@ -1102,6 +1018,49 @@ class _SerieExpansionTileState extends State<_SerieExpansionTile> {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ── Target chip ───────────────────────────────────────────────────
+
+class _TargetChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final BuildContext ctx;
+
+  const _TargetChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.ctx,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
