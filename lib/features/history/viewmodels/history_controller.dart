@@ -21,6 +21,8 @@ enum TrainingFilter {
 }
 
 class HistoryController {
+  static final needsReload = ValueNotifier<int>(0);
+
   TrainingRepository _trainingRepo;
 
   final ValueNotifier<List<Entrenamiento>> _allTrainings =

@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/app_transitions.dart';
 import '../../../core/widgets/main_shell.dart';
 import '../../athlete/data/athlete_session_model.dart';
+import '../../history/viewmodels/history_controller.dart';
 import '../../profile/data/zones_repository.dart';
 import '../../templates/data/workout_block.dart';
 import '../../templates/data/workout_segment.dart';
@@ -88,8 +89,9 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
             gpsActivo: _gpsOn,
             fcMax: _fcMax,
             onCompleted: () {
+              HistoryController.needsReload.value++;
               if (mounted) {
-                MainShell.shellKey.currentState?.navigateBack();
+                MainShell.shellKey.currentState?.navigateTo(4);
               }
             },
           ),

@@ -200,7 +200,13 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
         ...updates,
       };
 
+      debugPrint('[Summary] saving training id=${widget.entrenamiento.id}');
+      debugPrint('[Summary] uid=$uid');
+      debugPrint('[Summary] fullData keys=${fullData.keys.toList()}');
+
       await docRef.set(fullData);
+
+      debugPrint('[Summary] set() completed OK');
 
       if (!mounted) return;
 
@@ -225,7 +231,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
         title: Text(
           '¿Descartar entrenamiento?',
           style: TextStyle(
-            color: AppColors.textPrimary(context),
+            color: AppColors.textPrimary(ctx),
             fontSize: 17,
             fontWeight: FontWeight.w700,
           ),
@@ -233,7 +239,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
         content: Text(
           'Esta acción no se puede deshacer.',
           style: TextStyle(
-            color: AppColors.textSecondary(context),
+            color: AppColors.textSecondary(ctx),
             fontSize: 14,
           ),
         ),
@@ -242,7 +248,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
               'Cancelar',
-              style: TextStyle(color: AppColors.textSecondary(context)),
+              style: TextStyle(color: AppColors.textSecondary(ctx)),
             ),
           ),
           TextButton(

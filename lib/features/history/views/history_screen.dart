@@ -44,11 +44,16 @@ class _HistoryScreenState extends State<HistoryScreen>
     }
   }
 
+  void _onNeedsReload() {
+    _controller.loadTrainings();
+  }
+
   @override
   void initState() {
     super.initState();
     _controller = HistoryController();
     _scrollController = ScrollController()..addListener(_onScroll);
+    HistoryController.needsReload.addListener(_onNeedsReload);
     _controller.loadTrainings();
     _entranceCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 900));
@@ -72,6 +77,7 @@ class _HistoryScreenState extends State<HistoryScreen>
 
   @override
   void dispose() {
+    HistoryController.needsReload.removeListener(_onNeedsReload);
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _entranceCtrl.dispose();
