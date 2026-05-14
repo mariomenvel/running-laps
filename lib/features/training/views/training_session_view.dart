@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart'; // Para SystemSound
 import 'dart:math' show pi;
@@ -18,7 +17,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/services/gps_service.dart';
 import '../../../core/services/zones_service.dart';
 import '../../../core/services/heart_rate_service.dart';
-import 'package:running_laps/core/widgets/main_shell.dart';
 
 
 class TrainingSessionView extends StatefulWidget {
@@ -1559,10 +1557,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                  ModernSnackBar.showError(context, "Distancia demasiado baja para guardar (<30m). Descartando...");
                  await Future.delayed(const Duration(seconds: 2));
                  if (mounted) {
-                    Navigator.of(context).pushAndRemoveUntil(
-                      AppRoute(page: const MainShell()),
-                      (Route<dynamic> route) => false,
-                    );
+                    Navigator.of(context).popUntil((route) => route.isFirst);
                  }
                  return;
               }

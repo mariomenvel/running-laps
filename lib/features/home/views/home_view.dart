@@ -47,34 +47,50 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  late final HomeViewModel _vm;
+  HomeViewModel? _vm;
+  bool _vmReady = false;
 
   @override
   void initState() {
     super.initState();
-    final uid = FirebaseAuth.instance.currentUser!.uid;
-    _vm = HomeViewModel(userId: uid);
-    _vm.loadAll();
+    _initWithAuth();
+  }
+
+  Future<void> _initWithAuth() async {
+    final user = FirebaseAuth.instance.currentUser ??
+        await FirebaseAuth.instance.authStateChanges()
+            .firstWhere((u) => u != null);
+    if (!mounted) return;
+    setState(() {
+      _vm = HomeViewModel(userId: user!.uid);
+      _vmReady = true;
+    });
+    _vm!.loadAll();
   }
 
   @override
   void dispose() {
-    _vm.dispose();
+    _vm?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!_vmReady) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return ValueListenableBuilder<bool>(
-      valueListenable: _vm.isLoading,
+      valueListenable: _vm!.isLoading,
       builder: (_, loading, __) {
         if (loading) return _buildSkeleton();
         return ValueListenableBuilder<bool>(
-          valueListenable: _vm.isAthleteMode,
+          valueListenable: _vm!.isAthleteMode,
           builder: (_, isAthlete, __) {
             return RefreshIndicator(
               color: AppColors.brand,
-              onRefresh: _vm.refresh,
+              onRefresh: _vm!.refresh,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
@@ -136,7 +152,7 @@ class _HomeViewState extends State<HomeView> {
 
   Widget _buildDateHeader(bool isAthlete) {
     return ValueListenableBuilder<String>(
-      valueListenable: _vm.userName,
+      valueListenable: _vm!.userName,
       builder: (_, name, __) {
         return Row(
           children: [
@@ -160,7 +176,7 @@ class _HomeViewState extends State<HomeView> {
               child: IconButton(
                 icon: const Icon(Icons.sync_rounded),
                 color: AppColors.iconMutedOf(context),
-                onPressed: _vm.toggleAthleteMode,
+                onPressed: _vm!.toggleAthleteMode,
               ),
             ),
           ],
@@ -188,7 +204,7 @@ class _HomeViewState extends State<HomeView> {
 
   Widget _buildTodaySessionCard() {
     return ValueListenableBuilder<AthleteSession?>(
-      valueListenable: _vm.todaySession,
+      valueListenable: _vm!.todaySession,
       builder: (_, session, __) {
         return _card(
           child: Column(
@@ -234,8 +250,14 @@ class _HomeViewState extends State<HomeView> {
                       ),
                     ),
                     onPressed: () {
+                      debugPrint('[Home] EMPEZAR pressed, session=${session.id}');
+                      debugPrint('[Home] shellKey.currentState=${MainShell.shellKey.currentState}');
+
                       final workoutSession = mapAthleteSessionToWorkout(session);
+                      debugPrint('[Home] workoutSession=${workoutSession?.id}');
+
                       if (workoutSession != null) {
+                        debugPrint('[Home] navigating to index 16');
                         MainShell.shellKey.currentState?.navigateTo(
                           16,
                           params: PreExecutionShellParams(
@@ -244,6 +266,7 @@ class _HomeViewState extends State<HomeView> {
                           ),
                         );
                       } else {
+                        debugPrint('[Home] fallback to TrainingStartView');
                         Navigator.push(context, AppRoute(page: const TrainingStartView()));
                       }
                     },
@@ -270,10 +293,10 @@ class _HomeViewState extends State<HomeView> {
 
   Widget _buildWeekSessionsList() {
     return ValueListenableBuilder<AthleteSession?>(
-      valueListenable: _vm.todaySession,
+      valueListenable: _vm!.todaySession,
       builder: (_, today, __) {
         return ValueListenableBuilder<List<AthleteSession>>(
-          valueListenable: _vm.weekSessions,
+          valueListenable: _vm!.weekSessions,
           builder: (_, week, __) {
             final todayStr = _todayDateStr();
             final upcoming = week.where((s) => s.date != todayStr).toList();
@@ -341,17 +364,17 @@ class _HomeViewState extends State<HomeView> {
 
   Widget _buildWeeklyProgress() {
     return ValueListenableBuilder<double>(
-      valueListenable: _vm.weeklyVolumeKm,
+      valueListenable: _vm!.weeklyVolumeKm,
       builder: (_, km, __) => ValueListenableBuilder<int>(
-        valueListenable: _vm.weeklySessionCount,
+        valueListenable: _vm!.weeklySessionCount,
         builder: (_, count, __) => ValueListenableBuilder<int>(
-          valueListenable: _vm.weeklyTimeMinutes,
+          valueListenable: _vm!.weeklyTimeMinutes,
           builder: (_, minutes, __) => ValueListenableBuilder<double>(
-            valueListenable: _vm.weeklyRpeAvg,
+            valueListenable: _vm!.weeklyRpeAvg,
             builder: (_, rpe, __) => ValueListenableBuilder<double>(
-              valueListenable: _vm.weeklyLoadTotal,
+              valueListenable: _vm!.weeklyLoadTotal,
               builder: (_, load, __) => ValueListenableBuilder<Map<int, double>>(
-                valueListenable: _vm.weeklyZoneSeconds,
+                valueListenable: _vm!.weeklyZoneSeconds,
                 builder: (_, zones, __) {
                   const target = 60.0;
                   final hours  = minutes ~/ 60;
@@ -565,7 +588,7 @@ class _HomeViewState extends State<HomeView> {
                   borderRadius: BorderRadius.circular(AppDimens.buttonRadius),
                 ),
               ),
-              onPressed: _vm.toggleAthleteMode,
+              onPressed: _vm!.toggleAthleteMode,
             ),
           ),
         ],
@@ -575,7 +598,7 @@ class _HomeViewState extends State<HomeView> {
 
   Widget _buildPersonalRecords() {
     return ValueListenableBuilder<Map<int, PersonalRecord>>(
-      valueListenable: _vm.personalRecords,
+      valueListenable: _vm!.personalRecords,
       builder: (_, records, __) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -634,7 +657,7 @@ class _HomeViewState extends State<HomeView> {
 
   Widget _buildRecentWorkouts() {
     return ValueListenableBuilder<List<Entrenamiento>>(
-      valueListenable: _vm.recentWorkouts,
+      valueListenable: _vm!.recentWorkouts,
       builder: (_, workouts, __) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,

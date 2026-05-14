@@ -24,6 +24,8 @@ class AnalyticsHubController {
   final ValueNotifier<List<Entrenamiento>> filteredData = ValueNotifier([]);
   final ValueNotifier<bool> isLoading = ValueNotifier(true);
 
+  bool _disposed = false;
+
   // Cache de todos los datos para no recargar constantemente
   List<Entrenamiento> _allData = [];
 
@@ -35,6 +37,7 @@ class AnalyticsHubController {
   }) : _repository = repository ?? TrainingRepository();
 
   Future<void> initialize({List<Entrenamiento>? initialData}) async {
+    if (_disposed) return;
     if (initialData != null) {
       _allData = List.from(initialData);
       // Ordenar por fecha desc por si acaso
@@ -49,22 +52,23 @@ class AnalyticsHubController {
   }
 
   Future<void> _loadAllData() async {
+    if (_disposed) return;
     isLoading.value = true;
     try {
       // Cargar todo el historial (o un límite razonable, ej: 1 año)
       _allData = await _repository.getAllEntrenamientos(userId);
-      // Ordenar por fecha desc
+      if (_disposed) return;
       _allData.sort((a, b) => b.fecha.compareTo(a.fecha));
     } on RateLimitExceededException catch (e) {
       debugPrint('[AnalyticsHubController] rate limited: $e');
     } catch (e) {
       // Error
-    } finally {
-      isLoading.value = false;
     }
+    if (!_disposed) isLoading.value = false;
   }
 
   void setRange(AnalyticsTimeRange range, {DateTimeRange? custom}) {
+    if (_disposed) return;
     selectedRange.value = range;
     if (range == AnalyticsTimeRange.custom) {
       customDateRange.value = custom;
@@ -75,6 +79,7 @@ class AnalyticsHubController {
   }
 
   void _applyFilters() {
+    if (_disposed) return;
     if (_allData.isEmpty) {
       filteredData.value = [];
       return;
@@ -180,6 +185,7 @@ class AnalyticsHubController {
   }
 
   void dispose() {
+    _disposed = true;
     selectedRange.dispose();
     customDateRange.dispose();
     filteredData.dispose();

@@ -14,6 +14,8 @@ class HomeViewModel {
 
   final String userId;
 
+  bool _disposed = false;
+
   final _trainingRepo = TrainingRepository();
   final _sessionRepo  = AthleteSessionRepository();
   final _progressRepo = ProgressRepository();
@@ -63,6 +65,7 @@ class HomeViewModel {
       final athleteMode  = results[2] as bool;
       final recovered    = results[3] as RecoveredSession?;
 
+      if (_disposed) return;
       final data = userDoc.data() as Map<String, dynamic>? ?? {};
       userName.value      = data['nombre'] as String? ?? 'Usuario';
       totalKm.value       = (data['totalKm'] as num?)?.toDouble() ?? 0.0;
@@ -83,9 +86,8 @@ class HomeViewModel {
       }
     } catch (e) {
       debugPrint('[HomeViewModel] loadAll error: $e');
-    } finally {
-      isLoading.value = false;
     }
+    if (!_disposed) isLoading.value = false;
   }
 
   Future<void> refresh() => loadAll();
@@ -93,6 +95,7 @@ class HomeViewModel {
   Future<void> toggleAthleteMode() async {
     final newValue = !isAthleteMode.value;
     await _userService.setAthleteMode(userId, value: newValue);
+    if (_disposed) return;
     isAthleteMode.value = newValue;
     isLoading.value = true;
     try {
@@ -100,6 +103,7 @@ class HomeViewModel {
         _trainingRepo.getAllEntrenamientos(userId),
         FirebaseFirestore.instance.collection('users').doc(userId).get(),
       ]);
+      if (_disposed) return;
       final allWorkouts = results[0] as List<Entrenamiento>;
       final userDoc     = results[1] as DocumentSnapshot;
       final data        = userDoc.data() as Map<String, dynamic>? ?? {};
@@ -114,12 +118,14 @@ class HomeViewModel {
       } else {
         await _loadRecreativoData();
       }
-    } finally {
-      isLoading.value = false;
+    } catch (e) {
+      debugPrint('[HomeViewModel] toggleAthleteMode error: $e');
     }
+    if (!_disposed) isLoading.value = false;
   }
 
   void dispose() {
+    _disposed = true;
     isLoading.dispose();
     isAthleteMode.dispose();
     userName.dispose();
@@ -197,12 +203,15 @@ class HomeViewModel {
     final todaySessions = results[0] as List<AthleteSession>;
     final week          = results[1] as List<AthleteSession>;
 
+    if (_disposed) return;
     todaySession.value =
         todaySessions.where((s) => s.status == AthleteSessionStatus.planned).firstOrNull;
     weekSessions.value = week;
   }
 
   Future<void> _loadRecreativoData() async {
-    personalRecords.value = await _progressRepo.getPersonalRecords(userId);
+    final records = await _progressRepo.getPersonalRecords(userId);
+    if (_disposed) return;
+    personalRecords.value = records;
   }
 }

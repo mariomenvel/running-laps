@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
 
 import '../data/entrenamiento.dart';
 import '../data/training_repository.dart';
 import '../data/tag_manager.dart';
 import '../data/tag_model.dart';
 import '../../history/viewmodels/history_controller.dart';
-import '../../../../core/utils/app_transitions.dart';
-import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/constants/training_tags.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
@@ -284,11 +283,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
     }
 
     if (!mounted) return;
-    Navigator.pushAndRemoveUntil(
-      context,
-      AppRoute(page: const MainShell()),
-      (route) => false,
-    );
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────

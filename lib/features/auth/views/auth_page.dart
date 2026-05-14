@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 // RUTA CORREGIDA:
 import 'package:running_laps/features/auth/viewmodels/auth_controller.dart'; // CAMBIO: Usamos el Controller
-import 'package:running_laps/core/widgets/main_shell.dart';
-import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
@@ -65,10 +63,7 @@ class _AuthPageState extends State<AuthPage> {
 
       ModernSnackBar.showSuccess(context, 'Sesión iniciada');
 
-      Navigator.of(context).pushAndRemoveUntil(
-        AppRoute(page: const MainShell()),
-        (Route<dynamic> route) => false,
-      );
+      Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (e) {
       final msg = _extractErrorMessage(e);
       if (!mounted) return;
@@ -126,10 +121,7 @@ class _AuthPageState extends State<AuthPage> {
 
       ModernSnackBar.showSuccess(context, 'Sesión iniciada con Google');
 
-      Navigator.of(context).pushAndRemoveUntil(
-        AppRoute(page: const MainShell()),
-        (Route<dynamic> route) => false,
-      );
+      Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (e) {
       _showError(e);
     }

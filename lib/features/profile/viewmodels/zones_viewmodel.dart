@@ -36,6 +36,8 @@ class ZonesViewModel {
   ZonesViewModel({ZonesRepository? repository})
       : _repo = repository ?? ZonesRepository();
 
+  bool _disposed = false;
+
   final ZonesRepository _repo;
   final _zonesService = ZonesService();
 
@@ -61,8 +63,10 @@ class ZonesViewModel {
     state.value = state.value.copyWith(errorMessage: null);
     try {
       final profile = await _repo.getUserProfile(uid);
+      if (_disposed) return;
       state.value = state.value.copyWith(profile: profile);
     } catch (e) {
+      if (_disposed) return;
       debugPrint('ZonesViewModel.loadProfile error: $e');
       state.value = state.value.copyWith(errorMessage: e.toString());
     }
@@ -84,17 +88,19 @@ class ZonesViewModel {
         birthDate: birthDate,
         sex: sex,
       );
-      // Reload para reflejar los datos guardados
+      if (_disposed) return;
       await loadProfile(uid);
     } catch (e) {
-      debugPrint('ZonesViewModel.saveFcConfig error: $e');
-      state.value = state.value.copyWith(errorMessage: e.toString());
-    } finally {
-      state.value = state.value.copyWith(isSaving: false);
+      if (!_disposed) {
+        debugPrint('ZonesViewModel.saveFcConfig error: $e');
+        state.value = state.value.copyWith(errorMessage: e.toString());
+      }
     }
+    if (!_disposed) state.value = state.value.copyWith(isSaving: false);
   }
 
   void dispose() {
+    _disposed = true;
     state.dispose();
   }
 }

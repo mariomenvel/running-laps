@@ -36,6 +36,8 @@ class CalendarViewModel {
 
   final String userId;
 
+  bool _disposed = false;
+
   final _sessionRepo  = AthleteSessionRepository();
   final _trainingRepo = TrainingRepository();
   final _userService  = UserService();
@@ -88,9 +90,8 @@ class CalendarViewModel {
       _updateSelectedDayWorkouts(selectedDay.value);
     } catch (e) {
       debugPrint('[CalendarViewModel] loadAll error: $e');
-    } finally {
-      isLoading.value = false;
     }
+    if (!_disposed) isLoading.value = false;
   }
 
   void onDaySelected(DateTime day, DateTime focused) {
@@ -132,6 +133,7 @@ class CalendarViewModel {
     isLoading.value = true;
     final newVal = !isAthleteMode.value;
     await _userService.setAthleteMode(userId, value: newVal);
+    if (_disposed) return;
     isAthleteMode.value = newVal;
     if (newVal) {
       _subscribeToMonth(focusedMonth.value);
@@ -142,10 +144,9 @@ class CalendarViewModel {
       _seasonSub?.cancel();
       _seasonSub = null;
       await _loadTrainingDates();
+      if (_disposed) return;
       _updateSelectedDayWorkouts(selectedDay.value);
-      // En recreativo no hay temporada — limpiar
       seasonWeeks.value = [];
-      // Si estaba en temporada, volver a semanal
       if (viewType.value == CalendarViewType.season) {
         viewType.value = CalendarViewType.weekly;
       }
@@ -156,6 +157,7 @@ class CalendarViewModel {
   }
 
   void dispose() {
+    _disposed = true;
     _sessionSub?.cancel();
     _seasonSub?.cancel();
     isLoading.dispose();
@@ -319,6 +321,7 @@ class CalendarViewModel {
 
   Future<void> _loadTrainingDates() async {
     final workouts = await _trainingRepo.getAllEntrenamientos(userId);
+    if (_disposed) return;
     workouts.sort((a, b) => b.fecha.compareTo(a.fecha));
     allWorkouts.value  = workouts;
     trainingDates.value = { for (final w in workouts) _dateKey(w.fecha) };

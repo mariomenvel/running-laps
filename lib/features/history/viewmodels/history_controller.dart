@@ -22,6 +22,8 @@ enum TrainingFilter {
 class HistoryController {
   static final needsReload = ValueNotifier<int>(0);
 
+  bool _disposed = false;
+
   TrainingRepository _trainingRepo;
 
   final ValueNotifier<List<Entrenamiento>> _allTrainings =
@@ -70,6 +72,16 @@ class HistoryController {
 
   String? _resolveUid() => FirebaseAuth.instance.currentUser?.uid;
 
+  Future<void> loadWhenReady() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await loadTrainings();
+      return;
+    }
+    await FirebaseAuth.instance.authStateChanges().firstWhere((u) => u != null);
+    await loadTrainings();
+  }
+
   Future<void> loadTrainings() async {
     if (isLoading.value) return;
 
@@ -87,6 +99,7 @@ class HistoryController {
       }
 
       final page = await _trainingRepo.getTrainings(uid: uid, pageSize: 20);
+      if (_disposed) return;
       _allTrainings.value = page.trainings;
       _lastDocument = page.lastDocument;
       _hasMore = page.hasMore;
@@ -99,10 +112,9 @@ class HistoryController {
 
       applyFilters();
     } catch (e) {
-      error.value = 'Error al cargar entrenamientos: $e';
-    } finally {
-      isLoading.value = false;
+      if (!_disposed) error.value = 'Error al cargar entrenamientos: $e';
     }
+    if (!_disposed) isLoading.value = false;
   }
 
   Future<void> loadMore() async {
@@ -120,6 +132,7 @@ class HistoryController {
         pageSize: 20,
       );
 
+      if (_disposed) return;
       _allTrainings.value = [..._allTrainings.value, ...page.trainings];
       _lastDocument = page.lastDocument;
       _hasMore = page.hasMore;
@@ -377,6 +390,7 @@ class HistoryController {
   }
 
   void dispose() {
+    _disposed = true;
     _allTrainings.dispose();
     trainings.dispose();
     isLoading.dispose();
