@@ -497,3 +497,46 @@ Un usuario iOS tiene exactamente la misma experiencia en el reloj que un usuario
 | 10 | ATL/CTL/TSB (Premium) | Premium | Fases 1, 3, 5 |
 | 11 | Apple Watch | Free/Premium | Fase 8 |
 | 12 | Entrenador IA | Premium | Fases 1-10 |
+
+---
+
+## ROADMAP AI Coach y Generador por prompt
+
+### Fase 1 — Generador por prompt (free) — 1-2 semanas
+- Cloud Function generateWorkoutFromPrompt
+- Botón "Generar con IA" en WorkoutEditorScreen
+- Input texto + micrófono (speech_to_text)
+- Cuota 8/mes para free
+- Modelo: Claude Haiku 4.5
+
+### Fase 2 — Infraestructura Premium — 2-3 semanas
+- Sistema de suscripción
+- Trial 30 días + códigos creador
+- Estado premium en Firestore
+- Pantalla de upgrade
+
+### Fase 3 — Coach Premium MVP — 3-4 semanas
+- Cuestionario inicial
+- Cloud Function generateWeekPlan
+- Renombrar Analytics → Coaching
+- Vista "Mi semana" en Coaching
+- Generación semanal automática (domingos)
+- Modelo: Claude Sonnet 4.6
+
+### Fase 4 — Inteligencia del Coach — 3-4 semanas
+- Análisis de fatiga
+- Detección de feedback (edits del usuario)
+- Cuestionario semanal opcional
+- Adaptación automática
+- Mensajes del coach
+
+### Fase 5 — Chat con coach — 1-2 semanas
+- Conversación libre limitada
+- Notificaciones push
+- Cuota de mensajes
+
+### Fase 6 — Refinamiento — ongoing
+- Inglés
+- Fases de plan (base, específica, taper, competición)
+- Recuperación post-lesión
+- Plan de competición
