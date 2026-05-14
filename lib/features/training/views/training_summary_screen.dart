@@ -871,6 +871,8 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      useRootNavigator: true,
+      isDismissible: true,
       builder: (ctx) {
         return Padding(
           padding:
@@ -968,6 +970,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
         );
       },
     );
+    if (!mounted) return;
     controller.dispose();
     if (mounted) _loadCustomTags();
   }

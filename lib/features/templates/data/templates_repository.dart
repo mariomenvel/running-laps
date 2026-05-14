@@ -12,7 +12,6 @@ class TrainingTemplatesRepository {
 
   TrainingTemplatesRepository({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance {
-    _rateLimitService.registerLimit('templates:getAll', const Duration(seconds: 2));
     _rateLimitService.registerLimit('templates:save', const Duration(seconds: 2));
     _rateLimitService.registerLimit('templates:delete', const Duration(seconds: 3));
   }
@@ -36,7 +35,6 @@ class TrainingTemplatesRepository {
 
   // READ ALl
   Future<List<TrainingTemplate>> getUserTemplates() async {
-    _rateLimitService.checkLimit('templates:getAll');
     final uid = currentUserId;
     if (uid == null) return [];
 
