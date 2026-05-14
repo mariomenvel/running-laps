@@ -21,37 +21,52 @@ class CalendarView extends StatefulWidget {
 }
 
 class _CalendarViewState extends State<CalendarView> {
-  late final CalendarViewModel _vm;
+  CalendarViewModel? _vm;
+  bool _vmReady = false;
   int _focusedYear = DateTime.now().year;
 
   @override
   void initState() {
     super.initState();
-    _vm = CalendarViewModel(userId: FirebaseAuth.instance.currentUser!.uid);
-    _vm.loadAll();
+    _initWithAuth();
+  }
+
+  Future<void> _initWithAuth() async {
+    final user = FirebaseAuth.instance.currentUser ??
+        await FirebaseAuth.instance.authStateChanges()
+            .firstWhere((u) => u != null);
+    if (!mounted) return;
+    setState(() {
+      _vm = CalendarViewModel(userId: user!.uid);
+      _vmReady = true;
+    });
+    _vm!.loadAll();
   }
 
   @override
   void dispose() {
-    _vm.dispose();
+    _vm?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!_vmReady) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return ValueListenableBuilder<bool>(
-      valueListenable: _vm.isLoading,
+      valueListenable: _vm!.isLoading,
       builder: (_, loading, __) {
         if (loading) return _buildSkeleton();
         return ValueListenableBuilder<bool>(
-          valueListenable: _vm.isAthleteMode,
+          valueListenable: _vm!.isAthleteMode,
           builder: (_, isAthlete, __) {
             return Column(
               children: [
                 _buildViewSelector(isAthlete),
                 Expanded(
                   child: ValueListenableBuilder<CalendarViewType>(
-                    valueListenable: _vm.viewType,
+                    valueListenable: _vm!.viewType,
                     builder: (_, vt, __) {
                       switch (vt) {
                         case CalendarViewType.weekly:
@@ -101,7 +116,7 @@ class _CalendarViewState extends State<CalendarView> {
 
   Widget _buildViewSelector(bool isAthlete) {
     return ValueListenableBuilder<CalendarViewType>(
-      valueListenable: _vm.viewType,
+      valueListenable: _vm!.viewType,
       builder: (_, current, __) => Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.l,
@@ -110,12 +125,12 @@ class _CalendarViewState extends State<CalendarView> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _ViewTab('Semanal',   CalendarViewType.weekly,  current == CalendarViewType.weekly,  _vm),
+            _ViewTab('Semanal',   CalendarViewType.weekly,  current == CalendarViewType.weekly,  _vm!),
             const SizedBox(width: AppSpacing.s),
-            _ViewTab('Mensual',   CalendarViewType.monthly, current == CalendarViewType.monthly, _vm),
+            _ViewTab('Mensual',   CalendarViewType.monthly, current == CalendarViewType.monthly, _vm!),
             if (isAthlete) ...[
               const SizedBox(width: AppSpacing.s),
-              _ViewTab('Temporada', CalendarViewType.season, current == CalendarViewType.season, _vm),
+              _ViewTab('Temporada', CalendarViewType.season, current == CalendarViewType.season, _vm!),
             ],
           ],
         ),
@@ -127,11 +142,11 @@ class _CalendarViewState extends State<CalendarView> {
 
   Widget _buildMonthlyView(bool isAthlete) {
     return ValueListenableBuilder<DateTime>(
-      valueListenable: _vm.focusedMonth,
+      valueListenable: _vm!.focusedMonth,
       builder: (_, focused, __) => ValueListenableBuilder<List<Entrenamiento>>(
-        valueListenable: _vm.allWorkouts,
+        valueListenable: _vm!.allWorkouts,
         builder: (_, workouts, __) => ValueListenableBuilder<Map<String, List<AthleteSession>>>(
-          valueListenable: _vm.sessionsByDate,
+          valueListenable: _vm!.sessionsByDate,
           builder: (_, sessionsByDate, __) {
             final weeks = _getWeeksOfMonth(focused.year, focused.month);
 
@@ -148,7 +163,7 @@ class _CalendarViewState extends State<CalendarView> {
                       GestureDetector(
                         onTap: () {
                           final prev = DateTime(focused.year, focused.month - 1);
-                          _vm.onMonthChanged(prev);
+                          _vm!.onMonthChanged(prev);
                         },
                         child: Icon(Icons.chevron_left, color: AppColors.iconMutedOf(context)),
                       ),
@@ -162,7 +177,7 @@ class _CalendarViewState extends State<CalendarView> {
                       GestureDetector(
                         onTap: () {
                           final next = DateTime(focused.year, focused.month + 1);
-                          _vm.onMonthChanged(next);
+                          _vm!.onMonthChanged(next);
                         },
                         child: Icon(Icons.chevron_right, color: AppColors.iconMutedOf(context)),
                       ),
@@ -549,9 +564,9 @@ class _CalendarViewState extends State<CalendarView> {
 
   Widget _buildAthleteDayContent() {
     return ValueListenableBuilder<DateTime>(
-      valueListenable: _vm.selectedDay,
+      valueListenable: _vm!.selectedDay,
       builder: (_, day, __) => ValueListenableBuilder<List<AthleteSession>>(
-        valueListenable: _vm.selectedDaySessions,
+        valueListenable: _vm!.selectedDaySessions,
         builder: (_, sessions, __) => SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l, vertical: AppSpacing.m),
           child: Column(
@@ -573,9 +588,9 @@ class _CalendarViewState extends State<CalendarView> {
 
   Widget _buildRecreativoDayContent() {
     return ValueListenableBuilder<DateTime>(
-      valueListenable: _vm.selectedDay,
+      valueListenable: _vm!.selectedDay,
       builder: (_, day, __) => ValueListenableBuilder<List<Entrenamiento>>(
-        valueListenable: _vm.selectedDayWorkouts,
+        valueListenable: _vm!.selectedDayWorkouts,
         builder: (_, workouts, __) => SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l, vertical: AppSpacing.m),
           child: Column(
@@ -598,7 +613,7 @@ class _CalendarViewState extends State<CalendarView> {
 
   Widget _buildWeeklyView(bool isAthlete) {
     return ValueListenableBuilder<List<DateTime>>(
-      valueListenable: _vm.weekDays,
+      valueListenable: _vm!.weekDays,
       builder: (_, days, __) {
         if (days.isEmpty) return const SizedBox.shrink();
         final monday = days.first;
@@ -615,7 +630,7 @@ class _CalendarViewState extends State<CalendarView> {
                 children: [
                   IconButton(
                     icon: Icon(Icons.chevron_left, color: AppColors.iconMutedOf(context)),
-                    onPressed: () => _vm.navigateWeek(-7),
+                    onPressed: () => _vm!.navigateWeek(-7),
                   ),
                   Expanded(
                     child: Column(
@@ -635,7 +650,7 @@ class _CalendarViewState extends State<CalendarView> {
                   ),
                   IconButton(
                     icon: Icon(Icons.chevron_right, color: AppColors.iconMutedOf(context)),
-                    onPressed: () => _vm.navigateWeek(7),
+                    onPressed: () => _vm!.navigateWeek(7),
                   ),
                 ],
               ),
@@ -644,7 +659,7 @@ class _CalendarViewState extends State<CalendarView> {
               // ── Días de la semana ───────────────────────────────────
               if (isAthlete)
                 ValueListenableBuilder<Map<String, List<AthleteSession>>>(
-                  valueListenable: _vm.weekSessionsByDay,
+                  valueListenable: _vm!.weekSessionsByDay,
                   builder: (_, byDay, __) => Column(
                     children: days.map((day) {
                       final key = _normalize(day);
@@ -659,7 +674,7 @@ class _CalendarViewState extends State<CalendarView> {
                 )
               else
                 ValueListenableBuilder<Map<String, List<Entrenamiento>>>(
-                  valueListenable: _vm.weekWorkoutsByDay,
+                  valueListenable: _vm!.weekWorkoutsByDay,
                   builder: (_, byDay, __) => Column(
                     children: days.map((day) {
                       final key = _normalize(day);
@@ -695,33 +710,179 @@ class _CalendarViewState extends State<CalendarView> {
     final now     = DateTime.now();
     final isToday = day.year == now.year && day.month == now.month && day.day == now.day;
 
+    void _navigateToSession(AthleteSession planned) {
+      final workoutSession = mapAthleteSessionToWorkout(planned);
+      if (workoutSession != null) {
+        MainShell.shellKey.currentState?.navigateTo(
+          16,
+          params: PreExecutionShellParams(
+            session: workoutSession,
+            athleteSession: planned,
+          ),
+        );
+      }
+    }
+
+    void _navigateToNewSession() {
+      MainShell.shellKey.currentState?.navigateTo(
+        13,
+        params: AthleteSessionShellParams(
+          date: _normalize(day),
+          session: null,
+        ),
+      );
+    }
+
+    void _showPlannedSessionsSheet(List<AthleteSession> plannedSessions) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (_) => DraggableScrollableSheet(
+          initialChildSize: 0.5,
+          minChildSize: 0.35,
+          maxChildSize: 0.85,
+          expand: false,
+          builder: (_, ctrl) => SingleChildScrollView(
+            controller: ctrl,
+            padding: const EdgeInsets.all(AppSpacing.l),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36, height: 4,
+                    margin: const EdgeInsets.only(bottom: AppSpacing.l),
+                    decoration: BoxDecoration(
+                      color: AppColors.borderOf(context),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Text(
+                  'Sesiones del ${_formatDaySpanish(day)}',
+                  style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context)),
+                ),
+                const SizedBox(height: AppSpacing.l),
+                ...plannedSessions.map((s) {
+                  final title = s.title?.isNotEmpty == true
+                      ? s.title!
+                      : s.category != null
+                          ? SessionCategoryX.fromValue(s.category!).label
+                          : 'Entrenamiento';
+                  final durMin = s.blocks.fold<int>(
+                    0,
+                    (sum, b) =>
+                        sum +
+                        (b.type == SessionBlockType.continuousTime
+                            ? (b.durationMinutes ?? 0)
+                            : 0),
+                  );
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: AppSpacing.m),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.m,
+                      vertical: AppSpacing.m,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceOf(context),
+                      border: Border.all(color: AppColors.borderOf(context), width: 0.5),
+                      borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 8, height: 8,
+                          margin: const EdgeInsets.only(right: AppSpacing.m, top: 2),
+                          decoration: const BoxDecoration(
+                            color: AppColors.brand,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                title,
+                                style: AppTypography.body.copyWith(
+                                  color: AppColors.textPrimary(context),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              if (durMin > 0) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  '~$durMin min',
+                                  style: AppTypography.small.copyWith(
+                                    color: AppColors.textSecondary(context),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                            _navigateToSession(s);
+                          },
+                          child: const Icon(Icons.play_circle_outline, color: AppColors.brand, size: 28),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                const SizedBox(height: AppSpacing.s),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                    _navigateToNewSession();
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.m),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColors.brand),
+                      borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+                    ),
+                    child: Text(
+                      'Nueva sesión',
+                      style: AppTypography.body.copyWith(
+                        color: AppColors.brand,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.l),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     void onDayTap() {
       try {
         if (isAthlete) {
-          final planned = sessions
+          final plannedSessions = sessions
               .where((s) => s.status == AthleteSessionStatus.planned)
-              .firstOrNull;
-          if (planned != null) {
-            final workoutSession = mapAthleteSessionToWorkout(planned);
-            if (workoutSession != null) {
-              MainShell.shellKey.currentState?.navigateTo(
-                16,
-                params: PreExecutionShellParams(
-                  session: workoutSession,
-                  athleteSession: planned,
-                ),
-              );
-              return;
-            }
+              .toList();
+          if (plannedSessions.length > 1) {
+            _showPlannedSessionsSheet(plannedSessions);
+            return;
+          }
+          if (plannedSessions.length == 1) {
+            _navigateToSession(plannedSessions.first);
+            return;
           }
           // Sin sesión planificada → editor para crear nueva
-          MainShell.shellKey.currentState?.navigateTo(
-            13,
-            params: AthleteSessionShellParams(
-              date: _normalize(day),
-              session: null,
-            ),
-          );
+          _navigateToNewSession();
         } else {
           Navigator.push(context, AppRoute(page: const TrainingStartView()));
         }
@@ -739,26 +900,16 @@ class _CalendarViewState extends State<CalendarView> {
           child: const Icon(Icons.add_circle_outline, color: AppColors.brand, size: 24),
         );
       } else if (sessions.any((s) => s.status == AthleteSessionStatus.planned)) {
+        final plannedSessions = sessions
+            .where((s) => s.status == AthleteSessionStatus.planned)
+            .toList();
         actionButton = GestureDetector(
           onTap: () {
-            final planned = sessions
-                .where((s) => s.status == AthleteSessionStatus.planned)
-                .firstOrNull;
-            if (planned != null) {
-              final workoutSession = mapAthleteSessionToWorkout(planned);
-              if (workoutSession != null) {
-                MainShell.shellKey.currentState?.navigateTo(
-                  16,
-                  params: PreExecutionShellParams(
-                    session: workoutSession,
-                    athleteSession: planned,
-                  ),
-                );
-                return;
-              }
+            if (plannedSessions.length > 1) {
+              _showPlannedSessionsSheet(plannedSessions);
+            } else {
+              _navigateToSession(plannedSessions.first);
             }
-            // Fallback si no hay sesión planificada o mapeo falla
-            Navigator.push(context, AppRoute(page: const TrainingStartView()));
           },
           child: const Icon(Icons.play_circle_outline, color: AppColors.brand, size: 28),
         );
@@ -933,15 +1084,15 @@ class _CalendarViewState extends State<CalendarView> {
 
   Widget _buildWeekSummary() {
     return ValueListenableBuilder<Map<String, List<AthleteSession>>>(
-      valueListenable: _vm.weekSessionsByDay,
+      valueListenable: _vm!.weekSessionsByDay,
       builder: (_, byDay, __) {
         final allSessions = byDay.values.expand((l) => l).toList();
         final completed   = allSessions.where((s) => s.status == AthleteSessionStatus.completed).length;
         final total       = allSessions.length;
 
         // Volumen y carga de entrenamientos completados (de allWorkouts de la semana)
-        final weekKeys = _vm.weekDays.value.map(_normalize).toSet();
-        final weekWorkouts = _vm.allWorkouts.value
+        final weekKeys = _vm!.weekDays.value.map(_normalize).toSet();
+        final weekWorkouts = _vm!.allWorkouts.value
             .where((w) => weekKeys.contains(_normalize(w.fecha)))
             .toList();
         final km   = weekWorkouts.fold(0.0, (s, e) => s + e.distanciaTotalM() / 1000.0);
@@ -1001,7 +1152,7 @@ class _CalendarViewState extends State<CalendarView> {
                   side: const BorderSide(color: AppColors.brand),
                   foregroundColor: AppColors.brand,
                 ),
-                onPressed: _vm.toggleAthleteMode,
+                onPressed: _vm!.toggleAthleteMode,
                 child: const Text('Activar modo atleta'),
               ),
             ],
@@ -1011,7 +1162,7 @@ class _CalendarViewState extends State<CalendarView> {
     }
 
     return ValueListenableBuilder<List<Entrenamiento>>(
-      valueListenable: _vm.allWorkouts,
+      valueListenable: _vm!.allWorkouts,
       builder: (_, workouts, __) {
         final weeks = _getWeeksOfYear(_focusedYear, workouts);
 
@@ -1536,7 +1687,7 @@ class _CalendarViewState extends State<CalendarView> {
           const SizedBox(height: AppSpacing.m),
           TextButton(
             style: TextButton.styleFrom(foregroundColor: AppColors.brand, padding: EdgeInsets.zero),
-            onPressed: _vm.toggleAthleteMode,
+            onPressed: _vm!.toggleAthleteMode,
             child: const Text('Activar modo atleta →'),
           ),
         ],
