@@ -81,6 +81,12 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
         ? currentSegment!.alerts!.toAlarmIntervalMs()
         : null;
 
+    debugPrint('[Launch] targetPaceMinutes=${params['targetPaceMinutes']}');
+    debugPrint('[Launch] targetPaceSeconds=${params['targetPaceSeconds']}');
+    debugPrint('[Launch] targetPaceMaxMinutes=${params['targetPaceMaxMinutes']}');
+    debugPrint('[Launch] targetRpe=${params['targetRpe']}');
+    debugPrint('[Launch] targetZone=${params['targetZone']}');
+
     final result = await Navigator.of(context).push<Serie>(
       AppRoute(
         page: TrainingSessionView(

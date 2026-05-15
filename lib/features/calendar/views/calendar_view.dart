@@ -8,6 +8,7 @@ import 'package:running_laps/core/widgets/standard_table_calendar.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/calendar/viewmodels/calendar_view_model.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
+import 'package:running_laps/features/training/views/pre_execution_screen.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
@@ -713,13 +714,12 @@ class _CalendarViewState extends State<CalendarView> {
     void _navigateToSession(AthleteSession planned) {
       final workoutSession = mapAthleteSessionToWorkout(planned);
       if (workoutSession != null) {
-        MainShell.shellKey.currentState?.navigateTo(
-          16,
-          params: PreExecutionShellParams(
+        Navigator.of(context).push(AppRoute(
+          page: PreExecutionScreen(
             session: workoutSession,
             athleteSession: planned,
           ),
-        );
+        ));
       }
     }
 
@@ -1594,13 +1594,12 @@ class _CalendarViewState extends State<CalendarView> {
                     onPressed: () {
                       final workoutSession = mapAthleteSessionToWorkout(session);
                       if (workoutSession != null) {
-                        MainShell.shellKey.currentState?.navigateTo(
-                          16,
-                          params: PreExecutionShellParams(
+                        Navigator.of(context).push(AppRoute(
+                          page: PreExecutionScreen(
                             session: workoutSession,
                             athleteSession: session,
                           ),
-                        );
+                        ));
                       }
                     },
                     child: const Text('EMPEZAR'),

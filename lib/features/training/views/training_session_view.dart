@@ -687,10 +687,16 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
 
   // RITMO speedometer for interval mode — reuses the same card as Libre.
   Widget _buildIntervalRitmo() {
-    if (_demoMode) return _buildRitmoSpeedometer('4:45');
+    final targetMinSec = widget.targetPaceMinutes != null
+        ? widget.targetPaceMinutes! * 60 + (widget.targetPaceSeconds ?? 0)
+        : null;
+    final targetMaxSec = widget.targetPaceMaxMinutes != null
+        ? widget.targetPaceMaxMinutes! * 60 + (widget.targetPaceMaxSeconds ?? 0)
+        : null;
+    if (_demoMode) return _buildRitmoSpeedometer('4:45', targetMinSec: targetMinSec, targetMaxSec: targetMaxSec);
     return ValueListenableBuilder<String>(
       valueListenable: _gpsService?.currentPace ?? ValueNotifier("--:--"),
-      builder: (ctx, pace, _) => _buildRitmoSpeedometer(pace),
+      builder: (ctx, pace, _) => _buildRitmoSpeedometer(pace, targetMinSec: targetMinSec, targetMaxSec: targetMaxSec),
     );
   }
 
@@ -945,11 +951,33 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
   }
 
   // RITMO — the live engine. White card with circular speedometer arc.
-  Widget _buildRitmoSpeedometer(String paceString) {
-    final Color arcColor = _getArcPaceColor(paceString);
+  Widget _buildRitmoSpeedometer(
+    String paceString, {
+    int? targetMinSec,
+    int? targetMaxSec,
+  }) {
+    final Color arcColor;
+    if (targetMinSec != null) {
+      final currentSec = _parsePaceSec(paceString);
+      if (currentSec == null) {
+        arcColor = _getArcPaceColor(paceString);
+      } else if (currentSec >= targetMinSec - 5 &&
+                 currentSec <= (targetMaxSec ?? targetMinSec + 15) + 5) {
+        arcColor = AppColors.rpeLow;
+      } else if ((currentSec - (targetMaxSec ?? targetMinSec + 15)).abs() <= 20 ||
+                 (currentSec - targetMinSec).abs() <= 20) {
+        arcColor = AppColors.rpeMid;
+      } else {
+        arcColor = AppColors.rpeMax;
+      }
+    } else {
+      arcColor = _getArcPaceColor(paceString);
+    }
     final double fraction = _computeArcFraction(paceString);
     final String paceDisplay = paceString.split(' ')[0];
-    final String zoneLabel = _getPaceZoneLabel(paceString);
+    final String zoneLabel = targetMinSec != null
+        ? _getPaceLabelVsTarget(paceString, targetMinSec, targetMaxSec)
+        : _getPaceZoneLabel(paceString);
     final String hint = _getRitmoHint(paceString);
 
     return Container(
@@ -1132,6 +1160,15 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     } catch (_) {
       return '';
     }
+  }
+
+  String _getPaceLabelVsTarget(String pace, int targetMin, int? targetMax) {
+    final current = _parsePaceSec(pace);
+    if (current == null) return '—';
+    final max = targetMax ?? targetMin + 15;
+    if (current < targetMin - 5) return 'Demasiado rápido';
+    if (current > max + 5) return 'Demasiado lento';
+    return 'En objetivo ✓';
   }
 
   // Small gray timer — used at the top for libre and interval+GPS modes.
@@ -1969,18 +2006,19 @@ class _ZoneStatusIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentZone = ZonesService().zoneFor(currentHr, fcMax) ?? 1;
+    final int diff = (currentZone - targetZone).abs();
 
     final Color color;
     final IconData icon;
-    if (currentZone == targetZone) {
+    if (diff == 0) {
       color = AppColors.rpeLow;
       icon  = Icons.check_circle_rounded;
-    } else if (currentZone > targetZone) {
-      color = AppColors.rpeMax;
-      icon  = Icons.arrow_upward_rounded;
-    } else {
+    } else if (diff == 1) {
       color = AppColors.rpeMid;
-      icon  = Icons.arrow_downward_rounded;
+      icon  = currentZone > targetZone ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded;
+    } else {
+      color = AppColors.rpeMax;
+      icon  = currentZone > targetZone ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded;
     }
 
     return Icon(icon, size: 16, color: color);

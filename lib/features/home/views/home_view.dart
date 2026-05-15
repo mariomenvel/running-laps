@@ -6,6 +6,7 @@ import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
+import 'package:running_laps/features/training/views/pre_execution_screen.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/progress_repository.dart';
 import 'package:running_laps/features/home/viewmodels/home_view_model.dart';
@@ -250,23 +251,15 @@ class _HomeViewState extends State<HomeView> {
                       ),
                     ),
                     onPressed: () {
-                      debugPrint('[Home] EMPEZAR pressed, session=${session.id}');
-                      debugPrint('[Home] shellKey.currentState=${MainShell.shellKey.currentState}');
-
                       final workoutSession = mapAthleteSessionToWorkout(session);
-                      debugPrint('[Home] workoutSession=${workoutSession?.id}');
-
                       if (workoutSession != null) {
-                        debugPrint('[Home] navigating to index 16');
-                        MainShell.shellKey.currentState?.navigateTo(
-                          16,
-                          params: PreExecutionShellParams(
+                        Navigator.of(context).push(AppRoute(
+                          page: PreExecutionScreen(
                             session: workoutSession,
                             athleteSession: session,
                           ),
-                        );
+                        ));
                       } else {
-                        debugPrint('[Home] fallback to TrainingStartView');
                         Navigator.push(context, AppRoute(page: const TrainingStartView()));
                       }
                     },

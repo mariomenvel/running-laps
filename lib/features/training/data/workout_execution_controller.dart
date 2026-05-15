@@ -63,6 +63,13 @@ class WorkoutExecutionController
         .where((s) => s.type == SegmentType.recovery)
         .firstOrNull;
 
+    debugPrint('[Params] block.role=${block.role}');
+    debugPrint('[Params] segments.length=${block.segments.length}');
+    debugPrint('[Params] seg=${seg?.type} dist=${seg?.distanceM} dur=${seg?.durationSec}');
+    debugPrint('[Params] seg.target=${seg?.target}');
+    debugPrint('[Params] target.paceMin=${seg?.target?.paceMinSecPerKm}');
+    debugPrint('[Params] target.rpe=${seg?.target?.rpe}');
+
     return {
       'distancia': seg?.distanceM?.toString() ?? 'Libre',
       'descanso': recovery?.durationSec?.toString() ?? '0',

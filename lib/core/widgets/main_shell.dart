@@ -26,7 +26,6 @@ import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/templates/views/workout_editor_screen.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
-import 'package:running_laps/features/training/views/pre_execution_screen.dart';
 
 // ─── Params para tabs con parámetros ─────────────────────────────────────────
 
@@ -40,15 +39,6 @@ class AthleteSessionShellParams {
   final String date;
   final AthleteSession? session;
   const AthleteSessionShellParams({required this.date, this.session});
-}
-
-class PreExecutionShellParams {
-  final WorkoutSession session;
-  final AthleteSession? athleteSession;
-  const PreExecutionShellParams({
-    required this.session,
-    this.athleteSession,
-  });
 }
 
 // ─── MainShell ───────────────────────────────────────────────────────────────
@@ -73,7 +63,6 @@ class _MainShellState extends State<MainShell> {
   final _templateEditorNotifier  = ValueNotifier<TemplateEditorShellParams?>(null);
   final _athleteSessionNotifier  = ValueNotifier<AthleteSessionShellParams?>(null);
   final _avatarConfigNotifier    = ValueNotifier<AvatarConfig?>(null);
-  final _preExecutionParams      = ValueNotifier<PreExecutionShellParams?>(null);
 
   late final List<Widget> _screens = [
     // ── Tabs visibles en NavBar ──────────────────────────────────────────────
@@ -156,18 +145,6 @@ class _MainShellState extends State<MainShell> {
     ),
 
     const TrainingStartView(), // 15 → Iniciar entrenamiento (FAB)
-
-    // 16 → PreExecutionScreen
-    ValueListenableBuilder<PreExecutionShellParams?>(
-      valueListenable: _preExecutionParams,
-      builder: (_, params, __) => params != null
-          ? PreExecutionScreen(
-              key: ValueKey('pre_exec_${params.session.id}'),
-              session: params.session,
-              athleteSession: params.athleteSession,
-            )
-          : const SizedBox.shrink(),
-    ),
   ];
 
   @override
@@ -178,7 +155,6 @@ class _MainShellState extends State<MainShell> {
     _templateEditorNotifier.dispose();
     _athleteSessionNotifier.dispose();
     _avatarConfigNotifier.dispose();
-    _preExecutionParams.dispose();
     super.dispose();
   }
 
@@ -210,12 +186,6 @@ class _MainShellState extends State<MainShell> {
         }
       case 14:
         _avatarConfigNotifier.value = params is AvatarConfig ? params : null;
-      case 16:
-        if (params is PreExecutionShellParams) {
-          _preExecutionParams.value = params;
-        }
-        setState(() => _tabIndex = 16);
-        return;
     }
     setState(() {
       _previousTabIndex = _tabIndex;
@@ -284,7 +254,7 @@ class _MainShellState extends State<MainShell> {
           ),
         ],
       ),
-      bottomNavigationBar: (_tabIndex == 15 || _tabIndex == 16)
+      bottomNavigationBar: (_tabIndex == 15)
           ? const SizedBox.shrink()
           : _NavBar(
               currentIndex: _tabIndex,
