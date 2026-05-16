@@ -404,31 +404,6 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
     final theme = SessionTheme.forType(_getSessionType());
     final gradient = theme.backgroundGradient(context);
 
-    final scrollContent = SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildTop(theme),
-          _divider(),
-          _buildTypeSpecificStats(context, theme),
-          _divider(),
-          if (_showRpe) ...[
-            _buildRpeSlider(),
-            _divider(),
-          ],
-          _buildComparison(),
-          _divider(),
-          _buildTags(),
-          _divider(),
-          _buildNotas(),
-          const SizedBox(height: 32),
-          _buildActions(theme),
-          const SizedBox(height: 32),
-        ],
-      ),
-    );
-
     return Scaffold(
       backgroundColor: AppColors.background(context),
       body: gradient != null
@@ -436,10 +411,55 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
               fit: StackFit.expand,
               children: [
                 Container(decoration: BoxDecoration(gradient: gradient)),
-                scrollContent,
+                _buildContent(theme),
               ],
             )
-          : scrollContent,
+          : _buildContent(theme),
+    );
+  }
+
+  Widget _buildContent(SessionTheme theme) {
+    return SafeArea(
+      child: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTop(theme),
+                  _divider(),
+                  _buildTypeSpecificStats(context, theme),
+                  _divider(),
+                  if (_showRpe) ...[
+                    _buildRpeSlider(),
+                    _divider(),
+                  ],
+                  _buildComparison(),
+                  _divider(),
+                  _buildTags(),
+                  _divider(),
+                  _buildNotas(),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              border: Border(
+                top: BorderSide(
+                  color: AppColors.borderOf(context).withValues(alpha: 0.3),
+                ),
+              ),
+            ),
+            child: _buildActions(theme),
+          ),
+        ],
+      ),
     );
   }
 
@@ -944,36 +964,37 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
 
   // ── _buildTags ────────────────────────────────────────────────────────────
 
-  Widget _buildTagChip(String name, {required bool isPredefined}) {
+  Widget _buildTagChip(String name, {required bool isPredefined, StateSetter? setSheetState}) {
     final isSelected = _selectedTags.contains(name);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeText = isDark ? AppColors.brandLight : AppColors.brand;
     return GestureDetector(
-      onTap: () => setState(() {
+      onTap: () {
         if (isSelected) {
-          _selectedTags.remove(name);
+          setState(() => _selectedTags.remove(name));
+          setSheetState?.call(() {});
         } else {
           if (_selectedTags.length >= 5) {
             ModernSnackBar.showWarning(
                 context, 'Máximo 5 etiquetas por entrenamiento');
             return;
           }
-          _selectedTags.add(name);
+          setState(() => _selectedTags.add(name));
+          setSheetState?.call(() {});
         }
-      }),
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.brand.withOpacity(0.15)
+              ? AppColors.brand.withValues(alpha: 0.15)
               : isPredefined
-                  ? AppColors.brand.withOpacity(0.05)
+                  ? AppColors.brand.withValues(alpha: 0.05)
                   : AppColors.surface2Of(context),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color:
-                isSelected ? AppColors.brand : AppColors.borderOf(context),
+            color: isSelected ? AppColors.brand : AppColors.borderOf(context),
             width: isSelected ? 1.5 : 0.5,
           ),
         ),
@@ -987,11 +1008,8 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
             Text(
               name,
               style: TextStyle(
-                color: isSelected
-                    ? activeText
-                    : AppColors.textSecondary(context),
-                fontWeight:
-                    isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? activeText : AppColors.textSecondary(context),
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 fontSize: 14,
               ),
             ),
@@ -1001,27 +1019,17 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
     );
   }
 
-  Widget _buildTags() {
+  Widget _buildTagsContent(StateSetter setSheetState) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final createColor = isDark ? AppColors.brandLight : AppColors.brand;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'ETIQUETAS',
-          style: TextStyle(
-            color: AppColors.textSecondary(context),
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 1.5,
-          ),
-        ),
-        const SizedBox(height: 16),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: TrainingTags.predefined
-              .map((tag) => _buildTagChip(tag, isPredefined: true))
+              .map((tag) => _buildTagChip(tag, isPredefined: true, setSheetState: setSheetState))
               .toList(),
         ),
         if (_customTags.isNotEmpty) ...[
@@ -1030,18 +1038,20 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
             spacing: 8,
             runSpacing: 8,
             children: _customTags
-                .map((t) => _buildTagChip(t.name, isPredefined: false))
+                .map((t) => _buildTagChip(t.name, isPredefined: false, setSheetState: setSheetState))
                 .toList(),
           ),
         ],
         const SizedBox(height: 12),
         GestureDetector(
-          onTap: _showCreateTagSheet,
+          onTap: () async {
+            await _showCreateTagSheet();
+            setSheetState(() {});
+          },
           child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.brand.withOpacity(0.1),
+              color: AppColors.brand.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppColors.brand, width: 1),
             ),
@@ -1063,6 +1073,142 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildTags() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: InkWell(
+        onTap: () => _showTagsSheet(context),
+        borderRadius: BorderRadius.circular(16),
+        child: Row(
+          children: [
+            Icon(Icons.local_offer_outlined,
+                size: 18, color: AppColors.textSecondary(context)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _selectedTags.isEmpty
+                  ? Text(
+                      'Añadir etiquetas',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary(context),
+                      ),
+                    )
+                  : Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: _selectedTags.take(3).map((tag) =>
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppColors.brand.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            tag,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.brand,
+                            ),
+                          ),
+                        ),
+                      ).toList(),
+                    ),
+            ),
+            if (_selectedTags.length > 3) ...[
+              Text(
+                '+${_selectedTags.length - 3}',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary(context),
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
+            Icon(Icons.chevron_right_rounded,
+                color: AppColors.textSecondary(context)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showTagsSheet(BuildContext context) async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => StatefulBuilder(
+        builder: (sheetCtx, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.borderOf(context),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'ETIQUETAS',
+                style: TextStyle(
+                  fontSize: 11,
+                  letterSpacing: 1.5,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textSecondary(context),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: _buildTagsContent(setSheetState),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(sheetCtx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.brand,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
+                  child: const Text('Listo',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
