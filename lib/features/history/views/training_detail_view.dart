@@ -14,6 +14,8 @@ import 'package:running_laps/features/training/widgets/tag_chip.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 
 import '../widgets/training_map_view.dart';
+import 'widgets/temporal_chart.dart';
+import 'package:running_laps/features/training/data/temporal_data_extractor.dart';
 
 class TrainingDetailView extends StatefulWidget {
   final Entrenamiento training;
@@ -72,6 +74,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
         _buildMap(),
         _buildDivider(),
       ],
+      _buildSessionTemporalCharts(),
       _buildSeriesSection(),
       if (_hasFcData()) ...[
         _buildDivider(),
@@ -337,6 +340,99 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
                     ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  // ── Sección 3b — Gráficas temporales de sesión ───────────────────
+
+  Widget _buildSessionTemporalCharts() {
+    final paceData = TemporalDataExtractor.sessionPace(training);
+    final fcData = TemporalDataExtractor.sessionFc(training);
+
+    debugPrint('[Charts] series.length=${training.series.length}');
+    for (var i = 0; i < training.series.length; i++) {
+      final s = training.series[i];
+      debugPrint('[Charts] serie $i: gpsPoints=${s.gpsPoints?.length ?? 0}, fcReadings=${s.fcReadings?.length ?? 0}');
+    }
+    debugPrint('[Charts] paceData.points.length=${paceData.points.length}');
+    debugPrint('[Charts] fcData.points.length=${fcData.points.length}');
+
+    if (paceData.isEmpty && fcData.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'EVOLUCIÓN DURANTE LA SESIÓN',
+            style: TextStyle(
+              fontSize: 11,
+              letterSpacing: 1.5,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textSecondary(context),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Gráfica de pace
+          if (!paceData.isEmpty) ...[
+            Row(children: [
+              Icon(Icons.speed_rounded, size: 14, color: AppColors.brand),
+              const SizedBox(width: 6),
+              Text(
+                'Ritmo',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary(context),
+                ),
+              ),
+            ]),
+            const SizedBox(height: 8),
+            TemporalChart(
+              points: paceData.points,
+              markers: paceData.markers,
+              lineColor: AppColors.brand,
+              unitLabel: 'min/km',
+              height: 180,
+              invertYAxis: true,
+              formatY: (v) {
+                final m = (v / 60).floor();
+                final s = (v % 60).round();
+                return '$m:${s.toString().padLeft(2, '0')}';
+              },
+            ),
+            const SizedBox(height: 20),
+          ],
+
+          // Gráfica de FC
+          if (!fcData.isEmpty) ...[
+            Row(children: [
+              Icon(Icons.favorite_outline_rounded,
+                  size: 14, color: Colors.red[400]),
+              const SizedBox(width: 6),
+              Text(
+                'Frecuencia cardíaca',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary(context),
+                ),
+              ),
+            ]),
+            const SizedBox(height: 8),
+            TemporalChart(
+              points: fcData.points,
+              markers: fcData.markers,
+              lineColor: Colors.red[400]!,
+              unitLabel: 'bpm',
+              height: 180,
+              formatY: (v) => v.toInt().toString(),
+            ),
+          ],
         ],
       ),
     );
