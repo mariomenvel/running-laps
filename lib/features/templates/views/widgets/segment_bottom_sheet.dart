@@ -89,6 +89,14 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
   @override
   void initState() {
     super.initState();
+    debugPrint('[Sheet] initialSegment=${widget.initialSegment}');
+    debugPrint('[Sheet] initialSegment.alerts=${widget.initialSegment?.alerts}');
+    if (widget.initialSegment?.alerts != null) {
+      debugPrint('[Sheet] alerts.enabled=${widget.initialSegment!.alerts!.enabled}');
+      debugPrint('[Sheet] alerts.mode=${widget.initialSegment!.alerts!.mode}');
+      debugPrint('[Sheet] alerts.timeMin=${widget.initialSegment!.alerts!.timeMin}');
+      debugPrint('[Sheet] alerts.timeSec=${widget.initialSegment!.alerts!.timeSec}');
+    }
     final s = widget.initialSegment;
     _type = s?.type ?? SegmentType.interval;
     _byDistance = s == null ? true : s.distanceM != null;
@@ -184,6 +192,7 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
       segmentDistanceM: _alertDistanceM,
     );
 
+    debugPrint('[Sheet] guardando alerts: enabled=$_alertEnabled mode=${_alertByTime ? "time" : "pace"} timeMin=$_alertTimeMin timeSec=$_alertTimeSec');
     return WorkoutSegment(
       id: widget.initialSegment?.id ?? const Uuid().v4(),
       type: _type,

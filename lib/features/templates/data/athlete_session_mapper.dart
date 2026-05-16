@@ -246,12 +246,16 @@ List<WorkoutSegment> _mapSegments(SessionBlock block) {
   }
 
   final target = _buildTarget(block);
+  final segmentAlerts = block.alertsMap != null
+      ? SegmentAlerts.fromMap(block.alertsMap!)
+      : null;
 
   segments.add(WorkoutSegment(
     type: SegmentType.interval,
     durationSec: durationSec,
     distanceM: distanceM,
     target: target,
+    alerts: segmentAlerts,
   ));
 
   // Segmento de descanso (solo en bloques tipo series).
@@ -446,6 +450,7 @@ SessionBlock _workoutBlockToSessionBlock(WorkoutBlock block, {required int order
     targetPaceMaxSec: paceMaxSec,
     targetZone:       _zoneToInt(target?.zone),
     targetRpe:        target?.rpe?.toDouble(),
+    alertsMap:        intervalSeg?.alerts?.toMap(),
   );
 }
 

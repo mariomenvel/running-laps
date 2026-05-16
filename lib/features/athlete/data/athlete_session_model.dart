@@ -51,6 +51,7 @@ class SessionBlock {
   final int? targetPaceMaxSec;  // rango pace máximo — segundos
   final double? targetRpe;      // 1.0–10.0
   final int? targetZone;        // 1–5
+  final Map<String, dynamic>? alertsMap;
 
   const SessionBlock({
     required this.id,
@@ -67,6 +68,7 @@ class SessionBlock {
     this.targetPaceMaxSec,
     this.targetRpe,
     this.targetZone,
+    this.alertsMap,
   });
 
   factory SessionBlock.fromMap(Map<String, dynamic> map) {
@@ -85,6 +87,9 @@ class SessionBlock {
       targetPaceMaxSec: map['targetPaceMaxSec'] as int?,
       targetRpe:        (map['targetRpe'] as num?)?.toDouble(),
       targetZone:       map['targetZone'] as int?,
+      alertsMap:        map['alerts'] != null
+                          ? Map<String, dynamic>.from(map['alerts'] as Map)
+                          : null,
     );
   }
 
@@ -104,6 +109,7 @@ class SessionBlock {
       if (targetPaceMaxSec != null) 'targetPaceMaxSec': targetPaceMaxSec,
       if (targetRpe        != null) 'targetRpe':        targetRpe,
       if (targetZone       != null) 'targetZone':       targetZone,
+      if (alertsMap        != null) 'alerts':           alertsMap,
     };
   }
 
@@ -122,6 +128,7 @@ class SessionBlock {
     Object? targetPaceMaxSec = _sentinel,
     Object? targetRpe        = _sentinel,
     Object? targetZone       = _sentinel,
+    Object? alertsMap        = _sentinel,
   }) {
     return SessionBlock(
       id:               id               ?? this.id,
@@ -138,6 +145,7 @@ class SessionBlock {
       targetPaceMaxSec: targetPaceMaxSec == _sentinel ? this.targetPaceMaxSec : targetPaceMaxSec as int?,
       targetRpe:        targetRpe        == _sentinel ? this.targetRpe        : targetRpe        as double?,
       targetZone:       targetZone       == _sentinel ? this.targetZone       : targetZone       as int?,
+      alertsMap:        alertsMap        == _sentinel ? this.alertsMap        : alertsMap        as Map<String, dynamic>?,
     );
   }
 }

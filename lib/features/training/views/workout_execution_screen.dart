@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/services/heart_rate_service.dart';
 import '../../../core/utils/app_transitions.dart';
 import '../../athlete/data/athlete_session_model.dart';
 import '../../athlete/data/athlete_session_repository.dart';
@@ -13,6 +16,7 @@ import '../data/serie.dart';
 import '../data/workout_execution_controller.dart';
 import '../data/workout_execution_state.dart';
 import 'block_transition_screen.dart';
+import 'session_screens/rest/rest_screen.dart';
 import 'training_session_view.dart';
 import 'training_summary_screen.dart';
 
@@ -39,6 +43,7 @@ class WorkoutExecutionScreen extends StatefulWidget {
 
 class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
   late WorkoutExecutionController _controller;
+  bool _launchInFlight = false;
 
   @override
   void initState() {
@@ -60,6 +65,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
   }
 
   void _onPhaseChanged() {
+    if (_launchInFlight) return;
     final phase = _controller.value.phase;
     if (phase == ExecutionPhase.warmup ||
         phase == ExecutionPhase.main ||
@@ -71,12 +77,26 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
   }
 
   Future<void> _launchCurrentRep() async {
+    if (_launchInFlight) return;
     if (!mounted) return;
+    _launchInFlight = true;
+    try {
     final params = _controller.paramsForCurrentRep();
 
-    final currentSegment = _controller.value.currentBlock?.block.segments
+    final block = _controller.value.currentBlock.block;
+    final currentSegment = block.segments
         .where((s) => s.type == SegmentType.interval)
         .firstOrNull;
+    final restSegment = block.segments
+        .where((s) => s.type == SegmentType.recovery)
+        .firstOrNull;
+    final hasRest = restSegment?.durationSec != null &&
+                    restSegment!.durationSec! > 0;
+
+    final completedReps = _controller.value.currentBlock.completedReps;
+    final totalReps = _controller.value.currentBlock.totalReps;
+    final isLastRep = completedReps + 1 >= totalReps;
+
     final alarmIntervalMs = currentSegment?.alerts?.enabled == true
         ? currentSegment!.alerts!.toAlarmIntervalMs()
         : null;
@@ -86,6 +106,11 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     debugPrint('[Launch] targetPaceMaxMinutes=${params['targetPaceMaxMinutes']}');
     debugPrint('[Launch] targetRpe=${params['targetRpe']}');
     debugPrint('[Launch] targetZone=${params['targetZone']}');
+    debugPrint('[Rest] restSegment=$restSegment');
+    debugPrint('[Rest] durationSec=${restSegment?.durationSec}');
+    debugPrint('[Rest] hasRest=$hasRest');
+    debugPrint('[Rest] completedReps=$completedReps totalReps=$totalReps');
+    debugPrint('[Rest] isLastRep=$isLastRep');
 
     final result = await Navigator.of(context).push<Serie>(
       AppRoute(
@@ -103,12 +128,103 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
           targetZone: params['targetZone'],
           fcMax: widget.fcMax?.round(),
           alarmIntervalMs: alarmIntervalMs,
+          session: widget.session,
+          currentBlock: _controller.value.currentBlock.block,
+          currentSegment: currentSegment,
         ),
       ),
     );
-    if (result is Serie && mounted) {
+    if (result != null && mounted) {
       _onSerieComplete(result);
+      debugPrint('[Rest] tras recordSerie, intentando rest');
+      debugPrint('[Rest] mounted=$mounted hasRest=$hasRest isLastRep=$isLastRep');
+
+      if (!isLastRep && hasRest && mounted) {
+        await _launchRestScreen(
+          restSegment!.durationSec!,
+          _controller.value.currentBlock.completedReps + 1,
+          totalReps,
+        );
+
+        if (mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _launchCurrentRep();
+          });
+        }
+      }
     }
+    } finally {
+      _launchInFlight = false;
+    }
+  }
+
+  Future<void> _launchRestScreen(
+    int restDurationSec,
+    int nextRepNumber,
+    int totalReps,
+  ) async {
+    debugPrint('[RestLaunch] METHOD ENTERED dur=$restDurationSec next=$nextRepNumber/$totalReps');
+
+    final elapsedNotifier = ValueNotifier<Duration>(Duration.zero);
+    final stopwatch = Stopwatch()..start();
+    Timer? timer;
+
+    timer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      elapsedNotifier.value = stopwatch.elapsed;
+      debugPrint('[RestLaunch] tick: elapsed=${stopwatch.elapsed.inSeconds}s, target=${restDurationSec}s');
+      if (stopwatch.elapsed.inSeconds >= restDurationSec) {
+        debugPrint('[RestLaunch] auto-cerrando por tiempo');
+        timer?.cancel();
+        stopwatch.stop();
+        if (mounted) Navigator.of(context).pop();
+      }
+    });
+
+    final fcStartedAt = HeartRateService().heartRate.value;
+
+    final nextSeg = _controller.value.currentBlock.block.segments
+        .where((s) => s.type == SegmentType.interval)
+        .firstOrNull;
+    String? nextInfo;
+    if (nextSeg != null) {
+      final dist = nextSeg.distanceM != null ? '${nextSeg.distanceM}m' : '';
+      final pace = nextSeg.target?.paceMinSecPerKm != null
+          ? ' @ ${nextSeg.target!.paceMinSecPerKm! ~/ 60}:${(nextSeg.target!.paceMinSecPerKm! % 60).toString().padLeft(2, '0')}'
+          : '';
+      nextInfo = '$dist$pace'.trim().isEmpty ? null : '$dist$pace'.trim();
+    }
+
+    debugPrint('[RestLaunch] session=${widget.session.title}');
+    debugPrint('[RestLaunch] nextInfo=$nextInfo');
+    debugPrint('[RestLaunch] fcStartedAt=$fcStartedAt');
+
+    try {
+      debugPrint('[RestLaunch] about to push');
+      await Navigator.of(context).push(
+        AppRoute(
+          page: RestScreen(
+            session: widget.session,
+            restDurationSec: restDurationSec,
+            nextRepNumber: nextRepNumber,
+            totalReps: totalReps,
+            nextRepInfo: nextInfo,
+            fcStartedAt: fcStartedAt,
+            onSkip: () => Navigator.of(context).pop(),
+            elapsedNotifier: elapsedNotifier,
+            fcNotifier: HeartRateService().heartRate,
+            fcZoneNotifier: ValueNotifier<int?>(null),
+          ),
+        ),
+      );
+      debugPrint('[RestLaunch] push returned');
+    } catch (e, st) {
+      debugPrint('[RestLaunch] ERROR: $e');
+      debugPrint('[RestLaunch] stack: $st');
+    }
+
+    timer?.cancel();
+    stopwatch.stop();
+    elapsedNotifier.dispose();
   }
 
 

@@ -17,6 +17,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/services/gps_service.dart';
 import '../../../core/services/zones_service.dart';
 import '../../../core/services/heart_rate_service.dart';
+import '../../templates/data/workout_session.dart';
+import '../../templates/data/workout_block.dart';
+import '../../templates/data/workout_segment.dart';
+import 'session_screens/session_screen_router.dart';
+import 'session_screens/intra/interval_screen.dart';
+import 'session_screens/intra/continuous_screen.dart';
+import 'session_screens/intra/fartlek_screen.dart';
+import 'session_screens/intra/hills_screen.dart';
+import 'session_screens/intra/competition_screen.dart';
+import 'session_screens/intra/free_screen.dart';
 
 
 class TrainingSessionView extends StatefulWidget {
@@ -36,6 +46,11 @@ class TrainingSessionView extends StatefulWidget {
   final int? targetZone;
   final int? fcMax;
 
+  // Pantallas nuevas — opcionales para mantener compatibilidad con flujos legacy
+  final WorkoutSession? session;
+  final WorkoutBlock? currentBlock;
+  final WorkoutSegment? currentSegment;
+
   const TrainingSessionView({
     Key? key,
     required this.distancia,
@@ -51,6 +66,9 @@ class TrainingSessionView extends StatefulWidget {
     this.targetRpe,
     this.targetZone,
     this.fcMax,
+    this.session,
+    this.currentBlock,
+    this.currentSegment,
   }) : super(key: key);
 
 
@@ -83,11 +101,20 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
   String _ritmoActual = "--:-- /km";
   Timer? _gpsUpdateTimer;
 
+  // --- Notifiers para pantallas nuevas ---
+  final ValueNotifier<Duration> _tiempoNotifier = ValueNotifier<Duration>(Duration.zero);
+  final ValueNotifier<double> _distanciaMNotifier = ValueNotifier<double>(0.0);
+  final ValueNotifier<int?> _fcZoneNotifier = ValueNotifier<int?>(null);
+  final ValueNotifier<bool> _beepPulse = ValueNotifier<bool>(false);
+
   // NUEVO: Momento exacto en que se detuvo la serie
   DateTime? _finishedAt;
 
   // --- Acumulador FC para media de la serie ---
   final List<int> _hrReadings = [];
+
+  // --- Feature flag: activa las pantallas nuevas cuando session != null ---
+  static const bool _useNewScreens = true;
 
   // --- Demo mode (set to false for production) ---
   static const bool _demoMode = false;
@@ -124,6 +151,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     // Suscribirse a FC para acumular lecturas durante la serie
     HeartRateService().heartRate.addListener(_onHrChanged);
     HeartRateService().connectionState.addListener(_onHrChanged);
+    HeartRateService().heartRate.addListener(_onHrChangedForZone);
 
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1500),
@@ -180,6 +208,11 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
         mode: mode,
         serieNumber: widget.currentSeries ?? 1,
       );
+      // Mantener _distanciaMNotifier sincronizado con GPS
+      _gpsService!.totalDistanceMeters.addListener(() {
+        _distanciaMNotifier.value =
+            _gpsService!.totalDistanceMeters.value.toDouble();
+      });
       // UI is reactive via ValueListenableBuilder; a single rebuild gives
       // builders access to the now-initialised _gpsService.
       setState(() {});
@@ -237,6 +270,16 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     }
   }
 
+  void _onHrChangedForZone() {
+    final hr = HeartRateService().heartRate.value;
+    final fcMax = widget.fcMax;
+    if (hr != null && fcMax != null) {
+      _fcZoneNotifier.value = ZonesService().zoneFor(hr, fcMax);
+    } else {
+      _fcZoneNotifier.value = null;
+    }
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && _stopwatch.isRunning) {
@@ -254,6 +297,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     HeartRateService().heartRate.removeListener(_onHrChanged);
+    HeartRateService().heartRate.removeListener(_onHrChangedForZone);
     HeartRateService().connectionState.removeListener(_onHrChanged);
     _pulseController.dispose();
     _fadeController.dispose();
@@ -264,6 +308,10 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     _gpsService?.notificationAction.removeListener(_onNotificationAction);
     _gpsService?.dispose();
     _stopwatch.stop();
+    _tiempoNotifier.dispose();
+    _distanciaMNotifier.dispose();
+    _fcZoneNotifier.dispose();
+    _beepPulse.dispose();
     super.dispose();
   }
 
@@ -279,6 +327,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
         setState(() {
           _tiempoMostrado = _formatTiempo(_stopwatch.elapsed);
         });
+        _tiempoNotifier.value = _stopwatch.elapsed;
         // When GPS is off, keep the foreground notification elapsed in sync.
         if (!widget.gpsActivo) {
           _gpsService?.setExternalElapsed(
@@ -305,17 +354,21 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     _beepTimer?.cancel();
 
     if (_alarmIntervalMs != null && _alarmIntervalMs! > 0 && _isRunning) {
+      debugPrint('[Beep] timer iniciado, intervalo=${_alarmIntervalMs}ms');
       _beepTimer = Timer.periodic(Duration(milliseconds: _alarmIntervalMs!), (
         Timer timer,
       ) {
-        // 1. Sonido (Notificación fuerte)
+        debugPrint('[Beep] tick');
+        // 1. Sonido + vibración
         FlutterRingtonePlayer().playNotification();
+        HapticFeedback.heavyImpact();
 
         // 2. Efecto Visual (Pulse)
         if (mounted) {
           setState(() {
             _isAlarmActive = true;
           });
+          _beepPulse.value = true;
 
           // Apagar el efecto después de 500ms
           Future.delayed(const Duration(milliseconds: 500), () {
@@ -325,8 +378,13 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
               });
             }
           });
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (mounted) _beepPulse.value = false;
+          });
         }
       });
+    } else {
+      debugPrint('[Beep] NO iniciado: alarmIntervalMs=$_alarmIntervalMs, isRunning=$_isRunning');
     }
   }
 
@@ -543,9 +601,15 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
   // UI
   // ===================================================================
 
-
   @override
   Widget build(BuildContext context) {
+    if (_useNewScreens && widget.session != null) {
+      return _buildNewScreen();
+    }
+    return _buildLegacyContent();
+  }
+
+  Widget _buildLegacyContent() {
     final bool isLibre = widget.distancia == 'Libre';
     return Scaffold(
       body: Stack(
@@ -575,8 +639,167 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                 ),
               ),
             ),
+          ValueListenableBuilder<bool>(
+            valueListenable: _beepPulse,
+            builder: (_, pulse, __) {
+              return IgnorePointer(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: pulse
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.transparent,
+                      width: 6,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildNewScreen() {
+    final session = widget.session;
+    final currentBlock = widget.currentBlock;
+    final currentSegment = widget.currentSegment;
+
+    if (session == null || currentBlock == null || currentSegment == null) {
+      return _buildLegacyContent();
+    }
+
+    final router = SessionScreenRouter(
+      session: session,
+      currentBlock: currentBlock,
+      currentSegment: currentSegment,
+    );
+
+    final paceNotifier =
+        _gpsService?.currentPace ?? ValueNotifier<String>('--:--');
+
+    Widget screenWidget;
+    switch (router.kind) {
+      case SessionScreenKind.interval:
+        screenWidget = IntervalScreen(
+          session: session,
+          currentBlock: currentBlock,
+          currentSegment: currentSegment,
+          currentRep: widget.currentSeries ?? 1,
+          totalReps: widget.totalSeries ?? 1,
+          gpsActivo: widget.gpsActivo,
+          fcMax: widget.fcMax,
+          onFinish: _finishSeries,
+          distanciaMNotifier: _distanciaMNotifier,
+          paceNotifier: paceNotifier,
+          tiempoNotifier: _tiempoNotifier,
+          fcNotifier: HeartRateService().heartRate,
+          fcZoneNotifier: _fcZoneNotifier,
+        );
+      case SessionScreenKind.continuous:
+        screenWidget = ContinuousScreen(
+          session: session,
+          currentBlock: currentBlock,
+          currentSegment: currentSegment,
+          gpsActivo: widget.gpsActivo,
+          fcMax: widget.fcMax,
+          onFinish: _finishSeries,
+          distanciaMNotifier: _distanciaMNotifier,
+          paceNotifier: paceNotifier,
+          tiempoNotifier: _tiempoNotifier,
+          fcNotifier: HeartRateService().heartRate,
+          fcZoneNotifier: _fcZoneNotifier,
+        );
+      case SessionScreenKind.fartlek:
+        screenWidget = FartlekScreen(
+          isHighIntensity: true,
+          session: session,
+          currentBlock: currentBlock,
+          currentSegment: currentSegment,
+          currentRep: widget.currentSeries ?? 1,
+          totalReps: widget.totalSeries ?? 1,
+          gpsActivo: widget.gpsActivo,
+          fcMax: widget.fcMax,
+          onFinish: _finishSeries,
+          distanciaMNotifier: _distanciaMNotifier,
+          paceNotifier: paceNotifier,
+          tiempoNotifier: _tiempoNotifier,
+          fcNotifier: HeartRateService().heartRate,
+          fcZoneNotifier: _fcZoneNotifier,
+        );
+      case SessionScreenKind.hills:
+        screenWidget = HillsScreen(
+          session: session,
+          currentBlock: currentBlock,
+          currentSegment: currentSegment,
+          currentRep: widget.currentSeries ?? 1,
+          totalReps: widget.totalSeries ?? 1,
+          gpsActivo: widget.gpsActivo,
+          fcMax: widget.fcMax,
+          onFinish: _finishSeries,
+          distanciaMNotifier: _distanciaMNotifier,
+          paceNotifier: paceNotifier,
+          tiempoNotifier: _tiempoNotifier,
+          fcNotifier: HeartRateService().heartRate,
+          fcZoneNotifier: _fcZoneNotifier,
+        );
+      case SessionScreenKind.competition:
+        screenWidget = CompetitionScreen(
+          session: session,
+          currentBlock: currentBlock,
+          currentSegment: currentSegment,
+          gpsActivo: widget.gpsActivo,
+          fcMax: widget.fcMax,
+          onFinish: _finishSeries,
+          distanciaMNotifier: _distanciaMNotifier,
+          paceNotifier: paceNotifier,
+          tiempoNotifier: _tiempoNotifier,
+          fcNotifier: HeartRateService().heartRate,
+          fcZoneNotifier: _fcZoneNotifier,
+        );
+      case SessionScreenKind.free:
+        screenWidget = FreeScreen(
+          session: session,
+          currentBlock: currentBlock,
+          currentSegment: currentSegment,
+          gpsActivo: widget.gpsActivo,
+          fcMax: widget.fcMax,
+          onFinish: _finishSeries,
+          distanciaMNotifier: _distanciaMNotifier,
+          paceNotifier: paceNotifier,
+          tiempoNotifier: _tiempoNotifier,
+          fcNotifier: HeartRateService().heartRate,
+          fcZoneNotifier: _fcZoneNotifier,
+        );
+      case SessionScreenKind.rest:
+        // RestScreen tiene firma distinta — fallback al legacy por ahora
+        return _buildLegacyContent();
+    }
+
+    return Stack(
+      children: [
+        screenWidget,
+        ValueListenableBuilder<bool>(
+          valueListenable: _beepPulse,
+          builder: (_, pulse, __) {
+            return IgnorePointer(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: pulse
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.transparent,
+                    width: 6,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 
