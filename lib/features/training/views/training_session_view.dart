@@ -9,6 +9,7 @@ import '../../../core/widgets/modern_snackbar.dart';
 import '../../../core/services/settings_service.dart';
 
 import '../data/serie.dart';
+import '../data/fc_reading.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/constants/app_help_content.dart';
@@ -111,7 +112,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
   DateTime? _finishedAt;
 
   // --- Acumulador FC para media de la serie ---
-  final List<int> _hrReadings = [];
+  final List<FcReading> _hrReadings = [];
 
   // --- Feature flag: activa las pantallas nuevas cuando session != null ---
   static const bool _useNewScreens = true;
@@ -266,7 +267,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     final hr    = HeartRateService().heartRate.value;
     final state = HeartRateService().connectionState.value;
     if (hr != null && hr > 0 && state == HrConnectionState.connected) {
-      _hrReadings.add(hr);
+      _hrReadings.add(FcReading(bpm: hr, timestamp: DateTime.now()));
     }
   }
 
@@ -454,10 +455,10 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     final double tiempoFinalSec = _stopwatch.elapsed.inMilliseconds / 1000.0;
 
     // FC media acumulada durante la serie
-    final List<int>? fcReadings = _hrReadings.isNotEmpty
-        ? List<int>.from(_hrReadings) : null;
+    final List<FcReading>? fcReadings = _hrReadings.isNotEmpty
+        ? List<FcReading>.from(_hrReadings) : null;
     final double? fcMedia = fcReadings != null
-        ? fcReadings.reduce((a, b) => a + b) / fcReadings.length
+        ? fcReadings.map((r) => r.bpm).reduce((a, b) => a + b) / fcReadings.length
         : null;
     debugPrint('[FC] Serie terminada — lecturas: ${fcReadings?.length ?? 0}, media: $fcMedia');
     _hrReadings.clear();
@@ -495,10 +496,10 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     final double tiempoFinalSec = _stopwatch.elapsed.inMilliseconds / 1000.0;
 
     // FC media acumulada durante la serie
-    final List<int>? fcReadings = _hrReadings.isNotEmpty
-        ? List<int>.from(_hrReadings) : null;
+    final List<FcReading>? fcReadings = _hrReadings.isNotEmpty
+        ? List<FcReading>.from(_hrReadings) : null;
     final double? fcMedia = fcReadings != null
-        ? fcReadings.reduce((a, b) => a + b) / fcReadings.length
+        ? fcReadings.map((r) => r.bpm).reduce((a, b) => a + b) / fcReadings.length
         : null;
     debugPrint('[FC] Serie GPS terminada — lecturas: ${fcReadings?.length ?? 0}, media: $fcMedia');
     _hrReadings.clear();

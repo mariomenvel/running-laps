@@ -171,7 +171,7 @@ class SummaryStatsCalculator {
       // Buscar pico en lecturas
       if (s.fcReadings != null) {
         for (final r in s.fcReadings!) {
-          if (r > fcPeak) fcPeak = r;
+          if (r.bpm > fcPeak) fcPeak = r.bpm;
         }
       }
     }

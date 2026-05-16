@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'fc_reading.dart';
 
 class Serie {
   final double tiempoSec;   // tiempo activo de la serie (Secundos)
@@ -18,7 +19,7 @@ class Serie {
   final double? fcMedia;
 
   // Lecturas BPM punto a punto durante la serie, null si no hay pulsómetro
-  final List<int>? fcReadings;
+  final List<FcReading>? fcReadings;
 
   Serie({
     required this.tiempoSec,
@@ -73,7 +74,8 @@ class Serie {
       if (gpsPoints != null) 'gpsPoints': gpsPoints,
       if (finishedAt != null) 'finishedAt': finishedAt!.toIso8601String(),
       if (fcMedia != null) 'fcMedia': fcMedia,
-      if (fcReadings != null && fcReadings!.isNotEmpty) 'fcReadings': fcReadings,
+      if (fcReadings != null && fcReadings!.isNotEmpty)
+        'fcReadings': fcReadings!.map((r) => r.toMap()).toList(),
     };
   }
 
@@ -102,9 +104,15 @@ class Serie {
         return finishedAt;
       }(),
       fcMedia: (map['fcMedia'] as num?)?.toDouble(),
-      fcReadings: (map['fcReadings'] as List<dynamic>?)
-          ?.map((e) => (e as num).toInt())
-          .toList(),
+      fcReadings: map['fcReadings'] != null
+          ? (map['fcReadings'] as List).map((e) {
+              if (e is Map) return FcReading.fromMap(Map<String, dynamic>.from(e));
+              return FcReading(
+                bpm: (e as num).toInt(),
+                timestamp: DateTime.fromMillisecondsSinceEpoch(0),
+              );
+            }).toList()
+          : null,
     );
   }
 
@@ -136,7 +144,7 @@ class Serie {
       fcMedia:         identical(fcMedia, _sentinel)
           ? this.fcMedia         : fcMedia as double?,
       fcReadings:      identical(fcReadings, _sentinel)
-          ? this.fcReadings      : fcReadings as List<int>?,
+          ? this.fcReadings      : fcReadings as List<FcReading>?,
     );
   }
 }

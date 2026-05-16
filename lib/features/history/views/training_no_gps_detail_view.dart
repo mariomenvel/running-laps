@@ -678,7 +678,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
   Widget _buildFcChart() {
     final allReadings = training.series
         .where((s) => s.fcReadings != null && s.fcReadings!.isNotEmpty)
-        .expand((s) => s.fcReadings!)
+        .expand((s) => s.fcReadings!.map((r) => r.bpm))
         .toList();
     if (allReadings.isEmpty) return const SizedBox.shrink();
 

@@ -403,7 +403,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
   Widget _buildFcSection() {
     final allReadings = training.series
         .where((s) => s.fcReadings != null && s.fcReadings!.isNotEmpty)
-        .expand((s) => s.fcReadings!)
+        .expand((s) => s.fcReadings!.map((r) => r.bpm))
         .toList();
     if (allReadings.isEmpty) return const SizedBox.shrink();
 
@@ -797,7 +797,7 @@ class _SerieExpansionTileState extends State<_SerieExpansionTile> {
     debugPrint('[SerieExpansionTile] serieIndex=$i, plannedTarget=${widget.plannedTarget}');
     final rpeColor = AppColors.effortColor(serie.rpe.toDouble());
     final hasFc = serie.fcReadings != null &&
-        (serie.fcReadings as List).isNotEmpty;
+        (serie.fcReadings as List).isNotEmpty; // List<FcReading>
 
     return Theme(
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -891,7 +891,9 @@ class _SerieExpansionTileState extends State<_SerieExpansionTile> {
   }
 
   Widget _buildSerieChart(BuildContext context, dynamic serie, bool hasFc) {
-    final fcReadings = hasFc ? (serie.fcReadings as List<int>) : <int>[];
+    final fcBpms = hasFc
+        ? (serie.fcReadings as List).map((r) => (r.bpm as int)).toList()
+        : <int>[];
 
     // Build pace points from GPS points if available, otherwise skip pace chart
     final gpsPoints = serie.gpsPoints as List?;
@@ -909,9 +911,9 @@ class _SerieExpansionTileState extends State<_SerieExpansionTile> {
     }
 
     final fcPoints = <FlSpot>[];
-    if (fcReadings.length >= 3) {
-      for (int j = 0; j < fcReadings.length; j++) {
-        fcPoints.add(FlSpot(j.toDouble(), fcReadings[j].toDouble()));
+    if (fcBpms.length >= 3) {
+      for (int j = 0; j < fcBpms.length; j++) {
+        fcPoints.add(FlSpot(j.toDouble(), fcBpms[j].toDouble()));
       }
     }
 
