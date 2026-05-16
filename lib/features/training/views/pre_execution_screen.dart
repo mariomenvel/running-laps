@@ -86,6 +86,7 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
         AppRoute(
           page: WorkoutExecutionScreen(
             session: _session,
+            originalSession: _originalSession,
             athleteSession: widget.athleteSession,
             gpsActivo: _gpsOn,
             fcMax: _fcMax,

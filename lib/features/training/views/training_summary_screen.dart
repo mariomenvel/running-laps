@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 
 import '../data/entrenamiento.dart';
+import '../data/serie.dart';
 import '../data/training_repository.dart';
 import '../data/tag_manager.dart';
 import '../data/tag_model.dart';
@@ -162,6 +163,87 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
     final m = secKm ~/ 60;
     final s = secKm % 60;
     return '$m:${s.toString().padLeft(2, '0')}';
+  }
+
+  String _formatPaceSec(int? secPerKm) {
+    if (secPerKm == null) return '—';
+    return '${secPerKm ~/ 60}:${(secPerKm % 60).toString().padLeft(2, '0')}';
+  }
+
+  String _formatPaceRange(int? min, int? max) {
+    if (min == null && max == null) return '—';
+    if (min == null) return '${_formatPaceSec(max)} /km';
+    if (max == null) return '${_formatPaceSec(min)} /km';
+    return '${_formatPaceSec(min)} – ${_formatPaceSec(max)} /km';
+  }
+
+  Color _deltaColor(BuildContext context, double delta) {
+    if (delta.abs() <= 5) return AppColors.rpeLow;
+    if (delta.abs() <= 20) return AppColors.rpeMid;
+    return AppColors.rpeMax;
+  }
+
+  List<Map<String, dynamic>?> _extractPlannedTargetsPerSeries() {
+    final pc = widget.entrenamiento.plannedComparison;
+    if (pc == null) return [];
+    final blocks = pc['blocks'] as List? ?? [];
+    final result = <Map<String, dynamic>?>[];
+    for (final block in blocks) {
+      final role = block['role'] as String?;
+      if (role != 'main') continue;
+      final reps = (block['plannedReps'] as num?)?.toInt() ?? 1;
+      final segments = block['segments'] as List? ?? [];
+      for (var r = 0; r < reps; r++) {
+        for (final seg in segments) {
+          result.add({
+            'distanceM': seg['plannedDistanceM'],
+            'durationSec': seg['plannedDurationSec'],
+            'target': seg['target'],
+          });
+        }
+      }
+    }
+    return result;
+  }
+
+  int _totalPlannedMainReps() {
+    final pc = widget.entrenamiento.plannedComparison;
+    if (pc == null) return 0;
+    int total = 0;
+    for (final block in pc['blocks'] as List? ?? []) {
+      if (block['role'] == 'main') {
+        total += (block['plannedReps'] as num?)?.toInt() ?? 0;
+      }
+    }
+    return total;
+  }
+
+  List<Serie> _mainSeriesForComparison() {
+    final pc = widget.entrenamiento.plannedComparison;
+    if (pc == null) return widget.entrenamiento.series;
+
+    final executedBlocks = pc['executedBlocks'] as List?;
+    final blocks = executedBlocks ?? (pc['blocks'] as List? ?? []);
+
+    int currentIndex = 0;
+    for (final block in blocks) {
+      final role = block['role'] as String?;
+      final reps = (block['reps'] as num?)?.toInt()
+                ?? (block['plannedReps'] as num?)?.toInt()
+                ?? 1;
+      final segments = (block['segmentsCount'] as num?)?.toInt()
+                    ?? (block['segments'] as List?)?.length
+                    ?? 1;
+      final totalForBlock = reps * segments;
+      if (role == 'main') {
+        return widget.entrenamiento.series
+            .skip(currentIndex)
+            .take(totalForBlock)
+            .toList();
+      }
+      currentIndex += totalForBlock;
+    }
+    return widget.entrenamiento.series;
   }
 
   String _formatDuration(double totalSec) {
@@ -596,102 +678,152 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
   }
 
   Widget _buildPlannedComparison(Map<String, dynamic> planned) {
-    final series = widget.entrenamiento.series;
-    // planned is a map with per-serie data; render a simple table
+    debugPrint('[Comp] pc=${widget.entrenamiento.plannedComparison}');
+    debugPrint('[Comp] mainSeries.length=${_mainSeriesForComparison().length}');
+    debugPrint('[Comp] plannedTargets=${_extractPlannedTargetsPerSeries()}');
+    final theme = SessionTheme.forType(_getSessionType());
+    final accentColor = theme.primary(context);
+    final mainSeries = _mainSeriesForComparison();
+    final targets = _extractPlannedTargetsPerSeries();
+
+    if (mainSeries.isEmpty) return const SizedBox.shrink();
+
+    final executedCount = mainSeries.length;
+    final plannedCount = _totalPlannedMainReps();
+    final incomplete = plannedCount > 0 && executedCount < plannedCount;
+
+    debugPrint('[CompHdr] entrenamiento.series.length=${widget.entrenamiento.series.length}');
+    debugPrint('[CompHdr] mainSeries=${_mainSeriesForComparison().length}');
+    debugPrint('[CompHdr] totalPlannedMainReps=${_totalPlannedMainReps()}');
+    debugPrint('[CompHdr] pc.blocks=${widget.entrenamiento.plannedComparison?['blocks']}');
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'COMPARATIVA',
-          style: TextStyle(
-            color: AppColors.textSecondary(context),
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 1.5,
-          ),
+        Row(
+          children: [
+            Text(
+              'COMPARATIVA',
+              style: TextStyle(
+                color: accentColor,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.5,
+              ),
+            ),
+            if (plannedCount > 0) ...[
+              const SizedBox(width: 8),
+              Text(
+                '· $executedCount / $plannedCount series',
+                style: TextStyle(
+                  color: incomplete ? AppColors.rpeMid : AppColors.textSecondary(context),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ],
         ),
+        if (incomplete) ...[
+          const SizedBox(height: 4),
+          Text(
+            'Interrumpiste el plan',
+            style: TextStyle(
+              color: AppColors.rpeMid,
+              fontSize: 11,
+            ),
+          ),
+        ],
         const SizedBox(height: 16),
         // Header row
         Row(
           children: [
-            SizedBox(
-              width: 40,
-              child: Text('Serie',
-                  style: TextStyle(
-                      color: AppColors.textSecondary(context), fontSize: 11)),
+            const SizedBox(width: 36),
+            Expanded(
+              child: Text(
+                'Planificado',
+                style: TextStyle(
+                    color: AppColors.textSecondary(context), fontSize: 11),
+              ),
             ),
             Expanded(
-              child: Text('Planificado',
-                  style: TextStyle(
-                      color: AppColors.textSecondary(context), fontSize: 11)),
-            ),
-            Expanded(
-              child: Text('Real',
-                  style: TextStyle(
-                      color: AppColors.textSecondary(context), fontSize: 11)),
+              child: Text(
+                'Real',
+                style: TextStyle(
+                    color: AppColors.textSecondary(context), fontSize: 11),
+              ),
             ),
             SizedBox(
-              width: 56,
-              child: Text('Delta',
-                  textAlign: TextAlign.end,
-                  style: TextStyle(
-                      color: AppColors.textSecondary(context), fontSize: 11)),
+              width: 60,
+              child: Text(
+                'Delta',
+                textAlign: TextAlign.end,
+                style: TextStyle(
+                    color: AppColors.textSecondary(context), fontSize: 11),
+              ),
             ),
           ],
         ),
         const SizedBox(height: 8),
-        ...List.generate(series.length, (i) {
-          final s = series[i];
+        ...List.generate(mainSeries.length, (i) {
+          final s = mainSeries[i];
           if (s.distanciaM == 0) return const SizedBox.shrink();
-          final realPace =
-              (s.tiempoSec / (s.distanciaM / 1000.0)).round();
-          // Try to get planned pace from plannedComparison map
-          final planEntry = planned['series'] is List
-              ? (planned['series'] as List).elementAtOrNull(i)
-              : null;
-          final planPaceSec = planEntry != null
-              ? (planEntry['paceSecKm'] as num?)?.toInt()
-              : null;
-          final delta =
-              planPaceSec != null ? realPace - planPaceSec : null;
+
+          final realPaceSec = (s.tiempoSec / (s.distanciaM / 1000.0)).round();
+          final targetEntry = i < targets.length ? targets[i] : null;
+          final target = targetEntry?['target'] as Map?;
+          final planMin = (target?['paceMinSecPerKm'] as num?)?.toInt();
+          final planMax = (target?['paceMaxSecPerKm'] as num?)?.toInt();
+          final planLabel = (planMin != null || planMax != null)
+              ? _formatPaceRange(planMin, planMax)
+              : '—';
+
+          // Delta vs midpoint of range, or whichever value is available
+          double? delta;
+          if (planMin != null && planMax != null) {
+            delta = realPaceSec - (planMin + planMax) / 2;
+          } else if (planMin != null) {
+            delta = realPaceSec - planMin.toDouble();
+          } else if (planMax != null) {
+            delta = realPaceSec - planMax.toDouble();
+          }
+
           final deltaColor = delta == null
               ? AppColors.textSecondary(context)
-              : (delta <= 0 ? AppColors.rpeLow : AppColors.rpeMax);
+              : _deltaColor(context, delta);
 
           return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.only(bottom: 10),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SizedBox(
-                  width: 40,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.brandSurface,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      'S${i + 1}',
-                      style: const TextStyle(
-                          color: AppColors.brandLight,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700),
-                    ),
+                Container(
+                  width: 28,
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                ),
-                Expanded(
                   child: Text(
-                    planPaceSec != null
-                        ? '${_formatPace(planPaceSec)}/km'
-                        : '—',
+                    'S${i + 1}',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
-                        color: AppColors.textSecondary(context), fontSize: 13),
+                        color: accentColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    planLabel,
+                    style: TextStyle(
+                        color: AppColors.textSecondary(context), fontSize: 12),
                   ),
                 ),
                 Expanded(
                   child: Text(
-                    '${_formatPace(realPace)}/km',
+                    '${_formatPaceSec(realPaceSec)} /km',
                     style: TextStyle(
                         color: AppColors.textPrimary(context),
                         fontSize: 13,
@@ -699,11 +831,11 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
                   ),
                 ),
                 SizedBox(
-                  width: 56,
+                  width: 60,
                   child: Text(
                     delta == null
                         ? '—'
-                        : '${delta <= 0 ? '−' : '+'}${_formatPace(delta.abs())}',
+                        : '${delta <= 0 ? '−' : '+'}${_formatPaceSec(delta.abs().round())}',
                     textAlign: TextAlign.end,
                     style: TextStyle(
                         color: deltaColor,

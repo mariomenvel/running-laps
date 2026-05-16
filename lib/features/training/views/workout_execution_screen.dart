@@ -22,6 +22,7 @@ import 'training_summary_screen.dart';
 
 class WorkoutExecutionScreen extends StatefulWidget {
   final WorkoutSession session;
+  final WorkoutSession? originalSession;
   final AthleteSession? athleteSession;
   final VoidCallback? onCompleted;
   final bool gpsActivo;
@@ -30,6 +31,7 @@ class WorkoutExecutionScreen extends StatefulWidget {
   const WorkoutExecutionScreen({
     super.key,
     required this.session,
+    this.originalSession,
     this.athleteSession,
     this.onCompleted,
     this.gpsActivo = true,
@@ -282,6 +284,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
             return _DoneLoader(
               state: state,
               session: widget.session,
+              originalSession: widget.originalSession,
               athleteSession: widget.athleteSession,
               onCompleted: widget.onCompleted,
             );
@@ -298,12 +301,14 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
 class _DoneLoader extends StatefulWidget {
   final WorkoutExecutionState state;
   final WorkoutSession session;
+  final WorkoutSession? originalSession;
   final AthleteSession? athleteSession;
   final VoidCallback? onCompleted;
 
   const _DoneLoader({
     required this.state,
     required this.session,
+    this.originalSession,
     required this.athleteSession,
     required this.onCompleted,
   });
@@ -371,6 +376,13 @@ class _DoneLoaderState extends State<_DoneLoader> {
             })
             .toList(),
       }).toList(),
+      'executedBlocks': widget.session.blocks.map((block) => {
+        'role': block.role.name,
+        'reps': block.repetitions,
+        'segmentsCount': block.segments
+            .where((s) => s.type == SegmentType.interval)
+            .length,
+      }).toList(),
     };
   }
 
@@ -398,7 +410,7 @@ class _DoneLoaderState extends State<_DoneLoader> {
       fcMediaSesion: fcMediaSesion,
       notas: '',
       tags: _tagsFromSession(state.session),
-      plannedComparison: _buildPlannedComparison(widget.session),
+      plannedComparison: _buildPlannedComparison(widget.originalSession ?? widget.session),
     );
   }
 
