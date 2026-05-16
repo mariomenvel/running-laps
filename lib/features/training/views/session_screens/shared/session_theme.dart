@@ -44,14 +44,14 @@ class _IntervalsTheme implements SessionTheme {
   @override
   Color primary(BuildContext context) => const Color(0xFFB85C38); // terracota
   @override
-  Color accent(BuildContext context) => const Color(0xFFE94560);  // rojo
+  Color accent(BuildContext context) => const Color(0xFF8B3A1F);  // terracota oscuro
   @override
   Color background(BuildContext context) =>
       Theme.of(context).scaffoldBackgroundColor;
   @override
   Gradient? backgroundGradient(BuildContext context) => null;
   @override
-  Widget? backgroundDecoration(BuildContext context) => null; // TODO: pista oval
+  Widget? backgroundDecoration(BuildContext context) => null;
   @override
   TextStyle heroMetricStyle(BuildContext context) => TextStyle(
         fontSize: 88,
@@ -65,7 +65,7 @@ class _IntervalsTheme implements SessionTheme {
   SessionTheme dualMode(bool isHighIntensity) => this;
 }
 
-// ─── CONTINUOUS — verde/azul suave ───
+// ─── CONTINUOUS — azul-verde suave, sin gradient (calma, constancia) ───
 class _ContinuousTheme implements SessionTheme {
   @override
   WorkoutType get sessionType => WorkoutType.continuous;
@@ -73,7 +73,7 @@ class _ContinuousTheme implements SessionTheme {
   @override
   Color primary(BuildContext context) => const Color(0xFF4A90A4); // azul-verde
   @override
-  Color accent(BuildContext context) => const Color(0xFF7FB069);  // verde suave
+  Color accent(BuildContext context) => const Color(0xFF6BA88A);  // verde tranquilo
   @override
   Color background(BuildContext context) =>
       Theme.of(context).scaffoldBackgroundColor;
@@ -142,7 +142,7 @@ class _FartlekTheme implements SessionTheme {
       _FartlekTheme(isHighIntensity: isHighIntensity);
 }
 
-// ─── HILLS — marrón/tierra + verde montaña ───
+// ─── HILLS — marrón tierra con gradient hacia rojo arriba (esfuerzo creciente) ───
 class _HillsTheme implements SessionTheme {
   @override
   WorkoutType get sessionType => WorkoutType.hills;
@@ -150,7 +150,7 @@ class _HillsTheme implements SessionTheme {
   @override
   Color primary(BuildContext context) => const Color(0xFF8B5A3C); // marrón tierra
   @override
-  Color accent(BuildContext context) => const Color(0xFF606C38);  // verde oliva
+  Color accent(BuildContext context) => const Color(0xFFC1502E);  // rojo cuesta
   @override
   Color background(BuildContext context) =>
       Theme.of(context).scaffoldBackgroundColor;
@@ -159,7 +159,7 @@ class _HillsTheme implements SessionTheme {
       const LinearGradient(
         begin: Alignment.bottomCenter,
         end: Alignment.topCenter,
-        colors: [Color(0x338B5A3C), Color(0x33D62828)],
+        colors: [Color(0x228B5A3C), Color(0x33C1502E)],
       );
   @override
   Widget? backgroundDecoration(BuildContext context) => null;
@@ -176,25 +176,20 @@ class _HillsTheme implements SessionTheme {
   SessionTheme dualMode(bool isHighIntensity) => this;
 }
 
-// ─── COMPETITION — dorado/negro premium ───
+// ─── COMPETITION — dorado sólido, sin gradient (medalla/trofeo) ───
 class _CompetitionTheme implements SessionTheme {
   @override
   WorkoutType get sessionType => WorkoutType.competition;
 
   @override
-  Color primary(BuildContext context) => const Color(0xFFD4AF37); // dorado
+  Color primary(BuildContext context) => const Color(0xFFC9A227); // dorado mate
   @override
-  Color accent(BuildContext context) => const Color(0xFFD62828);  // rojo de meta
+  Color accent(BuildContext context) => const Color(0xFF8B0000);  // rojo de meta
   @override
   Color background(BuildContext context) =>
       Theme.of(context).scaffoldBackgroundColor;
   @override
-  Gradient? backgroundGradient(BuildContext context) =>
-      const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [Color(0x22D4AF37), Color(0x00D4AF37)],
-      );
+  Gradient? backgroundGradient(BuildContext context) => null;
   @override
   Widget? backgroundDecoration(BuildContext context) => null;
   @override
@@ -210,13 +205,13 @@ class _CompetitionTheme implements SessionTheme {
   SessionTheme dualMode(bool isHighIntensity) => this;
 }
 
-// ─── FREE — neutro minimalista ───
+// ─── FREE — gris neutro, sin tema (sin objetivo, sin presión) ───
 class _FreeTheme implements SessionTheme {
   @override
   WorkoutType get sessionType => WorkoutType.free;
 
   @override
-  Color primary(BuildContext context) => AppColors.brand;
+  Color primary(BuildContext context) => const Color(0xFF6B7280); // gris medio
   @override
   Color accent(BuildContext context) => AppColors.textSecondary(context);
   @override

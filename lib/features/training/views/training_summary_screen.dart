@@ -8,9 +8,18 @@ import '../data/training_repository.dart';
 import '../data/tag_manager.dart';
 import '../data/tag_model.dart';
 import '../../history/viewmodels/history_controller.dart';
+import '../../templates/data/workout_session.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/constants/training_tags.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'session_screens/shared/session_theme.dart';
+import '../data/summary_stats_calculator.dart';
+import 'session_screens/summary_cards/interval_stats_card.dart';
+import 'session_screens/summary_cards/continuous_stats_card.dart';
+import 'session_screens/summary_cards/fartlek_stats_card.dart';
+import 'session_screens/summary_cards/hills_stats_card.dart';
+import 'session_screens/summary_cards/competition_stats_card.dart';
+import 'session_screens/summary_cards/free_stats_card.dart';
 
 class TrainingSummaryScreen extends StatefulWidget {
   final Entrenamiento entrenamiento;
@@ -47,6 +56,30 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
   late final double? _fcMedia;
 
   bool get _showRpe => widget.entrenamiento.series.length == 1;
+
+  WorkoutType _getSessionType() {
+    final planned = widget.entrenamiento.plannedComparison;
+    if (planned != null) {
+      final typeStr = planned['type'] as String?;
+      if (typeStr != null) {
+        try {
+          return WorkoutType.values.byName(typeStr);
+        } catch (_) {}
+      }
+    }
+    return WorkoutType.free;
+  }
+
+  String _completionMessage() {
+    switch (_getSessionType()) {
+      case WorkoutType.intervals:   return '¡SERIES COMPLETADAS!';
+      case WorkoutType.continuous:  return '¡RODAJE COMPLETADO!';
+      case WorkoutType.fartlek:     return '¡FARTLEK COMPLETADO!';
+      case WorkoutType.hills:       return '¡CUESTAS CONQUISTADAS!';
+      case WorkoutType.competition: return '¡META!';
+      case WorkoutType.free:        return '¡COMPLETADO!';
+    }
+  }
 
   @override
   void initState() {
@@ -286,52 +319,68 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = SessionTheme.forType(_getSessionType());
+    final gradient = theme.backgroundGradient(context);
+
+    final scrollContent = SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildTop(theme),
+          _divider(),
+          _buildTypeSpecificStats(context, theme),
+          _divider(),
+          if (_showRpe) ...[
+            _buildRpeSlider(),
+            _divider(),
+          ],
+          _buildComparison(),
+          _divider(),
+          _buildTags(),
+          _divider(),
+          _buildNotas(),
+          const SizedBox(height: 32),
+          _buildActions(theme),
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+
     return Scaffold(
       backgroundColor: AppColors.background(context),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildTop(),
-            _divider(),
-            _buildStats(),
-            _divider(),
-            if (_showRpe) ...[
-              _buildRpeSlider(),
-              _divider(),
-            ],
-            _buildComparison(),
-            _divider(),
-            _buildTags(),
-            _divider(),
-            _buildNotas(),
-            const SizedBox(height: 32),
-            _buildActions(),
-            const SizedBox(height: 32),
-          ],
-        ),
-      ),
+      body: gradient != null
+          ? Stack(
+              fit: StackFit.expand,
+              children: [
+                Container(decoration: BoxDecoration(gradient: gradient)),
+                scrollContent,
+              ],
+            )
+          : scrollContent,
     );
   }
 
   // ── _buildTop ─────────────────────────────────────────────────────────────
 
-  Widget _buildTop() {
-    return Column(
-      children: [
+  Widget _buildTop(SessionTheme theme) {
+    return SizedBox(
+      width: double.infinity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
         const SizedBox(height: 32),
         ScaleTransition(
           scale: _checkScale,
-          child: const Icon(
+          child: Icon(
             Icons.check_circle_rounded,
-            color: AppColors.rpeLow,
+            color: theme.primary(context),
             size: 72,
           ),
         ),
         const SizedBox(height: 16),
         Text(
-          '¡Completado!',
+          _completionMessage(),
           textAlign: TextAlign.center,
           style: TextStyle(
             color: AppColors.textPrimary(context),
@@ -358,8 +407,37 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
             fontSize: 13,
           ),
         ),
+        // TODO: detectar marca personal en competition
+        // Buscar entrenos previos del mismo tipo y distancia
+        // Si el tiempo actual es menor → mostrar "¡NUEVA MARCA PERSONAL!"
       ],
+    ),
     );
+  }
+
+  // ── _buildTypeSpecificStats ───────────────────────────────────────────────
+
+  Widget _buildTypeSpecificStats(BuildContext context, SessionTheme theme) {
+    final calculator = SummaryStatsCalculator(
+      entrenamiento: widget.entrenamiento,
+      type: _getSessionType(),
+    );
+    final color = theme.primary(context);
+
+    switch (_getSessionType()) {
+      case WorkoutType.intervals:
+        return IntervalStatsCard(stats: calculator.intervalStats(), accentColor: color);
+      case WorkoutType.continuous:
+        return ContinuousStatsCard(stats: calculator.continuousStats(), accentColor: color);
+      case WorkoutType.fartlek:
+        return FartlekStatsCard(stats: calculator.fartlekStats(), accentColor: color);
+      case WorkoutType.hills:
+        return HillsStatsCard(stats: calculator.hillsStats(), accentColor: color);
+      case WorkoutType.competition:
+        return CompetitionStatsCard(stats: calculator.competitionStats(), accentColor: color);
+      case WorkoutType.free:
+        return FreeStatsCard(stats: calculator.freeStats(), accentColor: color);
+    }
   }
 
   // ── _buildStats ───────────────────────────────────────────────────────────
@@ -1022,7 +1100,8 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
 
   // ── _buildActions ─────────────────────────────────────────────────────────
 
-  Widget _buildActions() {
+  Widget _buildActions(SessionTheme theme) {
+    final saveColor = theme.primary(context);
     return Column(
       children: [
         SizedBox(
@@ -1030,9 +1109,9 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
           child: ElevatedButton(
             onPressed: _isSaving ? null : _saveTraining,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.brand,
+              backgroundColor: saveColor,
               foregroundColor: Colors.white,
-              disabledBackgroundColor: AppColors.brand.withOpacity(0.5),
+              disabledBackgroundColor: saveColor.withOpacity(0.5),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),

@@ -13,6 +13,7 @@ import '../../profile/data/zones_repository.dart';
 import '../../templates/data/workout_block.dart';
 import '../../templates/data/workout_segment.dart';
 import '../../templates/data/workout_session.dart';
+import 'session_screens/shared/session_theme.dart';
 import 'widgets/countdown_dialog.dart';
 import 'workout_execution_screen.dart';
 
@@ -100,86 +101,159 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
     }
   }
 
+  String _typeLabel() {
+    switch (widget.session.type) {
+      case WorkoutType.intervals:   return 'SERIES';
+      case WorkoutType.continuous:  return 'RODAJE';
+      case WorkoutType.fartlek:     return 'FARTLEK';
+      case WorkoutType.hills:       return 'CUESTAS';
+      case WorkoutType.competition: return 'COMPETICIÓN';
+      case WorkoutType.free:        return 'LIBRE';
+    }
+  }
+
+  IconData _typeIcon() {
+    switch (widget.session.type) {
+      case WorkoutType.intervals:   return Icons.timer_outlined;
+      case WorkoutType.continuous:  return Icons.straight;
+      case WorkoutType.fartlek:     return Icons.bolt_outlined;
+      case WorkoutType.hills:       return Icons.terrain_outlined;
+      case WorkoutType.competition: return Icons.emoji_events_outlined;
+      case WorkoutType.free:        return Icons.directions_run;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
+    final theme = SessionTheme.forType(widget.session.type);
+    final gradient = theme.backgroundGradient(context);
+    final decoration = theme.backgroundDecoration(context);
+    final isCompetition = widget.session.type == WorkoutType.competition;
+
+    final content = SafeArea(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.l),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (isCompetition) ...[
+                  Text(
+                    '¡A POR ELLA!',
+                    style: TextStyle(
+                      fontSize: 12,
+                      letterSpacing: 3.0,
+                      fontWeight: FontWeight.w800,
+                      color: theme.primary(context),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                ],
+                Row(
+                  children: [
+                    Icon(_typeIcon(), color: theme.primary(context), size: 22),
+                    const SizedBox(width: AppSpacing.s),
+                    Expanded(
+                      child: Text(
+                        _session.title,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  _typeLabel(),
+                  style: TextStyle(
+                    fontSize: 11,
+                    letterSpacing: 2.0,
+                    fontWeight: FontWeight.w600,
+                    color: theme.primary(context),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  _estimatedDuration(),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(color: AppColors.borderOf(context), height: 1),
+          Expanded(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(AppSpacing.l),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    _session.title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    _estimatedDuration(),
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary(context),
-                    ),
-                  ),
+                  if (_originalSession.warmupBlock != null)
+                    _buildWarmupRow(),
+                  ..._buildMainBlocks(),
+                  if (_originalSession.cooldownBlock != null)
+                    _buildCooldownRow(),
+                  const SizedBox(height: AppSpacing.xl),
+                  Divider(color: AppColors.borderOf(context), height: 1),
+                  const SizedBox(height: AppSpacing.m),
+                  _buildGpsRow(),
+                  const SizedBox(height: AppSpacing.s),
+                  _buildBleRow(),
                 ],
               ),
             ),
-            Divider(color: AppColors.borderOf(context), height: 1),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.l),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (_originalSession.warmupBlock != null)
-                      _buildWarmupRow(),
-                    ..._buildMainBlocks(),
-                    if (_originalSession.cooldownBlock != null)
-                      _buildCooldownRow(),
-                    const SizedBox(height: AppSpacing.xl),
-                    Divider(color: AppColors.borderOf(context), height: 1),
-                    const SizedBox(height: AppSpacing.m),
-                    _buildGpsRow(),
-                    const SizedBox(height: AppSpacing.s),
-                    _buildBleRow(),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.l),
-              child: SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: _onStart,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.brand,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.l),
+            child: SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: _onStart,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.primary(context),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text(
-                    'EMPEZAR',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.2,
-                    ),
+                ),
+                child: const Text(
+                  'EMPEZAR',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.2,
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
+    );
+
+    if (gradient == null && decoration == null) {
+      return Scaffold(
+        backgroundColor: AppColors.surfaceOf(context),
+        body: content,
+      );
+    }
+    return Scaffold(
+      backgroundColor: AppColors.surfaceOf(context),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (gradient != null)
+            Container(decoration: BoxDecoration(gradient: gradient)),
+          if (decoration != null) decoration,
+          content,
+        ],
       ),
     );
   }

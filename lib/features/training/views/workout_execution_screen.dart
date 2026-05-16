@@ -341,6 +341,7 @@ class _DoneLoaderState extends State<_DoneLoader> {
   Map<String, dynamic> _buildPlannedComparison(WorkoutSession session) {
     return {
       'plannedTitle': session.title,
+      'type': session.type.name,
       'blocks': session.blocks.map((block) => {
         'role': block.role.name,
         'plannedReps': block.repetitions,
