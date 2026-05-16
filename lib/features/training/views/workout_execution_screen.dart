@@ -141,9 +141,12 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
 
       if (!isLastRep && hasRest && mounted) {
         await _launchRestScreen(
-          restSegment!.durationSec!,
-          _controller.value.currentBlock.completedReps + 1,
-          totalReps,
+          restDurationSec: restSegment!.durationSec!,
+          nextRepNumber: _controller.value.currentBlock.completedReps + 1,
+          totalReps: totalReps,
+          completedSerie: result,
+          targetPaceMinSec: currentSegment?.target?.paceMinSecPerKm,
+          targetPaceMaxSec: currentSegment?.target?.paceMaxSecPerKm,
         );
 
         if (mounted) {
@@ -158,11 +161,14 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     }
   }
 
-  Future<void> _launchRestScreen(
-    int restDurationSec,
-    int nextRepNumber,
-    int totalReps,
-  ) async {
+  Future<void> _launchRestScreen({
+    required int restDurationSec,
+    required int nextRepNumber,
+    required int totalReps,
+    Serie? completedSerie,
+    int? targetPaceMinSec,
+    int? targetPaceMaxSec,
+  }) async {
     debugPrint('[RestLaunch] METHOD ENTERED dur=$restDurationSec next=$nextRepNumber/$totalReps');
 
     final elapsedNotifier = ValueNotifier<Duration>(Duration.zero);
@@ -213,6 +219,9 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
             elapsedNotifier: elapsedNotifier,
             fcNotifier: HeartRateService().heartRate,
             fcZoneNotifier: ValueNotifier<int?>(null),
+            completedSerie: completedSerie,
+            targetPaceMinSec: targetPaceMinSec,
+            targetPaceMaxSec: targetPaceMaxSec,
           ),
         ),
       );

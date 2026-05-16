@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 
+import '../../../../training/data/serie.dart';
 import '../shared/session_theme.dart';
 import '../shared/session_layout.dart';
 import '../shared/metrics/fc_widget.dart';
@@ -20,6 +21,9 @@ class RestScreen extends StatelessWidget {
   final ValueListenable<int?> fcNotifier;
   final ValueListenable<int?> fcZoneNotifier;
   final int? fcStartedAt;
+  final Serie? completedSerie;
+  final int? targetPaceMinSec;
+  final int? targetPaceMaxSec;
 
   const RestScreen({
     super.key,
@@ -33,6 +37,9 @@ class RestScreen extends StatelessWidget {
     required this.fcZoneNotifier,
     this.nextRepInfo,
     this.fcStartedAt,
+    this.completedSerie,
+    this.targetPaceMinSec,
+    this.targetPaceMaxSec,
   });
 
   @override
@@ -124,7 +131,56 @@ class RestScreen extends StatelessWidget {
           },
         ),
 
-        const SizedBox(height: 40),
+        if (completedSerie != null) ...[
+          const SizedBox(height: 20),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ACABAS DE HACER',
+                  style: TextStyle(
+                    fontSize: 10,
+                    letterSpacing: 1.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary(context),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    _statCell(context, '${completedSerie!.distanciaM}m', 'distancia'),
+                    _verticalDivider(context),
+                    _statCell(context, _formatTime(completedSerie!.tiempoSec), 'tiempo'),
+                    _verticalDivider(context),
+                    _statCell(
+                      context,
+                      _formatPaceFromSerie(completedSerie!),
+                      'pace',
+                      color: _paceColor(context, completedSerie!),
+                    ),
+                    if (completedSerie!.fcMedia != null) ...[
+                      _verticalDivider(context),
+                      _statCell(context, '${completedSerie!.fcMedia!.toInt()}', 'FC media'),
+                    ],
+                  ],
+                ),
+                if (targetPaceMinSec != null && completedSerie!.distanciaM > 0) ...[
+                  const SizedBox(height: 12),
+                  _paceComparisonBar(context),
+                ],
+              ],
+            ),
+          ),
+        ],
+
+        const SizedBox(height: 20),
 
         // ─── FC RECUPERACIÓN ───
         Container(
@@ -311,6 +367,85 @@ class RestScreen extends StatelessWidget {
             letterSpacing: 0.5,
           ),
         ),
+      ),
+    );
+  }
+
+  String _formatTime(double sec) {
+    final m = sec ~/ 60;
+    final s = (sec % 60).toInt();
+    return '$m:${s.toString().padLeft(2, '0')}';
+  }
+
+  String _formatPaceFromSerie(Serie s) {
+    if (s.distanciaM == 0) return '—';
+    final paceSec = s.tiempoSec / (s.distanciaM / 1000);
+    final m = paceSec ~/ 60;
+    final sec = (paceSec % 60).round();
+    return '$m:${sec.toString().padLeft(2, '0')}';
+  }
+
+  Color _paceColor(BuildContext context, Serie s) {
+    if (targetPaceMinSec == null || s.distanciaM == 0) {
+      return AppColors.textPrimary(context);
+    }
+    final pace = s.tiempoSec / (s.distanciaM / 1000);
+    final max = targetPaceMaxSec ?? targetPaceMinSec! + 15;
+    if (pace >= targetPaceMinSec! - 5 && pace <= max + 5) {
+      return AppColors.rpeLow;
+    }
+    return pace < targetPaceMinSec! - 5 ? AppColors.rpeMid : AppColors.rpeMax;
+  }
+
+  Widget _statCell(BuildContext context, String value, String label, {Color? color}) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: color ?? AppColors.textPrimary(context),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: AppColors.textSecondary(context),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _verticalDivider(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 32,
+      color: AppColors.borderOf(context).withValues(alpha: 0.3),
+    );
+  }
+
+  Widget _paceComparisonBar(BuildContext context) {
+    final pace = completedSerie!.tiempoSec / (completedSerie!.distanciaM / 1000);
+    final inRange = targetPaceMaxSec != null
+        ? pace >= targetPaceMinSec! - 5 && pace <= targetPaceMaxSec! + 5
+        : pace >= targetPaceMinSec! - 5 && pace <= targetPaceMinSec! + 20;
+    final color = inRange ? AppColors.rpeLow : AppColors.rpeMid;
+    final msg = inRange ? '✓ En objetivo' : 'Fuera del objetivo';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        msg,
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
       ),
     );
   }
