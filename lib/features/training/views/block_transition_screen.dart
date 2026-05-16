@@ -5,13 +5,16 @@ import '../../../core/theme/app_theme.dart';
 import '../../templates/data/workout_block.dart';
 import '../../templates/data/target_config.dart';
 import '../../templates/data/workout_segment.dart';
+import '../../templates/data/workout_session.dart';
 import '../data/workout_execution_state.dart';
+import 'session_screens/shared/session_theme.dart';
 
 class BlockTransitionScreen extends StatelessWidget {
   final BlockExecutionState completedBlock;
   final BlockExecutionState nextBlock;
   final VoidCallback onContinue;
   final VoidCallback onFinishEarly;
+  final WorkoutType sessionType;
 
   const BlockTransitionScreen({
     super.key,
@@ -19,27 +22,64 @@ class BlockTransitionScreen extends StatelessWidget {
     required this.nextBlock,
     required this.onContinue,
     required this.onFinishEarly,
+    required this.sessionType,
   });
+
+  SessionTheme _themeForNextBlock() {
+    final nextRole = nextBlock.block.role;
+    if (nextRole == BlockRole.warmup || nextRole == BlockRole.cooldown) {
+      return SessionTheme.forType(WorkoutType.continuous);
+    }
+    return SessionTheme.forType(sessionType);
+  }
+
+  String? _motivationalMessage() {
+    if (nextBlock.block.role != BlockRole.main) return null;
+    switch (sessionType) {
+      case WorkoutType.intervals:   return 'A POR LAS SERIES';
+      case WorkoutType.fartlek:     return 'A CAMBIAR DE RITMO';
+      case WorkoutType.hills:       return 'A POR LAS CUESTAS';
+      case WorkoutType.competition: return 'A LA LÍNEA DE SALIDA';
+      case WorkoutType.continuous:  return null;
+      case WorkoutType.free:        return null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.surfaceOf(context),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.l),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildCompletedSection(context),
-              const SizedBox(height: AppSpacing.xl),
-              _buildNextSection(context),
-              const Spacer(),
-              _buildActions(context),
-            ],
-          ),
+    final theme = _themeForNextBlock();
+    final gradient = theme.backgroundGradient(context);
+
+    Widget body = SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.l),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildCompletedSection(context),
+            const SizedBox(height: AppSpacing.xl),
+            _buildNextSection(context, theme),
+            const Spacer(),
+            _buildActions(context, theme),
+          ],
         ),
       ),
+    );
+
+    if (gradient != null) {
+      body = Stack(
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(decoration: BoxDecoration(gradient: gradient)),
+          ),
+          body,
+        ],
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: AppColors.surfaceOf(context),
+      body: body,
     );
   }
 
@@ -93,16 +133,29 @@ class BlockTransitionScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNextSection(BuildContext context) {
+  Widget _buildNextSection(BuildContext context, SessionTheme theme) {
     final block = nextBlock.block;
     final seg = block.segments
         .where((s) => s.type == SegmentType.interval)
         .firstOrNull;
-    final roleColor = _colorForRole(block.role, context);
+    final roleColor = theme.primary(context);
+    final motivational = _motivationalMessage();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (motivational != null) ...[
+          Text(
+            motivational,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: theme.primary(context),
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s),
+        ],
         Text(
           'A CONTINUACIÓN',
           style: TextStyle(
@@ -120,8 +173,8 @@ class BlockTransitionScreen extends StatelessWidget {
             color: AppColors.surface2Of(context),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: AppColors.borderOf(context),
-              width: 0.5,
+              color: theme.primary(context).withValues(alpha: 0.3),
+              width: 1,
             ),
           ),
           child: Column(
@@ -189,7 +242,7 @@ class BlockTransitionScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActions(BuildContext context) {
+  Widget _buildActions(BuildContext context, SessionTheme theme) {
     return Column(
       children: [
         SizedBox(
@@ -198,7 +251,7 @@ class BlockTransitionScreen extends StatelessWidget {
           child: ElevatedButton(
             onPressed: onContinue,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.brand,
+              backgroundColor: theme.primary(context),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -256,17 +309,6 @@ class BlockTransitionScreen extends StatelessWidget {
         return Icons.bolt;
       case BlockRole.cooldown:
         return Icons.self_improvement;
-    }
-  }
-
-  Color _colorForRole(BlockRole role, BuildContext context) {
-    switch (role) {
-      case BlockRole.warmup:
-      case BlockRole.cooldown:
-        return AppColors.rest;
-      case BlockRole.main:
-      case BlockRole.custom:
-        return AppColors.effort;
     }
   }
 

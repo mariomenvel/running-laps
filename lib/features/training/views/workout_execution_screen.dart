@@ -266,6 +266,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
                 _controller.advanceToNextBlock();
               },
               onFinishEarly: () => _controller.finishEarly(),
+              sessionType: widget.session.type,
             );
 
           case ExecutionPhase.done:
