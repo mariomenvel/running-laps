@@ -15,6 +15,7 @@ import 'package:running_laps/features/auth/views/auth_page.dart';
 import 'package:running_laps/features/groups/views/participant_profile_screen.dart';
 import 'package:running_laps/features/training/views/manual_training_view.dart';
 import 'package:running_laps/features/admin/views/admin_panel_screen.dart';
+import 'package:running_laps/features/ai_coach/views/ai_coach_settings_view.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:running_laps/features/avatar/models/avatar_config.dart';
 import 'package:running_laps/features/avatar/services/avatar_generator.dart';
@@ -453,6 +454,19 @@ class _ProfileViewState extends State<ProfileView> {
               icon: Icons.history_outlined,
               label: 'Historial completo',
               onTap: () => MainShell.shellKey.currentState?.navigateTo(4),
+            ),
+            const _MenuDivider(),
+            _MenuItem(
+              icon: Icons.auto_awesome_outlined,
+              label: 'Entrenador IA',
+              subtitle: 'Sugerencias semanales',
+              onTap: () {
+                final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+                Navigator.push(
+                  context,
+                  AppRoute(page: AiCoachSettingsView(uid: uid)),
+                );
+              },
             ),
             const _MenuDivider(),
             _MenuItem(

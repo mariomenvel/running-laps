@@ -46,6 +46,25 @@ class AthleteSessionRepository {
     }
   }
 
+  Future<List<AthleteSession>> getSessionsInRange({
+    required String uid,
+    required String startDate,
+    required String endDate,
+  }) async {
+    try {
+      final snap = await _col(uid)
+          .where('date', isGreaterThanOrEqualTo: startDate)
+          .where('date', isLessThanOrEqualTo: endDate)
+          .get();
+      return snap.docs
+          .map((doc) => AthleteSession.fromMap(doc.id, doc.data()))
+          .toList();
+    } catch (e) {
+      debugPrint('[AthleteSessionRepository] getSessionsInRange error: $e');
+      return [];
+    }
+  }
+
   Future<AthleteSession?> getSession({
     required String uid,
     required String id,
@@ -126,6 +145,95 @@ class AthleteSessionRepository {
       });
     } catch (e) {
       debugPrint('[AthleteSessionRepository] markAsCompleted error: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updateSuggestionStatus({
+    required String uid,
+    required String sessionId,
+    required AthleteSessionSuggestionStatus status,
+    String? responseNote,
+  }) async {
+    try {
+      final sessionRef = _col(uid).doc(sessionId);
+      final existing = await sessionRef.get();
+      final existingData = existing.data();
+      final now = Timestamp.fromDate(DateTime.now());
+      final existingSuggestion = existingData?['suggestion'];
+      final existingOrigin = existingSuggestion is Map
+          ? existingSuggestion['origin']?.toString()
+          : null;
+
+      if (status == AthleteSessionSuggestionStatus.rejected &&
+          existingOrigin == AthleteSessionOrigin.ai.toValue) {
+        await sessionRef.delete();
+        await _db.collection('users').doc(uid).collection('aiCoachEvents').add({
+          'eventType': 'suggestion_status_updated',
+          'payload': {
+            'sessionId': sessionId,
+            'date': existingData?['date'],
+            'previousStatus': existingSuggestion is Map
+                ? existingSuggestion['status']
+                : null,
+            'newStatus': 'rejected',
+            'removed': true,
+            if (responseNote != null) 'responseNote': responseNote,
+          },
+          'createdAt': now,
+        });
+        return;
+      }
+
+      await sessionRef.update({
+        'suggestion.status': status.toValue,
+        'suggestion.respondedAt': now,
+        if (responseNote != null) 'suggestion.responseNote': responseNote,
+        'updatedAt': now,
+      });
+      await _db.collection('users').doc(uid).collection('aiCoachEvents').add({
+        'eventType': 'suggestion_status_updated',
+        'payload': {
+          'sessionId': sessionId,
+          'date': existingData?['date'],
+          'previousStatus': existingData?['suggestion'] is Map
+              ? (existingData!['suggestion'] as Map)['status']
+              : null,
+          'newStatus': status.toValue,
+          if (responseNote != null) 'responseNote': responseNote,
+        },
+        'createdAt': now,
+      });
+    } catch (e) {
+      debugPrint('[AthleteSessionRepository] updateSuggestionStatus error: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deletePendingSuggestedSessionsInRange({
+    required String uid,
+    required String startDate,
+    required String endDate,
+  }) async {
+    try {
+      final snap = await _col(uid)
+          .where('date', isGreaterThanOrEqualTo: startDate)
+          .where('date', isLessThanOrEqualTo: endDate)
+          .get();
+      final batch = _db.batch();
+      final docsToDelete = snap.docs.where((doc) {
+        final session = AthleteSession.fromMap(doc.id, doc.data());
+        return session.suggestion?.origin == AthleteSessionOrigin.ai &&
+            session.suggestion?.status ==
+                AthleteSessionSuggestionStatus.suggested;
+      });
+      for (final doc in docsToDelete) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+    } catch (e) {
+      debugPrint(
+          '[AthleteSessionRepository] deletePendingSuggestedSessionsInRange error: $e');
       rethrow;
     }
   }

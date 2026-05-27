@@ -1,11 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:table_calendar/table_calendar.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
-import 'package:running_laps/core/widgets/standard_table_calendar.dart';
+import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
+import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_weekly_planner_service.dart';
 import 'package:running_laps/features/calendar/viewmodels/calendar_view_model.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/features/training/views/pre_execution_screen.dart';
@@ -25,6 +26,9 @@ class _CalendarViewState extends State<CalendarView> {
   CalendarViewModel? _vm;
   bool _vmReady = false;
   int _focusedYear = DateTime.now().year;
+  bool _isGeneratingAiPlan = false;
+  bool _isUpdatingSuggestion = false;
+  late Future<List<AthleteSession>> _nextWeekSuggestionsFuture;
 
   @override
   void initState() {
@@ -37,11 +41,13 @@ class _CalendarViewState extends State<CalendarView> {
         await FirebaseAuth.instance.authStateChanges()
             .firstWhere((u) => u != null);
     if (!mounted) return;
+    final uid = user!.uid;
     setState(() {
-      _vm = CalendarViewModel(userId: user!.uid);
+      _vm = CalendarViewModel(userId: uid);
       _vmReady = true;
     });
     _vm!.loadAll();
+    _nextWeekSuggestionsFuture = _loadVisibleWeekSuggestions(uid);
   }
 
   @override
@@ -65,6 +71,8 @@ class _CalendarViewState extends State<CalendarView> {
             return Column(
               children: [
                 _buildViewSelector(isAthlete),
+                if (isAthlete) _buildAiGenerateButton(),
+                if (isAthlete) _buildAiSuggestionsPanel(),
                 Expanded(
                   child: ValueListenableBuilder<CalendarViewType>(
                     valueListenable: _vm!.viewType,
@@ -86,6 +94,332 @@ class _CalendarViewState extends State<CalendarView> {
         );
       },
     );
+  }
+
+  Widget _buildAiGenerateButton() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.l, 0, AppSpacing.l, AppSpacing.m),
+      child: SizedBox(
+        width: double.infinity,
+        child: FilledButton.icon(
+          onPressed: _isGeneratingAiPlan ? null : _generateAiPlanManual,
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.brand,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppDimens.buttonRadius),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+          ),
+          icon: const Icon(Icons.auto_awesome_rounded, size: 18),
+          label: Text(_isGeneratingAiPlan ? 'Generando plan IA...' : 'Generar semana IA'),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAiSuggestionsPanel() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.l, 0, AppSpacing.l, AppSpacing.m),
+      child: FutureBuilder<List<AthleteSession>>(
+        future: _nextWeekSuggestionsFuture,
+        builder: (context, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            return const SizedBox(
+              height: 36,
+              child: Center(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.brand),
+                ),
+              ),
+            );
+          }
+          final suggestions = snap.data ?? const <AthleteSession>[];
+          if (suggestions.isEmpty) {
+            return Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceOf(context),
+                border: Border.all(color: AppColors.borderOf(context)),
+                borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+              ),
+              child: Text(
+                'Sin sugerencias IA pendientes para esta semana visible',
+                style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
+              ),
+            );
+          }
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceOf(context),
+              border: Border.all(color: AppColors.borderOf(context)),
+              borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Sugerencias IA (${suggestions.length})',
+                      style: AppTypography.body.copyWith(
+                        color: AppColors.textPrimary(context),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: _isUpdatingSuggestion
+                          ? null
+                          : () => _acceptAllSuggestions(suggestions),
+                      child: const Text('Aceptar todo'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                ...suggestions.map((s) => _buildSuggestionRow(s)),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSuggestionRow(AthleteSession session) {
+    final date = DateTime.tryParse(session.date);
+    final label = date == null
+        ? session.date
+        : '${_weekdayEs(date.weekday)} ${date.day}/${date.month}';
+    final why = _suggestionWhyText(session);
+    final title = (session.title ?? '').trim().isNotEmpty
+        ? session.title!.trim()
+        : (session.category != null
+            ? SessionCategoryX.fromValue(session.category!).label
+            : 'Sesión');
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTypography.small.copyWith(
+                    color: AppColors.textPrimary(context),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  label,
+                  style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
+                ),
+                if (why.isNotEmpty)
+                  Text(
+                    why,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.small.copyWith(
+                      color: AppColors.textSecondary(context),
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: _isUpdatingSuggestion
+                ? null
+                : () => _updateSuggestionStatus(
+                      sessionId: session.id,
+                      sessionDate: session.date,
+                      status: AthleteSessionSuggestionStatus.rejected,
+                      note: 'rejected_from_calendar',
+                    ),
+            child: const Text('Rechazar'),
+          ),
+          FilledButton(
+            onPressed: _isUpdatingSuggestion
+                ? null
+                : () => _updateSuggestionStatus(
+                      sessionId: session.id,
+                      sessionDate: session.date,
+                      status: AthleteSessionSuggestionStatus.accepted,
+                      note: 'accepted_from_calendar',
+                    ),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.brand,
+              minimumSize: const Size(0, 34),
+            ),
+            child: const Text('Aceptar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _generateAiPlanManual() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    final selected = _vm?.selectedDay.value ?? DateTime.now();
+    final weekStart = _mondayOf(selected);
+    debugPrint(
+      '[CalendarView][AI] Manual generation requested. uid=$uid weekStart=${weekStart.toIso8601String()}',
+    );
+    setState(() => _isGeneratingAiPlan = true);
+    try {
+      final startedAt = DateTime.now();
+      debugPrint('[CalendarView][AI] Calling AiCoachWeeklyPlannerService.planNextWeek...');
+      final result = await AiCoachWeeklyPlannerService().planNextWeek(
+        uid,
+        targetWeekStart: weekStart,
+      );
+      final elapsedMs = DateTime.now().difference(startedAt).inMilliseconds;
+      debugPrint(
+        '[CalendarView][AI] planNextWeek completed. sessions=${result.sessions.length}, elapsedMs=$elapsedMs',
+      );
+      final focused = _vm?.focusedMonth.value ?? DateTime.now();
+      _vm?.onMonthChanged(focused);
+      _nextWeekSuggestionsFuture = _loadVisibleWeekSuggestions(uid);
+      debugPrint('[CalendarView][AI] Calendar month refreshed. focused=${focused.toIso8601String()}');
+      if (!mounted) return;
+      ModernSnackBar.showSuccess(
+        context,
+        result.sessions.isEmpty
+            ? 'No se han generado nuevas sugerencias'
+            : 'Plan IA generado (${result.sessions.length} sugerencias)',
+      );
+    } catch (e) {
+      debugPrint('[CalendarView][AI] Manual generation failed: $e');
+      if (!mounted) return;
+      ModernSnackBar.showError(
+        context,
+        'No se pudo generar el plan IA. ${e.toString().replaceFirst('Exception: ', '')}',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isGeneratingAiPlan = false);
+      }
+      debugPrint('[CalendarView][AI] Manual generation flow finished');
+    }
+  }
+
+  Future<void> _acceptAllSuggestions(List<AthleteSession> sessions) async {
+    for (final session in sessions) {
+      await _updateSuggestionStatus(
+        sessionId: session.id,
+        sessionDate: session.date,
+        status: AthleteSessionSuggestionStatus.accepted,
+        note: 'accepted_all_from_calendar',
+        showMessage: false,
+      );
+    }
+    if (!mounted) return;
+    ModernSnackBar.showSuccess(context, 'Sugerencias aceptadas');
+  }
+
+  Future<void> _updateSuggestionStatus({
+    required String sessionId,
+    required String sessionDate,
+    required AthleteSessionSuggestionStatus status,
+    required String note,
+    bool showMessage = true,
+  }) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    setState(() => _isUpdatingSuggestion = true);
+    try {
+      await AthleteSessionRepository().updateSuggestionStatus(
+        uid: uid,
+        sessionId: sessionId,
+        status: status,
+        responseNote: note,
+      );
+      final acceptedDate = DateTime.tryParse(sessionDate);
+      final focused = acceptedDate != null
+          ? DateTime(acceptedDate.year, acceptedDate.month, 1)
+          : (_vm?.focusedMonth.value ?? DateTime.now());
+      _vm?.onMonthChanged(focused);
+      if (acceptedDate != null) {
+        _vm?.onDaySelected(acceptedDate, focused);
+      }
+      _nextWeekSuggestionsFuture = _loadVisibleWeekSuggestions(uid);
+      if (showMessage && mounted) {
+        ModernSnackBar.showSuccess(
+          context,
+          status == AthleteSessionSuggestionStatus.accepted
+              ? 'Sugerencia aceptada'
+              : 'Sugerencia rechazada',
+        );
+      }
+      debugPrint('[CalendarView][AI] Suggestion $sessionId updated to ${status.toValue}');
+    } catch (e) {
+      debugPrint('[CalendarView][AI] Failed to update suggestion $sessionId: $e');
+      if (mounted) {
+        ModernSnackBar.showError(context, 'No se pudo actualizar la sugerencia');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUpdatingSuggestion = false);
+      }
+    }
+  }
+
+  Future<List<AthleteSession>> _loadVisibleWeekSuggestions(String uid) async {
+    final selected = _vm?.selectedDay.value ?? DateTime.now();
+    final start = _mondayOf(selected);
+    final end = start.add(const Duration(days: 6));
+    final sessions = await AthleteSessionRepository().getSessionsInRange(
+      uid: uid,
+      startDate:
+          '${start.year}-${start.month.toString().padLeft(2, '0')}-${start.day.toString().padLeft(2, '0')}',
+      endDate:
+          '${end.year}-${end.month.toString().padLeft(2, '0')}-${end.day.toString().padLeft(2, '0')}',
+    );
+    final pending = sessions.where((session) {
+      final suggestion = session.suggestion;
+      return suggestion?.origin == AthleteSessionOrigin.ai &&
+          suggestion?.status == AthleteSessionSuggestionStatus.suggested &&
+          session.status == AthleteSessionStatus.planned;
+    }).toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+    debugPrint(
+      '[CalendarView][AI] Loaded visible-week pending suggestions: ${pending.length}. '
+      'weekStart=${start.toIso8601String()}',
+    );
+    return pending;
+  }
+
+  DateTime _mondayOf(DateTime value) {
+    final date = DateTime(value.year, value.month, value.day);
+    return date.subtract(Duration(days: date.weekday - 1));
+  }
+
+  String _weekdayEs(int weekday) {
+    switch (weekday) {
+      case DateTime.monday:
+        return 'Lun';
+      case DateTime.tuesday:
+        return 'Mar';
+      case DateTime.wednesday:
+        return 'Mie';
+      case DateTime.thursday:
+        return 'Jue';
+      case DateTime.friday:
+        return 'Vie';
+      case DateTime.saturday:
+        return 'Sab';
+      case DateTime.sunday:
+        return 'Dom';
+      default:
+        return '-';
+    }
   }
 
   // ── Skeleton ──────────────────────────────────────────────────────────────
@@ -275,6 +609,9 @@ class _CalendarViewState extends State<CalendarView> {
                   final hasData  = isAthlete
                       ? (sessions[_normalize(day)] ?? []).isNotEmpty
                       : trainings.any((w) => _normalize(w.fecha) == _normalize(day));
+                  final hasPendingAiSuggestion = isAthlete &&
+                      (sessions[_normalize(day)] ?? const <AthleteSession>[])
+                          .any(_isPendingAiSuggestion);
 
                   return Column(
                     children: [
@@ -292,6 +629,15 @@ class _CalendarViewState extends State<CalendarView> {
                         decoration: BoxDecoration(
                           color: isToday ? AppColors.brand : Colors.transparent,
                           shape: BoxShape.circle,
+                          boxShadow: hasPendingAiSuggestion
+                              ? [
+                                  BoxShadow(
+                                    color: AppColors.brand.withOpacity(0.22),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
+                                  ),
+                                ]
+                              : null,
                         ),
                         child: Center(
                           child: Text(
@@ -314,7 +660,9 @@ class _CalendarViewState extends State<CalendarView> {
                         width: 4,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: hasData
+                          color: hasPendingAiSuggestion
+                              ? AppColors.brand
+                              : hasData
                               ? (inMonth ? AppColors.brand : AppColors.brand.withOpacity(0.3))
                               : Colors.transparent,
                           shape: BoxShape.circle,
@@ -941,6 +1289,20 @@ class _CalendarViewState extends State<CalendarView> {
       borderRadius: BorderRadius.circular(AppDimens.cardRadius),
       child: Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.s),
+        // Subtle glow on days with pending AI suggestions.
+        // Helps discover suggested sessions at a glance.
+        foregroundDecoration: isAthlete && sessions.any(_isPendingAiSuggestion)
+            ? BoxDecoration(
+                borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.brand.withOpacity(0.18),
+                    blurRadius: 10,
+                    spreadRadius: 1,
+                  ),
+                ],
+              )
+            : null,
         decoration: BoxDecoration(
           color: AppColors.surfaceOf(context),
           border: Border.all(
@@ -1551,6 +1913,7 @@ class _CalendarViewState extends State<CalendarView> {
         : session.category != null
             ? SessionCategoryX.fromValue(session.category!).label
             : 'Entrenamiento';
+    final why = _suggestionWhyText(session);
 
     return Container(
       width: double.infinity,
@@ -1579,6 +1942,18 @@ class _CalendarViewState extends State<CalendarView> {
                 child: Text('• $detail', style: AppTypography.small.copyWith(color: AppColors.textSecondary(context))),
               );
             }),
+          ],
+          if (why.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.s),
+            Text(
+              why,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.small.copyWith(
+                color: AppColors.textSecondary(context),
+                fontStyle: FontStyle.italic,
+              ),
+            ),
           ],
           if (session.status == AthleteSessionStatus.planned) ...[
             const SizedBox(height: AppSpacing.m),
@@ -1779,9 +2154,35 @@ class _CalendarViewState extends State<CalendarView> {
     final days = date.difference(firstDay).inDays;
     return ((days + firstDay.weekday - 1) / 7).ceil();
   }
-}
 
 // ── Widgets privados ──────────────────────────────────────────────────────────
+
+  String _suggestionWhyText(AthleteSession session) {
+    final suggestion = session.suggestion;
+    if (suggestion == null || suggestion.origin != AthleteSessionOrigin.ai) {
+      return '';
+    }
+    final focus = (suggestion.focus ?? '').trim();
+    final rationale = (suggestion.rationale ?? '').trim();
+    final note = (session.planningNotes ?? '').trim();
+    if (focus.isNotEmpty) return 'Por que: foco en $focus';
+    if (rationale.isNotEmpty) return 'Por que: ${_truncateText(rationale, 90)}';
+    if (note.isNotEmpty) return 'Por que: ${_truncateText(note, 90)}';
+    return '';
+  }
+
+  String _truncateText(String text, int maxLen) {
+    if (text.length <= maxLen) return text;
+    return '${text.substring(0, maxLen - 1)}...';
+  }
+
+  bool _isPendingAiSuggestion(AthleteSession session) {
+    final suggestion = session.suggestion;
+    return suggestion?.origin == AthleteSessionOrigin.ai &&
+        suggestion?.status == AthleteSessionSuggestionStatus.suggested &&
+        session.status == AthleteSessionStatus.planned;
+  }
+}
 
 class _ViewTab extends StatelessWidget {
   const _ViewTab(this.label, this.type, this.isActive, this.vm);

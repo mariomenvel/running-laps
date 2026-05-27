@@ -11,7 +11,10 @@ import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 import 'package:running_laps/features/athlete/data/progress_repository.dart';
 import 'package:running_laps/features/athlete/viewmodels/athlete_calendar_viewmodel.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_automation_service.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_weekly_planner_service.dart';
+import 'package:running_laps/features/ai_coach/views/ai_coach_settings_view.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/features/templates/data/templates_repository.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
@@ -93,6 +96,7 @@ class _AthleteHubViewState extends State<AthleteHubView> {
                           explanation:
                               '• Punto verde: sesión completada\n'
                               '• Punto morado: sesión planificada\n'
+                              '• Punto lila: sugerencia IA pendiente\n'
                               '• Punto rojo: competición\n'
                               '• Círculo morado sólido: día seleccionado\n'
                               '• Círculo morado tenue: hoy',
@@ -126,7 +130,6 @@ class _AthleteHubViewState extends State<AthleteHubView> {
   }
 
   Widget _buildCalendarContent(AthleteCalendarState state, bool isDark) {
-    final titleColor = isDark ? Colors.white : const Color(0xFF1C1C1E);
     final defaultTextColor = isDark ? Colors.white : const Color(0xFF1C1C1E);
     final outsideTextColor =
         isDark ? const Color(0xFF3A3A3C) : const Color(0xFFC7C7CC);
@@ -883,6 +886,11 @@ class _PlanningTabState extends State<_PlanningTab> {
   late Future<List<WeeklyVolume>> _volumeFuture;
   late Future<AthleteSession?> _nextRaceFuture;
   late Future<List<AthleteSession>> _upcomingFuture;
+  late Future<List<AthleteSession>> _nextWeekSuggestionsFuture;
+  late Future<bool> _aiEnabledFuture;
+  bool _isGeneratingAiPlan = false;
+  bool _isAcceptingAiPlan = false;
+  bool _autoPlannerRan = false;
 
   String _fmt(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
@@ -893,6 +901,122 @@ class _PlanningTabState extends State<_PlanningTab> {
     return d.year == today.year && d.month == today.month && d.day == today.day;
   }
 
+  DateTime _mondayOf(DateTime value) {
+    final date = DateTime(value.year, value.month, value.day);
+    return date.subtract(Duration(days: date.weekday - 1));
+  }
+
+  Future<bool> _loadAiEnabled() async {
+    final provider = await AiCoachRepository().getProviderConfig(uid: widget.uid);
+    if (provider == null) return false;
+    return provider.weeklyPlanningEnabled &&
+        provider.provider == 'openrouter' &&
+        (provider.apiKey?.trim().isNotEmpty ?? false);
+  }
+
+  Future<List<AthleteSession>> _loadNextWeekSuggestions() async {
+    final now = DateTime.now();
+    final nextWeekStart = _mondayOf(now).add(const Duration(days: 7));
+    final nextWeekEnd = nextWeekStart.add(const Duration(days: 6));
+    final sessions = await AthleteSessionRepository().getSessionsInRange(
+      uid: widget.uid,
+      startDate: _fmt(nextWeekStart),
+      endDate: _fmt(nextWeekEnd),
+    );
+    return sessions.where((session) => _isAiPendingSuggestion(session)).toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+  }
+
+  Future<void> _runAutoPlannerIfNeeded() async {
+    if (_autoPlannerRan) return;
+    _autoPlannerRan = true;
+    try {
+      final result =
+          await AiCoachAutomationService().ensureNextWeekPlanIfDue(widget.uid);
+      if (!mounted || !result.generated) return;
+      setState(() {
+        _nextWeekSuggestionsFuture = _loadNextWeekSuggestions();
+        _upcomingFuture = _loadUpcoming();
+        _weekStatsFuture = _loadWeekStats();
+      });
+      ModernSnackBar.showSuccess(
+        context,
+        'Plan IA semanal generado (${result.generatedSessions} sesiones)',
+      );
+    } catch (e) {
+      debugPrint('[_PlanningTabState] auto planner error: $e');
+    }
+  }
+
+  Future<void> _generateAiPlan() async {
+    setState(() => _isGeneratingAiPlan = true);
+    try {
+      final result = await AiCoachWeeklyPlannerService().planNextWeek(widget.uid);
+      if (!mounted) return;
+      setState(() {
+        _nextWeekSuggestionsFuture = _loadNextWeekSuggestions();
+        _upcomingFuture = _loadUpcoming();
+        _weekStatsFuture = _loadWeekStats();
+      });
+      ModernSnackBar.showSuccess(
+        context,
+        result.sessions.isEmpty
+            ? 'No se han generado nuevas sugerencias para la próxima semana'
+            : 'Plan IA generado (${result.sessions.length} sugerencias)',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ModernSnackBar.showError(
+        context,
+        'No se pudo generar el plan IA. ${e.toString().replaceFirst('Exception: ', '')}',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isGeneratingAiPlan = false);
+      }
+    }
+  }
+
+  Future<void> _acceptAllAiSuggestions(List<AthleteSession> sessions) async {
+    if (sessions.isEmpty) return;
+    setState(() => _isAcceptingAiPlan = true);
+    try {
+      for (final session in sessions) {
+        await AthleteSessionRepository().updateSuggestionStatus(
+          uid: widget.uid,
+          sessionId: session.id,
+          status: AthleteSessionSuggestionStatus.accepted,
+          responseNote: 'accepted_from_planning_tab',
+        );
+      }
+      if (!mounted) return;
+      setState(() {
+        _nextWeekSuggestionsFuture = _loadNextWeekSuggestions();
+        _upcomingFuture = _loadUpcoming();
+        _weekStatsFuture = _loadWeekStats();
+      });
+      ModernSnackBar.showSuccess(context, 'Sugerencias IA aceptadas (${sessions.length})');
+    } catch (e) {
+      if (!mounted) return;
+      ModernSnackBar.showError(context, 'No se pudieron aceptar las sugerencias IA');
+    } finally {
+      if (mounted) {
+        setState(() => _isAcceptingAiPlan = false);
+      }
+    }
+  }
+
+  Future<void> _openAiSettings() async {
+    final changed = await Navigator.push<bool>(
+      context,
+      AppRoute(page: AiCoachSettingsView(uid: widget.uid)),
+    );
+    if (!mounted || changed != true) return;
+    setState(() {
+      _aiEnabledFuture = _loadAiEnabled();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -901,6 +1025,11 @@ class _PlanningTabState extends State<_PlanningTab> {
         ProgressRepository().getWeeklyVolume(widget.uid, weeks: 8);
     _nextRaceFuture = _loadNextRace();
     _upcomingFuture = _loadUpcoming();
+    _nextWeekSuggestionsFuture = _loadNextWeekSuggestions();
+    _aiEnabledFuture = _loadAiEnabled();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _runAutoPlannerIfNeeded();
+    });
   }
 
   Future<({int completed, int planned, double km})> _loadWeekStats() async {
@@ -1069,6 +1198,100 @@ class _PlanningTabState extends State<_PlanningTab> {
           const SizedBox(height: 24),
 
           // ── Próxima competición ─────────────────────────────────────
+          const _SectionTitle('PLAN IA SEMANAL'),
+          const SizedBox(height: 10),
+          FutureBuilder<bool>(
+            future: _aiEnabledFuture,
+            builder: (context, enabledSnap) {
+              final aiEnabled = enabledSnap.data ?? false;
+              return FutureBuilder<List<AthleteSession>>(
+                future: _nextWeekSuggestionsFuture,
+                builder: (context, suggestionsSnap) {
+                  final suggestions = suggestionsSnap.data ?? const <AthleteSession>[];
+                  final title = isDark ? Colors.white : const Color(0xFF1C1C1E);
+                  final cardColor = isDark ? const Color(0xFF2A2333) : const Color(0xFFF5EEFF);
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      border: Border.all(color: const Color(0xFFD6B8FF)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          aiEnabled
+                              ? 'Sugerencias IA próxima semana: ${suggestions.length}'
+                              : 'Configura OpenRouter para activar el plan IA',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: title,
+                          ),
+                        ),
+                        if (aiEnabled && suggestions.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          ...suggestions.take(3).map((s) => Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: Text(
+                                  '• ${DateFormat('EEE d', 'es_ES').format(DateTime.parse(s.date))}: ${_sessionTitleForCard(s)}',
+                                  style: TextStyle(fontSize: 12, color: secondary),
+                                ),
+                              )),
+                        ],
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: FilledButton(
+                                onPressed: _isGeneratingAiPlan ? null : _generateAiPlan,
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.brand,
+                                  minimumSize: const Size(0, 38),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: Text(_isGeneratingAiPlan ? 'Generando...' : 'Generar semana IA'),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: (!aiEnabled || suggestions.isEmpty || _isAcceptingAiPlan)
+                                    ? null
+                                    : () => _acceptAllAiSuggestions(suggestions),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.brand,
+                                  side: const BorderSide(color: AppColors.brand),
+                                  minimumSize: const Size(0, 38),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: Text(_isAcceptingAiPlan ? 'Aceptando...' : 'Aceptar todo'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: _openAiSettings,
+                            child: const Text('Configurar IA'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+
           FutureBuilder<AthleteSession?>(
             future: _nextRaceFuture,
             builder: (context, snap) {
@@ -2005,6 +2228,9 @@ class _DayActionSheet extends StatelessWidget {
   }
 
   String _sessionTitle(AthleteSession s) {
+    if ((s.title ?? '').trim().isNotEmpty) {
+      return s.title!.trim();
+    }
     if (s.category != null) {
       return SessionCategoryX.fromValue(s.category!).label;
     }
@@ -2062,6 +2288,15 @@ class _DayActionSheet extends StatelessWidget {
                                   color: titleColor,
                                 ),
                               ),
+                              if (_isAiPendingSuggestion(s))
+                                const Text(
+                                  'Sugerencia IA pendiente',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFFB084F5),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               if (s.blocks.isNotEmpty)
                                 Text(
                                   '${s.blocks.length} series',
@@ -2114,9 +2349,21 @@ class _DayActionSheet extends StatelessWidget {
                                     AppRoute(
                                       page: WorkoutEditorScreen(
                                         scheduledDate: sessionDate,
-                                        onSave: (session) =>
-                                            _onWorkoutSaved(
-                                                context, session, uid),
+                                        onSave: (session) async {
+                                          await _onWorkoutSaved(
+                                              context, session, uid);
+                                          if (_isAiPendingSuggestion(s)) {
+                                            try {
+                                              await AthleteSessionRepository()
+                                                  .updateSuggestionStatus(
+                                                uid: uid,
+                                                sessionId: s.id,
+                                                status: AthleteSessionSuggestionStatus.edited,
+                                                responseNote: 'edited_from_day_sheet',
+                                              );
+                                            } catch (_) {}
+                                          }
+                                        },
                                       ),
                                     ),
                                   );
@@ -2137,6 +2384,14 @@ class _DayActionSheet extends StatelessWidget {
                                 ),
                                 onPressed: () {
                                   Navigator.pop(context);
+                                  if (_isAiPendingSuggestion(s)) {
+                                    AthleteSessionRepository().updateSuggestionStatus(
+                                      uid: uid,
+                                      sessionId: s.id,
+                                      status: AthleteSessionSuggestionStatus.accepted,
+                                      responseNote: 'accepted_from_day_sheet_execute',
+                                    );
+                                  }
                                   _launchGuidedSession(context, s, uid);
                                 },
                                 child: const Text('Ejecutar',
@@ -2339,6 +2594,22 @@ Future<void> _launchGuidedSession(
 // _DayCircle — día con puntos de estado opcionales
 // ─────────────────────────────────────────────────────────────────────────────
 
+bool _isAiPendingSuggestion(AthleteSession session) {
+  final suggestion = session.suggestion;
+  return suggestion?.origin == AthleteSessionOrigin.ai &&
+      suggestion?.status == AthleteSessionSuggestionStatus.suggested;
+}
+
+String _sessionTitleForCard(AthleteSession session) {
+  if ((session.title ?? '').trim().isNotEmpty) {
+    return session.title!.trim();
+  }
+  if (session.category != null) {
+    return SessionCategoryX.fromValue(session.category!).label;
+  }
+  return 'Sesión';
+}
+
 List<Color> _dotsForDay(
   List<AthleteSession> sessions,
   bool isSelected,
@@ -2348,7 +2619,11 @@ List<Color> _dotsForDay(
       sessions.any((s) => s.status == AthleteSessionStatus.completed);
   final hasPlanned = sessions.any((s) =>
       s.status == AthleteSessionStatus.planned &&
+      !_isAiPendingSuggestion(s) &&
       s.category != 'competicion');
+  final hasAiPending = sessions.any((s) =>
+      s.status == AthleteSessionStatus.planned &&
+      _isAiPendingSuggestion(s));
   final hasRace =
       sessions.any((s) => s.category == 'competicion');
 
@@ -2359,6 +2634,11 @@ List<Color> _dotsForDay(
     colors.add(isSelected
         ? Colors.white.withOpacity(0.7)
         : AppColors.brand);
+  }
+  if (hasAiPending) {
+    colors.add(isSelected
+        ? Colors.white.withOpacity(0.85)
+        : const Color(0xFFB084F5));
   }
   if (hasRace) {
     colors.add(isSelected ? Colors.white : AppColors.rpeMax);

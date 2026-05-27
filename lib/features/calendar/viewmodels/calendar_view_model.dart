@@ -121,6 +121,12 @@ class CalendarViewModel {
     final newDay = selectedDay.value.add(Duration(days: deltaDays));
     selectedDay.value = newDay;
     if (isAthleteMode.value) {
+      final monthChanged = newDay.month != focusedMonth.value.month ||
+          newDay.year != focusedMonth.value.year;
+      if (monthChanged) {
+        focusedMonth.value = DateTime(newDay.year, newDay.month, 1);
+        _subscribeToMonth(newDay);
+      }
       selectedDaySessions.value = sessionsByDate.value[_dateKey(newDay)] ?? [];
     } else {
       _updateSelectedDayWorkouts(newDay);

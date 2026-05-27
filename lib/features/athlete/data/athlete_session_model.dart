@@ -214,6 +214,156 @@ extension AthleteSessionStatusX on AthleteSessionStatus {
   }
 }
 
+enum AthleteSessionOrigin { manual, ai }
+
+extension AthleteSessionOriginX on AthleteSessionOrigin {
+  String get toValue {
+    switch (this) {
+      case AthleteSessionOrigin.manual:
+        return 'manual';
+      case AthleteSessionOrigin.ai:
+        return 'ai';
+    }
+  }
+
+  static AthleteSessionOrigin fromValue(String v) {
+    switch (v) {
+      case 'ai':
+        return AthleteSessionOrigin.ai;
+      default:
+        return AthleteSessionOrigin.manual;
+    }
+  }
+}
+
+enum AthleteSessionSuggestionStatus { suggested, accepted, edited, rejected }
+
+extension AthleteSessionSuggestionStatusX on AthleteSessionSuggestionStatus {
+  String get toValue {
+    switch (this) {
+      case AthleteSessionSuggestionStatus.suggested:
+        return 'suggested';
+      case AthleteSessionSuggestionStatus.accepted:
+        return 'accepted';
+      case AthleteSessionSuggestionStatus.edited:
+        return 'edited';
+      case AthleteSessionSuggestionStatus.rejected:
+        return 'rejected';
+    }
+  }
+
+  static AthleteSessionSuggestionStatus fromValue(String v) {
+    switch (v) {
+      case 'accepted':
+        return AthleteSessionSuggestionStatus.accepted;
+      case 'edited':
+        return AthleteSessionSuggestionStatus.edited;
+      case 'rejected':
+        return AthleteSessionSuggestionStatus.rejected;
+      default:
+        return AthleteSessionSuggestionStatus.suggested;
+    }
+  }
+}
+
+class AthleteSessionSuggestion {
+  final AthleteSessionOrigin origin;
+  final AthleteSessionSuggestionStatus status;
+  final String? decisionId;
+  final String? cycleId;
+  final String? rationale;
+  final String? focus;
+  final double? estimatedLoad;
+  final String? sourceModel;
+  final DateTime? generatedAt;
+  final DateTime? respondedAt;
+  final String? responseNote;
+
+  const AthleteSessionSuggestion({
+    required this.origin,
+    required this.status,
+    this.decisionId,
+    this.cycleId,
+    this.rationale,
+    this.focus,
+    this.estimatedLoad,
+    this.sourceModel,
+    this.generatedAt,
+    this.respondedAt,
+    this.responseNote,
+  });
+
+  factory AthleteSessionSuggestion.fromMap(Map<String, dynamic> map) {
+    return AthleteSessionSuggestion(
+      origin: AthleteSessionOriginX.fromValue(
+        map['origin'] as String? ?? '',
+      ),
+      status: AthleteSessionSuggestionStatusX.fromValue(
+        map['status'] as String? ?? '',
+      ),
+      decisionId: map['decisionId'] as String?,
+      cycleId: map['cycleId'] as String?,
+      rationale: map['rationale'] as String?,
+      focus: map['focus'] as String?,
+      estimatedLoad: (map['estimatedLoad'] as num?)?.toDouble(),
+      sourceModel: map['sourceModel'] as String?,
+      generatedAt: map['generatedAt'] != null
+          ? _toDateTime(map['generatedAt'])
+          : null,
+      respondedAt: map['respondedAt'] != null
+          ? _toDateTime(map['respondedAt'])
+          : null,
+      responseNote: map['responseNote'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'origin': origin.toValue,
+      'status': status.toValue,
+      if (decisionId != null) 'decisionId': decisionId,
+      if (cycleId != null) 'cycleId': cycleId,
+      if (rationale != null) 'rationale': rationale,
+      if (focus != null) 'focus': focus,
+      if (estimatedLoad != null) 'estimatedLoad': estimatedLoad,
+      if (sourceModel != null) 'sourceModel': sourceModel,
+      if (generatedAt != null) 'generatedAt': Timestamp.fromDate(generatedAt!),
+      if (respondedAt != null) 'respondedAt': Timestamp.fromDate(respondedAt!),
+      if (responseNote != null) 'responseNote': responseNote,
+    };
+  }
+
+  AthleteSessionSuggestion copyWith({
+    AthleteSessionOrigin? origin,
+    AthleteSessionSuggestionStatus? status,
+    Object? decisionId = _sentinel,
+    Object? cycleId = _sentinel,
+    Object? rationale = _sentinel,
+    Object? focus = _sentinel,
+    Object? estimatedLoad = _sentinel,
+    Object? sourceModel = _sentinel,
+    Object? generatedAt = _sentinel,
+    Object? respondedAt = _sentinel,
+    Object? responseNote = _sentinel,
+  }) {
+    return AthleteSessionSuggestion(
+      origin: origin ?? this.origin,
+      status: status ?? this.status,
+      decisionId: decisionId == _sentinel ? this.decisionId : decisionId as String?,
+      cycleId: cycleId == _sentinel ? this.cycleId : cycleId as String?,
+      rationale: rationale == _sentinel ? this.rationale : rationale as String?,
+      focus: focus == _sentinel ? this.focus : focus as String?,
+      estimatedLoad: estimatedLoad == _sentinel
+          ? this.estimatedLoad
+          : estimatedLoad as double?,
+      sourceModel: sourceModel == _sentinel ? this.sourceModel : sourceModel as String?,
+      generatedAt: generatedAt == _sentinel ? this.generatedAt : generatedAt as DateTime?,
+      respondedAt: respondedAt == _sentinel ? this.respondedAt : respondedAt as DateTime?,
+      responseNote: responseNote == _sentinel ? this.responseNote : responseNote as String?,
+    );
+  }
+}
+
 // ── AthleteSession ────────────────────────────────────────────────────────────
 
 class AthleteSession {
@@ -234,6 +384,7 @@ class AthleteSession {
 
   final String? planningNotes;
   final String? executionNotes;
+  final AthleteSessionSuggestion? suggestion;
 
   // Campos de competición (solo relevantes si category == 'competicion')
   final String? raceName;          // p.ej. "10K Valencia"
@@ -258,6 +409,7 @@ class AthleteSession {
     this.title,
     this.planningNotes,
     this.executionNotes,
+    this.suggestion,
     this.raceName,
     this.raceDistanceM,
     this.targetTimeSeconds,
@@ -292,6 +444,10 @@ class AthleteSession {
       title:                map['title'] as String?,
       planningNotes:        map['planningNotes'] as String?,
       executionNotes:       map['executionNotes'] as String?,
+      suggestion:           map['suggestion'] != null
+                              ? AthleteSessionSuggestion.fromMap(
+                                  map['suggestion'] as Map<String, dynamic>)
+                              : null,
       raceName:             map['raceName']          as String?,
       raceDistanceM:        map['raceDistanceM']     as int?,
       targetTimeSeconds:    map['targetTimeSeconds'] as int?,
@@ -317,6 +473,7 @@ class AthleteSession {
       if (title                != null) 'title':                title,
       if (planningNotes        != null) 'planningNotes':        planningNotes,
       if (executionNotes       != null) 'executionNotes':       executionNotes,
+      if (suggestion          != null) 'suggestion':            suggestion!.toMap(),
       if (raceName             != null) 'raceName':             raceName,
       if (raceDistanceM        != null) 'raceDistanceM':        raceDistanceM,
       if (targetTimeSeconds    != null) 'targetTimeSeconds':    targetTimeSeconds,
@@ -338,6 +495,7 @@ class AthleteSession {
     Object? title               = _sentinel,
     Object? planningNotes       = _sentinel,
     Object? executionNotes      = _sentinel,
+    Object? suggestion          = _sentinel,
     Object? raceName            = _sentinel,
     Object? raceDistanceM       = _sentinel,
     Object? targetTimeSeconds   = _sentinel,
@@ -359,6 +517,7 @@ class AthleteSession {
       title:               title               == _sentinel ? this.title               : title               as String?,
       planningNotes:       planningNotes       == _sentinel ? this.planningNotes       : planningNotes       as String?,
       executionNotes:      executionNotes      == _sentinel ? this.executionNotes      : executionNotes      as String?,
+      suggestion:          suggestion          == _sentinel ? this.suggestion          : suggestion          as AthleteSessionSuggestion?,
       raceName:            raceName            == _sentinel ? this.raceName            : raceName            as String?,
       raceDistanceM:       raceDistanceM       == _sentinel ? this.raceDistanceM       : raceDistanceM       as int?,
       targetTimeSeconds:   targetTimeSeconds   == _sentinel ? this.targetTimeSeconds   : targetTimeSeconds   as int?,

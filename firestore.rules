@@ -164,6 +164,10 @@ service cloud.firestore {
       }
 
       // ── users/{uid}/result_notifications/{id} ──────────────────────────────
+      match /aiCoachEvents/{eventId} {
+        allow read, write: if isOwner(uid);
+      }
+
       match /result_notifications/{notifId} {
         // The owner reads and deletes their own reward notifications.
         allow read, delete: if isOwner(uid);
