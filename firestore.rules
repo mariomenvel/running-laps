@@ -399,6 +399,17 @@ service cloud.firestore {
     }
 
     // ────────────────────────────────────────────────────────────────────────
+    // appConfig/{doc}
+    // ────────────────────────────────────────────────────────────────────────
+    // Configuración global de la app (AI Coach provider config, etc.)
+    // Solo lectura para usuarios autenticados.
+    // Solo escritura para administradores.
+    match /appConfig/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
     // global_challenges/{id}
     // ────────────────────────────────────────────────────────────────────────
     match /global_challenges/{challengeId} {
