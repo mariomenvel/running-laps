@@ -6,7 +6,9 @@ import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_weekly_planner_service.dart';
+import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
 import 'package:running_laps/features/calendar/viewmodels/calendar_view_model.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/features/training/views/pre_execution_screen.dart';
@@ -28,6 +30,7 @@ class _CalendarViewState extends State<CalendarView> {
   int _focusedYear = DateTime.now().year;
   bool _isGeneratingAiPlan = false;
   bool _isUpdatingSuggestion = false;
+  bool _hasAiCoachProfile = false;
   late Future<List<AthleteSession>> _nextWeekSuggestionsFuture;
 
   @override
@@ -37,17 +40,28 @@ class _CalendarViewState extends State<CalendarView> {
   }
 
   Future<void> _initWithAuth() async {
-    final user = FirebaseAuth.instance.currentUser ??
-        await FirebaseAuth.instance.authStateChanges()
-            .firstWhere((u) => u != null);
+    // currentUser primero (síncrono, disponible si ya autenticado)
+    // authStateChanges como fallback con timeout de 5s
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      user = await FirebaseAuth.instance.authStateChanges()
+          .firstWhere((u) => u != null)
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => FirebaseAuth.instance.currentUser,
+          );
+    }
+    if (user == null) return;
     if (!mounted) return;
-    final uid = user!.uid;
+    final uid = user.uid;
     setState(() {
       _vm = CalendarViewModel(userId: uid);
       _vmReady = true;
     });
     _vm!.loadAll();
     _nextWeekSuggestionsFuture = _loadVisibleWeekSuggestions(uid);
+    final profile = await AiCoachRepository().getProfile(uid: uid);
+    if (mounted) setState(() => _hasAiCoachProfile = profile != null);
   }
 
   @override
@@ -71,7 +85,8 @@ class _CalendarViewState extends State<CalendarView> {
             return Column(
               children: [
                 _buildViewSelector(isAthlete),
-                if (isAthlete) _buildAiGenerateButton(),
+                if (isAthlete && _hasAiCoachProfile) _buildAiGenerateButton(),
+                if (isAthlete && !_hasAiCoachProfile) _buildAiCoachCta(),
                 if (isAthlete) _buildAiSuggestionsPanel(),
                 Expanded(
                   child: ValueListenableBuilder<CalendarViewType>(
@@ -112,6 +127,28 @@ class _CalendarViewState extends State<CalendarView> {
           ),
           icon: const Icon(Icons.auto_awesome_rounded, size: 18),
           label: Text(_isGeneratingAiPlan ? 'Generando plan IA...' : 'Generar semana IA'),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAiCoachCta() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.l, 0, AppSpacing.l, AppSpacing.m),
+      child: SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: () => launchAiCoachOnboarding(
+            context,
+            onCompleted: () async {
+              final uid = FirebaseAuth.instance.currentUser?.uid;
+              if (uid == null) return;
+              final profile = await AiCoachRepository().getProfile(uid: uid);
+              if (mounted) setState(() => _hasAiCoachProfile = profile != null);
+            },
+          ),
+          icon: const Icon(Icons.auto_awesome_rounded),
+          label: const Text('Configura tu entrenador IA'),
         ),
       ),
     );

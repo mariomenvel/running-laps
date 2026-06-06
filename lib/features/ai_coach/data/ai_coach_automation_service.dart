@@ -47,6 +47,15 @@ class AiCoachAutomationService {
       );
     }
 
+    final profile = await _repository.getProfile(uid: uid);
+    if (profile == null) {
+      debugPrint('[AiCoach] No profile found, skipping auto-plan');
+      return const AiCoachAutomationResult(
+        generated: false,
+        generatedSessions: 0,
+      );
+    }
+
     final provider = await _repository.getProviderConfig(uid: uid);
     if (provider == null ||
         !provider.weeklyPlanningEnabled ||

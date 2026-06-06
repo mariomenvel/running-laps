@@ -15,6 +15,7 @@ import 'package:running_laps/features/ai_coach/data/ai_coach_automation_service.
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_weekly_planner_service.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_settings_view.dart';
+import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/features/templates/data/templates_repository.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
@@ -891,6 +892,7 @@ class _PlanningTabState extends State<_PlanningTab> {
   bool _isGeneratingAiPlan = false;
   bool _isAcceptingAiPlan = false;
   bool _autoPlannerRan = false;
+  bool _hasAiCoachProfile = false;
 
   String _fmt(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
@@ -1007,14 +1009,16 @@ class _PlanningTabState extends State<_PlanningTab> {
   }
 
   Future<void> _openAiSettings() async {
-    final changed = await Navigator.push<bool>(
+    await launchAiCoachOnboarding(
       context,
-      AppRoute(page: AiCoachSettingsView(uid: widget.uid)),
+      onCompleted: () {
+        if (!mounted) return;
+        setState(() {
+          _aiEnabledFuture = _loadAiEnabled();
+          _nextWeekSuggestionsFuture = _loadNextWeekSuggestions();
+        });
+      },
     );
-    if (!mounted || changed != true) return;
-    setState(() {
-      _aiEnabledFuture = _loadAiEnabled();
-    });
   }
 
   @override
@@ -1027,6 +1031,9 @@ class _PlanningTabState extends State<_PlanningTab> {
     _upcomingFuture = _loadUpcoming();
     _nextWeekSuggestionsFuture = _loadNextWeekSuggestions();
     _aiEnabledFuture = _loadAiEnabled();
+    AiCoachRepository().getProfile(widget.uid).then((profile) {
+      if (mounted) setState(() => _hasAiCoachProfile = profile != null);
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _runAutoPlannerIfNeeded();
     });
@@ -1242,40 +1249,54 @@ class _PlanningTabState extends State<_PlanningTab> {
                               )),
                         ],
                         const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: FilledButton(
-                                onPressed: _isGeneratingAiPlan ? null : _generateAiPlan,
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: AppColors.brand,
-                                  minimumSize: const Size(0, 38),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                        if (_hasAiCoachProfile) ...[
+                          Row(
+                            children: [
+                              Expanded(
+                                child: FilledButton(
+                                  onPressed: _isGeneratingAiPlan ? null : _generateAiPlan,
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: AppColors.brand,
+                                    minimumSize: const Size(0, 38),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
                                   ),
+                                  child: Text(_isGeneratingAiPlan ? 'Generando...' : 'Generar semana IA'),
                                 ),
-                                child: Text(_isGeneratingAiPlan ? 'Generando...' : 'Generar semana IA'),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: (!aiEnabled || suggestions.isEmpty || _isAcceptingAiPlan)
-                                    ? null
-                                    : () => _acceptAllAiSuggestions(suggestions),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: AppColors.brand,
-                                  side: const BorderSide(color: AppColors.brand),
-                                  minimumSize: const Size(0, 38),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: (!aiEnabled || suggestions.isEmpty || _isAcceptingAiPlan)
+                                      ? null
+                                      : () => _acceptAllAiSuggestions(suggestions),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppColors.brand,
+                                    side: const BorderSide(color: AppColors.brand),
+                                    minimumSize: const Size(0, 38),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
                                   ),
+                                  child: Text(_isAcceptingAiPlan ? 'Aceptando...' : 'Aceptar todo'),
                                 ),
-                                child: Text(_isAcceptingAiPlan ? 'Aceptando...' : 'Aceptar todo'),
                               ),
+                            ],
+                          ),
+                        ] else ...[
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () => launchAiCoachOnboarding(
+                                context,
+                                onCompleted: () => setState(() => _hasAiCoachProfile = true),
+                              ),
+                              icon: const Icon(Icons.auto_awesome_rounded),
+                              label: const Text('Configura tu entrenador IA'),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(

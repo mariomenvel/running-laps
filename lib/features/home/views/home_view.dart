@@ -13,6 +13,8 @@ import 'package:running_laps/features/home/viewmodels/home_view_model.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/templates/data/athlete_session_mapper.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
+import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
 
 // Zone color helpers — Z1..Z5 matching ZonesService thresholds
 Color _zoneColor(int zone) {
@@ -50,6 +52,7 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   HomeViewModel? _vm;
   bool _vmReady = false;
+  bool _hasAiCoachProfile = false;
 
   @override
   void initState() {
@@ -58,15 +61,31 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _initWithAuth() async {
-    final user = FirebaseAuth.instance.currentUser ??
-        await FirebaseAuth.instance.authStateChanges()
-            .firstWhere((u) => u != null);
+    // currentUser primero (síncrono, disponible si ya autenticado)
+    // authStateChanges como fallback con timeout de 5s
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      user = await FirebaseAuth.instance.authStateChanges()
+          .firstWhere((u) => u != null)
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => FirebaseAuth.instance.currentUser,
+          );
+    }
+    if (user == null) return;
     if (!mounted) return;
     setState(() {
       _vm = HomeViewModel(userId: user!.uid);
       _vmReady = true;
     });
     _vm!.loadAll();
+    _checkAiCoachProfile(user!.uid);
+  }
+
+  Future<void> _checkAiCoachProfile(String uid) async {
+    final profile = await AiCoachRepository().getProfile(uid: uid);
+    if (!mounted) return;
+    setState(() => _hasAiCoachProfile = profile != null);
   }
 
   @override
@@ -197,10 +216,80 @@ class _HomeViewState extends State<HomeView> {
 
   List<Widget> _buildAthleteContent() {
     return [
+      if (!_hasAiCoachProfile) _buildAiCoachCta(),
       _buildTodaySessionCard(),
       const SizedBox(height: AppSpacing.xl),
       _buildWeekSessionsList(),
     ];
+  }
+
+  Widget _buildAiCoachCta() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.xl),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.brand.withValues(alpha: 0.15),
+            AppColors.brand.withValues(alpha: 0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.brand.withValues(alpha: 0.3)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => launchAiCoachOnboarding(
+            context,
+            onCompleted: () => setState(() => _hasAiCoachProfile = true),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.brand.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.auto_awesome_rounded,
+                      color: AppColors.brand, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Activa tu entrenador IA',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary(context),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Planes personalizados según tu historial y objetivos',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded, color: AppColors.brand),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildTodaySessionCard() {
