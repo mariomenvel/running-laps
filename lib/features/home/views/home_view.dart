@@ -15,6 +15,8 @@ import 'package:running_laps/features/templates/data/athlete_session_mapper.dart
 import 'package:running_laps/features/training/views/training_start_view.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
+import 'package:running_laps/features/ai_coach/views/ai_coach_weekly_feedback_view.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 // Zone color helpers — Z1..Z5 matching ZonesService thresholds
 Color _zoneColor(int zone) {
@@ -53,6 +55,43 @@ class _HomeViewState extends State<HomeView> {
   HomeViewModel? _vm;
   bool _vmReady = false;
   bool _hasAiCoachProfile = false;
+  bool _showFeedbackBanner = false;
+
+  String _currentWeekStart() {
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    return '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _checkWeeklyFeedback(String uid) async {
+    if (!_hasAiCoachProfile) return;
+    final existing = await AiCoachRepository().getWeeklyFeedback(
+      uid: uid,
+      weekStart: _currentWeekStart(),
+    );
+    final isWeekend = DateTime.now().weekday >= 6;
+    if (mounted) setState(() => _showFeedbackBanner = existing == null && isWeekend);
+    if (DateTime.now().weekday == 7 && existing == null) {
+      _scheduleWeeklyFeedbackNotification();
+    }
+  }
+
+  Future<void> _scheduleWeeklyFeedbackNotification() async {
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'ai_coach_feedback',
+      'Feedback semanal',
+      channelDescription: 'Recordatorio semanal del coach IA',
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+    );
+    const NotificationDetails details = NotificationDetails(android: androidDetails);
+    await FlutterLocalNotificationsPlugin().show(
+      999,
+      '¿Cómo fue la semana?',
+      'Tu coach quiere saber cómo te has sentido',
+      details,
+    );
+  }
 
   @override
   void initState() {
@@ -86,6 +125,7 @@ class _HomeViewState extends State<HomeView> {
     final profile = await AiCoachRepository().getProfile(uid: uid);
     if (!mounted) return;
     setState(() => _hasAiCoachProfile = profile != null);
+    if (profile != null) _checkWeeklyFeedback(uid);
   }
 
   @override
@@ -216,12 +256,85 @@ class _HomeViewState extends State<HomeView> {
 
   List<Widget> _buildAthleteContent() {
     return [
+      if (_showFeedbackBanner && _hasAiCoachProfile) _buildFeedbackBanner(),
       if (!_hasAiCoachProfile) _buildAiCoachCta(),
       _buildTodaySessionCard(),
       const SizedBox(height: AppSpacing.xl),
       _buildWeekSessionsList(),
     ];
   }
+
+  Widget _buildFeedbackBanner() => Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.xl),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColors.brand.withValues(alpha: 0.12),
+              AppColors.brand.withValues(alpha: 0.04),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.brand.withValues(alpha: 0.25)),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () async {
+              await Navigator.of(context).push(AppRoute(
+                page: AiCoachWeeklyFeedbackView(
+                  weekStart: _currentWeekStart(),
+                  generatePlanAfter: false,
+                  onCompleted: () =>
+                      setState(() => _showFeedbackBanner = false),
+                ),
+              ));
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.brand.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.rate_review_outlined,
+                        color: AppColors.brand, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '¿Cómo fue la semana?',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary(context),
+                          ),
+                        ),
+                        Text(
+                          'Cuéntale a tu coach cómo te has sentido',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right_rounded, color: AppColors.brand),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
 
   Widget _buildAiCoachCta() {
     return Container(

@@ -9,6 +9,7 @@ import 'package:running_laps/features/athlete/data/athlete_session_repository.da
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_weekly_planner_service.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
+import 'package:running_laps/features/ai_coach/views/ai_coach_weekly_feedback_view.dart';
 import 'package:running_laps/features/calendar/viewmodels/calendar_view_model.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/features/training/views/pre_execution_screen.dart';
@@ -31,7 +32,14 @@ class _CalendarViewState extends State<CalendarView> {
   bool _isGeneratingAiPlan = false;
   bool _isUpdatingSuggestion = false;
   bool _hasAiCoachProfile = false;
+  bool _showFeedbackBanner = false;
   late Future<List<AthleteSession>> _nextWeekSuggestionsFuture;
+
+  String _currentWeekStart() {
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    return '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
+  }
 
   @override
   void initState() {
@@ -85,7 +93,8 @@ class _CalendarViewState extends State<CalendarView> {
             return Column(
               children: [
                 _buildViewSelector(isAthlete),
-                if (isAthlete && _hasAiCoachProfile) _buildAiGenerateButton(),
+                if (isAthlete && _hasAiCoachProfile &&
+                    DateTime.now().weekday < 6) _buildAiGenerateButton(),
                 if (isAthlete && !_hasAiCoachProfile) _buildAiCoachCta(),
                 if (isAthlete) _buildAiSuggestionsPanel(),
                 Expanded(
@@ -304,6 +313,48 @@ class _CalendarViewState extends State<CalendarView> {
   Future<void> _generateAiPlanManual() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
+
+    final currentWeekStart = _currentWeekStart();
+    final feedback = await AiCoachRepository().getWeeklyFeedback(
+      uid: uid,
+      weekStart: currentWeekStart,
+    );
+    if (!mounted) return;
+
+    final isWeekend = DateTime.now().weekday >= 6;
+    if (feedback == null && isWeekend) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Antes de generar'),
+          content: const Text(
+            '¿Cómo fue esta semana? Tu coach necesita '
+            'tu feedback para generar un plan más preciso.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Saltar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Rellenar ahora'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed == true && mounted) {
+        await Navigator.of(context).push(AppRoute(
+          page: AiCoachWeeklyFeedbackView(
+            weekStart: currentWeekStart,
+            generatePlanAfter: false,
+            onCompleted: () => setState(() => _showFeedbackBanner = false),
+          ),
+        ));
+        if (!mounted) return;
+      }
+    }
+
     final selected = _vm?.selectedDay.value ?? DateTime.now();
     final weekStart = _mondayOf(selected);
     debugPrint(
