@@ -158,8 +158,12 @@ class AiCoachContextBuilder {
     AiCoachProfile? profile,
     UserProfileModel? userProfile,
   ) {
-    if (profile != null || userProfile == null) {
-      return profile;
+    if (userProfile == null) return profile;
+    if (profile != null) {
+      final merged = userProfile.fcMax != null && profile.fcMax == null
+          ? profile.copyWith(fcMax: userProfile.fcMax)
+          : profile;
+      return merged;
     }
     final now = DateTime.now();
     return AiCoachProfile(
@@ -169,11 +173,9 @@ class AiCoachContextBuilder {
       level: AiCoachAthleteLevel.beginner,
       preferredWeeklySessions: 3,
       availableWeekdays: const [1, 3, 5],
+      fcMax: userProfile.fcMax,
       createdAt: now,
       updatedAt: now,
-      coachNotes: userProfile.fcMax != null || userProfile.fcReposo != null
-          ? 'FC configurada en perfil'
-          : null,
     );
   }
 

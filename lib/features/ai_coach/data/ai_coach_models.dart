@@ -354,6 +354,7 @@ class AiCoachProfile {
   final List<AiCoachRecurringConstraint> recurringConstraints;
   final List<AiCoachTemporaryStatus> temporaryStatuses;
   final String? coachNotes;
+  final int? fcMax;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -369,6 +370,7 @@ class AiCoachProfile {
     this.recurringConstraints = const [],
     this.temporaryStatuses = const [],
     this.coachNotes,
+    this.fcMax,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -396,8 +398,44 @@ class AiCoachProfile {
               Map<String, dynamic>.from(item as Map)))
           .toList(),
       coachNotes: map['coachNotes'] as String?,
+      fcMax: (map['fcMax'] as num?)?.toInt(),
       createdAt: _toDateTime(map['createdAt']),
       updatedAt: _toDateTime(map['updatedAt']),
+    );
+  }
+
+  AiCoachProfile copyWith({
+    AiCoachGoalType? goal,
+    String? goalDescription,
+    DateTime? targetDate,
+    AiCoachAthleteLevel? level,
+    List<int>? availableWeekdays,
+    int? preferredWeeklySessions,
+    int? preferredLongRunWeekday,
+    List<AiCoachRecurringConstraint>? recurringConstraints,
+    List<AiCoachTemporaryStatus>? temporaryStatuses,
+    String? coachNotes,
+    int? fcMax,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return AiCoachProfile(
+      uid: uid,
+      goal: goal ?? this.goal,
+      goalDescription: goalDescription ?? this.goalDescription,
+      targetDate: targetDate ?? this.targetDate,
+      level: level ?? this.level,
+      availableWeekdays: availableWeekdays ?? this.availableWeekdays,
+      preferredWeeklySessions:
+          preferredWeeklySessions ?? this.preferredWeeklySessions,
+      preferredLongRunWeekday:
+          preferredLongRunWeekday ?? this.preferredLongRunWeekday,
+      recurringConstraints: recurringConstraints ?? this.recurringConstraints,
+      temporaryStatuses: temporaryStatuses ?? this.temporaryStatuses,
+      coachNotes: coachNotes ?? this.coachNotes,
+      fcMax: fcMax ?? this.fcMax,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -418,6 +456,7 @@ class AiCoachProfile {
       if (preferredLongRunWeekday != null)
         'preferredLongRunWeekday': preferredLongRunWeekday,
       if (coachNotes != null) 'coachNotes': coachNotes,
+      if (fcMax != null) 'fcMax': fcMax,
     };
   }
 }

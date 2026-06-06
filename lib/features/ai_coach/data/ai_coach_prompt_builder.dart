@@ -106,6 +106,7 @@ class AiCoachPromptBuilder {
                   .map((item) => item.toMap())
                   .toList(),
               'coachNotes': profile.coachNotes,
+              if (profile.fcMax != null) 'fcMax': profile.fcMax,
             },
       'weeklyState': context.weeklyState.toMap(),
       'coachSignals': context.coachSignals,
