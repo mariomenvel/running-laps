@@ -111,6 +111,25 @@ class AiCoachPromptBuilder {
       'weeklyState': context.weeklyState.toMap(),
       'coachSignals': context.coachSignals,
       'recentWeekHistory': context.recentWeekHistory,
+      if (context.weeklyFeedback != null)
+        'weeklyFeedback': {
+          'sensaciones': context.weeklyFeedback!.sensaciones,
+          'sueno': context.weeklyFeedback!.sueno,
+          if (context.weeklyFeedback!.molestias != null)
+            'molestias': context.weeklyFeedback!.molestias,
+          if (context.weeklyFeedback!.observaciones != null)
+            'observaciones': context.weeklyFeedback!.observaciones,
+          'instrucciones':
+              [
+                'Ten muy en cuenta este feedback al generar el plan de la semana siguiente.',
+                if (context.weeklyFeedback!.sensaciones <= 2 ||
+                    context.weeklyFeedback!.molestias != null)
+                  'El atleta tuvo una semana difícil o tiene molestias: reduce la carga y la intensidad.',
+                if (context.weeklyFeedback!.sensaciones >= 4 &&
+                    context.weeklyFeedback!.sueno == 'bien')
+                  'El atleta se sintió bien y durmió bien: puedes aumentar ligeramente la carga.',
+              ].join(' '),
+        },
       'recentTrainings':
           context.recentTrainings.map((item) => item.toMap()).toList(),
       'recentPlannedSessions':

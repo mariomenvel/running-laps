@@ -699,6 +699,7 @@ class AiCoachWeeklyContext {
   final List<Map<String, dynamic>> recentWeekHistory;
   final Map<String, dynamic> coachSignals;
   final DateTime generatedAt;
+  final AiCoachWeeklyFeedback? weeklyFeedback;
 
   const AiCoachWeeklyContext({
     required this.profile,
@@ -708,6 +709,7 @@ class AiCoachWeeklyContext {
     this.recentWeekHistory = const [],
     this.coachSignals = const {},
     required this.generatedAt,
+    this.weeklyFeedback,
   });
 
   Map<String, dynamic> toMap() {
@@ -720,6 +722,14 @@ class AiCoachWeeklyContext {
           recentPlannedSessions.map((item) => item.toMap()).toList(),
       'recentWeekHistory': recentWeekHistory,
       'coachSignals': coachSignals,
+      if (weeklyFeedback != null) 'weeklyFeedback': {
+        'sensaciones': weeklyFeedback!.sensaciones,
+        'sueno': weeklyFeedback!.sueno,
+        if (weeklyFeedback!.molestias != null)
+          'molestias': weeklyFeedback!.molestias,
+        if (weeklyFeedback!.observaciones != null)
+          'observaciones': weeklyFeedback!.observaciones,
+      },
     };
   }
 }
@@ -1007,4 +1017,45 @@ DateTime _toDateTime(dynamic value) {
     if (parsed != null) return parsed;
   }
   return DateTime.now();
+}
+
+class AiCoachWeeklyFeedback {
+  final String uid;
+  final String weekStart;
+  final int sensaciones;
+  final String sueno;
+  final String? molestias;
+  final String? observaciones;
+  final DateTime createdAt;
+
+  const AiCoachWeeklyFeedback({
+    required this.uid,
+    required this.weekStart,
+    required this.sensaciones,
+    required this.sueno,
+    this.molestias,
+    this.observaciones,
+    required this.createdAt,
+  });
+
+  Map<String, dynamic> toMap() => {
+        'uid': uid,
+        'weekStart': weekStart,
+        'sensaciones': sensaciones,
+        'sueno': sueno,
+        if (molestias != null) 'molestias': molestias,
+        if (observaciones != null) 'observaciones': observaciones,
+        'createdAt': Timestamp.fromDate(createdAt),
+      };
+
+  factory AiCoachWeeklyFeedback.fromMap(Map<String, dynamic> map) =>
+      AiCoachWeeklyFeedback(
+        uid: map['uid'] as String,
+        weekStart: map['weekStart'] as String,
+        sensaciones: (map['sensaciones'] as num).toInt(),
+        sueno: map['sueno'] as String,
+        molestias: map['molestias'] as String?,
+        observaciones: map['observaciones'] as String?,
+        createdAt: (map['createdAt'] as Timestamp).toDate(),
+      );
 }
