@@ -168,6 +168,10 @@ service cloud.firestore {
         allow read, write: if isOwner(uid);
       }
 
+      match /aiCoachFeedback/{weekStart} {
+        allow read, write: if isOwner(uid);
+      }
+
       match /result_notifications/{notifId} {
         // The owner reads and deletes their own reward notifications.
         allow read, delete: if isOwner(uid);
