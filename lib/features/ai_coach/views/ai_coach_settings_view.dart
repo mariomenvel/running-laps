@@ -20,8 +20,8 @@ class AiCoachSettingsView extends StatefulWidget {
 class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
   final _goalDescriptionCtrl = TextEditingController();
   final _coachNotesCtrl = TextEditingController();
-  final _strengthDaysCtrl = TextEditingController();
-  final _otherConstraintsCtrl = TextEditingController();
+  final _strengthInputCtrl = TextEditingController();
+  final _otherInputCtrl = TextEditingController();
   final _adjustmentCtrl = TextEditingController();
 
   final _repo = AiCoachRepository();
@@ -41,6 +41,9 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
   String _lastAdjustmentResponse = '';
   int _chatRemainingThisWeek = 3;
 
+  final List<String> _strengthConstraints = [];
+  final List<String> _otherConstraints = [];
+
   @override
   void initState() {
     super.initState();
@@ -51,8 +54,8 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
   void dispose() {
     _goalDescriptionCtrl.dispose();
     _coachNotesCtrl.dispose();
-    _strengthDaysCtrl.dispose();
-    _otherConstraintsCtrl.dispose();
+    _strengthInputCtrl.dispose();
+    _otherInputCtrl.dispose();
     _adjustmentCtrl.dispose();
     super.dispose();
   }
@@ -84,14 +87,20 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
         _availableWeekdays = profile.availableWeekdays.toSet();
         _goalDescriptionCtrl.text = profile.goalDescription;
         _coachNotesCtrl.text = profile.coachNotes ?? '';
-        _strengthDaysCtrl.text = profile.recurringConstraints
-            .where((item) => item.type == AiCoachConstraintType.strengthTraining)
-            .map((item) => item.label)
-            .join('\n');
-        _otherConstraintsCtrl.text = profile.recurringConstraints
-            .where((item) => item.type != AiCoachConstraintType.strengthTraining)
-            .map((item) => item.label)
-            .join('\n');
+        
+        _strengthConstraints.clear();
+        _strengthConstraints.addAll(
+          profile.recurringConstraints
+              .where((item) => item.type == AiCoachConstraintType.strengthTraining)
+              .map((item) => item.label),
+        );
+        
+        _otherConstraints.clear();
+        _otherConstraints.addAll(
+          profile.recurringConstraints
+              .where((item) => item.type != AiCoachConstraintType.strengthTraining)
+              .map((item) => item.label),
+        );
       } else {
         _goalDescriptionCtrl.text = 'Mejorar la consistencia semanal';
       }
@@ -207,406 +216,1006 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
 
   List<AiCoachRecurringConstraint> _buildRecurringConstraints() {
     final constraints = <AiCoachRecurringConstraint>[];
-    for (final line in _splitLines(_strengthDaysCtrl.text)) {
+    for (final label in _strengthConstraints) {
       constraints.add(
         AiCoachRecurringConstraint(
-          id: 'strength_${line.hashCode}',
+          id: 'strength_${label.hashCode}',
           type: AiCoachConstraintType.strengthTraining,
-          label: line,
+          label: label,
         ),
       );
     }
-    for (final line in _splitLines(_otherConstraintsCtrl.text)) {
+    for (final label in _otherConstraints) {
       constraints.add(
         AiCoachRecurringConstraint(
-          id: 'custom_${line.hashCode}',
+          id: 'custom_${label.hashCode}',
           type: AiCoachConstraintType.custom,
-          label: line,
+          label: label,
         ),
       );
     }
     return constraints;
   }
 
-  List<String> _splitLines(String raw) {
-    return raw
-        .split('\n')
-        .map((line) => line.trim())
-        .where((line) => line.isNotEmpty)
-        .toList();
+  void _showGoalBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.background(context),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.borderOf(context),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Selecciona tu Objetivo',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary(context),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Divider(color: AppColors.borderOf(context), thickness: 0.5),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.only(bottom: 16),
+                  children: AiCoachGoalType.values.map((value) {
+                    final isSelected = _goal == value;
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
+                      title: Text(
+                        _goalLabel(value),
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                          color: isSelected ? AppColors.brand : AppColors.textPrimary(context),
+                        ),
+                      ),
+                      trailing: isSelected
+                          ? const Icon(Icons.check_rounded, color: AppColors.brand, size: 20)
+                          : null,
+                      onTap: () {
+                        setState(() => _goal = value);
+                        Navigator.pop(context);
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showLongRunDayBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.background(context),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        final availableDaysSorted = _availableWeekdays.toList()..sort();
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.borderOf(context),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Día de Tirada Larga',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary(context),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Divider(color: AppColors.borderOf(context), thickness: 0.5),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.only(bottom: 16),
+                  children: [
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
+                      title: Text(
+                        'Automático',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: _preferredLongRunWeekday == null ? FontWeight.w600 : FontWeight.w400,
+                          color: _preferredLongRunWeekday == null ? AppColors.brand : AppColors.textPrimary(context),
+                        ),
+                      ),
+                      trailing: _preferredLongRunWeekday == null
+                          ? const Icon(Icons.check_rounded, color: AppColors.brand, size: 20)
+                          : null,
+                      onTap: () {
+                        setState(() => _preferredLongRunWeekday = null);
+                        Navigator.pop(context);
+                      },
+                    ),
+                    ...availableDaysSorted.map((day) {
+                      final isSelected = _preferredLongRunWeekday == day;
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
+                        title: Text(
+                          _weekdayLabel(day),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                            color: isSelected ? AppColors.brand : AppColors.textPrimary(context),
+                          ),
+                        ),
+                        trailing: isSelected
+                            ? const Icon(Icons.check_rounded, color: AppColors.brand, size: 20)
+                            : null,
+                        onTap: () {
+                          setState(() => _preferredLongRunWeekday = day);
+                          Navigator.pop(context);
+                        },
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background =
-        isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
-    final border = isDark ? AppColors.borderDark : AppColors.borderLight;
-    final title = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
-    final subtitle =
-        isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final background = AppColors.background(context);
 
     return Scaffold(
       backgroundColor: background,
-      body: Column(
-        children: [
-          AppHeader(
-            title: const Text(
-              'Entrenador IA',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+      body: DefaultTabController(
+        length: 2,
+        child: Column(
+          children: [
+            const AppHeader(
+              title: Text(
+                'Entrenador IA',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: AppColors.surface2Of(context),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.borderOf(context), width: 0.5),
+              ),
+              child: TabBar(
+                indicatorSize: TabBarIndicatorSize.tab,
+                dividerColor: Colors.transparent,
+                indicator: BoxDecoration(
+                  color: AppColors.surfaceOf(context),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                  border: Border.all(
+                    color: AppColors.borderOf(context).withValues(alpha: 0.5),
+                    width: 0.5,
+                  ),
+                ),
+                labelColor: AppColors.brand,
+                labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, letterSpacing: -0.3),
+                unselectedLabelColor: AppColors.textSecondary(context),
+                unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13, letterSpacing: -0.3),
+                tabs: const [
+                  Tab(text: 'Bases del Plan'),
+                  Tab(text: 'Ajuste Semanal'),
+                ],
+              ),
+            ),
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : TabBarView(
+                      children: [
+                        _buildBasesTab(context),
+                        _buildAjustesTab(context),
+                      ],
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBasesTab(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+      children: [
+        _SectionCard(
+          title: 'Objetivo deportivo',
+          subtitle: 'Define el contexto estable para que la IA planifique como un entrenador serio.',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildGoalSelector(context),
+              const SizedBox(height: 16),
+              _buildFormLabel(context, 'Descripción del objetivo'),
+              TextField(
+                controller: _goalDescriptionCtrl,
+                decoration: _inputDecoration(context, hint: 'Ej. 10K sub 50 o volver a correr con constancia'),
+                style: TextStyle(fontSize: 15, color: AppColors.textPrimary(context)),
+              ),
+              const SizedBox(height: 16),
+              _buildLevelSelector(context),
+              const SizedBox(height: 16),
+              _buildDatePicker(context),
+            ],
+          ),
+        ),
+        _SectionCard(
+          title: 'Disponibilidad semanal',
+          subtitle: 'La IA usará estos días como marco para repartir la carga.',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildWeekDaySelector(context),
+              const SizedBox(height: 16),
+              _buildSessionsCountSelector(context),
+              const SizedBox(height: 16),
+              _buildFormLabel(context, 'Día preferido de tirada larga'),
+              _buildLongRunDaySelector(context),
+            ],
+          ),
+        ),
+        _SectionCard(
+          title: 'Restricciones recurrentes',
+          subtitle: 'Cosas específicas que el entrenador IA debe recordar semana tras semana.',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildConstraintsManager(
+                context: context,
+                title: 'Fuerza / gimnasio',
+                placeholder: 'Ej. Miércoles hago pierna',
+                items: _strengthConstraints,
+                inputController: _strengthInputCtrl,
+                onAdd: () {
+                  final text = _strengthInputCtrl.text.trim();
+                  if (text.isNotEmpty) {
+                    setState(() {
+                      _strengthConstraints.add(text);
+                      _strengthInputCtrl.clear();
+                    });
+                  }
+                },
+                onDelete: (idx) {
+                  setState(() {
+                    _strengthConstraints.removeAt(idx);
+                  });
+                },
+              ),
+              const SizedBox(height: 20),
+              _buildConstraintsManager(
+                context: context,
+                title: 'Otras restricciones',
+                placeholder: 'Ej. Domingo no corro temprano',
+                items: _otherConstraints,
+                inputController: _otherInputCtrl,
+                onAdd: () {
+                  final text = _otherInputCtrl.text.trim();
+                  if (text.isNotEmpty) {
+                    setState(() {
+                      _otherConstraints.add(text);
+                      _otherInputCtrl.clear();
+                    });
+                  }
+                },
+                onDelete: (idx) {
+                  setState(() {
+                    _otherConstraints.removeAt(idx);
+                  });
+                },
+              ),
+              const SizedBox(height: 20),
+              _buildFormLabel(context, 'Notas adicionales del entrenador'),
+              TextField(
+                controller: _coachNotesCtrl,
+                minLines: 3,
+                maxLines: 5,
+                decoration: _inputDecoration(
+                  context,
+                  hint: 'Ej. Tolero mejor volumen que intensidad, prefiero calidad en jueves...',
+                ),
+                style: TextStyle(fontSize: 14, color: AppColors.textPrimary(context)),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        FilledButton(
+          onPressed: _isSaving ? null : _save,
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.brand,
+            foregroundColor: Colors.white,
+            minimumSize: const Size.fromHeight(52),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: 0,
+          ),
+          child: _isSaving
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Text(
+                  'Guardar bases del plan',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, letterSpacing: -0.3),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAjustesTab(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+      children: [
+        _SectionCard(
+          title: 'Ajuste rápido de esta semana',
+          subtitle: 'Comunícale cambios temporales a tu Coach para la planificación de la siguiente semana. Ej. "tengo dolor en la rodilla", "esta semana viajo y solo tengo 2 días".',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildMessageLimitIndicator(context),
+              const SizedBox(height: 16),
+              _buildFormLabel(context, 'Mensaje para tu Coach'),
+              TextField(
+                controller: _adjustmentCtrl,
+                minLines: 3,
+                maxLines: 5,
+                decoration: _inputDecoration(
+                  context,
+                  hint: 'Cuéntale a la IA el contexto específico o imprevistos de tu semana...',
+                ),
+                style: TextStyle(fontSize: 14, color: AppColors.textPrimary(context)),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _isSendingAdjustment || _chatRemainingThisWeek <= 0
+                      ? null
+                      : _sendAdjustment,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.brand,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 0,
+                  ),
+                  icon: _isSendingAdjustment
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.send_rounded, size: 18),
+                  label: Text(
+                    _isSendingAdjustment
+                        ? 'Ajustando plan...'
+                        : _chatRemainingThisWeek <= 0
+                            ? 'Sin consultas disponibles'
+                            : 'Enviar ajuste al Coach',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: -0.3),
+                  ),
+                ),
+              ),
+              if (_lastAdjustmentResponse.isNotEmpty) ...[
+                const SizedBox(height: 20),
+                _buildCoachResponseBubble(context),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFormLabel(BuildContext context, String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6.0),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textSecondary(context),
+          letterSpacing: -0.3,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGoalSelector(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFormLabel(context, 'Objetivo principal'),
+        InkWell(
+          onTap: () => _showGoalBottomSheet(context),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: AppColors.surface2Of(context),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _goalLabel(_goal),
+                    style: TextStyle(
+                      color: AppColors.textPrimary(context),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textSecondary(context)),
+              ],
             ),
           ),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-                    children: [
-                      _SectionCard(
-                        title: 'Objetivo deportivo',
-                        subtitle:
-                            'Define el contexto estable para que la IA planifique como un entrenador serio.',
-                        child: Column(
-                          children: [
-                            DropdownButtonFormField<AiCoachGoalType>(
-                              value: _goal,
-                              decoration: _inputDecoration('Objetivo principal'),
-                              items: AiCoachGoalType.values
-                                  .map(
-                                    (value) => DropdownMenuItem(
-                                      value: value,
-                                      child: Text(_goalLabel(value)),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (value) {
-                                if (value == null) return;
-                                setState(() => _goal = value);
-                              },
-                            ),
-                            const SizedBox(height: 12),
-                            TextField(
-                              controller: _goalDescriptionCtrl,
-                              decoration: _inputDecoration(
-                                'Descripción del objetivo',
-                                hint: 'Ej. 10K sub 50 o volver a correr con constancia',
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            DropdownButtonFormField<AiCoachAthleteLevel>(
-                              value: _level,
-                              decoration: _inputDecoration('Nivel actual'),
-                              items: AiCoachAthleteLevel.values
-                                  .map(
-                                    (value) => DropdownMenuItem(
-                                      value: value,
-                                      child: Text(_levelLabel(value)),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (value) {
-                                if (value == null) return;
-                                setState(() => _level = value);
-                              },
-                            ),
-                            const SizedBox(height: 12),
-                            InkWell(
-                              onTap: _pickDate,
-                              borderRadius: BorderRadius.circular(16),
-                              child: InputDecorator(
-                                decoration: _inputDecoration('Fecha objetivo'),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        _targetDate == null
-                                            ? 'Sin fecha objetivo'
-                                            : DateFormat('dd/MM/yyyy')
-                                                .format(_targetDate!),
-                                        style: TextStyle(color: title),
-                                      ),
-                                    ),
-                                    Icon(Icons.calendar_month_rounded,
-                                        color: subtitle),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLevelSelector(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFormLabel(context, 'Nivel actual'),
+        Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: AppColors.surface2Of(context),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.borderOf(context), width: 0.5),
+          ),
+          child: Row(
+            children: AiCoachAthleteLevel.values.map((value) {
+              final isSelected = _level == value;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _level = value),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.brand.withValues(alpha: 0.08)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isSelected ? AppColors.brand : Colors.transparent,
+                        width: isSelected ? 1.5 : 1,
                       ),
-                      const SizedBox(height: 16),
-                      _SectionCard(
-                        title: 'Disponibilidad semanal',
-                        subtitle:
-                            'La IA usará estos días como marco para repartir la carga.',
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Días disponibles',
-                              style: TextStyle(
-                                color: title,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: List.generate(7, (index) {
-                                final day = index + 1;
-                                final selected = _availableWeekdays.contains(day);
-                                return FilterChip(
-                                  selected: selected,
-                                  label: Text(_weekdayShort(day)),
-                                  onSelected: (value) {
-                                    setState(() {
-                                      if (value) {
-                                        _availableWeekdays.add(day);
-                                      } else {
-                                        _availableWeekdays.remove(day);
-                                      }
-                                      if (_preferredLongRunWeekday != null &&
-                                          !_availableWeekdays
-                                              .contains(_preferredLongRunWeekday)) {
-                                        _preferredLongRunWeekday = null;
-                                      }
-                                    });
-                                  },
-                                  selectedColor:
-                                      _kAiSetupAccent.withValues(alpha: 0.22),
-                                  checkmarkColor: AppColors.brandPurple,
-                                  side: BorderSide(
-                                    color: selected
-                                        ? AppColors.brandPurple
-                                        : border,
-                                  ),
-                                  labelStyle: TextStyle(
-                                    color: selected ? title : subtitle,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                );
-                              }),
-                            ),
-                            const SizedBox(height: 14),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: DropdownButtonFormField<int>(
-                                    value: _preferredWeeklySessions,
-                                    decoration: _inputDecoration(
-                                        'Sesiones objetivo por semana'),
-                                    items: List.generate(5, (index) => index + 2)
-                                        .map(
-                                          (value) => DropdownMenuItem(
-                                            value: value,
-                                            child: Text('$value sesiones'),
-                                          ),
-                                        )
-                                        .toList(),
-                                    onChanged: (value) {
-                                      if (value == null) return;
-                                      setState(
-                                          () => _preferredWeeklySessions = value);
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: DropdownButtonFormField<int?>(
-                                    value: _preferredLongRunWeekday,
-                                    decoration:
-                                        _inputDecoration('Día preferido de tirada'),
-                                    items: [
-                                      const DropdownMenuItem<int?>(
-                                        value: null,
-                                        child: Text('Automático'),
-                                      ),
-                                      ...(_availableWeekdays.toList()..sort()).map(
-                                        (day) => DropdownMenuItem<int?>(
-                                          value: day,
-                                          child: Text(_weekdayLabel(day)),
-                                        ),
-                                      ),
-                                    ],
-                                    onChanged: (value) {
-                                      setState(
-                                          () => _preferredLongRunWeekday = value);
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _SectionCard(
-                        title: 'Restricciones recurrentes',
-                        subtitle:
-                            'Aquí van cosas que la IA debe recordar semana tras semana.',
-                        child: Column(
-                          children: [
-                            TextField(
-                              controller: _strengthDaysCtrl,
-                              minLines: 2,
-                              maxLines: 4,
-                              decoration: _inputDecoration(
-                                'Fuerza / gimnasio',
-                                hint:
-                                    'Una línea por restricción. Ej. Miércoles hago pierna',
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            TextField(
-                              controller: _otherConstraintsCtrl,
-                              minLines: 2,
-                              maxLines: 4,
-                              decoration: _inputDecoration(
-                                'Otras restricciones',
-                                hint:
-                                    'Ej. Domingo no puedo correr temprano, viernes descanso fijo',
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            TextField(
-                              controller: _coachNotesCtrl,
-                              minLines: 2,
-                              maxLines: 4,
-                              decoration: _inputDecoration(
-                                'Notas del entrenador',
-                                hint:
-                                    'Ej. Tolero mejor volumen que intensidad, prefiero calidad en jueves',
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _SectionCard(
-                        title: 'Ajuste rápido de esta semana',
-                        subtitle:
-                            'Ejemplos: “miércoles hago pierna”, “esta semana solo tengo 2 días”, “tengo agujetas”.',
-                        child: Column(
-                          children: [
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                'Consultas restantes esta semana: $_chatRemainingThisWeek/3',
-                                style: TextStyle(
-                                  color: subtitle,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            TextField(
-                              controller: _adjustmentCtrl,
-                              minLines: 2,
-                              maxLines: 4,
-                              decoration: _inputDecoration(
-                                'Mensaje para la IA',
-                                hint: 'Cuéntale el contexto que debe tener en cuenta',
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              width: double.infinity,
-                              child: FilledButton.icon(
-                                onPressed: _isSendingAdjustment ? null : _sendAdjustment,
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: AppColors.brandPurple,
-                                  foregroundColor: Colors.white,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 14),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                ),
-                                icon: _isSendingAdjustment
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Icon(Icons.send_rounded),
-                                label: Text(
-                                  _isSendingAdjustment
-                                      ? 'Ajustando…'
-                                      : 'Enviar ajuste',
-                                ),
-                              ),
-                            ),
-                            if (_lastAdjustmentResponse.isNotEmpty) ...[
-                              const SizedBox(height: 12),
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
-                                  color: _kAiSetupAccent.withValues(alpha: 0.14),
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(
-                                    color: _kAiSetupAccent.withValues(alpha: 0.35),
-                                  ),
-                                ),
-                                child: Text(
-                                  _lastAdjustmentResponse,
-                                  style: TextStyle(color: title, height: 1.35),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      FilledButton(
-                        onPressed: _isSaving ? null : _save,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.brandPurple,
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size.fromHeight(54),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: _isSaving
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
                               )
-                            : const Text(
-                                'Guardar configuración IA',
-                                style: TextStyle(fontWeight: FontWeight.w700),
-                              ),
+                            ]
+                          : null,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      _levelLabel(value),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                        color: isSelected
+                            ? AppColors.brand
+                            : AppColors.textSecondary(context),
+                        letterSpacing: -0.3,
                       ),
-                    ],
+                    ),
                   ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDatePicker(BuildContext context) {
+    final title = AppColors.textPrimary(context);
+    final subtitle = AppColors.textSecondary(context);
+    
+    int? weeksLeft;
+    int? daysLeft;
+    if (_targetDate != null) {
+      final diff = _targetDate!.difference(DateTime.now());
+      daysLeft = diff.inDays;
+      weeksLeft = (daysLeft / 7).ceil();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFormLabel(context, 'Fecha objetivo'),
+        InkWell(
+          onTap: _pickDate,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: AppColors.surface2Of(context),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _targetDate == null
+                        ? 'Sin fecha objetivo'
+                        : DateFormat('dd/MM/yyyy').format(_targetDate!),
+                    style: TextStyle(color: title, fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                ),
+                Icon(Icons.calendar_month_rounded, color: subtitle),
+              ],
+            ),
+          ),
+        ),
+        if (_targetDate != null && daysLeft != null && daysLeft > 0) ...[
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.brand.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.brand.withValues(alpha: 0.15),
+                width: 0.5,
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.timer_outlined, color: AppColors.brand, size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Quedan $weeksLeft ${weeksLeft == 1 ? "semana" : "semanas"} ($daysLeft días) para tu objetivo.',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.brand,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildWeekDaySelector(BuildContext context) {
+    final subtitle = AppColors.textSecondary(context);
+    final border = AppColors.borderOf(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFormLabel(context, 'Días disponibles'),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(7, (index) {
+            final day = index + 1;
+            final selected = _availableWeekdays.contains(day);
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  if (selected) {
+                    _availableWeekdays.remove(day);
+                  } else {
+                    _availableWeekdays.add(day);
+                  }
+                  if (_preferredLongRunWeekday != null &&
+                      !_availableWeekdays.contains(_preferredLongRunWeekday)) {
+                    _preferredLongRunWeekday = null;
+                  }
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: selected
+                      ? AppColors.brand.withValues(alpha: 0.08)
+                      : AppColors.surface2Of(context),
+                  border: Border.all(
+                    color: selected ? AppColors.brand : border,
+                    width: selected ? 1.5 : 1,
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  _weekdayLetter(day),
+                  style: TextStyle(
+                    color: selected ? AppColors.brand : subtitle,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    fontSize: 13,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSessionsCountSelector(BuildContext context) {
+    final border = AppColors.borderOf(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFormLabel(context, 'Sesiones objetivo por semana'),
+        Row(
+          children: List.generate(5, (index) {
+            final count = index + 2;
+            final selected = _preferredWeeklySessions == count;
+            return Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _preferredWeeklySessions = count),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  margin: EdgeInsets.only(
+                    left: index == 0 ? 0 : 4,
+                    right: index == 4 ? 0 : 4,
+                  ),
+                  height: 38,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: selected
+                        ? AppColors.brand.withValues(alpha: 0.08)
+                        : AppColors.surface2Of(context),
+                    border: Border.all(
+                      color: selected ? AppColors.brand : border,
+                      width: selected ? 1.5 : 1,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '$count',
+                    style: TextStyle(
+                      color: selected ? AppColors.brand : AppColors.textSecondary(context),
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                      fontSize: 13,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLongRunDaySelector(BuildContext context) {
+    final labelText = _preferredLongRunWeekday == null
+        ? 'Automático'
+        : _weekdayLabel(_preferredLongRunWeekday!);
+    
+    return InkWell(
+      onTap: () => _showLongRunDayBottomSheet(context),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.surface2Of(context),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                labelText,
+                style: TextStyle(
+                  color: AppColors.textPrimary(context),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textSecondary(context)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildConstraintsManager({
+    required BuildContext context,
+    required String title,
+    required String placeholder,
+    required List<String> items,
+    required TextEditingController inputController,
+    required VoidCallback onAdd,
+    required Function(int) onDelete,
+  }) {
+    final textPrimary = AppColors.textPrimary(context);
+    final textSecondary = AppColors.textSecondary(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFormLabel(context, title),
+        if (items.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: Text(
+              'Sin restricciones añadidas.',
+              style: TextStyle(
+                color: textSecondary,
+                fontSize: 13,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          )
+        else
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: items.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final item = entry.value;
+              return Container(
+                padding: const EdgeInsets.only(left: 10, right: 4, top: 5, bottom: 5),
+                decoration: BoxDecoration(
+                  color: AppColors.brand.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.brand.withValues(alpha: 0.2), width: 1),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        item,
+                        style: const TextStyle(
+                          color: AppColors.brand,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    GestureDetector(
+                      onTap: () => onDelete(idx),
+                      child: const Padding(
+                        padding: EdgeInsets.all(2.0),
+                        child: Icon(
+                          Icons.close_rounded,
+                          color: AppColors.brand,
+                          size: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: inputController,
+                decoration: _inputDecoration(context, hint: placeholder).copyWith(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+                style: TextStyle(fontSize: 13, color: textPrimary),
+                onSubmitted: (_) => onAdd(),
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              onPressed: onAdd,
+              style: IconButton.styleFrom(
+                backgroundColor: AppColors.brand,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.all(12),
+              ),
+              icon: const Icon(Icons.add_rounded, size: 20),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMessageLimitIndicator(BuildContext context) {
+    final remaining = _chatRemainingThisWeek;
+    return Row(
+      children: [
+        Text(
+          'Consultas de la semana:',
+          style: TextStyle(
+            color: AppColors.textSecondary(context),
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            letterSpacing: -0.3,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Row(
+          children: List.generate(3, (index) {
+            final active = index < remaining;
+            return Container(
+              margin: const EdgeInsets.only(right: 6),
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: active
+                    ? AppColors.brand
+                    : AppColors.borderOf(context),
+              ),
+            );
+          }),
+        ),
+        const Spacer(),
+        Text(
+          '$remaining/3 restantes',
+          style: TextStyle(
+            color: remaining > 0 ? AppColors.brand : AppColors.textSecondary(context),
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.3,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCoachResponseBubble(BuildContext context) {
+    if (_lastAdjustmentResponse.isEmpty) return const SizedBox.shrink();
+    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.brandSurface : const Color(0xFFF9F5FF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? AppColors.brandBorder : const Color(0xFFEADBFF),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: AppColors.brand.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.psychology_rounded,
+                  color: AppColors.brand,
+                  size: 14,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Respuesta del Coach IA',
+                style: TextStyle(
+                  color: AppColors.brand,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  letterSpacing: -0.3,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            _lastAdjustmentResponse,
+            style: TextStyle(
+              color: AppColors.textPrimary(context),
+              height: 1.4,
+              fontSize: 13.5,
+              letterSpacing: -0.3,
+            ),
           ),
         ],
       ),
     );
   }
 
-  InputDecoration _inputDecoration(String label, {String? hint}) {
+  InputDecoration _inputDecoration(BuildContext context, {String? hint}) {
     return InputDecoration(
-      labelText: label,
       hintText: hint,
+      hintStyle: TextStyle(
+        color: AppColors.textSecondary(context).withValues(alpha: 0.6),
+        fontSize: 14,
+        letterSpacing: -0.3,
+      ),
       filled: true,
-      fillColor: Theme.of(context).brightness == Brightness.dark
-          ? AppColors.surfaceVariantDark
-          : AppColors.surfaceVariantLight,
+      fillColor: AppColors.surface2Of(context),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
       ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
 
@@ -640,22 +1249,22 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
     }
   }
 
-  String _weekdayShort(int day) {
+  String _weekdayLetter(int day) {
     switch (day) {
       case 1:
-        return 'Lun';
+        return 'L';
       case 2:
-        return 'Mar';
+        return 'M';
       case 3:
-        return 'Mié';
+        return 'X';
       case 4:
-        return 'Jue';
+        return 'J';
       case 5:
-        return 'Vie';
+        return 'V';
       case 6:
-        return 'Sáb';
+        return 'S';
       default:
-        return 'Dom';
+        return 'D';
     }
   }
 
@@ -692,14 +1301,15 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
+      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
-        borderRadius: BorderRadius.circular(20),
+        color: AppColors.surfaceOf(context),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+          color: AppColors.borderOf(context),
+          width: 0.5,
         ),
       ),
       child: Column(
@@ -708,22 +1318,20 @@ class _SectionCard extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: isDark
-                  ? AppColors.textPrimaryDark
-                  : AppColors.textPrimaryLight,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary(context),
+              letterSpacing: -0.3,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             subtitle,
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 12,
               height: 1.35,
-              color: isDark
-                  ? AppColors.textSecondaryDark
-                  : AppColors.textSecondaryLight,
+              color: AppColors.textSecondary(context),
+              letterSpacing: -0.3,
             ),
           ),
           const SizedBox(height: 16),
@@ -733,5 +1341,3 @@ class _SectionCard extends StatelessWidget {
     );
   }
 }
-
-const Color _kAiSetupAccent = Color(0xFFD8C8FF);

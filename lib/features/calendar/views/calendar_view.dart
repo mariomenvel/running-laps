@@ -671,52 +671,74 @@ class _CalendarViewState extends State<CalendarView>
             );
           }
           final suggestions = snap.data ?? const <AthleteSession>[];
-          if (suggestions.isEmpty) {
-            return Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceOf(context),
-                border: Border.all(color: AppColors.borderOf(context)),
-                borderRadius: BorderRadius.circular(AppDimens.cardRadius),
-              ),
-              child: Text(
-                'Sin sugerencias IA pendientes para esta semana visible',
-                style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
-              ),
-            );
-          }
+          if (suggestions.isEmpty) return const SizedBox.shrink();
           return Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             decoration: BoxDecoration(
-              color: AppColors.surfaceOf(context),
-              border: Border.all(color: AppColors.borderOf(context)),
-              borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.brand.withValues(alpha: 0.10),
+                  AppColors.brand.withValues(alpha: 0.03),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.brand.withValues(alpha: 0.25),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      'Sugerencias IA (${suggestions.length})',
-                      style: AppTypography.body.copyWith(
-                        color: AppColors.textPrimary(context),
-                        fontWeight: FontWeight.w700,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 8, 8),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.auto_awesome_rounded,
+                          color: AppColors.brand, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Tu coach propone ${suggestions.length} '
+                          '${suggestions.length == 1 ? "sesión" : "sesiones"}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary(context),
+                          ),
+                        ),
                       ),
-                    ),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: _isUpdatingSuggestion
-                          ? null
-                          : () => _acceptAllSuggestions(suggestions),
-                      child: const Text('Aceptar todo'),
-                    ),
-                  ],
+                      TextButton(
+                        onPressed: _isUpdatingSuggestion
+                            ? null
+                            : () => _acceptAllSuggestions(suggestions),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.brand,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                        ),
+                        child: const Text(
+                          'Aceptar todo',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 6),
+                Divider(
+                  height: 1,
+                  color: AppColors.brand.withValues(alpha: 0.15),
+                  indent: 16,
+                  endIndent: 16,
+                ),
+                const SizedBox(height: 4),
                 ...suggestions.map((s) => _buildSuggestionRow(s)),
+                const SizedBox(height: 8),
               ],
             ),
           );
@@ -727,49 +749,47 @@ class _CalendarViewState extends State<CalendarView>
 
   Widget _buildSuggestionRow(AthleteSession session) {
     final date = DateTime.tryParse(session.date);
-    final label = date == null
-        ? session.date
-        : '${_weekdayEs(date.weekday)} ${date.day}/${date.month}';
-    final why = _suggestionWhyText(session);
+    final dayTag = date != null ? _weekdayEs(date.weekday).toUpperCase() : '?';
     final title = (session.title ?? '').trim().isNotEmpty
         ? session.title!.trim()
         : (session.category != null
             ? SessionCategoryX.fromValue(session.category!).label
             : 'Sesión');
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Row(
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTypography.small.copyWith(
-                    color: AppColors.textPrimary(context),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  label,
-                  style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
-                ),
-                if (why.isNotEmpty)
-                  Text(
-                    why,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.small.copyWith(
-                      color: AppColors.textSecondary(context),
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-              ],
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.brand.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              dayTag.substring(0, 3),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: AppColors.brand,
+                letterSpacing: 0.5,
+              ),
             ),
           ),
-          TextButton(
-            onPressed: _isUpdatingSuggestion
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary(context),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          GestureDetector(
+            onTap: _isUpdatingSuggestion
                 ? null
                 : () => _updateSuggestionStatus(
                       sessionId: session.id,
@@ -777,10 +797,19 @@ class _CalendarViewState extends State<CalendarView>
                       status: AthleteSessionSuggestionStatus.rejected,
                       note: 'rejected_from_calendar',
                     ),
-            child: const Text('Rechazar'),
+            child: Container(
+              width: 32,
+              height: 32,
+              margin: const EdgeInsets.only(left: 6),
+              decoration: BoxDecoration(
+                color: AppColors.rpeMax.withValues(alpha: 0.10),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.close_rounded, size: 16, color: AppColors.rpeMax),
+            ),
           ),
-          FilledButton(
-            onPressed: _isUpdatingSuggestion
+          GestureDetector(
+            onTap: _isUpdatingSuggestion
                 ? null
                 : () => _updateSuggestionStatus(
                       sessionId: session.id,
@@ -788,11 +817,16 @@ class _CalendarViewState extends State<CalendarView>
                       status: AthleteSessionSuggestionStatus.accepted,
                       note: 'accepted_from_calendar',
                     ),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.brand,
-              minimumSize: const Size(0, 34),
+            child: Container(
+              width: 32,
+              height: 32,
+              margin: const EdgeInsets.only(left: 6),
+              decoration: BoxDecoration(
+                color: AppColors.rpeLow.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.check_rounded, size: 16, color: AppColors.rpeLow),
             ),
-            child: const Text('Aceptar'),
           ),
         ],
       ),
