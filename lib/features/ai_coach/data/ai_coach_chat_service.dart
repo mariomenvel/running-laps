@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_context_builder.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_prompt_builder.dart';
@@ -37,6 +38,299 @@ class AiCoachChatService {
   final UserService _userService;
   static const int _weeklyChatLimit = 3;
 
+  /// Genera un preview del ajuste SIN aplicarlo.
+  /// No gasta cuota de ajustes, pero suma al contador de previews (anti-abuso).
+  Future<AiCoachAdjustmentPreview> previewAdjustment({
+    required String uid,
+    required String athleteMessage,
+    required DateTime targetWeekStart,
+  }) async {
+    final isAthleteMode = await _userService.getIsAthleteMode(uid);
+    if (!isAthleteMode) {
+      return AiCoachAdjustmentPreview.limitReached(
+        'El Entrenador IA solo está disponible con modo atleta activado.',
+      );
+    }
+
+    final provider = await _repository.getProviderConfig(uid: uid);
+    if (provider == null ||
+        !provider.chatAdjustmentsEnabled ||
+        provider.provider != 'openrouter' ||
+        (provider.apiKey == null || provider.apiKey!.trim().isEmpty)) {
+      return AiCoachAdjustmentPreview.limitReached(
+        'Ajustes IA no configurados.',
+      );
+    }
+
+    final usageBeforeLlm = await _prepareAndGetCurrentWeekUsage(uid);
+
+    if (usageBeforeLlm.previewsGenerated >= 10) {
+      return AiCoachAdjustmentPreview.limitReached(
+        'Has alcanzado el máximo de peticiones esta semana. '
+        'Inténtalo de nuevo la semana que viene.',
+      );
+    }
+
+    try {
+      final llmResult = await _callLlmForAdjustment(
+        uid: uid,
+        athleteMessage: athleteMessage,
+        targetWeekStart: targetWeekStart,
+        provider: provider,
+      );
+
+      final intent = llmResult.intent;
+      final localAction = llmResult.localAction;
+
+      // Siempre suma al contador anti-abuso, sea info o no
+      debugPrint('[Cuota] preview: previewsGenerated ${usageBeforeLlm.previewsGenerated} → ${usageBeforeLlm.previewsGenerated + 1}');
+      await _repository.incrementUsageField(
+        uid: uid,
+        field: 'previewsGenerated',
+        periodStart: usageBeforeLlm.periodStart,
+        periodEnd: usageBeforeLlm.periodEnd,
+      );
+
+      // Para ajustes reales, comprobar cuota de mensajes DESPUÉS de conocer intent
+      if (intent != AiCoachAdjustIntent.unsupported) {
+        final usageNow = await _prepareAndGetCurrentWeekUsage(uid);
+        final limit = usageNow.messagesLimit ?? _weeklyChatLimit;
+        if (usageNow.messagesUsed >= limit) {
+          return AiCoachAdjustmentPreview(
+            response: '${llmResult.response}\n\n'
+                'Pero ya has usado tus $limit ajustes de esta semana. '
+                'Podrás aplicar cambios la semana que viene.',
+            intent: intent,
+            willModifyPlan: false,
+            decisionOverride: null,
+            localAction: null,
+          );
+        }
+      }
+
+      return AiCoachAdjustmentPreview(
+        response: llmResult.response,
+        willModifyPlan: intent != AiCoachAdjustIntent.unsupported,
+        intent: intent,
+        localAction: localAction,
+      );
+    } catch (e) {
+      throw Exception(
+        'Fallo al generar preview: ${e.toString().replaceFirst('Exception: ', '')}',
+      );
+    }
+  }
+
+  /// Aplica un ajuste previamente generado en preview.
+  /// Gasta 1 de la cuota de ajustes (3/semana).
+  Future<bool> applyAdjustment({
+    required String uid,
+    required AiCoachAdjustmentPreview preview,
+    required DateTime targetWeekStart,
+  }) async {
+    debugPrint('[Cuota] applyAdjustment llamado, intent=${preview.intent}, localAction=${preview.localAction?.type}');
+    try {
+      var didModify = false;
+
+      if (preview.localAction != null) {
+        await _applyLocalAction(uid, preview.localAction!, targetWeekStart);
+        didModify = true;
+      }
+
+      if (didModify) {
+        final usage = await _prepareAndGetCurrentWeekUsage(uid);
+        debugPrint('[Cuota] apply: didModify=$didModify, messagesUsed ${usage.messagesUsed} → ${usage.messagesUsed + 1}');
+        await _repository.incrementUsageField(
+          uid: uid,
+          field: 'messagesUsed',
+          periodStart: usage.periodStart,
+          periodEnd: usage.periodEnd,
+        );
+      }
+
+      return didModify;
+    } catch (e) {
+      debugPrint('[AiCoachChat] applyAdjustment error: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> _applyLocalAction(
+    String uid,
+    AiCoachLocalAction action,
+    DateTime weekStart,
+  ) async {
+    debugPrint('[Local] action: ${action.type} source=${action.sourceWeekday} target=${action.targetWeekday}');
+    debugPrint('[Local] weekStart=$weekStart');
+    final monday = _mondayOf(weekStart);
+    final sunday = monday.add(const Duration(days: 6));
+    final sessions = await _sessionRepository.getSessionsInRange(
+      uid: uid,
+      startDate: _dateKey(monday),
+      endDate: _dateKey(sunday),
+    );
+
+    final sourceDate = monday.add(Duration(days: action.sourceWeekday - 1));
+    debugPrint('[Local] sourceDate calculada=${_dateKey(sourceDate)}');
+    debugPrint('[Local] sesiones en la semana:');
+    for (final s in sessions) {
+      debugPrint('[Local]   ${s.date} status=${s.status} cat=${s.category}');
+    }
+    final sourceDateKey = _dateKey(sourceDate);
+    final sourceSessions = sessions
+        .where((s) =>
+            s.status == AthleteSessionStatus.planned && s.date == sourceDateKey)
+        .toList();
+
+    if (sourceSessions.isEmpty) {
+      final completedThatDay = sessions.any((s) =>
+          s.status == AthleteSessionStatus.completed && s.date == sourceDateKey);
+      if (completedThatDay) {
+        throw Exception('No se pueden modificar sesiones ya completadas');
+      }
+      throw Exception('No hay sesión planificada ese día');
+    }
+    final session = sourceSessions.first;
+
+    switch (action.type) {
+      case 'move':
+        if (action.targetWeekday == null) return;
+        final targetDate = monday.add(Duration(days: action.targetWeekday! - 1));
+        await _sessionRepository.updateSession(
+          session.copyWith(date: _dateKey(targetDate), updatedAt: DateTime.now()),
+        );
+        break;
+      case 'cancel':
+        await _sessionRepository.deleteSession(
+          uid: uid,
+          id: session.id,
+        );
+        break;
+      case 'complete':
+        await _sessionRepository.updateSession(
+          session.copyWith(
+            status: AthleteSessionStatus.completed,
+            updatedAt: DateTime.now(),
+          ),
+        );
+        break;
+      case 'adjust_session':
+        final delta = action.intensityDelta ?? -1;
+        await _adjustSessionIntensity(uid, session, delta);
+        break;
+      case 'add_series':
+        await _changeSeriesCount(uid, session, action.seriesCount ?? 1);
+        break;
+      case 'remove_series':
+        await _changeSeriesCount(uid, session, -(action.seriesCount ?? 1));
+        break;
+    }
+  }
+
+  Future<void> _changeSeriesCount(
+    String uid,
+    AthleteSession session,
+    int delta,
+  ) async {
+    final updatedBlocks = session.blocks.map((block) {
+      if (block.type != SessionBlockType.series) return block;
+      final currentReps = block.reps ?? 1;
+      final newReps = (currentReps + delta).clamp(1, 20);
+      return block.copyWith(reps: newReps);
+    }).toList();
+
+    final cleanTitle = (session.title ?? '')
+        .replaceAll(' · ajustada', '')
+        .replaceAll(' · intensificada', '')
+        .replaceAll(RegExp(r' · \d+ series'), '')
+        .trim();
+
+    final mainBlock = updatedBlocks.firstWhere(
+      (b) => b.type == SessionBlockType.series,
+      orElse: () => updatedBlocks.first,
+    );
+    final newTitle = '$cleanTitle · ${mainBlock.reps ?? 1} series';
+
+    await _sessionRepository.updateSession(
+      session.copyWith(
+        blocks: updatedBlocks,
+        title: newTitle,
+        updatedAt: DateTime.now(),
+      ),
+    );
+  }
+
+  Future<void> _adjustSessionIntensity(
+    String uid,
+    AthleteSession session,
+    int delta,
+  ) async {
+    final updatedBlocks = session.blocks.map((block) {
+      double? newRpe = block.targetRpe;
+      if (newRpe != null) {
+        newRpe = (newRpe + delta * 2.0).clamp(1.0, 10.0);
+      }
+
+      int? newZone = block.targetZone;
+      if (newZone != null) {
+        newZone = (newZone + delta).clamp(1, 5);
+      }
+
+      // Pace: más lento cuando baja intensidad (delta<0 → sumar segundos)
+      // Convertir min:sec → segundos totales, ajustar ±15s, descomponer
+      int? newPaceMinMin = block.targetPaceMinMin;
+      int? newPaceMinSec = block.targetPaceMinSec;
+      int? newPaceMaxMin = block.targetPaceMaxMin;
+      int? newPaceMaxSec = block.targetPaceMaxSec;
+
+      if (newPaceMinMin != null && newPaceMinSec != null) {
+        final totalSec = (newPaceMinMin * 60 + newPaceMinSec - delta * 15)
+            .clamp(120, 600); // 2:00–10:00 min/km
+        newPaceMinMin = totalSec ~/ 60;
+        newPaceMinSec = totalSec % 60;
+      }
+      if (newPaceMaxMin != null && newPaceMaxSec != null) {
+        final totalSec = (newPaceMaxMin * 60 + newPaceMaxSec - delta * 15)
+            .clamp(120, 600);
+        newPaceMaxMin = totalSec ~/ 60;
+        newPaceMaxSec = totalSec % 60;
+      }
+
+      return block.copyWith(
+        targetRpe: newRpe,
+        targetZone: newZone,
+        targetPaceMinMin: newPaceMinMin,
+        targetPaceMinSec: newPaceMinSec,
+        targetPaceMaxMin: newPaceMaxMin,
+        targetPaceMaxSec: newPaceMaxSec,
+      );
+    }).toList();
+
+    final noteText = delta < 0
+        ? 'El atleta encontró esta sesión demasiado dura'
+        : 'El atleta pidió más intensidad en esta sesión';
+
+    final currentTitle = session.title ?? '';
+    final cleanTitle = currentTitle
+        .replaceAll(' · ajustada', '')
+        .replaceAll(' · intensificada', '')
+        .trim();
+    final newTitle = delta < 0
+        ? '$cleanTitle · ajustada'
+        : '$cleanTitle · intensificada';
+
+    await _sessionRepository.updateSession(
+      session.copyWith(
+        title: newTitle,
+        blocks: updatedBlocks,
+        athleteNote: noteText,
+        updatedAt: DateTime.now(),
+      ),
+    );
+  }
+
+  /// Compatibilidad con el settings view actual.
+  /// Internamente hace preview + apply en un solo paso.
   Future<AiCoachChatAdjustmentResult> adjustNextWeekPlan(
     String uid, {
     required String athleteMessage,
@@ -65,44 +359,26 @@ class AiCoachChatService {
     }
 
     try {
-      final context = await _contextBuilder.buildWeeklyContext(uid);
-      final currentDecision = await _repository.getLastDecision(uid: uid);
-      final nextWeekSessions = await _loadNextWeekSessions(uid);
-      final prompt = _promptBuilder.buildChatAdjustmentPrompt(
-        context,
-        athleteMessage: athleteMessage,
-        nextWeekSessions: nextWeekSessions,
-        currentDecision: currentDecision,
-      );
-
-      final completion = await _openRouterClient.createJsonCompletion(
-        apiKey: provider.apiKey!.trim(),
-        model: provider.model,
-        messages: prompt.messages,
-        jsonSchema: prompt.jsonSchema,
-      );
-
-      final parsed = _parseJsonObject(completion.content);
-      final result = _buildResultFromResponse(
-        parsed,
-        fallbackModel: provider.model,
-      );
-
-      await _repository.saveUsage(
-        AiCoachUsage(
-          plan: usage.plan,
-          messagesUsed: usage.messagesUsed + 1,
-          messagesLimit: _weeklyChatLimit,
-          periodStart: usage.periodStart,
-          periodEnd: usage.periodEnd,
-        ),
+      final nextWeekMonday = _mondayOf(DateTime.now()).add(const Duration(days: 7));
+      final result = await _callLlmForAdjustment(
         uid: uid,
+        athleteMessage: athleteMessage,
+        targetWeekStart: nextWeekMonday,
+        provider: provider,
+      );
+
+      await _repository.incrementUsageField(
+        uid: uid,
+        field: 'messagesUsed',
+        periodStart: usage.periodStart,
+        periodEnd: usage.periodEnd,
       );
 
       if (result.decisionOverride != null) {
         await _weeklyPlannerService.planNextWeek(
           uid,
           decisionOverride: result.decisionOverride,
+          targetWeekStart: nextWeekMonday,
         );
         await _repository.saveLastDecision(result.decisionOverride!, uid: uid);
       } else {
@@ -112,10 +388,9 @@ class AiCoachChatService {
         );
         if (moved) {
           return AiCoachChatAdjustmentResult(
-            response:
-                result.response.isEmpty
-                    ? 'He aplicado el cambio de dia solicitado.'
-                    : '${result.response}\n\nHe aplicado el cambio de dia solicitado en el plan.',
+            response: result.response.isEmpty
+                ? 'He aplicado el cambio de dia solicitado.'
+                : '${result.response}\n\nHe aplicado el cambio de dia solicitado en el plan.',
           );
         }
       }
@@ -129,11 +404,41 @@ class AiCoachChatService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> _loadNextWeekSessions(String uid) async {
-    final anchor = DateTime.now();
-    final monday = DateTime(anchor.year, anchor.month, anchor.day)
-        .subtract(Duration(days: anchor.weekday - 1))
-        .add(const Duration(days: 7));
+  /// Llama al LLM y devuelve la decisión propuesta sin aplicarla ni tocar la cuota.
+  Future<AiCoachChatAdjustmentResult> _callLlmForAdjustment({
+    required String uid,
+    required String athleteMessage,
+    required DateTime targetWeekStart,
+    required AiCoachProviderConfig provider,
+  }) async {
+    final context = await _contextBuilder.buildWeeklyContext(uid);
+    final currentDecision = await _repository.getLastDecision(uid: uid);
+    final sessions = await _loadSessionsForWeek(uid, targetWeekStart);
+    final prompt = _promptBuilder.buildChatAdjustmentPrompt(
+      context,
+      athleteMessage: athleteMessage,
+      nextWeekSessions: sessions,
+      currentDecision: currentDecision,
+    );
+
+    final completion = await _openRouterClient.createJsonCompletion(
+      apiKey: provider.apiKey!.trim(),
+      model: provider.model,
+      messages: prompt.messages,
+      jsonSchema: prompt.jsonSchema,
+    );
+
+    final rawResponse = completion.content;
+    debugPrint('[Adjust] respuesta LLM raw: $rawResponse');
+    final parsed = _parseJsonObject(rawResponse);
+    return _buildResultFromResponse(parsed, fallbackModel: provider.model);
+  }
+
+  Future<List<Map<String, dynamic>>> _loadSessionsForWeek(
+    String uid,
+    DateTime weekStart,
+  ) async {
+    final monday = _mondayOf(weekStart);
     final sunday = monday.add(const Duration(days: 6));
     final sessions = await _sessionRepository.getSessionsInRange(
       uid: uid,
@@ -141,30 +446,27 @@ class AiCoachChatService {
       endDate: _dateKey(sunday),
     );
     sessions.sort((a, b) {
-      final dateCompare = a.date.compareTo(b.date);
-      if (dateCompare != 0) return dateCompare;
-      return (a.time ?? '').compareTo(b.time ?? '');
+      final d = a.date.compareTo(b.date);
+      return d != 0 ? d : (a.time ?? '').compareTo(b.time ?? '');
     });
-    return sessions
-        .map(
-          (session) => {
-            'sessionId': session.id,
-            'date': session.date,
-            'time': session.time,
-            'category': session.category,
-            'status': session.status.toValue,
-            'suggestionStatus': session.suggestion?.status.toValue,
-            'planningNotes': session.planningNotes,
-          },
-        )
-        .toList();
+    return sessions.map((s) => {
+      'sessionId': s.id,
+      'date': s.date,
+      'time': s.time,
+      'category': s.category,
+      'status': s.status.toValue,
+      'suggestionStatus': s.suggestion?.status.toValue,
+      'planningNotes': s.planningNotes,
+    }).toList();
   }
 
   Map<String, dynamic> _parseJsonObject(String raw) {
     final trimmed = raw.trim();
     try {
       return Map<String, dynamic>.from(jsonDecode(trimmed) as Map);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[Adjust] error parseando JSON: $e');
+      debugPrint('[Adjust] contenido que falló: $trimmed');
       final start = trimmed.indexOf('{');
       final end = trimmed.lastIndexOf('}');
       if (start >= 0 && end > start) {
@@ -179,11 +481,28 @@ class AiCoachChatService {
     Map<String, dynamic> map, {
     required String fallbackModel,
   }) {
-    final response = (map['response'] as String? ?? '').trim();
+    final rawResponseText = (map['response'] as String?)?.trim() ?? '';
+    final isCorrupt = rawResponseText.length < 10 ||
+        rawResponseText
+            .replaceAll(RegExp(r'[^\w\sáéíóúñ]'), '')
+            .trim()
+            .isEmpty;
+
+    final intent = AiCoachAdjustIntentX.fromValue(map['intent'] as String? ?? '');
+
+    final localActionMap = map['localAction'];
+    final localAction = localActionMap is Map<String, dynamic>
+        ? AiCoachLocalAction.fromMap(localActionMap)
+        : null;
+
     final overrideMap = map['decisionOverride'];
 
     if (overrideMap is! Map) {
-      return AiCoachChatAdjustmentResult(response: response);
+      return AiCoachChatAdjustmentResult(
+        response: rawResponseText,
+        intent: intent,
+        localAction: localAction,
+      );
     }
 
     final rawDecision = Map<String, dynamic>.from(overrideMap);
@@ -195,10 +514,69 @@ class AiCoachChatService {
       ...rawDecision,
     });
 
+    final responseText =
+        isCorrupt ? _buildChangeDescription(decision) : rawResponseText;
+
     return AiCoachChatAdjustmentResult(
-      response: response,
+      response: responseText,
       decisionOverride: decision,
+      intent: intent,
+      localAction: localAction,
     );
+  }
+
+  String _buildChangeDescription(AiCoachWeeklyDecision decision) {
+    final parts = <String>[];
+
+    switch (decision.weekType) {
+      case AiCoachWeekType.recovery:
+        parts.add('He preparado una semana de recuperación más suave.');
+      case AiCoachWeekType.build:
+        parts.add('He preparado una semana de aumento de carga.');
+      case AiCoachWeekType.taper:
+        parts.add('He preparado una semana de descarga progresiva (taper).');
+      case AiCoachWeekType.race:
+        parts.add('He preparado la semana de competición.');
+      case AiCoachWeekType.restart:
+        parts.add('He preparado una semana de reactivación.');
+      case AiCoachWeekType.absorb:
+        parts.add('He preparado una semana de asimilación.');
+    }
+
+    parts.add('${decision.targetSessions} sesiones esta semana.');
+
+    if (decision.primaryFocus.isNotEmpty) {
+      parts.add('Enfoque: ${decision.primaryFocus}.');
+    }
+
+    if (decision.workoutTargets.isNotEmpty) {
+      final categorias =
+          decision.workoutTargets.map((t) => _categoryLabel(t.category)).toList();
+      parts.add('Incluye: ${categorias.join(', ')}.');
+    }
+
+    return parts.join(' ');
+  }
+
+  String _categoryLabel(String category) {
+    switch (category) {
+      case 'rodaje_base':
+        return 'rodaje suave';
+      case 'series_medias':
+        return 'series medias';
+      case 'series_cortas':
+        return 'series cortas';
+      case 'series_largas':
+        return 'series largas';
+      case 'series_cuestas':
+        return 'cuestas';
+      case 'tempo':
+        return 'tempo';
+      case 'fartlek':
+        return 'fartlek';
+      default:
+        return category.replaceAll('_', ' ');
+    }
   }
 
   String _dateKey(DateTime value) {
@@ -208,8 +586,20 @@ class AiCoachChatService {
   Future<AiCoachUsage> _prepareAndGetCurrentWeekUsage(String uid) async {
     final now = DateTime.now();
     final weekStart = _mondayOf(now);
-    final weekEnd = weekStart.add(const Duration(days: 6));
+    final sundayStart = weekStart.add(const Duration(days: 6));
+    final weekEnd = DateTime(
+      sundayStart.year,
+      sundayStart.month,
+      sundayStart.day,
+      23, 59, 59,
+    );
     final current = await _repository.getUsage(uid: uid);
+    debugPrint('[Prep] usage leído: used=${current?.messagesUsed}, prev=${current?.previewsGenerated}');
+    debugPrint('[Prep] periodStart=${current?.periodStart}, periodEnd=${current?.periodEnd}');
+    debugPrint('[Prep] now=${DateTime.now()}');
+    debugPrint('[Prep] ¿resetear? current==null: ${current == null}, '
+        'periodStart.isAfter(now): ${current?.periodStart.isAfter(DateTime.now())}, '
+        'periodEnd.isBefore(now): ${current?.periodEnd.isBefore(DateTime.now())}');
     if (current == null ||
         current.periodStart.isAfter(now) ||
         current.periodEnd.isBefore(now)) {
