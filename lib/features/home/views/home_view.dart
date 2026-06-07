@@ -13,6 +13,8 @@ import 'package:running_laps/features/home/viewmodels/home_view_model.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/templates/data/athlete_session_mapper.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
+import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_automation_service.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_prompt_view.dart';
@@ -58,22 +60,59 @@ class _HomeViewState extends State<HomeView> {
   bool _hasAiCoachProfile = false;
   bool _showFeedbackBanner = false;
 
-  String _currentWeekStart() {
+  String _weekStartStr(DateTime monday) =>
+      '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
+
+  String _feedbackWeekToEvaluate() {
     final now = DateTime.now();
-    final monday = now.subtract(Duration(days: now.weekday - 1));
-    return '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
+    final weekday = now.weekday;
+    if (weekday >= 6) {
+      final monday = now.subtract(Duration(days: weekday - 1));
+      return _weekStartStr(monday);
+    } else if (weekday <= 2) {
+      final lastMonday = now.subtract(Duration(days: weekday - 1 + 7));
+      return _weekStartStr(lastMonday);
+    }
+    return '';
+  }
+
+  String _feedbackBannerTitle() {
+    final weekday = DateTime.now().weekday;
+    return weekday <= 2 ? '¿Cómo fue la semana pasada?' : '¿Cómo fue la semana?';
   }
 
   Future<void> _checkWeeklyFeedback(String uid) async {
     if (!_hasAiCoachProfile) return;
+
+    final weekToEval = _feedbackWeekToEvaluate();
+    if (weekToEval.isEmpty) {
+      if (mounted) setState(() => _showFeedbackBanner = false);
+      return;
+    }
+
     final existing = await AiCoachRepository().getWeeklyFeedback(
       uid: uid,
-      weekStart: _currentWeekStart(),
+      weekStart: weekToEval,
     );
-    final isWeekend = DateTime.now().weekday >= 6;
-    if (mounted) setState(() => _showFeedbackBanner = existing == null && isWeekend);
+
+    if (mounted) setState(() => _showFeedbackBanner = existing == null);
+
     if (DateTime.now().weekday == 7 && existing == null) {
       _scheduleWeeklyFeedbackNotification();
+    }
+  }
+
+  Future<void> _generateAiPlanFromHome() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    final generated = await AiCoachAutomationService()
+        .forceGenerateNextWeekPlan(uid);
+    if (mounted) {
+      if (generated) {
+        ModernSnackBar.showSuccess(context, 'Plan de la próxima semana generado');
+      } else {
+        ModernSnackBar.showError(context, 'No se pudo generar el plan');
+      }
     }
   }
 
@@ -301,10 +340,12 @@ class _HomeViewState extends State<HomeView> {
             onTap: () async {
               await Navigator.of(context).push(AppRoute(
                 page: AiCoachWeeklyFeedbackView(
-                  weekStart: _currentWeekStart(),
-                  generatePlanAfter: false,
-                  onCompleted: () =>
-                      setState(() => _showFeedbackBanner = false),
+                  weekStart: _feedbackWeekToEvaluate(),
+                  generatePlanAfter: true,
+                  onCompleted: () async {
+                    setState(() => _showFeedbackBanner = false);
+                    await _generateAiPlanFromHome();
+                  },
                 ),
               ));
             },
@@ -327,7 +368,7 @@ class _HomeViewState extends State<HomeView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '¿Cómo fue la semana?',
+                          _feedbackBannerTitle(),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,

@@ -700,6 +700,7 @@ class AiCoachWeeklyContext {
   final Map<String, dynamic> coachSignals;
   final DateTime generatedAt;
   final AiCoachWeeklyFeedback? weeklyFeedback;
+  final List<AiCoachWeeklyFeedback> recentFeedbacks;
 
   const AiCoachWeeklyContext({
     required this.profile,
@@ -710,6 +711,7 @@ class AiCoachWeeklyContext {
     this.coachSignals = const {},
     required this.generatedAt,
     this.weeklyFeedback,
+    this.recentFeedbacks = const [],
   });
 
   Map<String, dynamic> toMap() {
@@ -730,6 +732,13 @@ class AiCoachWeeklyContext {
         if (weeklyFeedback!.observaciones != null)
           'observaciones': weeklyFeedback!.observaciones,
       },
+      if (recentFeedbacks.isNotEmpty)
+        'recentFeedbacks': recentFeedbacks.map((f) => {
+          'weekStart': f.weekStart,
+          'sensaciones': f.sensaciones,
+          'sueno': f.sueno,
+          if (f.molestias != null) 'molestias': f.molestias,
+        }).toList(),
     };
   }
 }

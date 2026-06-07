@@ -456,4 +456,54 @@ class AiCoachRepository {
     final date = DateTime(value.year, value.month, value.day);
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
+
+  Future<void> saveWeeklyFeedback(AiCoachWeeklyFeedback feedback) async {
+    await _db
+        .collection('users')
+        .doc(feedback.uid)
+        .collection('aiCoachFeedback')
+        .doc(feedback.weekStart)
+        .set(feedback.toMap());
+  }
+
+  Future<AiCoachWeeklyFeedback?> getWeeklyFeedback({
+    required String uid,
+    required String weekStart,
+  }) async {
+    try {
+      final doc = await _db
+          .collection('users')
+          .doc(uid)
+          .collection('aiCoachFeedback')
+          .doc(weekStart)
+          .get();
+      if (!doc.exists) return null;
+      return AiCoachWeeklyFeedback.fromMap(doc.data()!);
+    } catch (e) {
+      debugPrint('[AiCoachRepository] getWeeklyFeedback error: $e');
+      return null;
+    }
+  }
+
+  /// Devuelve los últimos N feedbacks semanales, más recientes primero.
+  Future<List<AiCoachWeeklyFeedback>> getRecentFeedbacks({
+    required String uid,
+    int limit = 4,
+  }) async {
+    try {
+      final snapshot = await _db
+          .collection('users')
+          .doc(uid)
+          .collection('aiCoachFeedback')
+          .orderBy('weekStart', descending: true)
+          .limit(limit)
+          .get();
+      return snapshot.docs
+          .map((d) => AiCoachWeeklyFeedback.fromMap(d.data()))
+          .toList();
+    } catch (e) {
+      debugPrint('[AiCoachRepository] getRecentFeedbacks error: $e');
+      return [];
+    }
+  }
 }

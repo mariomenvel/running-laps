@@ -131,10 +131,11 @@ class AiCoachContextBuilder {
       ..._buildAthleteStyleSignals(trainings.take(20).toList()),
     };
 
-    final weekStartStr =
-        '${weekStart.year}-${weekStart.month.toString().padLeft(2, '0')}-${weekStart.day.toString().padLeft(2, '0')}';
-    final weeklyFeedback = await AiCoachRepository()
-        .getWeeklyFeedback(uid: uid, weekStart: weekStartStr);
+    final recentFeedbacks = await _aiCoachRepository
+        .getRecentFeedbacks(uid: uid, limit: 4);
+
+    final weeklyFeedback =
+        recentFeedbacks.isNotEmpty ? recentFeedbacks.first : null;
 
     return AiCoachWeeklyContext(
       profile: effectiveProfile,
@@ -145,6 +146,7 @@ class AiCoachContextBuilder {
       coachSignals: coachSignals,
       generatedAt: now,
       weeklyFeedback: weeklyFeedback,
+      recentFeedbacks: recentFeedbacks,
     );
   }
 

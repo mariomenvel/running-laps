@@ -33,6 +33,36 @@ class AiCoachAutomationService {
   final AiCoachWeeklyPlannerService _weeklyPlannerService;
   final UserService _userService;
 
+  /// Fuerza la generación del plan de la próxima semana,
+  /// saltándose las guardas de ventana temporal y ciclo.
+  /// Se usa cuando el usuario rellena el cuestionario manualmente.
+  /// Mantiene las validaciones de perfil, API key y modo atleta.
+  Future<bool> forceGenerateNextWeekPlan(String uid) async {
+    final profile = await _repository.getProfile(uid: uid);
+    if (profile == null) {
+      debugPrint('[AiCoachAutomation] force: sin perfil AI');
+      return false;
+    }
+
+    final providerConfig = await _repository.getProviderConfig(uid: uid);
+    if (providerConfig?.apiKey == null ||
+        (providerConfig!.apiKey?.trim().isEmpty ?? true)) {
+      debugPrint('[AiCoachAutomation] force: sin API key');
+      return false;
+    }
+
+    try {
+      final result = await _weeklyPlannerService.planNextWeek(uid);
+      debugPrint(
+        '[AiCoachAutomation] force: ${result.sessions.length} sesiones generadas',
+      );
+      return result.sessions.isNotEmpty;
+    } catch (e) {
+      debugPrint('[AiCoachAutomation] force error: $e');
+      return false;
+    }
+  }
+
   Future<AiCoachAutomationResult> ensureNextWeekPlanIfDue(
     String uid, {
     DateTime? referenceDate,

@@ -130,6 +130,53 @@ class AiCoachPromptBuilder {
                   'El atleta se sintió bien y durmió bien: puedes aumentar ligeramente la carga.',
               ].join(' '),
         },
+      if (context.recentFeedbacks.length >= 2)
+        'feedbackTendencias': () {
+          final feedbacks = context.recentFeedbacks;
+          final avgSensaciones = feedbacks
+                  .map((f) => f.sensaciones)
+                  .reduce((a, b) => a + b) /
+              feedbacks.length;
+          final malSueno =
+              feedbacks.where((f) => f.sueno == 'mal').length;
+          final conMolestias = feedbacks
+              .where((f) => f.molestias != null && f.molestias!.isNotEmpty)
+              .toList();
+
+          final instrucciones = <String>[];
+          if (malSueno >= 2) {
+            instrucciones.add(
+              'ATENCIÓN: el atleta ha dormido mal $malSueno de las últimas '
+              '${feedbacks.length} semanas. Considera reducir la carga.',
+            );
+          }
+          if (conMolestias.length >= 2) {
+            final detalle = conMolestias
+                .map((f) => 'semana ${f.weekStart}: ${f.molestias}')
+                .join('; ');
+            instrucciones.add(
+              'ATENCIÓN: molestias recurrentes ($detalle). '
+              'Prioriza la prevención de lesiones.',
+            );
+          }
+          if (avgSensaciones <= 2.5) {
+            instrucciones.add(
+              'El atleta lleva varias semanas sintiéndose mal. '
+              'Reduce intensidad y prioriza recuperación.',
+            );
+          } else if (avgSensaciones >= 4.0) {
+            instrucciones.add(
+              'El atleta se siente bien de forma sostenida. '
+              'Puede asumir progresión de carga.',
+            );
+          }
+
+          return {
+            'semanas': feedbacks.length,
+            'mediaSensaciones': double.parse(avgSensaciones.toStringAsFixed(1)),
+            if (instrucciones.isNotEmpty) 'instrucciones': instrucciones,
+          };
+        }(),
       'recentTrainings':
           context.recentTrainings.map((item) => item.toMap()).toList(),
       'recentPlannedSessions':
