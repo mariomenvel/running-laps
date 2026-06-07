@@ -58,6 +58,20 @@ class AiCoachPromptBuilder {
       'currentDecision':
           currentDecision == null ? null : _jsonSafe(currentDecision.toMap()),
       'nextWeekSessions': nextWeekSessions,
+      'weekdayMapping': {
+        'lunes': 1, 'martes': 2, 'miercoles': 3, 'miércoles': 3,
+        'jueves': 4, 'viernes': 5, 'sabado': 6, 'sábado': 6,
+        'domingo': 7,
+      },
+      'currentWeekSessions': nextWeekSessions.map((s) {
+        final date = DateTime.parse(s['date'] as String);
+        return {
+          'weekday': date.weekday,
+          'dayName': _weekdayName(date.weekday),
+          'category': s['category'],
+          'date': s['date'],
+        };
+      }).toList(),
     };
 
     return AiCoachPromptBundle(
@@ -70,9 +84,29 @@ class AiCoachPromptBuilder {
               ' Responde en espanol, con un tono claro y directo.'
               ' Debes seguir respetando estrictamente athleteProfile.availableWeekdays y el tiempo real sin entrenar.'
               ' Usa coachSignals y recentWeekHistory para mantener un estilo de entrenamiento coherente con el historial del atleta.'
-              ' Si hace falta modificar el plan, devuelve una decisionOverride completa y coherente.'
-              ' Si no hace falta tocar el plan, deja decisionOverride como null.'
-              ' Nunca generes entrenamientos finales; solo la decision semanal estructurada.'
+              ' Clasifica el intent del mensaje del atleta UNICAMENTE en uno de estos intents (lista cerrada):'
+              ' - "move": mover/cambiar una sesion de un dia a otro.'
+              '   -> localAction: sourceWeekday + targetWeekday.'
+              ' - "cancel": eliminar/cancelar la sesion de un dia.'
+              '   -> localAction: sourceWeekday.'
+              ' - "complete": marcar una sesion como hecha/completada.'
+              '   -> localAction: sourceWeekday.'
+              ' - "adjust_session": bajar o subir la intensidad de una sesion concreta de un dia.'
+              '   -> localAction: sourceWeekday + intensityDelta (-1 para bajar, 1 para subir).'
+              ' - "add_series": anadir series a una sesion (mas series, mas repeticiones, intensificar volumen de series).'
+              '   -> localAction: sourceWeekday + seriesCount (numero de series a anadir, minimo 1).'
+              ' - "remove_series": quitar series de una sesion (menos series, reducir repeticiones).'
+              '   -> localAction: sourceWeekday + seriesCount (numero de series a quitar, minimo 1).'
+              ' - "unsupported": cualquier cosa que NO encaje en los intents anteriores'
+              '   (preguntas informativas, cambiar el objetivo del atleta, modificar varios dias a la vez,'
+              '   regenerar la semana entera, preguntas no relacionadas con running, etc.).'
+              '   -> localAction: null. En response responde la pregunta si es informativa, o explica brevemente'
+              '   que SI puedes hacer: cambiar el dia de una sesion, subir o bajar su intensidad,'
+              '   anadir o quitar series, o eliminarla.'
+              ' Para todos los intents, decisionOverride siempre es null.'
+              ' response debe ser siempre en espanol, claro y breve, explicando que va a hacer o respondiendo la pregunta.'
+              ' IMPORTANTE: usa el campo weekday de currentWeekSessions para sourceWeekday — NO lo calcules tu mismo.'
+              ' Si el atleta dice "el jueves" y en currentWeekSessions hay una sesion con weekday=4 y dayName="jueves", usa sourceWeekday=4.'
               ' Responde unicamente con JSON valido que cumpla el esquema.',
         ),
         OpenRouterChatMessage(
@@ -208,6 +242,12 @@ class AiCoachPromptBuilder {
     return value.toString();
   }
 
+  String _weekdayName(int weekday) {
+    const names = ['', 'lunes', 'martes', 'miércoles',
+        'jueves', 'viernes', 'sábado', 'domingo'];
+    return names[weekday];
+  }
+
   static const Map<String, dynamic> _weeklyDecisionSchema = {
     'type': 'object',
     'additionalProperties': false,
@@ -298,16 +338,31 @@ class AiCoachPromptBuilder {
   static const Map<String, dynamic> _chatAdjustmentSchema = {
     'type': 'object',
     'additionalProperties': false,
-    'required': [
-      'response',
-      'decisionOverride',
-    ],
+    'required': ['intent', 'response', 'localAction'],
     'properties': {
+      'intent': {
+        'type': 'string',
+        'enum': ['move', 'cancel', 'complete', 'adjust_session', 'add_series', 'remove_series', 'unsupported'],
+      },
       'response': {'type': 'string'},
-      'decisionOverride': {
+      'localAction': {
         'anyOf': [
           {'type': 'null'},
-          _weeklyDecisionSchema,
+          {
+            'type': 'object',
+            'additionalProperties': false,
+            'required': ['type', 'sourceWeekday'],
+            'properties': {
+              'type': {
+                'type': 'string',
+                'enum': ['move', 'cancel', 'complete', 'adjust_session', 'add_series', 'remove_series'],
+              },
+              'sourceWeekday': {'type': 'integer', 'minimum': 1, 'maximum': 7},
+              'targetWeekday': {'type': 'integer', 'minimum': 1, 'maximum': 7},
+              'intensityDelta': {'type': 'integer', 'enum': [-1, 1]},
+              'seriesCount': {'type': 'integer', 'minimum': 1, 'maximum': 10},
+            },
+          },
         ],
       },
     },

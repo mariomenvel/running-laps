@@ -85,6 +85,7 @@ class AiCoachAutomationService {
       final result = await _weeklyPlannerService.planNextWeek(
         uid,
         targetWeekStart: currentMonday,
+        forceRegenerate: true,
       );
       debugPrint(
         '[AiCoachAutomation] forceCurrentWeek: ${result.sessions.length} sesiones generadas',
@@ -115,7 +116,10 @@ class AiCoachAutomationService {
     }
 
     try {
-      final result = await _weeklyPlannerService.planNextWeek(uid);
+      final result = await _weeklyPlannerService.planNextWeek(
+        uid,
+        forceRegenerate: true,
+      );
       debugPrint(
         '[AiCoachAutomation] force: ${result.sessions.length} sesiones generadas',
       );
