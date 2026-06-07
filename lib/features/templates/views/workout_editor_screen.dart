@@ -5,10 +5,14 @@ import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_prompt_session_generator.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 import 'package:running_laps/features/templates/data/athlete_session_mapper.dart';
 import 'package:running_laps/features/templates/data/templates_repository.dart';
+import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/templates/data/workout_block.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 import 'package:running_laps/features/templates/data/workout_segment.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
 import 'package:running_laps/features/templates/views/widgets/blocks_list_section.dart';
@@ -46,6 +50,13 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
   late final TextEditingController _titleController;
   late final TextEditingController _notesController;
 
+  final _aiPromptController = TextEditingController();
+  final _speechToText = SpeechToText();
+  final _aiPanelExpanded = ValueNotifier<bool>(false);
+  final _aiGenerating = ValueNotifier<bool>(false);
+  bool _aiListening = false;
+  bool _speechAvailable = false;
+
   // Effective scheduled date resolved from explicit param > shellParams > initialSession
   DateTime? _effectiveScheduledDate;
 
@@ -76,6 +87,8 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
       _notesController = TextEditingController(text: _notes.value);
       _notesController.addListener(() => _notes.value = _notesController.text);
 
+      _initSpeech();
+
       if (s != null && s.title.isNotEmpty) {
         _titleEdited = true;
         final autoTitle = generateTitle(s);
@@ -99,6 +112,9 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
     _notes.dispose();
     _titleController.dispose();
     _notesController.dispose();
+    _aiPromptController.dispose();
+    _aiPanelExpanded.dispose();
+    _aiGenerating.dispose();
     super.dispose();
   }
 
@@ -229,6 +245,76 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
       initialTime: _scheduledTime.value ?? TimeOfDay.now(),
     );
     if (picked != null) _scheduledTime.value = picked;
+  }
+
+  Future<void> _initSpeech() async {
+    _speechAvailable = await _speechToText.initialize();
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _toggleAiListening() async {
+    if (_aiListening) {
+      await _speechToText.stop();
+      setState(() => _aiListening = false);
+      return;
+    }
+    await _speechToText.listen(
+      onResult: (result) {
+        setState(() => _aiPromptController.text = result.recognizedWords);
+        if (result.finalResult) setState(() => _aiListening = false);
+      },
+      listenOptions: SpeechListenOptions(),
+    );
+    setState(() => _aiListening = true);
+  }
+
+  Future<void> _generateFromAi() async {
+    final text = _aiPromptController.text.trim();
+    if (text.isEmpty) return;
+
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    _aiGenerating.value = true;
+
+    try {
+      final providerConfig = await AiCoachRepository().getProviderConfig();
+      if (!mounted) return;
+      final apiKey = providerConfig?.apiKey;
+      if (apiKey == null) {
+        ModernSnackBar.showError(context, 'API key no configurada');
+        return;
+      }
+
+      final profile = await AiCoachRepository().getProfile(uid: uid);
+      if (!mounted) return;
+
+      const generator = AiCoachPromptSessionGenerator();
+      final session = await generator.generate(
+        prompt: text,
+        apiKey: apiKey,
+        model: providerConfig!.model,
+        profile: profile,
+      );
+
+      if (!mounted) return;
+
+      _blocks.value = List.of(session.blocks);
+      _titleEdited = true;
+      _titleIsAuto = false;
+      _onTypeSelected(session.type);
+      _titleController.text = session.title;
+      _title.value = session.title;
+
+      _aiPanelExpanded.value = false;
+      _aiPromptController.clear();
+      ModernSnackBar.showSuccess(context, 'Entrenamiento generado');
+    } catch (e) {
+      if (!mounted) return;
+      ModernSnackBar.showError(context, 'Error al generar');
+    } finally {
+      if (mounted) _aiGenerating.value = false;
+    }
   }
 
   Future<void> _onClose() async {
@@ -433,15 +519,21 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
           children: [
             const SizedBox(height: AppSpacing.l),
 
+            // ── Panel IA inline ──────────────────────────────────────
+            _buildAiPanel(),
+
             // ── Sección 1: Tipo ──────────────────────────────────────
             _SectionLabel('TIPO'),
             const SizedBox(height: AppSpacing.s),
             ValueListenableBuilder<WorkoutType?>(
               valueListenable: _selectedType,
-              builder: (_, type, __) => WorkoutTypeSelector(
-                selected: type,
-                onSelected: _onTypeSelected,
-              ),
+              builder: (_, type, __) {
+                debugPrint('[Selector] rebuild con type=$type');
+                return WorkoutTypeSelector(
+                  selected: type,
+                  onSelected: _onTypeSelected,
+                );
+              },
             ),
 
             _divider(context),
@@ -644,6 +736,155 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildAiPanel() {
+    return ValueListenableBuilder<bool>(
+      valueListenable: _aiPanelExpanded,
+      builder: (_, expanded, __) {
+        return Container(
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.brand.withValues(alpha: 0.10),
+                AppColors.brand.withValues(alpha: 0.03),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.brand.withValues(alpha: 0.25)),
+          ),
+          child: Column(
+            children: [
+              InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () => _aiPanelExpanded.value = !expanded,
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Row(
+                    children: [
+                      Icon(Icons.auto_awesome_rounded,
+                          color: AppColors.brand, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Crear con IA',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary(context),
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        expanded
+                            ? Icons.expand_less_rounded
+                            : Icons.expand_more_rounded,
+                        color: AppColors.brand,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (expanded) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                  child: Column(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceOf(context),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.all(12),
+                        child: TextField(
+                          controller: _aiPromptController,
+                          maxLines: 4,
+                          maxLength: 500,
+                          decoration: InputDecoration(
+                            hintText: 'Ej: 5 series de 400m a ritmo 5K '
+                                'con 90s de descanso...',
+                            hintStyle: TextStyle(
+                              color: AppColors.textSecondary(context),
+                              fontSize: 13,
+                            ),
+                            border: InputBorder.none,
+                            counterStyle: TextStyle(
+                              color: AppColors.textSecondary(context),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          if (_speechAvailable)
+                            GestureDetector(
+                              onTap: _toggleAiListening,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: _aiListening
+                                      ? AppColors.brand.withValues(alpha: 0.15)
+                                      : AppColors.surfaceOf(context),
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(
+                                    color: _aiListening
+                                        ? AppColors.brand
+                                        : AppColors.borderOf(context),
+                                  ),
+                                ),
+                                child: Icon(
+                                  _aiListening
+                                      ? Icons.stop_rounded
+                                      : Icons.mic_rounded,
+                                  size: 20,
+                                  color: _aiListening
+                                      ? AppColors.brand
+                                      : AppColors.textSecondary(context),
+                                ),
+                              ),
+                            ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: ValueListenableBuilder<bool>(
+                              valueListenable: _aiGenerating,
+                              builder: (_, generating, __) => FilledButton(
+                                onPressed: generating ? null : _generateFromAi,
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.brand,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: generating
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white),
+                                      )
+                                    : const Text('Generar'),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 

@@ -9,6 +9,7 @@ import 'package:running_laps/features/athlete/data/athlete_session_repository.da
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_weekly_planner_service.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
+import 'package:running_laps/features/ai_coach/views/ai_coach_prompt_view.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_weekly_feedback_view.dart';
 import 'package:running_laps/features/calendar/viewmodels/calendar_view_model.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
@@ -1290,6 +1291,45 @@ class _CalendarViewState extends State<CalendarView> {
                     ),
                   );
                 }),
+                const SizedBox(height: AppSpacing.s),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.brand.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.auto_awesome_rounded,
+                        color: AppColors.brand, size: 20),
+                  ),
+                  title: Text(
+                    'Generar con IA',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary(context),
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Describe el entrenamiento con tus palabras',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary(context),
+                    ),
+                  ),
+                  onTap: () async {
+                    Navigator.of(context).pop();
+                    if (!_hasAiCoachProfile) {
+                      ModernSnackBar.showWarning(
+                        context,
+                        'Configura tu entrenador IA primero',
+                      );
+                      return;
+                    }
+                    await Navigator.of(context).push(AppRoute(
+                      page: const AiCoachPromptView(),
+                    ));
+                  },
+                ),
                 const SizedBox(height: AppSpacing.s),
                 GestureDetector(
                   onTap: () {
