@@ -17,7 +17,6 @@ import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_automation_service.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
-import 'package:running_laps/features/ai_coach/views/ai_coach_prompt_view.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_weekly_feedback_view.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -327,21 +326,6 @@ class _HomeViewState extends State<HomeView> {
       else if (_showMissingPlanBanner && _hasAiCoachProfile) _buildMissingPlanBanner(),
       if (!_hasAiCoachProfile) _buildAiCoachCta(),
       _buildTodaySessionCard(),
-      if (_hasAiCoachProfile)
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
-            onPressed: () => Navigator.of(context).push(
-              AppRoute(page: const AiCoachPromptView()),
-            ),
-            icon: const Icon(Icons.auto_awesome_rounded,
-                size: 16, color: AppColors.brand),
-            label: const Text(
-              'Generar entrenamiento con IA',
-              style: TextStyle(fontSize: 13, color: AppColors.brand),
-            ),
-          ),
-        ),
       const SizedBox(height: AppSpacing.xl),
       _buildWeekSessionsList(),
     ];
