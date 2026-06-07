@@ -467,6 +467,7 @@ class AiCoachUsage {
   final int? messagesLimit;
   final DateTime periodStart;
   final DateTime periodEnd;
+  final int previewsGenerated;
 
   const AiCoachUsage({
     required this.plan,
@@ -474,6 +475,7 @@ class AiCoachUsage {
     this.messagesLimit,
     required this.periodStart,
     required this.periodEnd,
+    this.previewsGenerated = 0,
   });
 
   factory AiCoachUsage.fromMap(Map<String, dynamic> map) {
@@ -483,6 +485,8 @@ class AiCoachUsage {
       messagesLimit: (map['messagesLimit'] as num?)?.toInt(),
       periodStart: _toDateTime(map['periodStart']),
       periodEnd: _toDateTime(map['periodEnd']),
+      previewsGenerated:
+          (map['previewsGenerated'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -493,7 +497,26 @@ class AiCoachUsage {
       'periodStart': Timestamp.fromDate(periodStart),
       'periodEnd': Timestamp.fromDate(periodEnd),
       if (messagesLimit != null) 'messagesLimit': messagesLimit,
+      'previewsGenerated': previewsGenerated,
     };
+  }
+
+  AiCoachUsage copyWith({
+    String? plan,
+    int? messagesUsed,
+    int? messagesLimit,
+    DateTime? periodStart,
+    DateTime? periodEnd,
+    int? previewsGenerated,
+  }) {
+    return AiCoachUsage(
+      plan: plan ?? this.plan,
+      messagesUsed: messagesUsed ?? this.messagesUsed,
+      messagesLimit: messagesLimit ?? this.messagesLimit,
+      periodStart: periodStart ?? this.periodStart,
+      periodEnd: periodEnd ?? this.periodEnd,
+      previewsGenerated: previewsGenerated ?? this.previewsGenerated,
+    );
   }
 }
 
@@ -669,6 +692,7 @@ class AiCoachPlannedSessionSummary {
   final String status;
   final bool isAiSuggested;
   final String? suggestionStatus;
+  final String? athleteNote;
 
   const AiCoachPlannedSessionSummary({
     required this.sessionId,
@@ -677,6 +701,7 @@ class AiCoachPlannedSessionSummary {
     required this.status,
     required this.isAiSuggested,
     this.suggestionStatus,
+    this.athleteNote,
   });
 
   Map<String, dynamic> toMap() {
@@ -687,6 +712,7 @@ class AiCoachPlannedSessionSummary {
       'status': status,
       'isAiSuggested': isAiSuggested,
       if (suggestionStatus != null) 'suggestionStatus': suggestionStatus,
+      if (athleteNote != null) 'athleteNote': athleteNote,
     };
   }
 }
@@ -901,22 +927,107 @@ class AiCoachWeeklyDecision {
   }
 }
 
+enum AiCoachAdjustIntent { move, cancel, complete, adjustSession, addSeries, removeSeries, unsupported }
+
+extension AiCoachAdjustIntentX on AiCoachAdjustIntent {
+  static AiCoachAdjustIntent fromValue(String value) {
+    switch (value) {
+      case 'move':
+        return AiCoachAdjustIntent.move;
+      case 'cancel':
+        return AiCoachAdjustIntent.cancel;
+      case 'complete':
+        return AiCoachAdjustIntent.complete;
+      case 'adjust_session':
+        return AiCoachAdjustIntent.adjustSession;
+      case 'add_series':
+        return AiCoachAdjustIntent.addSeries;
+      case 'remove_series':
+        return AiCoachAdjustIntent.removeSeries;
+      default:
+        return AiCoachAdjustIntent.unsupported;
+    }
+  }
+}
+
+class AiCoachLocalAction {
+  final String type;
+  final int sourceWeekday;
+  final int? targetWeekday;
+  final int? intensityDelta; // -1 bajar, +1 subir. Solo para adjust_session
+  final int? seriesCount;   // cuántas series añadir/quitar
+
+  const AiCoachLocalAction({
+    required this.type,
+    required this.sourceWeekday,
+    this.targetWeekday,
+    this.intensityDelta,
+    this.seriesCount,
+  });
+
+  factory AiCoachLocalAction.fromMap(Map<String, dynamic> map) {
+    return AiCoachLocalAction(
+      type: map['type'] as String? ?? 'move',
+      sourceWeekday: (map['sourceWeekday'] as num?)?.toInt() ?? 1,
+      targetWeekday: (map['targetWeekday'] as num?)?.toInt(),
+      intensityDelta: (map['intensityDelta'] as num?)?.toInt(),
+      seriesCount: (map['seriesCount'] as num?)?.toInt(),
+    );
+  }
+}
+
+class AiCoachAdjustmentPreview {
+  final String response;
+  final AiCoachWeeklyDecision? decisionOverride;
+  final bool willModifyPlan;
+  final bool limitReached;
+  final String? limitMessage;
+  final AiCoachAdjustIntent intent;
+  final AiCoachLocalAction? localAction;
+
+  const AiCoachAdjustmentPreview({
+    required this.response,
+    this.decisionOverride,
+    this.willModifyPlan = false,
+    this.limitReached = false,
+    this.limitMessage,
+    this.intent = AiCoachAdjustIntent.unsupported,
+    this.localAction,
+  });
+
+  factory AiCoachAdjustmentPreview.limitReached(String message) =>
+      AiCoachAdjustmentPreview(
+        response: message,
+        limitReached: true,
+        limitMessage: message,
+      );
+}
+
 class AiCoachChatAdjustmentResult {
   final String response;
   final AiCoachWeeklyDecision? decisionOverride;
+  final AiCoachAdjustIntent intent;
+  final AiCoachLocalAction? localAction;
 
   const AiCoachChatAdjustmentResult({
     required this.response,
     this.decisionOverride,
+    this.intent = AiCoachAdjustIntent.unsupported,
+    this.localAction,
   });
 
   factory AiCoachChatAdjustmentResult.fromMap(Map<String, dynamic> map) {
+    final localActionMap = map['localAction'];
     return AiCoachChatAdjustmentResult(
       response: map['response'] as String? ?? '',
       decisionOverride: map['decisionOverride'] is Map<String, dynamic>
           ? AiCoachWeeklyDecision.fromMap(
               map['decisionOverride'] as Map<String, dynamic>,
             )
+          : null,
+      intent: AiCoachAdjustIntentX.fromValue(map['intent'] as String? ?? ''),
+      localAction: localActionMap is Map<String, dynamic>
+          ? AiCoachLocalAction.fromMap(localActionMap)
           : null,
     );
   }

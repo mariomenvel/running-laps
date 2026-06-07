@@ -90,6 +90,24 @@ class AiCoachRepository {
     }, SetOptions(merge: true));
   }
 
+  /// Incrementa atómicamente un contador de uso sin pisar
+  /// otros campos. Crea el documento si no existe.
+  Future<void> incrementUsageField({
+    required String uid,
+    required String field,
+    required DateTime periodStart,
+    required DateTime periodEnd,
+    int by = 1,
+  }) async {
+    final doc = _settingsDoc(uid, 'aiCoachUsage');
+    await doc.set({
+      field: FieldValue.increment(by),
+      'periodStart': Timestamp.fromDate(periodStart),
+      'periodEnd': Timestamp.fromDate(periodEnd),
+      'plan': 'athlete_chat_weekly',
+    }, SetOptions(merge: true));
+  }
+
   Future<AiCoachWeeklyState?> getWeeklyState({String? uid}) async {
     final resolvedUid = uid ?? _requireUid();
     try {

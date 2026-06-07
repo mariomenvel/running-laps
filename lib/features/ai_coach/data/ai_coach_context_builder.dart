@@ -96,6 +96,7 @@ class AiCoachContextBuilder {
         status: session.status.toValue,
         isAiSuggested: session.suggestion?.origin == AthleteSessionOrigin.ai,
         suggestionStatus: session.suggestion?.status.toValue,
+        athleteNote: session.athleteNote,
       );
     }).toList();
 
