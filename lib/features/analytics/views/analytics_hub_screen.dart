@@ -32,11 +32,20 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
   }
 
   Future<void> _initWithAuth() async {
-    final user = FirebaseAuth.instance.currentUser ??
-        await FirebaseAuth.instance.authStateChanges()
-            .firstWhere((u) => u != null);
+    // currentUser primero (síncrono, disponible si ya autenticado)
+    // authStateChanges como fallback con timeout de 5s
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      user = await FirebaseAuth.instance.authStateChanges()
+          .firstWhere((u) => u != null)
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => FirebaseAuth.instance.currentUser,
+          );
+    }
+    if (user == null) return;
     if (!mounted) return;
-    final ctrl = AnalyticsHubController(userId: user!.uid);
+    final ctrl = AnalyticsHubController(userId: user.uid);
     setState(() {
       _ctrl = ctrl;
       _ctrlReady = true;
