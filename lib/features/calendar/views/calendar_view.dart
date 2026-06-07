@@ -28,7 +28,8 @@ class CalendarView extends StatefulWidget {
   State<CalendarView> createState() => _CalendarViewState();
 }
 
-class _CalendarViewState extends State<CalendarView> {
+class _CalendarViewState extends State<CalendarView>
+    with WidgetsBindingObserver {
   CalendarViewModel? _vm;
   bool _vmReady = false;
   int _focusedYear = DateTime.now().year;
@@ -56,8 +57,12 @@ class _CalendarViewState extends State<CalendarView> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initWithAuth();
     _initAdjustSpeech();
+    _adjustController.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   Future<void> _initAdjustSpeech() async {
@@ -100,12 +105,21 @@ class _CalendarViewState extends State<CalendarView> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _vm?.dispose();
     _adjustController.dispose();
     _adjustPanelExpanded.dispose();
     _adjustProcessing.dispose();
     _adjustUsage.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) _loadAdjustUsage(uid);
+    }
   }
 
   // ── Panel ajuste plan ─────────────────────────────────────────────────────
@@ -476,81 +490,108 @@ class _CalendarViewState extends State<CalendarView> {
                             );
                           }
 
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Expanded(
-                                    child: TextField(
-                                      controller: _adjustController,
-                                      enabled: !processing,
-                                      maxLines: 3,
-                                      minLines: 1,
-                                      decoration: InputDecoration(
-                                        hintText:
-                                            'Ej: Mueve el rodaje del martes al jueves',
-                                        hintStyle: AppTypography.small.copyWith(
-                                          color: AppColors.iconMutedOf(context),
-                                        ),
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(8),
-                                          borderSide: BorderSide(
-                                            color: AppColors.borderOf(context),
-                                          ),
-                                        ),
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 8,
-                                        ),
-                                        isDense: true,
-                                      ),
-                                      style: AppTypography.body.copyWith(
-                                        color: AppColors.textPrimary(context),
-                                      ),
+                              Expanded(
+                                child: Container(
+                                  constraints: const BoxConstraints(maxHeight: 120),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surfaceOf(context),
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                      color: AppColors.borderOf(context),
                                     ),
                                   ),
-                                  if (_adjustSpeechAvailable) ...[
-                                    const SizedBox(width: AppSpacing.s),
-                                    IconButton(
-                                      onPressed: processing
-                                          ? null
-                                          : _toggleAdjustListening,
-                                      icon: Icon(
-                                        _adjustListening
-                                            ? Icons.mic
-                                            : Icons.mic_none,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 8),
+                                  child: TextField(
+                                    controller: _adjustController,
+                                    enabled: !processing,
+                                    maxLines: null,
+                                    maxLength: 300,
+                                    textInputAction: TextInputAction.send,
+                                    onSubmitted: (_) {
+                                      if (!processing &&
+                                          _adjustController.text.trim().isNotEmpty) {
+                                        _requestAdjustPreview();
+                                      }
+                                    },
+                                    decoration: InputDecoration(
+                                      hintText: 'Pide un ajuste...',
+                                      hintStyle: TextStyle(
+                                        color: AppColors.textSecondary(context),
+                                        fontSize: 13,
+                                      ),
+                                      border: InputBorder.none,
+                                      isDense: true,
+                                      counterText: '',
+                                    ),
+                                    style: AppTypography.body.copyWith(
+                                      color: AppColors.textPrimary(context),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              if (_adjustSpeechAvailable) ...[
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: processing ? null : _toggleAdjustListening,
+                                  child: Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: _adjustListening
+                                          ? AppColors.brand.withValues(alpha: 0.15)
+                                          : AppColors.surfaceOf(context),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
                                         color: _adjustListening
                                             ? AppColors.brand
-                                            : AppColors.iconMutedOf(context),
+                                            : AppColors.borderOf(context),
                                       ),
                                     ),
-                                  ],
-                                ],
-                              ),
-                              const SizedBox(height: AppSpacing.s),
-                              SizedBox(
-                                width: double.infinity,
-                                child: FilledButton(
-                                  onPressed: (processing || blocked)
-                                      ? null
-                                      : _requestAdjustPreview,
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: AppColors.brand,
-                                    minimumSize: const Size(0, 38),
+                                    child: Icon(
+                                      _adjustListening
+                                          ? Icons.stop_rounded
+                                          : Icons.mic_rounded,
+                                      size: 20,
+                                      color: _adjustListening
+                                          ? AppColors.brand
+                                          : AppColors.textSecondary(context),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: (processing ||
+                                        _adjustController.text.trim().isEmpty)
+                                    ? null
+                                    : _requestAdjustPreview,
+                                child: Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: (processing ||
+                                            _adjustController.text.trim().isEmpty)
+                                        ? AppColors.borderOf(context)
+                                        : AppColors.brand,
+                                    shape: BoxShape.circle,
                                   ),
                                   child: processing
-                                      ? const SizedBox(
-                                          width: 16,
-                                          height: 16,
+                                      ? const Padding(
+                                          padding: EdgeInsets.all(12),
                                           child: CircularProgressIndicator(
                                             strokeWidth: 2,
                                             color: Colors.white,
                                           ),
                                         )
-                                      : const Text('Ver propuesta'),
+                                      : const Icon(
+                                          Icons.arrow_upward_rounded,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
                                 ),
                               ),
                             ],
