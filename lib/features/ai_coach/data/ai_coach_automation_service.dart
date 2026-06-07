@@ -33,6 +33,69 @@ class AiCoachAutomationService {
   final AiCoachWeeklyPlannerService _weeklyPlannerService;
   final UserService _userService;
 
+  /// Comprueba si falta el plan de la semana ACTUAL en curso.
+  /// Devuelve true si no hay sesiones IA planificadas para esta semana
+  /// y aún quedan al menos 2 días útiles.
+  Future<bool> isCurrentWeekPlanMissing(String uid) async {
+    final isAthlete = await _userService.getIsAthleteMode(uid);
+    if (!isAthlete) return false;
+
+    final profile = await _repository.getProfile(uid: uid);
+    if (profile == null) return false;
+
+    final now = DateTime.now();
+    final monday = _mondayOf(now);
+    final sunday = monday.add(const Duration(days: 6));
+
+    final sessions = await _sessionRepository.getSessionsInRange(
+      uid: uid,
+      startDate: _dateKey(monday),
+      endDate: _dateKey(sunday),
+    );
+
+    final hasAiPlan = sessions.any(
+      (s) =>
+          s.status == AthleteSessionStatus.planned &&
+          s.suggestion?.origin == AthleteSessionOrigin.ai,
+    );
+
+    // Solo falta plan si NO hay plan IA Y aún quedan días útiles
+    final daysLeftInWeek = 7 - now.weekday; // 0 el domingo
+    return !hasAiPlan && daysLeftInWeek >= 2;
+  }
+
+  /// Fuerza la generación del plan de la semana ACTUAL en curso.
+  /// Usa targetWeekStart para que planNextWeek genere esta semana, no la próxima.
+  Future<bool> forceGenerateCurrentWeekPlan(String uid) async {
+    final profile = await _repository.getProfile(uid: uid);
+    if (profile == null) {
+      debugPrint('[AiCoachAutomation] forceCurrentWeek: sin perfil AI');
+      return false;
+    }
+
+    final providerConfig = await _repository.getProviderConfig(uid: uid);
+    if (providerConfig?.apiKey == null ||
+        (providerConfig!.apiKey?.trim().isEmpty ?? true)) {
+      debugPrint('[AiCoachAutomation] forceCurrentWeek: sin API key');
+      return false;
+    }
+
+    try {
+      final currentMonday = _mondayOf(DateTime.now());
+      final result = await _weeklyPlannerService.planNextWeek(
+        uid,
+        targetWeekStart: currentMonday,
+      );
+      debugPrint(
+        '[AiCoachAutomation] forceCurrentWeek: ${result.sessions.length} sesiones generadas',
+      );
+      return result.sessions.isNotEmpty;
+    } catch (e) {
+      debugPrint('[AiCoachAutomation] forceCurrentWeek error: $e');
+      return false;
+    }
+  }
+
   /// Fuerza la generación del plan de la próxima semana,
   /// saltándose las guardas de ventana temporal y ciclo.
   /// Se usa cuando el usuario rellena el cuestionario manualmente.

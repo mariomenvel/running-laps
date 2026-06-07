@@ -59,6 +59,7 @@ class _HomeViewState extends State<HomeView> {
   bool _vmReady = false;
   bool _hasAiCoachProfile = false;
   bool _showFeedbackBanner = false;
+  bool _showMissingPlanBanner = false;
 
   String _weekStartStr(DateTime monday) =>
       '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
@@ -99,6 +100,29 @@ class _HomeViewState extends State<HomeView> {
 
     if (DateTime.now().weekday == 7 && existing == null) {
       _scheduleWeeklyFeedbackNotification();
+    }
+  }
+
+  Future<void> _checkMissingPlan(String uid) async {
+    if (!_hasAiCoachProfile) return;
+    if (_showFeedbackBanner) return;
+    final missing =
+        await AiCoachAutomationService().isCurrentWeekPlanMissing(uid);
+    if (mounted) setState(() => _showMissingPlanBanner = missing);
+  }
+
+  Future<void> _generateCurrentWeekPlan() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    final generated =
+        await AiCoachAutomationService().forceGenerateCurrentWeekPlan(uid);
+    if (mounted) {
+      if (generated) {
+        setState(() => _showMissingPlanBanner = false);
+        ModernSnackBar.showSuccess(context, 'Plan de esta semana generado');
+      } else {
+        ModernSnackBar.showError(context, 'No se pudo generar el plan');
+      }
     }
   }
 
@@ -165,7 +189,10 @@ class _HomeViewState extends State<HomeView> {
     final profile = await AiCoachRepository().getProfile(uid: uid);
     if (!mounted) return;
     setState(() => _hasAiCoachProfile = profile != null);
-    if (profile != null) _checkWeeklyFeedback(uid);
+    if (profile != null) {
+      await _checkWeeklyFeedback(uid);
+      _checkMissingPlan(uid);
+    }
   }
 
   @override
@@ -296,7 +323,8 @@ class _HomeViewState extends State<HomeView> {
 
   List<Widget> _buildAthleteContent() {
     return [
-      if (_showFeedbackBanner && _hasAiCoachProfile) _buildFeedbackBanner(),
+      if (_showFeedbackBanner && _hasAiCoachProfile) _buildFeedbackBanner()
+      else if (_showMissingPlanBanner && _hasAiCoachProfile) _buildMissingPlanBanner(),
       if (!_hasAiCoachProfile) _buildAiCoachCta(),
       _buildTodaySessionCard(),
       if (_hasAiCoachProfile)
@@ -345,6 +373,8 @@ class _HomeViewState extends State<HomeView> {
                   onCompleted: () async {
                     setState(() => _showFeedbackBanner = false);
                     await _generateAiPlanFromHome();
+                    final uid = FirebaseAuth.instance.currentUser?.uid;
+                    if (uid != null) await _checkMissingPlan(uid);
                   },
                 ),
               ));
@@ -392,6 +422,71 @@ class _HomeViewState extends State<HomeView> {
           ),
         ),
       );
+
+  Widget _buildMissingPlanBanner() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.xl),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.brand.withValues(alpha: 0.10),
+            AppColors.brand.withValues(alpha: 0.03),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.brand.withValues(alpha: 0.20)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: _generateCurrentWeekPlan,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.brand.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.calendar_month_outlined,
+                      color: AppColors.brand, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'No tienes plan para esta semana',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary(context),
+                        ),
+                      ),
+                      Text(
+                        'Toca para generar tu plan ahora',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, color: AppColors.brand),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildAiCoachCta() {
     return Container(
