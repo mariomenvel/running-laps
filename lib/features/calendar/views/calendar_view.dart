@@ -6,7 +6,10 @@ import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_chat_service.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_weekly_planner_service.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_prompt_view.dart';
@@ -33,8 +36,17 @@ class _CalendarViewState extends State<CalendarView> {
   bool _isGeneratingAiPlan = false;
   bool _isUpdatingSuggestion = false;
   bool _hasAiCoachProfile = false;
-  bool _showFeedbackBanner = false;
   late Future<List<AthleteSession>> _nextWeekSuggestionsFuture;
+
+  // Panel "Ajustar plan con el coach"
+  final TextEditingController _adjustController = TextEditingController();
+  final SpeechToText _adjustSpeech = SpeechToText();
+  final ValueNotifier<bool> _adjustPanelExpanded = ValueNotifier(false);
+  final ValueNotifier<bool> _adjustProcessing = ValueNotifier(false);
+  final ValueNotifier<AiCoachUsage?> _adjustUsage = ValueNotifier(null);
+  bool _adjustListening = false;
+  bool _adjustSpeechAvailable = false;
+  AiCoachAdjustmentPreview? _pendingPreview;
 
   String _currentWeekStart() {
     final now = DateTime.now();
@@ -46,6 +58,13 @@ class _CalendarViewState extends State<CalendarView> {
   void initState() {
     super.initState();
     _initWithAuth();
+    _initAdjustSpeech();
+  }
+
+  Future<void> _initAdjustSpeech() async {
+    _adjustSpeechAvailable = await _adjustSpeech.initialize(
+      onError: (_) => setState(() => _adjustListening = false),
+    );
   }
 
   Future<void> _initWithAuth() async {
@@ -71,13 +90,116 @@ class _CalendarViewState extends State<CalendarView> {
     _nextWeekSuggestionsFuture = _loadVisibleWeekSuggestions(uid);
     final profile = await AiCoachRepository().getProfile(uid: uid);
     if (mounted) setState(() => _hasAiCoachProfile = profile != null);
+    _loadAdjustUsage(uid);
+  }
+
+  Future<void> _loadAdjustUsage(String uid) async {
+    final usage = await AiCoachRepository().getUsage(uid: uid);
+    debugPrint('[Usage] recargado: used=${usage?.messagesUsed}');
+    if (mounted) _adjustUsage.value = usage;
   }
 
   @override
   void dispose() {
     _vm?.dispose();
+    _adjustController.dispose();
+    _adjustPanelExpanded.dispose();
+    _adjustProcessing.dispose();
+    _adjustUsage.dispose();
     super.dispose();
   }
+
+  // ── Panel ajuste plan ─────────────────────────────────────────────────────
+
+  DateTime _visibleWeekStart() =>
+      _mondayOf(_vm?.selectedDay.value ?? DateTime.now());
+
+  Future<void> _toggleAdjustListening() async {
+    if (!_adjustSpeechAvailable) return;
+    if (_adjustListening) {
+      await _adjustSpeech.stop();
+      setState(() => _adjustListening = false);
+    } else {
+      setState(() => _adjustListening = true);
+      await _adjustSpeech.listen(
+        listenOptions: SpeechListenOptions(cancelOnError: true),
+        onResult: (result) {
+          setState(() {
+            _adjustController.text = result.recognizedWords;
+            _adjustController.selection = TextSelection.fromPosition(
+              TextPosition(offset: _adjustController.text.length),
+            );
+          });
+        },
+        onSoundLevelChange: null,
+      );
+    }
+  }
+
+  Future<void> _requestAdjustPreview() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final text = _adjustController.text.trim();
+    if (uid == null || text.isEmpty) return;
+    _adjustProcessing.value = true;
+    try {
+      final preview = await AiCoachChatService().previewAdjustment(
+        uid: uid,
+        athleteMessage: text,
+        targetWeekStart: _visibleWeekStart(),
+      );
+      if (!mounted) return;
+      setState(() => _pendingPreview = preview);
+      if (preview.limitReached) {
+        ModernSnackBar.showWarning(context, preview.limitMessage ?? 'Límite alcanzado');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ModernSnackBar.showError(
+        context,
+        'Error al generar preview: ${e.toString().replaceFirst('Exception: ', '')}',
+      );
+    } finally {
+      _adjustProcessing.value = false;
+    }
+  }
+
+  Future<void> _applyPreview() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final preview = _pendingPreview;
+    if (uid == null || preview == null) return;
+    _adjustProcessing.value = true;
+    try {
+      final ok = await AiCoachChatService().applyAdjustment(
+        uid: uid,
+        preview: preview,
+        targetWeekStart: _visibleWeekStart(),
+      );
+      if (!mounted) return;
+      if (ok) {
+        setState(() {
+          _pendingPreview = null;
+          _adjustController.clear();
+        });
+        final focused = _vm?.focusedMonth.value ?? DateTime.now();
+        _vm?.onMonthChanged(focused);
+        _nextWeekSuggestionsFuture = _loadVisibleWeekSuggestions(uid);
+        ModernSnackBar.showSuccess(context, 'Plan ajustado correctamente');
+        _loadAdjustUsage(uid);
+      } else {
+        ModernSnackBar.showError(context, 'No se pudo aplicar el ajuste');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ModernSnackBar.showError(
+        context,
+        'Error al aplicar: ${e.toString().replaceFirst('Exception: ', '')}',
+      );
+    } finally {
+      _adjustProcessing.value = false;
+    }
+  }
+
+  void _discardPreview() => setState(() => _pendingPreview = null);
 
   @override
   Widget build(BuildContext context) {
@@ -98,6 +220,7 @@ class _CalendarViewState extends State<CalendarView> {
                     DateTime.now().weekday < 6) _buildAiGenerateButton(),
                 if (isAthlete && !_hasAiCoachProfile) _buildAiCoachCta(),
                 if (isAthlete) _buildAiSuggestionsPanel(),
+                if (isAthlete && _hasAiCoachProfile) _buildAdjustPanel(),
                 Expanded(
                   child: ValueListenableBuilder<CalendarViewType>(
                     valueListenable: _vm!.viewType,
@@ -118,6 +241,331 @@ class _CalendarViewState extends State<CalendarView> {
           },
         );
       },
+    );
+  }
+
+  Widget _buildAdjustPanel() {
+    return ValueListenableBuilder<bool>(
+      valueListenable: _adjustPanelExpanded,
+      builder: (_, expanded, __) => Padding(
+        padding: const EdgeInsets.fromLTRB(AppSpacing.l, 0, AppSpacing.l, AppSpacing.m),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.surfaceOf(context),
+            border: Border.all(color: AppColors.borderOf(context)),
+            borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Cabecera colapsable
+              InkWell(
+                onTap: () => _adjustPanelExpanded.value = !expanded,
+                borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.m,
+                    vertical: AppSpacing.m,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.tune_rounded, color: AppColors.brand, size: 18),
+                      const SizedBox(width: AppSpacing.s),
+                      Expanded(
+                        child: Text(
+                          'Ajustar plan con el coach',
+                          style: AppTypography.body.copyWith(
+                            color: AppColors.textPrimary(context),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Tooltip(
+                        triggerMode: TooltipTriggerMode.tap,
+                        showDuration: const Duration(seconds: 6),
+                        margin: const EdgeInsets.symmetric(horizontal: 24),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceOf(context),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.borderOf(context),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        textStyle: TextStyle(
+                          fontSize: 12,
+                          height: 1.5,
+                          color: AppColors.textPrimary(context),
+                        ),
+                        message: 'Puedes pedirme:\n'
+                            '• Cambiar una sesión de día\n'
+                            '• Subir o bajar la intensidad\n'
+                            '• Añadir o quitar series\n'
+                            '• Eliminar una sesión\n'
+                            '• Preguntar qué tienes esta semana',
+                        child: Icon(
+                          Icons.help_outline_rounded,
+                          size: 18,
+                          color: AppColors.textSecondary(context),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.s),
+                      ValueListenableBuilder<AiCoachUsage?>(
+                        valueListenable: _adjustUsage,
+                        builder: (_, usage, __) {
+                          final used = usage?.messagesUsed ?? 0;
+                          final limit = usage?.messagesLimit ?? 3;
+                          final remaining = (limit - used).clamp(0, limit);
+                          final color = remaining == 0
+                              ? AppColors.rpeMax
+                              : remaining == 1
+                                  ? AppColors.rpeMid
+                                  : AppColors.rpeLow;
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '$remaining/$limit',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: color,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: AppSpacing.s),
+                      Icon(
+                        expanded ? Icons.expand_less : Icons.expand_more,
+                        color: AppColors.iconMutedOf(context),
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (expanded) ...[
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.m),
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _adjustProcessing,
+                    builder: (_, processing, __) {
+                      // Si hay preview pendiente, mostrar respuesta del coach
+                      if (_pendingPreview != null && !_pendingPreview!.limitReached) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Propuesta del coach',
+                              style: AppTypography.small.copyWith(
+                                color: AppColors.textSecondary(context),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.s),
+                            Text(
+                              _pendingPreview!.response,
+                              style: AppTypography.body.copyWith(
+                                color: AppColors.textPrimary(context),
+                              ),
+                            ),
+                            if (_pendingPreview!.willModifyPlan) ...[
+                              const SizedBox(height: AppSpacing.m),
+                              Text(
+                                '¿Aplicar este ajuste al plan?',
+                                style: AppTypography.small.copyWith(
+                                  color: AppColors.textSecondary(context),
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.s),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: FilledButton(
+                                      onPressed: processing ? null : _applyPreview,
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: AppColors.brand,
+                                        minimumSize: const Size(0, 38),
+                                      ),
+                                      child: processing
+                                          ? const SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Colors.white,
+                                              ),
+                                            )
+                                          : const Text('Aplicar'),
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.s),
+                                  OutlinedButton(
+                                    onPressed: processing ? null : _discardPreview,
+                                    style: OutlinedButton.styleFrom(
+                                      minimumSize: const Size(0, 38),
+                                    ),
+                                    child: const Text('Descartar'),
+                                  ),
+                                ],
+                              ),
+                            ] else ...[
+                              const SizedBox(height: AppSpacing.s),
+                              TextButton(
+                                onPressed: _discardPreview,
+                                child: const Text('Volver a escribir'),
+                              ),
+                            ],
+                          ],
+                        );
+                      }
+
+                      // Input normal
+                      return ValueListenableBuilder<AiCoachUsage?>(
+                        valueListenable: _adjustUsage,
+                        builder: (_, usage, __) {
+                          final used = usage?.messagesUsed ?? 0;
+                          final limit = usage?.messagesLimit ?? 3;
+                          final noQuotaLeft = used >= limit;
+                          final noPreviewsLeft =
+                              (usage?.previewsGenerated ?? 0) >= 10;
+                          final blocked = noQuotaLeft || noPreviewsLeft;
+
+                          if (blocked) {
+                            final msg = noQuotaLeft
+                                ? 'Has usado tus $limit ajustes de esta semana. '
+                                    'Podrás pedir más la semana que viene.'
+                                : 'Has alcanzado el máximo de peticiones esta semana.';
+                            return Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceOf(context),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.info_outline_rounded,
+                                    size: 18,
+                                    color: AppColors.textSecondary(context),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      msg,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: AppColors.textSecondary(context),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _adjustController,
+                                      enabled: !processing,
+                                      maxLines: 3,
+                                      minLines: 1,
+                                      decoration: InputDecoration(
+                                        hintText:
+                                            'Ej: Mueve el rodaje del martes al jueves',
+                                        hintStyle: AppTypography.small.copyWith(
+                                          color: AppColors.iconMutedOf(context),
+                                        ),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                          borderSide: BorderSide(
+                                            color: AppColors.borderOf(context),
+                                          ),
+                                        ),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 8,
+                                        ),
+                                        isDense: true,
+                                      ),
+                                      style: AppTypography.body.copyWith(
+                                        color: AppColors.textPrimary(context),
+                                      ),
+                                    ),
+                                  ),
+                                  if (_adjustSpeechAvailable) ...[
+                                    const SizedBox(width: AppSpacing.s),
+                                    IconButton(
+                                      onPressed: processing
+                                          ? null
+                                          : _toggleAdjustListening,
+                                      icon: Icon(
+                                        _adjustListening
+                                            ? Icons.mic
+                                            : Icons.mic_none,
+                                        color: _adjustListening
+                                            ? AppColors.brand
+                                            : AppColors.iconMutedOf(context),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: AppSpacing.s),
+                              SizedBox(
+                                width: double.infinity,
+                                child: FilledButton(
+                                  onPressed: (processing || blocked)
+                                      ? null
+                                      : _requestAdjustPreview,
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: AppColors.brand,
+                                    minimumSize: const Size(0, 38),
+                                  ),
+                                  child: processing
+                                      ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : const Text('Ver propuesta'),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -349,7 +797,7 @@ class _CalendarViewState extends State<CalendarView> {
           page: AiCoachWeeklyFeedbackView(
             weekStart: currentWeekStart,
             generatePlanAfter: false,
-            onCompleted: () => setState(() => _showFeedbackBanner = false),
+            onCompleted: () {},
           ),
         ));
         if (!mounted) return;

@@ -391,6 +391,8 @@ class AthleteSession {
   final int?    raceDistanceM;     // distancia oficial en metros
   final int?    targetTimeSeconds; // tiempo objetivo en segundos
 
+  final String? athleteNote;       // nota libre del atleta (ej: ajuste de intensidad)
+
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -413,6 +415,7 @@ class AthleteSession {
     this.raceName,
     this.raceDistanceM,
     this.targetTimeSeconds,
+    this.athleteNote,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -451,6 +454,7 @@ class AthleteSession {
       raceName:             map['raceName']          as String?,
       raceDistanceM:        map['raceDistanceM']     as int?,
       targetTimeSeconds:    map['targetTimeSeconds'] as int?,
+      athleteNote:          map['athleteNote']       as String?,
       createdAt:            _toDateTime(map['createdAt']),
       updatedAt:            _toDateTime(map['updatedAt']),
     );
@@ -477,6 +481,7 @@ class AthleteSession {
       if (raceName             != null) 'raceName':             raceName,
       if (raceDistanceM        != null) 'raceDistanceM':        raceDistanceM,
       if (targetTimeSeconds    != null) 'targetTimeSeconds':    targetTimeSeconds,
+      if (athleteNote          != null) 'athleteNote':          athleteNote,
     };
   }
 
@@ -499,6 +504,7 @@ class AthleteSession {
     Object? raceName            = _sentinel,
     Object? raceDistanceM       = _sentinel,
     Object? targetTimeSeconds   = _sentinel,
+    Object? athleteNote         = _sentinel,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -521,6 +527,7 @@ class AthleteSession {
       raceName:            raceName            == _sentinel ? this.raceName            : raceName            as String?,
       raceDistanceM:       raceDistanceM       == _sentinel ? this.raceDistanceM       : raceDistanceM       as int?,
       targetTimeSeconds:   targetTimeSeconds   == _sentinel ? this.targetTimeSeconds   : targetTimeSeconds   as int?,
+      athleteNote:         athleteNote         == _sentinel ? this.athleteNote         : athleteNote         as String?,
       createdAt:           createdAt           ?? this.createdAt,
       updatedAt:           updatedAt           ?? this.updatedAt,
     );

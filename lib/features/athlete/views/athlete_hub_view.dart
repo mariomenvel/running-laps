@@ -16,6 +16,7 @@ import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_weekly_planner_service.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_settings_view.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
+import 'package:running_laps/features/ai_coach/views/ai_coach_weekly_feedback_view.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/features/templates/data/templates_repository.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
@@ -893,6 +894,24 @@ class _PlanningTabState extends State<_PlanningTab> {
   bool _isAcceptingAiPlan = false;
   bool _autoPlannerRan = false;
   bool _hasAiCoachProfile = false;
+  bool _showFeedbackBanner = false;
+
+  String _currentWeekStart() {
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    return '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _checkWeeklyFeedback() async {
+    if (!_hasAiCoachProfile) return;
+    final existing = await AiCoachRepository().getWeeklyFeedback(
+      uid: widget.uid,
+      weekStart: _currentWeekStart(),
+    );
+    if (mounted) {
+      setState(() => _showFeedbackBanner = existing == null);
+    }
+  }
 
   String _fmt(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
@@ -1031,8 +1050,11 @@ class _PlanningTabState extends State<_PlanningTab> {
     _upcomingFuture = _loadUpcoming();
     _nextWeekSuggestionsFuture = _loadNextWeekSuggestions();
     _aiEnabledFuture = _loadAiEnabled();
-    AiCoachRepository().getProfile(widget.uid).then((profile) {
-      if (mounted) setState(() => _hasAiCoachProfile = profile != null);
+    AiCoachRepository().getProfile(uid: widget.uid).then((profile) {
+      if (mounted) {
+        setState(() => _hasAiCoachProfile = profile != null);
+        if (profile != null) _checkWeeklyFeedback();
+      }
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _runAutoPlannerIfNeeded();
@@ -1249,6 +1271,92 @@ class _PlanningTabState extends State<_PlanningTab> {
                               )),
                         ],
                         const SizedBox(height: 10),
+                        if (_showFeedbackBanner && _hasAiCoachProfile)
+                          Container(
+                            margin: const EdgeInsets.fromLTRB(0, 0, 0, 12),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppColors.brand.withValues(alpha: 0.12),
+                                  AppColors.brand.withValues(alpha: 0.04),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: AppColors.brand.withValues(alpha: 0.25),
+                              ),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(16),
+                                onTap: () async {
+                                  await Navigator.of(context).push(
+                                    AppRoute(
+                                      page: AiCoachWeeklyFeedbackView(
+                                        weekStart: _currentWeekStart(),
+                                        onCompleted: () => setState(
+                                            () => _showFeedbackBanner = false),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.brand
+                                              .withValues(alpha: 0.12),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        child: Icon(
+                                          Icons.rate_review_outlined,
+                                          color: AppColors.brand,
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              '¿Cómo fue la semana?',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColors.textPrimary(
+                                                    context),
+                                              ),
+                                            ),
+                                            Text(
+                                              'Cuéntale a tu coach cómo te has sentido',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: AppColors.textSecondary(
+                                                    context),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons.chevron_right_rounded,
+                                        color: AppColors.brand,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         if (_hasAiCoachProfile) ...[
                           Row(
                             children: [

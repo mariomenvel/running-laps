@@ -45,6 +45,7 @@ class AiCoachWeeklyPlannerService {
     DateTime? referenceDate,
     DateTime? targetWeekStart,
     AiCoachWeeklyDecision? decisionOverride,
+    bool forceRegenerate = false,
   }) async {
     final isAthleteMode = await _userService.getIsAthleteMode(uid);
     if (!isAthleteMode) {
@@ -110,15 +111,17 @@ class AiCoachWeeklyPlannerService {
       endDate: _dateKey(nextWeekEnd),
     );
 
-    final preservedSessions = existingBeforeCleanup
-        .where((session) {
-          final suggestion = session.suggestion;
-          if (suggestion == null) return true;
-          if (suggestion.origin != AthleteSessionOrigin.ai) return true;
-          return suggestion.status == AthleteSessionSuggestionStatus.accepted ||
-              suggestion.status == AthleteSessionSuggestionStatus.edited;
-        })
-        .toList();
+    final preservedSessions = forceRegenerate
+        ? existingBeforeCleanup.where((s) =>
+            s.suggestion == null ||
+            s.suggestion!.origin != AthleteSessionOrigin.ai).toList()
+        : existingBeforeCleanup.where((session) {
+            final suggestion = session.suggestion;
+            if (suggestion == null) return true;
+            if (suggestion.origin != AthleteSessionOrigin.ai) return true;
+            return suggestion.status == AthleteSessionSuggestionStatus.accepted ||
+                suggestion.status == AthleteSessionSuggestionStatus.edited;
+          }).toList();
     final occupiedWeekdays = preservedSessions
         .map((session) => DateTime.tryParse(session.date)?.weekday)
         .whereType<int>()
