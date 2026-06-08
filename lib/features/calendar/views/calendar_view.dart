@@ -10,9 +10,7 @@ import 'package:running_laps/features/ai_coach/data/ai_coach_chat_service.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:speech_to_text/speech_to_text.dart';
-import 'package:running_laps/features/ai_coach/data/ai_coach_weekly_planner_service.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
-import 'package:running_laps/features/ai_coach/views/ai_coach_weekly_feedback_view.dart';
 import 'package:running_laps/features/calendar/viewmodels/calendar_view_model.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/features/training/views/pre_execution_screen.dart';
@@ -33,9 +31,9 @@ class _CalendarViewState extends State<CalendarView>
   CalendarViewModel? _vm;
   bool _vmReady = false;
   int _focusedYear = DateTime.now().year;
-  bool _isGeneratingAiPlan = false;
   bool _isUpdatingSuggestion = false;
   bool _hasAiCoachProfile = false;
+  bool _initialized = false;
   late Future<List<AthleteSession>> _nextWeekSuggestionsFuture;
 
   // Panel "Ajustar plan con el coach"
@@ -60,6 +58,8 @@ class _CalendarViewState extends State<CalendarView>
     WidgetsBinding.instance.addObserver(this);
     _initWithAuth();
     _initAdjustSpeech();
+    MainShell.shellKey.currentState?.tabIndexNotifier
+        .addListener(_onTabChanged);
     _adjustController.addListener(() {
       if (mounted) setState(() {});
     });
@@ -95,6 +95,7 @@ class _CalendarViewState extends State<CalendarView>
     final profile = await AiCoachRepository().getProfile(uid: uid);
     if (mounted) setState(() => _hasAiCoachProfile = profile != null);
     _loadAdjustUsage(uid);
+    _initialized = true;
   }
 
   Future<void> _loadAdjustUsage(String uid) async {
@@ -106,12 +107,29 @@ class _CalendarViewState extends State<CalendarView>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    MainShell.shellKey.currentState?.tabIndexNotifier
+        .removeListener(_onTabChanged);
     _vm?.dispose();
     _adjustController.dispose();
     _adjustPanelExpanded.dispose();
     _adjustProcessing.dispose();
     _adjustUsage.dispose();
     super.dispose();
+  }
+
+  void _onTabChanged() {
+    final currentTab =
+        MainShell.shellKey.currentState?.tabIndexNotifier.value;
+    if (currentTab == 1 && _initialized) {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        _loadAdjustUsage(uid);
+        _vm?.loadAll();
+        setState(() {
+          _nextWeekSuggestionsFuture = _loadVisibleWeekSuggestions(uid);
+        });
+      }
+    }
   }
 
   @override
@@ -235,8 +253,6 @@ class _CalendarViewState extends State<CalendarView>
             return Column(
               children: [
                 _buildViewSelector(isAthlete),
-                if (isAthlete && _hasAiCoachProfile &&
-                    DateTime.now().weekday < 6) _buildAiGenerateButton(),
                 if (isAthlete && !_hasAiCoachProfile) _buildAiCoachCta(),
                 if (isAthlete) _buildAiSuggestionsPanel(),
                 if (isAthlete && _hasAiCoachProfile) _buildAdjustPanel(),
@@ -615,27 +631,6 @@ class _CalendarViewState extends State<CalendarView>
     );
   }
 
-  Widget _buildAiGenerateButton() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.l, 0, AppSpacing.l, AppSpacing.m),
-      child: SizedBox(
-        width: double.infinity,
-        child: FilledButton.icon(
-          onPressed: _isGeneratingAiPlan ? null : _generateAiPlanManual,
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.brand,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppDimens.buttonRadius),
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 12),
-          ),
-          icon: const Icon(Icons.auto_awesome_rounded, size: 18),
-          label: Text(_isGeneratingAiPlan ? 'Generando plan IA...' : 'Generar semana IA'),
-        ),
-      ),
-    );
-  }
-
   Widget _buildAiCoachCta() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppSpacing.l, 0, AppSpacing.l, AppSpacing.m),
@@ -837,94 +832,6 @@ class _CalendarViewState extends State<CalendarView>
         ],
       ),
     );
-  }
-
-  Future<void> _generateAiPlanManual() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-
-    final currentWeekStart = _currentWeekStart();
-    final feedback = await AiCoachRepository().getWeeklyFeedback(
-      uid: uid,
-      weekStart: currentWeekStart,
-    );
-    if (!mounted) return;
-
-    final isWeekend = DateTime.now().weekday >= 6;
-    if (feedback == null && isWeekend) {
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Antes de generar'),
-          content: const Text(
-            '¿Cómo fue esta semana? Tu coach necesita '
-            'tu feedback para generar un plan más preciso.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Saltar'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Rellenar ahora'),
-            ),
-          ],
-        ),
-      );
-      if (confirmed == true && mounted) {
-        await Navigator.of(context).push(AppRoute(
-          page: AiCoachWeeklyFeedbackView(
-            weekStart: currentWeekStart,
-            generatePlanAfter: false,
-            onCompleted: () {},
-          ),
-        ));
-        if (!mounted) return;
-      }
-    }
-
-    final selected = _vm?.selectedDay.value ?? DateTime.now();
-    final weekStart = _mondayOf(selected);
-    debugPrint(
-      '[CalendarView][AI] Manual generation requested. uid=$uid weekStart=${weekStart.toIso8601String()}',
-    );
-    setState(() => _isGeneratingAiPlan = true);
-    try {
-      final startedAt = DateTime.now();
-      debugPrint('[CalendarView][AI] Calling AiCoachWeeklyPlannerService.planNextWeek...');
-      final result = await AiCoachWeeklyPlannerService().planNextWeek(
-        uid,
-        targetWeekStart: weekStart,
-      );
-      final elapsedMs = DateTime.now().difference(startedAt).inMilliseconds;
-      debugPrint(
-        '[CalendarView][AI] planNextWeek completed. sessions=${result.sessions.length}, elapsedMs=$elapsedMs',
-      );
-      final focused = _vm?.focusedMonth.value ?? DateTime.now();
-      _vm?.onMonthChanged(focused);
-      _nextWeekSuggestionsFuture = _loadVisibleWeekSuggestions(uid);
-      debugPrint('[CalendarView][AI] Calendar month refreshed. focused=${focused.toIso8601String()}');
-      if (!mounted) return;
-      ModernSnackBar.showSuccess(
-        context,
-        result.sessions.isEmpty
-            ? 'No se han generado nuevas sugerencias'
-            : 'Plan IA generado (${result.sessions.length} sugerencias)',
-      );
-    } catch (e) {
-      debugPrint('[CalendarView][AI] Manual generation failed: $e');
-      if (!mounted) return;
-      ModernSnackBar.showError(
-        context,
-        'No se pudo generar el plan IA. ${e.toString().replaceFirst('Exception: ', '')}',
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isGeneratingAiPlan = false);
-      }
-      debugPrint('[CalendarView][AI] Manual generation flow finished');
-    }
   }
 
   Future<void> _acceptAllSuggestions(List<AthleteSession> sessions) async {
@@ -1798,6 +1705,50 @@ class _CalendarViewState extends State<CalendarView>
                                 ),
                               ],
                             ],
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                title: const Text('Eliminar sesión'),
+                                content: Text(
+                                  '¿Eliminar "${s.title?.isNotEmpty == true ? s.title! : 'esta sesión'}"?',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, false),
+                                    child: const Text('Cancelar'),
+                                  ),
+                                  FilledButton(
+                                    onPressed: () => Navigator.pop(context, true),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: AppColors.rpeMax,
+                                    ),
+                                    child: const Text('Eliminar'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirm != true || !mounted) return;
+                            final uid = FirebaseAuth.instance.currentUser?.uid;
+                            if (uid == null) return;
+                            await AthleteSessionRepository().deleteSession(
+                              uid: uid,
+                              id: s.id,
+                            );
+                            if (!mounted) return;
+                            Navigator.of(context).pop();
+                            _vm?.loadAll();
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Icon(
+                              Icons.delete_outline_rounded,
+                              size: 20,
+                              color: AppColors.rpeMax,
+                            ),
                           ),
                         ),
                         GestureDetector(

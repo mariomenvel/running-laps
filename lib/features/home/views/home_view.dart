@@ -59,6 +59,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   bool _hasAiCoachProfile = false;
   bool _showFeedbackBanner = false;
   bool _showMissingPlanBanner = false;
+  bool _initialized = false;
 
   String _weekStartStr(DateTime monday) =>
       '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
@@ -82,10 +83,17 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   }
 
   Future<void> _checkWeeklyFeedback(String uid) async {
-    if (!_hasAiCoachProfile) return;
+    debugPrint('[HomeTab] checkFeedback weekday=${DateTime.now().weekday}');
+    if (!_hasAiCoachProfile) {
+      debugPrint('[HomeTab] sin perfil AI, skip');
+      return;
+    }
 
     final weekToEval = _feedbackWeekToEvaluate();
+    debugPrint('[HomeTab] weekToEval=$weekToEval');
+
     if (weekToEval.isEmpty) {
+      debugPrint('[HomeTab] miércoles-viernes, no banner');
       if (mounted) setState(() => _showFeedbackBanner = false);
       return;
     }
@@ -95,7 +103,12 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       weekStart: weekToEval,
     );
 
-    if (mounted) setState(() => _showFeedbackBanner = existing == null);
+    debugPrint('[HomeTab] feedback encontrado: ${existing != null}');
+    debugPrint('[HomeTab] showBanner=${existing == null}');
+
+    if (mounted) {
+      setState(() => _showFeedbackBanner = existing == null);
+    }
 
     if (DateTime.now().weekday == 7 && existing == null) {
       _scheduleWeeklyFeedbackNotification();
@@ -161,6 +174,8 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initWithAuth();
+    MainShell.shellKey.currentState?.tabIndexNotifier
+        .addListener(_onTabChanged);
   }
 
   Future<void> _initWithAuth() async {
@@ -193,13 +208,30 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       await _checkWeeklyFeedback(uid);
       _checkMissingPlan(uid);
     }
+    _initialized = true;
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    MainShell.shellKey.currentState?.tabIndexNotifier
+        .removeListener(_onTabChanged);
     _vm?.dispose();
     super.dispose();
+  }
+
+  void _onTabChanged() {
+    final currentTab =
+        MainShell.shellKey.currentState?.tabIndexNotifier.value;
+    debugPrint('[HomeTab] tab cambió a $currentTab, initialized=$_initialized');
+    if (currentTab == 0 && _initialized) {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      debugPrint('[HomeTab] recargando, uid=${uid != null}');
+      if (uid != null) {
+        _checkWeeklyFeedback(uid);
+        _checkMissingPlan(uid);
+      }
+    }
   }
 
   @override

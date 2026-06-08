@@ -17,6 +17,8 @@ class AiCoachAutomationResult {
 }
 
 class AiCoachAutomationService {
+  static bool _isGenerating = false;
+
   AiCoachAutomationService({
     AiCoachRepository? repository,
     AthleteSessionRepository? sessionRepository,
@@ -67,20 +69,26 @@ class AiCoachAutomationService {
   /// Fuerza la generación del plan de la semana ACTUAL en curso.
   /// Usa targetWeekStart para que planNextWeek genere esta semana, no la próxima.
   Future<bool> forceGenerateCurrentWeekPlan(String uid) async {
-    final profile = await _repository.getProfile(uid: uid);
-    if (profile == null) {
-      debugPrint('[AiCoachAutomation] forceCurrentWeek: sin perfil AI');
+    if (_isGenerating) {
+      debugPrint('[AiCoachAutomation] generación en curso, skip');
       return false;
     }
-
-    final providerConfig = await _repository.getProviderConfig(uid: uid);
-    if (providerConfig?.apiKey == null ||
-        (providerConfig!.apiKey?.trim().isEmpty ?? true)) {
-      debugPrint('[AiCoachAutomation] forceCurrentWeek: sin API key');
-      return false;
-    }
+    _isGenerating = true;
 
     try {
+      final profile = await _repository.getProfile(uid: uid);
+      if (profile == null) {
+        debugPrint('[AiCoachAutomation] forceCurrentWeek: sin perfil AI');
+        return false;
+      }
+
+      final providerConfig = await _repository.getProviderConfig(uid: uid);
+      if (providerConfig?.apiKey == null ||
+          (providerConfig!.apiKey?.trim().isEmpty ?? true)) {
+        debugPrint('[AiCoachAutomation] forceCurrentWeek: sin API key');
+        return false;
+      }
+
       final currentMonday = _mondayOf(DateTime.now());
       final result = await _weeklyPlannerService.planNextWeek(
         uid,
@@ -94,6 +102,8 @@ class AiCoachAutomationService {
     } catch (e) {
       debugPrint('[AiCoachAutomation] forceCurrentWeek error: $e');
       return false;
+    } finally {
+      _isGenerating = false;
     }
   }
 
@@ -102,20 +112,26 @@ class AiCoachAutomationService {
   /// Se usa cuando el usuario rellena el cuestionario manualmente.
   /// Mantiene las validaciones de perfil, API key y modo atleta.
   Future<bool> forceGenerateNextWeekPlan(String uid) async {
-    final profile = await _repository.getProfile(uid: uid);
-    if (profile == null) {
-      debugPrint('[AiCoachAutomation] force: sin perfil AI');
+    if (_isGenerating) {
+      debugPrint('[AiCoachAutomation] generación en curso, skip');
       return false;
     }
-
-    final providerConfig = await _repository.getProviderConfig(uid: uid);
-    if (providerConfig?.apiKey == null ||
-        (providerConfig!.apiKey?.trim().isEmpty ?? true)) {
-      debugPrint('[AiCoachAutomation] force: sin API key');
-      return false;
-    }
+    _isGenerating = true;
 
     try {
+      final profile = await _repository.getProfile(uid: uid);
+      if (profile == null) {
+        debugPrint('[AiCoachAutomation] force: sin perfil AI');
+        return false;
+      }
+
+      final providerConfig = await _repository.getProviderConfig(uid: uid);
+      if (providerConfig?.apiKey == null ||
+          (providerConfig!.apiKey?.trim().isEmpty ?? true)) {
+        debugPrint('[AiCoachAutomation] force: sin API key');
+        return false;
+      }
+
       final result = await _weeklyPlannerService.planNextWeek(
         uid,
         forceRegenerate: true,
@@ -127,6 +143,8 @@ class AiCoachAutomationService {
     } catch (e) {
       debugPrint('[AiCoachAutomation] force error: $e');
       return false;
+    } finally {
+      _isGenerating = false;
     }
   }
 

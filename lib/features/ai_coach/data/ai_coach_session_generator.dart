@@ -197,7 +197,17 @@ class AiCoachSessionGenerator {
       return _pickBestQualityDay(openDays, usedDays);
     }
 
-    return openDays.first;
+    if (usedDays.isEmpty) return openDays.first;
+
+    return openDays.reduce((best, day) {
+      final distBest = usedDays
+          .map((d) => (d - best).abs())
+          .reduce(math.min);
+      final distDay = usedDays
+          .map((d) => (d - day).abs())
+          .reduce(math.min);
+      return distDay > distBest ? day : best;
+    });
   }
 
   int? _resolvePreferredLongRunDay(

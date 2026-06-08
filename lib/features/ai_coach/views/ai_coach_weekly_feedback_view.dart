@@ -67,10 +67,22 @@ class _AiCoachWeeklyFeedbackViewState
       if (!mounted) return;
       ModernSnackBar.showSuccess(context, '¡Gracias! Tu coach lo tendrá en cuenta');
 
+      debugPrint('[Feedback] generatePlanAfter=${widget.generatePlanAfter}');
       if (widget.generatePlanAfter) {
+        debugPrint('[Feedback] iniciando generación...');
         setState(() => _isGeneratingPlan = true);
         try {
-          await AiCoachAutomationService().forceGenerateNextWeekPlan(uid);
+          final weekday = DateTime.now().weekday;
+          if (weekday <= 2) {
+            // Lunes o martes: generar la semana ACTUAL
+            await AiCoachAutomationService()
+                .forceGenerateCurrentWeekPlan(uid);
+          } else {
+            // Sábado/domingo: generar la semana SIGUIENTE
+            await AiCoachAutomationService()
+                .forceGenerateNextWeekPlan(uid);
+          }
+          debugPrint('[Feedback] plan generado OK');
         } catch (e) {
           debugPrint('[Feedback] error generando plan: $e');
         }

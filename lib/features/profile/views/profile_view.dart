@@ -601,19 +601,31 @@ class _ProfileViewState extends State<ProfileView> {
                 onTap: () async {
                   final uid = FirebaseAuth.instance.currentUser?.uid;
                   if (uid == null) return;
+
                   final now = DateTime.now();
-                  final monday = now.subtract(Duration(days: now.weekday - 1));
-                  final weekStart =
-                      '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
-                  await FirebaseFirestore.instance
+
+                  final thisMonday = now.subtract(Duration(days: now.weekday - 1));
+                  final thisWeekStart = '${thisMonday.year}-'
+                      '${thisMonday.month.toString().padLeft(2, '0')}-'
+                      '${thisMonday.day.toString().padLeft(2, '0')}';
+
+                  final lastMonday = thisMonday.subtract(const Duration(days: 7));
+                  final lastWeekStart = '${lastMonday.year}-'
+                      '${lastMonday.month.toString().padLeft(2, '0')}-'
+                      '${lastMonday.day.toString().padLeft(2, '0')}';
+
+                  final col = FirebaseFirestore.instance
                       .collection('users')
                       .doc(uid)
-                      .collection('aiCoachFeedback')
-                      .doc(weekStart)
-                      .delete();
+                      .collection('aiCoachFeedback');
+
+                  await Future.wait([
+                    col.doc(thisWeekStart).delete(),
+                    col.doc(lastWeekStart).delete(),
+                  ]);
+
                   if (context.mounted) {
-                    ModernSnackBar.showSuccess(
-                        context, 'Feedback semanal reseteado');
+                    ModernSnackBar.showSuccess(context, 'Feedback reseteado');
                   }
                 },
               ),
