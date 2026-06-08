@@ -593,6 +593,30 @@ class _ProfileViewState extends State<ProfileView> {
                   }
                 },
               ),
+              const _MenuDivider(),
+              _MenuItem(
+                icon: Icons.feedback_outlined,
+                label: 'Reset feedback semanal',
+                subtitle: 'Elimina el feedback de la semana actual',
+                onTap: () async {
+                  final uid = FirebaseAuth.instance.currentUser?.uid;
+                  if (uid == null) return;
+                  final now = DateTime.now();
+                  final monday = now.subtract(Duration(days: now.weekday - 1));
+                  final weekStart =
+                      '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
+                  await FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(uid)
+                      .collection('aiCoachFeedback')
+                      .doc(weekStart)
+                      .delete();
+                  if (context.mounted) {
+                    ModernSnackBar.showSuccess(
+                        context, 'Feedback semanal reseteado');
+                  }
+                },
+              ),
             ]),
           ],
 

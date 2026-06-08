@@ -53,7 +53,7 @@ class HomeView extends StatefulWidget {
   State<HomeView> createState() => _HomeViewState();
 }
 
-class _HomeViewState extends State<HomeView> {
+class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   HomeViewModel? _vm;
   bool _vmReady = false;
   bool _hasAiCoachProfile = false;
@@ -159,6 +159,7 @@ class _HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initWithAuth();
   }
 
@@ -196,8 +197,20 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _vm?.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        _checkWeeklyFeedback(uid);
+        _checkMissingPlan(uid);
+      }
+    }
   }
 
   @override
@@ -354,11 +367,8 @@ class _HomeViewState extends State<HomeView> {
                 page: AiCoachWeeklyFeedbackView(
                   weekStart: _feedbackWeekToEvaluate(),
                   generatePlanAfter: true,
-                  onCompleted: () async {
+                  onCompleted: () {
                     setState(() => _showFeedbackBanner = false);
-                    await _generateAiPlanFromHome();
-                    final uid = FirebaseAuth.instance.currentUser?.uid;
-                    if (uid != null) await _checkMissingPlan(uid);
                   },
                 ),
               ));

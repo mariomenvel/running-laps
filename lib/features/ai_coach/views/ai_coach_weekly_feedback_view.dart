@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../data/ai_coach_automation_service.dart';
 import '../data/ai_coach_models.dart';
 import '../data/ai_coach_repository.dart';
 import '../../../core/theme/app_colors.dart';
@@ -31,6 +33,7 @@ class _AiCoachWeeklyFeedbackViewState
   final _molestiaController = TextEditingController();
   final _observacionesController = TextEditingController();
   bool _isSaving = false;
+  bool _isGeneratingPlan = false;
 
   @override
   void dispose() {
@@ -63,8 +66,19 @@ class _AiCoachWeeklyFeedbackViewState
       await AiCoachRepository().saveWeeklyFeedback(feedback);
       if (!mounted) return;
       ModernSnackBar.showSuccess(context, '¡Gracias! Tu coach lo tendrá en cuenta');
+
+      if (widget.generatePlanAfter) {
+        setState(() => _isGeneratingPlan = true);
+        try {
+          await AiCoachAutomationService().forceGenerateNextWeekPlan(uid);
+        } catch (e) {
+          debugPrint('[Feedback] error generando plan: $e');
+        }
+        if (mounted) setState(() => _isGeneratingPlan = false);
+      }
+
       widget.onCompleted?.call();
-      Navigator.of(context).pop();
+      if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
       ModernSnackBar.showError(context, 'Error al guardar. Inténtalo de nuevo.');
@@ -203,22 +217,57 @@ class _AiCoachWeeklyFeedbackViewState
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: _isSaving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
+                  child: _isGeneratingPlan
+                      ? const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Text(
+                              'Generando plan...',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
                         )
-                      : const Text(
-                          'Enviar al coach',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+                      : _isSaving
+                          ? const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(width: 10),
+                                Text(
+                                  'Guardando...',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : const Text(
+                              'Enviar al coach',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                 ),
               ),
             ),

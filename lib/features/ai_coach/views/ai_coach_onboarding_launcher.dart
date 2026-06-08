@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_automation_service.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_view.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_settings_view.dart';
@@ -47,8 +49,14 @@ Future<void> launchAiCoachOnboarding(
         uid: uid,
         apiKey: apiKey,
         model: providerConfig!.model,
-        onCompleted: () {
+        onCompleted: () async {
           Navigator.of(context).pop();
+          try {
+            await AiCoachAutomationService()
+                .forceGenerateCurrentWeekPlan(uid);
+          } catch (e) {
+            debugPrint('[Onboarding] error generando plan: $e');
+          }
           onCompleted?.call();
         },
       ),

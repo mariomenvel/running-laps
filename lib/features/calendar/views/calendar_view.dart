@@ -118,7 +118,13 @@ class _CalendarViewState extends State<CalendarView>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       final uid = FirebaseAuth.instance.currentUser?.uid;
-      if (uid != null) _loadAdjustUsage(uid);
+      if (uid != null) {
+        _loadAdjustUsage(uid);
+        _vm?.loadAll();
+        setState(() {
+          _nextWeekSuggestionsFuture = _loadVisibleWeekSuggestions(uid);
+        });
+      }
     }
   }
 

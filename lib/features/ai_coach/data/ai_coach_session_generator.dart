@@ -46,7 +46,7 @@ class AiCoachSessionGenerator {
       final category = _normalizeCategory(target.category);
       final suggestion = AthleteSessionSuggestion(
         origin: AthleteSessionOrigin.ai,
-        status: AthleteSessionSuggestionStatus.suggested,
+        status: AthleteSessionSuggestionStatus.accepted,
         decisionId: decision.id,
         cycleId: cycleId,
         rationale: decision.analysis,
