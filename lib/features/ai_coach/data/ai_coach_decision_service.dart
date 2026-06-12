@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_context_builder.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_models_config.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_prompt_builder.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
@@ -37,10 +38,9 @@ class AiCoachDecisionService {
       final prompt = _promptBuilder.buildWeeklyDecisionPrompt(context);
       debugPrint('[Decision] system prompt: ${prompt.messages.first.content}');
       debugPrint('[Decision] payload: ${prompt.messages.last.content}');
-      const decisionModel = 'anthropic/claude-sonnet-4-5';
       final completion = await _openRouterClient.createJsonCompletion(
         apiKey: provider.apiKey!.trim(),
-        model: decisionModel,
+        model: AiCoachModels.decision,
         messages: prompt.messages,
         jsonSchema: prompt.jsonSchema,
       );
@@ -49,7 +49,7 @@ class AiCoachDecisionService {
       final parsed = _parseJsonObject(completion.content);
       final decision = _buildDecisionFromResponse(
         parsed,
-        fallbackModel: decisionModel,
+        fallbackModel: AiCoachModels.decision,
       );
 
       await _repository.saveWeeklyState(context.weeklyState, uid: uid);

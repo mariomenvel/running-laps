@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_context_builder.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_models_config.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_prompt_builder.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_weekly_planner_service.dart';
@@ -416,7 +417,7 @@ class AiCoachChatService {
 
     final completion = await _openRouterClient.createJsonCompletion(
       apiKey: provider.apiKey!.trim(),
-      model: provider.model,
+      model: AiCoachModels.chatClassify,
       messages: prompt.messages,
       jsonSchema: prompt.jsonSchema,
     );
@@ -424,7 +425,7 @@ class AiCoachChatService {
     final rawResponse = completion.content;
     debugPrint('[Adjust] respuesta LLM raw: $rawResponse');
     final parsed = _parseJsonObject(rawResponse);
-    return _buildResultFromResponse(parsed, fallbackModel: provider.model);
+    return _buildResultFromResponse(parsed, fallbackModel: AiCoachModels.chatClassify);
   }
 
   Future<List<Map<String, dynamic>>> _loadSessionsForWeek(

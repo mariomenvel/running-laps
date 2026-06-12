@@ -293,7 +293,6 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
       final session = await generator.generate(
         prompt: text,
         apiKey: apiKey,
-        model: providerConfig!.model,
         profile: profile,
       );
 

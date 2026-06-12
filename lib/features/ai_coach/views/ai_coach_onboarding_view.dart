@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_models_config.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/data/openrouter_client.dart';
 
@@ -130,7 +131,7 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
 
       final result = await client.createJsonCompletion(
         apiKey: widget.apiKey,
-        model: widget.model,
+        model: AiCoachModels.onboarding,
         messages: [
           const OpenRouterChatMessage(
             role: 'system',

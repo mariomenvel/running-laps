@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_models_config.dart';
 import 'package:running_laps/features/ai_coach/data/openrouter_client.dart';
 import 'package:running_laps/features/templates/data/target_config.dart';
 import 'package:running_laps/features/templates/data/workout_block.dart';
@@ -15,7 +16,6 @@ class AiCoachPromptSessionGenerator {
   Future<WorkoutSession> generate({
     required String prompt,
     required String apiKey,
-    required String model,
     AiCoachProfile? profile,
   }) async {
     final client = OpenRouterClient();
@@ -23,7 +23,7 @@ class AiCoachPromptSessionGenerator {
     debugPrint('[Generator] llamando LLM...');
     final result = await client.createJsonCompletion(
       apiKey: apiKey,
-      model: model,
+      model: AiCoachModels.promptGenerator,
       messages: messages,
       jsonSchema: _sessionSchema,
       temperature: 0.4,
