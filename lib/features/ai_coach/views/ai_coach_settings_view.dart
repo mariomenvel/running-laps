@@ -135,9 +135,37 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
     }
   }
 
+  String? _validateCoachText(String? value) {
+    if (value == null || value.isEmpty) return null;
+    final lower = value.toLowerCase();
+    const suspiciousPatterns = [
+      'ignore', 'ignora', 'olvida', 'forget',
+      'system prompt', 'instrucciones anteriores',
+      'eres ahora', 'you are now', 'jailbreak',
+      'dan mode', 'developer mode',
+    ];
+    if (suspiciousPatterns.any((p) => lower.contains(p))) {
+      return 'Por favor escribe solo información de entrenamiento';
+    }
+    return null;
+  }
+
   Future<void> _save() async {
     if (_availableWeekdays.isEmpty) {
       ModernSnackBar.showError(context, 'Selecciona al menos un día disponible');
+      return;
+    }
+    final goalError = _validateCoachText(_goalDescriptionCtrl.text);
+    final notesError = _validateCoachText(_coachNotesCtrl.text);
+    final constraintError = [
+      ..._strengthConstraints,
+      ..._otherConstraints,
+    ].map(_validateCoachText).firstWhere((e) => e != null, orElse: () => null);
+    if (goalError != null || notesError != null || constraintError != null) {
+      ModernSnackBar.showError(
+        context,
+        goalError ?? notesError ?? constraintError!,
+      );
       return;
     }
     setState(() => _isSaving = true);
@@ -489,6 +517,7 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
               _buildFormLabel(context, 'Descripción del objetivo'),
               TextField(
                 controller: _goalDescriptionCtrl,
+                maxLength: 200,
                 decoration: _inputDecoration(context, hint: 'Ej. 10K sub 50 o volver a correr con constancia'),
                 style: TextStyle(fontSize: 15, color: AppColors.textPrimary(context)),
               ),
@@ -529,6 +558,10 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
                 onAdd: () {
                   final text = _strengthInputCtrl.text.trim();
                   if (text.isNotEmpty) {
+                    if (_validateCoachText(text) != null) {
+                      ModernSnackBar.showError(context, _validateCoachText(text)!);
+                      return;
+                    }
                     setState(() {
                       _strengthConstraints.add(text);
                       _strengthInputCtrl.clear();
@@ -551,6 +584,10 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
                 onAdd: () {
                   final text = _otherInputCtrl.text.trim();
                   if (text.isNotEmpty) {
+                    if (_validateCoachText(text) != null) {
+                      ModernSnackBar.showError(context, _validateCoachText(text)!);
+                      return;
+                    }
                     setState(() {
                       _otherConstraints.add(text);
                       _otherInputCtrl.clear();
@@ -569,6 +606,7 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
                 controller: _coachNotesCtrl,
                 minLines: 3,
                 maxLines: 5,
+                maxLength: 300,
                 decoration: _inputDecoration(
                   context,
                   hint: 'Ej. Tolero mejor volumen que intensidad, prefiero calidad en jueves...',
@@ -1119,8 +1157,10 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
             Expanded(
               child: TextField(
                 controller: inputController,
+                maxLength: 100,
                 decoration: _inputDecoration(context, hint: placeholder).copyWith(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  counterText: '',
                 ),
                 style: TextStyle(fontSize: 13, color: textPrimary),
                 onSubmitted: (_) => onAdd(),

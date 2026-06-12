@@ -70,7 +70,36 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
     }
   }
 
+  String? _validateCoachText(String? value) {
+    if (value == null || value.isEmpty) return null;
+    final lower = value.toLowerCase();
+    const suspiciousPatterns = [
+      'ignore', 'ignora', 'olvida', 'forget',
+      'system prompt', 'instrucciones anteriores',
+      'eres ahora', 'you are now', 'jailbreak',
+      'dan mode', 'developer mode',
+    ];
+    if (suspiciousPatterns.any((p) => lower.contains(p))) {
+      return 'Por favor escribe solo información de entrenamiento';
+    }
+    return null;
+  }
+
   Future<void> _processOnboarding() async {
+    final allInputs = [
+      _step1Controller.text,
+      _step2Controller.text,
+      _step3Controller.text,
+      _step4Controller.text,
+    ];
+    final inputError = allInputs
+        .map(_validateCoachText)
+        .firstWhere((e) => e != null, orElse: () => null);
+    if (inputError != null) {
+      ModernSnackBar.showError(context, inputError);
+      return;
+    }
+
     setState(() => _isProcessing = true);
 
     try {
@@ -341,6 +370,7 @@ class _StepPage extends StatelessWidget {
   final TextEditingController controller;
   final bool isDark;
   final bool optional;
+  final int maxLength;
 
   const _StepPage({
     required this.question,
@@ -348,6 +378,7 @@ class _StepPage extends StatelessWidget {
     required this.controller,
     required this.isDark,
     this.optional = false,
+    this.maxLength = 500,
   });
 
   @override
@@ -384,6 +415,7 @@ class _StepPage extends StatelessWidget {
               controller: controller,
               minLines: 4,
               maxLines: 8,
+              maxLength: maxLength,
               style: TextStyle(fontSize: 16, color: textPrimary),
               decoration: InputDecoration(
                 hintText: hint,

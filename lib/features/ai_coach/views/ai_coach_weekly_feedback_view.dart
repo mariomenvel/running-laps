@@ -75,9 +75,31 @@ class _AiCoachWeeklyFeedbackViewState
     super.dispose();
   }
 
+  String? _validateCoachText(String? value) {
+    if (value == null || value.isEmpty) return null;
+    final lower = value.toLowerCase();
+    const suspiciousPatterns = [
+      'ignore', 'ignora', 'olvida', 'forget',
+      'system prompt', 'instrucciones anteriores',
+      'eres ahora', 'you are now', 'jailbreak',
+      'dan mode', 'developer mode',
+    ];
+    if (suspiciousPatterns.any((p) => lower.contains(p))) {
+      return 'Por favor escribe solo información de entrenamiento';
+    }
+    return null;
+  }
+
   Future<void> _save() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
+
+    final molestiaError = _validateCoachText(_molestiaController.text);
+    final obsError = _validateCoachText(_observacionesController.text);
+    if (molestiaError != null || obsError != null) {
+      ModernSnackBar.showError(context, molestiaError ?? obsError!);
+      return;
+    }
 
     setState(() => _isSaving = true);
 
@@ -254,6 +276,7 @@ class _AiCoachWeeklyFeedbackViewState
                     _textField(
                       controller: _molestiaController,
                       hint: 'Ej: Molestia en el talón izquierdo...',
+                      maxLength: 200,
                     ),
                     const SizedBox(height: 24),
 
@@ -263,6 +286,7 @@ class _AiCoachWeeklyFeedbackViewState
                       controller: _observacionesController,
                       hint: 'Ej: Esta semana viajé y no pude entrenar como quería...',
                       maxLines: 3,
+                      maxLength: 300,
                     ),
                   ],
                 ),
@@ -425,6 +449,7 @@ class _AiCoachWeeklyFeedbackViewState
     required TextEditingController controller,
     required String hint,
     int maxLines = 1,
+    int? maxLength,
   }) =>
       Container(
         decoration: BoxDecoration(
@@ -434,6 +459,7 @@ class _AiCoachWeeklyFeedbackViewState
         child: TextField(
           controller: controller,
           maxLines: maxLines,
+          maxLength: maxLength,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(color: AppColors.textSecondary(context)),
