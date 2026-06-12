@@ -1,11 +1,16 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:table_calendar/table_calendar.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
-import 'package:running_laps/core/widgets/standard_table_calendar.dart';
+import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
+import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_chat_service.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
+import 'package:speech_to_text/speech_to_text.dart';
+import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
 import 'package:running_laps/features/calendar/viewmodels/calendar_view_model.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/features/training/views/pre_execution_screen.dart';
@@ -21,34 +26,217 @@ class CalendarView extends StatefulWidget {
   State<CalendarView> createState() => _CalendarViewState();
 }
 
-class _CalendarViewState extends State<CalendarView> {
+class _CalendarViewState extends State<CalendarView>
+    with WidgetsBindingObserver {
   CalendarViewModel? _vm;
   bool _vmReady = false;
   int _focusedYear = DateTime.now().year;
+  bool _isUpdatingSuggestion = false;
+  bool _hasAiCoachProfile = false;
+  bool _initialized = false;
+  late Future<List<AthleteSession>> _nextWeekSuggestionsFuture;
+
+  // Panel "Ajustar plan con el coach"
+  final TextEditingController _adjustController = TextEditingController();
+  final SpeechToText _adjustSpeech = SpeechToText();
+  final ValueNotifier<bool> _adjustPanelExpanded = ValueNotifier(false);
+  final ValueNotifier<bool> _adjustProcessing = ValueNotifier(false);
+  final ValueNotifier<AiCoachUsage?> _adjustUsage = ValueNotifier(null);
+  bool _adjustListening = false;
+  bool _adjustSpeechAvailable = false;
+  AiCoachAdjustmentPreview? _pendingPreview;
+
+  String _currentWeekStart() {
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    return '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
+  }
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initWithAuth();
+    _initAdjustSpeech();
+    MainShell.shellKey.currentState?.tabIndexNotifier
+        .addListener(_onTabChanged);
+    _adjustController.addListener(() {
+      if (mounted) setState(() {});
+    });
+  }
+
+  Future<void> _initAdjustSpeech() async {
+    _adjustSpeechAvailable = await _adjustSpeech.initialize(
+      onError: (_) => setState(() => _adjustListening = false),
+    );
   }
 
   Future<void> _initWithAuth() async {
-    final user = FirebaseAuth.instance.currentUser ??
-        await FirebaseAuth.instance.authStateChanges()
-            .firstWhere((u) => u != null);
+    // currentUser primero (síncrono, disponible si ya autenticado)
+    // authStateChanges como fallback con timeout de 5s
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      user = await FirebaseAuth.instance.authStateChanges()
+          .firstWhere((u) => u != null)
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => FirebaseAuth.instance.currentUser,
+          );
+    }
+    if (user == null) return;
     if (!mounted) return;
+    final uid = user.uid;
     setState(() {
-      _vm = CalendarViewModel(userId: user!.uid);
+      _vm = CalendarViewModel(userId: uid);
       _vmReady = true;
     });
     _vm!.loadAll();
+    _nextWeekSuggestionsFuture = _loadVisibleWeekSuggestions(uid);
+    final profile = await AiCoachRepository().getProfile(uid: uid);
+    if (mounted) setState(() => _hasAiCoachProfile = profile != null);
+    _loadAdjustUsage(uid);
+    _initialized = true;
+  }
+
+  Future<void> _loadAdjustUsage(String uid) async {
+    final usage = await AiCoachRepository().getUsage(uid: uid);
+    debugPrint('[Usage] recargado: used=${usage?.messagesUsed}');
+    if (mounted) _adjustUsage.value = usage;
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    MainShell.shellKey.currentState?.tabIndexNotifier
+        .removeListener(_onTabChanged);
     _vm?.dispose();
+    _adjustController.dispose();
+    _adjustPanelExpanded.dispose();
+    _adjustProcessing.dispose();
+    _adjustUsage.dispose();
     super.dispose();
   }
+
+  void _onTabChanged() {
+    final currentTab =
+        MainShell.shellKey.currentState?.tabIndexNotifier.value;
+    if (currentTab == 1 && _initialized) {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        _loadAdjustUsage(uid);
+        _vm?.loadAll();
+        setState(() {
+          _nextWeekSuggestionsFuture = _loadVisibleWeekSuggestions(uid);
+        });
+      }
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        _loadAdjustUsage(uid);
+        _vm?.loadAll();
+        setState(() {
+          _nextWeekSuggestionsFuture = _loadVisibleWeekSuggestions(uid);
+        });
+      }
+    }
+  }
+
+  // ── Panel ajuste plan ─────────────────────────────────────────────────────
+
+  DateTime _visibleWeekStart() =>
+      _mondayOf(_vm?.selectedDay.value ?? DateTime.now());
+
+  Future<void> _toggleAdjustListening() async {
+    if (!_adjustSpeechAvailable) return;
+    if (_adjustListening) {
+      await _adjustSpeech.stop();
+      setState(() => _adjustListening = false);
+    } else {
+      setState(() => _adjustListening = true);
+      await _adjustSpeech.listen(
+        listenOptions: SpeechListenOptions(cancelOnError: true),
+        onResult: (result) {
+          setState(() {
+            _adjustController.text = result.recognizedWords;
+            _adjustController.selection = TextSelection.fromPosition(
+              TextPosition(offset: _adjustController.text.length),
+            );
+          });
+        },
+        onSoundLevelChange: null,
+      );
+    }
+  }
+
+  Future<void> _requestAdjustPreview() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final text = _adjustController.text.trim();
+    if (uid == null || text.isEmpty) return;
+    _adjustProcessing.value = true;
+    try {
+      final preview = await AiCoachChatService().previewAdjustment(
+        uid: uid,
+        athleteMessage: text,
+        targetWeekStart: _visibleWeekStart(),
+      );
+      if (!mounted) return;
+      setState(() => _pendingPreview = preview);
+      if (preview.limitReached) {
+        ModernSnackBar.showWarning(context, preview.limitMessage ?? 'Límite alcanzado');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ModernSnackBar.showError(
+        context,
+        'Error al generar preview: ${e.toString().replaceFirst('Exception: ', '')}',
+      );
+    } finally {
+      _adjustProcessing.value = false;
+    }
+  }
+
+  Future<void> _applyPreview() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final preview = _pendingPreview;
+    if (uid == null || preview == null) return;
+    _adjustProcessing.value = true;
+    try {
+      final ok = await AiCoachChatService().applyAdjustment(
+        uid: uid,
+        preview: preview,
+        targetWeekStart: _visibleWeekStart(),
+      );
+      if (!mounted) return;
+      if (ok) {
+        setState(() {
+          _pendingPreview = null;
+          _adjustController.clear();
+        });
+        final focused = _vm?.focusedMonth.value ?? DateTime.now();
+        _vm?.onMonthChanged(focused);
+        _nextWeekSuggestionsFuture = _loadVisibleWeekSuggestions(uid);
+        ModernSnackBar.showSuccess(context, 'Plan ajustado correctamente');
+        _loadAdjustUsage(uid);
+      } else {
+        ModernSnackBar.showError(context, 'No se pudo aplicar el ajuste');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ModernSnackBar.showError(
+        context,
+        'Error al aplicar: ${e.toString().replaceFirst('Exception: ', '')}',
+      );
+    } finally {
+      _adjustProcessing.value = false;
+    }
+  }
+
+  void _discardPreview() => setState(() => _pendingPreview = null);
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +253,9 @@ class _CalendarViewState extends State<CalendarView> {
             return Column(
               children: [
                 _buildViewSelector(isAthlete),
+                if (isAthlete && !_hasAiCoachProfile) _buildAiCoachCta(),
+                if (isAthlete) _buildAiSuggestionsPanel(),
+                if (isAthlete && _hasAiCoachProfile) _buildAdjustPanel(),
                 Expanded(
                   child: ValueListenableBuilder<CalendarViewType>(
                     valueListenable: _vm!.viewType,
@@ -86,6 +277,673 @@ class _CalendarViewState extends State<CalendarView> {
         );
       },
     );
+  }
+
+  Widget _buildAdjustPanel() {
+    return ValueListenableBuilder<bool>(
+      valueListenable: _adjustPanelExpanded,
+      builder: (_, expanded, __) => Padding(
+        padding: const EdgeInsets.fromLTRB(AppSpacing.l, 0, AppSpacing.l, AppSpacing.m),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.surfaceOf(context),
+            border: Border.all(color: AppColors.borderOf(context)),
+            borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Cabecera colapsable
+              InkWell(
+                onTap: () => _adjustPanelExpanded.value = !expanded,
+                borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.m,
+                    vertical: AppSpacing.m,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.tune_rounded, color: AppColors.brand, size: 18),
+                      const SizedBox(width: AppSpacing.s),
+                      Expanded(
+                        child: Text(
+                          'Ajustar plan con el coach',
+                          style: AppTypography.body.copyWith(
+                            color: AppColors.textPrimary(context),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Tooltip(
+                        triggerMode: TooltipTriggerMode.tap,
+                        showDuration: const Duration(seconds: 6),
+                        margin: const EdgeInsets.symmetric(horizontal: 24),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceOf(context),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.borderOf(context),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        textStyle: TextStyle(
+                          fontSize: 12,
+                          height: 1.5,
+                          color: AppColors.textPrimary(context),
+                        ),
+                        message: 'Puedes pedirme:\n'
+                            '• Cambiar una sesión de día\n'
+                            '• Subir o bajar la intensidad\n'
+                            '• Añadir o quitar series\n'
+                            '• Eliminar una sesión\n'
+                            '• Preguntar qué tienes esta semana',
+                        child: Icon(
+                          Icons.help_outline_rounded,
+                          size: 18,
+                          color: AppColors.textSecondary(context),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.s),
+                      ValueListenableBuilder<AiCoachUsage?>(
+                        valueListenable: _adjustUsage,
+                        builder: (_, usage, __) {
+                          final used = usage?.messagesUsed ?? 0;
+                          final limit = usage?.messagesLimit ?? 3;
+                          final remaining = (limit - used).clamp(0, limit);
+                          final color = remaining == 0
+                              ? AppColors.rpeMax
+                              : remaining == 1
+                                  ? AppColors.rpeMid
+                                  : AppColors.rpeLow;
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '$remaining/$limit',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: color,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: AppSpacing.s),
+                      Icon(
+                        expanded ? Icons.expand_less : Icons.expand_more,
+                        color: AppColors.iconMutedOf(context),
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (expanded) ...[
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.m),
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _adjustProcessing,
+                    builder: (_, processing, __) {
+                      // Si hay preview pendiente, mostrar respuesta del coach
+                      if (_pendingPreview != null && !_pendingPreview!.limitReached) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Propuesta del coach',
+                              style: AppTypography.small.copyWith(
+                                color: AppColors.textSecondary(context),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.s),
+                            Text(
+                              _pendingPreview!.response,
+                              style: AppTypography.body.copyWith(
+                                color: AppColors.textPrimary(context),
+                              ),
+                            ),
+                            if (_pendingPreview!.willModifyPlan) ...[
+                              const SizedBox(height: AppSpacing.m),
+                              Text(
+                                '¿Aplicar este ajuste al plan?',
+                                style: AppTypography.small.copyWith(
+                                  color: AppColors.textSecondary(context),
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.s),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: FilledButton(
+                                      onPressed: processing ? null : _applyPreview,
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: AppColors.brand,
+                                        minimumSize: const Size(0, 38),
+                                      ),
+                                      child: processing
+                                          ? const SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Colors.white,
+                                              ),
+                                            )
+                                          : const Text('Aplicar'),
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.s),
+                                  OutlinedButton(
+                                    onPressed: processing ? null : _discardPreview,
+                                    style: OutlinedButton.styleFrom(
+                                      minimumSize: const Size(0, 38),
+                                    ),
+                                    child: const Text('Descartar'),
+                                  ),
+                                ],
+                              ),
+                            ] else ...[
+                              const SizedBox(height: AppSpacing.s),
+                              TextButton(
+                                onPressed: _discardPreview,
+                                child: const Text('Volver a escribir'),
+                              ),
+                            ],
+                          ],
+                        );
+                      }
+
+                      // Input normal
+                      return ValueListenableBuilder<AiCoachUsage?>(
+                        valueListenable: _adjustUsage,
+                        builder: (_, usage, __) {
+                          final used = usage?.messagesUsed ?? 0;
+                          final limit = usage?.messagesLimit ?? 3;
+                          final noQuotaLeft = used >= limit;
+                          final noPreviewsLeft =
+                              (usage?.previewsGenerated ?? 0) >= 10;
+                          final blocked = noQuotaLeft || noPreviewsLeft;
+
+                          if (blocked) {
+                            final msg = noQuotaLeft
+                                ? 'Has usado tus $limit ajustes de esta semana. '
+                                    'Podrás pedir más la semana que viene.'
+                                : 'Has alcanzado el máximo de peticiones esta semana.';
+                            return Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceOf(context),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.info_outline_rounded,
+                                    size: 18,
+                                    color: AppColors.textSecondary(context),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      msg,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: AppColors.textSecondary(context),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  constraints: const BoxConstraints(maxHeight: 120),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surfaceOf(context),
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                      color: AppColors.borderOf(context),
+                                    ),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 8),
+                                  child: TextField(
+                                    controller: _adjustController,
+                                    enabled: !processing,
+                                    maxLines: null,
+                                    maxLength: 300,
+                                    textInputAction: TextInputAction.send,
+                                    onSubmitted: (_) {
+                                      if (!processing &&
+                                          _adjustController.text.trim().isNotEmpty) {
+                                        _requestAdjustPreview();
+                                      }
+                                    },
+                                    decoration: InputDecoration(
+                                      hintText: 'Pide un ajuste...',
+                                      hintStyle: TextStyle(
+                                        color: AppColors.textSecondary(context),
+                                        fontSize: 13,
+                                      ),
+                                      border: InputBorder.none,
+                                      isDense: true,
+                                      counterText: '',
+                                    ),
+                                    style: AppTypography.body.copyWith(
+                                      color: AppColors.textPrimary(context),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              if (_adjustSpeechAvailable) ...[
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: processing ? null : _toggleAdjustListening,
+                                  child: Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: _adjustListening
+                                          ? AppColors.brand.withValues(alpha: 0.15)
+                                          : AppColors.surfaceOf(context),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: _adjustListening
+                                            ? AppColors.brand
+                                            : AppColors.borderOf(context),
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      _adjustListening
+                                          ? Icons.stop_rounded
+                                          : Icons.mic_rounded,
+                                      size: 20,
+                                      color: _adjustListening
+                                          ? AppColors.brand
+                                          : AppColors.textSecondary(context),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: (processing ||
+                                        _adjustController.text.trim().isEmpty)
+                                    ? null
+                                    : _requestAdjustPreview,
+                                child: Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: (processing ||
+                                            _adjustController.text.trim().isEmpty)
+                                        ? AppColors.borderOf(context)
+                                        : AppColors.brand,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: processing
+                                      ? const Padding(
+                                          padding: EdgeInsets.all(12),
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.arrow_upward_rounded,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAiCoachCta() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.l, 0, AppSpacing.l, AppSpacing.m),
+      child: SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: () => launchAiCoachOnboarding(
+            context,
+            onCompleted: () async {
+              final uid = FirebaseAuth.instance.currentUser?.uid;
+              if (uid == null) return;
+              final profile = await AiCoachRepository().getProfile(uid: uid);
+              if (mounted) setState(() => _hasAiCoachProfile = profile != null);
+            },
+          ),
+          icon: const Icon(Icons.auto_awesome_rounded),
+          label: const Text('Configura tu entrenador IA'),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAiSuggestionsPanel() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.l, 0, AppSpacing.l, AppSpacing.m),
+      child: FutureBuilder<List<AthleteSession>>(
+        future: _nextWeekSuggestionsFuture,
+        builder: (context, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            return const SizedBox(
+              height: 36,
+              child: Center(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.brand),
+                ),
+              ),
+            );
+          }
+          final suggestions = snap.data ?? const <AthleteSession>[];
+          if (suggestions.isEmpty) return const SizedBox.shrink();
+          return Container(
+            width: double.infinity,
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.brand.withValues(alpha: 0.10),
+                  AppColors.brand.withValues(alpha: 0.03),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.brand.withValues(alpha: 0.25),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 8, 8),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.auto_awesome_rounded,
+                          color: AppColors.brand, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Tu coach propone ${suggestions.length} '
+                          '${suggestions.length == 1 ? "sesión" : "sesiones"}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary(context),
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _isUpdatingSuggestion
+                            ? null
+                            : () => _acceptAllSuggestions(suggestions),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.brand,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                        ),
+                        child: const Text(
+                          'Aceptar todo',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Divider(
+                  height: 1,
+                  color: AppColors.brand.withValues(alpha: 0.15),
+                  indent: 16,
+                  endIndent: 16,
+                ),
+                const SizedBox(height: 4),
+                ...suggestions.map((s) => _buildSuggestionRow(s)),
+                const SizedBox(height: 8),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSuggestionRow(AthleteSession session) {
+    final date = DateTime.tryParse(session.date);
+    final dayTag = date != null ? _weekdayEs(date.weekday).toUpperCase() : '?';
+    final title = (session.title ?? '').trim().isNotEmpty
+        ? session.title!.trim()
+        : (session.category != null
+            ? SessionCategoryX.fromValue(session.category!).label
+            : 'Sesión');
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.brand.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              dayTag.substring(0, 3),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: AppColors.brand,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary(context),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          GestureDetector(
+            onTap: _isUpdatingSuggestion
+                ? null
+                : () => _updateSuggestionStatus(
+                      sessionId: session.id,
+                      sessionDate: session.date,
+                      status: AthleteSessionSuggestionStatus.rejected,
+                      note: 'rejected_from_calendar',
+                    ),
+            child: Container(
+              width: 32,
+              height: 32,
+              margin: const EdgeInsets.only(left: 6),
+              decoration: BoxDecoration(
+                color: AppColors.rpeMax.withValues(alpha: 0.10),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.close_rounded, size: 16, color: AppColors.rpeMax),
+            ),
+          ),
+          GestureDetector(
+            onTap: _isUpdatingSuggestion
+                ? null
+                : () => _updateSuggestionStatus(
+                      sessionId: session.id,
+                      sessionDate: session.date,
+                      status: AthleteSessionSuggestionStatus.accepted,
+                      note: 'accepted_from_calendar',
+                    ),
+            child: Container(
+              width: 32,
+              height: 32,
+              margin: const EdgeInsets.only(left: 6),
+              decoration: BoxDecoration(
+                color: AppColors.rpeLow.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.check_rounded, size: 16, color: AppColors.rpeLow),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _acceptAllSuggestions(List<AthleteSession> sessions) async {
+    for (final session in sessions) {
+      await _updateSuggestionStatus(
+        sessionId: session.id,
+        sessionDate: session.date,
+        status: AthleteSessionSuggestionStatus.accepted,
+        note: 'accepted_all_from_calendar',
+        showMessage: false,
+      );
+    }
+    if (!mounted) return;
+    ModernSnackBar.showSuccess(context, 'Sugerencias aceptadas');
+  }
+
+  Future<void> _updateSuggestionStatus({
+    required String sessionId,
+    required String sessionDate,
+    required AthleteSessionSuggestionStatus status,
+    required String note,
+    bool showMessage = true,
+  }) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    setState(() => _isUpdatingSuggestion = true);
+    try {
+      await AthleteSessionRepository().updateSuggestionStatus(
+        uid: uid,
+        sessionId: sessionId,
+        status: status,
+        responseNote: note,
+      );
+      final acceptedDate = DateTime.tryParse(sessionDate);
+      final focused = acceptedDate != null
+          ? DateTime(acceptedDate.year, acceptedDate.month, 1)
+          : (_vm?.focusedMonth.value ?? DateTime.now());
+      _vm?.onMonthChanged(focused);
+      if (acceptedDate != null) {
+        _vm?.onDaySelected(acceptedDate, focused);
+      }
+      _nextWeekSuggestionsFuture = _loadVisibleWeekSuggestions(uid);
+      if (showMessage && mounted) {
+        ModernSnackBar.showSuccess(
+          context,
+          status == AthleteSessionSuggestionStatus.accepted
+              ? 'Sugerencia aceptada'
+              : 'Sugerencia rechazada',
+        );
+      }
+      debugPrint('[CalendarView][AI] Suggestion $sessionId updated to ${status.toValue}');
+    } catch (e) {
+      debugPrint('[CalendarView][AI] Failed to update suggestion $sessionId: $e');
+      if (mounted) {
+        ModernSnackBar.showError(context, 'No se pudo actualizar la sugerencia');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUpdatingSuggestion = false);
+      }
+    }
+  }
+
+  Future<List<AthleteSession>> _loadVisibleWeekSuggestions(String uid) async {
+    final selected = _vm?.selectedDay.value ?? DateTime.now();
+    final start = _mondayOf(selected);
+    final end = start.add(const Duration(days: 6));
+    final sessions = await AthleteSessionRepository().getSessionsInRange(
+      uid: uid,
+      startDate:
+          '${start.year}-${start.month.toString().padLeft(2, '0')}-${start.day.toString().padLeft(2, '0')}',
+      endDate:
+          '${end.year}-${end.month.toString().padLeft(2, '0')}-${end.day.toString().padLeft(2, '0')}',
+    );
+    final pending = sessions.where((session) {
+      final suggestion = session.suggestion;
+      return suggestion?.origin == AthleteSessionOrigin.ai &&
+          suggestion?.status == AthleteSessionSuggestionStatus.suggested &&
+          session.status == AthleteSessionStatus.planned;
+    }).toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+    debugPrint(
+      '[CalendarView][AI] Loaded visible-week pending suggestions: ${pending.length}. '
+      'weekStart=${start.toIso8601String()}',
+    );
+    return pending;
+  }
+
+  DateTime _mondayOf(DateTime value) {
+    final date = DateTime(value.year, value.month, value.day);
+    return date.subtract(Duration(days: date.weekday - 1));
+  }
+
+  String _weekdayEs(int weekday) {
+    switch (weekday) {
+      case DateTime.monday:
+        return 'Lun';
+      case DateTime.tuesday:
+        return 'Mar';
+      case DateTime.wednesday:
+        return 'Mie';
+      case DateTime.thursday:
+        return 'Jue';
+      case DateTime.friday:
+        return 'Vie';
+      case DateTime.saturday:
+        return 'Sab';
+      case DateTime.sunday:
+        return 'Dom';
+      default:
+        return '-';
+    }
   }
 
   // ── Skeleton ──────────────────────────────────────────────────────────────
@@ -275,6 +1133,9 @@ class _CalendarViewState extends State<CalendarView> {
                   final hasData  = isAthlete
                       ? (sessions[_normalize(day)] ?? []).isNotEmpty
                       : trainings.any((w) => _normalize(w.fecha) == _normalize(day));
+                  final hasPendingAiSuggestion = isAthlete &&
+                      (sessions[_normalize(day)] ?? const <AthleteSession>[])
+                          .any(_isPendingAiSuggestion);
 
                   return Column(
                     children: [
@@ -292,6 +1153,15 @@ class _CalendarViewState extends State<CalendarView> {
                         decoration: BoxDecoration(
                           color: isToday ? AppColors.brand : Colors.transparent,
                           shape: BoxShape.circle,
+                          boxShadow: hasPendingAiSuggestion
+                              ? [
+                                  BoxShadow(
+                                    color: AppColors.brand.withOpacity(0.22),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
+                                  ),
+                                ]
+                              : null,
                         ),
                         child: Center(
                           child: Text(
@@ -314,7 +1184,9 @@ class _CalendarViewState extends State<CalendarView> {
                         width: 4,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: hasData
+                          color: hasPendingAiSuggestion
+                              ? AppColors.brand
+                              : hasData
                               ? (inMonth ? AppColors.brand : AppColors.brand.withOpacity(0.3))
                               : Colors.transparent,
                           shape: BoxShape.circle,
@@ -836,6 +1708,50 @@ class _CalendarViewState extends State<CalendarView> {
                           ),
                         ),
                         GestureDetector(
+                          onTap: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                title: const Text('Eliminar sesión'),
+                                content: Text(
+                                  '¿Eliminar "${s.title?.isNotEmpty == true ? s.title! : 'esta sesión'}"?',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, false),
+                                    child: const Text('Cancelar'),
+                                  ),
+                                  FilledButton(
+                                    onPressed: () => Navigator.pop(context, true),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: AppColors.rpeMax,
+                                    ),
+                                    child: const Text('Eliminar'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirm != true || !mounted) return;
+                            final uid = FirebaseAuth.instance.currentUser?.uid;
+                            if (uid == null) return;
+                            await AthleteSessionRepository().deleteSession(
+                              uid: uid,
+                              id: s.id,
+                            );
+                            if (!mounted) return;
+                            Navigator.of(context).pop();
+                            _vm?.loadAll();
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Icon(
+                              Icons.delete_outline_rounded,
+                              size: 20,
+                              color: AppColors.rpeMax,
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
                           onTap: () {
                             Navigator.pop(context);
                             _navigateToEditSession(s);
@@ -941,6 +1857,20 @@ class _CalendarViewState extends State<CalendarView> {
       borderRadius: BorderRadius.circular(AppDimens.cardRadius),
       child: Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.s),
+        // Subtle glow on days with pending AI suggestions.
+        // Helps discover suggested sessions at a glance.
+        foregroundDecoration: isAthlete && sessions.any(_isPendingAiSuggestion)
+            ? BoxDecoration(
+                borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.brand.withOpacity(0.18),
+                    blurRadius: 10,
+                    spreadRadius: 1,
+                  ),
+                ],
+              )
+            : null,
         decoration: BoxDecoration(
           color: AppColors.surfaceOf(context),
           border: Border.all(
@@ -1551,6 +2481,7 @@ class _CalendarViewState extends State<CalendarView> {
         : session.category != null
             ? SessionCategoryX.fromValue(session.category!).label
             : 'Entrenamiento';
+    final why = _suggestionWhyText(session);
 
     return Container(
       width: double.infinity,
@@ -1579,6 +2510,18 @@ class _CalendarViewState extends State<CalendarView> {
                 child: Text('• $detail', style: AppTypography.small.copyWith(color: AppColors.textSecondary(context))),
               );
             }),
+          ],
+          if (why.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.s),
+            Text(
+              why,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.small.copyWith(
+                color: AppColors.textSecondary(context),
+                fontStyle: FontStyle.italic,
+              ),
+            ),
           ],
           if (session.status == AthleteSessionStatus.planned) ...[
             const SizedBox(height: AppSpacing.m),
@@ -1779,9 +2722,35 @@ class _CalendarViewState extends State<CalendarView> {
     final days = date.difference(firstDay).inDays;
     return ((days + firstDay.weekday - 1) / 7).ceil();
   }
-}
 
 // ── Widgets privados ──────────────────────────────────────────────────────────
+
+  String _suggestionWhyText(AthleteSession session) {
+    final suggestion = session.suggestion;
+    if (suggestion == null || suggestion.origin != AthleteSessionOrigin.ai) {
+      return '';
+    }
+    final focus = (suggestion.focus ?? '').trim();
+    final rationale = (suggestion.rationale ?? '').trim();
+    final note = (session.planningNotes ?? '').trim();
+    if (focus.isNotEmpty) return 'Por que: foco en $focus';
+    if (rationale.isNotEmpty) return 'Por que: ${_truncateText(rationale, 90)}';
+    if (note.isNotEmpty) return 'Por que: ${_truncateText(note, 90)}';
+    return '';
+  }
+
+  String _truncateText(String text, int maxLen) {
+    if (text.length <= maxLen) return text;
+    return '${text.substring(0, maxLen - 1)}...';
+  }
+
+  bool _isPendingAiSuggestion(AthleteSession session) {
+    final suggestion = session.suggestion;
+    return suggestion?.origin == AthleteSessionOrigin.ai &&
+        suggestion?.status == AthleteSessionSuggestionStatus.suggested &&
+        session.status == AthleteSessionStatus.planned;
+  }
+}
 
 class _ViewTab extends StatelessWidget {
   const _ViewTab(this.label, this.type, this.isActive, this.vm);

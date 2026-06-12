@@ -19,7 +19,7 @@ import 'package:running_laps/features/analytics/views/analytics_hub_screen.dart'
 import '../../admin/views/admin_panel_screen.dart';
 import 'account_settings_view.dart';
 import 'zones_config_screen.dart';
-import 'package:running_laps/features/athlete/views/athlete_hub_view.dart';
+import 'package:running_laps/features/ai_coach/views/ai_coach_settings_view.dart';
 import 'package:running_laps/features/profile/views/heart_rate_monitor_view.dart';
 import 'package:running_laps/core/services/heart_rate_service.dart';
 
@@ -455,14 +455,15 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                           },
                         ),
                         _buildMenuTile(
-                          title: "Modo atleta",
-                          icon: Icons.directions_run_rounded,
-                          color: AppColors.brand,
+                          title: "Entrenador IA",
+                          icon: Icons.auto_awesome_rounded,
+                          color: const Color(0xFFB084F5),
+                          subtitle: "Plan semanal con sugerencias",
                           onTap: () {
                             final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
                             Navigator.push(
                               context,
-                              AppRoute(page: AthleteHubView(uid: uid)),
+                              AppRoute(page: AiCoachSettingsView(uid: uid)),
                             );
                           },
                         ),

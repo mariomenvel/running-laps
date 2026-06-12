@@ -4,7 +4,13 @@
       "Bash(git:*)",
       "Bash(flutter pub get:*)",
       "Bash(flutter analyze:*)",
-      "PowerShell(*)"
+      "PowerShell(*)",
+      "Bash(echo \"EXIT:$?\")",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(flutter devices *)",
+      "Bash(echo \"Iniciando en background PID=$!\")",
+      "Bash(Remove-Item \"c:\\\\Users\\\\mario\\\\Desktop\\\\rl\\\\lib\\\\features\\\\ai_coach\\\\views\\\\ai_coach_prompt_view.dart\")"
     ]
   }
 }

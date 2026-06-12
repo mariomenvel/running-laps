@@ -56,6 +56,9 @@ class _MainShellState extends State<MainShell> {
   int _tabIndex = 0;
   int _previousTabIndex = 0;
 
+  // Notifier público para que los tabs sepan cuándo son activados
+  final ValueNotifier<int> tabIndexNotifier = ValueNotifier(0);
+
   // Notifiers para tabs con parámetros
   final _detailNotifier          = ValueNotifier<Entrenamiento?>(null);
   final _groupIdNotifier         = ValueNotifier<String?>(null);
@@ -149,6 +152,7 @@ class _MainShellState extends State<MainShell> {
 
   @override
   void dispose() {
+    tabIndexNotifier.dispose();
     _detailNotifier.dispose();
     _groupIdNotifier.dispose();
     _accountParamsNotifier.dispose();
@@ -164,6 +168,7 @@ class _MainShellState extends State<MainShell> {
       _previousTabIndex = _tabIndex;
       _tabIndex = navIndex;
     });
+    tabIndexNotifier.value = navIndex;
   }
 
   void navigateTo(int index, {dynamic params}) {

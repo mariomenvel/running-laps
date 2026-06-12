@@ -16,12 +16,12 @@ class WorkoutTypeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GridView.count(
-      crossAxisCount: 2,
+      crossAxisCount: 3,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: AppSpacing.s,
       crossAxisSpacing: AppSpacing.s,
-      childAspectRatio: 1,
+      childAspectRatio: 1.35,
       children: WorkoutType.values
           .map((type) => _WorkoutTypeCard(
                 type: type,
@@ -44,7 +44,7 @@ class _WorkoutTypeCard extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
-  static const _radius = BorderRadius.all(Radius.circular(16));
+  static const _radius = BorderRadius.all(Radius.circular(12));
 
   @override
   Widget build(BuildContext context) {
@@ -59,14 +59,14 @@ class _WorkoutTypeCard extends StatelessWidget {
         ? AppColors.brand
         : AppColors.iconMutedOf(context);
     final labelColor = isSelected
-        ? AppColors.textPrimary(context)
+        ? AppColors.brand
         : AppColors.textSecondary(context);
 
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(AppSpacing.l),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: _radius,
@@ -75,14 +75,16 @@ class _WorkoutTypeCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(_iconFor(type), color: iconColor, size: 28),
-            const SizedBox(height: AppSpacing.s),
+            Icon(_iconFor(type), color: iconColor, size: 20),
+            const SizedBox(height: 6),
             Text(
               _labelFor(type),
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+                fontSize: 11.5,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 letterSpacing: -0.3,
                 color: labelColor,
               ),

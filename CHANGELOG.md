@@ -1,5 +1,28 @@
 # CHANGELOG — Running Laps
 
+## [Deuda técnica — Seguridad] API key OpenRouter en cliente — 2026-06-06
+
+**Gravedad:** 🔴 Crítico antes de producción pública
+
+**Problema:**
+La API key de OpenRouter vive en Firestore (appConfig/aiCoachProvider)
+con read permitido a cualquier usuario autenticado. Cualquier usuario
+logueado puede leer la key y usarla fuera de la app.
+
+**Solución correcta:**
+Mover las llamadas a OpenRouter a una Cloud Function.
+La key vive como variable de entorno del servidor (Firebase Functions config).
+El cliente llama a la función, nunca a OpenRouter directamente.
+
+**Impacto actual:**
+Solo en uso interno/beta con usuarios de confianza.
+No desplegar a producción pública sin resolver esto.
+
+**Referencia:**
+PREMIUM_AI_COACH.md líneas 176-179 — arquitectura correcta con Cloud Functions.
+
+---
+
 ## [feature/workout-types] — Mayo 2026
 
 ### Añadido

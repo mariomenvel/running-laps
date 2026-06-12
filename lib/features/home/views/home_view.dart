@@ -13,6 +13,13 @@ import 'package:running_laps/features/home/viewmodels/home_view_model.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/templates/data/athlete_session_mapper.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
+import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_automation_service.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
+import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
+import 'package:running_laps/features/ai_coach/views/ai_coach_weekly_feedback_view.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 // Zone color helpers — Z1..Z5 matching ZonesService thresholds
 Color _zoneColor(int zone) {
@@ -47,32 +54,195 @@ class HomeView extends StatefulWidget {
   State<HomeView> createState() => _HomeViewState();
 }
 
-class _HomeViewState extends State<HomeView> {
+class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   HomeViewModel? _vm;
   bool _vmReady = false;
+  bool _hasAiCoachProfile = false;
+  bool _showFeedbackBanner = false;
+  bool _showMissingPlanBanner = false;
+  bool _initialized = false;
+  AiCoachWeeklyState? _weeklyState;
+
+  String _weekStartStr(DateTime monday) =>
+      '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
+
+  String _feedbackWeekToEvaluate() {
+    final now = DateTime.now();
+    final weekday = now.weekday;
+    if (weekday >= 6) {
+      final monday = now.subtract(Duration(days: weekday - 1));
+      return _weekStartStr(monday);
+    } else if (weekday <= 2) {
+      final lastMonday = now.subtract(Duration(days: weekday - 1 + 7));
+      return _weekStartStr(lastMonday);
+    }
+    return '';
+  }
+
+  String _feedbackBannerTitle() {
+    final weekday = DateTime.now().weekday;
+    return weekday <= 2 ? '¿Cómo fue la semana pasada?' : '¿Cómo fue la semana?';
+  }
+
+  Future<void> _checkWeeklyFeedback(String uid) async {
+    if (!_hasAiCoachProfile) {
+      return;
+    }
+
+    final weekToEval = _feedbackWeekToEvaluate();
+
+    if (weekToEval.isEmpty) {
+      if (mounted) setState(() => _showFeedbackBanner = false);
+      return;
+    }
+
+    final existing = await AiCoachRepository().getWeeklyFeedback(
+      uid: uid,
+      weekStart: weekToEval,
+    );
+
+    if (mounted) {
+      setState(() => _showFeedbackBanner = existing == null);
+    }
+
+    if (DateTime.now().weekday == 7 && existing == null) {
+      _scheduleWeeklyFeedbackNotification();
+    }
+  }
+
+  Future<void> _checkMissingPlan(String uid) async {
+    if (!_hasAiCoachProfile) return;
+    if (_showFeedbackBanner) return;
+    final missing =
+        await AiCoachAutomationService().isCurrentWeekPlanMissing(uid);
+    if (mounted) setState(() => _showMissingPlanBanner = missing);
+  }
+
+  Future<void> _generateCurrentWeekPlan() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    final generated =
+        await AiCoachAutomationService().forceGenerateCurrentWeekPlan(uid);
+    if (mounted) {
+      if (generated) {
+        setState(() => _showMissingPlanBanner = false);
+        ModernSnackBar.showSuccess(context, 'Plan de esta semana generado');
+      } else {
+        ModernSnackBar.showError(context, 'No se pudo generar el plan');
+      }
+    }
+  }
+
+  Future<void> _generateAiPlanFromHome() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    final generated = await AiCoachAutomationService()
+        .forceGenerateNextWeekPlan(uid);
+    if (mounted) {
+      if (generated) {
+        ModernSnackBar.showSuccess(context, 'Plan de la próxima semana generado');
+      } else {
+        ModernSnackBar.showError(context, 'No se pudo generar el plan');
+      }
+    }
+  }
+
+  Future<void> _scheduleWeeklyFeedbackNotification() async {
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'ai_coach_feedback',
+      'Feedback semanal',
+      channelDescription: 'Recordatorio semanal del coach IA',
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+    );
+    const NotificationDetails details = NotificationDetails(android: androidDetails);
+    await FlutterLocalNotificationsPlugin().show(
+      999,
+      '¿Cómo fue la semana?',
+      'Tu coach quiere saber cómo te has sentido',
+      details,
+    );
+  }
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initWithAuth();
+    MainShell.shellKey.currentState?.tabIndexNotifier
+        .addListener(_onTabChanged);
   }
 
   Future<void> _initWithAuth() async {
-    final user = FirebaseAuth.instance.currentUser ??
-        await FirebaseAuth.instance.authStateChanges()
-            .firstWhere((u) => u != null);
+    // currentUser primero (síncrono, disponible si ya autenticado)
+    // authStateChanges como fallback con timeout de 5s
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      user = await FirebaseAuth.instance.authStateChanges()
+          .firstWhere((u) => u != null)
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => FirebaseAuth.instance.currentUser,
+          );
+    }
+    if (user == null) return;
     if (!mounted) return;
     setState(() {
       _vm = HomeViewModel(userId: user!.uid);
       _vmReady = true;
     });
     _vm!.loadAll();
+    _checkAiCoachProfile(user!.uid);
+  }
+
+  Future<void> _checkAiCoachProfile(String uid) async {
+    final repo = AiCoachRepository();
+    final results = await Future.wait([
+      repo.getProfile(uid: uid),
+      repo.getWeeklyState(uid: uid),
+    ]);
+    if (!mounted) return;
+    setState(() {
+      _hasAiCoachProfile = results[0] != null;
+      _weeklyState = results[1] as AiCoachWeeklyState?;
+    });
+    if (results[0] != null) {
+      await _checkWeeklyFeedback(uid);
+      _checkMissingPlan(uid);
+    }
+    _initialized = true;
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    MainShell.shellKey.currentState?.tabIndexNotifier
+        .removeListener(_onTabChanged);
     _vm?.dispose();
     super.dispose();
+  }
+
+  void _onTabChanged() {
+    final currentTab =
+        MainShell.shellKey.currentState?.tabIndexNotifier.value;
+    if (currentTab == 0 && _initialized) {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        _checkWeeklyFeedback(uid);
+        _checkMissingPlan(uid);
+      }
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        _checkWeeklyFeedback(uid);
+        _checkMissingPlan(uid);
+      }
+    }
   }
 
   @override
@@ -197,10 +367,224 @@ class _HomeViewState extends State<HomeView> {
 
   List<Widget> _buildAthleteContent() {
     return [
+      if (_showFeedbackBanner && _hasAiCoachProfile && _feedbackWeekToEvaluate().isNotEmpty) _buildFeedbackBanner()
+      else if (_showMissingPlanBanner && _hasAiCoachProfile) _buildMissingPlanBanner(),
+      if (!_hasAiCoachProfile) _buildAiCoachCta(),
       _buildTodaySessionCard(),
       const SizedBox(height: AppSpacing.xl),
       _buildWeekSessionsList(),
     ];
+  }
+
+  Widget _buildFeedbackBanner() => Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.xl),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColors.brand.withValues(alpha: 0.12),
+              AppColors.brand.withValues(alpha: 0.04),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.brand.withValues(alpha: 0.25)),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () async {
+              await Navigator.of(context).push(AppRoute(
+                page: AiCoachWeeklyFeedbackView(
+                  weekStart: _feedbackWeekToEvaluate(),
+                  generatePlanAfter: true,
+                  daysSinceLastTraining:
+                      _weeklyState?.daysSinceLastTraining ?? 0,
+                  consecutiveMissedWeeks:
+                      _weeklyState?.consecutiveMissedWeeks ?? 0,
+                  onCompleted: () {
+                    setState(() => _showFeedbackBanner = false);
+                  },
+                ),
+              ));
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.brand.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.rate_review_outlined,
+                        color: AppColors.brand, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _feedbackBannerTitle(),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary(context),
+                          ),
+                        ),
+                        Text(
+                          'Cuéntale a tu coach cómo te has sentido',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right_rounded, color: AppColors.brand),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+  Widget _buildMissingPlanBanner() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.xl),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.brand.withValues(alpha: 0.10),
+            AppColors.brand.withValues(alpha: 0.03),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.brand.withValues(alpha: 0.20)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: _generateCurrentWeekPlan,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.brand.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.calendar_month_outlined,
+                      color: AppColors.brand, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'No tienes plan para esta semana',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary(context),
+                        ),
+                      ),
+                      Text(
+                        'Toca para generar tu plan ahora',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, color: AppColors.brand),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAiCoachCta() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.xl),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.brand.withValues(alpha: 0.15),
+            AppColors.brand.withValues(alpha: 0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.brand.withValues(alpha: 0.3)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => launchAiCoachOnboarding(
+            context,
+            onCompleted: () => setState(() => _hasAiCoachProfile = true),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.brand.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.auto_awesome_rounded,
+                      color: AppColors.brand, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Activa tu entrenador IA',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary(context),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Planes personalizados según tu historial y objetivos',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded, color: AppColors.brand),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildTodaySessionCard() {

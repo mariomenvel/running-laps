@@ -15,6 +15,9 @@ import 'package:running_laps/features/auth/views/auth_page.dart';
 import 'package:running_laps/features/groups/views/participant_profile_screen.dart';
 import 'package:running_laps/features/training/views/manual_training_view.dart';
 import 'package:running_laps/features/admin/views/admin_panel_screen.dart';
+import 'package:running_laps/features/ai_coach/views/ai_coach_settings_view.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:running_laps/features/avatar/models/avatar_config.dart';
 import 'package:running_laps/features/avatar/services/avatar_generator.dart';
@@ -456,6 +459,19 @@ class _ProfileViewState extends State<ProfileView> {
             ),
             const _MenuDivider(),
             _MenuItem(
+              icon: Icons.auto_awesome_outlined,
+              label: 'Entrenador IA',
+              subtitle: 'Sugerencias semanales',
+              onTap: () {
+                final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+                Navigator.push(
+                  context,
+                  AppRoute(page: AiCoachSettingsView(uid: uid)),
+                );
+              },
+            ),
+            const _MenuDivider(),
+            _MenuItem(
               icon: Icons.edit_note_outlined,
               label: 'Registrar entrenamiento',
               subtitle: 'Sesión pasada sin móvil',
@@ -548,6 +564,70 @@ class _ProfileViewState extends State<ProfileView> {
                 label: 'Generar datos de prueba',
                 subtitle: 'Borrará todos tus entrenamientos y creará ~55 realistas',
                 onTap: _showGenerateTestDataDialog,
+              ),
+              const _MenuDivider(),
+              _MenuItem(
+                icon: Icons.restart_alt_rounded,
+                label: 'Reset cuotas IA',
+                subtitle: 'Reinicia messagesUsed y previewsGenerated a 0',
+                onTap: () async {
+                  final uid = FirebaseAuth.instance.currentUser?.uid;
+                  if (uid == null) return;
+                  final now = DateTime.now();
+                  final monday = now.subtract(Duration(days: now.weekday - 1));
+                  final sunday = now.add(Duration(days: 7 - now.weekday));
+                  await AiCoachRepository().saveUsage(
+                    AiCoachUsage(
+                      plan: 'athlete_chat_weekly',
+                      messagesUsed: 0,
+                      previewsGenerated: 0,
+                      messagesLimit: 3,
+                      periodStart: DateTime(monday.year, monday.month, monday.day),
+                      periodEnd: DateTime(
+                          sunday.year, sunday.month, sunday.day, 23, 59, 59),
+                    ),
+                    uid: uid,
+                  );
+                  if (context.mounted) {
+                    ModernSnackBar.showSuccess(context, 'Cuotas reseteadas');
+                  }
+                },
+              ),
+              const _MenuDivider(),
+              _MenuItem(
+                icon: Icons.feedback_outlined,
+                label: 'Reset feedback semanal',
+                subtitle: 'Elimina el feedback de la semana actual',
+                onTap: () async {
+                  final uid = FirebaseAuth.instance.currentUser?.uid;
+                  if (uid == null) return;
+
+                  final now = DateTime.now();
+
+                  final thisMonday = now.subtract(Duration(days: now.weekday - 1));
+                  final thisWeekStart = '${thisMonday.year}-'
+                      '${thisMonday.month.toString().padLeft(2, '0')}-'
+                      '${thisMonday.day.toString().padLeft(2, '0')}';
+
+                  final lastMonday = thisMonday.subtract(const Duration(days: 7));
+                  final lastWeekStart = '${lastMonday.year}-'
+                      '${lastMonday.month.toString().padLeft(2, '0')}-'
+                      '${lastMonday.day.toString().padLeft(2, '0')}';
+
+                  final col = FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(uid)
+                      .collection('aiCoachFeedback');
+
+                  await Future.wait([
+                    col.doc(thisWeekStart).delete(),
+                    col.doc(lastWeekStart).delete(),
+                  ]);
+
+                  if (context.mounted) {
+                    ModernSnackBar.showSuccess(context, 'Feedback reseteado');
+                  }
+                },
               ),
             ]),
           ],

@@ -164,6 +164,14 @@ service cloud.firestore {
       }
 
       // ── users/{uid}/result_notifications/{id} ──────────────────────────────
+      match /aiCoachEvents/{eventId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      match /aiCoachFeedback/{weekStart} {
+        allow read, write: if isOwner(uid);
+      }
+
       match /result_notifications/{notifId} {
         // The owner reads and deletes their own reward notifications.
         allow read, delete: if isOwner(uid);
@@ -391,6 +399,17 @@ service cloud.firestore {
       allow read: if isSignedIn();
 
       // Only app-level admins (isAdmin: true) can create, update, or delete.
+      allow write: if isAdmin();
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // appConfig/{doc}
+    // ────────────────────────────────────────────────────────────────────────
+    // Configuración global de la app (AI Coach provider config, etc.)
+    // Solo lectura para usuarios autenticados.
+    // Solo escritura para administradores.
+    match /appConfig/{docId} {
+      allow read: if isSignedIn();
       allow write: if isAdmin();
     }
 
