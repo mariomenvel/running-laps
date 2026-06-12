@@ -15,6 +15,7 @@ import 'package:running_laps/features/templates/data/athlete_session_mapper.dart
 import 'package:running_laps/features/training/views/training_start_view.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_automation_service.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_weekly_feedback_view.dart';
@@ -60,6 +61,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   bool _showFeedbackBanner = false;
   bool _showMissingPlanBanner = false;
   bool _initialized = false;
+  AiCoachWeeklyState? _weeklyState;
 
   String _weekStartStr(DateTime monday) =>
       '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
@@ -194,10 +196,17 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   }
 
   Future<void> _checkAiCoachProfile(String uid) async {
-    final profile = await AiCoachRepository().getProfile(uid: uid);
+    final repo = AiCoachRepository();
+    final results = await Future.wait([
+      repo.getProfile(uid: uid),
+      repo.getWeeklyState(uid: uid),
+    ]);
     if (!mounted) return;
-    setState(() => _hasAiCoachProfile = profile != null);
-    if (profile != null) {
+    setState(() {
+      _hasAiCoachProfile = results[0] != null;
+      _weeklyState = results[1] as AiCoachWeeklyState?;
+    });
+    if (results[0] != null) {
       await _checkWeeklyFeedback(uid);
       _checkMissingPlan(uid);
     }
@@ -390,6 +399,10 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                 page: AiCoachWeeklyFeedbackView(
                   weekStart: _feedbackWeekToEvaluate(),
                   generatePlanAfter: true,
+                  daysSinceLastTraining:
+                      _weeklyState?.daysSinceLastTraining ?? 0,
+                  consecutiveMissedWeeks:
+                      _weeklyState?.consecutiveMissedWeeks ?? 0,
                   onCompleted: () {
                     setState(() => _showFeedbackBanner = false);
                   },

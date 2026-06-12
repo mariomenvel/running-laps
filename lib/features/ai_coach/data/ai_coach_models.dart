@@ -1199,6 +1199,7 @@ class AiCoachWeeklyFeedback {
   final String sueno;
   final String? molestias;
   final String? observaciones;
+  final String? motivoParon;
   final DateTime createdAt;
 
   const AiCoachWeeklyFeedback({
@@ -1208,6 +1209,7 @@ class AiCoachWeeklyFeedback {
     required this.sueno,
     this.molestias,
     this.observaciones,
+    this.motivoParon,
     required this.createdAt,
   });
 
@@ -1218,6 +1220,7 @@ class AiCoachWeeklyFeedback {
         'sueno': sueno,
         if (molestias != null) 'molestias': molestias,
         if (observaciones != null) 'observaciones': observaciones,
+        if (motivoParon != null) 'motivoParon': motivoParon,
         'createdAt': Timestamp.fromDate(createdAt),
       };
 
@@ -1229,6 +1232,7 @@ class AiCoachWeeklyFeedback {
         sueno: map['sueno'] as String,
         molestias: map['molestias'] as String?,
         observaciones: map['observaciones'] as String?,
+        motivoParon: map['motivoParon'] as String?,
         createdAt: (map['createdAt'] as Timestamp).toDate(),
       );
 }

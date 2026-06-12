@@ -12,12 +12,16 @@ class AiCoachWeeklyFeedbackView extends StatefulWidget {
   final String weekStart;
   final VoidCallback? onCompleted;
   final bool generatePlanAfter;
+  final int daysSinceLastTraining;
+  final int consecutiveMissedWeeks;
 
   const AiCoachWeeklyFeedbackView({
     super.key,
     required this.weekStart,
     this.onCompleted,
     this.generatePlanAfter = true,
+    this.daysSinceLastTraining = 0,
+    this.consecutiveMissedWeeks = 0,
   });
 
   @override
@@ -30,10 +34,39 @@ class _AiCoachWeeklyFeedbackViewState
 
   int _sensaciones = 3;
   String _sueno = 'bien';
+  String? _motivoParon;
   final _molestiaController = TextEditingController();
   final _observacionesController = TextEditingController();
   bool _isSaving = false;
   bool _isGeneratingPlan = false;
+
+  String get _sensacionesLabel {
+    if (widget.consecutiveMissedWeeks >= 4) {
+      return '¿Cómo te encuentras físicamente?';
+    } else if (widget.daysSinceLastTraining >= 10) {
+      return '¿Cómo te sientes después del parón?';
+    } else {
+      return '¿Cómo te has sentido entrenando?';
+    }
+  }
+
+  String get _sensacionesHint {
+    if (widget.consecutiveMissedWeeks >= 4) {
+      return '1 = muy bajo, 5 = en plena forma';
+    } else if (widget.daysSinceLastTraining >= 10) {
+      return '1 = muy cansado, 5 = con mucha energía';
+    } else {
+      return '1 = muy mal, 5 = muy bien';
+    }
+  }
+
+  String get _suenoLabel {
+    if (widget.daysSinceLastTraining >= 7) {
+      return 'Sueño en las últimas semanas';
+    } else {
+      return 'Sueño esta semana';
+    }
+  }
 
   @override
   void dispose() {
@@ -59,6 +92,7 @@ class _AiCoachWeeklyFeedbackViewState
       observaciones: _observacionesController.text.trim().isEmpty
           ? null
           : _observacionesController.text.trim(),
+      motivoParon: _motivoParon,
       createdAt: DateTime.now(),
     );
 
@@ -142,7 +176,7 @@ class _AiCoachWeeklyFeedbackViewState
                     ),
                     const SizedBox(height: 32),
 
-                    _sectionLabel('¿Cómo te has sentido entrenando?'),
+                    _sectionLabel(_sensacionesLabel),
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -172,9 +206,36 @@ class _AiCoachWeeklyFeedbackViewState
                         );
                       }),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 6),
+                    Center(
+                      child: Text(
+                        _sensacionesHint,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary(context),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 26),
 
-                    _sectionLabel('¿Has dormido bien?'),
+                    if (widget.consecutiveMissedWeeks >= 2) ...[
+                      _sectionLabel('¿Por qué paraste?'),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          _motivoChip('Lesión o molestia', 'lesion'),
+                          _motivoChip('Viaje o trabajo', 'viaje'),
+                          _motivoChip('Falta de tiempo', 'tiempo'),
+                          _motivoChip('Desmotivación', 'motivacion'),
+                          _motivoChip('Otro', 'otro'),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+
+                    _sectionLabel(_suenoLabel),
                     const SizedBox(height: 12),
                     Wrap(
                       spacing: 8,
@@ -297,6 +358,37 @@ class _AiCoachWeeklyFeedbackViewState
           color: AppColors.textPrimary(context),
         ),
       );
+
+  Widget _motivoChip(String label, String value) {
+    final selected = _motivoParon == value;
+    return GestureDetector(
+      onTap: () => setState(() => _motivoParon = selected ? null : value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.brand.withValues(alpha: 0.15)
+              : AppColors.surface2Of(context),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: selected ? AppColors.brand : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            color: selected
+                ? AppColors.brand
+                : AppColors.textSecondary(context),
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _suenoChip(String value, String label) {
     final selected = _sueno == value;

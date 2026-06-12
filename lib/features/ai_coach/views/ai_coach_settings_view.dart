@@ -5,6 +5,7 @@ import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_chat_service.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_weekly_feedback_view.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
@@ -33,6 +34,7 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
   bool _isLoading = true;
   bool _isSaving = false;
   bool _isSendingAdjustment = false;
+  AiCoachWeeklyState? _weeklyState;
 
   AiCoachGoalType _goal = AiCoachGoalType.improveEndurance;
   AiCoachAthleteLevel _level = AiCoachAthleteLevel.beginner;
@@ -77,8 +79,14 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
         return;
       }
 
-      final profile = await _repo.getProfile(uid: widget.uid);
-      final usage = await _repo.getUsage(uid: widget.uid);
+      final results = await Future.wait([
+        _repo.getProfile(uid: widget.uid),
+        _repo.getWeeklyState(uid: widget.uid),
+        _repo.getUsage(uid: widget.uid),
+      ]);
+      final profile = results[0] as AiCoachProfile?;
+      _weeklyState = results[1] as AiCoachWeeklyState?;
+      final usage = results[2] as AiCoachUsage?;
       if (!mounted) return;
       if (profile != null) {
         _goal = profile.goal;
@@ -625,6 +633,10 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
                   page: AiCoachWeeklyFeedbackView(
                     weekStart: _currentWeekStart(),
                     generatePlanAfter: false,
+                    daysSinceLastTraining:
+                        _weeklyState?.daysSinceLastTraining ?? 0,
+                    consecutiveMissedWeeks:
+                        _weeklyState?.consecutiveMissedWeeks ?? 0,
                     onCompleted: () => Navigator.of(context).pop(),
                   ),
                 ),

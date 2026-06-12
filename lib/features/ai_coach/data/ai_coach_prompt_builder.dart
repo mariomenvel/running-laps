@@ -196,6 +196,15 @@ class AiCoachPromptBuilder {
           'sueno': context.weeklyFeedback!.sueno,
           if (context.weeklyFeedback!.molestias != null)
             'molestias': context.weeklyFeedback!.molestias,
+          if (context.weeklyFeedback!.motivoParon != null) ...{
+            'motivoParon': context.weeklyFeedback!.motivoParon,
+            if (context.weeklyFeedback!.motivoParon == 'lesion')
+              'instruccionParon':
+                  'MANDATO: El atleta paró por lesión. Sé especialmente '
+                  'conservador: empieza con volumen e intensidad muy bajos, '
+                  'prioriza rodajes suaves y regenerativos, y evita series '
+                  'o cargas altas hasta confirmar que la molestia ha desaparecido.',
+          },
           if (context.weeklyFeedback!.observaciones != null) ...{
             'observaciones': context.weeklyFeedback!.observaciones,
             'instruccionObservaciones':
