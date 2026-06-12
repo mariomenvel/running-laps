@@ -84,8 +84,9 @@ class AiCoachWeeklyPlannerService {
     }
     final context = await _contextBuilder.buildWeeklyContext(uid);
     final memory = _extractAthleteMemory(context.coachSignals);
+    final adapted = _adaptDecisionWithAthleteMemory(rawDecision, memory);
     final aligned = _alignDecisionToProfile(
-      _adaptDecisionWithAthleteMemory(rawDecision, memory),
+      adapted,
       profile,
       weekStart: nextWeekStart,
       minDate: minDate,
@@ -424,9 +425,15 @@ class AiCoachWeeklyPlannerService {
     final preferredWeeklySessions = profile.preferredWeeklySessions > 0
         ? profile.preferredWeeklySessions
         : decision.targetSessions;
+    // Si el LLM propone MÁS sesiones que la preferencia del perfil,
+    // respetamos al LLM — puede haber un mandato explícito del atleta
+    // o una razón deportiva. Solo limitamos si el LLM propone menos.
+    final effectiveTarget = decision.targetSessions > preferredWeeklySessions
+        ? decision.targetSessions  // LLM manda más → respetar
+        : preferredWeeklySessions; // LLM manda menos → usar perfil como piso
+
     final maxSessions = [
-      decision.targetSessions,
-      preferredWeeklySessions,
+      effectiveTarget,
       if (availableDays > 0) availableDays,
     ].reduce((a, b) => a < b ? a : b);
 

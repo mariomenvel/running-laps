@@ -83,17 +83,13 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   }
 
   Future<void> _checkWeeklyFeedback(String uid) async {
-    debugPrint('[HomeTab] checkFeedback weekday=${DateTime.now().weekday}');
     if (!_hasAiCoachProfile) {
-      debugPrint('[HomeTab] sin perfil AI, skip');
       return;
     }
 
     final weekToEval = _feedbackWeekToEvaluate();
-    debugPrint('[HomeTab] weekToEval=$weekToEval');
 
     if (weekToEval.isEmpty) {
-      debugPrint('[HomeTab] miércoles-viernes, no banner');
       if (mounted) setState(() => _showFeedbackBanner = false);
       return;
     }
@@ -102,9 +98,6 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       uid: uid,
       weekStart: weekToEval,
     );
-
-    debugPrint('[HomeTab] feedback encontrado: ${existing != null}');
-    debugPrint('[HomeTab] showBanner=${existing == null}');
 
     if (mounted) {
       setState(() => _showFeedbackBanner = existing == null);
@@ -223,10 +216,8 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   void _onTabChanged() {
     final currentTab =
         MainShell.shellKey.currentState?.tabIndexNotifier.value;
-    debugPrint('[HomeTab] tab cambió a $currentTab, initialized=$_initialized');
     if (currentTab == 0 && _initialized) {
       final uid = FirebaseAuth.instance.currentUser?.uid;
-      debugPrint('[HomeTab] recargando, uid=${uid != null}');
       if (uid != null) {
         _checkWeeklyFeedback(uid);
         _checkMissingPlan(uid);
@@ -367,7 +358,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
   List<Widget> _buildAthleteContent() {
     return [
-      if (_showFeedbackBanner && _hasAiCoachProfile) _buildFeedbackBanner()
+      if (_showFeedbackBanner && _hasAiCoachProfile && _feedbackWeekToEvaluate().isNotEmpty) _buildFeedbackBanner()
       else if (_showMissingPlanBanner && _hasAiCoachProfile) _buildMissingPlanBanner(),
       if (!_hasAiCoachProfile) _buildAiCoachCta(),
       _buildTodaySessionCard(),

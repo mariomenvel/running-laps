@@ -6,6 +6,16 @@ import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 class AiCoachSessionGenerator {
   const AiCoachSessionGenerator();
 
+  int _roundRunDistance(int distanceM) {
+    if (distanceM <= 500) return 500;
+    return ((distanceM / 500).round() * 500);
+  }
+
+  int _roundSeriesDistance(int distanceM) {
+    if (distanceM <= 50) return 50;
+    return ((distanceM / 50).round() * 50);
+  }
+
   List<AthleteSession> generateWeekSessions({
     required String uid,
     required DateTime weekStart,
@@ -349,6 +359,7 @@ class AiCoachSessionGenerator {
           sessionIndex: sessionIndex,
           reps: 10,
           distanceM: 200,
+          roundDistance: false,
           restSeconds: 75,
           rpe: math.min(8.5, rpe + 0.5),
           zone: 4,
@@ -433,7 +444,8 @@ class AiCoachSessionGenerator {
             id: 'block_${sessionIndex}_1',
             order: 0,
             type: SessionBlockType.continuousDistance,
-            distanceM: math.max(5000, (targetKm * 1000).round()),
+            distanceM: _roundRunDistance(
+                math.max(5000, (targetKm * 1000).round())),
             targetRpe: rpe,
             targetZone: zone,
             notes: '${target.notes ?? 'Rodaje controlado'} · carga estimada ${targetLoad.toStringAsFixed(0)}',
@@ -466,36 +478,18 @@ class AiCoachSessionGenerator {
     required int zone,
     String? notes,
   }) {
-    if (targetMinutes >= 42) {
-      final firstPart = (targetMinutes * 0.7).round();
-      final secondPart = math.max(10, targetMinutes - firstPart);
-      return [
-        SessionBlock(
-          id: 'block_${sessionIndex}_1',
-          order: 0,
-          type: SessionBlockType.continuousTime,
-          durationMinutes: firstPart,
-          targetRpe: math.max(4.5, rpe - 0.4),
-          targetZone: zone,
-          notes: notes ?? 'Rodaje base estable y cómodo',
-        ),
-        SessionBlock(
-          id: 'block_${sessionIndex}_2',
-          order: 1,
-          type: SessionBlockType.continuousTime,
-          durationMinutes: secondPart,
-          targetRpe: math.min(6.2, rpe + 0.5),
-          targetZone: math.min(3, zone + 1),
-          notes: 'Último bloque ligeramente progresivo',
-        ),
-      ];
-    }
     return [
       SessionBlock(
         id: 'block_${sessionIndex}_1',
         order: 0,
-        type: SessionBlockType.continuousDistance,
-        distanceM: math.max(5000, (targetKm * 1000).round()),
+        type: targetMinutes >= 42
+            ? SessionBlockType.continuousTime
+            : SessionBlockType.continuousDistance,
+        durationMinutes: targetMinutes >= 42 ? targetMinutes : null,
+        distanceM: targetMinutes < 42
+            ? _roundRunDistance(
+                math.max(5000, (targetKm * 1000).round()))
+            : null,
         targetRpe: rpe,
         targetZone: zone,
         notes: notes ?? 'Rodaje controlado',
@@ -572,12 +566,16 @@ class AiCoachSessionGenerator {
       case 'easy':
       case 'easy_run':
       case 'base':
-      case 'long_run':
-      case 'rodaje_largo':
       case 'rodaje':
       case 'rodaje_base':
         return 'rodaje_base';
+      case 'long_run':
+      case 'rodaje_largo':
+      case 'tirada_larga':
+        return 'rodaje_largo';
       case 'recovery':
+      case 'recuperacion':
+      case 'recuperación':
       case 'regenerativo':
         return 'regenerativo';
       case 'tempo':
@@ -587,12 +585,21 @@ class AiCoachSessionGenerator {
       case 'fartlek':
         return 'fartlek';
       case 'short_intervals':
+      case 'speed':
+      case 'velocidad':
       case 'series_cortas':
         return 'series_cortas';
       case 'long_intervals':
+      case 'series':
+      case 'intervals':
       case 'series_largas':
         return 'series_largas';
+      case 'series_medias':
+        return 'series_medias';
       case 'hills':
+      case 'hill':
+      case 'cuestas':
+      case 'series_hills':
       case 'series_cuestas':
         return 'series_cuestas';
       case 'mixed_intervals':
@@ -602,6 +609,8 @@ class AiCoachSessionGenerator {
       case 'strength_training':
       case 'gym_strength':
       case 'gym':
+      case 'fuerza':
+      case 'gimnasio':
       case 'gimnasio_fuerza':
         return 'gimnasio_fuerza';
       case 'test':
@@ -621,29 +630,32 @@ class AiCoachSessionGenerator {
     required int restSeconds,
     required double rpe,
     required int zone,
+    bool roundDistance = true,
     int? paceMinMin,
     int? paceMinSec,
     int? paceMaxMin,
     int? paceMaxSec,
     String? notes,
   }) {
-    return List.generate(reps, (index) {
-      return SessionBlock(
-        id: 'block_${sessionIndex}_${index + 1}',
-        order: index,
+    final finalDistance =
+        roundDistance ? _roundSeriesDistance(distanceM) : distanceM;
+    return [
+      SessionBlock(
+        id: 'block_${sessionIndex}_1',
+        order: 0,
         type: SessionBlockType.series,
-        reps: 1,
-        distanceM: distanceM,
-        restSeconds: index == reps - 1 ? 0 : restSeconds,
+        reps: reps,
+        distanceM: finalDistance,
+        restSeconds: restSeconds,
         targetRpe: rpe,
         targetZone: zone,
         targetPaceMinMin: paceMinMin,
         targetPaceMinSec: paceMinSec,
         targetPaceMaxMin: paceMaxMin,
         targetPaceMaxSec: paceMaxSec,
-        notes: index == 0 ? notes : null,
-      );
-    });
+        notes: notes,
+      ),
+    ];
   }
 
   List<SessionBlock> _buildMixedSeriesBlocks({

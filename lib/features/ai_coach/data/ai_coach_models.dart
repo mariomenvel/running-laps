@@ -653,6 +653,13 @@ class AiCoachTrainingSummary {
   final double? load;
   final double? fcAvg;
   final String? note;
+  final double? targetPaceSecPerKm;
+  final double? paceCompliancePercent;
+  final int? targetDistanceKm;
+  final double? distanceCompliancePercent;
+  final double? targetRpe;
+  final bool? wasEasierThanExpected;
+  final bool? wasHarderThanExpected;
 
   const AiCoachTrainingSummary({
     required this.trainingId,
@@ -666,7 +673,45 @@ class AiCoachTrainingSummary {
     this.load,
     this.fcAvg,
     this.note,
+    this.targetPaceSecPerKm,
+    this.paceCompliancePercent,
+    this.targetDistanceKm,
+    this.distanceCompliancePercent,
+    this.targetRpe,
+    this.wasEasierThanExpected,
+    this.wasHarderThanExpected,
   });
+
+  AiCoachTrainingSummary copyWith({
+    double? targetPaceSecPerKm,
+    double? paceCompliancePercent,
+    int? targetDistanceKm,
+    double? distanceCompliancePercent,
+    double? targetRpe,
+    bool? wasEasierThanExpected,
+    bool? wasHarderThanExpected,
+  }) {
+    return AiCoachTrainingSummary(
+      trainingId: trainingId,
+      date: date,
+      title: title,
+      category: category,
+      distanceKm: distanceKm,
+      durationMinutes: durationMinutes,
+      paceSecPerKm: paceSecPerKm,
+      rpe: rpe,
+      load: load,
+      fcAvg: fcAvg,
+      note: note,
+      targetPaceSecPerKm: targetPaceSecPerKm ?? this.targetPaceSecPerKm,
+      paceCompliancePercent: paceCompliancePercent ?? this.paceCompliancePercent,
+      targetDistanceKm: targetDistanceKm ?? this.targetDistanceKm,
+      distanceCompliancePercent: distanceCompliancePercent ?? this.distanceCompliancePercent,
+      targetRpe: targetRpe ?? this.targetRpe,
+      wasEasierThanExpected: wasEasierThanExpected ?? this.wasEasierThanExpected,
+      wasHarderThanExpected: wasHarderThanExpected ?? this.wasHarderThanExpected,
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -681,6 +726,14 @@ class AiCoachTrainingSummary {
       if (load != null) 'load': load,
       if (fcAvg != null) 'fcAvg': fcAvg,
       if (note != null) 'note': note,
+      if (targetPaceSecPerKm != null) 'targetPace': targetPaceSecPerKm,
+      if (paceCompliancePercent != null)
+        'paceCompliance': '${paceCompliancePercent!.round()}%',
+      if (wasHarderThanExpected == true)
+        'execution': 'más duro de lo esperado',
+      if (wasEasierThanExpected == true)
+        'execution': 'más fácil de lo esperado',
+      if (targetRpe != null) 'targetRpe': targetRpe,
     };
   }
 }

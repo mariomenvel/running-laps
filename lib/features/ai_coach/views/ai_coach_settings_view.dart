@@ -3,7 +3,9 @@ import 'package:intl/intl.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_chat_service.dart';
+import 'package:running_laps/features/ai_coach/views/ai_coach_weekly_feedback_view.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/core/services/user_service.dart';
@@ -178,6 +180,12 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
     );
     if (picked == null) return;
     setState(() => _targetDate = picked);
+  }
+
+  String _currentWeekStart() {
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    return '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
   }
 
   Future<void> _sendAdjustment() async {
@@ -596,6 +604,34 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
+        _SectionCard(
+          title: 'Feedback semanal',
+          subtitle: 'Cuéntale al coach cómo fue la semana para que ajuste los próximos entrenamientos.',
+          child: SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.rate_review_outlined, size: 18),
+              label: const Text('Enviar feedback al coach'),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.brand),
+                foregroundColor: AppColors.brand,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              onPressed: () => Navigator.of(context).push(
+                AppRoute(
+                  page: AiCoachWeeklyFeedbackView(
+                    weekStart: _currentWeekStart(),
+                    generatePlanAfter: false,
+                    onCompleted: () => Navigator.of(context).pop(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
         _SectionCard(
           title: 'Ajuste rápido de esta semana',
           subtitle: 'Comunícale cambios temporales a tu Coach para la planificación de la siguiente semana. Ej. "tengo dolor en la rodilla", "esta semana viajo y solo tengo 2 días".',

@@ -528,7 +528,6 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
             ValueListenableBuilder<WorkoutType?>(
               valueListenable: _selectedType,
               builder: (_, type, __) {
-                debugPrint('[Selector] rebuild con type=$type');
                 return WorkoutTypeSelector(
                   selected: type,
                   onSelected: _onTypeSelected,

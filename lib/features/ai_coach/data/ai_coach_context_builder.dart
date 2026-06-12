@@ -66,7 +66,7 @@ class AiCoachContextBuilder {
       final linkedSession = training.id != null
           ? linkedSessionByTrainingId[training.id!]
           : null;
-      return AiCoachTrainingSummary(
+      var summary = AiCoachTrainingSummary(
         trainingId: training.id ?? '',
         date: training.fecha,
         title: training.titulo,
@@ -81,6 +81,47 @@ class AiCoachContextBuilder {
         fcAvg: training.fcMediaSesion,
         note: training.notas,
       );
+      if (linkedSession != null) {
+        final mainBlock = linkedSession.blocks
+            .where((b) =>
+                b.targetPaceMinMin != null ||
+                b.targetPaceMaxMin != null ||
+                b.targetRpe != null)
+            .firstOrNull;
+        final targetPaceSec = mainBlock != null &&
+                mainBlock.targetPaceMaxMin != null &&
+                mainBlock.targetPaceMaxSec != null
+            ? (mainBlock.targetPaceMaxMin! * 60 + mainBlock.targetPaceMaxSec!).toDouble()
+            : null;
+        final realPace = training.distanciaTotalM() > 0
+            ? training.ritmoMedioSecPorKm().toDouble()
+            : null;
+        final paceCompliance = targetPaceSec != null &&
+                realPace != null &&
+                targetPaceSec > 0
+            ? (targetPaceSec / realPace * 100).clamp(0.0, 150.0)
+            : null;
+        final targetRpe = mainBlock?.targetRpe;
+        final realRpe = training.series.isEmpty ? null : training.rpePromedio();
+        final targetDistM = linkedSession.blocks
+            .fold<int>(0, (acc, b) => acc + (b.distanceM ?? 0));
+        final targetDistKm = targetDistM > 0 ? targetDistM / 1000.0 : null;
+        final realDistKm = training.distanciaTotalM() / 1000.0;
+        summary = summary.copyWith(
+          targetPaceSecPerKm: targetPaceSec,
+          paceCompliancePercent: paceCompliance,
+          targetDistanceKm: targetDistKm?.round(),
+          distanceCompliancePercent: targetDistKm != null && targetDistKm > 0
+              ? (realDistKm / targetDistKm * 100).clamp(0.0, 200.0)
+              : null,
+          targetRpe: targetRpe,
+          wasEasierThanExpected:
+              targetRpe != null && realRpe != null ? realRpe < targetRpe - 1 : null,
+          wasHarderThanExpected:
+              targetRpe != null && realRpe != null ? realRpe > targetRpe + 1 : null,
+        );
+      }
+      return summary;
     }).toList();
 
     final recentPlannedSessions = sessions

@@ -75,6 +75,23 @@ class AiCoachPromptSessionGenerator {
             ' (ej: "avisos cada 100m" → mode="pace", segmentDistanceM=100).'
             ' En modo pace NO generes paceMin ni paceSec; el ritmo se toma del target.'
             ' Si no se mencionan avisos, omite el campo alerts o pon enabled=false.'
+            ' REGLAS DE ESTRUCTURA DE BLOQUES:\n'
+            '- Un rodaje continuo (continuous) SIEMPRE tiene exactamente'
+            '  UN bloque main con UN segmento. Nunca múltiples bloques main.\n'
+            '- Los intervalos (intervals) tienen UN bloque main con'
+            '  repetitions > 1. Cada repetición alterna interval + recovery.'
+            '  Ejemplo 5x400m: un bloque main con repetitions=5 y dos'
+            '  segmentos: interval 400m + recovery.\n'
+            '- Fartlek: UN bloque main con múltiples segmentos alternando'
+            '  ritmos, sin repetitions (repetitions=1).\n'
+            '- Hills: UN bloque main con repetitions=N. Segmentos:'
+            '  subida (interval) + bajada recuperación (recovery).\n'
+            '- NUNCA pongas múltiples bloques main con la misma zona'
+            '  o ritmo — fúndelos en uno solo.\n'
+            '- Los descansos van DENTRO del bloque main como segmentos'
+            '  de type recovery, NO como bloques separados.\n'
+            '- warmup y cooldown son opcionales pero recomendados.'
+            '  Duración máxima warmup: 15 min. Cooldown: 10 min.\n'
             ' Responde únicamente con JSON válido que cumpla el esquema.',
       ),
       OpenRouterChatMessage(

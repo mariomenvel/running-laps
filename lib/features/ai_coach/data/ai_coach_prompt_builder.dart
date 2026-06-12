@@ -22,20 +22,9 @@ class AiCoachPromptBuilder {
   ) {
     return AiCoachPromptBundle(
       messages: [
-        const OpenRouterChatMessage(
+        OpenRouterChatMessage(
           role: 'system',
-          content:
-              'Eres un entrenador profesional de running especializado en planificacion semanal de resistencia.'
-              ' Tomas decisiones conservadoras, coherentes y progresivas.'
-              ' Priorizas adherencia, gestion de fatiga, sobrecarga progresiva, semanas de descarga, taper y prevencion de lesion.'
-              ' Debes respetar estrictamente la disponibilidad semanal del atleta y no programar sesiones fuera de athleteProfile.availableWeekdays.'
-              ' Si athleteProfile.preferredWeeklySessions existe, targetSessions no debe superarlo.'
-              ' Si el contexto muestra paron, baja adherencia o detraining, debes reiniciar de forma gradual aunque el objetivo sea ambicioso.'
-              ' Usa coachSignals y recentWeekHistory para detectar si el atleta suele responder mejor a series, tempo, fartlek o carrera continua.'
-              ' Mantente alineado con el estilo real del atleta salvo que haya una razon deportiva clara para cambiarlo.'
-              ' Si el atleta viene de entrenamientos estructurados, puedes proponer sesiones complejas. Si no, progresa la complejidad poco a poco.'
-              ' No generes entrenamientos completos. Devuelve solo una decision semanal estructurada para que otro motor genere las sesiones.'
-              ' Responde unicamente con JSON valido que cumpla el esquema.',
+          content: _buildDecisionSystemPrompt(context.profile),
         ),
         OpenRouterChatMessage(
           role: 'user',
@@ -44,6 +33,62 @@ class AiCoachPromptBuilder {
       ],
       jsonSchema: _weeklyDecisionSchema,
     );
+  }
+
+  String _buildDecisionSystemPrompt(AiCoachProfile? profile) {
+    final base =
+        'Eres un entrenador profesional de running especializado en planificacion semanal de resistencia.'
+        ' Tomas decisiones conservadoras, coherentes y progresivas.'
+        ' Priorizas adherencia, gestion de fatiga, sobrecarga progresiva, semanas de descarga, taper y prevencion de lesion.'
+        ' athleteProfile.preferredWeeklySessions es la preferencia habitual del atleta, pero puede superarse si el atleta lo solicita explícitamente en observaciones o si hay una razón deportiva clara (semana de carga, recuperación activa, etc.).'
+        ' Si el contexto muestra paron, baja adherencia o detraining, debes reiniciar de forma gradual aunque el objetivo sea ambicioso.'
+        ' Usa coachSignals y recentWeekHistory para detectar si el atleta suele responder mejor a series, tempo, fartlek o carrera continua.'
+        ' Mantente alineado con el estilo real del atleta salvo que haya una razon deportiva clara para cambiarlo.'
+        ' Si el atleta viene de entrenamientos estructurados, puedes proponer sesiones complejas. Si no, progresa la complejidad poco a poco.'
+        ' No generes entrenamientos completos. Devuelve solo una decision semanal estructurada para que otro motor genere las sesiones.'
+        ' Si el campo observaciones contiene una peticion concreta'
+        ' (ej: "quiero entrenar el viernes", "esta semana 3 sesiones",'
+        ' "necesito descansar el martes"), tratala como ORDEN del atleta'
+        ' y reflejala en la decision semanal sin excepcion.\n'
+        'Las categorías válidas para workoutTargets.category son '
+        'EXCLUSIVAMENTE: series_cortas, series_largas, series_cuestas, '
+        'series_mixtas, fartlek, tempo, rodaje_base, rodaje_largo, '
+        'regenerativo, gimnasio_fuerza, test, competicion. '
+        'NO uses otras categorías. Si el atleta pide "cuestas", '
+        'usa "series_cuestas". Si pide "gimnasio" o "fuerza", '
+        'usa "gimnasio_fuerza". Si pide "largo", usa "rodaje_largo".\n'
+        'RESTRICCIONES RECURRENTES: Si athleteProfile.recurringConstraints '
+        'contiene una restricción, DEBES incluirla en el plan TODAS las semanas '
+        'sin excepción. Si la restricción dice "cuestas a la semana", '
+        'uno de los workoutTargets DEBE tener category="series_cuestas". '
+        'Las restricciones recurrentes tienen la misma prioridad que '
+        'los mandatos del atleta en observaciones.\n'
+        'Cada entrenamiento en recentTrainings puede incluir '
+        'paceCompliance (% de cumplimiento del ritmo objetivo), '
+        'execution ("más duro/fácil de lo esperado") y targetRpe. '
+        'Usa estos datos para calibrar la dificultad real de las '
+        'sesiones. Si el atleta consistentemente supera el RPE objetivo, '
+        'reduce la intensidad. Si va más fácil de lo esperado, '
+        'puedes progresar más agresivamente.\n'
+        ' Responde unicamente con JSON valido que cumpla el esquema.';
+
+    if (profile != null && profile.availableWeekdays.isNotEmpty) {
+      final dayNames = _weekdayNamesList(profile.availableWeekdays);
+      return '$base'
+          ' IMPORTANTE: El atleta SOLO puede entrenar los dias: $dayNames.'
+          ' Distribuye las sesiones UNICAMENTE en esos dias.'
+          ' No pongas sesiones en otros dias.'
+          ' Si el atleta tiene restricciones recurrentes o notas del entrenador (coachNotes),'
+          ' respeta siempre esas preferencias al asignar dias.';
+    }
+    return base;
+  }
+
+  String _weekdayNamesList(List<int> weekdays) {
+    const names = ['', 'lunes', 'martes', 'miercoles',
+        'jueves', 'viernes', 'sabado', 'domingo'];
+    final sorted = [...weekdays]..sort();
+    return sorted.map((d) => d >= 1 && d <= 7 ? names[d] : '').join(', ');
   }
 
   AiCoachPromptBundle buildChatAdjustmentPrompt(
@@ -151,8 +196,15 @@ class AiCoachPromptBuilder {
           'sueno': context.weeklyFeedback!.sueno,
           if (context.weeklyFeedback!.molestias != null)
             'molestias': context.weeklyFeedback!.molestias,
-          if (context.weeklyFeedback!.observaciones != null)
+          if (context.weeklyFeedback!.observaciones != null) ...{
             'observaciones': context.weeklyFeedback!.observaciones,
+            'instruccionObservaciones':
+                'MANDATO PRIORITARIO: Si el atleta indica en observaciones '
+                'dias concretos, numero de sesiones, o cualquier restriccion '
+                'o preferencia explicita para esta semana, DEBES respetarlo '
+                'por encima de cualquier otra consideracion. '
+                'Tiene prioridad sobre el perfil, la fatiga y el plan habitual.',
+          },
           'instrucciones':
               [
                 'Ten muy en cuenta este feedback al generar el plan de la semana siguiente.',
@@ -289,19 +341,9 @@ class AiCoachPromptBuilder {
           'restart',
         ],
       },
-      'targetSessions': {
-        'type': 'integer',
-        'minimum': 1,
-        'maximum': 7,
-      },
-      'targetVolumeKm': {
-        'type': 'number',
-        'minimum': 0,
-      },
-      'targetLoad': {
-        'type': 'number',
-        'minimum': 0,
-      },
+      'targetSessions': {'type': 'integer'},
+      'targetVolumeKm': {'type': 'number'},
+      'targetLoad': {'type': 'number'},
       'primaryFocus': {
         'type': 'string',
       },
@@ -323,7 +365,7 @@ class AiCoachPromptBuilder {
           'properties': {
             'category': {'type': 'string'},
             'purpose': {'type': 'string'},
-            'priority': {'type': 'integer', 'minimum': 1, 'maximum': 4},
+            'priority': {'type': 'integer'},
             'preferredDay': {'type': 'string'},
             'targetLoad': {'type': 'number'},
             'targetDistanceKm': {'type': 'number'},
@@ -357,10 +399,10 @@ class AiCoachPromptBuilder {
                 'type': 'string',
                 'enum': ['move', 'cancel', 'complete', 'adjust_session', 'add_series', 'remove_series'],
               },
-              'sourceWeekday': {'type': 'integer', 'minimum': 1, 'maximum': 7},
-              'targetWeekday': {'type': 'integer', 'minimum': 1, 'maximum': 7},
+              'sourceWeekday': {'type': 'integer'},
+              'targetWeekday': {'type': 'integer'},
               'intensityDelta': {'type': 'integer', 'enum': [-1, 1]},
-              'seriesCount': {'type': 'integer', 'minimum': 1, 'maximum': 10},
+              'seriesCount': {'type': 'integer'},
             },
           },
         ],

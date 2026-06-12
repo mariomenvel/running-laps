@@ -160,8 +160,6 @@ class AiCoachChatService {
     AiCoachLocalAction action,
     DateTime weekStart,
   ) async {
-    debugPrint('[Local] action: ${action.type} source=${action.sourceWeekday} target=${action.targetWeekday}');
-    debugPrint('[Local] weekStart=$weekStart');
     final monday = _mondayOf(weekStart);
     final sunday = monday.add(const Duration(days: 6));
     final sessions = await _sessionRepository.getSessionsInRange(
@@ -171,11 +169,6 @@ class AiCoachChatService {
     );
 
     final sourceDate = monday.add(Duration(days: action.sourceWeekday - 1));
-    debugPrint('[Local] sourceDate calculada=${_dateKey(sourceDate)}');
-    debugPrint('[Local] sesiones en la semana:');
-    for (final s in sessions) {
-      debugPrint('[Local]   ${s.date} status=${s.status} cat=${s.category}');
-    }
     final sourceDateKey = _dateKey(sourceDate);
     final sourceSessions = sessions
         .where((s) =>
