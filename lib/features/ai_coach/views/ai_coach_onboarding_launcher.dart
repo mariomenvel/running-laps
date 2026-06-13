@@ -6,7 +6,7 @@ import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_automation_service.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_view.dart';
-import 'package:running_laps/features/ai_coach/views/ai_coach_settings_view.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
 
 /// Lanza el onboarding si el atleta no tiene perfil IA, o los settings si ya lo tiene.
 /// Si no hay apiKey configurada, muestra error y no navega.
@@ -36,9 +36,7 @@ Future<void> launchAiCoachOnboarding(
   if (!context.mounted) return;
 
   if (existingProfile != null) {
-    await Navigator.of(context).push(
-      AppRoute(page: AiCoachSettingsView(uid: uid)),
-    );
+    MainShell.shellKey.currentState?.navigateTo(16);
     onCompleted?.call();
     return;
   }

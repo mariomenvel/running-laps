@@ -462,13 +462,7 @@ class _ProfileViewState extends State<ProfileView> {
               icon: Icons.auto_awesome_outlined,
               label: 'Entrenador IA',
               subtitle: 'Sugerencias semanales',
-              onTap: () {
-                final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-                Navigator.push(
-                  context,
-                  AppRoute(page: AiCoachSettingsView(uid: uid)),
-                );
-              },
+              onTap: () => MainShell.shellKey.currentState?.navigateTo(16),
             ),
             const _MenuDivider(),
             _MenuItem(

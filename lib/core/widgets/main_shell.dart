@@ -26,6 +26,7 @@ import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/templates/views/workout_editor_screen.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
+import 'package:running_laps/features/ai_coach/views/ai_coach_settings_view.dart';
 
 // ─── Params para tabs con parámetros ─────────────────────────────────────────
 
@@ -148,6 +149,8 @@ class _MainShellState extends State<MainShell> {
     ),
 
     const TrainingStartView(), // 15 → Iniciar entrenamiento (FAB)
+
+    const AiCoachSettingsView(), // 16 → Entrenador IA settings
   ];
 
   @override
