@@ -123,6 +123,17 @@ test_output_v2.txt
 *.iws
 
 # ============================
+# Secrets y credenciales — nunca committear
+# ============================
+.env
+*.env
+secrets.json
+*.secrets
+api_keys.dart
+**/google-services.json
+**/GoogleService-Info.plist
+
+# ============================
 # OS-level junk
 # ============================
 .DS_Store
