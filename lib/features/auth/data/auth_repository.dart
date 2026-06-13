@@ -50,6 +50,7 @@ class AuthRepository {
           "fcReposo": null,
           "birthDate": null,
           "sex": null,
+          "onboardingCompleted": false,
         });
       }
 
@@ -78,6 +79,7 @@ class AuthRepository {
       "fcReposo": null,
       "birthDate": null,
       "sex": null,
+      "onboardingCompleted": false,
     });
   }
 

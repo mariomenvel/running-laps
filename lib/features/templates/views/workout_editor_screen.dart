@@ -278,7 +278,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
     _aiGenerating.value = true;
 
     try {
-      final providerConfig = await AiCoachRepository().getProviderConfig();
+      final providerConfig = await AiCoachRepository().getProviderConfig(uid: uid);
       if (!mounted) return;
       final apiKey = providerConfig?.apiKey;
       if (apiKey == null) {

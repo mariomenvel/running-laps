@@ -37,14 +37,6 @@ class AuthController {
         throw Exception('Todos los campos son obligatorios.');
       }
       await _repo.signIn(emailCtrl.text, passCtrl.text);
-
-      // VERIFICACIÓN DE EMAIL
-      final user = _repo.getCurrentUser();
-      if (user != null && !user.emailVerified) {
-        await _repo.signOut(); // No dejarle entrar
-        throw Exception('Debes verificar tu correo electrónico antes de iniciar sesión. Revisalo.');
-      }
-
     } catch (e) {
       rethrow;
     } finally {
@@ -65,20 +57,6 @@ class AuthController {
     } finally {
       isLoading.value = false;
     }
-  }
-
-  Future<void> resendVerificationEmail(String email, String password) async {
-      isLoading.value = true;
-      try {
-        // Necesitamos iniciar sesión temporalmente para enviar el correo si no hay usuario activo
-         await _repo.signIn(email, password);
-         await _repo.sendEmailVerification();
-         await _repo.signOut();
-      } catch (e) {
-        rethrow;
-      } finally {
-        isLoading.value = false;
-      }
   }
 
   // ==========================
@@ -111,9 +89,6 @@ class AuthController {
 
       // Enviar email de verificación
       await _repo.sendEmailVerification();
-
-      // Volver a la vista de login
-      toggleView();
     } catch (e) {
       rethrow;
     } finally {
@@ -156,18 +131,6 @@ class AuthController {
     } finally {
       isLoading.value = false;
     }
-  }
-
-  // ==========================
-  // Cambio de vista (login / registro)
-  // ==========================
-  void toggleView() {
-    emailCtrl.clear();
-    passCtrl.clear();
-    usernameCtrl.clear();
-    confirmPassCtrl.clear();
-
-    isLoginView.value = !isLoginView.value;
   }
 
   // ==========================

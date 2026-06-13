@@ -147,11 +147,17 @@ class AiCoachRepository {
 
   Future<AiCoachProviderConfig?> getProviderConfig({String? uid}) async {
     try {
-      final doc = await _globalProviderDoc().get();
-      if (!doc.exists || doc.data() == null) {
-        return null;
+      final resolvedUid = uid ?? _auth.currentUser?.uid;
+      if (resolvedUid != null) {
+        final userDoc = await _settingsDoc(resolvedUid, 'aiCoachProvider').get();
+        if (userDoc.exists && userDoc.data() != null) {
+          final config = AiCoachProviderConfig.fromMap(userDoc.data()!);
+          if (config.apiKey?.trim().isNotEmpty == true) return config;
+        }
       }
-      return AiCoachProviderConfig.fromMap(doc.data()!);
+      final globalDoc = await _globalProviderDoc().get();
+      if (!globalDoc.exists || globalDoc.data() == null) return null;
+      return AiCoachProviderConfig.fromMap(globalDoc.data()!);
     } catch (e) {
       debugPrint('[AiCoachRepository] getProviderConfig error: $e');
       return null;

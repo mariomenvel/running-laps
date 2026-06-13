@@ -18,7 +18,7 @@ Future<void> launchAiCoachOnboarding(
   if (uid == null) return;
 
   final repo = AiCoachRepository();
-  final providerConfig = await repo.getProviderConfig();
+  final providerConfig = await repo.getProviderConfig(uid: uid);
 
   if (!context.mounted) return;
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-// RUTA CORREGIDA:
-import 'package:running_laps/features/auth/viewmodels/auth_controller.dart'; // CAMBIO: Usamos el Controller
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:running_laps/features/auth/viewmodels/auth_controller.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
@@ -60,56 +60,18 @@ class _AuthPageState extends State<AuthPage> {
     try {
       await _authCtrl.signIn();
       if (!mounted) return;
-
       ModernSnackBar.showSuccess(context, 'Sesión iniciada');
-
-      Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (e) {
-      final msg = _extractErrorMessage(e);
       if (!mounted) return;
-
-      if (msg.contains("verificar tu correo")) {
-        // Mostrar opción de reenviar
-        // Mostrar opción de reenviar
-        ModernSnackBar.showWarning(
-          context,
-          msg,
-          duration: const Duration(seconds: 6),
-          action: SnackBarAction(
-            label: 'REENVIAR',
-            textColor: Colors.white,
-            onPressed: () async {
-               // Reenviar correo
-               try {
-                 await _authCtrl.resendVerificationEmail(
-                   _authCtrl.emailCtrl.text, 
-                   _authCtrl.passCtrl.text
-                 );
-                 if(!mounted) return;
-                 ModernSnackBar.showSuccess(context, 'Correo enviado. Revisa tu bandeja.');
-               } catch (resendError) {
-                 _showError(resendError);
-               }
-            },
-          ),
-        );
-      } else {
-         _showError(e);
-      }
+      _showError(e);
     }
   }
 
   Future<void> _signUp() async {
     try {
       await _authCtrl.signUp();
-      if (!mounted) return;
-
-      ModernSnackBar.showSuccess(
-        context, 
-        'Cuenta creada. Revisa tu correo para verificarla antes de entrar.',
-        duration: const Duration(seconds: 5),
-      );
     } catch (e) {
+      if (!mounted) return;
       _showError(e);
     }
   }
@@ -125,10 +87,6 @@ class _AuthPageState extends State<AuthPage> {
     } catch (e) {
       _showError(e);
     }
-  }
-
-  void _toggleView() {
-    _authCtrl.toggleView();
   }
 
   Future<void> _recoverPassword(String email) async {
@@ -407,17 +365,21 @@ class _AuthPageState extends State<AuthPage> {
     return Container(
       height: 60,
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.08) : AppColors.iconMutedOf(context),
+        color: AppColors.surfaceOf(context),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: isDark
-            ? []
-            : [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withOpacity(0.08)
+              : Colors.black.withOpacity(0.06),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0 : 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: TextField(
         controller: controller,
@@ -436,7 +398,7 @@ class _AuthPageState extends State<AuthPage> {
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+            color: AppColors.textSecondary(context),
             letterSpacing: 0.0,
           ),
           border: InputBorder.none,
@@ -523,14 +485,24 @@ class _AuthPageState extends State<AuthPage> {
       child: Row(
         children: [
           Expanded(child: Divider(color: Theme.of(context).colorScheme.outline, thickness: 1)),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+          Container(
+            width: 28,
+            height: 28,
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.surfaceOf(context),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+              ),
+            ),
+            alignment: Alignment.center,
             child: Text(
-              'O',
+              'o',
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
+                color: AppColors.textSecondary(context),
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
               ),
             ),
           ),
@@ -555,7 +527,7 @@ class _AuthPageState extends State<AuthPage> {
         _buildTextField(
           controller: _authCtrl.emailCtrl,
           hintText: 'Correo electrónico',
-          prefixIcon: Icon(Icons.email_outlined, color: AppColors.surface2),
+          prefixIcon: Icon(Icons.email_outlined, color: AppColors.textSecondary(context)),
           textInputAction: TextInputAction.next,
           onSubmitted: (_) => FocusScope.of(context).nextFocus(),
         ),
@@ -564,13 +536,13 @@ class _AuthPageState extends State<AuthPage> {
           controller: _authCtrl.passCtrl,
           hintText: 'Contraseña',
           obscureText: !_showLoginPassword,
-          prefixIcon: Icon(Icons.lock_outline, color: AppColors.surface2),
+          prefixIcon: Icon(Icons.lock_outline, color: AppColors.textSecondary(context)),
           textInputAction: TextInputAction.done,
           onSubmitted: (_) => FocusScope.of(context).unfocus(),
           suffixIcon: IconButton(
             icon: Icon(
               _showLoginPassword ? Icons.visibility_off : Icons.visibility,
-              color: AppColors.iconMutedOf(context),
+              color: AppColors.textSecondary(context),
             ),
             onPressed: () {
               setState(() {
@@ -615,7 +587,13 @@ class _AuthPageState extends State<AuthPage> {
         const SizedBox(height: 16),
         _buildButton(
           text: 'REGISTRARSE',
-          onPressed: _toggleView,
+          onPressed: () {
+            _authCtrl.isLoginView.value = false;
+            _authCtrl.emailCtrl.clear();
+            _authCtrl.passCtrl.clear();
+            _authCtrl.usernameCtrl.clear();
+            _authCtrl.confirmPassCtrl.clear();
+          },
           showLoading: false,
         ),
       ],
@@ -629,7 +607,7 @@ class _AuthPageState extends State<AuthPage> {
         _buildTextField(
           controller: _authCtrl.usernameCtrl,
           hintText: 'Nombre de usuario',
-          prefixIcon: Icon(Icons.person_outline, color: AppColors.surface2),
+          prefixIcon: Icon(Icons.person_outline, color: AppColors.textSecondary(context)),
           textInputAction: TextInputAction.next,
           onSubmitted: (_) => FocusScope.of(context).nextFocus(),
         ),
@@ -637,7 +615,7 @@ class _AuthPageState extends State<AuthPage> {
         _buildTextField(
           controller: _authCtrl.emailCtrl,
           hintText: 'Correo electrónico',
-          prefixIcon: Icon(Icons.email_outlined, color: AppColors.surface2),
+          prefixIcon: Icon(Icons.email_outlined, color: AppColors.textSecondary(context)),
           textInputAction: TextInputAction.next,
           onSubmitted: (_) => FocusScope.of(context).nextFocus(),
         ),
@@ -646,13 +624,13 @@ class _AuthPageState extends State<AuthPage> {
           controller: _authCtrl.passCtrl,
           hintText: 'Contraseña',
           obscureText: !_showRegisterPassword,
-          prefixIcon: Icon(Icons.lock_outline, color: AppColors.surface2),
+          prefixIcon: Icon(Icons.lock_outline, color: AppColors.textSecondary(context)),
           textInputAction: TextInputAction.next,
           onSubmitted: (_) => FocusScope.of(context).nextFocus(),
           suffixIcon: IconButton(
             icon: Icon(
               _showRegisterPassword ? Icons.visibility_off : Icons.visibility,
-              color: AppColors.iconMutedOf(context),
+              color: AppColors.textSecondary(context),
             ),
             onPressed: () {
               setState(() {
@@ -666,7 +644,7 @@ class _AuthPageState extends State<AuthPage> {
           controller: _authCtrl.confirmPassCtrl,
           hintText: 'Confirmar contraseña',
           obscureText: !_showRegisterConfirmPassword,
-          prefixIcon: Icon(Icons.lock_outline, color: AppColors.surface2),
+          prefixIcon: Icon(Icons.lock_outline, color: AppColors.textSecondary(context)),
           textInputAction: TextInputAction.done,
           onSubmitted: (_) => FocusScope.of(context).unfocus(),
           suffixIcon: IconButton(
@@ -674,7 +652,7 @@ class _AuthPageState extends State<AuthPage> {
               _showRegisterConfirmPassword
                   ? Icons.visibility_off
                   : Icons.visibility,
-              color: AppColors.iconMutedOf(context),
+              color: AppColors.textSecondary(context),
             ),
             onPressed: () {
               setState(() {
@@ -705,7 +683,12 @@ class _AuthPageState extends State<AuthPage> {
           valueListenable: _authCtrl.isLoading,
           builder: (context, isLoading, child) {
             return TextButton(
-              onPressed: isLoading ? null : _toggleView,
+              onPressed: isLoading ? null : () {
+                _authCtrl.isLoginView.value = true;
+                _authCtrl.emailCtrl.clear();
+                _authCtrl.passCtrl.clear();
+                _authCtrl.usernameCtrl.clear();
+              },
               child: Text(
                 '¿Ya tienes cuenta? Iniciar sesión',
                 style: TextStyle(
@@ -727,7 +710,7 @@ class _AuthPageState extends State<AuthPage> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final double logoHeight = size.height * 0.30; // Un poco menos para dar espacio
+    final double logoHeight = size.height * 0.18;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -748,60 +731,57 @@ class _AuthPageState extends State<AuthPage> {
           // Usamos un solo SingleChildScrollView para TODO
           child: SingleChildScrollView(
             physics: const ClampingScrollPhysics(), // Evita rebote excesivo
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            padding: const EdgeInsets.symmetric(horizontal: 42.0),
             child: ConstrainedBox(
               // Aseguramos que el contenido ocupe al menos toda la pantalla si es posible
               constraints: BoxConstraints(
                 minHeight: size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
                 maxWidth: 400,
               ),
-              child: IntrinsicHeight( // Permite que el Column use MainAxisAlignment.spaceBetween
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // ================= HEADER (Logo) =================
-                    SizedBox(
-                      height: logoHeight > 250 ? 250 : logoHeight,
-                      child: Center(
-                        child: Image.asset(
-                          'assets/images/Icon.png',
-                          fit: BoxFit.contain,
-                        ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // ================= HEADER (Logo) =================
+                  SizedBox(
+                    height: logoHeight > 140 ? 140 : logoHeight,
+                    child: Center(
+                      child: Image.asset(
+                        'assets/images/Icon.png',
+                        fit: BoxFit.contain,
                       ),
                     ),
-                    
-                    // ================= BODY (Campos) =================
-                    ValueListenableBuilder<bool>(
-                      valueListenable: _authCtrl.isLoginView,
-                      builder: (context, isLoginView, child) {
-                        return AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 300),
-                          key: ValueKey<bool>(isLoginView),
-                          child: isLoginView
-                              ? _buildLoginFields()
-                              : _buildRegisterFields(),
-                        );
-                      },
-                    ),
-                    
-                    const Spacer(), // Empuja los botones al final si hay espacio
-                    const SizedBox(height: 24),
-                    
-                    // ================= FOOTER (Botones) =================
-                    ValueListenableBuilder<bool>(
-                      valueListenable: _authCtrl.isLoginView,
-                      builder: (context, isLoginView, child) {
-                         return AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 300),
-                          child: isLoginView 
-                              ? _buildLoginButtons() 
-                              : _buildRegisterButtons(),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 24), // Margen inferior final
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // ================= BODY (Campos) =================
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _authCtrl.isLoginView,
+                    builder: (context, isLoginView, child) {
+                      return AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        key: ValueKey<bool>(isLoginView),
+                        child: isLoginView
+                            ? _buildLoginFields()
+                            : _buildRegisterFields(),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 28),
+
+                  // ================= FOOTER (Botones) =================
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _authCtrl.isLoginView,
+                    builder: (context, isLoginView, child) {
+                      return AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: isLoginView
+                            ? _buildLoginButtons()
+                            : _buildRegisterButtons(),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                ],
               ),
             ),
           ),
@@ -919,12 +899,10 @@ class _PremiumGoogleButtonState extends State<_PremiumGoogleButton> with SingleT
                                   ),
                                 ],
                               ),
-                              child: Image.network(
-                                'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1024px-Google_%22G%22_logo.svg.png',
-                                width: 18,
-                                height: 18,
-                                errorBuilder: (context, error, stackTrace) => 
-                                    Icon(Icons.login_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 18),
+                              child: SvgPicture.asset(
+                                'assets/images/google_logo.svg',
+                                width: 20,
+                                height: 20,
                               ),
                             ),
                             const SizedBox(width: 16),

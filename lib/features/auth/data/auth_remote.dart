@@ -82,6 +82,7 @@ class AuthRemote {
                 "fcReposo": null,
                 "birthDate": null,
                 "sex": null,
+                "onboardingCompleted": false,
               });
             }
           } catch (e) {
