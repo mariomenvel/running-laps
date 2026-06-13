@@ -1,5 +1,13 @@
 # CHANGELOG — Running Laps
 
+## [iOS Build Fix] — 2026-06-13
+- `IPHONEOS_DEPLOYMENT_TARGET` subido de 13.0 a 16.0 en Runner (Profile)
+  y configuración base del proyecto (Debug/Release) en `project.pbxproj`
+- Causa: Firebase SDK (cloud_firestore, firebase_auth, firebase_core,
+  firebase_app_check, firebase_storage) requiere mínimo iOS 15.0 vía SPM
+- Live Activity Extension no tocada (ya estaba en 16.1)
+- Pendiente: verificar build en Codemagic
+
 ## [Seguridad — Pendiente antes de producción] — 2026-06-12
 
 ### Requiere Firebase Blaze + Cloud Functions
