@@ -1,39 +1,35 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
-import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
-import 'package:running_laps/features/ai_coach/data/ai_coach_chat_service.dart';
+import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_weekly_feedback_view.dart';
-import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/core/services/user_service.dart';
 
 class AiCoachSettingsView extends StatefulWidget {
-  const AiCoachSettingsView({super.key, required this.uid});
-
-  final String uid;
+  const AiCoachSettingsView({super.key});
 
   @override
   State<AiCoachSettingsView> createState() => _AiCoachSettingsViewState();
 }
 
 class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
+  String get _uid => FirebaseAuth.instance.currentUser?.uid ?? '';
+
   final _goalDescriptionCtrl = TextEditingController();
   final _coachNotesCtrl = TextEditingController();
   final _strengthInputCtrl = TextEditingController();
   final _otherInputCtrl = TextEditingController();
-  final _adjustmentCtrl = TextEditingController();
 
   final _repo = AiCoachRepository();
-  final _chatService = AiCoachChatService();
   final _userService = UserService();
 
   bool _isLoading = true;
   bool _isSaving = false;
-  bool _isSendingAdjustment = false;
   AiCoachWeeklyState? _weeklyState;
 
   AiCoachGoalType _goal = AiCoachGoalType.improveEndurance;
@@ -42,8 +38,6 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
   int _preferredWeeklySessions = 3;
   int? _preferredLongRunWeekday;
   Set<int> _availableWeekdays = <int>{1, 3, 5};
-  String _lastAdjustmentResponse = '';
-  int _chatRemainingThisWeek = 3;
 
   final List<String> _strengthConstraints = [];
   final List<String> _otherConstraints = [];
@@ -60,14 +54,13 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
     _coachNotesCtrl.dispose();
     _strengthInputCtrl.dispose();
     _otherInputCtrl.dispose();
-    _adjustmentCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _load() async {
     setState(() => _isLoading = true);
     try {
-      final isAthleteMode = await _userService.getIsAthleteMode(widget.uid);
+      final isAthleteMode = await _userService.getIsAthleteMode(_uid);
       if (!isAthleteMode) {
         if (mounted) {
           ModernSnackBar.showError(
@@ -80,13 +73,11 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
       }
 
       final results = await Future.wait([
-        _repo.getProfile(uid: widget.uid),
-        _repo.getWeeklyState(uid: widget.uid),
-        _repo.getUsage(uid: widget.uid),
+        _repo.getProfile(uid: _uid),
+        _repo.getWeeklyState(uid: _uid),
       ]);
       final profile = results[0] as AiCoachProfile?;
       _weeklyState = results[1] as AiCoachWeeklyState?;
-      final usage = results[2] as AiCoachUsage?;
       if (!mounted) return;
       if (profile != null) {
         _goal = profile.goal;
@@ -97,14 +88,14 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
         _availableWeekdays = profile.availableWeekdays.toSet();
         _goalDescriptionCtrl.text = profile.goalDescription;
         _coachNotesCtrl.text = profile.coachNotes ?? '';
-        
+
         _strengthConstraints.clear();
         _strengthConstraints.addAll(
           profile.recurringConstraints
               .where((item) => item.type == AiCoachConstraintType.strengthTraining)
               .map((item) => item.label),
         );
-        
+
         _otherConstraints.clear();
         _otherConstraints.addAll(
           profile.recurringConstraints
@@ -114,13 +105,6 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
       } else {
         _goalDescriptionCtrl.text = 'Mejorar la consistencia semanal';
       }
-
-      final now = DateTime.now();
-      final isCurrentWeekUsage = usage != null &&
-          !usage.periodStart.isAfter(now) &&
-          !usage.periodEnd.isBefore(now);
-      final used = isCurrentWeekUsage ? usage.messagesUsed : 0;
-      _chatRemainingThisWeek = (3 - used).clamp(0, 3);
     } catch (e) {
       if (!mounted) return;
       ModernSnackBar.showError(
@@ -171,9 +155,9 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
     setState(() => _isSaving = true);
     try {
       final now = DateTime.now();
-      final previousProfile = await _repo.getProfile(uid: widget.uid);
+      final previousProfile = await _repo.getProfile(uid: _uid);
       final profile = AiCoachProfile(
-        uid: widget.uid,
+        uid: _uid,
         goal: _goal,
         goalDescription: _goalDescriptionCtrl.text.trim(),
         targetDate: _targetDate,
@@ -218,44 +202,35 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
     setState(() => _targetDate = picked);
   }
 
-  String _currentWeekStart() {
-    final now = DateTime.now();
-    final monday = now.subtract(Duration(days: now.weekday - 1));
-    return '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
+  String _feedbackButtonLabel() {
+    final weekday = DateTime.now().weekday;
+    if (weekday >= 6) return 'Cuéntale cómo fue esta semana';
+    if (weekday <= 2) return 'Cuéntale cómo fue la semana pasada';
+    return 'Enviar feedback al coach';
   }
 
-  Future<void> _sendAdjustment() async {
-    final message = _adjustmentCtrl.text.trim();
-    if (message.isEmpty) return;
-    setState(() => _isSendingAdjustment = true);
-    try {
-      final result = await _chatService.adjustNextWeekPlan(
-        widget.uid,
-        athleteMessage: message,
-      );
-      if (!mounted) return;
-      setState(() {
-        _lastAdjustmentResponse = result.response;
-        _adjustmentCtrl.clear();
-        _chatRemainingThisWeek = (_chatRemainingThisWeek - 1).clamp(0, 3);
-      });
-      ModernSnackBar.showSuccess(
-        context,
-        result.decisionOverride != null
-            ? 'Plan ajustado para la próxima semana'
-            : 'La IA ha respondido sin cambiar el plan',
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ModernSnackBar.showError(
-        context,
-        'No se pudo enviar el ajuste. ${e.toString().replaceFirst('Exception: ', '')}',
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isSendingAdjustment = false);
-      }
+  void _openFeedback() {
+    final weekday = DateTime.now().weekday;
+    final now = DateTime.now();
+    late DateTime monday;
+    if (weekday <= 2) {
+      monday = now.subtract(Duration(days: now.weekday - 1 + 7));
+    } else {
+      monday = now.subtract(Duration(days: now.weekday - 1));
     }
+    final weekStart = '${monday.year}-'
+        '${monday.month.toString().padLeft(2, '0')}-'
+        '${monday.day.toString().padLeft(2, '0')}';
+
+    Navigator.of(context).push(AppRoute(
+      page: AiCoachWeeklyFeedbackView(
+        weekStart: weekStart,
+        generatePlanAfter: false,
+        daysSinceLastTraining: _weeklyState?.daysSinceLastTraining ?? 0,
+        consecutiveMissedWeeks: _weeklyState?.consecutiveMissedWeeks ?? 0,
+        onCompleted: () => Navigator.of(context).pop(),
+      ),
+    ));
   }
 
   List<AiCoachRecurringConstraint> _buildRecurringConstraints() {
@@ -436,317 +411,232 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
 
   @override
   Widget build(BuildContext context) {
-    final background = AppColors.background(context);
-
     return Scaffold(
-      backgroundColor: background,
-      body: DefaultTabController(
-        length: 2,
-        child: Column(
-          children: [
-            const AppHeader(
-              title: Text(
-                'Entrenador IA',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+      backgroundColor: AppColors.background(context),
+      appBar: ShellEmbeddingScope.isEmbedded(context)
+          ? null
+          : AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_rounded),
+                onPressed: () => Navigator.of(context).pop(),
               ),
             ),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: AppColors.surface2Of(context),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.borderOf(context), width: 0.5),
-              ),
-              child: TabBar(
-                indicatorSize: TabBarIndicatorSize.tab,
-                dividerColor: Colors.transparent,
-                indicator: BoxDecoration(
-                  color: AppColors.surfaceOf(context),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                  border: Border.all(
-                    color: AppColors.borderOf(context).withValues(alpha: 0.5),
-                    width: 0.5,
-                  ),
-                ),
-                labelColor: AppColors.brand,
-                labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, letterSpacing: -0.3),
-                unselectedLabelColor: AppColors.textSecondary(context),
-                unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13, letterSpacing: -0.3),
-                tabs: const [
-                  Tab(text: 'Bases del Plan'),
-                  Tab(text: 'Ajuste Semanal'),
-                ],
-              ),
-            ),
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : TabBarView(
-                      children: [
-                        _buildBasesTab(context),
-                        _buildAjustesTab(context),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                        _sectionHeader(
+                          'OBJETIVO',
+                          subtitle: 'Define el contexto estable para que la IA planifique como un entrenador serio.',
+                        ),
+                        Divider(height: 1, color: AppColors.borderOf(context)),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                          child: _buildGoalSelector(context),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildFormLabel(context, 'Descripción del objetivo'),
+                              TextField(
+                                controller: _goalDescriptionCtrl,
+                                maxLength: 200,
+                                decoration: _inputDecoration(context, hint: 'Ej. 10K sub 50 o volver a correr con constancia'),
+                                style: TextStyle(fontSize: 15, color: AppColors.textPrimary(context)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                          child: _buildLevelSelector(context),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                          child: _buildDatePicker(context),
+                        ),
+                        _sectionHeader(
+                          'DISPONIBILIDAD',
+                          subtitle: 'La IA usará estos días como marco para repartir la carga.',
+                        ),
+                        Divider(height: 1, color: AppColors.borderOf(context)),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                          child: _buildWeekDaySelector(context),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                          child: _buildSessionsCountSelector(context),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildFormLabel(context, 'Día preferido de tirada larga'),
+                              _buildLongRunDaySelector(context),
+                            ],
+                          ),
+                        ),
+                        _sectionHeader(
+                          'RESTRICCIONES',
+                          subtitle: 'Cosas que el entrenador IA debe recordar semana tras semana.',
+                        ),
+                        Divider(height: 1, color: AppColors.borderOf(context)),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                          child: _buildConstraintsManager(
+                            context: context,
+                            title: 'Fuerza / gimnasio',
+                            placeholder: 'Ej. Miércoles hago pierna',
+                            items: _strengthConstraints,
+                            inputController: _strengthInputCtrl,
+                            onAdd: () {
+                              final text = _strengthInputCtrl.text.trim();
+                              if (text.isNotEmpty) {
+                                if (_validateCoachText(text) != null) {
+                                  ModernSnackBar.showError(context, _validateCoachText(text)!);
+                                  return;
+                                }
+                                setState(() {
+                                  _strengthConstraints.add(text);
+                                  _strengthInputCtrl.clear();
+                                });
+                              }
+                            },
+                            onDelete: (idx) {
+                              setState(() => _strengthConstraints.removeAt(idx));
+                            },
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                          child: _buildConstraintsManager(
+                            context: context,
+                            title: 'Otras restricciones',
+                            placeholder: 'Ej. Domingo no corro temprano',
+                            items: _otherConstraints,
+                            inputController: _otherInputCtrl,
+                            onAdd: () {
+                              final text = _otherInputCtrl.text.trim();
+                              if (text.isNotEmpty) {
+                                if (_validateCoachText(text) != null) {
+                                  ModernSnackBar.showError(context, _validateCoachText(text)!);
+                                  return;
+                                }
+                                setState(() {
+                                  _otherConstraints.add(text);
+                                  _otherInputCtrl.clear();
+                                });
+                              }
+                            },
+                            onDelete: (idx) {
+                              setState(() => _otherConstraints.removeAt(idx));
+                            },
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildFormLabel(context, 'Notas adicionales del entrenador'),
+                              TextField(
+                                controller: _coachNotesCtrl,
+                                minLines: 3,
+                                maxLines: 5,
+                                maxLength: 300,
+                                decoration: _inputDecoration(
+                                  context,
+                                  hint: 'Ej. Tolero mejor volumen que intensidad, prefiero calidad en jueves...',
+                                ),
+                                style: TextStyle(fontSize: 14, color: AppColors.textPrimary(context)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        _sectionHeader('FEEDBACK'),
+                        Divider(height: 1, color: AppColors.borderOf(context)),
+                        ListTile(
+                          leading: const Icon(Icons.rate_review_outlined, color: AppColors.brand),
+                          title: Text(_feedbackButtonLabel()),
+                          subtitle: const Text('El coach lo tendrá en cuenta al generar tu próximo plan'),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: _openFeedback,
+                        ),
+                        Divider(height: 1, color: AppColors.borderOf(context)),
+                        Container(
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              onPressed: _isSaving ? null : _save,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.brand,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: _isSaving
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Guardar',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
+                  ),
+    );
+  }
+
+  Widget _sectionHeader(String title, {String? subtitle}) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+                color: AppColors.brand,
+              ),
             ),
+            if (subtitle != null) ...[
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary(context),
+                ),
+              ),
+            ],
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildBasesTab(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-      children: [
-        _SectionCard(
-          title: 'Objetivo deportivo',
-          subtitle: 'Define el contexto estable para que la IA planifique como un entrenador serio.',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildGoalSelector(context),
-              const SizedBox(height: 16),
-              _buildFormLabel(context, 'Descripción del objetivo'),
-              TextField(
-                controller: _goalDescriptionCtrl,
-                maxLength: 200,
-                decoration: _inputDecoration(context, hint: 'Ej. 10K sub 50 o volver a correr con constancia'),
-                style: TextStyle(fontSize: 15, color: AppColors.textPrimary(context)),
-              ),
-              const SizedBox(height: 16),
-              _buildLevelSelector(context),
-              const SizedBox(height: 16),
-              _buildDatePicker(context),
-            ],
-          ),
-        ),
-        _SectionCard(
-          title: 'Disponibilidad semanal',
-          subtitle: 'La IA usará estos días como marco para repartir la carga.',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildWeekDaySelector(context),
-              const SizedBox(height: 16),
-              _buildSessionsCountSelector(context),
-              const SizedBox(height: 16),
-              _buildFormLabel(context, 'Día preferido de tirada larga'),
-              _buildLongRunDaySelector(context),
-            ],
-          ),
-        ),
-        _SectionCard(
-          title: 'Restricciones recurrentes',
-          subtitle: 'Cosas específicas que el entrenador IA debe recordar semana tras semana.',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildConstraintsManager(
-                context: context,
-                title: 'Fuerza / gimnasio',
-                placeholder: 'Ej. Miércoles hago pierna',
-                items: _strengthConstraints,
-                inputController: _strengthInputCtrl,
-                onAdd: () {
-                  final text = _strengthInputCtrl.text.trim();
-                  if (text.isNotEmpty) {
-                    if (_validateCoachText(text) != null) {
-                      ModernSnackBar.showError(context, _validateCoachText(text)!);
-                      return;
-                    }
-                    setState(() {
-                      _strengthConstraints.add(text);
-                      _strengthInputCtrl.clear();
-                    });
-                  }
-                },
-                onDelete: (idx) {
-                  setState(() {
-                    _strengthConstraints.removeAt(idx);
-                  });
-                },
-              ),
-              const SizedBox(height: 20),
-              _buildConstraintsManager(
-                context: context,
-                title: 'Otras restricciones',
-                placeholder: 'Ej. Domingo no corro temprano',
-                items: _otherConstraints,
-                inputController: _otherInputCtrl,
-                onAdd: () {
-                  final text = _otherInputCtrl.text.trim();
-                  if (text.isNotEmpty) {
-                    if (_validateCoachText(text) != null) {
-                      ModernSnackBar.showError(context, _validateCoachText(text)!);
-                      return;
-                    }
-                    setState(() {
-                      _otherConstraints.add(text);
-                      _otherInputCtrl.clear();
-                    });
-                  }
-                },
-                onDelete: (idx) {
-                  setState(() {
-                    _otherConstraints.removeAt(idx);
-                  });
-                },
-              ),
-              const SizedBox(height: 20),
-              _buildFormLabel(context, 'Notas adicionales del entrenador'),
-              TextField(
-                controller: _coachNotesCtrl,
-                minLines: 3,
-                maxLines: 5,
-                maxLength: 300,
-                decoration: _inputDecoration(
-                  context,
-                  hint: 'Ej. Tolero mejor volumen que intensidad, prefiero calidad en jueves...',
-                ),
-                style: TextStyle(fontSize: 14, color: AppColors.textPrimary(context)),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        FilledButton(
-          onPressed: _isSaving ? null : _save,
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.brand,
-            foregroundColor: Colors.white,
-            minimumSize: const Size.fromHeight(52),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            elevation: 0,
-          ),
-          child: _isSaving
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Text(
-                  'Guardar bases del plan',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, letterSpacing: -0.3),
-                ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAjustesTab(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-      children: [
-        _SectionCard(
-          title: 'Feedback semanal',
-          subtitle: 'Cuéntale al coach cómo fue la semana para que ajuste los próximos entrenamientos.',
-          child: SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              icon: const Icon(Icons.rate_review_outlined, size: 18),
-              label: const Text('Enviar feedback al coach'),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.brand),
-                foregroundColor: AppColors.brand,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              onPressed: () => Navigator.of(context).push(
-                AppRoute(
-                  page: AiCoachWeeklyFeedbackView(
-                    weekStart: _currentWeekStart(),
-                    generatePlanAfter: false,
-                    daysSinceLastTraining:
-                        _weeklyState?.daysSinceLastTraining ?? 0,
-                    consecutiveMissedWeeks:
-                        _weeklyState?.consecutiveMissedWeeks ?? 0,
-                    onCompleted: () => Navigator.of(context).pop(),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        _SectionCard(
-          title: 'Ajuste rápido de esta semana',
-          subtitle: 'Comunícale cambios temporales a tu Coach para la planificación de la siguiente semana. Ej. "tengo dolor en la rodilla", "esta semana viajo y solo tengo 2 días".',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildMessageLimitIndicator(context),
-              const SizedBox(height: 16),
-              _buildFormLabel(context, 'Mensaje para tu Coach'),
-              TextField(
-                controller: _adjustmentCtrl,
-                minLines: 3,
-                maxLines: 5,
-                decoration: _inputDecoration(
-                  context,
-                  hint: 'Cuéntale a la IA el contexto específico o imprevistos de tu semana...',
-                ),
-                style: TextStyle(fontSize: 14, color: AppColors.textPrimary(context)),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: _isSendingAdjustment || _chatRemainingThisWeek <= 0
-                      ? null
-                      : _sendAdjustment,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brand,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    elevation: 0,
-                  ),
-                  icon: _isSendingAdjustment
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.send_rounded, size: 18),
-                  label: Text(
-                    _isSendingAdjustment
-                        ? 'Ajustando plan...'
-                        : _chatRemainingThisWeek <= 0
-                            ? 'Sin consultas disponibles'
-                            : 'Enviar ajuste al Coach',
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: -0.3),
-                  ),
-                ),
-              ),
-              if (_lastAdjustmentResponse.isNotEmpty) ...[
-                const SizedBox(height: 20),
-                _buildCoachResponseBubble(context),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+      );
 
   Widget _buildFormLabel(BuildContext context, String label) {
     return Padding(
@@ -774,7 +664,7 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: AppColors.surface2Of(context),
+              color: AppColors.surfaceOf(context),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -806,7 +696,7 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
         Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: AppColors.surface2Of(context),
+            color: AppColors.surfaceOf(context),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: AppColors.borderOf(context), width: 0.5),
           ),
@@ -863,7 +753,7 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
   Widget _buildDatePicker(BuildContext context) {
     final title = AppColors.textPrimary(context);
     final subtitle = AppColors.textSecondary(context);
-    
+
     int? weeksLeft;
     int? daysLeft;
     if (_targetDate != null) {
@@ -882,7 +772,7 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: AppColors.surface2Of(context),
+              color: AppColors.surfaceOf(context),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -971,7 +861,7 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
                   shape: BoxShape.circle,
                   color: selected
                       ? AppColors.brand.withValues(alpha: 0.08)
-                      : AppColors.surface2Of(context),
+                      : AppColors.surfaceOf(context),
                   border: Border.all(
                     color: selected ? AppColors.brand : border,
                     width: selected ? 1.5 : 1,
@@ -1020,7 +910,7 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
                     borderRadius: BorderRadius.circular(10),
                     color: selected
                         ? AppColors.brand.withValues(alpha: 0.08)
-                        : AppColors.surface2Of(context),
+                        : AppColors.surfaceOf(context),
                     border: Border.all(
                       color: selected ? AppColors.brand : border,
                       width: selected ? 1.5 : 1,
@@ -1049,14 +939,14 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
     final labelText = _preferredLongRunWeekday == null
         ? 'Automático'
         : _weekdayLabel(_preferredLongRunWeekday!);
-    
+
     return InkWell(
       onTap: () => _showLongRunDayBottomSheet(context),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.surface2Of(context),
+          color: AppColors.surfaceOf(context),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -1185,110 +1075,6 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
     );
   }
 
-  Widget _buildMessageLimitIndicator(BuildContext context) {
-    final remaining = _chatRemainingThisWeek;
-    return Row(
-      children: [
-        Text(
-          'Consultas de la semana:',
-          style: TextStyle(
-            color: AppColors.textSecondary(context),
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            letterSpacing: -0.3,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Row(
-          children: List.generate(3, (index) {
-            final active = index < remaining;
-            return Container(
-              margin: const EdgeInsets.only(right: 6),
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: active
-                    ? AppColors.brand
-                    : AppColors.borderOf(context),
-              ),
-            );
-          }),
-        ),
-        const Spacer(),
-        Text(
-          '$remaining/3 restantes',
-          style: TextStyle(
-            color: remaining > 0 ? AppColors.brand : AppColors.textSecondary(context),
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.3,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCoachResponseBubble(BuildContext context) {
-    if (_lastAdjustmentResponse.isEmpty) return const SizedBox.shrink();
-    
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.brandSurface : const Color(0xFFF9F5FF),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? AppColors.brandBorder : const Color(0xFFEADBFF),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  color: AppColors.brand.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.psychology_rounded,
-                  color: AppColors.brand,
-                  size: 14,
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'Respuesta del Coach IA',
-                style: TextStyle(
-                  color: AppColors.brand,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                  letterSpacing: -0.3,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            _lastAdjustmentResponse,
-            style: TextStyle(
-              color: AppColors.textPrimary(context),
-              height: 1.4,
-              fontSize: 13.5,
-              letterSpacing: -0.3,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   InputDecoration _inputDecoration(BuildContext context, {String? hint}) {
     return InputDecoration(
       hintText: hint,
@@ -1298,7 +1084,7 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
         letterSpacing: -0.3,
       ),
       filled: true,
-      fillColor: AppColors.surface2Of(context),
+      fillColor: AppColors.surfaceOf(context),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
@@ -1373,59 +1159,5 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
       default:
         return 'Domingo';
     }
-  }
-}
-
-class _SectionCard extends StatelessWidget {
-  const _SectionCard({
-    required this.title,
-    required this.subtitle,
-    required this.child,
-  });
-
-  final String title;
-  final String subtitle;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceOf(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.borderOf(context),
-          width: 0.5,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary(context),
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 12,
-              height: 1.35,
-              color: AppColors.textSecondary(context),
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 16),
-          child,
-        ],
-      ),
-    );
   }
 }

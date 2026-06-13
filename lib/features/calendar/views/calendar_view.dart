@@ -31,11 +31,8 @@ class _CalendarViewState extends State<CalendarView>
   CalendarViewModel? _vm;
   bool _vmReady = false;
   int _focusedYear = DateTime.now().year;
-  bool _isUpdatingSuggestion = false;
   bool _hasAiCoachProfile = false;
   bool _initialized = false;
-  late Future<List<AthleteSession>> _nextWeekSuggestionsFuture;
-
   // Panel "Ajustar plan con el coach"
   final TextEditingController _adjustController = TextEditingController();
   final SpeechToText _adjustSpeech = SpeechToText();
@@ -91,7 +88,6 @@ class _CalendarViewState extends State<CalendarView>
       _vmReady = true;
     });
     _vm!.loadAll();
-    _nextWeekSuggestionsFuture = _loadVisibleWeekSuggestions(uid);
     final profile = await AiCoachRepository().getProfile(uid: uid);
     if (mounted) setState(() => _hasAiCoachProfile = profile != null);
     _loadAdjustUsage(uid);
@@ -125,9 +121,6 @@ class _CalendarViewState extends State<CalendarView>
       if (uid != null) {
         _loadAdjustUsage(uid);
         _vm?.loadAll();
-        setState(() {
-          _nextWeekSuggestionsFuture = _loadVisibleWeekSuggestions(uid);
-        });
       }
     }
   }
@@ -139,9 +132,6 @@ class _CalendarViewState extends State<CalendarView>
       if (uid != null) {
         _loadAdjustUsage(uid);
         _vm?.loadAll();
-        setState(() {
-          _nextWeekSuggestionsFuture = _loadVisibleWeekSuggestions(uid);
-        });
       }
     }
   }
@@ -219,7 +209,6 @@ class _CalendarViewState extends State<CalendarView>
         });
         final focused = _vm?.focusedMonth.value ?? DateTime.now();
         _vm?.onMonthChanged(focused);
-        _nextWeekSuggestionsFuture = _loadVisibleWeekSuggestions(uid);
         ModernSnackBar.showSuccess(context, 'Plan ajustado correctamente');
         _loadAdjustUsage(uid);
       } else {
@@ -254,7 +243,6 @@ class _CalendarViewState extends State<CalendarView>
               children: [
                 _buildViewSelector(isAthlete),
                 if (isAthlete && !_hasAiCoachProfile) _buildAiCoachCta(),
-                if (isAthlete) _buildAiSuggestionsPanel(),
                 if (isAthlete && _hasAiCoachProfile) _buildAdjustPanel(),
                 Expanded(
                   child: ValueListenableBuilder<CalendarViewType>(
@@ -651,273 +639,6 @@ class _CalendarViewState extends State<CalendarView>
         ),
       ),
     );
-  }
-
-  Widget _buildAiSuggestionsPanel() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.l, 0, AppSpacing.l, AppSpacing.m),
-      child: FutureBuilder<List<AthleteSession>>(
-        future: _nextWeekSuggestionsFuture,
-        builder: (context, snap) {
-          if (snap.connectionState == ConnectionState.waiting) {
-            return const SizedBox(
-              height: 36,
-              child: Center(
-                child: SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.brand),
-                ),
-              ),
-            );
-          }
-          final suggestions = snap.data ?? const <AthleteSession>[];
-          if (suggestions.isEmpty) return const SizedBox.shrink();
-          return Container(
-            width: double.infinity,
-            margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.brand.withValues(alpha: 0.10),
-                  AppColors.brand.withValues(alpha: 0.03),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: AppColors.brand.withValues(alpha: 0.25),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 8, 8),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.auto_awesome_rounded,
-                          color: AppColors.brand, size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Tu coach propone ${suggestions.length} '
-                          '${suggestions.length == 1 ? "sesión" : "sesiones"}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary(context),
-                          ),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: _isUpdatingSuggestion
-                            ? null
-                            : () => _acceptAllSuggestions(suggestions),
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.brand,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                        ),
-                        child: const Text(
-                          'Aceptar todo',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Divider(
-                  height: 1,
-                  color: AppColors.brand.withValues(alpha: 0.15),
-                  indent: 16,
-                  endIndent: 16,
-                ),
-                const SizedBox(height: 4),
-                ...suggestions.map((s) => _buildSuggestionRow(s)),
-                const SizedBox(height: 8),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildSuggestionRow(AthleteSession session) {
-    final date = DateTime.tryParse(session.date);
-    final dayTag = date != null ? _weekdayEs(date.weekday).toUpperCase() : '?';
-    final title = (session.title ?? '').trim().isNotEmpty
-        ? session.title!.trim()
-        : (session.category != null
-            ? SessionCategoryX.fromValue(session.category!).label
-            : 'Sesión');
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.brand.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              dayTag.substring(0, 3),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: AppColors.brand,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary(context),
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          GestureDetector(
-            onTap: _isUpdatingSuggestion
-                ? null
-                : () => _updateSuggestionStatus(
-                      sessionId: session.id,
-                      sessionDate: session.date,
-                      status: AthleteSessionSuggestionStatus.rejected,
-                      note: 'rejected_from_calendar',
-                    ),
-            child: Container(
-              width: 32,
-              height: 32,
-              margin: const EdgeInsets.only(left: 6),
-              decoration: BoxDecoration(
-                color: AppColors.rpeMax.withValues(alpha: 0.10),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.close_rounded, size: 16, color: AppColors.rpeMax),
-            ),
-          ),
-          GestureDetector(
-            onTap: _isUpdatingSuggestion
-                ? null
-                : () => _updateSuggestionStatus(
-                      sessionId: session.id,
-                      sessionDate: session.date,
-                      status: AthleteSessionSuggestionStatus.accepted,
-                      note: 'accepted_from_calendar',
-                    ),
-            child: Container(
-              width: 32,
-              height: 32,
-              margin: const EdgeInsets.only(left: 6),
-              decoration: BoxDecoration(
-                color: AppColors.rpeLow.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.check_rounded, size: 16, color: AppColors.rpeLow),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _acceptAllSuggestions(List<AthleteSession> sessions) async {
-    for (final session in sessions) {
-      await _updateSuggestionStatus(
-        sessionId: session.id,
-        sessionDate: session.date,
-        status: AthleteSessionSuggestionStatus.accepted,
-        note: 'accepted_all_from_calendar',
-        showMessage: false,
-      );
-    }
-    if (!mounted) return;
-    ModernSnackBar.showSuccess(context, 'Sugerencias aceptadas');
-  }
-
-  Future<void> _updateSuggestionStatus({
-    required String sessionId,
-    required String sessionDate,
-    required AthleteSessionSuggestionStatus status,
-    required String note,
-    bool showMessage = true,
-  }) async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-    setState(() => _isUpdatingSuggestion = true);
-    try {
-      await AthleteSessionRepository().updateSuggestionStatus(
-        uid: uid,
-        sessionId: sessionId,
-        status: status,
-        responseNote: note,
-      );
-      final acceptedDate = DateTime.tryParse(sessionDate);
-      final focused = acceptedDate != null
-          ? DateTime(acceptedDate.year, acceptedDate.month, 1)
-          : (_vm?.focusedMonth.value ?? DateTime.now());
-      _vm?.onMonthChanged(focused);
-      if (acceptedDate != null) {
-        _vm?.onDaySelected(acceptedDate, focused);
-      }
-      _nextWeekSuggestionsFuture = _loadVisibleWeekSuggestions(uid);
-      if (showMessage && mounted) {
-        ModernSnackBar.showSuccess(
-          context,
-          status == AthleteSessionSuggestionStatus.accepted
-              ? 'Sugerencia aceptada'
-              : 'Sugerencia rechazada',
-        );
-      }
-      debugPrint('[CalendarView][AI] Suggestion $sessionId updated to ${status.toValue}');
-    } catch (e) {
-      debugPrint('[CalendarView][AI] Failed to update suggestion $sessionId: $e');
-      if (mounted) {
-        ModernSnackBar.showError(context, 'No se pudo actualizar la sugerencia');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isUpdatingSuggestion = false);
-      }
-    }
-  }
-
-  Future<List<AthleteSession>> _loadVisibleWeekSuggestions(String uid) async {
-    final selected = _vm?.selectedDay.value ?? DateTime.now();
-    final start = _mondayOf(selected);
-    final end = start.add(const Duration(days: 6));
-    final sessions = await AthleteSessionRepository().getSessionsInRange(
-      uid: uid,
-      startDate:
-          '${start.year}-${start.month.toString().padLeft(2, '0')}-${start.day.toString().padLeft(2, '0')}',
-      endDate:
-          '${end.year}-${end.month.toString().padLeft(2, '0')}-${end.day.toString().padLeft(2, '0')}',
-    );
-    final pending = sessions.where((session) {
-      final suggestion = session.suggestion;
-      return suggestion?.origin == AthleteSessionOrigin.ai &&
-          suggestion?.status == AthleteSessionSuggestionStatus.suggested &&
-          session.status == AthleteSessionStatus.planned;
-    }).toList()
-      ..sort((a, b) => a.date.compareTo(b.date));
-    debugPrint(
-      '[CalendarView][AI] Loaded visible-week pending suggestions: ${pending.length}. '
-      'weekStart=${start.toIso8601String()}',
-    );
-    return pending;
   }
 
   DateTime _mondayOf(DateTime value) {

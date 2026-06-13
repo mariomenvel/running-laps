@@ -438,6 +438,28 @@ class AiCoachSessionGenerator {
           targetKm: targetKm,
           notes: target.notes,
         );
+      case 'series_medias':
+        // Series medias: 800-1000m en Z4 (VO2max)
+        // Entre velocidad pura (cortas) y umbral (largas)
+        final repDistanceMed = complexityTier >= 2 ? 1000 : 800;
+        final repsMed =
+            math.max(4, (targetKm * 1000 / repDistanceMed).round());
+        final restSecondsMed = complexityTier >= 2 ? 80 : 90;
+        final paceMinSecMed = complexityTier >= 2 ? 10 : 25;
+        final paceMaxSecMed = complexityTier >= 2 ? 45 : 55;
+        return _buildRepeatedSeriesBlocks(
+          sessionIndex: sessionIndex,
+          reps: repsMed,
+          distanceM: repDistanceMed,
+          restSeconds: restSecondsMed,
+          rpe: rpe,
+          zone: zone,
+          paceMinMin: 4,
+          paceMinSec: paceMinSecMed,
+          paceMaxMin: 4,
+          paceMaxSec: paceMaxSecMed,
+          notes: target.notes ?? 'Series medias Z4 · VO2max',
+        );
       default:
         return [
           SessionBlock(
