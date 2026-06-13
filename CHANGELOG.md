@@ -6,7 +6,16 @@
 - Causa: Firebase SDK (cloud_firestore, firebase_auth, firebase_core,
   firebase_app_check, firebase_storage) requiere mínimo iOS 15.0 vía SPM
 - Live Activity Extension no tocada (ya estaba en 16.1)
-- Pendiente: verificar build en Codemagic
+- → RESUELTO: build de Xcode completa sin errores
+  (antes fallaba por requisito Firebase SDK ≥ iOS 15.0)
+
+### Pendiente — Code signing iOS
+- Build de Xcode OK, pero falla la firma final:
+  "requires a selected Development Team with a Provisioning Profile"
+- Requiere configurar Code Signing en Codemagic
+  (certificado .p12 + provisioning profile, o App Store Connect API key)
+- No requiere Xcode/Mac — se configura desde el dashboard web de Codemagic
+- Bloqueado: usuario sin cuenta Apple Developer activa todavía
 
 ## [Seguridad — Pendiente antes de producción] — 2026-06-12
 
