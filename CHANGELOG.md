@@ -1,5 +1,61 @@
 # CHANGELOG — Running Laps
 
+## [Seguridad — Pendiente antes de producción] — 2026-06-12
+
+### Requiere Firebase Blaze + Cloud Functions
+
+#### 🔴 CRÍTICO
+1. API key OpenRouter → Cloud Function
+   - Ahora: appConfig/aiCoachProvider legible por cualquier
+     usuario autenticado
+   - Fix: Cloud Function proxy que recibe el prompt,
+     añade la key server-side, llama a OpenRouter
+   - Nunca debe llegar ninguna key al cliente
+
+2. trainings read → Cloud Function para rankings de grupo
+   - Ahora: allow read: if isOwner(uid) (correcto pero
+     rompe rankings de grupo)
+   - Fix: Cloud Function con Admin SDK calcula el ranking
+     y devuelve solo los datos necesarios
+   - Permite restringir trainings a isOwner(uid) completamente
+
+#### 🟡 MEDIO
+3. result_notifications create → Cloud Function
+   - Ahora: allow create: if isSignedIn() (cualquier
+     usuario autenticado puede crear notificaciones a otro)
+   - Fix: solo Admin SDK puede crear notificaciones
+
+4. Email verificado en Firestore Rules
+   - Ahora: isSignedIn() no comprueba emailVerified
+     (no disponible en Firestore Rules sin custom claims)
+   - Fix: Cloud Function setCustomUserClaims({ emailVerified: true })
+     tras verificación → Rules comprueban
+     request.auth.token.email_verified == true
+
+5. invite_codes write
+   - Ahora: cualquier usuario autenticado puede crear
+   - Fix: isGroupAdmin(data.groupId) cuando Firestore
+     soporte acceder a request.resource.data en top-level
+
+#### 🟢 BAJO
+6. App Check iOS
+   - Requiere Apple Developer membership + DeviceCheck setup
+   - Activar cuando se tenga acceso a Xcode/Mac
+
+7. Wear OS custom token
+   - Reemplazar bypass de auth por custom JWT
+   - Cloud Function generateSessionToken(userId, deviceCode)
+
+### No requiere Cloud Functions (hacer ahora)
+- ✅ Cerrado: trainings/tags/templates/settings
+  ya no tienen request.auth == null
+- ✅ .gitignore actualizado con secrets
+- ✅ Anti-injection en prompts del AI Coach
+- ✅ Validación de inputs en campos del coach
+- ✅ App Check activo en Android y Web
+
+---
+
 ## [Deuda técnica — Seguridad] API key OpenRouter en cliente — 2026-06-06
 
 **Gravedad:** 🔴 Crítico antes de producción pública

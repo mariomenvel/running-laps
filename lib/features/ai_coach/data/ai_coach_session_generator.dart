@@ -438,6 +438,13 @@ class AiCoachSessionGenerator {
           targetKm: targetKm,
           notes: target.notes,
         );
+      case 'rodaje_largo':
+        return _buildProgressiveLongRunBlocks(
+          sessionIndex: sessionIndex,
+          totalMinutes: math.max(50, targetMinutes),
+          complexityTier: complexityTier,
+          notes: target.notes,
+        );
       case 'series_medias':
         // Series medias: 800-1000m en Z4 (VO2max)
         // Entre velocidad pura (cortas) y umbral (largas)

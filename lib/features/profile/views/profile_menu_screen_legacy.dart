@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
 
 // Auth
 import 'package:firebase_auth/firebase_auth.dart';
@@ -459,13 +460,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                           icon: Icons.auto_awesome_rounded,
                           color: const Color(0xFFB084F5),
                           subtitle: "Plan semanal con sugerencias",
-                          onTap: () {
-                            final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-                            Navigator.push(
-                              context,
-                              AppRoute(page: AiCoachSettingsView(uid: uid)),
-                            );
-                          },
+                          onTap: () => MainShell.shellKey.currentState?.navigateTo(16),
                         ),
                       ],
                     )),
