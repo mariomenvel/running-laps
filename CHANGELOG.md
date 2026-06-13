@@ -17,6 +17,16 @@
 - No requiere Xcode/Mac — se configura desde el dashboard web de Codemagic
 - Bloqueado: usuario sin cuenta Apple Developer activa todavía
 
+### Pendiente — iOS distribución a dispositivos reales
+- Build de Xcode funciona correctamente (deployment target 16.0 resuelto)
+- Code signing requiere Apple Developer Program ($99/año) — sin esto,
+  imposible distribuir a iPhones de testers (TestFlight) ni instalar
+  en dispositivos físicos ajenos
+- Mientras tanto: build para simulador posible sin coste
+  (`flutter build ios --simulator`)
+- Testing con amigos: centrado en Android hasta decidir sobre
+  la cuenta Apple Developer
+
 ## [Seguridad — Pendiente antes de producción] — 2026-06-12
 
 ### Requiere Firebase Blaze + Cloud Functions
