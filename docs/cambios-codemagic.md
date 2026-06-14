@@ -35,6 +35,15 @@ El workflow actual evita ese fallo compilando para `iOS Simulator` con `xcodebui
 El artefacto final publicado por Codemagic es un `.zip` que contiene `Runner.app`.
 Si se quiere una `.ipa` distribuible desde Codemagic, hay que crear un workflow firmado adicional para dispositivo real.
 
+## Ajuste adicional para CI iOS
+
+Se ha ampliado `SUPPORTED_PLATFORMS` en las configuraciones `Release` y `Profile` del proyecto iOS para admitir tambien `iphonesimulator`.
+
+Motivo:
+
+- el proyecto estaba limitado a `iphoneos`
+- eso provocaba fallo `xcodebuild` con codigo `65` al compilar el workflow unsigned de simulador en Codemagic
+
 ## Como usarlo
 
 1. Subir este archivo a la rama deseada.
