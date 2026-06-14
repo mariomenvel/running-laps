@@ -3,6 +3,7 @@ import 'package:running_laps/features/ai_coach/data/ai_coach_weekly_planner_serv
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
+import 'package:running_laps/core/services/notification_service.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'package:flutter/foundation.dart';
 
@@ -91,6 +92,12 @@ class AiCoachAutomationService {
       debugPrint(
         '[AiCoachAutomation] forceCurrentWeek: ${result.sessions.length} sesiones generadas',
       );
+      if (result.sessions.isNotEmpty) {
+        NotificationService()
+            .syncTrainingReminders(uid)
+            .catchError((Object e) =>
+                debugPrint('[Notifications] sync (forceCurrentWeek): $e'));
+      }
       return result.sessions.isNotEmpty;
     } catch (e) {
       debugPrint('[AiCoachAutomation] forceCurrentWeek error: $e');
@@ -125,6 +132,12 @@ class AiCoachAutomationService {
       debugPrint(
         '[AiCoachAutomation] force: ${result.sessions.length} sesiones generadas',
       );
+      if (result.sessions.isNotEmpty) {
+        NotificationService()
+            .syncTrainingReminders(uid)
+            .catchError((Object e) =>
+                debugPrint('[Notifications] sync (forceNextWeek): $e'));
+      }
       return result.sessions.isNotEmpty;
     } catch (e) {
       debugPrint('[AiCoachAutomation] force error: $e');

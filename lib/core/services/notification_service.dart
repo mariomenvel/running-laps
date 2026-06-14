@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
+import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
+import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 
 class NotificationService {
   static final NotificationService _instance =
@@ -13,9 +15,11 @@ class NotificationService {
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
-  static const int _sessionReminderId = 1;
-  static const int _personalRecordId  = 2;
-  static const int _weeklySummaryId   = 3;
+  static const int _sessionReminderId       = 1;
+  static const int _personalRecordId        = 2;
+  static const int _weeklySummaryId         = 3;
+  static const int _weeklyFeedbackReminderId = 4;
+  static const int _trainingReminderBaseId  = 100; // 101-107 = lun-dom
 
   static const _sessionChannel = AndroidNotificationChannel(
     'session_reminder',
@@ -193,6 +197,131 @@ class NotificationService {
     );
     debugPrint(
         '[NotificationService] weekly summary scheduled for $nextSunday');
+  }
+
+  Future<void> scheduleWeeklyFeedbackReminder() async {
+    await init();
+    final now = DateTime.now();
+    var nextSaturday = now;
+    while (nextSaturday.weekday != DateTime.saturday) {
+      nextSaturday = nextSaturday.add(const Duration(days: 1));
+    }
+    nextSaturday = DateTime(
+        nextSaturday.year, nextSaturday.month, nextSaturday.day, 9, 0);
+    if (nextSaturday.isBefore(now)) {
+      nextSaturday = nextSaturday.add(const Duration(days: 7));
+    }
+
+    final tzTime = tz.TZDateTime.from(nextSaturday, tz.local);
+
+    await _plugin.zonedSchedule(
+      _weeklyFeedbackReminderId,
+      '📋 ¿Cómo fue tu semana?',
+      'Cuéntale a tu coach cómo te sientes para ajustar tu próximo plan',
+      tzTime,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          _summaryChannel.id,
+          _summaryChannel.name,
+          channelDescription: _summaryChannel.description,
+          importance: Importance.defaultImportance,
+          icon: '@mipmap/ic_launcher',
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentSound: true,
+        ),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+    );
+    debugPrint(
+        '[NotificationService] feedback reminder scheduled for $nextSaturday');
+  }
+
+  Future<void> cancelTrainingReminders() async {
+    for (var i = 1; i <= 7; i++) {
+      await _plugin.cancel(_trainingReminderBaseId + i);
+    }
+  }
+
+  Future<void> syncTrainingReminders(String uid) async {
+    await init();
+    await cancelTrainingReminders();
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final daysUntilSunday = 7 - today.weekday;
+    final endOfWeek = today.add(Duration(days: daysUntilSunday));
+
+    String fmt(DateTime d) =>
+        '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+    final sessions = await AthleteSessionRepository().getSessionsInRange(
+      uid: uid,
+      startDate: fmt(today),
+      endDate: fmt(endOfWeek),
+    );
+
+    for (final session in sessions) {
+      if (session.status != AthleteSessionStatus.planned) continue;
+
+      final date = DateTime.tryParse(session.date);
+      if (date == null) continue;
+
+      final reminderTime =
+          DateTime(date.year, date.month, date.day, 8, 0);
+      if (reminderTime.isBefore(now)) continue;
+
+      final tzTime = tz.TZDateTime.from(reminderTime, tz.local);
+      final categoryLabel = _friendlyCategoryName(session.category ?? '');
+
+      await _plugin.zonedSchedule(
+        _trainingReminderBaseId + date.weekday,
+        '🏃 Hoy toca: $categoryLabel',
+        '¡A por ello! Tu coach lo tiene preparado.',
+        tzTime,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            _sessionChannel.id,
+            _sessionChannel.name,
+            channelDescription: _sessionChannel.description,
+            importance: Importance.defaultImportance,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentSound: true,
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+      debugPrint(
+          '[NotificationService] training reminder for ${session.date} ($categoryLabel)');
+    }
+  }
+
+  String _friendlyCategoryName(String category) {
+    const labels = {
+      'series_cortas':   'Series cortas',
+      'series_medias':   'Series medias',
+      'series_largas':   'Series largas',
+      'series_cuestas':  'Cuestas',
+      'series_mixtas':   'Series mixtas',
+      'fartlek':         'Fartlek',
+      'tempo':           'Tempo',
+      'rodaje_base':     'Rodaje',
+      'rodaje_largo':    'Rodaje largo',
+      'regenerativo':    'Regenerativo',
+      'gimnasio_fuerza': 'Gimnasio',
+      'test':            'Test',
+      'competicion':     'Competición',
+    };
+    return labels[category] ?? 'Entrenamiento';
   }
 
   Future<void> cancelAll() async {

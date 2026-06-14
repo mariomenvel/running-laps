@@ -1,5 +1,16 @@
 # CHANGELOG — Running Laps
 
+## [Notificaciones] — 2026-06-14 — Recordatorios coach
+- `scheduleWeeklyFeedbackReminder`: sábado 09:00, recurrente (OS-managed via `matchDateTimeComponents`) — "¿Cómo fue tu semana?"
+- `syncTrainingReminders(uid)`: notificación 08:00 los días con sesión `planned` esta semana (IDs 101-107, se resincronizan en cada llamada con cancelación previa)
+- `cancelTrainingReminders()`: cancela IDs 101-107
+- `_friendlyCategoryName()`: helper interno que mapea categorías a etiquetas en español
+- Ambas gated por `isAthleteMode` (leído del snapshot de Firestore en `AuthWrapper`)
+- `AuthWrapper`: llama feedback reminder + sync 1x por sesión de app (flag `_notificationsSynced`)
+- `AiCoachAutomationService`: llama `syncTrainingReminders` tras generación exitosa en `forceGenerateCurrentWeekPlan` y `forceGenerateNextWeekPlan`
+- Nota: recordatorios diarios requieren que la app se abra al menos 1x/semana; el recordatorio semanal (recurrente, OS-managed) actúa como gancho para mantener el ciclo activo
+- Pendiente: probar en dispositivo real, especialmente Android con optimización de batería agresiva
+
 ## [AI Coach] — 2026-06-14 — Migrado a Cloud Function callOpenRouter
 - `OpenRouterClient` ahora llama a la Cloud Function `callOpenRouter` (cloud_functions) en vez de HTTP directo
 - `apiKey` eliminado de los 6 puntos de uso: `decision_service`, `chat_service`, `prompt_session_generator`, `onboarding_view`, `onboarding_launcher`, `workout_editor_screen`

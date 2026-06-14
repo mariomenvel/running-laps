@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/services/notification_service.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/features/auth/views/auth_page.dart';
 import 'package:running_laps/features/auth/views/email_verification_pending_view.dart';
@@ -14,6 +15,8 @@ class AuthWrapper extends StatefulWidget {
 }
 
 class _AuthWrapperState extends State<AuthWrapper> {
+  bool _notificationsSynced = false;
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
@@ -52,6 +55,22 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
             if (!onboardingCompleted) {
               return const WelcomeView();
+            }
+
+            if (!_notificationsSynced) {
+              _notificationsSynced = true;
+              final isAthlete =
+                  userSnap.data?.data()?['isAthleteMode'] as bool? ?? false;
+              if (isAthlete) {
+                NotificationService()
+                    .scheduleWeeklyFeedbackReminder()
+                    .catchError((Object e) =>
+                        debugPrint('[Notifications] feedback reminder: $e'));
+                NotificationService()
+                    .syncTrainingReminders(user.uid)
+                    .catchError((Object e) =>
+                        debugPrint('[Notifications] training reminders: $e'));
+              }
             }
 
             return MainShell(key: MainShell.shellKey);
