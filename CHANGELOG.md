@@ -1,5 +1,12 @@
 # CHANGELOG — Running Laps
 
+## [Cloud Functions] — 2026-06-14
+- Setup inicial: `functions/` (TypeScript, Node 20)
+- Función de prueba `ping` (callable, requiere auth)
+- `firebase.json` actualizado con sección `functions` + predeploy build
+- Pendiente: `firebase login` + `firebase deploy --only functions`
+  (requiere autenticación interactiva del usuario)
+
 ## [iOS Build Fix] — 2026-06-13
 - `IPHONEOS_DEPLOYMENT_TARGET` subido de 13.0 a 16.0 en Runner (Profile)
   y configuración base del proyecto (Debug/Release) en `project.pbxproj`

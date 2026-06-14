@@ -1,0 +1,15 @@
+import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { initializeApp } from "firebase-admin/app";
+
+initializeApp();
+
+export const ping = onCall((request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Debes iniciar sesión.");
+  }
+  return {
+    message: "pong",
+    uid: request.auth.uid,
+    timestamp: new Date().toISOString(),
+  };
+});
