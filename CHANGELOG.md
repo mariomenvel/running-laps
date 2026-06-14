@@ -7,6 +7,15 @@
 - Pendiente: `firebase login` + `firebase deploy --only functions`
   (requiere autenticación interactiva del usuario)
 
+### callOpenRouter
+- Función callable `callOpenRouter`: recibe
+  `{ model, messages, jsonSchema, temperature?, schemaName? }`
+- API key de OpenRouter en Secret Manager
+  (`OPENROUTER_API_KEY`), nunca en el cliente
+- Auth requerida, validación de inputs, límite 200k chars por payload
+- Pendiente: `firebase functions:secrets:set OPENROUTER_API_KEY`
+  + `firebase deploy --only functions`
+
 ## [iOS Build Fix] — 2026-06-13
 - `IPHONEOS_DEPLOYMENT_TARGET` subido de 13.0 a 16.0 en Runner (Profile)
   y configuración base del proyecto (Debug/Release) en `project.pbxproj`

@@ -3,6 +3,8 @@ import { initializeApp } from "firebase-admin/app";
 
 initializeApp();
 
+export { callOpenRouter } from "./openrouter";
+
 export const ping = onCall((request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Debes iniciar sesión.");
