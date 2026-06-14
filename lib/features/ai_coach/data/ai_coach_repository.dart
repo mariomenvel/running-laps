@@ -145,22 +145,23 @@ class AiCoachRepository {
     await _settingsDoc(resolvedUid, 'aiCoachLastDecision').set(decision.toMap());
   }
 
-  Future<AiCoachProviderConfig?> getProviderConfig({String? uid}) async {
+  Future<AiCoachProviderConfig> getProviderConfig({String? uid}) async {
     try {
       final resolvedUid = uid ?? _auth.currentUser?.uid;
       if (resolvedUid != null) {
         final userDoc = await _settingsDoc(resolvedUid, 'aiCoachProvider').get();
         if (userDoc.exists && userDoc.data() != null) {
-          final config = AiCoachProviderConfig.fromMap(userDoc.data()!);
-          if (config.apiKey?.trim().isNotEmpty == true) return config;
+          return AiCoachProviderConfig.fromMap(userDoc.data()!);
         }
       }
       final globalDoc = await _globalProviderDoc().get();
-      if (!globalDoc.exists || globalDoc.data() == null) return null;
-      return AiCoachProviderConfig.fromMap(globalDoc.data()!);
+      if (globalDoc.exists && globalDoc.data() != null) {
+        return AiCoachProviderConfig.fromMap(globalDoc.data()!);
+      }
+      return AiCoachProviderConfig.fromMap(const {});
     } catch (e) {
       debugPrint('[AiCoachRepository] getProviderConfig error: $e');
-      return null;
+      return AiCoachProviderConfig.fromMap(const {});
     }
   }
 

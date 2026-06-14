@@ -278,21 +278,12 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
     _aiGenerating.value = true;
 
     try {
-      final providerConfig = await AiCoachRepository().getProviderConfig(uid: uid);
-      if (!mounted) return;
-      final apiKey = providerConfig?.apiKey;
-      if (apiKey == null) {
-        ModernSnackBar.showError(context, 'API key no configurada');
-        return;
-      }
-
       final profile = await AiCoachRepository().getProfile(uid: uid);
       if (!mounted) return;
 
       const generator = AiCoachPromptSessionGenerator();
       final session = await generator.generate(
         prompt: text,
-        apiKey: apiKey,
         profile: profile,
       );
 

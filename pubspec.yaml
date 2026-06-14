@@ -75,6 +75,7 @@ dependencies:
   flutter_local_notifications: ^18.0.0
   timezone: ^0.9.4
   http: ^1.2.2
+  cloud_functions: ^6.3.2
 
 dev_dependencies:
   flutter_test:

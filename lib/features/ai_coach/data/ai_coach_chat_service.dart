@@ -54,10 +54,7 @@ class AiCoachChatService {
     }
 
     final provider = await _repository.getProviderConfig(uid: uid);
-    if (provider == null ||
-        !provider.chatAdjustmentsEnabled ||
-        provider.provider != 'openrouter' ||
-        (provider.apiKey == null || provider.apiKey!.trim().isEmpty)) {
+    if (!provider.chatAdjustmentsEnabled || provider.provider != 'openrouter') {
       return AiCoachAdjustmentPreview.limitReached(
         'Ajustes IA no configurados.',
       );
@@ -77,7 +74,6 @@ class AiCoachChatService {
         uid: uid,
         athleteMessage: athleteMessage,
         targetWeekStart: targetWeekStart,
-        provider: provider,
       );
 
       final intent = llmResult.intent;
@@ -345,10 +341,7 @@ class AiCoachChatService {
     }
 
     final provider = await _repository.getProviderConfig(uid: uid);
-    if (provider == null ||
-        !provider.chatAdjustmentsEnabled ||
-        provider.provider != 'openrouter' ||
-        (provider.apiKey == null || provider.apiKey!.trim().isEmpty)) {
+    if (!provider.chatAdjustmentsEnabled || provider.provider != 'openrouter') {
       throw Exception('Ajustes IA no configurados');
     }
 
@@ -358,7 +351,6 @@ class AiCoachChatService {
         uid: uid,
         athleteMessage: athleteMessage,
         targetWeekStart: nextWeekMonday,
-        provider: provider,
       );
 
       await _repository.incrementUsageField(
@@ -403,7 +395,6 @@ class AiCoachChatService {
     required String uid,
     required String athleteMessage,
     required DateTime targetWeekStart,
-    required AiCoachProviderConfig provider,
   }) async {
     final context = await _contextBuilder.buildWeeklyContext(uid);
     final currentDecision = await _repository.getLastDecision(uid: uid);
@@ -416,10 +407,10 @@ class AiCoachChatService {
     );
 
     final completion = await _openRouterClient.createJsonCompletion(
-      apiKey: provider.apiKey!.trim(),
       model: AiCoachModels.chatClassify,
       messages: prompt.messages,
       jsonSchema: prompt.jsonSchema,
+      schemaName: 'chat_adjustment',
     );
 
     final rawResponse = completion.content;

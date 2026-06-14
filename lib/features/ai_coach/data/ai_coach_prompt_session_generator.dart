@@ -15,18 +15,17 @@ class AiCoachPromptSessionGenerator {
 
   Future<WorkoutSession> generate({
     required String prompt,
-    required String apiKey,
     AiCoachProfile? profile,
   }) async {
     final client = OpenRouterClient();
     final messages = _buildMessages(prompt: prompt, profile: profile);
     debugPrint('[Generator] llamando LLM...');
     final result = await client.createJsonCompletion(
-      apiKey: apiKey,
       model: AiCoachModels.promptGenerator,
       messages: messages,
       jsonSchema: _sessionSchema,
       temperature: 0.4,
+      schemaName: 'prompt_session',
     ).timeout(
       const Duration(seconds: 30),
       onTimeout: () {

@@ -26,11 +26,8 @@ class AiCoachDecisionService {
 
   Future<AiCoachWeeklyDecision> generateWeeklyDecision(String uid) async {
     final provider = await _repository.getProviderConfig(uid: uid);
-    if (provider == null ||
-        !provider.weeklyPlanningEnabled ||
-        provider.provider != 'openrouter' ||
-        (provider.apiKey == null || provider.apiKey!.trim().isEmpty)) {
-      throw Exception('Proveedor OpenRouter no configurado');
+    if (!provider.weeklyPlanningEnabled || provider.provider != 'openrouter') {
+      throw Exception('Generación de planes desactivada temporalmente');
     }
 
     try {
@@ -39,10 +36,10 @@ class AiCoachDecisionService {
       debugPrint('[Decision] system prompt: ${prompt.messages.first.content}');
       debugPrint('[Decision] payload: ${prompt.messages.last.content}');
       final completion = await _openRouterClient.createJsonCompletion(
-        apiKey: provider.apiKey!.trim(),
         model: AiCoachModels.decision,
         messages: prompt.messages,
         jsonSchema: prompt.jsonSchema,
+        schemaName: 'weekly_decision',
       );
       debugPrint('[Decision] respuesta LLM raw: ${completion.content}');
 

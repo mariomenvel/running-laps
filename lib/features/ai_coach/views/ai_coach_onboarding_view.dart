@@ -10,15 +10,11 @@ import 'package:running_laps/features/ai_coach/data/openrouter_client.dart';
 
 class AiCoachOnboardingView extends StatefulWidget {
   final String uid;
-  final String apiKey;
-  final String model;
   final VoidCallback onCompleted;
 
   const AiCoachOnboardingView({
     super.key,
     required this.uid,
-    required this.apiKey,
-    required this.model,
     required this.onCompleted,
   });
 
@@ -130,7 +126,6 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
           '- level debe ser uno de los valores exactos indicados';
 
       final result = await client.createJsonCompletion(
-        apiKey: widget.apiKey,
         model: AiCoachModels.onboarding,
         messages: [
           const OpenRouterChatMessage(
@@ -145,6 +140,7 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
         ],
         jsonSchema: _profileExtractionSchema,
         temperature: 0.2,
+        schemaName: 'onboarding_profile',
       );
 
       final raw = jsonDecode(result.content) as Map<String, dynamic>;

@@ -82,13 +82,6 @@ class AiCoachAutomationService {
         return false;
       }
 
-      final providerConfig = await _repository.getProviderConfig(uid: uid);
-      if (providerConfig?.apiKey == null ||
-          (providerConfig!.apiKey?.trim().isEmpty ?? true)) {
-        debugPrint('[AiCoachAutomation] forceCurrentWeek: sin API key');
-        return false;
-      }
-
       final currentMonday = _mondayOf(DateTime.now());
       final result = await _weeklyPlannerService.planNextWeek(
         uid,
@@ -122,13 +115,6 @@ class AiCoachAutomationService {
       final profile = await _repository.getProfile(uid: uid);
       if (profile == null) {
         debugPrint('[AiCoachAutomation] force: sin perfil AI');
-        return false;
-      }
-
-      final providerConfig = await _repository.getProviderConfig(uid: uid);
-      if (providerConfig?.apiKey == null ||
-          (providerConfig!.apiKey?.trim().isEmpty ?? true)) {
-        debugPrint('[AiCoachAutomation] force: sin API key');
         return false;
       }
 
@@ -172,10 +158,7 @@ class AiCoachAutomationService {
     }
 
     final provider = await _repository.getProviderConfig(uid: uid);
-    if (provider == null ||
-        !provider.weeklyPlanningEnabled ||
-        provider.provider != 'openrouter' ||
-        (provider.apiKey?.trim().isEmpty ?? true)) {
+    if (!provider.weeklyPlanningEnabled || provider.provider != 'openrouter') {
       return const AiCoachAutomationResult(
         generated: false,
         generatedSessions: 0,

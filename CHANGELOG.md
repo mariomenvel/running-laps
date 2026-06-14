@@ -1,5 +1,13 @@
 # CHANGELOG — Running Laps
 
+## [AI Coach] — 2026-06-14 — Migrado a Cloud Function callOpenRouter
+- `OpenRouterClient` ahora llama a la Cloud Function `callOpenRouter` (cloud_functions) en vez de HTTP directo
+- `apiKey` eliminado de los 6 puntos de uso: `decision_service`, `chat_service`, `prompt_session_generator`, `onboarding_view`, `onboarding_launcher`, `workout_editor_screen`
+- `getProviderConfig` devuelve config habilitada por defecto (`fromMap({})`) si no existe ningún doc — el coach funciona sin configuración previa en Firestore (resuelve bloqueo de onboarding para usuarios nuevos)
+- `weeklyPlanningEnabled` / `chatAdjustmentsEnabled` siguen funcionando como kill-switches de admin vía `appConfig/aiCoachProvider`
+- `AiCoachAutomationService`: eliminados los guards de API key en `forceGenerateCurrentWeekPlan` y `forceGenerateNextWeekPlan`
+- Pendiente (deuda técnica menor): campos `apiKey` en `appConfig/aiCoachProvider` y `users/{uid}/settings/aiCoachProvider` quedan sin uso — limpieza de Firestore opcional
+
 ## [Cloud Functions] — 2026-06-14
 - Setup inicial: `functions/` (TypeScript, Node 20)
 - Función de prueba `ping` (callable, requiere auth)

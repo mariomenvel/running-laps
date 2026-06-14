@@ -9,7 +9,7 @@ import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_view.da
 import 'package:running_laps/core/widgets/main_shell.dart';
 
 /// Lanza el onboarding si el atleta no tiene perfil IA, o los settings si ya lo tiene.
-/// Si no hay apiKey configurada, muestra error y no navega.
+/// Si weeklyPlanningEnabled está desactivado, muestra error y no navega.
 Future<void> launchAiCoachOnboarding(
   BuildContext context, {
   VoidCallback? onCompleted,
@@ -22,11 +22,10 @@ Future<void> launchAiCoachOnboarding(
 
   if (!context.mounted) return;
 
-  final apiKey = providerConfig?.apiKey?.trim() ?? '';
-  if (apiKey.isEmpty) {
+  if (!providerConfig.weeklyPlanningEnabled) {
     ModernSnackBar.showError(
       context,
-      'Configura tu API key en Perfil → Entrenador IA antes de continuar',
+      'El entrenador IA está temporalmente desactivado.',
     );
     return;
   }
@@ -45,8 +44,6 @@ Future<void> launchAiCoachOnboarding(
     AppRoute(
       page: AiCoachOnboardingView(
         uid: uid,
-        apiKey: apiKey,
-        model: providerConfig!.model,
         onCompleted: () async {
           Navigator.of(context).pop();
           try {
