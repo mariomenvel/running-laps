@@ -16,7 +16,7 @@ Se anade `codemagic.yaml` en la raiz del repositorio para que Codemagic pueda de
 - `ios-workflow`
   - ejecuta `flutter pub get`
   - ejecuta `pod install`
-  - genera `.ipa` release
+  - genera build iOS release sin firma
 
 ## Archivo creado
 
@@ -30,7 +30,8 @@ Para que el workflow de iOS funcione de forma fiable en Codemagic, sigue pendien
 - provisioning profiles
 - cuenta App Store Connect si se quiere distribuir
 
-Si no se configura firma iOS en Codemagic, el paso `flutter build ipa --release` puede fallar.
+El workflow actual evita ese fallo usando `flutter build ios --release --no-codesign`.
+Si se quiere una `.ipa` distribuible desde Codemagic, hay que crear un workflow firmado adicional.
 
 ## Como usarlo
 
