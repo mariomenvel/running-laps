@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
@@ -17,6 +18,7 @@ class EmailVerificationPendingView extends StatefulWidget {
 
 class _EmailVerificationPendingViewState
     extends State<EmailVerificationPendingView> {
+  bool _checking = false;
   bool _resendCooldown = false;
   int _cooldownSeconds = 0;
   Timer? _cooldownTimer;
@@ -28,17 +30,32 @@ class _EmailVerificationPendingViewState
   }
 
   Future<void> _checkVerified() async {
-    await FirebaseAuth.instance.currentUser?.reload();
-    if (!mounted) return;
-    final verified =
-        FirebaseAuth.instance.currentUser?.emailVerified ?? false;
-    if (verified) {
+    setState(() => _checking = true);
+    final user = FirebaseAuth.instance.currentUser;
+    await user?.reload();
+    final refreshedUser = FirebaseAuth.instance.currentUser;
+
+    if (refreshedUser?.emailVerified == true) {
+      try {
+        await FirebaseFunctions.instance
+            .httpsCallable('syncEmailVerified')
+            .call();
+        await refreshedUser?.getIdToken(true);
+      } catch (e) {
+        debugPrint('[EmailVerification] syncEmailVerified error: $e');
+        // no bloqueante: el usuario ya está verificado en Auth,
+        // el custom claim es defensa adicional, no requisito
+      }
       widget.onVerified();
     } else {
-      ModernSnackBar.showWarning(
-        context,
-        'Aún no hemos detectado la verificación. Intenta de nuevo en unos segundos.',
-      );
+      if (mounted) setState(() => _checking = false);
+      if (mounted) {
+        ModernSnackBar.showWarning(
+          context,
+          'Aún no hemos detectado la verificación. '
+          'Intenta de nuevo en unos segundos.',
+        );
+      }
     }
   }
 
@@ -123,20 +140,29 @@ class _EmailVerificationPendingViewState
                   width: double.infinity,
                   height: 56,
                   child: FilledButton(
-                    onPressed: _checkVerified,
+                    onPressed: _checking ? null : _checkVerified,
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.brand,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: const Text(
-                      'Ya verifiqué mi email',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: _checking
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'Ya verifiqué mi email',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 12),

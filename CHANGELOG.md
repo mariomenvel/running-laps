@@ -8,6 +8,16 @@
 - `AiCoachAutomationService`: eliminados los guards de API key en `forceGenerateCurrentWeekPlan` y `forceGenerateNextWeekPlan`
 - Pendiente (deuda técnica menor): campos `apiKey` en `appConfig/aiCoachProvider` y `users/{uid}/settings/aiCoachProvider` quedan sin uso — limpieza de Firestore opcional
 
+## [Cloud Functions] — syncEmailVerified — 2026-06-14
+- Función callable que confirma emailVerified vía Admin SDK
+  (fuente de verdad real) y añade custom claim email_verified
+- EmailVerificationPendingView la llama tras reload() exitoso,
+  refresca el ID token; spinner mientras comprueba
+- Firestore Rules: helper hasVerifiedEmailClaim() añadido,
+  NO aplicado todavía (UI gate ya cubre el caso; aplicar en
+  rules es hardening futuro)
+- Pendiente: firebase deploy --only functions
+
 ## [Cloud Functions] — 2026-06-14
 - Setup inicial: `functions/` (TypeScript, Node 20)
 - Función de prueba `ping` (callable, requiere auth)

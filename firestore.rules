@@ -43,6 +43,19 @@ service cloud.firestore {
       return request.resource.data.keys().size() < 50;
     }
 
+    // True when the user's ID token has the email_verified
+    // custom claim (set by syncEmailVerified Cloud Function
+    // after Firebase Auth confirms emailVerified == true).
+    // NOTE: not yet enforced on any collection — the UI gate
+    // in AuthWrapper already blocks unverified users from
+    // reaching MainShell. This helper is available for future
+    // defense-in-depth hardening once token-refresh timing
+    // is verified in practice.
+    function hasVerifiedEmailClaim() {
+      return request.auth != null &&
+             request.auth.token.email_verified == true;
+    }
+
     // True when the document is both key-count-bounded and total-size-bounded.
     // Applied to group-level creates to prevent large document injection.
     function isSafeWrite() {

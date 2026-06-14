@@ -4,6 +4,7 @@ import { initializeApp } from "firebase-admin/app";
 initializeApp();
 
 export { callOpenRouter } from "./openrouter";
+export { syncEmailVerified } from "./auth";
 
 export const ping = onCall((request) => {
   if (!request.auth) {
