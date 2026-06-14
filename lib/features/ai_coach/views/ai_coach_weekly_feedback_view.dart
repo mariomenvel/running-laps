@@ -147,7 +147,10 @@ class _AiCoachWeeklyFeedbackViewState
 
       widget.onCompleted?.call();
       if (mounted) Navigator.of(context).pop();
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('[Feedback] ERROR EXTERIOR: $e');
+      debugPrint('[Feedback] tipo: ${e.runtimeType}');
+      debugPrint('[Feedback] stack: $st');
       if (!mounted) return;
       ModernSnackBar.showError(context, 'Error al guardar. Inténtalo de nuevo.');
     } finally {

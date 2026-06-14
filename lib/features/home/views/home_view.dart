@@ -404,6 +404,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                   consecutiveMissedWeeks:
                       _weeklyState?.consecutiveMissedWeeks ?? 0,
                   onCompleted: () {
+                    if (!mounted) return;
                     setState(() => _showFeedbackBanner = false);
                   },
                 ),
@@ -539,7 +540,10 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           borderRadius: BorderRadius.circular(20),
           onTap: () => launchAiCoachOnboarding(
             context,
-            onCompleted: () => setState(() => _hasAiCoachProfile = true),
+            onCompleted: () {
+              if (!mounted) return;
+              setState(() => _hasAiCoachProfile = true);
+            },
           ),
           child: Padding(
             padding: const EdgeInsets.all(20),
