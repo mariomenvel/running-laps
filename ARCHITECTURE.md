@@ -24,12 +24,15 @@ running_laps/
 │   ├── main.dart                   ← Entry point: Firebase init, App Check, ThemeService
 │   ├── firebase_options.dart       ← Generado por flutterfire CLI
 │   ├── config/
-│   │   └── app_theme.dart          ← Tema global, AvatarHelper
+│   │   └── app_theme.dart          ← Tema global, AvatarHelper (alias legado)
 │   ├── core/
 │   │   ├── services/               ← GPSService, SensorService, PDFGeneratorService,
-│   │   │                              SettingsService, UserService, WearAuthService
+│   │   │                              SettingsService, UserService, WearAuthService,
+│   │   │                              HeartRateService, NotificationService,
+│   │   │                              IOSLiveActivityService
+│   │   ├── theme/                  ← AppColors (tokens), AppTheme, ThemeService
 │   │   ├── tracking/               ← tracking_state, tracking_types, sensor_frame
-│   │   ├── utils/                  ← kalman_filter, tag_utils, stub_html
+│   │   ├── utils/                  ← kalman_filter, tag_utils
 │   │   └── widgets/                ← Widgets compartidos (ModernSnackBar, etc.)
 │   └── features/
 │       ├── auth/                   ← Login, registro, recuperación, verificación email
@@ -41,7 +44,10 @@ running_laps/
 │       ├── templates/              ← Plantillas de entrenamiento con bloques y alarmas
 │       ├── avatar/                 ← Constructor de avatares SVG por capas
 │       ├── profile/                ← Menú perfil, foto, configuración de cuenta
-│       └── admin/                  ← Panel admin (solo usuarios con isAdmin=true)
+│       ├── admin/                  ← Panel admin (solo usuarios con isAdmin=true)
+│       ├── ai_coach/               ← Coach IA: sugerencias semanales, memoria atleta, automatización
+│       ├── athlete/                ← Perfil atleta avanzado, métricas de forma
+│       └── calendar/               ← Calendario de entrenamientos planificados
 ├── firestore.rules                 ← Reglas de seguridad Firestore
 ├── pubspec.yaml
 ├── CHANGELOG.md
@@ -541,7 +547,7 @@ La comunicación entre la UI Compose y el servicio usa `StateFlow` en el compani
 | Ítem | Descripción |
 |---|---|
 | Prints de debug en producción | `auth_remote.dart` tiene prints `WEB LOGIN: ...` temporales que deben eliminarse una vez confirmado el fix de Google Sign In en web |
-| `stub_html.dart` sin uso | `lib/core/utils/stub_html.dart` existe pero ya no es importado en ningún archivo (el import condicional de `dart:html` fue eliminado de `auth_repository.dart`). Puede borrarse |
+| `getAllEntrenamientos(uid)` alias inútil | `TrainingRepository.getAllEntrenamientos()` solo llama a `getTrainings()` ignorando el `uid` recibido. Confuso para futuros desarrolladores |
 | Paginación en historial | `getTrainings()` carga máximo 100 entrenamientos. Usuarios con más de 100 no ven el historial completo. Requiere implementar cursor-based pagination con `startAfterDocument` |
 
 ### Prioridad media
@@ -571,7 +577,7 @@ La comunicación entre la UI Compose y el servicio usa `StateFlow` en el compani
 | `GoogleService-Info.plist` | `ios/Runner/` | Configuración Firebase iOS (**en repo**) |
 | `firebase_options.dart` | `lib/` | Generado por `flutterfire configure` |
 | reCAPTCHA v3 site key | `lib/main.dart` | `6LcH2acsAAAAAGdH2Wi1X39xnD3EB6o40ZsVjnIo` |
-| Brand color | `lib/config/app_theme.dart` | `Tema.brandPurple = Color(0xFF8E24AA)` |
+| Brand color | `lib/config/app_theme.dart` (legado) / `lib/core/theme/app_colors.dart` | `Tema.brandPurple = Color(0xFF8E24AA)` / `AppColors.brand` |
 
 ### Configuración iOS específica
 

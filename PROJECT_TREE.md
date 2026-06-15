@@ -1,509 +1,262 @@
-# Project Structure & Classes
-Generated: 2026-01-18 22:16:18.777221
-
-## lib\config\app_theme.dart
-- [class] Tema
-- [class] AvatarHelper
-
-## lib\core\auth_failure.dart
-- [class] AuthFailure
-
-## lib\core\constants\app_help_content.dart
-- [class] AppHelpContent
-
-## lib\core\services\gps_service.dart
-- [class] GpsPoint
-- [enum] GpsStatus
-- [class] GPSService
-
-## lib\core\services\pdf_generator_service.dart
-- [class] PdfGeneratorService
-
-## lib\core\services\sensor_service.dart
-- [enum] SensorStatus
-- [class] SensorService
-
-## lib\core\utils\kalman_filter.dart
-- [class] KalmanFilter
-
-## lib\core\utils\tag_utils.dart
-- [class] TagUtils
-
-## lib\core\widgets\app_footer.dart
-- [class] AppFooter
-- [class] _AppFooterState
-
-## lib\core\widgets\app_header.dart
-- [class] AppHeader
-
-## lib\core\widgets\gradient_banner.dart
-- [class] GradientBanner
-- [class] _GradientBannerState
-- [class] GradientChip
-
-## lib\core\widgets\group_skeleton_card.dart
-- [class] GroupSkeletonCard
-- [class] _GroupSkeletonCardState
-
-## lib\core\widgets\info_tooltip.dart
-- [class] InfoTooltip
-
-## lib\core\widgets\kpi_card_with_delta.dart
-- [class] KpiCardWithDelta
-
-## lib\core\widgets\modern_snackbar.dart
-- [class] ModernSnackBar
-
-## lib\features\admin\data\admin_repository.dart
-- [class] AdminRepository
-
-## lib\features\admin\viewmodels\admin_controller.dart
-- [enum] AdminDateFilter
-- [class] AdminController
-
-## lib\features\admin\views\admin_challenges_tab.dart
-- [class] AdminChallengesTab
-
-## lib\features\admin\views\admin_dashboard_tab.dart
-- [class] AdminDashboardTab
-
-## lib\features\admin\views\admin_panel_screen.dart
-- [class] AdminPanelScreen
-- [class] _AdminPanelScreenState
-
-## lib\features\analytics\data\coach_insight_service.dart
-- [enum] InsightType
-- [class] CoachInsight
-- [class] CoachInsightService
-
-## lib\features\analytics\data\home_config_repository.dart
-- [class] HomeConfigRepository
-
-## lib\features\analytics\data\home_layout_config.dart
-- [class] HomeLayoutConfig
-- [class] HomeWidget
-- [enum] WidgetType
-- [extension] WidgetTypeExtension
-
-## lib\features\analytics\data\pattern_cache.dart
-- [class] PatternCache
-
-## lib\features\analytics\data\pattern_detector.dart
-- [class] PatternDetector
-- [class] PatternStats
-
-## lib\features\analytics\data\series_pattern.dart
-- [class] SerieInstance
-- [class] SeriesPattern
-
-## lib\features\analytics\data\workout_pattern.dart
-- [class] WorkoutInstance
-- [class] WorkoutPattern
-
-## lib\features\analytics\viewmodels\analytics_hub_controller.dart
-- [enum] AnalyticsTimeRange
-- [class] AnalyticsHubController
-
-## lib\features\analytics\viewmodels\analytics_viewmodel.dart
-- [class] AnalyticsViewModel
-
-## lib\features\analytics\views\analytics_hub_screen.dart
-- [class] AnalyticsHubScreen
-- [class] _AnalyticsHubScreenState
-
-## lib\features\analytics\views\analytics_hub_view.dart
-- [class] AnalyticsHubView
-- [class] _AnalyticsHubViewState
-
-## lib\features\analytics\views\pattern_comparison_view.dart
-- [class] PatternComparisonView
-
-## lib\features\analytics\views\series_pattern_carousel_view.dart
-- [class] SeriesPatternCarouselView
-- [class] _SeriesPatternContent
-- [class] _PaceProgressionChart
-
-## lib\features\analytics\views\series_pattern_detail_view.dart
-- [class] SeriesPatternDetailView
-- [class] _PaceProgressionChart
-
-## lib\features\analytics\views\tabs\distribution_tab.dart
-- [class] DistributionTab
-- [class] _TagDistributionContent
-- [class] _TagDistributionContentState
-
-## lib\features\analytics\views\tabs\overview_tab.dart
-- [class] OverviewTab
-- [class] _WeeklyVolumeChart
-- [class] _PaceEvolutionChart
-- [class] _TagDistributionContent
-- [class] _TagDistributionContentState
-
-## lib\features\analytics\views\tabs\patterns_tab.dart
-- [class] PatternsTab
-- [class] SeriesPatternCard
-- [class] WorkoutPatternCard
-
-## lib\features\analytics\views\tabs\trends_tab.dart
-- [class] TrendsTab
-- [class] _WeeklyVolumeChart
-- [class] _PaceEvolutionChart
-
-## lib\features\analytics\views\workout_pattern_carousel_view.dart
-- [class] WorkoutPatternCarouselView
-- [class] _WorkoutPatternCarouselViewState
-- [class] _ComparisonSelectorSheet
-- [class] _ComparisonSelectorSheetState
-- [class] _WorkoutPatternContent
-- [class] _PerformanceChart
-
-## lib\features\analytics\views\workout_pattern_detail_view.dart
-- [class] WorkoutPatternDetailView
-- [class] _PerformanceChart
-
-## lib\features\analytics\widgets\analytics_range_selector.dart
-- [class] AnalyticsRangeSelector
-
-## lib\features\analytics\widgets\coach_insight_widget.dart
-- [class] CoachInsightWidget
-
-## lib\features\analytics\widgets\pattern_carousel.dart
-- [class] PatternCarousel
-- [class] _PatternCarouselState
-
-## lib\features\auth\data\auth_remote.dart
-- [class] AuthRemote
-
-## lib\features\auth\data\auth_repository.dart
-- [class] AuthRepository
-
-## lib\features\auth\viewmodels\auth_controller.dart
-- [class] AuthController
-
-## lib\features\auth\views\auth_page.dart
-- [class] AuthPage
-- [class] _AuthPageState
-
-## lib\features\avatar\data\background_shape.dart
-- [enum] BackgroundShape
-
-## lib\features\avatar\viewmodels\avatar_maker_controller.dart
-- [class] AvatarMakerController
-
-## lib\features\avatar\views\avatar_maker_screen.dart
-- [class] AvatarMakerScreen
-- [class] _AvatarMakerScreenState
-
-## lib\features\avatar\widgets\avatar_color_picker.dart
-- [class] AppColorTheme
-
-## lib\features\avatar\widgets\avatar_text_styles.dart
-- [class] AppTextStyle
-
-## lib\features\groups\data\helpers\challenge_helpers.dart
-- [class] ChallengeFilters
-- [class] ChallengeGoal
-
-## lib\features\groups\data\helpers\challenge_ranking_helper.dart
-- [class] ChallengeRankingHelper
-- [extension] GoalKindExtension
-
-## lib\features\groups\data\helpers\period_helper.dart
-- [class] PeriodHelper
-
-## lib\features\groups\data\models\challenge_models.dart
-- [class] ChallengeTemplate
-- [class] Challenge
-- [class] ChallengeParticipant
-- [class] GroupPrefs
-
-## lib\features\groups\data\models\enums.dart
-- [enum] GroupType
-- [enum] MemberStatus
-- [enum] ChallengePeriodicity
-- [enum] ChallengeMetric
-- [enum] ChallengeAggregation
-- [enum] ChallengeOrigin
-- [enum] ChallengeStatus
-- [enum] TieBreakerType
-- [enum] MedalType
-- [enum] BadgeType
-- [enum] GoalKind
-- [enum] GroupNotificationType
-
-## lib\features\groups\data\models\group_models.dart
-- [class] Group
-- [class] GroupMember
-- [class] Invite
-
-## lib\features\groups\data\models\group_stats_model.dart
-- [class] GroupModel
-- [class] GroupMemberStats
-
-## lib\features\groups\data\models\result_notification_model.dart
-- [class] GroupResultNotification
-
-## lib\features\groups\data\models\rewards_models.dart
-- [class] GroupMedals
-- [class] MedalHistoryEntry
-- [class] GroupBadges
-- [class] BadgeHistoryEntry
-
-## lib\features\groups\data\repositories\challenges_repository.dart
-- [class] ChallengesRepository
-
-## lib\features\groups\data\repositories\groups_repository.dart
-- [class] GroupsRepository
-
-## lib\features\groups\data\repositories\group_detail_repository.dart
-- [class] GroupDetailRepository
-
-## lib\features\groups\data\repositories\group_prefs_repository.dart
-- [class] GroupPrefsRepository
-
-## lib\features\groups\data\repositories\invites_repository.dart
-- [class] InvitesRepository
-
-## lib\features\groups\data\repositories\rewards_repository.dart
-- [class] RewardsRepository
-
-## lib\features\groups\data\repositories\templates_repository.dart
-- [class] TemplatesRepository
-
-## lib\features\groups\data\repositories\user_groups_repository.dart
-- [class] UserGroupMembership
-- [class] UserGroupsRepository
-
-## lib\features\groups\data\services\auto_join_service.dart
-- [class] AutoJoinService
-
-## lib\features\groups\data\services\challenge_calculator.dart
-- [class] ChallengeCalculator
-
-## lib\features\groups\data\services\challenge_finalize_service.dart
-- [class] ChallengeFinalizeService
-
-## lib\features\groups\data\services\ensure_auto_challenges_service.dart
-- [class] EnsureAutoChallengesService
-
-## lib\features\groups\data\services\gamification_service.dart
-- [class] Achievement
-- [class] GamificationService
-
-## lib\features\groups\data\services\training_challenge_sync_service.dart
-- [class] TrainingChallengeSyncService
-
-## lib\features\groups\data\services\user_lookup_service.dart
-- [class] UserLookupService
-
-## lib\features\groups\viewmodels\challenge_detail_controller.dart
-- [class] ChallengeDetailController
-
-## lib\features\groups\viewmodels\group_challenges_controller.dart
-- [class] GroupChallengesController
-
-## lib\features\groups\viewmodels\group_rewards_controller.dart
-- [class] GroupRewardsController
-
-## lib\features\groups\views\challenge_detail_screen.dart
-- [class] ChallengeDetailScreen
-- [class] _ChallengeDetailScreenState
-- [class] _AnimatedBackButton
-- [class] _AnimatedBackButtonState
-- [extension] GoalKindToMetric
-
-## lib\features\groups\views\groups_list_screen.dart
-- [class] GroupsListScreen
-- [class] _GroupsListScreenState
-- [class] _CreateGroupModal
-- [class] _PremiumGroupCard
-- [class] _PremiumGroupCardState
-- [class] _InvitationCard
-- [class] _InvitationCardState
-- [class] _GlassBadge
-- [class] _StaggeredGroupItem
-- [class] _StaggeredGroupItemState
-- [class] _PremiumFloatingActionButton
-- [class] _PremiumFloatingActionButtonState
-
-## lib\features\groups\views\group_rewards_screen.dart
-- [class] GroupRewardsScreen
-- [class] _GroupRewardsScreenState
-- [class] _PremiumMedalCard
-- [class] _PremiumBadgeCard
-- [class] _MedalCounter
-- [class] _StaggeredItem
-- [class] _StaggeredItemState
-- [class] _AnimatedBackButton
-- [class] _AnimatedBackButtonState
-
-## lib\features\groups\views\group_screen.dart
-- [class] GroupScreen
-- [class] _GroupScreenState
-- [class] _AnimatedBackButton
-- [class] _AnimatedBackButtonState
-- [class] _PremiumChallengeCard
-- [class] _PremiumChallengeCardState
-- [class] _PremiumMemberCard
-- [class] _StaggeredChallengeItem
-- [class] _StaggeredChallengeItemState
-- [class] _StaggeredMemberItem
-- [class] _StaggeredMemberItemState
-- [class] _PremiumFloatingActionButton
-- [class] _PremiumFloatingActionButtonState
-
-## lib\features\groups\views\participant_profile_screen.dart
-- [class] ParticipantProfileScreen
-- [class] _ParticipantProfileScreenState
-- [class] _StatItem
-- [class] _AchievementCard
-
-## lib\features\groups\views\widgets\challenge_result_dialog.dart
-- [class] ChallengeResultDialog
-- [class] _ChallengeResultDialogState
-
-## lib\features\groups\views\widgets\create_challenge_modal.dart
-- [class] CreateChallengeModal
-- [class] _CreateChallengeModalState
-
-## lib\features\history\viewmodels\history_analytics_view_model.dart
-- [class] HistoryAnalyticsViewModel
-
-## lib\features\history\viewmodels\history_controller.dart
-- [enum] TrainingFilter
-- [class] HistoryController
-
-## lib\features\history\views\history_screen.dart
-- [class] HistoryScreen
-- [class] _HistoryScreenState
-
-## lib\features\history\widgets\filter_badge_button.dart
-- [class] FilterBadgeButton
-
-## lib\features\history\widgets\history_bottom_bar.dart
-- [class] HistoryBottomBar
-
-## lib\features\history\widgets\history_calendar_widget.dart
-- [class] HistoryCalendarWidget
-- [class] _HistoryCalendarWidgetState
-
-## lib\features\history\widgets\history_filter_sheet.dart
-- [class] HistoryFilterSheet
-- [class] _HistoryFilterSheetState
-
-## lib\features\history\widgets\history_search_bar.dart
-- [class] HistorySearchBar
-- [class] _HistorySearchBarState
-
-## lib\features\history\widgets\premium_training_card.dart
-- [class] PremiumTrainingCard
-- [class] _PremiumTrainingCardState
-
-## lib\features\home\data\home_estadistica_repository.dart
-- [enum] HomeMetric
-- [enum] TimeRange
-- [class] DailyMetric
-- [class] HomeEstadisticaRepository
-
-## lib\features\home\viewmodels\home_config_controller.dart
-- [class] HomeConfigController
-
-## lib\features\home\viewmodels\home_estadistica_controller.dart
-- [class] HomeEstadisticaController
-
-## lib\features\home\views\edit_home_view.dart
-- [class] EditHomeView
-- [class] _EditHomeViewState
-
-## lib\features\home\views\home_view.dart
-- [class] HomeView
-- [class] _HomeViewState
-- [enum] TimeRange
-- [class] _GroupHighlightCard
-
-## lib\features\home\widgets\configurable_widget_renderer.dart
-- [class] ConfigurableWidgetRenderer
-
-## lib\features\home\widgets\history_carousel.dart
-- [class] HistoryCarousel
-- [class] _HistoryCarouselState
-
-## lib\features\home\widgets\home_flagship_chart.dart
-- [enum] ChartFlagshipRange
-- [enum] ChartFlagshipMetric
-- [class] HomeFlagshipChart
-- [class] _HomeFlagshipChartState
-- [class] _ChartGroup
-
-## lib\features\home\widgets\legacy_bar_chart.dart
-- [enum] HomeMetric
-- [enum] TimeRange
-- [class] DailyMetric
-- [class] LegacyBarChart
-- [class] _LegacyBarChartState
-- [class] _BarChartPainter
-
-## lib\features\home\widgets\stats_carousel.dart
-- [class] StatsCarousel
-- [class] _StatsCarouselState
-
-## lib\features\profile\views\avatar_editor_wraper_view.dart
-- [class] AvatarEditorWrapperView
-- [class] _AvatarEditorWrapperViewState
-
-## lib\features\profile\views\edit_profile_picture_view.dart
-- [class] EditProfilePictureView
-
-## lib\features\profile\views\profile_menu_screen.dart
-- [class] ProfileMenuView
-- [class] _ProfileMenuViewState
-
-## lib\features\training\data\entrenamiento.dart
-- [class] Entrenamiento
-
-## lib\features\training\data\entrenamiento_utils.dart
-- [class] EntrenamientoUtils
-- [class] WeekStats
-
-## lib\features\training\data\serie.dart
-- [class] Serie
-
-## lib\features\training\data\tag_manager.dart
-- [class] TagManager
-
-## lib\features\training\data\tag_model.dart
-- [class] TrainingTag
-- [class] TagColors
-
-## lib\features\training\data\training_repository.dart
-- [class] TrainingRepository
-
-## lib\features\training\viewmodels\training_viewmodel.dart
-- [class] TrainingViewModel
-
-## lib\features\training\views\training_session_view.dart
-- [class] TrainingSessionView
-- [class] _TrainingSessionViewState
-
-## lib\features\training\views\training_start_view.dart
-- [enum] AlarmMode
-- [class] TrainingStartView
-- [class] _TrainingStartViewState
-
-## lib\features\training\widgets\create_tag_dialog.dart
-- [class] CreateTagDialog
-- [class] _CreateTagDialogState
-
-## lib\features\training\widgets\tag_chip.dart
-- [class] TagChip
-
-## lib\features\training\widgets\tag_selector_sheet.dart
-- [class] TagSelectorSheet
-- [class] _TagSelectorSheetState
-
-## lib\firebase_options.dart
-- [class] DefaultFirebaseOptions
-
-## lib\main.dart
-- [class] MyApp
-
+# Project Structure
+Generated: 2026-06-15 (actualizar con `find lib -name "*.dart" | sort`)
+
+## lib/ — raíz
+
+- `lib/main.dart` — entry point: Firebase init, App Check, ThemeService, AuthWrapper
+- `lib/firebase_options.dart` — generado por flutterfire CLI, no editar
+- `lib/scripts/generate_test_workouts.dart` — script de datos de prueba
+
+---
+
+## lib/config/
+- `app_theme.dart` — clase `Tema` (alias legado: `brandPurple`, `AvatarHelper`)
+
+---
+
+## lib/core/
+
+### core/services/
+- `gps_service.dart` — GPSService: Haversine + KalmanFilter, ventana 5 pts, descarta accuracy >20m
+- `sensor_service.dart` — SensorService: pedómetro
+- `pdf_generator_service.dart` — PDFGeneratorService: exportar entrenamientos a PDF
+- `settings_service.dart` — SettingsService: SharedPreferences (alarmas, GPS defaults)
+- `user_service.dart` — UserService: nombre, contraseña, borrar cuenta, reauth, isGoogleUser
+- `wear_auth_service.dart` — WearAuthService: código de sesión 6 dígitos para Wear OS
+- `heart_rate_service.dart` — HeartRateService: frecuencia cardiaca BLE
+- `notification_service.dart` — NotificationService: push + resumen semanal programado
+- `ios_live_activity_service.dart` — IOSLiveActivityService: MethodChannel/EventChannel Swift↔Dart
+- `foreground_tracking_handler.dart` — handler para tracking en foreground (Android)
+- `rate_limit_service.dart` — RateLimitService: throttling de llamadas a IA/API
+- `session_recovery_service.dart` — SessionRecoveryService: recuperar sesión tras crash
+- `training_load_service.dart` — TrainingLoadService: carga de entrenamiento (TRIMP/TSS)
+- `zones_service.dart` — ZonesService: zonas de FC por usuario
+
+### core/theme/
+- `app_colors.dart` — AppColors: tokens de color actuales (`AppColors.brand`, etc.)
+- `app_theme.dart` — ThemeData claro/oscuro basado en AppColors
+- `theme_service.dart` — ThemeService: persiste tema en SharedPreferences
+
+### core/tracking/
+- `tracking_state.dart` — GpsStatus enum: uninitialized → ready → active → paused → error
+- `tracking_types.dart` — tipos y enums de tracking
+- `sensor_frame.dart` — SensorFrame: frame combinado GPS + pedómetro
+
+### core/utils/
+- `kalman_filter.dart` — KalmanFilter para suavizado de coordenadas GPS
+- `tag_utils.dart` — utilidades para tags
+- `ekf2d.dart` — Extended Kalman Filter 2D
+- `rdp_smoother.dart` — Ramer-Douglas-Peucker para simplificar trazados GPS
+- `app_transitions.dart` — transiciones de navegación
+- `exponential_backoff.dart` — retry con backoff exponencial
+- `rate_limit_decorator.dart` — decorador de rate limiting
+
+### core/constants/
+- `app_help_content.dart` — textos de ayuda en app
+- `training_tags.dart` — tags predefinidos de entrenamiento
+
+### core/widgets/
+- `modern_snackbar.dart` — ModernSnackBar.showSuccess/showError/showWarning
+- `app_header.dart` — AppHeader reutilizable con gradiente
+- `app_footer.dart` — AppFooter con navegación principal
+- `app_page_scaffold.dart` — scaffold estándar de la app
+- `main_shell.dart` — MainShell: shell con tabs de navegación
+- `shell_embedding_scope.dart` — scope para embeber en shell
+- `empty_state_widget.dart` — empty state genérico
+- `gradient_banner.dart` — banner con gradiente
+- `group_skeleton_card.dart` — skeleton loader de grupos
+- `info_tooltip.dart` — tooltip de información
+- `kpi_card_with_delta.dart` — card KPI con delta vs período anterior
+- `number_picker_field.dart` — campo selector numérico
+- `premium_date_range_picker.dart` — selector de rango de fechas
+- `skeleton_shimmer.dart` — shimmer loader genérico
+- `standard_table_calendar.dart` — calendario estándar (TableCalendar)
+
+---
+
+## lib/features/
+
+### features/auth/
+- `data/auth_remote.dart` — comunicación directa con Firebase Auth
+- `data/auth_repository.dart` — AuthRepository: signIn, signUp, signOut, Google Sign-In
+- `viewmodels/auth_controller.dart` — AuthController: estado de la UI de auth + isUserAdmin()
+- `views/auth_page.dart` — AuthPage: login/registro
+- `views/auth_wrapper.dart` — AuthWrapper: StreamBuilder<User?> → HomeView | AuthPage
+- `views/email_verification_pending_view.dart` — pantalla de verificación de email pendiente
+- `views/welcome_view.dart` — pantalla de bienvenida
+
+### features/training/
+- `data/entrenamiento.dart` — modelo Entrenamiento (distanciaTotalM: int metros, tiempoTotalSec: double)
+- `data/serie.dart` — modelo Serie (tiempoSec, distanciaM, descansoSec, rpe, gpsPoints)
+- `data/tag_model.dart` — TagModel (id, name, color ARGB)
+- `data/tag_manager.dart` — TagManager: CRUD de tags en Firestore
+- `data/training_repository.dart` — TrainingRepository: CRUD trainings + contadores atómicos
+- `data/entrenamiento_utils.dart` — utilidades de cálculo
+- `data/fc_reading.dart` — FcReading: lectura de FC durante entrenamiento
+- `data/serie.dart` — modelo Serie
+- `data/summary_stats_calculator.dart` — cálculo de estadísticas de resumen
+- `data/temporal_data_extractor.dart` — extractor de datos temporales de series
+- `data/workout_execution_controller.dart` — WorkoutExecutionController: lógica de ejecución de bloque
+- `data/workout_execution_state.dart` — WorkoutExecutionState: estado de la ejecución
+- `services/training_analysis_service.dart` — análisis post-entrenamiento
+- `viewmodels/training_viewmodel.dart` — TrainingViewModel: estado de la sesión activa
+- `views/training_start_view.dart` — pantalla de inicio de entrenamiento
+- `views/training_session_view.dart` — sesión de entrenamiento activa (modo libre)
+- `views/manual_training_view.dart` — entrenamiento manual (sin GPS)
+- `views/training_summary_screen.dart` — resumen post-entrenamiento
+- `views/pre_execution_screen.dart` — pantalla previa a ejecución de bloque
+- `views/block_transition_screen.dart` — transición entre bloques
+- `views/workout_execution_screen.dart` — ejecución de workout por bloques
+- `views/session_screens/` — pantallas por tipo: interval, continuous, fartlek, free, hills, competition + rest
+- `views/session_screens/shared/` — métricas compartidas: distance, fc, pace, time, progress_bar, target_comparison
+- `views/session_screens/summary_cards/` — cards de resumen por tipo de sesión
+- `widgets/` — create_tag_dialog, tag_chip, tag_selector_sheet
+
+### features/history/
+- `viewmodels/history_controller.dart` — HistoryController: carga 100 entrenamientos, filtros en memoria
+- `viewmodels/history_analytics_view_model.dart` — analíticas del historial
+- `views/history_screen.dart` — HistoryScreen: lista + filtros + calendario
+- `views/training_detail_view.dart` — detalle de entrenamiento con GPS
+- `views/training_no_gps_detail_view.dart` — detalle sin GPS
+- `views/widgets/temporal_chart.dart` — gráfica temporal
+- `widgets/` — filter_badge_button, history_bottom_bar, history_calendar_widget, history_filter_sheet, history_search_bar, premium_training_card, training_map_view
+
+### features/home/
+- `data/home_estadistica_repository.dart` — HomeEstadisticaRepository (singleton + caché 5min)
+- `data/home_config_repository.dart` — configuración del layout de home
+- `data/global_challenges_repository.dart` — desafíos globales
+- `data/home_layout_config.dart` — HomeLayoutConfig: widgets configurables
+- `viewmodels/home_estadistica_controller.dart` — HomeEstadisticaController
+- `viewmodels/home_config_controller.dart` — HomeConfigController
+- `viewmodels/home_view_model.dart` — HomeViewModel
+- `views/home_view.dart` — HomeView: dashboard principal
+- `views/edit_home_view.dart` — editor de widgets del home
+- `widgets/` — configurable_widget_renderer, global_challenge_card, history_carousel, home_flagship_chart, legacy_bar_chart, stats_carousel
+
+### features/analytics/
+- `data/pattern_detector.dart` — PatternDetector: detecta patrones de series y entrenamientos
+- `data/pattern_cache.dart` — PatternCache (singleton, caché 5min)
+- `data/coach_insight_service.dart` — CoachInsightService: insights del coach
+- `data/series_pattern.dart` — SeriesPattern modelo
+- `data/workout_pattern.dart` — WorkoutPattern modelo
+- `viewmodels/analytics_hub_controller.dart` — AnalyticsHubController
+- `viewmodels/analytics_view_model.dart` — AnalyticsViewModel
+- `views/analytics_hub_screen.dart` — AnalyticsHubScreen (versión actual)
+- `views/tabs/` — overview_tab, trends_tab, patterns_tab, distribution_tab
+- `views/` — pattern_comparison_view, series_pattern_carousel_view, series_pattern_detail_view, workout_pattern_carousel_view, workout_pattern_detail_view
+- `widgets/` — analytics_range_selector, coach_insight_widget, pattern_carousel
+
+### features/groups/
+- `data/models/` — challenge_models, group_models, group_stats_model, rewards_models, result_notification_model, enums
+- `data/repositories/` — challenges_repository, group_detail_repository, groups_repository, invites_repository, rewards_repository, templates_repository, user_groups_repository, group_prefs_repository
+- `data/services/` — gamification_service, challenge_calculator, challenge_finalize_service, training_challenge_sync_service, auto_join_service, ensure_auto_challenges_service, user_lookup_service
+- `data/helpers/` — challenge_color_helper, challenge_helpers, challenge_ranking_helper, invite_token_helper, period_helper
+- `viewmodels/` — challenge_detail_controller, group_challenges_controller, group_rewards_controller
+- `views/` — group_screen, groups_list_screen, challenge_detail_screen, group_rewards_screen, participant_profile_screen
+- `views/widgets/` — challenge_result_dialog, create_challenge_modal
+
+### features/templates/
+- `data/template_models.dart` — TemplateBlock, TemplateAlerts
+- `data/workout_session.dart` — WorkoutSession: sesión estructurada por bloques
+- `data/workout_block.dart` — WorkoutBlock: bloque de tipo distance|time
+- `data/workout_segment.dart` — WorkoutSegment: segmento dentro de un bloque
+- `data/target_config.dart` — TargetConfig: configuración de objetivo (pace/time/HR)
+- `data/saved_block.dart` — SavedBlock: bloque guardado reutilizable
+- `data/templates_repository.dart` — TemplatesRepository: CRUD plantillas Firestore
+- `data/saved_blocks_repository.dart` — SavedBlocksRepository
+- `data/athlete_session_mapper.dart` — mapeo entre AthleteSession y WorkoutSession
+- `views/templates_list_view.dart` — lista de plantillas
+- `views/template_editor_view.dart` — editor de plantilla
+- `views/workout_editor_screen.dart` — editor visual de workout
+- `views/widgets/` — blocks_list_section, segment_bottom_sheet, workout_type_selector
+- `widgets/` — alarm_config_sheet, block_editor_sheet
+
+### features/avatar/
+- `data/assets.dart` — gestión de assets SVG por capa
+- `data/background_shape.dart` — formas de fondo
+- `models/avatar_config.dart` — AvatarConfig: configuración de capas
+- `services/avatar_generator.dart` — AvatarGenerator: renderiza SVG
+- `viewmodels/avatar_maker_controller.dart` — AvatarMakerController
+- `views/avatar_maker_screen.dart` — pantalla de creación de avatar
+- `views/avatar_customizer_view.dart` — vista de personalización
+- `widgets/` — avatar_color_picker, avatar_text_styles
+
+### features/profile/
+- `data/user_profile_model.dart` — UserProfileModel
+- `data/zones_repository.dart` — ZonesRepository: zonas de FC en Firestore
+- `viewmodels/zones_viewmodel.dart` — ZonesViewModel
+- `views/profile_menu_screen.dart` — menú de perfil principal
+- `views/profile_view.dart` — vista de perfil
+- `views/account_settings_view.dart` — cambiar nombre, contraseña, borrar cuenta
+- `views/edit_profile_picture_view.dart` — editar foto/avatar de perfil
+- `views/avatar_editor_wraper_view.dart` — wrapper del editor de avatar
+- `views/heart_rate_monitor_view.dart` — monitor de FC en tiempo real
+- `views/zones_config_screen.dart` — configuración de zonas de FC
+
+### features/admin/
+- `data/admin_repository.dart` — AdminRepository: acceso a colecciones admin
+- `viewmodels/admin_controller.dart` — AdminController
+- `views/admin_panel_screen.dart` — panel admin (isAdmin=true)
+- `views/admin_dashboard_tab.dart` — tab dashboard de admin
+- `views/admin_challenges_tab.dart` — tab desafíos de admin
+
+### features/ai_coach/
+- `data/ai_coach_models.dart` — AiCoachWeeklyDecision, AiCoachAthleteMemory, AiCoachAutomation, CoachInsight
+- `data/ai_coach_repository.dart` — AiCoachRepository: persistencia en Firestore
+- `data/ai_coach_context_builder.dart` — construye contexto del atleta para el prompt
+- `data/ai_coach_prompt_builder.dart` — construye prompts para el LLM
+- `data/ai_coach_decision_service.dart` — AiCoachDecisionService: toma de decisiones semanales
+- `data/ai_coach_automation_service.dart` — AiCoachAutomationService: automatización de sugerencias
+- `data/ai_coach_weekly_planner_service.dart` — planificador semanal
+- `data/ai_coach_chat_service.dart` — chat con el coach
+- `data/ai_coach_session_generator.dart` — generador de sesiones de entrenamiento por IA
+- `data/ai_coach_prompt_session_generator.dart` — generador de sesiones por prompt
+- `data/ai_coach_defaults.dart` — configuración por defecto del coach
+- `data/ai_coach_models_config.dart` — configuración de modelos LLM
+- `data/openrouter_client.dart` — cliente HTTP para OpenRouter (LLM gateway)
+- `views/ai_coach_onboarding_view.dart` — onboarding del coach
+- `views/ai_coach_onboarding_launcher.dart` — launcher del onboarding
+- `views/ai_coach_settings_view.dart` — configuración del coach
+- `views/ai_coach_weekly_feedback_view.dart` — feedback semanal del coach
+
+### features/athlete/
+- `data/athlete_session_model.dart` — AthleteSession: sesión planificada del atleta
+- `data/athlete_session_repository.dart` — AthleteSessionRepository
+- `data/progress_repository.dart` — ProgressRepository: progreso del atleta
+- `viewmodels/athlete_hub_viewmodel.dart` — AthleteHubViewModel
+- `viewmodels/athlete_calendar_viewmodel.dart` — calendario de sesiones
+- `viewmodels/athlete_session_editor_viewmodel.dart` — editor de sesión
+- `viewmodels/progress_viewmodel.dart` — ProgressViewModel
+- `viewmodels/season_viewmodel.dart` — SeasonViewModel
+- `viewmodels/session_editor_viewmodel.dart` — SessionEditorViewModel
+- `views/athlete_hub_view.dart` — hub principal del atleta
+- `views/athlete_session_editor_view.dart` — editor de sesión atleta
+- `views/progress_view.dart` — vista de progreso
+- `views/season_view.dart` — vista de temporada
+- `views/session_editor_view.dart` — editor de sesión
+- `views/session_planner_view.dart` — planificador de sesiones
+- `widgets/save_as_template_sheet.dart` — guardar sesión como plantilla
+- `widgets/session_block_editor.dart` — editor de bloque de sesión
+
+### features/calendar/
+- `viewmodels/calendar_view_model.dart` — CalendarViewModel: entrenamientos por fecha
+- `views/calendar_view.dart` — CalendarView: calendario de entrenamientos planificados
+
+---
+
+## wear_os/ (Kotlin/Compose — app independiente)
+- `MainActivity.kt` — entry point, SwipeDismissableNavHost, App Check
+- `HomeScreen.kt` — dashboard con stats desde Firestore
+- `SeriesPageScreen.kt` — configuración de serie
+- `SeriesActiveScreen.kt` — pantalla activa durante la serie
+- `SeriesTrainingService.kt` — Foreground service: timer, GPS, alarmas (⚠️ DEBUG_SIMULATE debe ser false en release)
+- `TemplatePickerScreen.kt` — selector de plantilla
+- `TemplateModels.kt` — modelos de datos para plantillas
+
+---
+
+## functions/src/ (Cloud Functions — Node.js/TypeScript)
+- `index.ts` — entry point de Cloud Functions
+- `auth.ts` — funciones de autenticación (custom tokens, etc.)
+- `openrouter.ts` — proxy seguro para llamadas a OpenRouter (LLM)
+- `waitlist.ts` — gestión de lista de espera

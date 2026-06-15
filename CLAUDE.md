@@ -33,11 +33,16 @@ Feature-First + MVVM. Cada feature en `lib/features/<name>/` con subcarpetas `vi
 - **No** importar `dart:html` directamente — usar `kIsWeb` de `foundation.dart`.
 
 Paths clave:
-- `lib/config/app_theme.dart` — `Tema.brandPurple = Color(0xFF8E24AA)`, `AvatarHelper`
+- `lib/config/app_theme.dart` — `Tema.brandPurple = Color(0xFF8E24AA)`, `AvatarHelper` (alias legado)
+- `lib/core/theme/app_colors.dart` — sistema de colores actual (`AppColors.brand`, tokens semánticos)
+- `lib/core/theme/theme_service.dart` — tema claro/oscuro, persistido en SharedPreferences
 - `lib/main.dart` — Firebase init, App Check (Android + Web), `AuthWrapper` (StreamBuilder<User?>)
 - `core/services/gps_service.dart` — GPS + Live Activity iOS + Kalman + Haversine
 - `core/services/ios_live_activity_service.dart` — puente MethodChannel/EventChannel Swift↔Dart
 - `firebase_options.dart` — generado por flutterfire CLI, **no editar a mano**
+
+Features activas en `lib/features/`:
+`auth` · `training` · `history` · `home` · `analytics` · `groups` · `templates` · `avatar` · `profile` · `admin` · `ai_coach` · `athlete` · `calendar`
 
 ---
 
@@ -89,4 +94,4 @@ No instanciar con `HomeEstadisticaRepository()` esperando instancia independient
 2. **Auth Wear OS** — reemplazar bypass con Cloud Function + custom token
 3. **Historial** — limitado a 100 entradas, implementar paginación con cursor
 4. `getAllEntrenamientos(uid)` en `TrainingRepository` ignora el uid recibido
-5. `stub_html.dart` en `core/utils/` — sin imports, borrar
+5. `getAllEntrenamientos(uid)` en `TrainingRepository` — alias de `getTrainings()` que ignora el uid; confuso para futuros devs

@@ -80,11 +80,13 @@
 ```
 lib/
 ├── main.dart                       ← Firebase init, App Check, ThemeService
-├── config/app_theme.dart           ← Sistema de colores (AppColors) y tema global
+├── config/app_theme.dart           ← Tema global, AvatarHelper (alias legado)
 ├── core/
-│   ├── services/                   ← GPS, Live Activity iOS, WearAuth, Settings, User
+│   ├── theme/                      ← AppColors (tokens), AppTheme, ThemeService
+│   ├── services/                   ← GPS, Live Activity iOS, WearAuth, Settings, User,
+│   │                                  HeartRate, Notifications, ZonesService
 │   ├── tracking/                   ← TrackingState, tipos, SensorFrame
-│   └── utils/                      ← KalmanFilter, TagUtils
+│   └── utils/                      ← KalmanFilter, EKF2D, RDP, TagUtils
 └── features/
     ├── auth/                       ← Login, registro, verificación, recuperación
     ├── training/                   ← Sesión activa, GPS por serie, tags
@@ -94,8 +96,11 @@ lib/
     ├── groups/                     ← Grupos, desafíos, ranking, recompensas
     ├── templates/                  ← Plantillas con bloques y alarmas
     ├── avatar/                     ← Constructor SVG por capas
-    ├── profile/                    ← Perfil, foto, configuración
-    └── admin/                      ← Panel admin (requiere isAdmin == true)
+    ├── profile/                    ← Perfil, foto, configuración, zonas FC
+    ├── admin/                      ← Panel admin (requiere isAdmin == true)
+    ├── ai_coach/                   ← Coach IA: sugerencias semanales, memoria atleta
+    ├── athlete/                    ← Perfil atleta avanzado, planificación
+    └── calendar/                   ← Calendario de entrenamientos
 
 wear_os/app/src/main/kotlin/com/runninglaps/wear/
 ├── MainActivity.kt

@@ -5,6 +5,7 @@ initializeApp();
 
 export { callOpenRouter } from "./openrouter";
 export { syncEmailVerified } from "./auth";
+export { joinWaitlist } from "./waitlist";
 
 export const ping = onCall((request) => {
   if (!request.auth) {

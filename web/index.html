@@ -789,17 +789,42 @@
     });
   });
 
-  // Waitlist forms (placeholder — wire up to Firestore/email service later)
+  // Waitlist forms
   document.querySelectorAll('form.signup').forEach(form => {
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const input = form.querySelector('input');
       const btn = form.querySelector('button');
-      if (!input.value) return;
-      btn.textContent = '¡Listo!';
-      input.value = '';
-      input.placeholder = 'Te avisaremos pronto';
-      setTimeout(() => { btn.textContent = 'Unirme'; input.placeholder = 'tu@email.com'; }, 3000);
+      const email = input.value.trim();
+      if (!email) return;
+
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
+
+      try {
+        const res = await fetch('/api/waitlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        if (!res.ok) throw new Error('bad response');
+
+        btn.textContent = '¡Listo!';
+        input.value = '';
+        input.placeholder = 'Te avisaremos pronto';
+      } catch (err) {
+        btn.textContent = 'Error, reintenta';
+        setTimeout(() => { btn.textContent = originalText; }, 2500);
+        btn.disabled = false;
+        return;
+      }
+
+      setTimeout(() => {
+        btn.textContent = originalText;
+        input.placeholder = 'tu@email.com';
+        btn.disabled = false;
+      }, 3000);
     });
   });
 </script>

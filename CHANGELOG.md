@@ -1,5 +1,11 @@
 # CHANGELOG — Running Laps
 
+## [Web] — 2026-06-15 — Recolección de emails (waitlist)
+- Cloud Function `joinWaitlist` (HTTP, Admin SDK): escribe en Firestore `waitlist/{email}`
+- `firebase.json`: rewrite `/api/waitlist` → `joinWaitlist` (mismo origen, sin CORS visible en el cliente)
+- Formularios de la landing conectados, con estado de carga/error
+- Pendiente: `firebase deploy --only hosting,functions`
+
 ## [Web] — 2026-06-15 — Landing page + Firebase Hosting
 - `web/`: landing page (index, privacy, terms, support)
 - `firebase.json`: sección `hosting` añadida (`public: "web"`, rewrites para /privacy, /terms, /support)

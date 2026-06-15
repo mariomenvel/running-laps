@@ -1,7 +1,7 @@
 # 📋 Running Laps - Documentación Técnica Completa
 
-> **Versión:** 1.0.0  
-> **Última actualización:** Diciembre 2025  
+> **Versión:** 1.1.0  
+> **Última actualización:** Junio 2026  
 > **Autores:** Mario, Álvaro
 
 ---
@@ -161,115 +161,61 @@ flutter_ringtone_player: ^4.0.0+4 # Sonidos de notificación
 
 ```
 lib/
-├── app/
-│   └── tema.dart                          # Tema y estilos globales
+├── config/
+│   └── app_theme.dart                     # Tema global, AvatarHelper (alias legado)
 │
 ├── core/                                  # Componentes transversales
 │   ├── services/
-│   │   ├── gps_service.dart              # Servicio de geolocalización
-│   │   └── pdf_generator_service.dart    # Generación de PDFs
+│   │   ├── gps_service.dart              # Geolocalización + Kalman + Haversine
+│   │   ├── pdf_generator_service.dart    # Generación de PDFs
+│   │   ├── settings_service.dart         # SharedPreferences: alarmas, GPS defaults
+│   │   ├── user_service.dart             # Nombre, contraseña, borrar cuenta, reauth
+│   │   ├── wear_auth_service.dart        # Código de sesión Wear OS (6 dígitos)
+│   │   ├── heart_rate_service.dart       # Frecuencia cardiaca BLE
+│   │   ├── notification_service.dart     # Push + resumen semanal programado
+│   │   ├── ios_live_activity_service.dart # MethodChannel/EventChannel Swift↔Dart
+│   │   └── sensor_service.dart           # Pedómetro
+│   ├── theme/
+│   │   ├── app_colors.dart              # Tokens de color actuales (AppColors.brand, etc.)
+│   │   ├── app_theme.dart               # ThemeData claro/oscuro
+│   │   └── theme_service.dart           # Gestión de tema persistida
+│   ├── tracking/
+│   │   ├── tracking_state.dart           # GpsStatus enum
+│   │   ├── tracking_types.dart           # Tipos y enums
+│   │   └── sensor_frame.dart             # Frame combinado GPS + pedómetro
 │   ├── utils/
-│   │   └── tag_utils.dart                # Utilidades para tags
-│   ├── widgets/
-│   │   ├── app_footer.dart               # Footer reutilizable
-│   │   ├── app_header.dart               # Header reutilizable
-│   │   ├── group_skeleton_card.dart      # Skeleton loader
-│   │   └── modern_snackbar.dart          # Snackbar personalizado
-│   ├── auth_failure.dart                 # Manejo de errores de autenticación
-│   ├── constants.dart                    # Constantes globales
-│   └── utils.dart                        # Utilidades generales
+│   │   ├── kalman_filter.dart            # Filtro Kalman para GPS
+│   │   └── tag_utils.dart               # Utilidades para tags
+│   └── widgets/
+│       ├── app_footer.dart               # Footer reutilizable
+│       ├── app_header.dart               # Header reutilizable
+│       ├── group_skeleton_card.dart      # Skeleton loader
+│       └── modern_snackbar.dart          # Snackbar personalizado
 │
 ├── features/                             # Módulos funcionales
 │   ├── auth/                             # Autenticación
-│   │   ├── data/
-│   │   │   ├── auth_remote.dart          # Comunicación con Firebase Auth
-│   │   │   └── auth_repository.dart      # Repositorio de autenticación
-│   │   ├── viewmodels/
-│   │   │   └── auth_controller.dart      # Controlador de autenticación
-│   │   └── views/
-│   │       └── auth_page.dart            # Vista de login/registro
-│   │
-│   ├── avatar/                           # Creador de avatares
-│   │   ├── data/
-│   │   │   ├── assets.dart               # Gestión de assets SVG
-│   │   │   └── background_shape.dart     # Formas de fondo
-│   │   ├── viewmodels/
-│   │   │   └── avatar_maker_controller.dart
-│   │   ├── views/
-│   │   │   └── avatar_maker_screen.dart
-│   │   └── widgets/
-│   │       ├── avatar_color_picker.dart
-│   │       └── avatar_text_styles.dart
-│   │
-│   ├── groups/                           # Sistema de grupos
-│   │   ├── group/                        # Detalle de grupo
-│   │   │   ├── data/
-│   │   │   │   ├── challenge_model.dart
-│   │   │   │   └── group_detail_repository.dart
-│   │   │   ├── logic/
-│   │   │   │   └── gamification_service.dart
-│   │   │   └── view/
-│   │   │       ├── challenge_detail_screen.dart
-│   │   │       ├── group_detail_screen.dart
-│   │   │       └── participant_profile_screen.dart
-│   │   ├── home/                         # Lista de grupos
-│   │   │   ├── data/
-│   │   │   │   └── groups_repository.dart
-│   │   │   └── view/
-│   │   │       └── groups_home_screen.dart
-│   │   ├── group_model.dart
-│   │   └── invitation_model.dart
-│   │
-│   ├── home/                             # Pantalla principal
-│   │   ├── data/
-│   │   │   └── homeEstadistica_repository.dart
-│   │   ├── viewmodels/
-│   │   │   └── homeEstadistica_Controller.dart
-│   │   ├── views/
-│   │   │   └── home_view.dart
-│   │   └── widgets/
-│   │       ├── history_carousel.dart     # Carrusel de historial
-│   │       ├── legacy_bar_chart.dart     # Gráfica de barras
-│   │       └── stats_carousel.dart       # Carrusel de estadísticas
-│   │
-│   ├── profile/                          # Perfil y analíticas
-│   │   ├── data/
-│   │   │   └── (repositorios de perfil)
-│   │   ├── viewmodels/
-│   │   │   ├── analytics_view_model.dart
-│   │   │   └── profile_controller.dart
-│   │   └── views/
-│   │       ├── analytics_detail_screen.dart
-│   │       ├── analytics_screen.dart
-│   │       ├── avatar_editor_wrapper_view.dart
-│   │       ├── edit_profile_picture_view.dart
-│   │       ├── history_screen.dart
-│   │       ├── profile_menu_screen.dart
-│   │       └── widgets/
-│   │           ├── history_calendar_widget.dart
-│   │           └── history_filter_sheet.dart
-│   │
-│   └── training/                         # Entrenamientos
-│       ├── data/
-│       │   ├── entrenamiento.dart        # Modelo de entrenamiento
-│       │   ├── serie.dart                # Modelo de serie
-│       │   ├── tag_manager.dart          # Gestión de etiquetas
-│       │   ├── tag_model.dart            # Modelo de etiqueta
-│       │   └── training_repository.dart  # Repositorio de entrenamientos
-│       ├── viewmodels/
-│       │   └── training_viewmodel.dart   # Controlador de entrenamientos
-│       ├── views/
-│       │   └── (vistas de entrenamiento)
-│       └── widgets/
-│           └── (componentes de entrenamiento)
+│   ├── training/                         # Sesión de entrenamiento, GPS por serie, tags
+│   ├── history/                          # Historial, filtros, calendario, mapa, PDF
+│   ├── home/                             # Dashboard con widgets configurables
+│   ├── analytics/                        # Overview, trends, patterns, coach insights
+│   ├── groups/                           # Grupos sociales, desafíos, ranking, recompensas
+│   ├── templates/                        # Plantillas con bloques y alarmas de ritmo/tiempo
+│   ├── avatar/                           # Constructor de avatares SVG por capas
+│   ├── profile/                          # Menú perfil, foto, configuración de cuenta
+│   ├── admin/                            # Panel admin (solo isAdmin=true)
+│   ├── ai_coach/                         # Coach IA: sugerencias semanales, memoria atleta
+│   ├── athlete/                          # Perfil atleta avanzado, métricas de forma
+│   └── calendar/                         # Calendario de entrenamientos planificados
 │
-├── firebase_options.dart                 # Configuración de Firebase
-└── main.dart                            # Punto de entrada de la aplicación
+├── firebase_options.dart                 # Configuración de Firebase (no editar a mano)
+└── main.dart                            # Entry point: Firebase init, App Check, ThemeService
 ```
 
 ---
 
 ## 🎨 Módulos Principales (Features)
+
+Features activas: `auth` · `training` · `history` · `home` · `analytics` · `groups` · `templates` · `avatar` · `profile` · `admin` · `ai_coach` · `athlete` · `calendar`
 
 ### 1. **Auth** - Autenticación
 
@@ -606,34 +552,51 @@ users/
     ├── createdAt: timestamp
     ├── profilePicType: "avatar" | "photo"
     ├── avatarConfig: map
+    ├── totalKm: double            # contador atómico
+    ├── totalSessions: int
+    ├── totalTimeMinutes: double
+    ├── lastTrainingDate: string
+    ├── isAdmin: bool?
     └── subcollections:
-        ├── entrenamientos/
-        │   {entrenamientoId}/
+        ├── trainings/             ⚠️ nombre real (no "entrenamientos")
+        │   {trainingId}/
         │       ├── titulo: string
         │       ├── fecha: string (ISO 8601)
         │       ├── gps: boolean
         │       ├── tags: array<string>
         │       ├── series: array<map>
-        │       ├── distanciaTotalM: number
-        │       ├── tiempoTotalSec: number
-        │       ├── rpePromedio: number
-        │       └── ritmoMedioSecKm: number
-        │
-        └── tags/
-            {tagId}/
-                ├── name: string
-                └── color: number
+        │       ├── distanciaTotalM: int (metros)
+        │       ├── tiempoTotalSec: double
+        │       ├── rpePromedio: double
+        │       ├── ritmoMedioSecKm: int
+        │       ├── trackPoints: array<map>?
+        │       └── createdAt: timestamp
+        ├── tags/
+        │   {tagId}/
+        │       ├── name: string
+        │       └── color: int (ARGB)
+        ├── templates/
+        │   {templateId}/
+        │       ├── name: string
+        │       ├── colorValue: int
+        │       ├── enabled: bool
+        │       └── blocks: array<map>
+        └── settings/
+            homeLayoutConfig/ {widgets: array}
 
 groups/
   {groupId}/
     ├── name: string
-    ├── members: array<string>
+    ├── adminUid: string
+    ├── members: array<map>
     └── subcollections:
-        └── challenges/
-            {challengeId}/
-                ├── title: string
-                ├── startDate: timestamp
-                └── endDate: timestamp
+        ├── challenges/{id}
+        └── participations/{uid}
+
+wear_sessions/{código6dígitos}
+  ├── uid: string
+  ├── status: "pending" | "used"
+  └── createdAt: timestamp
 ```
 
 ---
@@ -1046,50 +1009,25 @@ flutter test --coverage
 
 ---
 
-##  Mejoras Futuras
+## 🔧 Deuda Técnica
 
 ### Prioridad Alta
 
-- [ ] **Sincronización Offline**: 
-  - Implementar cache local con `Hive` o `Drift`
-  - Sincronizar cuando vuelva conexión
-
-- [ ] **Notificaciones Push**:
-  - Firebase Cloud Messaging
-  - Recordatorios de entrenamiento
-  - Notificaciones de grupo
-
-- [ ] **Mapa de Ruta GPS**:
-  - Integrar `google_maps_flutter`
-  - Visualizar recorrido en mapa
-  - Exportar track GPX
+- [ ] **Google Sign-In iOS** — crash `assertionFailure` en `AppDelegate.configureGoogleSignIn()`, pendiente diagnóstico en Xcode
+- [ ] **Auth Wear OS** — reemplazar bypass de sesión por Cloud Function + custom token
+- [ ] **Paginación en historial** — `getTrainings()` limitado a 100 entrenamientos, necesita cursor-based pagination con `startAfterDocument`
 
 ### Prioridad Media
 
-- [ ] **Planes de Entrenamiento**:
-  - Crear planes semanales/mensuales
-  - Plantillas predefinidas (5K, 10K, media maratón)
-
-- [ ] **Objetivos y Logros**:
-  - Sistema de badges
-  - Objetivos personalizados (ej: "100km en un mes")
-
-- [ ] **Compartir en Redes Sociales**:
-  - Generar imágenes para compartir
-  - Integración con Strava, Garmin
+- [ ] **`getAllEntrenamientos(uid)`** — alias de `getTrainings()` que ignora el uid; refactorizar o eliminar
+- [ ] **Invalidación `PatternCache`** — usa longitud de lista para detectar cambios; no detecta borrado+inserción con mismo count
+- [ ] **App Check iOS** — omitido por falta de Apple Developer credentials
 
 ### Prioridad Baja
 
-- [ ] **Modo Oscuro**:
-  - Tema dark completo
-  - Detección automática del sistema
-
-- [ ] **Internacionalización**:
-  - Soporte multi-idioma (inglés, español)
-  - Usar paquete `intl` para traducciones
-
-- [ ] **Apple Watch / Wear OS**:
-  - Compañía para registro desde wearables
+- [ ] **Sincronización Offline** — implementar cache local con `Hive` o `Drift`
+- [ ] **Internacionalización** — soporte multi-idioma (en/es)
+- [ ] **Exportación GPX** — exportar trazados GPS en formato estándar
 
 ---
 
