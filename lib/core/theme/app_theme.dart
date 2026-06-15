@@ -6,13 +6,6 @@ import 'app_colors.dart';
 class AppTheme {
   AppTheme._();
 
-  static const _pageTransitions = PageTransitionsTheme(
-    builders: {
-      TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-      TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-    },
-  );
-
   static ThemeData light() => ThemeData(
     fontFamily: 'GeneralSans',
     brightness: Brightness.light,
@@ -38,7 +31,6 @@ class AppTheme {
       unselectedItemColor: AppColors.lightIconMuted,
     ),
     visualDensity: VisualDensity.adaptivePlatformDensity,
-    pageTransitionsTheme: _pageTransitions,
   );
 
   static ThemeData dark() => ThemeData(
@@ -67,7 +59,6 @@ class AppTheme {
       unselectedItemColor: AppColors.iconMuted,
     ),
     visualDensity: VisualDensity.adaptivePlatformDensity,
-    pageTransitionsTheme: _pageTransitions,
   );
 }
 
@@ -102,7 +93,7 @@ class AppDimens {
   static const double cardRadiusLarge = 16;
   static const double cardPadding     = 16;
   static final BoxShadow cardShadow   = BoxShadow(
-    color: Colors.black.withOpacity(0.3),
+    color: Colors.black.withValues(alpha: 0.3),
     blurRadius: 12,
     offset: const Offset(0, 4),
   );

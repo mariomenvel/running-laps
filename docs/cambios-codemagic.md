@@ -46,6 +46,15 @@ Motivo:
 
 El workflow deja de llamar a `xcodebuild` directamente porque Codemagic documenta `flutter build ios --simulator` como ruta especifica para Flutter. Esto evita que Xcode entre en una ruta de build de dispositivo o archive que requiere equipo de desarrollo.
 
+## Ajuste adicional por fallo real de build Dart
+
+Tras revisar el log completo de Codemagic, el fallo ya no era de firma. La compilacion de simulador llegaba hasta Dart y fallaba por:
+
+- `Method not found: 'CupertinoPageTransitionsBuilder'`
+
+Se corrige eliminando la referencia explicita a `CupertinoPageTransitionsBuilder` en `lib/core/theme/app_theme.dart`.
+La app vuelve a usar las transiciones por defecto de Flutter, evitando depender de una API que cambia de libreria segun la version del SDK.
+
 ## Como usarlo
 
 1. Subir este archivo a la rama deseada.
