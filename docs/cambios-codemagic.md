@@ -16,7 +16,7 @@ Se anade `codemagic.yaml` en la raiz del repositorio para que Codemagic pueda de
 - `ios-workflow`
   - ejecuta `flutter pub get`
   - ejecuta `pod install`
-  - genera `Runner.app` para simulador sin firma
+  - genera `Runner.app` para simulador sin firma con `flutter build ios --simulator`
   - empaqueta esa app en `.zip`
 
 ## Archivo creado
@@ -31,7 +31,7 @@ Para que el workflow de iOS funcione de forma fiable en Codemagic, sigue pendien
 - provisioning profiles
 - cuenta App Store Connect si se quiere distribuir
 
-El workflow actual evita ese fallo compilando para `iOS Simulator` con `xcodebuild` y `CODE_SIGNING_ALLOWED=NO`.
+El workflow actual evita ese fallo compilando para `iOS Simulator` con el flujo Flutter documentado: `flutter build ios --simulator`.
 El artefacto final publicado por Codemagic es un `.zip` que contiene `Runner.app`.
 Si se quiere una `.ipa` distribuible desde Codemagic, hay que crear un workflow firmado adicional para dispositivo real.
 
@@ -43,6 +43,8 @@ Motivo:
 
 - el proyecto estaba limitado a `iphoneos`
 - eso provocaba fallo `xcodebuild` con codigo `65` al compilar el workflow unsigned de simulador en Codemagic
+
+El workflow deja de llamar a `xcodebuild` directamente porque Codemagic documenta `flutter build ios --simulator` como ruta especifica para Flutter. Esto evita que Xcode entre en una ruta de build de dispositivo o archive que requiere equipo de desarrollo.
 
 ## Como usarlo
 

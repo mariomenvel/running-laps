@@ -36,23 +36,12 @@ workflows:
           pod install
           cd ..
       - name: Build iOS simulator app without code signing
-        script: |
-          flutter build ios --config-only
-          xcodebuild \
-            -workspace ios/Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
-            build
+        script: flutter build ios --simulator
       - name: Package simulator app as zip
         script: |
-          APP_PATH=$(find "$HOME/Library/Developer/Xcode/DerivedData" -path "*Build/Products/Release-iphonesimulator/Runner.app" | head -n 1)
-          if [ -z "$APP_PATH" ]; then
-            echo "Runner.app not found in DerivedData"
+          APP_PATH="build/ios/iphonesimulator/Runner.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "Runner.app not found at $APP_PATH"
             exit 1
           fi
           mkdir -p build/ios/simulator
