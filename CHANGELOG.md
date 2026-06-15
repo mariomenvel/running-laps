@@ -1,5 +1,10 @@
 # CHANGELOG — Running Laps
 
+## [Web] — 2026-06-15 — Landing page + Firebase Hosting
+- `web/`: landing page (index, privacy, terms, support)
+- `firebase.json`: sección `hosting` añadida (`public: "web"`, rewrites para /privacy, /terms, /support)
+- Pendiente: `firebase deploy --only hosting` (URL final: https://running-laps-mario-2025.web.app)
+
 ## [Notificaciones] — 2026-06-14 — Recordatorios coach
 - `scheduleWeeklyFeedbackReminder`: sábado 09:00, recurrente (OS-managed via `matchDateTimeComponents`) — "¿Cómo fue tu semana?"
 - `syncTrainingReminders(uid)`: notificación 08:00 los días con sesión `planned` esta semana (IDs 101-107, se resincronizan en cada llamada con cancelación previa)
