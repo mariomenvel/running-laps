@@ -389,7 +389,7 @@ class AiCoachSessionGenerator {
           notes: target.notes,
         );
       case 'rodaje_base':
-        if (_shouldBuildProgressiveLongRun(
+        if (complexityTier >= 2 && _shouldBuildProgressiveLongRun(
           target: target,
           targetMinutes: targetMinutes,
           targetKm: targetKm,
@@ -439,10 +439,20 @@ class AiCoachSessionGenerator {
           notes: target.notes,
         );
       case 'rodaje_largo':
-        return _buildProgressiveLongRunBlocks(
+        if (complexityTier >= 2) {
+          return _buildProgressiveLongRunBlocks(
+            sessionIndex: sessionIndex,
+            totalMinutes: math.max(50, targetMinutes),
+            complexityTier: complexityTier,
+            notes: target.notes,
+          );
+        }
+        return _buildBaseRunBlocks(
           sessionIndex: sessionIndex,
-          totalMinutes: math.max(50, targetMinutes),
-          complexityTier: complexityTier,
+          targetKm: targetKm,
+          targetMinutes: math.max(50, targetMinutes),
+          rpe: rpe,
+          zone: zone,
           notes: target.notes,
         );
       case 'series_medias':

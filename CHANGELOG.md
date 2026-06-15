@@ -1,5 +1,11 @@
 # CHANGELOG — Running Laps
 
+## [AI Coach] — 2026-06-15 — Fix: rodaje fragmentado sin progresión real
+- `_buildProgressiveLongRunBlocks` en `rodaje_base` y `rodaje_largo` solo se activa si `complexityTier >= 2` (nivel avanzado en semana de carga), donde el bloque final sube a Z3 y hay progresión real de zona
+- Con `complexityTier < 2`, se genera un único bloque continuo con la duración total (`_buildBaseRunBlocks`), sin fragmentar artificialmente en 3 segmentos idénticos en Z2
+- Antes: rodaje de 70 min → 39/21/10 min, los tres en Z2 (sin sentido pedagógico). Ahora: 1 bloque de 70 min en Z2
+- Bajo impacto: lógica de generación de sesiones, compartida Android/iOS/Web, sin cambios de UI
+
 ## [Web] — 2026-06-15 — Recolección de emails (waitlist)
 - Cloud Function `joinWaitlist` (HTTP, Admin SDK): escribe en Firestore `waitlist/{email}`
 - `firebase.json`: rewrite `/api/waitlist` → `joinWaitlist` (mismo origen, sin CORS visible en el cliente)
