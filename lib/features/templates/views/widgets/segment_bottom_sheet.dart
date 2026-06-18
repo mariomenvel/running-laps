@@ -68,20 +68,20 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
   // Metrónomo
   bool _alertEnabled = false;
   bool _alertByTime = true; // true = time mode, false = pace mode
-  int _alertTimeMin = 0;
   double _alertTimeSec = 30;
   int _alertPaceMin = 5;
   int _alertPaceSec = 0;
   int _alertDistanceM = 400;
 
   static const _alertDistances = [100, 200, 300, 400, 500, 1000];
-  static const _alertTimeSecOptions = [
-    0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 45.0,
+  static final List<double> _alertTimeSecOptions = [
+    for (int i = 1; i <= 120; i++) i * 0.5,
   ];
 
-  static const _distances = [
-    100, 200, 300, 400, 500, 600, 800, 1000,
-    1200, 1500, 2000, 3000, 5000, 10000,
+  static final List<int> _distances = [
+    for (int i = 50; i <= 1000; i += 50) i,
+    for (int i = 1100; i <= 5000; i += 100) i,
+    for (int i = 5500; i <= 42000; i += 500) i,
   ];
   static const _secOptions = [0, 5, 10, 15, 20, 25, 30, 45];
   static const _paceSecOptions = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
@@ -111,8 +111,8 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
     if (a != null) {
       _alertEnabled = a.enabled;
       _alertByTime = a.mode == 'time';
-      _alertTimeMin = a.timeMin;
-      _alertTimeSec = a.timeSec;
+      _alertTimeSec =
+          _nearestAlertTimeSecOption(a.timeMin * 60 + a.timeSec);
       _alertPaceMin = a.paceMin;
       _alertPaceSec = a.paceSec;
       if (_alertDistances.contains(a.segmentDistanceM)) {
@@ -143,6 +143,9 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
 
   int _nearestPaceSecOption(int v) =>
       _paceSecOptions.reduce((a, b) => (a - v).abs() < (b - v).abs() ? a : b);
+
+  double _nearestAlertTimeSecOption(num v) => _alertTimeSecOptions
+      .reduce((a, b) => (a - v).abs() < (b - v).abs() ? a : b);
 
   bool get _saveDisabled {
     if (_type == SegmentType.interval) {
@@ -185,14 +188,13 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
     final alerts = SegmentAlerts(
       enabled: _alertEnabled,
       mode: _alertByTime ? 'time' : 'pace',
-      timeMin: _alertTimeMin,
       timeSec: _alertTimeSec,
       paceMin: _alertPaceMin,
       paceSec: _alertPaceSec,
       segmentDistanceM: _alertDistanceM,
     );
 
-    debugPrint('[Sheet] guardando alerts: enabled=$_alertEnabled mode=${_alertByTime ? "time" : "pace"} timeMin=$_alertTimeMin timeSec=$_alertTimeSec');
+    debugPrint('[Sheet] guardando alerts: enabled=$_alertEnabled mode=${_alertByTime ? "time" : "pace"} timeSec=$_alertTimeSec');
     return WorkoutSegment(
       id: widget.initialSegment?.id ?? const Uuid().v4(),
       type: _type,
@@ -209,7 +211,6 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
     final ms = SegmentAlerts(
       enabled: true,
       mode: _alertByTime ? 'time' : 'pace',
-      timeMin: _alertTimeMin,
       timeSec: _alertTimeSec,
       paceMin: _alertPaceMin,
       paceSec: _alertPaceSec,
@@ -296,36 +297,93 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
                   if (_type == SegmentType.interval && _byDistance) ...[
                     _sectionLabel(context, 'DISTANCIA'),
                     const SizedBox(height: AppSpacing.s),
-                    _WheelPicker(
-                      values: _distances,
-                      selected: _distanceM,
-                      suffix: 'm',
-                      onChanged: (v) => setState(() => _distanceM = v),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2Of(context),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: AppColors.borderOf(context)),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Column(children: [
+                            Text('m',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color:
+                                        AppColors.textSecondary(context))),
+                            const SizedBox(height: 4),
+                            _WheelPicker(
+                              values: _distances,
+                              selected: _distanceM,
+                              suffix: '',
+                              onChanged: (v) =>
+                                  setState(() => _distanceM = v),
+                            ),
+                          ]),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.l),
                   ] else ...[
                     _sectionLabel(context, 'DURACIÓN'),
                     const SizedBox(height: AppSpacing.s),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _WheelPicker(
-                            values: List.generate(60, (i) => i),
-                            selected: _durationMin,
-                            suffix: 'min',
-                            onChanged: (v) => setState(() => _durationMin = v),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2Of(context),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: AppColors.borderOf(context)),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Column(children: [
+                            Text('min',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color:
+                                        AppColors.textSecondary(context))),
+                            const SizedBox(height: 4),
+                            _WheelPicker(
+                              values: List.generate(60, (i) => i),
+                              selected: _durationMin,
+                              suffix: '',
+                              onChanged: (v) =>
+                                  setState(() => _durationMin = v),
+                            ),
+                          ]),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 16),
+                            child: Text(' : ',
+                                style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w300,
+                                    color:
+                                        AppColors.textSecondary(context))),
                           ),
-                        ),
-                        const SizedBox(width: AppSpacing.m),
-                        Expanded(
-                          child: _WheelPicker(
-                            values: _secOptions,
-                            selected: _durationSec,
-                            suffix: 'seg',
-                            onChanged: (v) => setState(() => _durationSec = v),
-                          ),
-                        ),
-                      ],
+                          Column(children: [
+                            Text('seg',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color:
+                                        AppColors.textSecondary(context))),
+                            const SizedBox(height: 4),
+                            _WheelPicker(
+                              values: _secOptions,
+                              selected: _durationSec,
+                              suffix: '',
+                              onChanged: (v) =>
+                                  setState(() => _durationSec = v),
+                            ),
+                          ]),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.l),
                   ],
@@ -353,87 +411,146 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
                     const SizedBox(height: AppSpacing.l),
                   ],
 
-                  // ── Objetivo (opcional) ──
-                  Row(
-                    children: [
-                      _sectionLabel(context, 'OBJETIVO'),
-                      const SizedBox(width: AppSpacing.s),
-                      Text(
-                        '· opcional',
-                        style: TextStyle(
-                            fontSize: 11,
-                            color: AppColors.textSecondary(context)),
+                  // ── Objetivo + Metrónomo (ocultos en descanso pasivo) ──
+                  if (!(_type == SegmentType.recovery &&
+                      _recoveryType == RecoveryType.passive)) ...[
+                    Row(
+                      children: [
+                        _sectionLabel(context, 'OBJETIVO'),
+                        const SizedBox(width: AppSpacing.s),
+                        Text(
+                          '· opcional',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.textSecondary(context)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.m),
+
+                    // Pace
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2Of(context),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: AppColors.borderOf(context)),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.m),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _cardLabel(context, 'PACE'),
+                          const SizedBox(height: 8),
+                          _PaceRow(
+                            minMin: _paceMinMin,
+                            minSec: _paceMinSec,
+                            maxMin: _paceMaxMin,
+                            maxSec: _paceMaxSec,
+                            onMinChanged: (min, sec) => setState(() {
+                              _paceMinMin = min;
+                              _paceMinSec = sec;
+                            }),
+                            onMaxChanged: (min, sec) => setState(() {
+                              _paceMaxMin = min;
+                              _paceMaxSec = sec;
+                            }),
+                            onClear: () => setState(() {
+                              _paceMinMin =
+                                  _paceMinSec = _paceMaxMin = _paceMaxSec = null;
+                            }),
+                            context: context,
+                          ),
+                        ],
+                      ),
+                    ),
 
-                  // Pace
-                  _sectionLabel(context, 'Pace', small: true),
-                  const SizedBox(height: AppSpacing.s),
-                  _PaceRow(
-                    minMin: _paceMinMin,
-                    minSec: _paceMinSec,
-                    maxMin: _paceMaxMin,
-                    maxSec: _paceMaxSec,
-                    onMinChanged: (min, sec) =>
-                        setState(() { _paceMinMin = min; _paceMinSec = sec; }),
-                    onMaxChanged: (min, sec) =>
-                        setState(() { _paceMaxMin = min; _paceMaxSec = sec; }),
-                    onClear: () => setState(() {
-                      _paceMinMin = _paceMinSec = _paceMaxMin = _paceMaxSec = null;
-                    }),
-                    context: context,
-                  ),
-                  const SizedBox(height: AppSpacing.m),
+                    // Zona FC
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2Of(context),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: AppColors.borderOf(context)),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _cardLabel(context, 'ZONA FC'),
+                          const SizedBox(height: 8),
+                          _ZoneRow(
+                            selected: _zone,
+                            onSelect: (z) =>
+                                setState(() => _zone = _zone == z ? null : z),
+                            context: context,
+                          ),
+                        ],
+                      ),
+                    ),
 
-                  // Zona FC
-                  _sectionLabel(context, 'Zona FC', small: true),
-                  const SizedBox(height: AppSpacing.s),
-                  _ZoneRow(
-                    selected: _zone,
-                    onSelect: (z) => setState(() => _zone = _zone == z ? null : z),
-                    context: context,
-                  ),
-                  const SizedBox(height: AppSpacing.m),
+                    // RPE
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2Of(context),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: AppColors.borderOf(context)),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _cardLabel(context, 'RPE'),
+                          const SizedBox(height: 8),
+                          _RpeRow(
+                            rpe: _rpe,
+                            sliderValue: _rpeSliderValue,
+                            onSliderChanged: (v) => setState(() {
+                              _rpeSliderValue = v;
+                              _rpe = v.round();
+                            }),
+                            onClear: () => setState(() => _rpe = null),
+                            context: context,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.s),
 
-                  // RPE
-                  _sectionLabel(context, 'RPE', small: true),
-                  const SizedBox(height: AppSpacing.s),
-                  _RpeRow(
-                    rpe: _rpe,
-                    sliderValue: _rpeSliderValue,
-                    onSliderChanged: (v) => setState(() {
-                      _rpeSliderValue = v;
-                      _rpe = v.round();
-                    }),
-                    onClear: () => setState(() => _rpe = null),
-                    context: context,
-                  ),
-                  const SizedBox(height: AppSpacing.l),
-
-                  // ── Metrónomo ──
-                  _AlertSection(
-                    enabled: _alertEnabled,
-                    byTime: _alertByTime,
-                    timeMin: _alertTimeMin,
-                    timeSec: _alertTimeSec,
-                    paceMin: _alertPaceMin,
-                    paceSec: _alertPaceSec,
-                    distanceM: _alertDistanceM,
-                    previewText: _alertPreviewText(),
-                    alertDistances: _alertDistances,
-                    alertTimeSecOptions: _alertTimeSecOptions,
-                    onToggleEnabled: (v) => setState(() => _alertEnabled = v),
-                    onToggleMode: (byTime) => setState(() => _alertByTime = byTime),
-                    onTimeMinChanged: (v) => setState(() => _alertTimeMin = v),
-                    onTimeSecChanged: (v) => setState(() => _alertTimeSec = v),
-                    onPaceMinChanged: (v) => setState(() => _alertPaceMin = v),
-                    onPaceSecChanged: (v) => setState(() => _alertPaceSec = v),
-                    onDistanceChanged: (v) => setState(() => _alertDistanceM = v),
-                    context: context,
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
+                    // ── Metrónomo ──
+                    _AlertSection(
+                      enabled: _alertEnabled,
+                      byTime: _alertByTime,
+                      timeSec: _alertTimeSec,
+                      paceMin: _alertPaceMin,
+                      paceSec: _alertPaceSec,
+                      distanceM: _alertDistanceM,
+                      previewText: _alertPreviewText(),
+                      alertDistances: _alertDistances,
+                      alertTimeSecOptions: _alertTimeSecOptions,
+                      onToggleEnabled: (v) =>
+                          setState(() => _alertEnabled = v),
+                      onToggleMode: (byTime) =>
+                          setState(() => _alertByTime = byTime),
+                      onTimeSecChanged: (v) =>
+                          setState(() => _alertTimeSec = v),
+                      onPaceMinChanged: (v) =>
+                          setState(() => _alertPaceMin = v),
+                      onPaceSecChanged: (v) =>
+                          setState(() => _alertPaceSec = v),
+                      onDistanceChanged: (v) =>
+                          setState(() => _alertDistanceM = v),
+                      context: context,
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                  ],
 
                   // Botón guardar
                   SizedBox(
@@ -476,9 +593,19 @@ Widget _sectionLabel(BuildContext context, String text,
     Text(
       text,
       style: TextStyle(
-        fontSize: small ? 13 : 12,
+        fontSize: small ? 13 : 11,
+        fontWeight: small ? FontWeight.w500 : FontWeight.w600,
+        letterSpacing: small ? 0 : 0.08,
+        color: AppColors.textSecondary(context),
+      ),
+    );
+
+Widget _cardLabel(BuildContext context, String text) => Text(
+      text,
+      style: TextStyle(
+        fontSize: 11,
         fontWeight: FontWeight.w500,
-        letterSpacing: small ? 0 : 1.2,
+        letterSpacing: 0.06,
         color: AppColors.textSecondary(context),
       ),
     );
@@ -537,9 +664,11 @@ class _TypeToggle extends StatelessWidget {
                     label,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w500,
                       color: isSelected
-                          ? AppColors.textPrimary(outerContext)
+                          ? AppColors.brand
                           : AppColors.textSecondary(outerContext),
                     ),
                   ),
@@ -604,10 +733,8 @@ class _BoolToggle extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: sel
-                    ? AppColors.textPrimary(ctx)
-                    : AppColors.textSecondary(ctx),
+                fontWeight: sel ? FontWeight.w600 : FontWeight.w500,
+                color: sel ? AppColors.brand : AppColors.textSecondary(ctx),
               ),
             ),
           ),
@@ -615,9 +742,147 @@ class _BoolToggle extends StatelessWidget {
       );
 }
 
+// ── _IosPicker ────────────────────────────────────────────────────────────────
+
+/// Picker estilo iOS: rueda con pill oscura central,
+/// ítem seleccionado destacado, fade superior/inferior.
+class _IosPicker extends StatefulWidget {
+  final List<String> labels;
+  final int initialIndex;
+  final ValueChanged<int> onIndexChanged;
+  final double itemExtent;
+  final double width;
+
+  const _IosPicker({
+    required this.labels,
+    required this.initialIndex,
+    required this.onIndexChanged,
+    this.itemExtent = 32,
+    this.width = 56,
+  });
+
+  @override
+  State<_IosPicker> createState() => _IosPickerState();
+}
+
+class _IosPickerState extends State<_IosPicker> {
+  late final FixedExtentScrollController _ctrl;
+  late int _selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+    _ctrl = FixedExtentScrollController(initialItem: widget.initialIndex);
+  }
+
+  @override
+  void didUpdateWidget(_IosPicker old) {
+    super.didUpdateWidget(old);
+    if (old.initialIndex != widget.initialIndex &&
+        _selectedIndex != widget.initialIndex) {
+      _selectedIndex = widget.initialIndex;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_ctrl.hasClients) return;
+        if (_ctrl.selectedItem != widget.initialIndex) {
+          _ctrl.jumpToItem(widget.initialIndex);
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final pillColor = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : AppColors.borderOf(context).withValues(alpha: 0.6);
+    final selectedColor = isDark ? Colors.white : Colors.black;
+    final unselectedColor = isDark
+        ? Colors.white.withValues(alpha: 0.35)
+        : Colors.black.withValues(alpha: 0.35);
+
+    const visibleItems = 3;
+    final totalHeight = widget.itemExtent * visibleItems;
+
+    return SizedBox(
+      width: widget.width,
+      height: totalHeight,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Pill de selección central
+          Positioned(
+            top: (totalHeight - widget.itemExtent) / 2,
+            left: 4,
+            right: 4,
+            child: Container(
+              height: widget.itemExtent,
+              decoration: BoxDecoration(
+                color: pillColor,
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+          ),
+
+          // Rueda con fade
+          ShaderMask(
+            shaderCallback: (bounds) => const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.transparent,
+                Colors.white,
+                Colors.white,
+                Colors.transparent,
+              ],
+              stops: [0.0, 0.25, 0.75, 1.0],
+            ).createShader(bounds),
+            blendMode: BlendMode.dstIn,
+            child: ListWheelScrollView.useDelegate(
+              controller: _ctrl,
+              itemExtent: widget.itemExtent,
+              perspective: 0.002,
+              diameterRatio: 1.5,
+              physics: const FixedExtentScrollPhysics(),
+              onSelectedItemChanged: (i) {
+                setState(() => _selectedIndex = i);
+                widget.onIndexChanged(i);
+              },
+              childDelegate: ListWheelChildBuilderDelegate(
+                childCount: widget.labels.length,
+                builder: (ctx, i) {
+                  final isSelected = i == _selectedIndex;
+                  return Center(
+                    child: Text(
+                      widget.labels[i],
+                      style: TextStyle(
+                        fontSize: isSelected ? 15 : 14,
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.w400,
+                        color: isSelected ? selectedColor : unselectedColor,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── _WheelPicker ──────────────────────────────────────────────────────────────
 
-class _WheelPicker extends StatefulWidget {
+class _WheelPicker extends StatelessWidget {
   const _WheelPicker({
     required this.values,
     required this.selected,
@@ -631,77 +896,70 @@ class _WheelPicker extends StatefulWidget {
   final void Function(int) onChanged;
 
   @override
-  State<_WheelPicker> createState() => _WheelPickerState();
-}
-
-class _WheelPickerState extends State<_WheelPicker> {
-  late final FixedExtentScrollController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    final idx = widget.values.indexOf(widget.selected);
-    _ctrl = FixedExtentScrollController(initialItem: idx < 0 ? 0 : idx);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 100,
-      decoration: BoxDecoration(
-        color: AppColors.surfaceOf(context),
-        borderRadius: BorderRadius.circular(12),
-        border:
-            Border.all(color: AppColors.borderOf(context), width: 0.5),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 72,
-            child: ListWheelScrollView.useDelegate(
-              controller: _ctrl,
-              itemExtent: 36,
-              perspective: 0.003,
-              diameterRatio: 1.4,
-              physics: const FixedExtentScrollPhysics(),
-              onSelectedItemChanged: (i) => widget.onChanged(widget.values[i]),
-              childDelegate: ListWheelChildBuilderDelegate(
-                builder: (ctx, i) {
-                  if (i < 0 || i >= widget.values.length) return null;
-                  return Center(
-                    child: Text(
-                      '${widget.values[i]}',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textPrimary(ctx),
-                      ),
-                    ),
-                  );
-                },
-                childCount: widget.values.length,
-              ),
-            ),
+    final initialIndex =
+        values.indexOf(selected).clamp(0, values.length - 1);
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        _IosPicker(
+          labels: values.map((v) => '$v').toList(),
+          initialIndex: initialIndex,
+          onIndexChanged: (i) => onChanged(values[i]),
+          itemExtent: 32,
+          width: 60,
+        ),
+        if (suffix.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 6),
+            child: Text(suffix,
+                style: TextStyle(
+                    fontSize: 14, color: AppColors.textSecondary(context))),
           ),
-          Text(
-            widget.suffix,
-            style: TextStyle(
-                fontSize: 14, color: AppColors.textSecondary(context)),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }
 
 // ── _PaceRow ──────────────────────────────────────────────────────────────────
+
+// ── _PacePill ─────────────────────────────────────────────────────────────────
+
+class _PacePill extends StatelessWidget {
+  final Widget minutesPicker;
+  final Widget secondsPicker;
+
+  const _PacePill({
+    required this.minutesPicker,
+    required this.secondsPicker,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface2Of(context),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.borderOf(context), width: 0.5),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          minutesPicker,
+          Text(' : ',
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w300,
+                  color: AppColors.textSecondary(context))),
+          secondsPicker,
+        ],
+      ),
+    );
+  }
+}
 
 class _PaceRow extends StatelessWidget {
   const _PaceRow({
@@ -724,7 +982,7 @@ class _PaceRow extends StatelessWidget {
   final VoidCallback onClear;
   final BuildContext context;
 
-  static const _mins = [3, 4, 5, 6, 7, 8];
+  static const _mins = [2, 3, 4, 5, 6, 7, 8];
   static const _secs = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
 
   @override
@@ -739,43 +997,39 @@ class _PaceRow extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 13,
                     color: AppColors.textSecondary(outerContext))),
-            _MiniWheelPicker(
-              values: _mins,
-              selected: minMin ?? 4,
-              onChanged: (v) => onMinChanged(v, minSec ?? 0),
-              context: outerContext,
-            ),
-            Text(' : ',
-                style: TextStyle(
-                    fontSize: 16,
-                    color: AppColors.textPrimary(outerContext))),
-            _MiniWheelPicker(
-              values: _secs,
-              selected: minSec ?? 0,
-              onChanged: (v) => onMinChanged(minMin ?? 4, v),
-              context: outerContext,
-              pad: true,
+            _PacePill(
+              minutesPicker: _MiniWheelPicker(
+                values: _mins,
+                selected: minMin ?? 4,
+                onChanged: (v) => onMinChanged(v, minSec ?? 0),
+                context: outerContext,
+              ),
+              secondsPicker: _MiniWheelPicker(
+                values: _secs,
+                selected: minSec ?? 0,
+                onChanged: (v) => onMinChanged(minMin ?? 4, v),
+                context: outerContext,
+                pad: true,
+              ),
             ),
             Text('  a  ',
                 style: TextStyle(
                     fontSize: 13,
                     color: AppColors.textSecondary(outerContext))),
-            _MiniWheelPicker(
-              values: _mins,
-              selected: maxMin ?? 4,
-              onChanged: (v) => onMaxChanged(v, maxSec ?? 0),
-              context: outerContext,
-            ),
-            Text(' : ',
-                style: TextStyle(
-                    fontSize: 16,
-                    color: AppColors.textPrimary(outerContext))),
-            _MiniWheelPicker(
-              values: _secs,
-              selected: maxSec ?? 0,
-              onChanged: (v) => onMaxChanged(maxMin ?? 4, v),
-              context: outerContext,
-              pad: true,
+            _PacePill(
+              minutesPicker: _MiniWheelPicker(
+                values: _mins,
+                selected: maxMin ?? 4,
+                onChanged: (v) => onMaxChanged(v, maxSec ?? 0),
+                context: outerContext,
+              ),
+              secondsPicker: _MiniWheelPicker(
+                values: _secs,
+                selected: maxSec ?? 0,
+                onChanged: (v) => onMaxChanged(maxMin ?? 4, v),
+                context: outerContext,
+                pad: true,
+              ),
             ),
             Text('  /km',
                 style: TextStyle(
@@ -813,7 +1067,7 @@ class _PaceRow extends StatelessWidget {
   }
 }
 
-class _MiniWheelPicker extends StatefulWidget {
+class _MiniWheelPicker extends StatelessWidget {
   const _MiniWheelPicker({
     required this.values,
     required this.selected,
@@ -829,57 +1083,18 @@ class _MiniWheelPicker extends StatefulWidget {
   final bool pad;
 
   @override
-  State<_MiniWheelPicker> createState() => _MiniWheelPickerState();
-}
-
-class _MiniWheelPickerState extends State<_MiniWheelPicker> {
-  late final FixedExtentScrollController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    final idx = widget.values.indexOf(widget.selected);
-    _ctrl = FixedExtentScrollController(initialItem: idx < 0 ? 0 : idx);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 32,
-      height: 44,
-      child: ListWheelScrollView.useDelegate(
-        controller: _ctrl,
-        itemExtent: 32,
-        perspective: 0.003,
-        diameterRatio: 1.8,
-        physics: const FixedExtentScrollPhysics(),
-        onSelectedItemChanged: (i) => widget.onChanged(widget.values[i]),
-        childDelegate: ListWheelChildBuilderDelegate(
-          builder: (ctx, i) {
-            if (i < 0 || i >= widget.values.length) return null;
-            final label = widget.pad
-                ? widget.values[i].toString().padLeft(2, '0')
-                : '${widget.values[i]}';
-            return Center(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary(ctx),
-                ),
-              ),
-            );
-          },
-          childCount: widget.values.length,
-        ),
-      ),
+    final labels =
+        values.map((v) => pad ? '$v'.padLeft(2, '0') : '$v').toList();
+    final initialIndex =
+        values.indexOf(selected).clamp(0, values.length - 1);
+
+    return _IosPicker(
+      labels: labels,
+      initialIndex: initialIndex,
+      onIndexChanged: (i) => onChanged(values[i]),
+      itemExtent: 28,
+      width: 36,
     );
   }
 }
@@ -890,7 +1105,6 @@ class _AlertSection extends StatelessWidget {
   const _AlertSection({
     required this.enabled,
     required this.byTime,
-    required this.timeMin,
     required this.timeSec,
     required this.paceMin,
     required this.paceSec,
@@ -900,7 +1114,6 @@ class _AlertSection extends StatelessWidget {
     required this.alertTimeSecOptions,
     required this.onToggleEnabled,
     required this.onToggleMode,
-    required this.onTimeMinChanged,
     required this.onTimeSecChanged,
     required this.onPaceMinChanged,
     required this.onPaceSecChanged,
@@ -910,7 +1123,6 @@ class _AlertSection extends StatelessWidget {
 
   final bool enabled;
   final bool byTime;
-  final int timeMin;
   final double timeSec;
   final int paceMin;
   final int paceSec;
@@ -920,14 +1132,13 @@ class _AlertSection extends StatelessWidget {
   final List<double> alertTimeSecOptions;
   final void Function(bool) onToggleEnabled;
   final void Function(bool) onToggleMode;
-  final void Function(int) onTimeMinChanged;
   final void Function(double) onTimeSecChanged;
   final void Function(int) onPaceMinChanged;
   final void Function(int) onPaceSecChanged;
   final void Function(int) onDistanceChanged;
   final BuildContext context;
 
-  static const _paceMinOptions = [3, 4, 5, 6, 7, 8, 9, 10];
+  static const _paceMinOptions = [2, 3, 4, 5, 6, 7, 8, 9, 10];
   static const _paceSecOptions = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
 
   @override
@@ -971,58 +1182,70 @@ class _AlertSection extends StatelessWidget {
             // Modo tiempo: beep cada MM:SS.S
             _sectionLabel(outerContext, 'Beep cada', small: true),
             const SizedBox(height: AppSpacing.s),
-            Row(
-              children: [
-                _MiniWheelPicker(
-                  values: List.generate(60, (i) => i),
-                  selected: timeMin,
-                  onChanged: onTimeMinChanged,
-                  context: outerContext,
-                ),
-                Text(
-                  ' min  ',
-                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary(outerContext)),
-                ),
-                _MiniWheelPickerDouble(
-                  values: alertTimeSecOptions,
-                  selected: timeSec,
-                  onChanged: onTimeSecChanged,
-                  context: outerContext,
-                ),
-                Text(
-                  ' seg',
-                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary(outerContext)),
-                ),
-              ],
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface2Of(outerContext),
+                borderRadius: BorderRadius.circular(12),
+                border:
+                    Border.all(color: AppColors.borderOf(outerContext)),
+              ),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _MiniWheelPickerDouble(
+                    values: alertTimeSecOptions,
+                    selected: timeSec,
+                    onChanged: onTimeSecChanged,
+                    context: outerContext,
+                  ),
+                  Text(
+                    ' seg',
+                    style: TextStyle(fontSize: 13, color: AppColors.textSecondary(outerContext)),
+                  ),
+                ],
+              ),
             ),
           ] else ...[
             // Modo ritmo: pace + distancia
             _sectionLabel(outerContext, 'Pace objetivo', small: true),
             const SizedBox(height: AppSpacing.s),
-            Row(
-              children: [
-                _MiniWheelPicker(
-                  values: _paceMinOptions,
-                  selected: paceMin,
-                  onChanged: onPaceMinChanged,
-                  context: outerContext,
-                ),
-                Text(
-                  ' : ',
-                  style: TextStyle(fontSize: 16, color: AppColors.textPrimary(outerContext)),
-                ),
-                _MiniWheelPicker(
-                  values: _paceSecOptions,
-                  selected: paceSec,
-                  onChanged: onPaceSecChanged,
-                  context: outerContext,
-                  pad: true,
-                ),
-                Text(
-                  '  /km',
-                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary(outerContext)),
-                ),
-              ],
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface2Of(outerContext),
+                borderRadius: BorderRadius.circular(12),
+                border:
+                    Border.all(color: AppColors.borderOf(outerContext)),
+              ),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _MiniWheelPicker(
+                    values: _paceMinOptions,
+                    selected: paceMin,
+                    onChanged: onPaceMinChanged,
+                    context: outerContext,
+                  ),
+                  Text(
+                    ' : ',
+                    style: TextStyle(fontSize: 16, color: AppColors.textPrimary(outerContext)),
+                  ),
+                  _MiniWheelPicker(
+                    values: _paceSecOptions,
+                    selected: paceSec,
+                    onChanged: onPaceSecChanged,
+                    context: outerContext,
+                    pad: true,
+                  ),
+                  Text(
+                    '  /km',
+                    style: TextStyle(fontSize: 13, color: AppColors.textSecondary(outerContext)),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: AppSpacing.m),
             _sectionLabel(outerContext, 'Cada', small: true),
@@ -1085,7 +1308,7 @@ class _AlertSection extends StatelessWidget {
 
 // ── _MiniWheelPickerDouble ────────────────────────────────────────────────────
 
-class _MiniWheelPickerDouble extends StatefulWidget {
+class _MiniWheelPickerDouble extends StatelessWidget {
   const _MiniWheelPickerDouble({
     required this.values,
     required this.selected,
@@ -1099,63 +1322,41 @@ class _MiniWheelPickerDouble extends StatefulWidget {
   final BuildContext context;
 
   @override
-  State<_MiniWheelPickerDouble> createState() => _MiniWheelPickerDoubleState();
-}
-
-class _MiniWheelPickerDoubleState extends State<_MiniWheelPickerDouble> {
-  late final FixedExtentScrollController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    final idx = widget.values.indexOf(widget.selected);
-    _ctrl = FixedExtentScrollController(initialItem: idx < 0 ? 0 : idx);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 40,
-      height: 44,
-      child: ListWheelScrollView.useDelegate(
-        controller: _ctrl,
-        itemExtent: 32,
-        perspective: 0.003,
-        diameterRatio: 1.8,
-        physics: const FixedExtentScrollPhysics(),
-        onSelectedItemChanged: (i) => widget.onChanged(widget.values[i]),
-        childDelegate: ListWheelChildBuilderDelegate(
-          builder: (ctx, i) {
-            if (i < 0 || i >= widget.values.length) return null;
-            final v = widget.values[i];
-            final label = v == v.truncateToDouble()
-                ? v.toInt().toString().padLeft(2, '0')
-                : v.toStringAsFixed(1);
-            return Center(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary(ctx),
-                ),
-              ),
-            );
-          },
-          childCount: widget.values.length,
-        ),
-      ),
+    final labels = values.map((v) {
+      return v == v.roundToDouble()
+          ? v.toInt().toString().padLeft(2, '0')
+          : v.toStringAsFixed(1);
+    }).toList();
+    final initialIndex =
+        values.indexOf(selected).clamp(0, values.length - 1);
+
+    return _IosPicker(
+      labels: labels,
+      initialIndex: initialIndex,
+      onIndexChanged: (i) => onChanged(values[i]),
+      itemExtent: 28,
+      width: 36,
     );
   }
 }
 
 // ── _ZoneRow ──────────────────────────────────────────────────────────────────
+
+Color _zoneSelectedColor(HeartRateZone z) {
+  switch (z) {
+    case HeartRateZone.z1: return const Color(0xFF639922);
+    case HeartRateZone.z2: return const Color(0xFF378ADD);
+    case HeartRateZone.z3: return const Color(0xFFEF9F27);
+    case HeartRateZone.z4: return const Color(0xFFD85A30);
+    case HeartRateZone.z5: return const Color(0xFFE24B4A);
+  }
+}
+
+Color _darken(Color c) {
+  final h = HSLColor.fromColor(c);
+  return h.withLightness((h.lightness - 0.18).clamp(0.0, 1.0)).toColor();
+}
 
 class _ZoneRow extends StatelessWidget {
   const _ZoneRow({
@@ -1173,6 +1374,7 @@ class _ZoneRow extends StatelessWidget {
     return Row(
       children: HeartRateZone.values.map((z) {
         final isSelected = z == selected;
+        final zoneColor = _zoneSelectedColor(z);
         return GestureDetector(
           onTap: () => onSelect(z),
           child: AnimatedContainer(
@@ -1182,12 +1384,13 @@ class _ZoneRow extends StatelessWidget {
             height: 32,
             decoration: BoxDecoration(
               color: isSelected
-                  ? AppColors.brand.withValues(alpha: 0.12)
+                  ? zoneColor.withValues(alpha: 0.15)
                   : AppColors.surfaceOf(outerContext),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color:
-                    isSelected ? AppColors.brand : AppColors.borderOf(outerContext),
+                color: isSelected
+                    ? zoneColor
+                    : AppColors.borderOf(outerContext),
                 width: isSelected ? 1.5 : 0.5,
               ),
             ),
@@ -1198,7 +1401,7 @@ class _ZoneRow extends StatelessWidget {
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                   color: isSelected
-                      ? AppColors.brand
+                      ? _darken(zoneColor)
                       : AppColors.textSecondary(outerContext),
                 ),
               ),
@@ -1227,6 +1430,9 @@ class _RpeRow extends StatelessWidget {
   final VoidCallback onClear;
   final BuildContext context;
 
+  static const double _thumbRadius = 12.0;
+  static const double _trackHeight = 4.0;
+
   @override
   Widget build(BuildContext outerContext) {
     final activeColor = rpe != null
@@ -1235,14 +1441,56 @@ class _RpeRow extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: Slider(
-            min: 1,
-            max: 10,
-            divisions: 9,
-            value: sliderValue,
-            activeColor: activeColor,
-            inactiveColor: AppColors.borderOf(outerContext),
-            onChanged: onSliderChanged,
+          child: SizedBox(
+            height: 36,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Track con gradiente (detrás)
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: _thumbRadius),
+                  child: Container(
+                    height: _trackHeight,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(_trackHeight / 2),
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF639922),
+                          Color(0xFFEF9F27),
+                          Color(0xFFD85A30),
+                          Color(0xFFE24B4A),
+                        ],
+                        stops: [0.0, 0.45, 0.75, 1.0],
+                      ),
+                    ),
+                  ),
+                ),
+                // Slider encima con track invisible
+                SliderTheme(
+                  data: SliderTheme.of(outerContext).copyWith(
+                    trackHeight: _trackHeight,
+                    activeTrackColor: Colors.transparent,
+                    inactiveTrackColor: Colors.transparent,
+                    thumbColor: activeColor,
+                    thumbShape: const RoundSliderThumbShape(
+                      enabledThumbRadius: _thumbRadius,
+                      elevation: 2,
+                    ),
+                    overlayShape:
+                        const RoundSliderOverlayShape(overlayRadius: 20),
+                    overlayColor: activeColor.withValues(alpha: 0.12),
+                  ),
+                  child: Slider(
+                    min: 1,
+                    max: 10,
+                    divisions: 9,
+                    value: sliderValue,
+                    onChanged: onSliderChanged,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         SizedBox(
@@ -1251,9 +1499,11 @@ class _RpeRow extends StatelessWidget {
             rpe != null ? '$rpe' : '–',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 22,
               fontWeight: FontWeight.w500,
-              color: rpe != null ? activeColor : AppColors.textSecondary(outerContext),
+              color: rpe != null
+                  ? activeColor
+                  : AppColors.textSecondary(outerContext),
             ),
           ),
         ),
@@ -1263,8 +1513,7 @@ class _RpeRow extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.only(left: AppSpacing.xs),
               child: Icon(Icons.close,
-                  size: 16,
-                  color: AppColors.iconMutedOf(outerContext)),
+                  size: 16, color: AppColors.iconMutedOf(outerContext)),
             ),
           ),
       ],

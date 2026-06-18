@@ -1,3 +1,6 @@
+// LEGACY — usado solo por SessionEditorView
+// (vista huérfana, no conectada al flujo principal)
+// No modificar hasta decidir si se elimina
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
@@ -26,6 +29,28 @@ Color _rpeColor(double rpe) {
   return AppColors.rpeMax;
 }
 
+// Franja de color izquierda: Z1 verde, Z2 azul, Z3 ámbar, Z4 coral, Z5 rojo
+Color _zoneAccentColor(SessionBlock block, {required bool isDark}) {
+  if (block.targetZone != null) {
+    switch (block.targetZone!) {
+      case 1: return AppColors.rpeLow;
+      case 2: return AppColors.rest;
+      case 3: return AppColors.rpeMid;
+      case 4: return AppColors.effort;
+      case 5: return AppColors.rpeMax;
+    }
+  }
+  if (block.targetRpe != null || block.targetPaceMinMin != null) {
+    return AppColors.brand;
+  }
+  return isDark ? AppColors.border : AppColors.lightBorder2;
+}
+
+Color _darken(Color color) {
+  final hsl = HSLColor.fromColor(color);
+  return hsl.withLightness((hsl.lightness - 0.15).clamp(0.0, 1.0)).toColor();
+}
+
 String _fmtPaceFragment(int? min, int? sec) {
   if (min == null && sec == null) return '';
   final m = min ?? 0;
@@ -41,16 +66,6 @@ String _blockTitle(SessionBlock b) {
       return '${b.durationMinutes ?? 0} min';
     case SessionBlockType.continuousDistance:
       return '${b.distanceM ?? 0} m';
-  }
-}
-
-String _blockSubtitle(SessionBlock b) {
-  switch (b.type) {
-    case SessionBlockType.series:
-      return 'Desc ${b.restSeconds ?? 0} s';
-    case SessionBlockType.continuousTime:
-    case SessionBlockType.continuousDistance:
-      return 'Carrera continua';
   }
 }
 
@@ -301,84 +316,146 @@ class _BlockCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final brandChipBg = AppColors.brand.withValues(alpha: 0.12);
-    final brandChipText =
-        isDark ? AppColors.brandLight : AppColors.brand;
+    final accentColor = _zoneAccentColor(block, isDark: isDark);
+    final chipBg = accentColor.withValues(alpha: 0.13);
+    final chipFg = isDark ? accentColor.withValues(alpha: 0.85) : _darken(accentColor);
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
           color: AppColors.surfaceOf(context),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppColors.borderOf(context),
-          ),
+          border: Border.all(color: AppColors.borderOf(context)),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(children: [
+        clipBehavior: Clip.hardEdge,
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Franja de color izquierda
+              Container(width: 3, color: accentColor),
+              // Contenido
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _blockTitle(block),
-                      style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _blockSubtitle(block),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark
-                            ? AppColors.textSecondaryDark
-                            : AppColors.textSecondaryLight,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _blockTitle(block),
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.textPrimary(context),
+                                    letterSpacing: -0.01,
+                                  ),
+                                ),
+                                if (_subtitleText.isNotEmpty) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    _subtitleText,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.textSecondary(context),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.chevron_right,
+                            size: 18,
+                            color: AppColors.textSecondary(context),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                      if (_hasObjectives) ...[
+                        const SizedBox(height: 8),
+                        Wrap(spacing: 6, runSpacing: 4, children: [
+                          if (_paceLabel.isNotEmpty)
+                            _ObjectiveChip(
+                                label: _paceLabel,
+                                bg: chipBg,
+                                fg: chipFg),
+                          if (block.targetRpe != null)
+                            _ObjectiveChip(
+                                label: 'RPE ${block.targetRpe!.toStringAsFixed(1)}',
+                                bg: chipBg,
+                                fg: chipFg),
+                          if (block.targetZone != null)
+                            _ObjectiveChip(
+                                label: 'Z${block.targetZone}',
+                                bg: chipBg,
+                                fg: chipFg),
+                        ]),
+                      ],
+                      if (block.notes != null &&
+                          block.notes!.trim().isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.only(top: 8),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              top: BorderSide(
+                                  color: AppColors.borderOf(context)),
+                            ),
+                          ),
+                          child: Text(
+                            block.notes!,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                              color: AppColors.textSecondary(context),
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
-              Icon(Icons.edit_outlined,
-                  size: 16,
-                  color: isDark
-                      ? AppColors.textSecondaryDark
-                      : AppColors.textSecondaryLight),
-            ]),
-
-            // Objective chips
-            if (_hasObjectives) ...[
-              const SizedBox(height: 8),
-              Wrap(
-                spacing:    6,
-                runSpacing: 4,
-                children: [
-                  if (_paceLabel.isNotEmpty)
-                    _ObjectiveChip(
-                        label: _paceLabel,
-                        bg: brandChipBg,
-                        fg: brandChipText),
-                  if (block.targetRpe != null)
-                    _ObjectiveChip(
-                        label: 'RPE ${block.targetRpe!.toStringAsFixed(1)}',
-                        bg: _rpeColor(block.targetRpe!).withValues(alpha: 0.15),
-                        fg: _rpeColor(block.targetRpe!)),
-                  if (block.targetZone != null)
-                    _ObjectiveChip(
-                        label: 'Z${block.targetZone}',
-                        bg: _zoneColor(block.targetZone!).withValues(alpha: 0.15),
-                        fg: _zoneColor(block.targetZone!)),
-                ],
-              ),
             ],
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  String get _subtitleText {
+    final parts = <String>[];
+    switch (block.type) {
+      case SessionBlockType.series:
+        parts.add('Series');
+        if (block.restSeconds != null && block.restSeconds! > 0) {
+          final m = block.restSeconds! ~/ 60;
+          final s = block.restSeconds! % 60;
+          final rest = m > 0
+              ? (s > 0 ? '${m}m ${s}s' : '${m} min')
+              : '${s}s';
+          parts.add('Desc $rest');
+        }
+      case SessionBlockType.continuousTime:
+        parts.add('Continuo · tiempo');
+      case SessionBlockType.continuousDistance:
+        parts.add('Continuo · distancia');
+    }
+    return parts.join(' · ');
   }
 
   bool get _hasObjectives =>

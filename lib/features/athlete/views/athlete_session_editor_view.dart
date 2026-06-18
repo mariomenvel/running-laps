@@ -1,3 +1,6 @@
+// LEGACY — AthleteSessionEditorView no está
+// conectada al flujo principal del usuario.
+// No modificar hasta decidir si se elimina
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
@@ -184,11 +187,34 @@ class _AthleteSessionEditorViewState extends State<AthleteSessionEditorView> {
                       const SizedBox(height: 24),
 
                       // ── Warmup ────────────────────────────────────────────
-                      _SectionLabel('Calentamiento'),
-                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface2Of(context),
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(12)),
+                          border: Border.all(
+                              color: AppColors.borderOf(context)),
+                        ),
+                        child: Row(children: [
+                          const Icon(Icons.wb_sunny_outlined,
+                              size: 16, color: Color(0xFFBA7517)),
+                          const SizedBox(width: 8),
+                          Text('Calentamiento',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary(context),
+                                letterSpacing: 0.08,
+                              )),
+                        ]),
+                      ),
                       _WarmupCooldownEditor(
                         value:     state.warmup,
                         onChanged: _vm.updateWarmup,
+                        borderRadius: const BorderRadius.vertical(
+                            bottom: Radius.circular(12)),
                       ),
 
                       const SizedBox(height: 24),
@@ -222,11 +248,34 @@ class _AthleteSessionEditorViewState extends State<AthleteSessionEditorView> {
                       const SizedBox(height: 24),
 
                       // ── Cooldown ──────────────────────────────────────────
-                      _SectionLabel('Enfriamiento'),
-                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface2Of(context),
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(12)),
+                          border: Border.all(
+                              color: AppColors.borderOf(context)),
+                        ),
+                        child: Row(children: [
+                          const Icon(Icons.self_improvement_outlined,
+                              size: 16, color: Color(0xFF639922)),
+                          const SizedBox(width: 8),
+                          Text('Vuelta a la calma',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary(context),
+                                letterSpacing: 0.08,
+                              )),
+                        ]),
+                      ),
                       _WarmupCooldownEditor(
                         value:     state.cooldown,
                         onChanged: _vm.updateCooldown,
+                        borderRadius: const BorderRadius.vertical(
+                            bottom: Radius.circular(12)),
                       ),
 
                       const SizedBox(height: 24),
@@ -403,8 +452,13 @@ class _CategoryPicker extends StatelessWidget {
 class _WarmupCooldownEditor extends StatefulWidget {
   final SessionWarmupCooldown? value;
   final ValueChanged<SessionWarmupCooldown?> onChanged;
+  final BorderRadius? borderRadius;
 
-  const _WarmupCooldownEditor({required this.value, required this.onChanged});
+  const _WarmupCooldownEditor({
+    required this.value,
+    required this.onChanged,
+    this.borderRadius,
+  });
 
   @override
   State<_WarmupCooldownEditor> createState() => _WarmupCooldownEditorState();
@@ -441,11 +495,12 @@ class _WarmupCooldownEditorState extends State<_WarmupCooldownEditor> {
 
   @override
   Widget build(BuildContext context) {
+    final radius = widget.borderRadius ?? BorderRadius.circular(12);
     return Container(
       padding:     const EdgeInsets.all(14),
       decoration:  BoxDecoration(
         color:        AppColors.surfaceOf(context),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: radius,
         border:       Border.all(
             color: AppColors.borderOf(context)),
       ),

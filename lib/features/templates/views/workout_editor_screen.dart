@@ -9,7 +9,6 @@ import 'package:running_laps/features/ai_coach/data/ai_coach_prompt_session_gene
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 import 'package:running_laps/features/templates/data/athlete_session_mapper.dart';
-import 'package:running_laps/features/templates/data/templates_repository.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/templates/data/workout_block.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -43,7 +42,6 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
   late final ValueNotifier<WorkoutType?> _selectedType;
   late final ValueNotifier<String> _title;
   late final ValueNotifier<List<WorkoutBlock>> _blocks;
-  late final ValueNotifier<bool> _saveAsTemplate;
   late final ValueNotifier<TimeOfDay?> _scheduledTime;
   late final ValueNotifier<String> _notes;
 
@@ -77,7 +75,6 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
       _selectedType    = ValueNotifier(s?.type);
       _title           = ValueNotifier(s?.title ?? '');
       _blocks          = ValueNotifier(List.of(s?.blocks ?? []));
-      _saveAsTemplate  = ValueNotifier(s?.isTemplate ?? false);
       _scheduledTime   = ValueNotifier(s?.scheduledTime);
       _notes           = ValueNotifier(s?.notes ?? '');
 
@@ -107,7 +104,6 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
     _selectedType.dispose();
     _title.dispose();
     _blocks.dispose();
-    _saveAsTemplate.dispose();
     _scheduledTime.dispose();
     _notes.dispose();
     _titleController.dispose();
@@ -409,17 +405,9 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
       scheduledDate:  _effectiveScheduledDate,
       scheduledTime:  _scheduledTime.value,
       notes:          notesValue,
-      isTemplate:     _saveAsTemplate.value,
+      isTemplate:     widget.initialSession?.isTemplate ?? false,
       templateId:     widget.initialSession?.templateId,
     );
-
-    if (_saveAsTemplate.value) {
-      try {
-        await TrainingTemplatesRepository().saveWorkoutSession(session);
-      } catch (e) {
-        debugPrint('[WorkoutEditor] saveWorkoutSession error: $e');
-      }
-    }
 
     // Persiste como sesión planificada en Firestore si viene del calendario.
     if (widget.shellParams != null || widget.scheduledDate != null) {
@@ -628,33 +616,6 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                       ),
               ),
             ),
-
-            // ── Sección 4: Opciones ──────────────────────────────────
-            _SectionLabel('OPCIONES'),
-            const SizedBox(height: AppSpacing.s),
-            ValueListenableBuilder<bool>(
-              valueListenable: _saveAsTemplate,
-              builder: (_, save, __) => Row(
-                children: [
-                  Switch(
-                    value: save,
-                    activeThumbColor: AppColors.brand,
-                    activeTrackColor: AppColors.brand.withValues(alpha: 0.4),
-                    onChanged: (v) => _saveAsTemplate.value = v,
-                  ),
-                  const SizedBox(width: AppSpacing.s),
-                  Text(
-                    'Guardar como plantilla',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: AppColors.textPrimary(context),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            _divider(context),
 
             // ── Sección 5: Notas ─────────────────────────────────────
             _SectionLabel('NOTAS'),

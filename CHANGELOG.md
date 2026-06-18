@@ -1,5 +1,91 @@
 # CHANGELOG — Running Laps
 
+## [Templates] — 2026-06-18 — Switch "Guardar como plantilla" eliminado
+- Eliminado del `WorkoutEditorScreen` hasta que exista UI de carga de plantillas
+- El backend (`TrainingTemplatesRepository` + Firestore `users/{uid}/templates/`) está completo y listo para cuando se implemente la feature
+
+## [Pendiente — Templates MVP]
+- Pantalla "Nueva sesión: Desde cero / Desde plantilla"
+- Lista de plantillas guardadas (`getWorkoutSessions`)
+- Flujo: seleccionar plantilla → abrir editor precargado con sus bloques
+- Guardar como plantilla: volver a exponer el switch una vez haya UI de carga
+- `TrainingTemplatesRepository` ya implementado, solo falta la UI
+
+## [UI] — 2026-06-18 — Metrónomo: solo segundos (0.5–60s)
+- Eliminado el picker de minutos del modo "Por tiempo" del metrónomo — ahora un único `_MiniWheelPickerDouble` de 0.5 a 60 segundos en pasos de 0.5
+- `_alertTimeSecOptions` pasa de 8 valores fijos a 120 valores generados (0.5, 1.0, ..., 60.0)
+- Quitado el campo `_alertTimeMin`/`onTimeMinChanged` de `_AlertSection` y `_SegmentBottomSheetState` (el modelo `SegmentAlerts.timeMin` ya tenía default 0)
+- Al cargar un segmento existente con `timeMin > 0`, se convierte a segundos totales y se ajusta al valor más cercano dentro de 0.5–60s
+
+## [Fix] — 2026-06-18 — setState durante build en _IosPicker
+- `_IosPickerState.didUpdateWidget` llamaba `_ctrl.jumpToItem(...)` de forma síncrona, lo que podía disparar `onSelectedItemChanged` → `setState` en `_SegmentBottomSheetState` mientras el árbol todavía estaba en build
+- Ahora el salto se difiere con `WidgetsBinding.instance.addPostFrameCallback`; `_selectedIndex` se actualiza como mutación directa de campo (seguro durante `didUpdateWidget`)
+
+## [UI] — 2026-06-18 — Distancias del segmento: rango completo
+- `_distances` ahora cubre 50m–1km en pasos de 50m, 1.1km–5km en pasos de 100m, y 5.5km–42km en pasos de 500m (antes solo 14 valores discretos hasta 10km)
+
+## [UI] — 2026-06-18 — Pickers: fondo uniforme + rango pace
+- `_IosPicker`: pill central ahora usa `AppColors.borderOf` al 60% en light (antes `Colors.black` al 7%) — color consistente sobre `surface` y `surface2`
+- Pickers: fondo uniforme `surface2` en duración, distancia, pace y metrónomo (antes el metrónomo no tenía contenedor)
+- Pace: mínimo de minutos reducido a 2:00 /km (antes 3:00) en `_PaceRow` y en el pace objetivo del metrónomo
+
+## [UI] — 2026-06-18 — Pickers iOS: reducción de tamaño
+- `_IosPicker`: 3 ítems visibles (antes 5), altura total 96px (antes 190px con itemExtent 32)
+- `_WheelPicker`: itemExtent 32, width 60 (antes 38/72)
+- `_MiniWheelPicker`/`_MiniWheelPickerDouble`: itemExtent 28, width 36 (antes 32/44)
+- Fuente: 15px seleccionado / 14px no seleccionado (antes 17px ambos)
+- Pill de selección: borderRadius 6 (antes 8)
+
+## [UI] — 2026-06-18 — Pickers estilo iOS en editor de segmento
+- `_WheelPicker`, `_MiniWheelPicker`, `_MiniWheelPickerDouble` migrados a `_IosPicker`: pill de selección central, ítem activo en bold/blanco, fade superior/inferior
+- Funciona en modo claro y oscuro
+- Sin paquetes externos — `ListWheelScrollView` nativo
+- Duración/Distancia: quitado el `Container` con borde envolvente (el pill interno ya da suficiente contexto visual)
+- Pace: `_PacePill` simplificado a borde 0.5px y padding 8×4
+
+## [UI] — 2026-06-18 — Rediseño editor de segmento
+- Tipo/Medida (`_TypeToggle`, `_BoolToggle`): seleccionado con fondo morado sólido y texto blanco (antes solo borde + texto morado)
+- Duración/Distancia: pickers agrupados en card `surface2` con label "min"/"seg"/"m" encima de cada rueda
+- Objetivo: Pace, Zona FC y RPE en cards individuales (`surface2` + borde) con label interno propio
+- Zona FC: cada zona usa su color semántico al seleccionarse (Z1 verde, Z2 azul, Z3 ámbar, Z4 coral, Z5 rojo) en lugar de morado genérico
+- RPE: fila de 10 puntos de color como leyenda visual sobre el slider, número aumentado a 22px
+- Descanso pasivo: añadido guard — antes Objetivo y Metrónomo se mostraban siempre; ahora se ocultan cuando `type == recovery && recoveryType == passive`
+- Tipo/Medida: revertido a fondo suave morado (brand × 0.08) — más coherente con el resto de la app
+- Pace: pickers min:seg agrupados en pill con borde
+- RPE: track con gradiente verde→ámbar→coral→rojo (Stack con Container gradiente + Slider thumb-only), reemplaza la fila de 10 puntos
+- Rama: `feat/segment-editor-redesign`
+
+## [UI] — 2026-06-18 — Polish bloques editor: colores semánticos
+- Franja izquierda: color por rol del bloque (ámbar calentamiento, coral principal, verde vuelta a la calma, morado custom)
+- Chips de zona: color propio de cada zona (Z1-Z5)
+- Chips de RPE: escala verde→ámbar→coral→rojo según intensidad
+- Chips de FC%: escala por porcentaje (<70/<80/<90/≥90)
+- Chips de pace: morado neutro
+- Fila "Repeticiones" con fondo surface2 para más presencia visual
+- Chips más grandes (padding 8×4, font 12)
+- Rama: `feat/workout-block-redesign`
+
+## [UI] — 2026-06-17 — Rediseño WorkoutBlockCard y SegmentCard
+- Header del bloque con fondo de color según rol: ámbar (calentamiento), verde (vuelta a la calma), neutro surface2 (principal/custom)
+- Iconos de rol: `wb_sunny_outlined` / `bolt` / `self_improvement_outlined` / `add_circle_outline`
+- Botones de repetición como círculos compactos 28×28 con borde `AppColors.brand`
+- Segmentos como cards compactos (`_SegmentCard`) con franja de color izquierda (3px) según zona/tipo
+- Chips de objetivos por segmento: pace, zona Z1-Z5, RPE, %FC — solo cuando existen
+- Descanso pasivo sin chips (corrección de UX: no tiene objetivos de esfuerzo)
+- `_SegmentChip` renombrado a `_SegmentCard`; añadidos `_RepButton` y `_TargetChip`
+- Archivos legacy marcados con comentario LEGACY en cabecera
+- Rama: `feat/workout-block-redesign`
+
+## [UI] — 2026-06-17 — Rediseño cards de bloque en editor de sesión
+- Franja de color izquierda según zona (Z1 verde, Z2 azul, Z3 ámbar, Z4 coral, Z5 rojo, sin zona gris neutro)
+- Título `w500` en lugar de `w700`, subtítulo con tipo de bloque y descanso formateado
+- Chips RPE/zona/pace con color coherente a la zona del bloque (un solo acento por card)
+- Icono `chevron_right` en lugar de `edit_outlined`
+- Notas del bloque visibles en el card (2 líneas, italic, separadas por borde superior)
+- `_WarmupCooldownEditor` acepta `borderRadius` opcional para conectarse al header
+- Headers con icono y color: sol ámbar para Calentamiento, yoga verde para Vuelta a la calma
+- Rama: `feat/session-block-redesign`
+
 ## [AI Coach] — 2026-06-15 — Fix: rodaje fragmentado sin progresión real
 - `_buildProgressiveLongRunBlocks` en `rodaje_base` y `rodaje_largo` solo se activa si `complexityTier >= 2` (nivel avanzado en semana de carga), donde el bloque final sube a Z3 y hay progresión real de zona
 - Con `complexityTier < 2`, se genera un único bloque continuo con la duración total (`_buildBaseRunBlocks`), sin fragmentar artificialmente en 3 segmentos idénticos en Z2

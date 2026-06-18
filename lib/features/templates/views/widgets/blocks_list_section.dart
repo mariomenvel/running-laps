@@ -4,10 +4,127 @@ import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/features/templates/data/saved_block.dart';
 import 'package:running_laps/features/templates/data/saved_blocks_repository.dart';
 import 'package:running_laps/features/templates/data/workout_block.dart';
+import 'package:running_laps/features/templates/data/target_config.dart';
 import 'package:running_laps/features/templates/data/workout_segment.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
 import 'package:running_laps/features/templates/views/widgets/segment_bottom_sheet.dart';
 import 'package:uuid/uuid.dart';
+
+// ── Helpers de color ─────────────────────────────────────────────────────────
+
+Color _blockRoleColor(BlockRole role) {
+  switch (role) {
+    case BlockRole.warmup:   return const Color(0xFFBA7517);
+    case BlockRole.cooldown: return const Color(0xFF3B6D11);
+    case BlockRole.main:     return const Color(0xFFD85A30);
+    case BlockRole.custom:   return const Color(0xFF8E24AA);
+  }
+}
+
+Color _zoneChipColor(HeartRateZone zone) {
+  switch (zone) {
+    case HeartRateZone.z1: return const Color(0xFF639922);
+    case HeartRateZone.z2: return const Color(0xFF378ADD);
+    case HeartRateZone.z3: return const Color(0xFFEF9F27);
+    case HeartRateZone.z4: return const Color(0xFFD85A30);
+    case HeartRateZone.z5: return const Color(0xFFE24B4A);
+  }
+}
+
+Color _rpeChipColor(int rpe) {
+  if (rpe <= 4) return const Color(0xFF639922);
+  if (rpe <= 6) return const Color(0xFFEF9F27);
+  if (rpe <= 8) return const Color(0xFFD85A30);
+  return const Color(0xFFE24B4A);
+}
+
+Color _fcChipColor(int fcPercent) {
+  if (fcPercent < 70) return const Color(0xFF639922);
+  if (fcPercent < 80) return const Color(0xFF378ADD);
+  if (fcPercent < 90) return const Color(0xFFEF9F27);
+  return const Color(0xFFD85A30);
+}
+
+Color _darken(Color c) {
+  final h = HSLColor.fromColor(c);
+  return h.withLightness((h.lightness - 0.18).clamp(0.0, 1.0)).toColor();
+}
+
+String _fmtPace(int secPerKm) {
+  final m = secPerKm ~/ 60;
+  final s = secPerKm % 60;
+  return '$m:${s.toString().padLeft(2, '0')}';
+}
+
+String _segmentMainLabel(WorkoutSegment segment) {
+  String base = '';
+  if (segment.durationSec != null) {
+    final m = segment.durationSec! ~/ 60;
+    final s = segment.durationSec! % 60;
+    base = m > 0 ? (s > 0 ? '${m} min ${s}s' : '${m} min') : '${s}s';
+  } else if (segment.distanceM != null) {
+    base = segment.distanceM! >= 1000
+        ? '${(segment.distanceM! / 1000).toStringAsFixed(1)} km'
+        : '${segment.distanceM} m';
+  }
+  if (segment.type == SegmentType.recovery) {
+    final tipo = segment.recoveryType == RecoveryType.passive
+        ? 'descanso pasivo'
+        : 'descanso activo';
+    return '$base $tipo'.trim();
+  }
+  return base;
+}
+
+bool _segmentHasTargets(WorkoutSegment segment) {
+  if (segment.type == SegmentType.recovery &&
+      segment.recoveryType == RecoveryType.passive) return false;
+  final t = segment.target;
+  if (t == null) return false;
+  return t.paceMinSecPerKm != null ||
+      t.zone != null ||
+      t.rpe != null ||
+      t.fcMaxPercent != null;
+}
+
+List<Widget> _buildTargetChips(
+    WorkoutSegment segment, BuildContext context) {
+  final t = segment.target!;
+  final chips = <Widget>[];
+
+  if (t.paceMinSecPerKm != null) {
+    const paceColor = Color(0xFF8E24AA);
+    final paceLabel = t.paceMaxSecPerKm != null
+        ? '${_fmtPace(t.paceMinSecPerKm!)}–${_fmtPace(t.paceMaxSecPerKm!)} /km'
+        : '${_fmtPace(t.paceMinSecPerKm!)} /km';
+    chips.add(_TargetChip(
+        label: paceLabel,
+        bg: paceColor.withValues(alpha: 0.12),
+        fg: const Color(0xFF6A1880)));
+  }
+  if (t.zone != null) {
+    final zoneColor = _zoneChipColor(t.zone!);
+    chips.add(_TargetChip(
+        label: 'Z${t.zone!.index + 1}',
+        bg: zoneColor.withValues(alpha: 0.13),
+        fg: _darken(zoneColor)));
+  }
+  if (t.rpe != null) {
+    final rpeColor = _rpeChipColor(t.rpe!);
+    chips.add(_TargetChip(
+        label: 'RPE ${t.rpe}',
+        bg: rpeColor.withValues(alpha: 0.13),
+        fg: _darken(rpeColor)));
+  }
+  if (t.fcMaxPercent != null) {
+    final fcColor = _fcChipColor(t.fcMaxPercent!);
+    chips.add(_TargetChip(
+        label: '${t.fcMaxPercent}% FC',
+        bg: fcColor.withValues(alpha: 0.13),
+        fg: _darken(fcColor)));
+  }
+  return chips;
+}
 
 // ── BlocksListSection ────────────────────────────────────────────────────────
 
@@ -383,204 +500,198 @@ class _WorkoutBlockCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final headerBg = _roleHeaderBg(context);
+    final roleIconColor = _roleIconColor(context);
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surfaceOf(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: AppColors.borderOf(context), width: 0.5),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.borderOf(context), width: 0.5),
       ),
-      padding: const EdgeInsets.all(AppSpacing.l),
+      clipBehavior: Clip.hardEdge,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
-          Row(
-            children: [
+          // ── Header ────────────────────────────────────────────────────────────
+          Container(
+            color: headerBg,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            child: Row(children: [
               ReorderableDragStartListener(
                 index: index,
-                child: Padding(
-                  padding: const EdgeInsets.only(right: AppSpacing.s),
-                  child: Icon(
-                    Icons.drag_handle,
-                    size: 20,
-                    color: AppColors.iconMutedOf(context),
-                  ),
-                ),
+                child: Icon(Icons.drag_handle,
+                    size: 18, color: AppColors.iconMutedOf(context)),
               ),
-              Icon(_roleIcon, color: _roleColor, size: 20),
-              const SizedBox(width: AppSpacing.s),
+              const SizedBox(width: 8),
+              Icon(_roleIcon, size: 16, color: roleIconColor),
+              const SizedBox(width: 6),
               Text(
                 _roleLabel,
                 style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 1.2,
-                  color: AppColors.textSecondary(context),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.08,
+                  color: roleIconColor,
                 ),
               ),
               const Spacer(),
               IconButton(
                 icon: Icon(Icons.bookmark_outline,
-                    size: 20, color: AppColors.iconMutedOf(context)),
+                    size: 18, color: roleIconColor),
                 tooltip: 'Guardar bloque',
                 onPressed: onSave,
                 constraints: const BoxConstraints(),
                 padding: const EdgeInsets.only(right: AppSpacing.s),
+                visualDensity: VisualDensity.compact,
               ),
               if (block.role != BlockRole.warmup &&
                   block.role != BlockRole.cooldown)
                 IconButton(
                   icon: Icon(Icons.delete_outline,
-                      size: 20,
-                      color: AppColors.textSecondary(context)),
+                      size: 18, color: AppColors.iconMutedOf(context)),
                   onPressed: onDelete,
                   constraints: const BoxConstraints(),
                   padding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
                 ),
-            ],
+            ]),
           ),
 
-          // Repetitions selector
-          if (_showRepetitions) ...[
-            const SizedBox(height: AppSpacing.m),
-            Row(
+          // ── Cuerpo ────────────────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Repeticiones',
-                  style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary(context)),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: Icon(Icons.remove,
-                      color: block.repetitions > 1
-                          ? AppColors.brand
-                          : AppColors.iconMutedOf(context)),
-                  onPressed: block.repetitions > 1
-                      ? () => onChanged(
-                          block.copyWith(repetitions: block.repetitions - 1))
-                      : null,
-                  constraints: const BoxConstraints(),
-                  padding: EdgeInsets.zero,
-                ),
-                SizedBox(
-                  width: 32,
-                  child: Text(
-                    '${block.repetitions}',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textPrimary(context),
+                // Repeticiones
+                if (_showRepetitions) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface2Of(context),
+                      borderRadius: BorderRadius.circular(8),
                     ),
+                    child: Row(children: [
+                      Text('Repeticiones',
+                          style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textPrimary(context))),
+                      const Spacer(),
+                      _RepButton(
+                        icon: Icons.remove,
+                        enabled: block.repetitions > 1,
+                        onTap: () => onChanged(
+                            block.copyWith(
+                                repetitions: block.repetitions - 1)),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          '${block.repetitions}',
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      _RepButton(
+                        icon: Icons.add,
+                        enabled: block.repetitions < 99,
+                        onTap: () => onChanged(
+                            block.copyWith(
+                                repetitions: block.repetitions + 1)),
+                      ),
+                    ]),
                   ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.add,
-                      color: block.repetitions < 99
-                          ? AppColors.brand
-                          : AppColors.iconMutedOf(context)),
-                  onPressed: block.repetitions < 99
-                      ? () => onChanged(
-                          block.copyWith(repetitions: block.repetitions + 1))
-                      : null,
-                  constraints: const BoxConstraints(),
-                  padding: EdgeInsets.zero,
-                ),
-              ],
-            ),
-          ],
+                  const SizedBox(height: 8),
+                ],
 
-          const SizedBox(height: AppSpacing.m),
-
-          // Segments list
-          if (block.segments.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Center(
-                child: Text(
-                  'Sin segmentos — toca + para añadir',
-                  style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary(context)),
-                ),
-              ),
-            )
-          else if (_reorderable)
-            ReorderableListView(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              buildDefaultDragHandles: false,
-              proxyDecorator: (child, index, animation) {
-                return AnimatedBuilder(
-                  animation: animation,
-                  builder: (context, child) {
-                    return Material(
+                // Segmentos
+                if (block.segments.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Center(
+                      child: Text(
+                        'Sin segmentos — toca + para añadir',
+                        style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary(context)),
+                      ),
+                    ),
+                  )
+                else if (_reorderable)
+                  ReorderableListView(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    buildDefaultDragHandles: false,
+                    proxyDecorator: (child, index, animation) => Material(
                       elevation: 4,
                       color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(10),
                       child: child,
-                    );
-                  },
-                  child: child,
-                );
-              },
-              onReorder: (oldIndex, newIndex) {
-                final segments = List<WorkoutSegment>.of(block.segments);
-                if (newIndex > oldIndex) newIndex--;
-                final seg = segments.removeAt(oldIndex);
-                segments.insert(newIndex, seg);
-                onChanged(block.copyWith(segments: segments));
-              },
-              children: [
-                for (int i = 0; i < block.segments.length; i++)
-                  _SegmentChip(
-                    key: ValueKey(block.segments[i].id),
-                    index: i,
-                    segment: block.segments[i],
-                    onEdit: () => onEditSegment(block.segments[i]),
-                    onDelete: () {
-                      final segs = block.segments
-                          .where((s) => s.id != block.segments[i].id)
-                          .toList();
+                    ),
+                    onReorder: (oldIndex, newIndex) {
+                      final segs = List<WorkoutSegment>.of(block.segments);
+                      if (newIndex > oldIndex) newIndex--;
+                      final seg = segs.removeAt(oldIndex);
+                      segs.insert(newIndex, seg);
                       onChanged(block.copyWith(segments: segs));
                     },
+                    children: [
+                      for (int i = 0; i < block.segments.length; i++)
+                        _SegmentCard(
+                          key: ValueKey(block.segments[i].id),
+                          index: i,
+                          segment: block.segments[i],
+                          role: block.role,
+                          onEdit: () => onEditSegment(block.segments[i]),
+                          onDelete: () {
+                            final segs = block.segments
+                                .where((s) =>
+                                    s.id != block.segments[i].id)
+                                .toList();
+                            onChanged(block.copyWith(segments: segs));
+                          },
+                        ),
+                    ],
+                  )
+                else
+                  Column(
+                    children: [
+                      for (int i = 0; i < block.segments.length; i++)
+                        _SegmentCard(
+                          index: i,
+                          segment: block.segments[i],
+                          role: block.role,
+                          onEdit: () => onEditSegment(block.segments[i]),
+                          onDelete: () {
+                            final segs = block.segments
+                                .where((s) =>
+                                    s.id != block.segments[i].id)
+                                .toList();
+                            onChanged(block.copyWith(segments: segs));
+                          },
+                        ),
+                    ],
                   ),
-              ],
-            )
-          else
-            Column(
-              children: [
-                for (int i = 0; i < block.segments.length; i++)
-                  _SegmentChip(
-                    index: i,
-                    segment: block.segments[i],
-                    onEdit: () => onEditSegment(block.segments[i]),
-                    onDelete: () {
-                      final segs = block.segments
-                          .where((s) => s.id != block.segments[i].id)
-                          .toList();
-                      onChanged(block.copyWith(segments: segs));
-                    },
-                  ),
-              ],
-            ),
 
-          // Add segment button
-          TextButton.icon(
-            onPressed: onAddSegment,
-            icon: Icon(Icons.add, size: 14, color: AppColors.brand),
-            label: Text(
-              'Añadir segmento',
-              style: TextStyle(fontSize: 13, color: AppColors.brand),
-            ),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.xs, vertical: AppSpacing.xs),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                // Botón añadir segmento
+                TextButton.icon(
+                  onPressed: onAddSegment,
+                  icon: Icon(Icons.add, size: 14, color: roleIconColor),
+                  label: Text('Añadir segmento',
+                      style: TextStyle(
+                          fontSize: 13, color: roleIconColor)),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xs,
+                        vertical: AppSpacing.xs),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -588,41 +699,39 @@ class _WorkoutBlockCard extends StatelessWidget {
     );
   }
 
-  IconData get _roleIcon {
+  Color _roleHeaderBg(BuildContext context) {
     switch (block.role) {
-      case BlockRole.warmup:
-        return Icons.waves;
+      case BlockRole.warmup:   return const Color(0xFFFEF6E9);
+      case BlockRole.cooldown: return const Color(0xFFEAF3DE);
       case BlockRole.main:
-        return Icons.bolt;
-      case BlockRole.cooldown:
-        return Icons.waves;
-      case BlockRole.custom:
-        return Icons.add_circle_outline;
+      case BlockRole.custom:   return AppColors.surface2Of(context);
     }
   }
 
-  Color get _roleColor {
+  Color _roleIconColor(BuildContext context) {
     switch (block.role) {
-      case BlockRole.warmup:
-      case BlockRole.cooldown:
-        return AppColors.rest;
-      case BlockRole.main:
-        return AppColors.effort;
-      case BlockRole.custom:
-        return AppColors.brand;
+      case BlockRole.warmup:   return const Color(0xFF854F0B);
+      case BlockRole.cooldown: return const Color(0xFF27500A);
+      case BlockRole.main:     return AppColors.effort;
+      case BlockRole.custom:   return AppColors.brand;
+    }
+  }
+
+  IconData get _roleIcon {
+    switch (block.role) {
+      case BlockRole.warmup:   return Icons.wb_sunny_outlined;
+      case BlockRole.main:     return Icons.bolt;
+      case BlockRole.cooldown: return Icons.self_improvement_outlined;
+      case BlockRole.custom:   return Icons.add_circle_outline;
     }
   }
 
   String get _roleLabel {
     switch (block.role) {
-      case BlockRole.warmup:
-        return 'CALENTAMIENTO';
-      case BlockRole.main:
-        return 'BLOQUE PRINCIPAL';
-      case BlockRole.cooldown:
-        return 'VUELTA A LA CALMA';
-      case BlockRole.custom:
-        return 'BLOQUE ADICIONAL';
+      case BlockRole.warmup:   return 'CALENTAMIENTO';
+      case BlockRole.main:     return 'BLOQUE PRINCIPAL';
+      case BlockRole.cooldown: return 'VUELTA A LA CALMA';
+      case BlockRole.custom:   return 'BLOQUE ADICIONAL';
     }
   }
 }
@@ -959,123 +1068,156 @@ class _SavedBlockTile extends StatelessWidget {
   }
 }
 
-// ── _SegmentChip ─────────────────────────────────────────────────────────────
+// ── _RepButton ────────────────────────────────────────────────────────────────
 
-class _SegmentChip extends StatelessWidget {
-  const _SegmentChip({
+class _RepButton extends StatelessWidget {
+  const _RepButton({
+    required this.icon,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+              color: enabled
+                  ? AppColors.brand
+                  : AppColors.borderOf(context)),
+        ),
+        child: Icon(icon,
+            size: 16,
+            color: enabled
+                ? AppColors.brand
+                : AppColors.iconMutedOf(context)),
+      ),
+    );
+  }
+}
+
+// ── _TargetChip ───────────────────────────────────────────────────────────────
+
+class _TargetChip extends StatelessWidget {
+  const _TargetChip({
+    required this.label,
+    required this.bg,
+    required this.fg,
+  });
+
+  final String label;
+  final Color bg;
+  final Color fg;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration:
+          BoxDecoration(color: bg, borderRadius: BorderRadius.circular(6)),
+      child: Text(label,
+          style: TextStyle(
+              fontSize: 12, fontWeight: FontWeight.w500, color: fg)),
+    );
+  }
+}
+
+// ── _SegmentCard ──────────────────────────────────────────────────────────────
+
+class _SegmentCard extends StatelessWidget {
+  const _SegmentCard({
     super.key,
     required this.index,
     required this.segment,
+    required this.role,
     required this.onEdit,
     required this.onDelete,
   });
 
   final int index;
   final WorkoutSegment segment;
+  final BlockRole role;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        children: [
-          Icon(
-            segment.type == SegmentType.interval
-                ? Icons.circle
-                : Icons.more_horiz,
-            size: segment.type == SegmentType.interval ? 10 : 16,
-            color: segment.type == SegmentType.interval
-                ? AppColors.effort
-                : AppColors.rest,
-          ),
-          const SizedBox(width: AppSpacing.s),
-          Expanded(
-            child: Text(
-              _buildLabel(),
-              style: TextStyle(
-                  fontSize: 13, color: AppColors.textPrimary(context)),
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.edit_outlined,
-                size: 18, color: AppColors.iconMutedOf(context)),
-            onPressed: onEdit,
-            constraints: const BoxConstraints(),
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-          ),
-          IconButton(
-            icon: Icon(Icons.close,
-                size: 18, color: AppColors.iconMutedOf(context)),
-            onPressed: onDelete,
-            constraints: const BoxConstraints(),
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-          ),
-          ReorderableDragStartListener(
-            index: index,
-            child: Padding(
-              padding: const EdgeInsets.only(left: AppSpacing.xs),
-              child: Icon(
-                Icons.drag_handle,
-                size: 18,
-                color: AppColors.iconMutedOf(context),
+    final accent = _blockRoleColor(role);
+    final hasTargets = _segmentHasTargets(segment);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      decoration: BoxDecoration(
+        color: AppColors.surface2Of(context),
+        borderRadius: BorderRadius.circular(10),
+        border: Border(
+          left: BorderSide(color: accent, width: 3),
+        ),
+      ),
+      child: Padding(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _segmentMainLabel(segment),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textPrimary(context),
+                    ),
+                  ),
+                  if (hasTargets)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 5),
+                      child: Wrap(
+                        spacing: 5,
+                        runSpacing: 3,
+                        children:
+                            _buildTargetChips(segment, context),
+                      ),
+                    ),
+                ],
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: onEdit,
+              child: Icon(Icons.edit_outlined,
+                  size: 15,
+                  color: AppColors.textSecondary(context)),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: onDelete,
+              child: Icon(Icons.close,
+                  size: 15,
+                  color: AppColors.textSecondary(context)),
+            ),
+            const SizedBox(width: 4),
+            ReorderableDragStartListener(
+              index: index,
+              child: Icon(Icons.drag_handle,
+                  size: 16,
+                  color: AppColors.textSecondary(context)),
+            ),
+          ],
+        ),
       ),
     );
-  }
-
-  String _buildLabel() {
-    final base = _baseLabel();
-    final target = _targetLabel();
-    return target.isEmpty ? base : '$base · $target';
-  }
-
-  String _baseLabel() {
-    if (segment.type == SegmentType.interval) {
-      if (segment.distanceM != null) {
-        return '${segment.distanceM}m';
-      }
-      final sec = segment.durationSec!;
-      return _formatDuration(sec);
-    } else {
-      final sec =
-          segment.durationSec ?? (segment.distanceM != null ? null : null);
-      if (sec != null) return '${_formatDuration(sec)} descanso';
-      if (segment.distanceM != null) return '${segment.distanceM}m descanso';
-      return 'Descanso';
-    }
-  }
-
-  String _targetLabel() {
-    final t = segment.target;
-    if (t == null) return '';
-    if (t.paceMinSecPerKm != null || t.paceMaxSecPerKm != null) {
-      if (t.paceMinSecPerKm != null && t.paceMaxSecPerKm != null) {
-        return '${_formatPace(t.paceMinSecPerKm!)}–${_formatPace(t.paceMaxSecPerKm!)}/km';
-      }
-      final pace = t.paceMinSecPerKm ?? t.paceMaxSecPerKm!;
-      return '${_formatPace(pace)}/km';
-    }
-    if (t.zone != null) return t.zone!.name.toUpperCase();
-    if (t.rpe != null) return 'RPE ${t.rpe}';
-    return '';
-  }
-
-  String _formatPace(int secPerKm) {
-    final min = secPerKm ~/ 60;
-    final sec = secPerKm % 60;
-    return '$min:${sec.toString().padLeft(2, '0')}';
-  }
-
-  String _formatDuration(int totalSec) {
-    if (totalSec < 60) return '$totalSec seg';
-    final min = totalSec ~/ 60;
-    final sec = totalSec % 60;
-    if (sec == 0) return '$min min';
-    return '$min min $sec seg';
   }
 }
