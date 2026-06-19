@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/rpe_badge.dart';
 import 'package:running_laps/features/profile/data/zones_repository.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
@@ -396,17 +397,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
                             style: TextStyle(fontSize: 13, color: AppColors.rpeLow, fontWeight: FontWeight.w600),
                           ),
                           if (serie.rpe > 0)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: AppColors.rpeMax.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                "RPE ${serie.rpe}",
-                                style: const TextStyle(fontSize: 11, color: AppColors.rpeMax, fontWeight: FontWeight.bold),
-                              ),
-                            ),
+                            RpeBadge(rpe: serie.rpe.toDouble()),
                         ],
                       ),
                     ],
@@ -564,10 +555,9 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
                               textAlign: TextAlign.center),
                           if ((planned?['targetRpe'] as num?) != null) ...[
                             const SizedBox(height: 2),
-                            Text('RPE ${(planned!['targetRpe'] as num).toStringAsFixed(1)}',
-                                style: TextStyle(fontSize: 11,
-                                    color: _rpeColor((planned['targetRpe'] as num).toDouble())),
-                                textAlign: TextAlign.center),
+                            RpeBadge(
+                                rpe: (planned!['targetRpe'] as num).toDouble(),
+                                size: RpeBadgeSize.text),
                           ],
                         ]),
                       ),
@@ -584,10 +574,9 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
                                 textAlign: TextAlign.center),
                             if ((executed['rpe'] as num?) != null) ...[
                               const SizedBox(height: 2),
-                              Text('RPE ${(executed['rpe'] as num).toStringAsFixed(1)}',
-                                  style: TextStyle(fontSize: 11,
-                                      color: _rpeColor((executed['rpe'] as num).toDouble())),
-                                  textAlign: TextAlign.center),
+                              RpeBadge(
+                                  rpe: (executed['rpe'] as num).toDouble(),
+                                  size: RpeBadgeSize.text),
                             ],
                           ],
                         ]),
@@ -663,12 +652,6 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
   Color _deltaColor(double delta) {
     if (delta.abs() <= 15) return AppColors.rpeLow;
     if (delta.abs() <= 30) return AppColors.rpeMid;
-    return AppColors.rpeMax;
-  }
-
-  Color _rpeColor(double rpe) {
-    if (rpe <= 4) return AppColors.rpeLow;
-    if (rpe <= 7) return AppColors.rpeMid;
     return AppColors.rpeMax;
   }
 

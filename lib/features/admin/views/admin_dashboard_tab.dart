@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/widgets/premium_date_range_picker.dart';
 import '../../../../config/app_theme.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/rpe_badge.dart';
 
 class AdminDashboardTab extends StatelessWidget {
   final AdminController controller;
@@ -313,13 +314,7 @@ class AdminDashboardTab extends StatelessWidget {
               const SizedBox(height: 16),
               Row(
                 children: [
-                   _buildStatCard(
-                    "Esfuerzo Medio (RPE)",
-                    (stats['avgRpe'] as double? ?? 0).toStringAsFixed(1),
-                    "Nivel de intensidad percibida (Escala 1-10)",
-                    Icons.bolt,
-                    AppColors.rpeMax,
-                  ),
+                   _buildRpeStatCard(stats['avgRpe'] as double? ?? 0),
                   const Spacer(),
                 ],
               ),
@@ -463,6 +458,62 @@ class AdminDashboardTab extends StatelessWidget {
     );
   }
   
+  Widget _buildRpeStatCard(double avgRpe) {
+    return Builder(
+      builder: (context) {
+        final cs = Theme.of(context).colorScheme;
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final color = AppColors.effortColor(avgRpe);
+        return Expanded(
+          child: Container(
+            height: 180,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: isDark ? Colors.transparent : Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.bolt, color: color, size: 24),
+                ),
+                const Spacer(),
+                RpeBadge(rpe: avgRpe, size: RpeBadgeSize.stat),
+                const SizedBox(height: 4),
+                Text(
+                  "Esfuerzo Medio (RPE)",
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: cs.onSurface),
+                ),
+                const SizedBox(height: 4),
+                Expanded(
+                  child: Text(
+                    "Nivel de intensidad percibida (Escala 1-10)",
+                    style: TextStyle(fontSize: 11, color: cs.onSurface.withOpacity(0.5), height: 1.2),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildFilterChip(BuildContext context, AdminController controller, AdminDateFilter filter, String label) {
     final bool isSelected = controller.currentFilter == filter;
     final cs = Theme.of(context).colorScheme;

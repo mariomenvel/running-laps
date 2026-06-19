@@ -13,6 +13,7 @@ import '../data/training_repository.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
+import 'package:running_laps/core/widgets/rpe_badge.dart';
 import '../../../core/services/gps_service.dart';
 import '../../../core/services/ios_live_activity_service.dart';
 import '../../../core/widgets/modern_snackbar.dart';
@@ -1861,10 +1862,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
           ],
           if (targetRpe != null) ...[
             const SizedBox(width: AppSpacing.s),
-            Text(
-              'RPE ${targetRpe.toStringAsFixed(0)}',
-              style: AppTypography.small.copyWith(color: AppColors.textSecondary(context)),
-            ),
+            RpeBadge(rpe: targetRpe, size: RpeBadgeSize.text),
           ],
         ],
       ),
@@ -2774,7 +2772,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                         _buildSerieStat('${serie.distanciaM}m', Icons.straighten, AppColors.rest),
                         _buildSerieStat('${serie.tiempoSec.toStringAsFixed(1)}s', Icons.timer_outlined, AppColors.rpeMid),
                         _buildSerieStat(serie.ritmoTexto(), Icons.speed, AppColors.rpeLow),
-                        _buildSerieStat('RPE ${serie.rpe}', Icons.bolt, AppColors.rpeMax, isRpe: true),
+                        RpeBadge(rpe: serie.rpe.toDouble(), size: RpeBadgeSize.chip, showIcon: true),
                         if (serie.fcMedia != null)
                           _buildSerieStat('${serie.fcMedia!.round()} ppm', Icons.favorite_rounded, AppColors.rpeMax),
                       ],
@@ -2818,7 +2816,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
     return Column(children: children);
   }
 
-  Widget _buildSerieStat(String text, IconData icon, Color color, {bool isRpe = false}) {
+  Widget _buildSerieStat(String text, IconData icon, Color color) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [

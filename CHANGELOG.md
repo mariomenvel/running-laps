@@ -1,5 +1,34 @@
 # CHANGELOG — Running Laps
 
+## [UI] — RpeBadge: rollout a 4 sitios adicionales
+- training_no_gps_detail_view.dart: chip por serie
+  + planificado/ejecutado (elimina _rpeColor duplicado,
+  que tenía un tier de color faltante respecto a
+  AppColors.effortColor)
+- training_start_view.dart: objetivo de RPE + stat de
+  serie completada (elimina parámetro isRpe muerto de
+  _buildSerieStat)
+- admin_dashboard_tab.dart: stat card de RPE medio
+  con color semántico (antes fijo en rojo)
+- FIX adicional: 3 sitios más tenían el bug de color
+  fijo en rojo independiente del valor real de RPE
+
+## [RPE — excluidos de la migración, documentado]
+- analytics_hub_screen.dart _IntensityBar: no es un
+  valor de RPE individual, es % de distribución —
+  fuera de alcance
+- block_transition_screen.dart _RpeBadge: ya implementado
+  correctamente con AppColors.effortColor + variante
+  con borde (más rico que el RpeBadge compartido actual)
+  — pendiente: considerar ampliar RpeBadge con parámetro
+  border para poder migrar este caso sin perder esa
+  variante visual
+- athlete_hub_view.dart _RpeVsPaceHalfCard: el color
+  actual representa "tendencia" (mejoró/empeoró entre
+  mitades de temporada), no nivel absoluto de esfuerzo —
+  requiere decisión de producto antes de migrar, no es
+  un swap directo
+
 ## [UI] — RpeBadge: componente compartido de RPE
 - Nuevo lib/core/widgets/rpe_badge.dart — 3 tamaños
   (text/chip/stat), color semántico vía
