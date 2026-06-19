@@ -8,6 +8,7 @@ import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
+import 'package:running_laps/core/widgets/rpe_badge.dart';
 import 'package:running_laps/features/profile/data/zones_repository.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/widgets/tag_chip.dart';
@@ -891,7 +892,6 @@ class _SerieExpansionTileState extends State<_SerieExpansionTile> {
     final serie = widget.serie;
     final i = widget.index;
     debugPrint('[SerieExpansionTile] serieIndex=$i, plannedTarget=${widget.plannedTarget}');
-    final rpeColor = AppColors.effortColor(serie.rpe.toDouble());
     final hasFc = serie.fcReadings != null &&
         (serie.fcReadings as List).isNotEmpty; // List<FcReading>
 
@@ -942,11 +942,7 @@ class _SerieExpansionTileState extends State<_SerieExpansionTile> {
                         fontWeight: FontWeight.w400),
                   ),
                   if (serie.rpe > 0)
-                    Text(
-                      'RPE ${serie.rpe}',
-                      style: AppTypography.body
-                          .copyWith(color: rpeColor, fontWeight: FontWeight.w400),
-                    ),
+                    RpeBadge(rpe: serie.rpe.toDouble(), size: RpeBadgeSize.text),
                 ],
               ),
             ),

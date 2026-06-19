@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
+import 'package:running_laps/core/widgets/rpe_badge.dart';
 import 'package:running_laps/features/templates/data/saved_block.dart';
 import 'package:running_laps/features/templates/data/saved_blocks_repository.dart';
 import 'package:running_laps/features/templates/data/workout_block.dart';
@@ -110,11 +111,7 @@ List<Widget> _buildTargetChips(
         fg: _darken(zoneColor)));
   }
   if (t.rpe != null) {
-    final rpeColor = _rpeChipColor(t.rpe!);
-    chips.add(_TargetChip(
-        label: 'RPE ${t.rpe}',
-        bg: rpeColor.withValues(alpha: 0.13),
-        fg: _darken(rpeColor)));
+    chips.add(RpeBadge(rpe: t.rpe!.toDouble()));
   }
   if (t.fcMaxPercent != null) {
     final fcColor = _fcChipColor(t.fcMaxPercent!);

@@ -1,5 +1,24 @@
 # CHANGELOG — Running Laps
 
+## [UI] — RpeBadge: componente compartido de RPE
+- Nuevo lib/core/widgets/rpe_badge.dart — 3 tamaños
+  (text/chip/stat), color semántico vía
+  AppColors.effortColor, label autoformateado
+- Aplicado en: training_detail_view.dart (chip por
+  serie), blocks_list_section.dart (chip de objetivo),
+  premium_training_card.dart (stat chip de historial)
+- FIX: premium_training_card.dart tenía el RPE
+  siempre en color rojo (AppColors.rpeMax fijo)
+  sin importar el valor real — ahora usa el color
+  semántico correcto
+- home_view.dart: pendiente, _StatItem no tiene
+  parámetro de color — fuera de alcance, documentado
+  para sesión futura
+- Quedan 7 sitios de visualización de RPE sin migrar
+  (ver inventario completo en sesión anterior) —
+  se migrarán en tareas siguientes
+- Rama: feat/rpe-badge-shared
+
 ## [Auditoría] — 2026-06-19 — Vistas huérfanas vs activas
 
 Mapa de reachability desde `MainShell` (sin router de paquete, sin rutas con

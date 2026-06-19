@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/rpe_badge.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/data/serie.dart';
 import 'package:running_laps/features/training/widgets/tag_chip.dart';
@@ -74,7 +75,6 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
     final km = widget.training.distanciaTotalM() / 1000.0;
     final distText = km.toStringAsFixed(2);
     final ritmoText = widget.training.ritmoMedioTexto();
-    final rpeText = widget.training.rpePromedio().toStringAsFixed(1);
     final tiempoText =
         _formatSeconds(widget.training.tiempoTotalSec().round());
 
@@ -102,7 +102,8 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
           child: Column(
             children: [
               _buildCardHeader(context),
-              _buildStatsRow(context, distText, tiempoText, ritmoText, rpeText),
+              _buildStatsRow(context, distText, tiempoText, ritmoText,
+                  widget.training.rpePromedio()),
               AnimatedCrossFade(
                 firstChild: const SizedBox.shrink(),
                 secondChild: _buildExpandedContent(context),
@@ -241,7 +242,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
   }
 
   Widget _buildStatsRow(BuildContext context, String dist, String tiempo,
-      String ritmo, String rpe) {
+      String ritmo, double rpe) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
       child: Row(
@@ -250,7 +251,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
           _StatChip(icon: Icons.straighten_rounded, value: dist, unit: 'km', color: AppColors.rest),
           _StatChip(icon: Icons.timer_outlined, value: tiempo, unit: '', color: AppColors.rpeMid),
           _StatChip(icon: Icons.speed_rounded, value: ritmo, unit: '/km', color: AppColors.rpeLow),
-          _StatChip(icon: Icons.bolt_rounded, value: rpe, unit: 'RPE', color: AppColors.rpeMax),
+          RpeBadge(rpe: rpe, size: RpeBadgeSize.chip, showIcon: true),
         ],
       ),
     );
