@@ -1,3 +1,7 @@
+// ✅ ACTIVO — pese al sufijo "_legacy" en el nombre
+// de archivo, esta vista SÍ está en uso real.
+// Ver auditoría del 2026-06-19 en CHANGELOG.md antes
+// de asumir que es seguro modificar/eliminar.
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';

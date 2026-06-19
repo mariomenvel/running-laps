@@ -1,5 +1,48 @@
 # CHANGELOG — Running Laps
 
+## [Auditoría] — 2026-06-19 — Vistas huérfanas vs activas
+
+Mapa de reachability desde `MainShell` (sin router de paquete, sin rutas con
+nombre — toda la navegación es `Navigator.push`/`MainShell.navigateTo` con
+`AppRoute`/`AppModalRoute`, por lo que el grep de instanciación directa es fiable):
+
+| Vista | Archivo | Estado | Usada desde |
+|---|---|---|---|
+| WorkoutEditorScreen | workout_editor_screen.dart | ACTIVA | calendario (slot 13), athlete_hub_view ×4, training_start_view |
+| SessionEditorView | session_editor_view.dart | HUÉRFANA | nadie |
+| AthleteSessionEditorView | athlete_session_editor_view.dart | HUÉRFANA | nadie (ni siquiera slot 13) |
+| CalendarView | calendar_view.dart | ACTIVA | slot 1 |
+| HomeView (no-legacy) | home_view.dart | ACTIVA | slot 0 |
+| HomeView (legacy) | home_view_legacy.dart | HUÉRFANA | sus 2 "importadores" no usan la clase |
+| GlobalChallengeCard | global_challenge_card.dart | HUÉRFANA | solo dentro de home_view_legacy.dart |
+| ProfileView | profile_view.dart | ACTIVA | slot 3 |
+| ProfileMenuView (no-legacy) | profile_menu_screen.dart | HUÉRFANA | nadie — pese al nombre sin sufijo |
+| ProfileMenuView (legacy) | profile_menu_screen_legacy.dart | **ACTIVA** | GroupScreen, GroupsListScreen, TemplatesListView |
+| AnalyticsHubScreen | analytics_hub_screen.dart | ACTIVA | slot 2 |
+| AnalyticsHubScreenLegacy | analytics_hub_screen_legacy.dart | HUÉRFANA | nadie |
+| AnalyticsHubView | analytics_hub_view.dart | HUÉRFANA | nadie |
+| GroupRewardsScreen | group_rewards_screen.dart | HUÉRFANA | nadie |
+| EditProfilePictureView | edit_profile_picture_view.dart | HUÉRFANA | nadie |
+| SessionPlannerView | session_planner_view.dart | HUÉRFANA | nadie |
+| TrainingSummaryScreen | training_summary_screen.dart | DUDOSA | no verificado |
+| AiCoachOnboardingView | ai_coach_onboarding_view.dart | DUDOSA | no verificado |
+
+10 archivos marcados con comentario ⚠️ HUÉRFANO:
+session_editor_view.dart, athlete_session_editor_view.dart, home_view_legacy.dart,
+profile_menu_screen.dart, analytics_hub_screen_legacy.dart, analytics_hub_view.dart,
+group_rewards_screen.dart, edit_profile_picture_view.dart, session_planner_view.dart,
+global_challenge_card.dart
+
+1 archivo marcado con comentario ✅ ACTIVO pese al naming confuso:
+profile_menu_screen_legacy.dart (es la versión realmente usada; la versión
+sin sufijo "_legacy" es la huérfana — el nombre del archivo no refleja su estado real)
+
+**PENDIENTE:** testing manual exhaustivo de cada flujo antes de eliminar ningún huérfano.
+
+**PENDIENTE:** una vez confirmado por testing, eliminar huérfanos y renombrar
+`profile_menu_screen_legacy.dart` → `profile_menu_screen.dart` (quitando el
+sufijo del archivo que es realmente el activo).
+
 ## [Templates] — 2026-06-18 — Switch "Guardar como plantilla" eliminado
 - Eliminado del `WorkoutEditorScreen` hasta que exista UI de carga de plantillas
 - El backend (`TrainingTemplatesRepository` + Firestore `users/{uid}/templates/`) está completo y listo para cuando se implemente la feature

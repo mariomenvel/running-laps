@@ -1,3 +1,7 @@
+// ⚠️ HUÉRFANO — sin referencias activas detectadas
+// por auditoría del 2026-06-19. NO USAR como base para
+// nuevo desarrollo. Pendiente de confirmar con testing
+// manual antes de eliminar. Ver CHANGELOG.md.
 // lib/features/profile/views/edit_profile_picture_view.dart
 
 import 'package:flutter/material.dart';
