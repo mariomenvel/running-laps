@@ -6,6 +6,7 @@ import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
+import 'package:running_laps/core/widgets/block_preview_tile.dart';
 import 'package:running_laps/features/training/views/pre_execution_screen.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/progress_repository.dart';
@@ -619,13 +620,8 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                 ),
                 if (session.blocks.isNotEmpty) ...[
                   const SizedBox(height: 8),
-                  ...session.blocks.take(3).map((b) => Padding(
-                    padding: const EdgeInsets.only(bottom: 2),
-                    child: Text(
-                      _blockSummary(b),
-                      style: AppTypography.body.copyWith(color: AppColors.textSecondary(context)),
-                    ),
-                  )),
+                  ...session.blocks.take(3).map((b) =>
+                      BlockPreviewTile(block: b)),
                 ],
                 const SizedBox(height: 16),
                 SizedBox(
@@ -1162,15 +1158,6 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       'test':            'Test',
     };
     return map[cat] ?? cat;
-  }
-
-  String _blockSummary(SessionBlock b) {
-    if (b.reps != null && b.distanceM != null) {
-      return '• ${b.reps}×${b.distanceM}m';
-    }
-    if (b.distanceM != null) return '• ${b.distanceM}m';
-    if (b.durationMinutes != null) return '• ${b.durationMinutes} min';
-    return '• bloque';
   }
 
   String _weekdayLabel(String dateStr) {

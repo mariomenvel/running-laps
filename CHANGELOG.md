@@ -1,5 +1,30 @@
 # CHANGELOG — Running Laps
 
+## [UI] — BlockPreviewTile: componente compartido
+- Nuevo lib/core/widgets/block_preview_tile.dart —
+  2 estilos (compact para Home/Calendario, card para
+  selección), opera sobre SessionBlock
+- Unifica 3 implementaciones de formato de texto
+  que tenían inconsistencias entre sí (uso de '+'
+  vs '•', condición reps>1 aplicada solo en 1 de 3)
+- Aplicado en home_view.dart, calendar_view.dart
+  (2 usos), save_as_template_sheet.dart
+- Eliminadas: _blockSummary, _blocksDescription,
+  _BlockPickerTile (duplicadas/redundantes tras
+  la unificación)
+
+## [Arquitectura — nota documentada, no resuelta]
+- Existen dos modelos de sesión paralelos en el repo:
+  SessionBlock (AI Coach, lib/features/athlete/data/
+  athlete_session_model.dart) y WorkoutBlock/WorkoutSegment
+  (editor manual, lib/features/templates/data/).
+  No hay conversión entre ambos. Home/Calendario
+  muestran sesiones del AI Coach (SessionBlock);
+  WorkoutEditorScreen crea sesiones con WorkoutBlock.
+  Evaluar en sesión futura si esto debe unificarse.
+- Rama: feat/block-preview-tile — PENDIENTE testing
+  visual antes de mergear
+
 ## [UI] — RpeBadge: rollout a 4 sitios adicionales
 - training_no_gps_detail_view.dart: chip por serie
   + planificado/ejecutado (elimina _rpeColor duplicado,

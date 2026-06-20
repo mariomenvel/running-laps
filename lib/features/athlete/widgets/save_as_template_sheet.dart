@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'package:running_laps/core/widgets/block_preview_tile.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/features/templates/data/templates_repository.dart';
@@ -382,8 +383,9 @@ class _SaveAsTemplateSheetState extends State<_SaveAsTemplateSheet> {
                           ),
                           child: Column(children: [
                             for (int i = 0; i < s.blocks.length; i++)
-                              _BlockPickerTile(
+                              BlockPreviewTile(
                                 block:    s.blocks[i],
+                                style:    BlockPreviewStyle.card,
                                 index:    i,
                                 selected: _selectedBlockIndex == i,
                                 onTap:    () => setState(
@@ -555,61 +557,6 @@ class _OptionTile extends StatelessWidget {
           ),
         ]),
       ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// _BlockPickerTile
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _BlockPickerTile extends StatelessWidget {
-  final SessionBlock block;
-  final int index;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _BlockPickerTile({
-    required this.block,
-    required this.index,
-    required this.selected,
-    required this.onTap,
-  });
-
-  String get _title {
-    switch (block.type) {
-      case SessionBlockType.series:
-        return '${block.reps ?? 1} × ${block.distanceM ?? 0} m';
-      case SessionBlockType.continuousTime:
-        return '${block.durationMinutes ?? 0} min continuo';
-      case SessionBlockType.continuousDistance:
-        return '${block.distanceM ?? 0} m continuo';
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      dense:    true,
-      leading:  Text(
-        '${index + 1}',
-        style: TextStyle(
-          fontSize:   13,
-          fontWeight: FontWeight.w700,
-          color:      selected ? AppColors.brand : const Color(0xFFAAAAAA),
-        ),
-      ),
-      title: Text(_title,
-          style: TextStyle(
-            fontSize:   14,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-          )),
-      trailing: selected
-          ? const Icon(Icons.check_circle,
-              color: AppColors.brand, size: 18)
-          : null,
-      onTap: onTap,
-      shape: const RoundedRectangleBorder(),
     );
   }
 }

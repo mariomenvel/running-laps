@@ -13,6 +13,7 @@ import 'package:speech_to_text/speech_to_text.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
 import 'package:running_laps/features/calendar/viewmodels/calendar_view_model.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
+import 'package:running_laps/core/widgets/block_preview_tile.dart';
 import 'package:running_laps/features/training/views/pre_execution_screen.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
@@ -1683,9 +1684,11 @@ class _CalendarViewState extends State<CalendarView>
                                 if (s.blocks.isNotEmpty)
                                   Padding(
                                     padding: const EdgeInsets.only(left: 14, top: 2),
-                                    child: Text(
-                                      _blocksDescription(s.blocks),
-                                      style: AppTypography.small.copyWith(color: AppColors.textSecondary(context)),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: s.blocks
+                                          .map((b) => BlockPreviewTile(block: b))
+                                          .toList(),
                                     ),
                                   ),
                               ],
@@ -2222,15 +2225,8 @@ class _CalendarViewState extends State<CalendarView>
           ),
           if (session.blocks.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.s),
-            ...session.blocks.take(3).map((b) {
-              final detail = b.distanceM != null
-                  ? '${b.reps != null && b.reps! > 1 ? '${b.reps}×' : ''}${b.distanceM}m'
-                  : b.durationMinutes != null ? '${b.durationMinutes} min' : 'bloque';
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 2),
-                child: Text('• $detail', style: AppTypography.small.copyWith(color: AppColors.textSecondary(context))),
-              );
-            }),
+            ...session.blocks.take(3).map((b) =>
+                BlockPreviewTile(block: b)),
           ],
           if (why.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.s),
@@ -2406,20 +2402,6 @@ class _CalendarViewState extends State<CalendarView>
   String _dayAbbr(int weekday) {
     const days = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
     return days[weekday - 1];
-  }
-
-  String _blocksDescription(List<SessionBlock> blocks) {
-    final parts = <String>[];
-    for (final b in blocks) {
-      if (b.reps != null && b.distanceM != null) {
-        parts.add('${b.reps}×${b.distanceM}m');
-      } else if (b.distanceM != null) {
-        parts.add('${b.distanceM}m');
-      } else if (b.durationMinutes != null) {
-        parts.add('${b.durationMinutes} min');
-      }
-    }
-    return parts.join(' + ');
   }
 
   String _normalize(DateTime d) =>
