@@ -1,7 +1,7 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
+import 'package:running_laps/core/widgets/ios_picker.dart';
 
 class NumberPickerField extends StatelessWidget {
   final String label;
@@ -98,24 +98,20 @@ class NumberPickerField extends StatelessWidget {
               ),
               // Picker
               Expanded(
-                child: CupertinoPicker(
-                  itemExtent: 40,
-                  scrollController: FixedExtentScrollController(
-                      initialItem: initialItem),
-                  onSelectedItemChanged: (i) {
-                    tempValue = min + (i * step);
-                  },
-                  children: List.generate(itemCount, (i) {
-                    final v = min + (i * step);
-                    return Center(
-                      child: Text(
-                        unit.isEmpty ? '$v' : '$v $unit',
-                        style: AppTypography.body.copyWith(
-                          color: AppColors.textPrimary(context),
-                        ),
-                      ),
-                    );
-                  }),
+                child: Center(
+                  child: IosPicker(
+                    itemCount: itemCount,
+                    initialItem: initialItem,
+                    itemExtent: 40,
+                    width: 160,
+                    textBuilder: (i) {
+                      final v = min + (i * step);
+                      return unit.isEmpty ? '$v' : '$v $unit';
+                    },
+                    onChanged: (i) {
+                      tempValue = min + (i * step);
+                    },
+                  ),
                 ),
               ),
             ],

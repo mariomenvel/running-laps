@@ -14,6 +14,7 @@ import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/widgets/rpe_badge.dart';
+import 'package:running_laps/core/widgets/ios_picker.dart';
 import '../../../core/services/gps_service.dart';
 import '../../../core/services/ios_live_activity_service.dart';
 import '../../../core/widgets/modern_snackbar.dart';
@@ -3706,32 +3707,16 @@ class _TrainingStartViewState extends State<TrainingStartView>
     required ValueChanged<int> onChanged,
     required String Function(int) textBuilder,
   }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(label, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
-        Expanded(
-          child: CupertinoPicker(
-            magnification: 1.22,
-            squeeze: 1.2,
-            useMagnifier: true,
-            itemExtent: 32,
-            // This is called when selected item is changed.
-            onSelectedItemChanged: onChanged,
-            scrollController: FixedExtentScrollController(
-              initialItem: initialItem,
-            ),
-            children: List<Widget>.generate(itemCount, (int index) {
-              return Center(
-                child: Text(
-                  textBuilder(index),
-                  style: const TextStyle(fontSize: 20),
-                ),
-              );
-            }),
-          ),
-        ),
-      ],
+    return Center(
+      child: IosPicker(
+        label: label,
+        itemCount: itemCount,
+        initialItem: initialItem,
+        itemExtent: 32,
+        width: 70,
+        onChanged: onChanged,
+        textBuilder: textBuilder,
+      ),
     );
   }
 

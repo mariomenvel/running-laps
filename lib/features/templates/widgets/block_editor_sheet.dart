@@ -1,8 +1,8 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/ios_picker.dart';
 import '../data/template_models.dart';
 import 'alarm_config_sheet.dart';
 
@@ -126,15 +126,14 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
             Expanded(
-              child: CupertinoPicker(
-                itemExtent: 32,
-                scrollController: FixedExtentScrollController(
-                    initialItem: (_distancia ~/ 50) - 1),
-                onSelectedItemChanged: (idx) {
-                  setState(() => _distancia = (idx + 1) * 50);
-                },
-                children: List.generate(
-                    100, (i) => Center(child: Text('${(i + 1) * 50}m'))),
+              child: IosPicker(
+                itemCount: 100,
+                initialItem: (_distancia ~/ 50) - 1,
+                onChanged: (idx) =>
+                    setState(() => _distancia = (idx + 1) * 50),
+                textBuilder: (i) => '${(i + 1) * 50}m',
+                width: double.infinity,
+                itemExtent: 36,
               ),
             ),
             Padding(
@@ -181,17 +180,13 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
             Expanded(
-              child: CupertinoPicker(
-                itemExtent: 32,
-                scrollController:
-                    FixedExtentScrollController(initialItem: _descanso ~/ 5),
-                onSelectedItemChanged: (idx) {
-                  setState(() => _descanso = idx * 5);
-                },
-                children: List.generate(
-                    61,
-                    (i) =>
-                        Center(child: Text(_formatMinSec(i * 5)))),
+              child: IosPicker(
+                itemCount: 61,
+                initialItem: _descanso ~/ 5,
+                onChanged: (idx) => setState(() => _descanso = idx * 5),
+                textBuilder: (i) => _formatMinSec(i * 5),
+                width: double.infinity,
+                itemExtent: 36,
               ),
             ),
             Padding(
