@@ -621,7 +621,10 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                 if (session.blocks.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   ...session.blocks.take(3).map((b) =>
-                      BlockPreviewTile(block: b)),
+                      BlockPreviewTile(
+                        block: b,
+                        style: BlockPreviewStyle.card,
+                      )),
                 ],
                 const SizedBox(height: 16),
                 SizedBox(

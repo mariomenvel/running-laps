@@ -12,6 +12,20 @@
 - Eliminadas: _blockSummary, _blocksDescription,
   _BlockPickerTile (duplicadas/redundantes tras
   la unificación)
+- home_view.dart: cambiado de BlockPreviewStyle.compact
+  a .card — ahora muestra chips de RPE/zona/pace
+  por bloque, igual que en el editor
+- calendar_view.dart: ambos usos cambiados de
+  BlockPreviewStyle.compact a .card. Tras revisar el
+  código no existe ninguna celda de grid apretada en
+  este archivo — la vista mensual (_buildMonthSection)
+  solo pinta puntos de color y no usa BlockPreviewTile.
+  Los 2 usos reales son full-width sin restricción de
+  altura: _buildWeekDayCard (vista semanal, card por
+  día en una Column vertical) y _buildSessionCard
+  (panel de detalle del día seleccionado). Se aplicó
+  card completo en ambos, sin necesidad de take(1) ni
+  de mantener compact en ningún sitio.
 
 ## [Arquitectura — nota documentada, no resuelta]
 - Existen dos modelos de sesión paralelos en el repo:

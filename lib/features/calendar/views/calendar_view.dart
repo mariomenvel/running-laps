@@ -1687,7 +1687,10 @@ class _CalendarViewState extends State<CalendarView>
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: s.blocks
-                                          .map((b) => BlockPreviewTile(block: b))
+                                          .map((b) => BlockPreviewTile(
+                                                block: b,
+                                                style: BlockPreviewStyle.card,
+                                              ))
                                           .toList(),
                                     ),
                                   ),
@@ -2226,7 +2229,10 @@ class _CalendarViewState extends State<CalendarView>
           if (session.blocks.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.s),
             ...session.blocks.take(3).map((b) =>
-                BlockPreviewTile(block: b)),
+                BlockPreviewTile(
+                  block: b,
+                  style: BlockPreviewStyle.card,
+                )),
           ],
           if (why.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.s),
