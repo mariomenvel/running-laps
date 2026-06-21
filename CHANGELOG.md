@@ -1,5 +1,41 @@
 # CHANGELOG — Running Laps
 
+## [Fix] Colisión WorkoutType.free/continuous en athlete_session_mapper.dart
+- Causa raíz: en `_workoutTypeToCategory()` (athlete_session_mapper.dart:367),
+  `case WorkoutType.free:` devolvía el mismo string `'rodaje_base'` que
+  `case WorkoutType.continuous:` (línea 362). Al releer una sesión desde
+  Firestore, `_mapCategory('rodaje_base')` siempre resuelve a
+  `WorkoutType.continuous` (línea 48-50) — el tipo `free` se perdía
+  silenciosamente cada vez que la sesión se cargaba de nuevo.
+- Fix: línea 367 ahora devuelve `'gimnasio_fuerza'`, la categoría que
+  `_mapCategory()` ya mapeaba correctamente a `WorkoutType.free`
+  (línea 62-63) — el camino de lectura ya estaba bien, solo faltaba que
+  la escritura usara el mismo valor.
+- Test nuevo: test/features/templates/athlete_session_mapper_test.dart
+  — round-trip `WorkoutType -> category -> WorkoutType` para todos los
+  valores del enum, vía las funciones públicas `mapWorkoutSessionToAthlete`
+  / `mapAthleteSessionToWorkout`. Evita que esta colisión vuelva a pasar
+  silenciosamente si se añaden nuevos `WorkoutType` en el futuro.
+- `flutter analyze` sin errores; `flutter test` — 59/59 tests pasan
+  (la única carga fallida, test/widget_test.dart, es un archivo vacío
+  preexistente sin relación con este cambio).
+- Cambio puramente en Dart compartido — mismo comportamiento en Android,
+  iOS y Wear OS tras el fix (Wear OS no lee el campo `category`).
+- **Pendiente — migración de datos:** las sesiones `free` guardadas
+  ANTES de este fix quedaron persistidas en Firestore con
+  `category: 'rodaje_base'` (indistinguibles de una sesión `continuous`
+  real por ese campo). Hay una heurística posible para identificarlas
+  retroactivamente — documentos con `category == 'rodaje_base'` cuyo
+  array `blocks` tiene un solo elemento con `role == 'main'` (sin
+  warmup/cooldown) — pero NO se ha aplicado ninguna migración. Requiere
+  revisión manual de una muestra antes de tocar datos de producción,
+  por riesgo de falsos positivos (una sesión `continuous` editada a mano
+  para tener un solo bloque caería en el mismo patrón).
+- **Pendiente — training_load_service.dart:** no distingue
+  `'gimnasio_fuerza'` de `'rodaje_base'` en `_intensityForCategory()` —
+  ambos caen en el `default: 1.0` porque `'gimnasio_fuerza'` no está
+  listado en ese switch. No se tocó este archivo en este fix.
+
 ## [Refactor — MVVM] SpeechToText extraído a servicio singleton
 - Corrige deuda técnica: SpeechToText() se instanciaba directamente
   en la View (State) en workout_editor_screen.dart:52 y

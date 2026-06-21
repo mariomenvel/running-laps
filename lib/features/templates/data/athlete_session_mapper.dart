@@ -364,7 +364,7 @@ String _workoutTypeToCategory(WorkoutType type) {
     case WorkoutType.fartlek:     return 'fartlek';
     case WorkoutType.hills:       return 'series_cuestas';
     case WorkoutType.competition: return 'competicion';
-    case WorkoutType.free:        return 'rodaje_base';
+    case WorkoutType.free:        return 'gimnasio_fuerza';
   }
 }
 
