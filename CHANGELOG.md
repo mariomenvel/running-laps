@@ -1,5 +1,29 @@
 # CHANGELOG — Running Laps
 
+## [Fix — iOS] Crash SIGABRT/TCC al arrancar (micrófono del generador de entrenamientos por IA)
+- Causa raíz confirmada por crash log (.ips): el proceso terminaba con
+  SIGABRT al invocar el reconocimiento de voz (paquete speech_to_text)
+  porque ios/Runner/Info.plist no declaraba la clave
+  NSSpeechRecognitionUsageDescription. iOS exige declarar el uso de
+  TCC (Transparency, Consent and Control) antes de poder solicitar el
+  permiso; sin la clave, el sistema aborta el proceso en vez de mostrar
+  el diálogo de permiso.
+- Añadidas a ios/Runner/Info.plist:
+  - NSSpeechRecognitionUsageDescription
+  - NSMicrophoneUsageDescription (también faltaba; speech_to_text
+    requiere acceso al micrófono además del reconocimiento de voz)
+- Afecta al botón de micrófono del generador de entrenamientos por IA
+  (ver WORKOUT_GENERATOR_BY_PROMPT.md), usado en
+  lib/features/templates/views/workout_editor_screen.dart y
+  lib/features/calendar/views/calendar_view.dart.
+- Pendiente: verificar en build iOS real (requiere Mac/Codemagic) que
+  el diálogo de permiso aparece y la app ya no crashea al pulsar el
+  micrófono.
+- Nota aparte (no corregida, solo reportada): en ambos archivos
+  SpeechToText() se instancia directamente en la View (State), no en
+  un viewmodel — inconsistente con la convención MVVM del proyecto.
+  No se modifica sin confirmación explícita.
+
 ## [UI] — BlockPreviewTile: componente compartido
 - Nuevo lib/core/widgets/block_preview_tile.dart —
   2 estilos (compact para Home/Calendario, card para

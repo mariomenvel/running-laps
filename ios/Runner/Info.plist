@@ -57,6 +57,10 @@
 	<string>Running Laps necesita acceso continuo a tu ubicación para registrar tu entrenamiento aunque la pantalla esté bloqueada.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>Running Laps utiliza el podómetro para mejorar la precisión del GPS y calcular tu cadencia al correr.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Running Laps necesita acceso al micrófono para dictar tus entrenamientos por voz en el generador con IA.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Running Laps utiliza reconocimiento de voz para convertir tu dictado en un entrenamiento generado por IA.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
