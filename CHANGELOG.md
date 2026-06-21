@@ -1,5 +1,40 @@
 # CHANGELOG — Running Laps
 
+## [Refactor — MVVM] SpeechToText extraído a servicio singleton
+- Corrige deuda técnica: SpeechToText() se instanciaba directamente
+  en la View (State) en workout_editor_screen.dart:52 y
+  calendar_view.dart:39, violando la convención MVVM del proyecto
+  (Vistas sin lógica de negocio).
+- Nuevo lib/core/services/speech_to_text_service.dart — singleton
+  que encapsula el paquete speech_to_text, siguiendo el mismo patrón
+  que HeartRateService. Expone isAvailable, isListening,
+  recognizedText y lastError como ValueNotifier (sin GetX).
+  Solo puede haber una sesión de escucha activa a la vez en toda la
+  app (coherente: un solo micrófono, un solo campo dictado a la vez).
+- Nuevo lib/features/templates/viewmodels/workout_ai_panel_view_model.dart
+  — viewmodel para WorkoutEditorScreen (no existía ninguno para esta
+  pantalla). Consume SpeechToTextService; expone su estado a la View.
+  Solo cubre el dictado del panel "Crear con IA" — el resto de la
+  lógica de la pantalla (tipo, bloques, guardado) se deja igual,
+  fuera de alcance de este refactor.
+- lib/features/calendar/viewmodels/calendar_view_model.dart — añadidos
+  getters/métodos (adjustSpeechAvailable, adjustListening,
+  adjustRecognizedText, adjustSpeechError, initAdjustSpeech,
+  toggleAdjustListening) que delegan en SpeechToTextService, para el
+  panel "Ajustar plan con el coach". Se reutiliza el viewmodel ya
+  existente en vez de crear uno nuevo, ya que CalendarViewModel ya
+  encapsulaba el estado de esa pantalla.
+- workout_editor_screen.dart y calendar_view.dart: eliminada la
+  instanciación directa de SpeechToText(); ambos consumen el
+  viewmodel vía ValueListenableBuilder. El flujo funcional
+  ("pulsar micrófono → dictar → texto al campo editable") no cambia.
+- flutter analyze sin errores tras el refactor (mismos warnings
+  preexistentes en calendar_view.dart, no relacionados con este
+  cambio — verificado con git stash).
+- Sin impacto en Android (Dart puro) ni en Wear OS (esta feature no
+  existe en el reloj).
+- No se tocó App Check, Google Sign-In ni Bluetooth/HeartRateService.
+
 ## [Fix — iOS] Crash SIGABRT/TCC al arrancar (micrófono del generador de entrenamientos por IA)
 - Causa raíz confirmada por crash log (.ips): el proceso terminaba con
   SIGABRT al invocar el reconocimiento de voz (paquete speech_to_text)

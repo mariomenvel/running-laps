@@ -11,9 +11,9 @@ import 'package:running_laps/features/athlete/data/athlete_session_repository.da
 import 'package:running_laps/features/templates/data/athlete_session_mapper.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/templates/data/workout_block.dart';
-import 'package:speech_to_text/speech_to_text.dart';
 import 'package:running_laps/features/templates/data/workout_segment.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
+import 'package:running_laps/features/templates/viewmodels/workout_ai_panel_view_model.dart';
 import 'package:running_laps/features/templates/views/widgets/blocks_list_section.dart';
 import 'package:running_laps/features/templates/views/widgets/workout_type_selector.dart';
 import 'package:uuid/uuid.dart';
@@ -49,11 +49,9 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
   late final TextEditingController _notesController;
 
   final _aiPromptController = TextEditingController();
-  final _speechToText = SpeechToText();
+  final _aiPanelViewModel = WorkoutAiPanelViewModel();
   final _aiPanelExpanded = ValueNotifier<bool>(false);
   final _aiGenerating = ValueNotifier<bool>(false);
-  bool _aiListening = false;
-  bool _speechAvailable = false;
 
   // Effective scheduled date resolved from explicit param > shellParams > initialSession
   DateTime? _effectiveScheduledDate;
@@ -85,6 +83,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
       _notesController.addListener(() => _notes.value = _notesController.text);
 
       _initSpeech();
+      _aiPanelViewModel.recognizedText.addListener(_onRecognizedTextChanged);
 
       if (s != null && s.title.isNotEmpty) {
         _titleEdited = true;
@@ -108,6 +107,8 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
     _notes.dispose();
     _titleController.dispose();
     _notesController.dispose();
+    _aiPanelViewModel.recognizedText.removeListener(_onRecognizedTextChanged);
+    _aiPanelViewModel.dispose();
     _aiPromptController.dispose();
     _aiPanelExpanded.dispose();
     _aiGenerating.dispose();
@@ -244,24 +245,22 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
   }
 
   Future<void> _initSpeech() async {
-    _speechAvailable = await _speechToText.initialize();
-    if (mounted) setState(() {});
+    final available = await _aiPanelViewModel.initSpeech();
+    if (!available && mounted && _aiPanelViewModel.speechError.value != null) {
+      ModernSnackBar.showError(context, _aiPanelViewModel.speechError.value!);
+    }
+  }
+
+  void _onRecognizedTextChanged() {
+    _aiPromptController.text = _aiPanelViewModel.recognizedText.value;
   }
 
   Future<void> _toggleAiListening() async {
-    if (_aiListening) {
-      await _speechToText.stop();
-      setState(() => _aiListening = false);
-      return;
+    await _aiPanelViewModel.toggleListening();
+    final error = _aiPanelViewModel.speechError.value;
+    if (error != null && mounted) {
+      ModernSnackBar.showError(context, error);
     }
-    await _speechToText.listen(
-      onResult: (result) {
-        setState(() => _aiPromptController.text = result.recognizedWords);
-        if (result.finalResult) setState(() => _aiListening = false);
-      },
-      listenOptions: SpeechListenOptions(),
-    );
-    setState(() => _aiListening = true);
   }
 
   Future<void> _generateFromAi() async {
@@ -771,34 +770,42 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          if (_speechAvailable)
-                            GestureDetector(
-                              onTap: _toggleAiListening,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 14, vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: _aiListening
-                                      ? AppColors.brand.withValues(alpha: 0.15)
-                                      : AppColors.surfaceOf(context),
-                                  borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(
-                                    color: _aiListening
-                                        ? AppColors.brand
-                                        : AppColors.borderOf(context),
+                          ValueListenableBuilder<bool>(
+                            valueListenable: _aiPanelViewModel.speechAvailable,
+                            builder: (_, available, __) {
+                              if (!available) return const SizedBox.shrink();
+                              return ValueListenableBuilder<bool>(
+                                valueListenable: _aiPanelViewModel.isListening,
+                                builder: (_, listening, __) => GestureDetector(
+                                  onTap: _toggleAiListening,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 14, vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: listening
+                                          ? AppColors.brand.withValues(alpha: 0.15)
+                                          : AppColors.surfaceOf(context),
+                                      borderRadius: BorderRadius.circular(24),
+                                      border: Border.all(
+                                        color: listening
+                                            ? AppColors.brand
+                                            : AppColors.borderOf(context),
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      listening
+                                          ? Icons.stop_rounded
+                                          : Icons.mic_rounded,
+                                      size: 20,
+                                      color: listening
+                                          ? AppColors.brand
+                                          : AppColors.textSecondary(context),
+                                    ),
                                   ),
                                 ),
-                                child: Icon(
-                                  _aiListening
-                                      ? Icons.stop_rounded
-                                      : Icons.mic_rounded,
-                                  size: 20,
-                                  color: _aiListening
-                                      ? AppColors.brand
-                                      : AppColors.textSecondary(context),
-                                ),
-                              ),
-                            ),
+                              );
+                            },
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: ValueListenableBuilder<bool>(

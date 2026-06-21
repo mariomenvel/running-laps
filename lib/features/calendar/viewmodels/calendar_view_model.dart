@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:running_laps/core/services/speech_to_text_service.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
@@ -41,6 +42,22 @@ class CalendarViewModel {
   final _sessionRepo  = AthleteSessionRepository();
   final _trainingRepo = TrainingRepository();
   final _userService  = UserService();
+  final _speech        = SpeechToTextService();
+
+  // ── Dictado por voz — panel "Ajustar plan con el coach" ─────────────────
+
+  ValueNotifier<bool> get adjustSpeechAvailable => _speech.isAvailable;
+  ValueNotifier<bool> get adjustListening => _speech.isListening;
+  ValueNotifier<String> get adjustRecognizedText => _speech.recognizedText;
+  ValueNotifier<String?> get adjustSpeechError => _speech.lastError;
+
+  Future<void> initAdjustSpeech() => _speech.initialize();
+
+  Future<void> toggleAdjustListening() {
+    return adjustListening.value
+        ? _speech.stopListening()
+        : _speech.startListening();
+  }
 
   // ── Estado de vista ───────────────────────────────────────────────────────
 
@@ -164,6 +181,7 @@ class CalendarViewModel {
 
   void dispose() {
     _disposed = true;
+    _speech.dispose();
     _sessionSub?.cancel();
     _seasonSub?.cancel();
     isLoading.dispose();

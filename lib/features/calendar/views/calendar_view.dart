@@ -9,7 +9,6 @@ import 'package:running_laps/features/athlete/data/athlete_session_repository.da
 import 'package:running_laps/features/ai_coach/data/ai_coach_chat_service.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
-import 'package:speech_to_text/speech_to_text.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
 import 'package:running_laps/features/calendar/viewmodels/calendar_view_model.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
@@ -36,14 +35,11 @@ class _CalendarViewState extends State<CalendarView>
   bool _initialized = false;
   // Panel "Ajustar plan con el coach"
   final TextEditingController _adjustController = TextEditingController();
-  final SpeechToText _adjustSpeech = SpeechToText();
   final ValueNotifier<bool> _adjustPanelExpanded = ValueNotifier(false);
   final ValueNotifier<bool> _adjustProcessing = ValueNotifier(false);
   final ValueNotifier<AiCoachUsage?> _adjustUsage = ValueNotifier(null);
   final ValueNotifier<Set<String>> _expandedSessions =
       ValueNotifier<Set<String>>({});
-  bool _adjustListening = false;
-  bool _adjustSpeechAvailable = false;
   AiCoachAdjustmentPreview? _pendingPreview;
 
   String _currentWeekStart() {
@@ -57,7 +53,6 @@ class _CalendarViewState extends State<CalendarView>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initWithAuth();
-    _initAdjustSpeech();
     MainShell.shellKey.currentState?.tabIndexNotifier
         .addListener(_onTabChanged);
     _adjustController.addListener(() {
@@ -65,9 +60,10 @@ class _CalendarViewState extends State<CalendarView>
     });
   }
 
-  Future<void> _initAdjustSpeech() async {
-    _adjustSpeechAvailable = await _adjustSpeech.initialize(
-      onError: (_) => setState(() => _adjustListening = false),
+  void _onAdjustRecognizedTextChanged() {
+    _adjustController.text = _vm!.adjustRecognizedText.value;
+    _adjustController.selection = TextSelection.fromPosition(
+      TextPosition(offset: _adjustController.text.length),
     );
   }
 
@@ -90,6 +86,8 @@ class _CalendarViewState extends State<CalendarView>
       _vm = CalendarViewModel(userId: uid);
       _vmReady = true;
     });
+    _vm!.adjustRecognizedText.addListener(_onAdjustRecognizedTextChanged);
+    _vm!.initAdjustSpeech();
     _vm!.loadAll();
     final profile = await AiCoachRepository().getProfile(uid: uid);
     if (mounted) setState(() => _hasAiCoachProfile = profile != null);
@@ -108,6 +106,7 @@ class _CalendarViewState extends State<CalendarView>
     WidgetsBinding.instance.removeObserver(this);
     MainShell.shellKey.currentState?.tabIndexNotifier
         .removeListener(_onTabChanged);
+    _vm?.adjustRecognizedText.removeListener(_onAdjustRecognizedTextChanged);
     _vm?.dispose();
     _adjustController.dispose();
     _adjustPanelExpanded.dispose();
@@ -156,24 +155,11 @@ class _CalendarViewState extends State<CalendarView>
       _mondayOf(_vm?.selectedDay.value ?? DateTime.now());
 
   Future<void> _toggleAdjustListening() async {
-    if (!_adjustSpeechAvailable) return;
-    if (_adjustListening) {
-      await _adjustSpeech.stop();
-      setState(() => _adjustListening = false);
-    } else {
-      setState(() => _adjustListening = true);
-      await _adjustSpeech.listen(
-        listenOptions: SpeechListenOptions(cancelOnError: true),
-        onResult: (result) {
-          setState(() {
-            _adjustController.text = result.recognizedWords;
-            _adjustController.selection = TextSelection.fromPosition(
-              TextPosition(offset: _adjustController.text.length),
-            );
-          });
-        },
-        onSoundLevelChange: null,
-      );
+    if (_vm == null || !_vm!.adjustSpeechAvailable.value) return;
+    await _vm!.toggleAdjustListening();
+    final error = _vm!.adjustSpeechError.value;
+    if (error != null && mounted) {
+      ModernSnackBar.showError(context, error);
     }
   }
 
@@ -557,36 +543,47 @@ class _CalendarViewState extends State<CalendarView>
                                   ),
                                 ),
                               ),
-                              if (_adjustSpeechAvailable) ...[
-                                const SizedBox(width: 8),
-                                GestureDetector(
-                                  onTap: processing ? null : _toggleAdjustListening,
-                                  child: Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: BoxDecoration(
-                                      color: _adjustListening
-                                          ? AppColors.brand.withValues(alpha: 0.15)
-                                          : AppColors.surfaceOf(context),
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: _adjustListening
-                                            ? AppColors.brand
-                                            : AppColors.borderOf(context),
-                                      ),
+                              ValueListenableBuilder<bool>(
+                                valueListenable: _vm!.adjustSpeechAvailable,
+                                builder: (_, speechAvailable, __) {
+                                  if (!speechAvailable) return const SizedBox.shrink();
+                                  return ValueListenableBuilder<bool>(
+                                    valueListenable: _vm!.adjustListening,
+                                    builder: (_, listening, __) => Row(
+                                      children: [
+                                        const SizedBox(width: 8),
+                                        GestureDetector(
+                                          onTap: processing ? null : _toggleAdjustListening,
+                                          child: Container(
+                                            width: 44,
+                                            height: 44,
+                                            decoration: BoxDecoration(
+                                              color: listening
+                                                  ? AppColors.brand.withValues(alpha: 0.15)
+                                                  : AppColors.surfaceOf(context),
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: listening
+                                                    ? AppColors.brand
+                                                    : AppColors.borderOf(context),
+                                              ),
+                                            ),
+                                            child: Icon(
+                                              listening
+                                                  ? Icons.stop_rounded
+                                                  : Icons.mic_rounded,
+                                              size: 20,
+                                              color: listening
+                                                  ? AppColors.brand
+                                                  : AppColors.textSecondary(context),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    child: Icon(
-                                      _adjustListening
-                                          ? Icons.stop_rounded
-                                          : Icons.mic_rounded,
-                                      size: 20,
-                                      color: _adjustListening
-                                          ? AppColors.brand
-                                          : AppColors.textSecondary(context),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                                  );
+                                },
+                              ),
                               const SizedBox(width: 8),
                               GestureDetector(
                                 onTap: (processing ||
