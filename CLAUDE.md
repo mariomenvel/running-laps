@@ -95,3 +95,4 @@ No instanciar con `HomeEstadisticaRepository()` esperando instancia independient
 3. **Historial** — limitado a 100 entradas, implementar paginación con cursor
 4. `getAllEntrenamientos(uid)` en `TrainingRepository` ignora el uid recibido
 5. `getAllEntrenamientos(uid)` en `TrainingRepository` — alias de `getTrainings()` que ignora el uid; confuso para futuros devs
+6. **Refactor MVVM de `workout_editor_screen.dart`** — iniciado y pausado en rama `refactor/workout-editor-mvvm` (sin mergear). Reveló bug real: colisión `WorkoutType.free`/`continuous` en `athlete_session_mapper.dart` (mismo valor de categoría Firestore para ambos). Retomar el refactor cuando haya tiempo; el bug del mapper es independiente y de mayor prioridad.
