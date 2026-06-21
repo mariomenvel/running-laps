@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/ios_picker.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/data/serie.dart';
@@ -653,19 +654,18 @@ class _DistancePickerSheetState extends State<_DistancePickerSheet> {
           const SizedBox(height: 12),
           Text('Distancia', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: labelColor)),
           Expanded(
-            child: CupertinoPicker(
-              scrollController: FixedExtentScrollController(initialItem: _selectedIndex),
-              itemExtent: 40,
-              onSelectedItemChanged: (i) => setState(() => _selectedIndex = i),
-              children: [
-                ..._standardDistances.map((d) => Center(
-                      child: Text(_distanceLabel(d),
-                          style: TextStyle(fontSize: 18, color: labelColor)))),
-                Center(
-                  child: Text('Otra distancia →',
-                      style: TextStyle(fontSize: 18, color: AppColors.brand)),
-                ),
-              ],
+            child: Center(
+              child: IosPicker(
+                itemCount: _standardDistances.length,
+                initialItem: _selectedIndex,
+                onChanged: (i) => setState(() => _selectedIndex = i),
+                textBuilder: (i) => _distanceLabel(_standardDistances[i]),
+                extraItemLabel: 'Otra distancia →',
+                onExtraSelected: () => setState(() =>
+                    _selectedIndex = _standardDistances.length),
+                itemExtent: 40,
+                width: 160,
+              ),
             ),
           ),
           Padding(
@@ -735,12 +735,14 @@ class _DurationPickerSheetState extends State<_DurationPickerSheet> {
                   child: Column(
                     children: [
                       Expanded(
-                        child: CupertinoPicker(
-                          scrollController: FixedExtentScrollController(initialItem: _minutes),
-                          itemExtent: 40,
-                          onSelectedItemChanged: (i) => setState(() => _minutes = i),
-                          children: List.generate(181, (i) => Center(
-                              child: Text('$i', style: TextStyle(fontSize: 18, color: textColor)))),
+                        child: Center(
+                          child: IosPicker(
+                            itemCount: 181,
+                            initialItem: _minutes,
+                            onChanged: (i) => setState(() => _minutes = i),
+                            textBuilder: (i) => '$i',
+                            itemExtent: 40,
+                          ),
                         ),
                       ),
                       Text('min', style: TextStyle(fontSize: 13, color: hintColor)),
@@ -752,16 +754,16 @@ class _DurationPickerSheetState extends State<_DurationPickerSheet> {
                   child: Column(
                     children: [
                       Expanded(
-                        child: CupertinoPicker(
-                          scrollController: FixedExtentScrollController(
-                              initialItem: _secValues.indexOf(_seconds)),
-                          itemExtent: 40,
-                          onSelectedItemChanged: (i) => setState(() => _seconds = _secValues[i]),
-                          children: _secValues
-                              .map((s) => Center(
-                                    child: Text(s.toString().padLeft(2, '0'),
-                                        style: TextStyle(fontSize: 18, color: textColor))))
-                              .toList(),
+                        child: Center(
+                          child: IosPicker(
+                            itemCount: _secValues.length,
+                            initialItem: _secValues.indexOf(_seconds),
+                            onChanged: (i) =>
+                                setState(() => _seconds = _secValues[i]),
+                            textBuilder: (i) =>
+                                _secValues[i].toString().padLeft(2, '0'),
+                            itemExtent: 40,
+                          ),
                         ),
                       ),
                       Text('seg', style: TextStyle(fontSize: 13, color: hintColor)),
@@ -830,25 +832,20 @@ class _RpePickerSheetState extends State<_RpePickerSheet> {
           Text('RPE (esfuerzo percibido)',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: defaultColor)),
           Expanded(
-            child: CupertinoPicker(
-              scrollController: FixedExtentScrollController(initialItem: _idx),
-              itemExtent: 40,
-              onSelectedItemChanged: (i) => setState(() => _idx = i),
-              children: _rpeValues.map((v) {
-                final isSelected = _rpeValues[_idx] == v;
-                final color      = isSelected ? _rpeColor(v) : defaultColor;
-                final label      = v == v.truncateToDouble()
-                    ? v.toInt().toString()
-                    : v.toString();
-                return Center(
-                  child: Text(label,
-                      style: TextStyle(
-                        fontSize:   18,
-                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
-                        color:      color,
-                      )),
-                );
-              }).toList(),
+            child: Center(
+              child: IosPicker(
+                itemCount: _rpeValues.length,
+                initialItem: _idx,
+                onChanged: (i) => setState(() => _idx = i),
+                textBuilder: (i) {
+                  final v = _rpeValues[i];
+                  return v == v.truncateToDouble()
+                      ? v.toInt().toString()
+                      : v.toString();
+                },
+                selectedColorBuilder: (i) => _rpeColor(_rpeValues[i]),
+                itemExtent: 40,
+              ),
             ),
           ),
           Padding(
@@ -902,15 +899,14 @@ class _RestPickerSheetState extends State<_RestPickerSheet> {
           Text('Descanso entre series',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: textColor)),
           Expanded(
-            child: CupertinoPicker(
-              scrollController: FixedExtentScrollController(initialItem: _idx),
-              itemExtent: 40,
-              onSelectedItemChanged: (i) => setState(() => _idx = i),
-              children: _restValues
-                  .map((v) => Center(
-                        child: Text(_restLabel(v),
-                            style: TextStyle(fontSize: 18, color: textColor))))
-                  .toList(),
+            child: Center(
+              child: IosPicker(
+                itemCount: _restValues.length,
+                initialItem: _idx,
+                onChanged: (i) => setState(() => _idx = i),
+                textBuilder: (i) => _restLabel(_restValues[i]),
+                itemExtent: 40,
+              ),
             ),
           ),
           Padding(

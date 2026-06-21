@@ -6,6 +6,7 @@ import 'dart:math' show pi;
 import 'dart:ui' show FontFeature;
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import '../../../core/widgets/modern_snackbar.dart';
+import '../../../core/widgets/ios_picker.dart';
 import '../../../core/services/settings_service.dart';
 
 import '../data/serie.dart';
@@ -1760,25 +1761,16 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
 
                 // Picker
                 Expanded(
-                  child: CupertinoPicker(
-                    itemExtent: 32.0, // Más compacto
-                    scrollController: FixedExtentScrollController(
-                      initialItem: initialItemIndex,
-                    ),
-                    magnification: 1.22,
-                    useMagnifier: true,
-                    onSelectedItemChanged: (int index) {
-                       _rpeSeleccionado = (index * 0.5) + 1.0;
+                  child: IosPicker(
+                    itemCount: 19,
+                    initialItem: initialItemIndex,
+                    onChanged: (index) {
+                      _rpeSeleccionado = (index * 0.5) + 1.0;
                     },
-                    children: List<Widget>.generate(19, (int index) {
-                      final double value = (index * 0.5) + 1.0;
-                      return Center(
-                        child: Text(
-                          value.toStringAsFixed(1),
-                          style: TextStyle(fontSize: 21.0, fontWeight: FontWeight.w400, color: Theme.of(ctx).colorScheme.onSurface),
-                        ),
-                      );
-                    }),
+                    textBuilder: (index) =>
+                        ((index * 0.5) + 1.0).toStringAsFixed(1),
+                    itemExtent: 32,
+                    width: double.infinity,
                   ),
                 ),
 

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/ios_picker.dart';
 import '../data/template_models.dart';
 
 
@@ -306,7 +307,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
     required ValueChanged<int> onChanged,
     required String Function(int) textBuilder,
   }) {
-     return Column(
+    return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const SizedBox(height: 12),
@@ -320,25 +321,15 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
           ),
         ),
         Expanded(
-          child: CupertinoPicker(
-            magnification: 1.1,
-            squeeze: 1.0,
-            useMagnifier: true,
-            itemExtent: 36,
-            onSelectedItemChanged: onChanged,
-            scrollController: FixedExtentScrollController(initialItem: initialItem),
-            children: List<Widget>.generate(itemCount, (int index) {
-              return Center(
-                child: Text(
-                  textBuilder(index),
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-              );
-            }),
+          child: Center(
+            child: IosPicker(
+              itemCount: itemCount,
+              initialItem: initialItem,
+              onChanged: onChanged,
+              textBuilder: textBuilder,
+              itemExtent: 36,
+              width: 90,
+            ),
           ),
         ),
         const SizedBox(height: 12),

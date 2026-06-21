@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
+import 'package:running_laps/core/widgets/ios_picker.dart';
 import 'package:running_laps/features/templates/data/target_config.dart';
 import 'package:running_laps/features/templates/data/workout_segment.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
@@ -742,143 +743,7 @@ class _BoolToggle extends StatelessWidget {
       );
 }
 
-// ── _IosPicker ────────────────────────────────────────────────────────────────
-
-/// Picker estilo iOS: rueda con pill oscura central,
-/// ítem seleccionado destacado, fade superior/inferior.
-class _IosPicker extends StatefulWidget {
-  final List<String> labels;
-  final int initialIndex;
-  final ValueChanged<int> onIndexChanged;
-  final double itemExtent;
-  final double width;
-
-  const _IosPicker({
-    required this.labels,
-    required this.initialIndex,
-    required this.onIndexChanged,
-    this.itemExtent = 32,
-    this.width = 56,
-  });
-
-  @override
-  State<_IosPicker> createState() => _IosPickerState();
-}
-
-class _IosPickerState extends State<_IosPicker> {
-  late final FixedExtentScrollController _ctrl;
-  late int _selectedIndex;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedIndex = widget.initialIndex;
-    _ctrl = FixedExtentScrollController(initialItem: widget.initialIndex);
-  }
-
-  @override
-  void didUpdateWidget(_IosPicker old) {
-    super.didUpdateWidget(old);
-    if (old.initialIndex != widget.initialIndex &&
-        _selectedIndex != widget.initialIndex) {
-      _selectedIndex = widget.initialIndex;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || !_ctrl.hasClients) return;
-        if (_ctrl.selectedItem != widget.initialIndex) {
-          _ctrl.jumpToItem(widget.initialIndex);
-        }
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final pillColor = isDark
-        ? Colors.white.withValues(alpha: 0.12)
-        : AppColors.borderOf(context).withValues(alpha: 0.6);
-    final selectedColor = isDark ? Colors.white : Colors.black;
-    final unselectedColor = isDark
-        ? Colors.white.withValues(alpha: 0.35)
-        : Colors.black.withValues(alpha: 0.35);
-
-    const visibleItems = 3;
-    final totalHeight = widget.itemExtent * visibleItems;
-
-    return SizedBox(
-      width: widget.width,
-      height: totalHeight,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Pill de selección central
-          Positioned(
-            top: (totalHeight - widget.itemExtent) / 2,
-            left: 4,
-            right: 4,
-            child: Container(
-              height: widget.itemExtent,
-              decoration: BoxDecoration(
-                color: pillColor,
-                borderRadius: BorderRadius.circular(6),
-              ),
-            ),
-          ),
-
-          // Rueda con fade
-          ShaderMask(
-            shaderCallback: (bounds) => const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                Colors.white,
-                Colors.white,
-                Colors.transparent,
-              ],
-              stops: [0.0, 0.25, 0.75, 1.0],
-            ).createShader(bounds),
-            blendMode: BlendMode.dstIn,
-            child: ListWheelScrollView.useDelegate(
-              controller: _ctrl,
-              itemExtent: widget.itemExtent,
-              perspective: 0.002,
-              diameterRatio: 1.5,
-              physics: const FixedExtentScrollPhysics(),
-              onSelectedItemChanged: (i) {
-                setState(() => _selectedIndex = i);
-                widget.onIndexChanged(i);
-              },
-              childDelegate: ListWheelChildBuilderDelegate(
-                childCount: widget.labels.length,
-                builder: (ctx, i) {
-                  final isSelected = i == _selectedIndex;
-                  return Center(
-                    child: Text(
-                      widget.labels[i],
-                      style: TextStyle(
-                        fontSize: isSelected ? 15 : 14,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w400,
-                        color: isSelected ? selectedColor : unselectedColor,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// ── IosPicker ahora vive en lib/core/widgets/ios_picker.dart ──────────────────
 
 // ── _WheelPicker ──────────────────────────────────────────────────────────────
 
@@ -904,10 +769,11 @@ class _WheelPicker extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _IosPicker(
-          labels: values.map((v) => '$v').toList(),
-          initialIndex: initialIndex,
-          onIndexChanged: (i) => onChanged(values[i]),
+        IosPicker(
+          itemCount: values.length,
+          initialItem: initialIndex,
+          textBuilder: (i) => '${values[i]}',
+          onChanged: (i) => onChanged(values[i]),
           itemExtent: 32,
           width: 60,
         ),
@@ -1084,15 +950,15 @@ class _MiniWheelPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final labels =
-        values.map((v) => pad ? '$v'.padLeft(2, '0') : '$v').toList();
     final initialIndex =
         values.indexOf(selected).clamp(0, values.length - 1);
 
-    return _IosPicker(
-      labels: labels,
-      initialIndex: initialIndex,
-      onIndexChanged: (i) => onChanged(values[i]),
+    return IosPicker(
+      itemCount: values.length,
+      initialItem: initialIndex,
+      textBuilder: (i) =>
+          pad ? '${values[i]}'.padLeft(2, '0') : '${values[i]}',
+      onChanged: (i) => onChanged(values[i]),
       itemExtent: 28,
       width: 36,
     );
@@ -1323,18 +1189,19 @@ class _MiniWheelPickerDouble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final labels = values.map((v) {
-      return v == v.roundToDouble()
-          ? v.toInt().toString().padLeft(2, '0')
-          : v.toStringAsFixed(1);
-    }).toList();
     final initialIndex =
         values.indexOf(selected).clamp(0, values.length - 1);
 
-    return _IosPicker(
-      labels: labels,
-      initialIndex: initialIndex,
-      onIndexChanged: (i) => onChanged(values[i]),
+    return IosPicker(
+      itemCount: values.length,
+      initialItem: initialIndex,
+      textBuilder: (i) {
+        final v = values[i];
+        return v == v.roundToDouble()
+            ? v.toInt().toString().padLeft(2, '0')
+            : v.toStringAsFixed(1);
+      },
+      onChanged: (i) => onChanged(values[i]),
       itemExtent: 28,
       width: 36,
     );

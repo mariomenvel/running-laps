@@ -44,6 +44,41 @@
 - Rama: feat/block-preview-tile — PENDIENTE testing
   visual antes de mergear
 
+## [UI] — IosPicker: migración completa (4 archivos restantes)
+- IosPicker ampliado con selectedColorBuilder opcional
+  (color de texto por ítem, ej. escala RPE)
+- alarm_config_sheet.dart: _buildCupertinoWheel migrado,
+  5 call sites sin cambios de firma
+- block_editor_sheet.dart: distancia y descanso migrados
+- manual_training_view.dart: los 4 sheets migrados
+  (distancia con extraItemLabel para "Otra distancia →",
+  duración, RPE con color dinámico, descanso)
+- training_session_view.dart: RPE intra-entreno migrado
+  (⚠️ requiere testing manual cuidadoso antes de mergear,
+  pantalla usada durante carreras reales)
+- Con esto, IosPicker sustituye TODOS los CupertinoPicker/
+  ListWheelScrollView ad-hoc identificados en el
+  inventario original (7 de 7 sitios)
+- Rama: feat/ios-picker-shared — PENDIENTE testing
+  visual completo antes de mergear a main
+
+## [UI] — IosPicker componente compartido
+- Nuevo lib/core/widgets/ios_picker.dart: extraído
+  de segment_bottom_sheet.dart, API basada en
+  itemCount+initialItem+textBuilder (cubre rangos
+  consecutivos, decimales, zero-pad, lookup tables)
+- Soporte opcional para ítem extra final
+  (extraItemLabel/onExtraSelected) preparado para
+  el caso "Otro..." de manual_training_view.dart
+- Migrados: segment_bottom_sheet.dart (interno),
+  NumberPickerField, training_start_view.dart
+  (_buildCupertinoWheel, 5 call sites sin cambios
+  de firma)
+- Pendiente: alarm_config_sheet.dart,
+  block_editor_sheet.dart, manual_training_view.dart
+  (caso "Otro..."), training_session_view.dart
+- Rama: feat/ios-picker-shared
+
 ## [UI] — RpeBadge: rollout a 4 sitios adicionales
 - training_no_gps_detail_view.dart: chip por serie
   + planificado/ejecutado (elimina _rpeColor duplicado,
