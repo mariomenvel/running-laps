@@ -40,6 +40,8 @@ class _CalendarViewState extends State<CalendarView>
   final ValueNotifier<bool> _adjustPanelExpanded = ValueNotifier(false);
   final ValueNotifier<bool> _adjustProcessing = ValueNotifier(false);
   final ValueNotifier<AiCoachUsage?> _adjustUsage = ValueNotifier(null);
+  final ValueNotifier<Set<String>> _expandedSessions =
+      ValueNotifier<Set<String>>({});
   bool _adjustListening = false;
   bool _adjustSpeechAvailable = false;
   AiCoachAdjustmentPreview? _pendingPreview;
@@ -111,7 +113,18 @@ class _CalendarViewState extends State<CalendarView>
     _adjustPanelExpanded.dispose();
     _adjustProcessing.dispose();
     _adjustUsage.dispose();
+    _expandedSessions.dispose();
     super.dispose();
+  }
+
+  void _toggleExpanded(String sessionId) {
+    final current = Set<String>.from(_expandedSessions.value);
+    if (current.contains(sessionId)) {
+      current.remove(sessionId);
+    } else {
+      current.add(sessionId);
+    }
+    _expandedSessions.value = current;
   }
 
   void _onTabChanged() {
@@ -1385,111 +1398,148 @@ class _CalendarViewState extends State<CalendarView>
                             ? (b.durationMinutes ?? 0)
                             : 0),
                   );
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: AppSpacing.m),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.m,
-                      vertical: AppSpacing.m,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceOf(context),
-                      border: Border.all(color: AppColors.borderOf(context), width: 0.5),
-                      borderRadius: BorderRadius.circular(AppDimens.cardRadius),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 8, height: 8,
-                          margin: const EdgeInsets.only(right: AppSpacing.m, top: 2),
-                          decoration: const BoxDecoration(
-                            color: AppColors.brand,
-                            shape: BoxShape.circle,
-                          ),
+                  return ValueListenableBuilder<Set<String>>(
+                    valueListenable: _expandedSessions,
+                    builder: (_, expandedIds, __) {
+                      final isExpanded = expandedIds.contains(s.id);
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: AppSpacing.m),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.m,
+                          vertical: AppSpacing.m,
                         ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                title,
-                                style: AppTypography.body.copyWith(
-                                  color: AppColors.textPrimary(context),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              if (durMin > 0) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  '~$durMin min',
-                                  style: AppTypography.small.copyWith(
-                                    color: AppColors.textSecondary(context),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceOf(context),
+                          border: Border.all(color: AppColors.borderOf(context), width: 0.5),
+                          borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 8, height: 8,
+                                  margin: const EdgeInsets.only(right: AppSpacing.m, top: 2),
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.brand,
+                                    shape: BoxShape.circle,
                                   ),
+                                ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        title,
+                                        style: AppTypography.body.copyWith(
+                                          color: AppColors.textPrimary(context),
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      if (durMin > 0) ...[
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          '~$durMin min',
+                                          style: AppTypography.small.copyWith(
+                                            color: AppColors.textSecondary(context),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                if (s.blocks.isNotEmpty)
+                                  GestureDetector(
+                                    onTap: () => _toggleExpanded(s.id),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(4),
+                                      child: Icon(
+                                        isExpanded
+                                            ? Icons.keyboard_arrow_up
+                                            : Icons.keyboard_arrow_down,
+                                        color: AppColors.iconMutedOf(context),
+                                      ),
+                                    ),
+                                  ),
+                                GestureDetector(
+                                  onTap: () async {
+                                    final confirm = await showDialog<bool>(
+                                      context: context,
+                                      builder: (_) => AlertDialog(
+                                        title: const Text('Eliminar sesión'),
+                                        content: Text(
+                                          '¿Eliminar "${s.title?.isNotEmpty == true ? s.title! : 'esta sesión'}"?',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context, false),
+                                            child: const Text('Cancelar'),
+                                          ),
+                                          FilledButton(
+                                            onPressed: () => Navigator.pop(context, true),
+                                            style: FilledButton.styleFrom(
+                                              backgroundColor: AppColors.rpeMax,
+                                            ),
+                                            child: const Text('Eliminar'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    if (confirm != true || !mounted) return;
+                                    final uid = FirebaseAuth.instance.currentUser?.uid;
+                                    if (uid == null) return;
+                                    await AthleteSessionRepository().deleteSession(
+                                      uid: uid,
+                                      id: s.id,
+                                    );
+                                    if (!mounted) return;
+                                    Navigator.of(context).pop();
+                                    _vm?.loadAll();
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8),
+                                    child: Icon(
+                                      Icons.delete_outline_rounded,
+                                      size: 20,
+                                      color: AppColors.rpeMax,
+                                    ),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    _navigateToEditSession(s);
+                                  },
+                                  child: Icon(Icons.edit_outlined, color: AppColors.textSecondary(context), size: 22),
+                                ),
+                                const SizedBox(width: AppSpacing.m),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    _navigateToSession(s);
+                                  },
+                                  child: const Icon(Icons.play_circle_outline, color: AppColors.brand, size: 28),
                                 ),
                               ],
-                            ],
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () async {
-                            final confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (_) => AlertDialog(
-                                title: const Text('Eliminar sesión'),
-                                content: Text(
-                                  '¿Eliminar "${s.title?.isNotEmpty == true ? s.title! : 'esta sesión'}"?',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context, false),
-                                    child: const Text('Cancelar'),
-                                  ),
-                                  FilledButton(
-                                    onPressed: () => Navigator.pop(context, true),
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: AppColors.rpeMax,
-                                    ),
-                                    child: const Text('Eliminar'),
-                                  ),
-                                ],
-                              ),
-                            );
-                            if (confirm != true || !mounted) return;
-                            final uid = FirebaseAuth.instance.currentUser?.uid;
-                            if (uid == null) return;
-                            await AthleteSessionRepository().deleteSession(
-                              uid: uid,
-                              id: s.id,
-                            );
-                            if (!mounted) return;
-                            Navigator.of(context).pop();
-                            _vm?.loadAll();
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: Icon(
-                              Icons.delete_outline_rounded,
-                              size: 20,
-                              color: AppColors.rpeMax,
                             ),
-                          ),
+                            if (isExpanded && s.blocks.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: AppSpacing.s),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: s.blocks
+                                      .map((b) => BlockPreviewTile(
+                                            block: b,
+                                            style: BlockPreviewStyle.card,
+                                          ))
+                                      .toList(),
+                                ),
+                              ),
+                          ],
                         ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.pop(context);
-                            _navigateToEditSession(s);
-                          },
-                          child: Icon(Icons.edit_outlined, color: AppColors.textSecondary(context), size: 22),
-                        ),
-                        const SizedBox(width: AppSpacing.m),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.pop(context);
-                            _navigateToSession(s);
-                          },
-                          child: const Icon(Icons.play_circle_outline, color: AppColors.brand, size: 28),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   );
                 }),
                 const SizedBox(height: AppSpacing.s),
@@ -1656,45 +1706,64 @@ class _CalendarViewState extends State<CalendarView>
                         else
                           ...sessions.map((s) => Padding(
                             padding: const EdgeInsets.only(top: AppSpacing.s),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
+                            child: ValueListenableBuilder<Set<String>>(
+                              valueListenable: _expandedSessions,
+                              builder: (_, expandedIds, __) {
+                                final isExpanded = expandedIds.contains(s.id);
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Container(
-                                      width: 6, height: 6,
-                                      decoration: BoxDecoration(
-                                        color: _statusColor(s.status),
-                                        borderRadius: BorderRadius.circular(3),
+                                    GestureDetector(
+                                      onTap: s.blocks.isNotEmpty
+                                          ? () => _toggleExpanded(s.id)
+                                          : null,
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 6, height: 6,
+                                            decoration: BoxDecoration(
+                                              color: _statusColor(s.status),
+                                              borderRadius: BorderRadius.circular(3),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              s.title?.isNotEmpty == true
+                                                  ? s.title!
+                                                  : s.category != null
+                                                      ? SessionCategoryX.fromValue(s.category!).label
+                                                      : 'Entrenamiento',
+                                              style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
+                                            ),
+                                          ),
+                                          if (s.blocks.isNotEmpty)
+                                            Icon(
+                                              isExpanded
+                                                  ? Icons.keyboard_arrow_up
+                                                  : Icons.keyboard_arrow_down,
+                                              size: 18,
+                                              color: AppColors.textSecondary(context),
+                                            ),
+                                        ],
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        s.title?.isNotEmpty == true
-                                            ? s.title!
-                                            : s.category != null
-                                                ? SessionCategoryX.fromValue(s.category!).label
-                                                : 'Entrenamiento',
-                                        style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
+                                    if (isExpanded && s.blocks.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 14, top: 2),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: s.blocks
+                                              .map((b) => BlockPreviewTile(
+                                                    block: b,
+                                                    style: BlockPreviewStyle.card,
+                                                  ))
+                                              .toList(),
+                                        ),
                                       ),
-                                    ),
                                   ],
-                                ),
-                                if (s.blocks.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 14, top: 2),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: s.blocks
-                                          .map((b) => BlockPreviewTile(
-                                                block: b,
-                                                style: BlockPreviewStyle.card,
-                                              ))
-                                          .toList(),
-                                    ),
-                                  ),
-                              ],
+                                );
+                              },
                             ),
                           )),
                       ] else ...[

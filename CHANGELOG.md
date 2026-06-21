@@ -26,6 +26,11 @@
   (panel de detalle del día seleccionado). Se aplicó
   card completo en ambos, sin necesidad de take(1) ni
   de mantener compact en ningún sitio.
+- calendar_view.dart: sesiones ahora desplegables
+  (colapsado por defecto, toca el título/chevron
+  para ver el desglose de bloques) en ambas vistas
+  (_buildWeekDayCard y _showDaySessionsSheet),
+  estado compartido vía ValueNotifier<Set<String>>
 
 ## [Arquitectura — nota documentada, no resuelta]
 - Existen dos modelos de sesión paralelos en el repo:
