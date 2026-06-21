@@ -1,5 +1,59 @@
 # CHANGELOG — Running Laps
 
+## [Fix — iOS] Live Activity apagada durante el descanso entre series
+- Síntoma reportado inicialmente: "pace y tiempo no se actualizan bien"
+  durante la sesión. Tras auditoría, esa sospecha se descartó — `pace`
+  (gps_service.dart:575) y `elapsed` (gps_service.dart:435-456) se calculan
+  en tiempo real en cada fix GPS, independientes del modelo de
+  bloques/segmentos, y funcionan correctamente. La causa real era otra.
+- Causa raíz confirmada: cada serie de entreno (`TrainingSessionView`) crea
+  su propio `GPSService`, y al cerrarla (`GPSService.dispose()`,
+  gps_service.dart:277-300, línea 288:
+  `unawaited(IOSLiveActivityService.instance.stop())`) la Live Activity de
+  iOS termina por completo. En el flujo nuevo de bloques/segmentos
+  (`WorkoutExecutionScreen` → `RestScreen`), `RestScreen`
+  (session_screens/rest/rest_screen.dart) es un `StatelessWidget` puro sin
+  ninguna referencia a `GPSService` ni `IOSLiveActivityService` — durante
+  todo el descanso entre series no había ninguna Live Activity activa en
+  la pantalla bloqueada, hasta que la siguiente serie volvía a arrancar una
+  nueva. El flujo legacy (`training_start_view.dart:279-298`) sí lo hacía
+  bien, alimentando `IOSLiveActivityService.instance.update()` con
+  `IOSLiveActivityPayload.rest()` cada segundo durante el descanso — ese
+  patrón nunca se portó al flujo nuevo durante la remodelación del modelo
+  de entrenamiento.
+- Fix: en `workout_execution_screen.dart` → `_launchRestScreen()`, se añade
+  un segundo `Timer.periodic` (1 Hz, solo si `!kIsWeb &&
+  defaultTargetPlatform == TargetPlatform.iOS`) que llama a
+  `IOSLiveActivityService.instance.update(IOSLiveActivityPayload.rest(...))`
+  con el countdown restante y `serie: nextRepNumber` (el mismo valor ya
+  calculado por `WorkoutExecutionController` y pasado a `RestScreen` para
+  la UI in-app, así que el número de serie del payload de descanso es
+  coherente con el resto de la sesión). El timer de UI existente
+  (`elapsedNotifier`, 100ms) no se tocó — se mantiene separado para no
+  perder fluidez en el countdown visible en pantalla.
+- El timer de Live Activity se cancela en las tres rutas de salida del
+  descanso: cierre automático por tiempo, "saltar descanso" (`onSkip` →
+  `Navigator.pop()`), y la limpieza final tras el `await push(...)` — sin
+  timers huérfanos.
+- No hizo falta tocar el arranque de la siguiente serie ni el cierre de la
+  Live Activity al terminar toda la sesión: `RunningLapsLiveActivityManager
+  .start()` (Swift) ya termina cualquier Activity existente antes de crear
+  una nueva, así que la siguiente `TrainingSessionView` reemplaza
+  correctamente la Activity de descanso; y la última serie de la sesión ya
+  dispara `GPSService.dispose()` → `stop()` al hacer pop, sin dejar Activity
+  huérfana en la pantalla bloqueada.
+- `flutter analyze`: 0 errores. `flutter test`: 59/59 (única carga fallida:
+  `test/widget_test.dart`, archivo vacío preexistente, no relacionado).
+- Cambio exclusivo de `workout_execution_screen.dart` (Dart, flujo nuevo de
+  iOS). No se tocó `training_start_view.dart` (legacy, ya funciona) ni
+  ningún archivo de Android/Wear OS — Android no tiene Live Activity y
+  Wear OS no participa de este flujo.
+- **Pendiente de verificación:** no se puede compilar ni probar en Xcode
+  desde este entorno. Falta verificación visual en iPhone real vía
+  Codemagic — confirmar que la Live Activity muestra el countdown de
+  descanso correctamente y que no queda ninguna Activity duplicada o
+  huérfana al encadenar varias series.
+
 ## [Fix] Colisión WorkoutType.free/continuous en athlete_session_mapper.dart
 - Causa raíz: en `_workoutTypeToCategory()` (athlete_session_mapper.dart:367),
   `case WorkoutType.free:` devolvía el mismo string `'rodaje_base'` que
