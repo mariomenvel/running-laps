@@ -68,6 +68,15 @@ android/local.properties
 android/.idea/
 
 # ============================
+# Wear OS (Kotlin/Gradle)
+# ============================
+wear_os/.gradle/
+wear_os/build/
+wear_os/app/build/
+wear_os/local.properties
+wear_os/.idea/
+
+# ============================
 # iOS
 # ============================
 ios/Pods/
