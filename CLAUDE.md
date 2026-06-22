@@ -85,6 +85,7 @@ No instanciar con `HomeEstadisticaRepository()` esperando instancia independient
 | GPS + Live Activity | ✅ OK |
 | App Check | ❌ Omitido (sin Apple Developer) |
 | Notificación persistente | ⚠️ Solo barra GPS — `flutter_foreground_task` no funciona en iOS |
+| Code signing / Development Team | ❌ No configurado — build falla en Codemagic con "requires a selected Development Team with a Provisioning Profile". Requiere cuenta Apple Developer Program activa + configuración de firma en Codemagic (API Key de App Store Connect o certificados manuales). Bloquea cualquier build firmado para dispositivo real, incluyendo TestFlight. |
 
 ---
 

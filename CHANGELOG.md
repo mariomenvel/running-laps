@@ -1,5 +1,18 @@
 # CHANGELOG — Running Laps
 
+## [CI/Build — iOS] Codemagic compila pero falla al firmar
+- Build de la rama `fix/ios-live-activity-rest-serie` en Codemagic:
+  Xcode build completó correctamente (sin errores de código), pero el
+  proceso falló al firmar con "requires a selected Development Team
+  with a Provisioning Profile".
+- No es un bug de código — es falta de configuración de cuenta. Pendiente:
+  cuenta Apple Developer Program activa + configuración de firma en
+  Codemagic (API Key de App Store Connect o certificados manuales). Ver
+  CLAUDE.md → "Estado iOS" → fila "Code signing / Development Team".
+- Bloquea cualquier build firmado para dispositivo real, incluyendo
+  TestFlight — esto incluye la verificación visual pendiente de los dos
+  fixes de Live Activity de esa rama.
+
 ## [Fix] Colisión WorkoutType.free/continuous en athlete_session_mapper.dart
 - Causa raíz: en `_workoutTypeToCategory()` (athlete_session_mapper.dart:367),
   `case WorkoutType.free:` devolvía el mismo string `'rodaje_base'` que
