@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/services/heart_rate_service.dart';
+import '../../../core/services/ios_live_activity_service.dart';
 import '../../../core/utils/app_transitions.dart';
 import '../../athlete/data/athlete_session_model.dart';
 import '../../athlete/data/athlete_session_repository.dart';
@@ -176,6 +177,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     final elapsedNotifier = ValueNotifier<Duration>(Duration.zero);
     final stopwatch = Stopwatch()..start();
     Timer? timer;
+    Timer? liveActivityTimer;
 
     timer = Timer.periodic(const Duration(milliseconds: 100), (_) {
       elapsedNotifier.value = stopwatch.elapsed;
@@ -183,10 +185,30 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
       if (stopwatch.elapsed.inSeconds >= restDurationSec) {
         debugPrint('[RestLaunch] auto-cerrando por tiempo');
         timer?.cancel();
+        liveActivityTimer?.cancel();
         stopwatch.stop();
         if (mounted) Navigator.of(context).pop();
       }
     });
+
+    // La Live Activity de iOS se apagó al disponer la TrainingSessionView de
+    // la serie recién terminada (ver GPSService.dispose()); durante el
+    // descanso la realimentamos aquí con el mismo payload .rest() que ya usa
+    // el flujo legacy (training_start_view.dart), para no dejarla congelada.
+    final useIOSLiveActivity =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+    if (useIOSLiveActivity) {
+      liveActivityTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        final remaining = (restDurationSec - stopwatch.elapsed.inSeconds)
+            .clamp(0, restDurationSec);
+        IOSLiveActivityService.instance.update(
+          IOSLiveActivityPayload.rest(
+            restCountdown: remaining,
+            serie: nextRepNumber,
+          ),
+        );
+      });
+    }
 
     final fcStartedAt = HeartRateService().heartRate.value;
 
@@ -234,6 +256,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     }
 
     timer?.cancel();
+    liveActivityTimer?.cancel();
     stopwatch.stop();
     elapsedNotifier.dispose();
   }
