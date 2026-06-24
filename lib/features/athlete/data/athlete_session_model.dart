@@ -51,6 +51,7 @@ class SessionBlock {
   final int? targetPaceMaxSec;  // rango pace máximo — segundos
   final double? targetRpe;      // 1.0–10.0
   final int? targetZone;        // 1–5
+  final int? targetFcBpm;       // FC objetivo en bpm (punto medio de la zona)
   final Map<String, dynamic>? alertsMap;
 
   const SessionBlock({
@@ -68,6 +69,7 @@ class SessionBlock {
     this.targetPaceMaxSec,
     this.targetRpe,
     this.targetZone,
+    this.targetFcBpm,
     this.alertsMap,
   });
 
@@ -87,6 +89,7 @@ class SessionBlock {
       targetPaceMaxSec: map['targetPaceMaxSec'] as int?,
       targetRpe:        (map['targetRpe'] as num?)?.toDouble(),
       targetZone:       map['targetZone'] as int?,
+      targetFcBpm:      map['targetFcBpm'] as int?,
       alertsMap:        map['alerts'] != null
                           ? Map<String, dynamic>.from(map['alerts'] as Map)
                           : null,
@@ -109,6 +112,7 @@ class SessionBlock {
       if (targetPaceMaxSec != null) 'targetPaceMaxSec': targetPaceMaxSec,
       if (targetRpe        != null) 'targetRpe':        targetRpe,
       if (targetZone       != null) 'targetZone':       targetZone,
+      if (targetFcBpm      != null) 'targetFcBpm':      targetFcBpm,
       if (alertsMap        != null) 'alerts':           alertsMap,
     };
   }
@@ -128,6 +132,7 @@ class SessionBlock {
     Object? targetPaceMaxSec = _sentinel,
     Object? targetRpe        = _sentinel,
     Object? targetZone       = _sentinel,
+    Object? targetFcBpm      = _sentinel,
     Object? alertsMap        = _sentinel,
   }) {
     return SessionBlock(
@@ -145,6 +150,7 @@ class SessionBlock {
       targetPaceMaxSec: targetPaceMaxSec == _sentinel ? this.targetPaceMaxSec : targetPaceMaxSec as int?,
       targetRpe:        targetRpe        == _sentinel ? this.targetRpe        : targetRpe        as double?,
       targetZone:       targetZone       == _sentinel ? this.targetZone       : targetZone       as int?,
+      targetFcBpm:      targetFcBpm      == _sentinel ? this.targetFcBpm      : targetFcBpm      as int?,
       alertsMap:        alertsMap        == _sentinel ? this.alertsMap        : alertsMap        as Map<String, dynamic>?,
     );
   }
@@ -393,6 +399,10 @@ class AthleteSession {
 
   final String? athleteNote;       // nota libre del atleta (ej: ajuste de intensidad)
 
+  // Fecha original de planificación — se fija al crear, nunca se modifica.
+  // Si date != originalDate, el atleta movió la sesión.
+  final String? originalDate;
+
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -416,6 +426,7 @@ class AthleteSession {
     this.raceDistanceM,
     this.targetTimeSeconds,
     this.athleteNote,
+    this.originalDate,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -455,6 +466,7 @@ class AthleteSession {
       raceDistanceM:        map['raceDistanceM']     as int?,
       targetTimeSeconds:    map['targetTimeSeconds'] as int?,
       athleteNote:          map['athleteNote']       as String?,
+      originalDate:         map['originalDate']      as String?,
       createdAt:            _toDateTime(map['createdAt']),
       updatedAt:            _toDateTime(map['updatedAt']),
     );
@@ -482,6 +494,7 @@ class AthleteSession {
       if (raceDistanceM        != null) 'raceDistanceM':        raceDistanceM,
       if (targetTimeSeconds    != null) 'targetTimeSeconds':    targetTimeSeconds,
       if (athleteNote          != null) 'athleteNote':          athleteNote,
+      if (originalDate         != null) 'originalDate':         originalDate,
     };
   }
 
@@ -505,6 +518,7 @@ class AthleteSession {
     Object? raceDistanceM       = _sentinel,
     Object? targetTimeSeconds   = _sentinel,
     Object? athleteNote         = _sentinel,
+    Object? originalDate        = _sentinel,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -528,6 +542,7 @@ class AthleteSession {
       raceDistanceM:       raceDistanceM       == _sentinel ? this.raceDistanceM       : raceDistanceM       as int?,
       targetTimeSeconds:   targetTimeSeconds   == _sentinel ? this.targetTimeSeconds   : targetTimeSeconds   as int?,
       athleteNote:         athleteNote         == _sentinel ? this.athleteNote         : athleteNote         as String?,
+      originalDate:        originalDate        == _sentinel ? this.originalDate        : originalDate        as String?,
       createdAt:           createdAt           ?? this.createdAt,
       updatedAt:           updatedAt           ?? this.updatedAt,
     );

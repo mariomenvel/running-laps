@@ -32,6 +32,12 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
   final TextEditingController _step3Controller = TextEditingController();
   final TextEditingController _step4Controller = TextEditingController();
 
+  // Paso 5 — marcas personales (opcionales, en segundos totales)
+  int? _pb5kSeconds;
+  int? _pb10kSeconds;
+  int? _pbHalfMarathonSeconds;
+  int? _pbMarathonSeconds;
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -56,7 +62,7 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
   }
 
   void _nextStep() {
-    if (_currentStep < 3) {
+    if (_currentStep < 4) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,
@@ -66,6 +72,8 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
       _processOnboarding();
     }
   }
+
+  void _skipToProcess() => _processOnboarding();
 
   String? _validateCoachText(String? value) {
     if (value == null || value.isEmpty) return null;
@@ -173,6 +181,10 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
         coachNotes: (raw['coachNotes'] as String?)?.trim().isEmpty ?? true
             ? null
             : raw['coachNotes'] as String?,
+        pb5kSeconds: _pb5kSeconds,
+        pb10kSeconds: _pb10kSeconds,
+        pbHalfMarathonSeconds: _pbHalfMarathonSeconds,
+        pbMarathonSeconds: _pbMarathonSeconds,
         createdAt: now,
         updatedAt: now,
       );
@@ -234,7 +246,7 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
     return Column(
       children: [
         const SizedBox(height: 24),
-        _StepIndicator(currentStep: _currentStep),
+        _StepIndicator(currentStep: _currentStep, totalSteps: 5),
         Expanded(
           child: PageView(
             controller: _pageController,
@@ -274,15 +286,29 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
                 isDark: isDark,
                 optional: true,
               ),
+              _PbStepPage(
+                isDark: isDark,
+                pb5kSeconds: _pb5kSeconds,
+                pb10kSeconds: _pb10kSeconds,
+                pbHalfMarathonSeconds: _pbHalfMarathonSeconds,
+                pbMarathonSeconds: _pbMarathonSeconds,
+                onChanged5k: (v) => setState(() => _pb5kSeconds = v),
+                onChanged10k: (v) => setState(() => _pb10kSeconds = v),
+                onChangedHalf: (v) => setState(() => _pbHalfMarathonSeconds = v),
+                onChangedMarathon: (v) => setState(() => _pbMarathonSeconds = v),
+              ),
             ],
           ),
         ),
-        _NextButton(
-          isLastStep: _currentStep == 3,
-          controller: _controllerForStep(_currentStep),
-          isOptional: _currentStep == 3,
-          onNext: _nextStep,
-        ),
+        if (_currentStep == 4)
+          _PbStepButtons(onSkip: _skipToProcess, onCreate: _processOnboarding)
+        else
+          _NextButton(
+            isLastStep: false,
+            controller: _controllerForStep(_currentStep),
+            isOptional: _currentStep == 3,
+            onNext: _nextStep,
+          ),
         const SizedBox(height: 32),
       ],
     );
@@ -331,14 +357,15 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
 
 class _StepIndicator extends StatelessWidget {
   final int currentStep;
+  final int totalSteps;
 
-  const _StepIndicator({required this.currentStep});
+  const _StepIndicator({required this.currentStep, this.totalSteps = 4});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(4, (i) {
+      children: List.generate(totalSteps, (i) {
         final active = i == currentStep;
         return AnimatedContainer(
           duration: const Duration(milliseconds: 250),
@@ -502,6 +529,268 @@ class _NextButtonState extends State<_NextButton> {
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _PbStepPage — paso 5 (opcional): marcas personales
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _PbStepPage extends StatelessWidget {
+  final bool isDark;
+  final int? pb5kSeconds;
+  final int? pb10kSeconds;
+  final int? pbHalfMarathonSeconds;
+  final int? pbMarathonSeconds;
+  final ValueChanged<int?> onChanged5k;
+  final ValueChanged<int?> onChanged10k;
+  final ValueChanged<int?> onChangedHalf;
+  final ValueChanged<int?> onChangedMarathon;
+
+  const _PbStepPage({
+    required this.isDark,
+    required this.pb5kSeconds,
+    required this.pb10kSeconds,
+    required this.pbHalfMarathonSeconds,
+    required this.pbMarathonSeconds,
+    required this.onChanged5k,
+    required this.onChanged10k,
+    required this.onChangedHalf,
+    required this.onChangedMarathon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textPrimary = isDark ? Colors.white : const Color(0xFF1C1C1E);
+    final textSecondary =
+        isDark ? const Color(0xFF8E8E93) : const Color(0xFF6C6C70);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 28),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '¿Tienes marcas personales?\nSon opcionales, pero me ayudan\na calibrar mejor tu ritmo.',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              height: 1.3,
+              color: textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Si no las tienes o no quieres añadirlas, pulsa "Saltar".',
+            style: TextStyle(fontSize: 14, color: textSecondary),
+          ),
+          const SizedBox(height: 32),
+          _OnboardingPbField(
+            label: '5K',
+            valueSeconds: pb5kSeconds,
+            isDark: isDark,
+            onChanged: onChanged5k,
+          ),
+          const SizedBox(height: 16),
+          _OnboardingPbField(
+            label: '10K',
+            valueSeconds: pb10kSeconds,
+            isDark: isDark,
+            onChanged: onChanged10k,
+          ),
+          const SizedBox(height: 16),
+          _OnboardingPbField(
+            label: 'Media maratón',
+            valueSeconds: pbHalfMarathonSeconds,
+            isDark: isDark,
+            onChanged: onChangedHalf,
+          ),
+          const SizedBox(height: 16),
+          _OnboardingPbField(
+            label: 'Maratón',
+            valueSeconds: pbMarathonSeconds,
+            isDark: isDark,
+            onChanged: onChangedMarathon,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OnboardingPbField extends StatelessWidget {
+  final String label;
+  final int? valueSeconds;
+  final bool isDark;
+  final ValueChanged<int?> onChanged;
+
+  const _OnboardingPbField({
+    required this.label,
+    required this.valueSeconds,
+    required this.isDark,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textPrimary = isDark ? Colors.white : const Color(0xFF1C1C1E);
+    final textSecondary =
+        isDark ? const Color(0xFF8E8E93) : const Color(0xFF6C6C70);
+    final fieldBg =
+        isDark ? const Color(0xFF1C1C1E) : const Color(0xFFF2F2F7);
+
+    final minutes = valueSeconds != null ? valueSeconds! ~/ 60 : null;
+    final seconds = valueSeconds != null ? valueSeconds! % 60 : null;
+
+    // Controllers se crean aquí — este widget es inmutable, se reconstruye en setState del padre
+    final minCtrl = TextEditingController(
+      text: minutes != null ? '$minutes' : '',
+    );
+    final secCtrl = TextEditingController(
+      text: seconds != null ? seconds.toString().padLeft(2, '0') : '',
+    );
+
+    return Row(
+      children: [
+        SizedBox(
+          width: 110,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: textPrimary,
+            ),
+          ),
+        ),
+        const Spacer(),
+        SizedBox(
+          width: 56,
+          child: TextField(
+            controller: minCtrl,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            maxLength: 3,
+            style: TextStyle(fontSize: 16, color: textPrimary),
+            decoration: InputDecoration(
+              hintText: '--',
+              hintStyle: TextStyle(color: textSecondary),
+              filled: true,
+              fillColor: fieldBg,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              counterText: '',
+            ),
+            onChanged: (v) {
+              final m = int.tryParse(v);
+              final s = int.tryParse(secCtrl.text) ?? 0;
+              onChanged(m != null ? m * 60 + s.clamp(0, 59) : null);
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Text(
+            ':',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: textPrimary,
+            ),
+          ),
+        ),
+        SizedBox(
+          width: 56,
+          child: TextField(
+            controller: secCtrl,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            maxLength: 2,
+            style: TextStyle(fontSize: 16, color: textPrimary),
+            decoration: InputDecoration(
+              hintText: '00',
+              hintStyle: TextStyle(color: textSecondary),
+              filled: true,
+              fillColor: fieldBg,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              counterText: '',
+            ),
+            onChanged: (v) {
+              final s = int.tryParse(v);
+              final m = int.tryParse(minCtrl.text) ?? 0;
+              if (s == null) return;
+              onChanged(m * 60 + s.clamp(0, 59));
+            },
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          'mm:ss',
+          style: TextStyle(fontSize: 12, color: textSecondary),
+        ),
+      ],
+    );
+  }
+}
+
+class _PbStepButtons extends StatelessWidget {
+  final VoidCallback onSkip;
+  final VoidCallback onCreate;
+
+  const _PbStepButtons({required this.onSkip, required this.onCreate});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 28),
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: onSkip,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.brand,
+                side: const BorderSide(color: AppColors.brand),
+                minimumSize: const Size.fromHeight(54),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: const Text(
+                'Saltar',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: FilledButton(
+              onPressed: onCreate,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.brand,
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(54),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: const Text(
+                'Crear mi plan →',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

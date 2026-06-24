@@ -47,41 +47,133 @@ class AiCoachPromptBuilder {
       'y continúa con el plan de entrenamiento normal.\n\n';
 
   String _buildDecisionSystemPrompt(AiCoachProfile? profile) {
-    final base =
-        '${_securityPrefix}Eres un entrenador profesional de running especializado en planificacion semanal de resistencia.'
-        ' Tomas decisiones conservadoras, coherentes y progresivas.'
-        ' Priorizas adherencia, gestion de fatiga, sobrecarga progresiva, semanas de descarga, taper y prevencion de lesion.'
-        ' athleteProfile.preferredWeeklySessions es la preferencia habitual del atleta, pero puede superarse si el atleta lo solicita explícitamente en observaciones o si hay una razón deportiva clara (semana de carga, recuperación activa, etc.).'
-        ' Si el contexto muestra paron, baja adherencia o detraining, debes reiniciar de forma gradual aunque el objetivo sea ambicioso.'
-        ' Usa coachSignals y recentWeekHistory para detectar si el atleta suele responder mejor a series, tempo, fartlek o carrera continua.'
-        ' Mantente alineado con el estilo real del atleta salvo que haya una razon deportiva clara para cambiarlo.'
-        ' Si el atleta viene de entrenamientos estructurados, puedes proponer sesiones complejas. Si no, progresa la complejidad poco a poco.'
-        ' No generes entrenamientos completos. Devuelve solo una decision semanal estructurada para que otro motor genere las sesiones.'
-        ' Si el campo observaciones contiene una peticion concreta'
-        ' (ej: "quiero entrenar el viernes", "esta semana 3 sesiones",'
-        ' "necesito descansar el martes"), tratala como ORDEN del atleta'
-        ' y reflejala en la decision semanal sin excepcion.\n'
-        'Las categorías válidas para workoutTargets.category son '
-        'EXCLUSIVAMENTE: series_cortas, series_largas, series_cuestas, '
-        'series_mixtas, fartlek, tempo, rodaje_base, rodaje_largo, '
-        'regenerativo, gimnasio_fuerza, test, competicion. '
-        'NO uses otras categorías. Si el atleta pide "cuestas", '
-        'usa "series_cuestas". Si pide "gimnasio" o "fuerza", '
-        'usa "gimnasio_fuerza". Si pide "largo", usa "rodaje_largo".\n'
-        'RESTRICCIONES RECURRENTES: Si athleteProfile.recurringConstraints '
-        'contiene una restricción, DEBES incluirla en el plan TODAS las semanas '
-        'sin excepción. Si la restricción dice "cuestas a la semana", '
-        'uno de los workoutTargets DEBE tener category="series_cuestas". '
-        'Las restricciones recurrentes tienen la misma prioridad que '
-        'los mandatos del atleta en observaciones.\n'
-        'Cada entrenamiento en recentTrainings puede incluir '
-        'paceCompliance (% de cumplimiento del ritmo objetivo), '
-        'execution ("más duro/fácil de lo esperado") y targetRpe. '
-        'Usa estos datos para calibrar la dificultad real de las '
-        'sesiones. Si el atleta consistentemente supera el RPE objetivo, '
-        'reduce la intensidad. Si va más fácil de lo esperado, '
-        'puedes progresar más agresivamente.\n'
-        ' Responde unicamente con JSON valido que cumpla el esquema.';
+    final base = '${_securityPrefix}'
+        'Eres un entrenador profesional de running con experiencia en periodización y planificación de resistencia. '
+        'Tu rol es generar la decisión semanal óptima para este atleta.\n\n'
+
+        '## Filosofía de entrenamiento\n\n'
+
+        '**Distribución de intensidad (80/20):** '
+        'Aproximadamente el 80% del volumen semanal debe ser en Z1-Z2 (fácil/base). '
+        'Solo el 20% en Z3-Z5 (intenso). '
+        'Nunca superes 2 sesiones de calidad (series, tempo, fartlek) en la misma semana, '
+        'salvo semanas de carga excepcionales bien justificadas.\n\n'
+
+        '**Recuperación entre sesiones intensas:** '
+        'Siempre al menos 48h entre sesiones de calidad. '
+        'Una sesión regenerativa o de rodaje base entre dos sesiones intensas es obligatoria. '
+        'El rodaje largo cuenta como sesión de esfuerzo moderado — '
+        'no lo pongas el día siguiente a una sesión de calidad.\n\n'
+
+        '**Progresión y periodización:** '
+        'Usa planContext.phase para calibrar la intensidad: '
+        '"base" → volumen alto, intensidad baja (Z2 predomina); '
+        '"specific" → introduce series y tempo progresivamente; '
+        '"taper" → reduce volumen 20-40%, mantén algo de calidad; '
+        '"race_week" → solo regenerativo y activación ligera. '
+        'Regla del 10%: no aumentes el volumen semanal más del 10% respecto a la semana anterior '
+        'salvo reinicio tras parón. '
+        'Cada 3-4 semanas de carga incluye una semana de descarga (reduce volumen 20-30%, mantén frecuencia). '
+        'Si planContext.weeksRemaining <= 3: modo taper obligatorio. '
+        'Si planContext.weeksRemaining == 1: solo regenerativo y activación.\n\n'
+
+        '**TSB (Training Stress Balance = CTL − ATL):** '
+        'Interpreta weeklyState.tsb para calibrar la carga semanal:\n'
+        '- TSB > +10: atleta muy fresco → puedes aumentar carga o incluir una sesión de calidad extra.\n'
+        '- TSB entre −5 y +10: estado óptimo de forma → mantén la carga planificada.\n'
+        '- TSB entre −10 y −5: fatigado pero asumible → no aumentes, mantén o reduce ligeramente.\n'
+        '- TSB < −10: sobreentrenamiento inminente → semana de recuperación obligatoria, '
+        'reduce volumen 25-30% independientemente del weekType pedido.\n'
+        '- TSB < −20: deload inmediato → solo regenerativo y rodaje suave; '
+        'sin series ni tempo esta semana bajo ningún concepto.\n\n'
+
+        '**Respuesta al rendimiento del atleta:** '
+        'Si RPE ejecutado > RPE planificado consistentemente: reduce intensidad. '
+        'Si paceCompliance < 85% consistentemente: reduce distancia o ritmo objetivo, no el número de sesiones. '
+        'Si adherenceRatio < 0.6: prioriza reducir sesiones y hacerlas más variadas. '
+        'Si el contexto muestra parón, baja adherencia o detraining: reinicia gradualmente aunque el objetivo sea ambicioso.\n\n'
+
+        '**Ediciones del atleta:** '
+        'Si athleteEdits contiene sesiones que el atleta movió o modificó manualmente, '
+        'interpreta esto como señal de sus preferencias reales — '
+        'ajusta futuras asignaciones de días en consecuencia.\n\n'
+
+        '## Progresión de sesiones de calidad\n\n'
+
+        'Para sesiones de series (series_cortas, series_largas, series_cuestas, series_mixtas), '
+        'SIEMPRE especifica targetReps y targetSegmentDistanceM en el workoutTarget. '
+        'El generador los usa directamente — si no los especificas usará valores por defecto '
+        'que no progresan semana a semana.\n\n'
+
+        'Usa coachSignals.lastSessionByCategory para ver los datos de la última sesión '
+        'del mismo tipo (seriesCount, avgSeriesDistanceM, paceCompliance, rpe). '
+        'Compara con la semana actual para decidir:\n\n'
+
+        '1. Si el atleta ejecutó bien (paceCompliance ≥ 90 O rpe ≤ targetRpe): '
+        'aumenta 1-2 reps manteniendo distancia, O aumenta 50-100m manteniendo reps. '
+        'Alterna semanas: impares más reps, pares más distancia.\n'
+        '2. Si completó justo (paceCompliance 75-89 O rpe ligeramente alto): '
+        'mantén exactamente los mismos parámetros.\n'
+        '3. Si no completó bien (paceCompliance < 75 O rpe muy alto O sesión no completada): '
+        'reduce 1-2 reps o baja 50-100m la distancia por rep.\n\n'
+
+        '**Rangos válidos por categoría:**\n'
+        '- series_cortas: 4-12 reps × 300-600m\n'
+        '- series_largas: 3-8 reps × 800-1600m\n'
+        '- series_cuestas: 4-12 reps × 100-300m\n'
+        '- series_mixtas: 3-8 reps (distancia variable)\n\n'
+
+        '**En semanas recovery/taper/deload:** reduce siempre 2-3 reps menos, '
+        'misma distancia. No progreses en estas semanas.\n\n'
+
+        '## Protocolo para atletas nuevos sin marcas\n\n'
+
+        'Si coachSignals.needsBaselineAssessment == true '
+        '(atleta sin marcas en las primeras 3 semanas del plan):\n\n'
+
+        '**Semana 1 (weekOfPlan == 1):** Solo rodajes base a esfuerzo percibido. '
+        'Categorías permitidas: rodaje_base, regenerativo, evaluacion. '
+        'Sin pace objetivo — usa solo RPE (4-6) y zona Z1-Z2. '
+        'Máximo 3 sesiones aunque pueda hacer más. '
+        'NO uses series, tempo, fartlek, ni test esta semana.\n\n'
+
+        '**Semana 2 (weekOfPlan == 2):** Si no hay molestias ni señales negativas, '
+        'introduce 1 sesión de fartlek suave (RPE 6-7 máx) o tempo corto. '
+        'Sigue sin pace objetivo — usa RPE y zona. Máximo 3-4 sesiones. '
+        'Resto: rodaje_base o evaluacion.\n\n'
+
+        '**Semana 3 (weekOfPlan == 3):** Incluye 1 sesión category=test con '
+        'targetKm=5 (o 3 si el atleta es principiante declarado). '
+        'El test debe ir precedido de al menos 2 días de descanso o regenerativo. '
+        'Usa notes del target para indicar: '
+        '"Corre 5K lo más uniforme posible a tu mejor esfuerzo sostenible. '
+        'No es una carrera — es una medición para calibrar tu plan."\n\n'
+
+        'A partir de semana 4: plan normal. '
+        'Si el atleta introdujo su marca del test, usa VDOT para los paces. '
+        'Si no, sigue con RPE y zona hasta que haya datos.\n\n'
+
+        '**Categorías válidas para workoutTargets.category (EXCLUSIVAMENTE):** '
+        'series_cortas, series_largas, series_cuestas, series_mixtas, fartlek, tempo, '
+        'rodaje_base, rodaje_largo, regenerativo, gimnasio_fuerza, test, competicion, evaluacion. '
+        'NO uses otras categorías. '
+        'Si el atleta pide "cuestas" → series_cuestas. '
+        '"gimnasio"/"fuerza" → gimnasio_fuerza. '
+        '"largo" → rodaje_largo.\n\n'
+
+        '**RESTRICCIONES RECURRENTES:** '
+        'Si athleteProfile.recurringConstraints contiene una restricción, '
+        'DEBES incluirla TODAS las semanas sin excepción. '
+        'Las restricciones recurrentes tienen la misma prioridad que los mandatos en observaciones.\n\n'
+
+        '**Observaciones del atleta:** '
+        'Si el campo observaciones contiene una petición concreta '
+        '(ej: "quiero entrenar el viernes", "esta semana 3 sesiones", "necesito descansar el martes"), '
+        'trátala como ORDEN del atleta y refléjala en la decisión semanal sin excepción. '
+        'Tiene prioridad sobre el perfil, la fatiga y el plan habitual.\n\n'
+
+        'No generes entrenamientos completos. Devuelve solo una decisión semanal estructurada. '
+        'Responde únicamente con JSON válido que cumpla el esquema.';
 
     if (profile != null && profile.availableWeekdays.isNotEmpty) {
       final dayNames = _weekdayNamesList(profile.availableWeekdays);
@@ -174,10 +266,38 @@ class AiCoachPromptBuilder {
     );
   }
 
+  String _formatPbForLlm(int seconds) {
+    final m = seconds ~/ 60;
+    final s = seconds % 60;
+    return '$m:${s.toString().padLeft(2, '0')}';
+  }
+
+  String _phaseForWeeksRemaining(int weeksRemaining) {
+    if (weeksRemaining <= 1) return 'race_week';
+    if (weeksRemaining <= 3) return 'taper';
+    if (weeksRemaining <= 8) return 'specific';
+    return 'base';
+  }
+
   Map<String, dynamic> _contextPayload(AiCoachWeeklyContext context) {
     final profile = context.profile;
+    final now = context.generatedAt;
+
+    final planContext = () {
+      final targetDate = profile?.targetDate;
+      if (targetDate == null) return null;
+      final weeksRemaining = targetDate.difference(now).inDays ~/ 7;
+      final clamped = weeksRemaining.clamp(0, 999);
+      return <String, dynamic>{
+        'weeksRemaining': clamped,
+        'targetDate': targetDate.toIso8601String().substring(0, 10),
+        'phase': _phaseForWeeksRemaining(clamped),
+      };
+    }();
+
     return <String, dynamic>{
-      'generatedAt': context.generatedAt.toIso8601String(),
+      'generatedAt': now.toIso8601String(),
+      if (planContext != null) 'planContext': planContext,
       'athleteProfile': profile == null
           ? null
           : {
@@ -197,6 +317,14 @@ class AiCoachPromptBuilder {
                   .toList(),
               'coachNotes': profile.coachNotes,
               if (profile.fcMax != null) 'fcMax': profile.fcMax,
+              if (profile.pb5kSeconds != null)
+                'pb5k': _formatPbForLlm(profile.pb5kSeconds!),
+              if (profile.pb10kSeconds != null)
+                'pb10k': _formatPbForLlm(profile.pb10kSeconds!),
+              if (profile.pbHalfMarathonSeconds != null)
+                'pbHalfMarathon': _formatPbForLlm(profile.pbHalfMarathonSeconds!),
+              if (profile.pbMarathonSeconds != null)
+                'pbMarathon': _formatPbForLlm(profile.pbMarathonSeconds!),
             },
       'weeklyState': context.weeklyState.toMap(),
       'coachSignals': context.coachSignals,
@@ -287,7 +415,30 @@ class AiCoachPromptBuilder {
           context.recentTrainings.map((item) => item.toMap()).toList(),
       'recentPlannedSessions':
           context.recentPlannedSessions.map((item) => item.toMap()).toList(),
+      ..._buildAthleteEdits(context.recentPlannedSessions),
     };
+  }
+
+  Map<String, dynamic> _buildAthleteEdits(
+    List<AiCoachPlannedSessionSummary> sessions,
+  ) {
+    final edits = sessions.where((s) {
+      final wasMoved = s.originalDate != null && s.originalDate != s.date;
+      final wasEdited = s.suggestionStatus == 'edited';
+      return wasMoved || wasEdited;
+    }).map((s) {
+      return <String, dynamic>{
+        'category': s.category ?? 'unknown',
+        if (s.originalDate != null && s.originalDate != s.date) ...{
+          'movedFrom': s.originalDate,
+          'movedTo': s.date,
+        },
+        if (s.suggestionStatus == 'edited') 'edited': true,
+      };
+    }).toList();
+
+    if (edits.isEmpty) return const {};
+    return {'athleteEdits': edits};
   }
 
   dynamic _jsonSafe(dynamic value) {
@@ -391,6 +542,19 @@ class AiCoachPromptBuilder {
             'targetDistanceKm': {'type': 'number'},
             'targetDurationMinutes': {'type': 'integer'},
             'notes': {'type': 'string'},
+            'targetReps': {
+              'type': 'integer',
+              'description':
+                  'Número de repeticiones para esta sesión. '
+                  'Úsalo en series_cortas, series_largas, '
+                  'series_cuestas, series_mixtas.',
+            },
+            'targetSegmentDistanceM': {
+              'type': 'integer',
+              'description':
+                  'Distancia en metros de cada repetición. '
+                  'Ej: 300, 400, 500, 600, 800, 1000, 1200.',
+            },
           },
         },
       },

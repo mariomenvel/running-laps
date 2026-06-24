@@ -103,7 +103,10 @@ class AthleteSessionRepository {
       final id = session.id.isEmpty
           ? DateTime.now().millisecondsSinceEpoch.toString()
           : session.id;
-      await _col(session.uid).doc(id).set(session.toMap());
+      final sessionToSave = session.originalDate == null
+          ? session.copyWith(originalDate: session.date)
+          : session;
+      await _col(sessionToSave.uid).doc(id).set(sessionToSave.toMap());
     } catch (e) {
       debugPrint('[AthleteSessionRepository] createSession error: $e');
       rethrow;

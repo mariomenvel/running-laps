@@ -355,6 +355,11 @@ class AiCoachProfile {
   final List<AiCoachTemporaryStatus> temporaryStatuses;
   final String? coachNotes;
   final int? fcMax;
+  // Marcas personales en segundos totales (ej: 5K en 25:30 → pb5kSeconds = 1530)
+  final int? pb5kSeconds;
+  final int? pb10kSeconds;
+  final int? pbHalfMarathonSeconds;
+  final int? pbMarathonSeconds;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -371,6 +376,10 @@ class AiCoachProfile {
     this.temporaryStatuses = const [],
     this.coachNotes,
     this.fcMax,
+    this.pb5kSeconds,
+    this.pb10kSeconds,
+    this.pbHalfMarathonSeconds,
+    this.pbMarathonSeconds,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -399,6 +408,10 @@ class AiCoachProfile {
           .toList(),
       coachNotes: map['coachNotes'] as String?,
       fcMax: (map['fcMax'] as num?)?.toInt(),
+      pb5kSeconds: (map['pb5kSeconds'] as num?)?.toInt(),
+      pb10kSeconds: (map['pb10kSeconds'] as num?)?.toInt(),
+      pbHalfMarathonSeconds: (map['pbHalfMarathonSeconds'] as num?)?.toInt(),
+      pbMarathonSeconds: (map['pbMarathonSeconds'] as num?)?.toInt(),
       createdAt: _toDateTime(map['createdAt']),
       updatedAt: _toDateTime(map['updatedAt']),
     );
@@ -416,6 +429,10 @@ class AiCoachProfile {
     List<AiCoachTemporaryStatus>? temporaryStatuses,
     String? coachNotes,
     int? fcMax,
+    Object? pb5kSeconds = _sentinel,
+    Object? pb10kSeconds = _sentinel,
+    Object? pbHalfMarathonSeconds = _sentinel,
+    Object? pbMarathonSeconds = _sentinel,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -434,10 +451,16 @@ class AiCoachProfile {
       temporaryStatuses: temporaryStatuses ?? this.temporaryStatuses,
       coachNotes: coachNotes ?? this.coachNotes,
       fcMax: fcMax ?? this.fcMax,
+      pb5kSeconds: pb5kSeconds == _sentinel ? this.pb5kSeconds : pb5kSeconds as int?,
+      pb10kSeconds: pb10kSeconds == _sentinel ? this.pb10kSeconds : pb10kSeconds as int?,
+      pbHalfMarathonSeconds: pbHalfMarathonSeconds == _sentinel ? this.pbHalfMarathonSeconds : pbHalfMarathonSeconds as int?,
+      pbMarathonSeconds: pbMarathonSeconds == _sentinel ? this.pbMarathonSeconds : pbMarathonSeconds as int?,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
+  static const Object _sentinel = Object();
 
   Map<String, dynamic> toMap() {
     return {
@@ -457,6 +480,10 @@ class AiCoachProfile {
         'preferredLongRunWeekday': preferredLongRunWeekday,
       if (coachNotes != null) 'coachNotes': coachNotes,
       if (fcMax != null) 'fcMax': fcMax,
+      if (pb5kSeconds != null) 'pb5kSeconds': pb5kSeconds,
+      if (pb10kSeconds != null) 'pb10kSeconds': pb10kSeconds,
+      if (pbHalfMarathonSeconds != null) 'pbHalfMarathonSeconds': pbHalfMarathonSeconds,
+      if (pbMarathonSeconds != null) 'pbMarathonSeconds': pbMarathonSeconds,
     };
   }
 }
@@ -741,6 +768,7 @@ class AiCoachTrainingSummary {
 class AiCoachPlannedSessionSummary {
   final String sessionId;
   final String date;
+  final String? originalDate;
   final String? category;
   final String status;
   final bool isAiSuggested;
@@ -750,6 +778,7 @@ class AiCoachPlannedSessionSummary {
   const AiCoachPlannedSessionSummary({
     required this.sessionId,
     required this.date,
+    this.originalDate,
     required this.category,
     required this.status,
     required this.isAiSuggested,
@@ -872,6 +901,8 @@ class AiCoachWorkoutTarget {
   final double? targetDistanceKm;
   final int? targetDurationMinutes;
   final String? notes;
+  final int? targetReps;             // reps objetivo especificadas por el LLM
+  final int? targetSegmentDistanceM; // metros por rep especificados por el LLM
 
   const AiCoachWorkoutTarget({
     required this.category,
@@ -882,6 +913,8 @@ class AiCoachWorkoutTarget {
     this.targetDistanceKm,
     this.targetDurationMinutes,
     this.notes,
+    this.targetReps,
+    this.targetSegmentDistanceM,
   });
 
   factory AiCoachWorkoutTarget.fromMap(Map<String, dynamic> map) {
@@ -894,6 +927,8 @@ class AiCoachWorkoutTarget {
       targetDistanceKm: (map['targetDistanceKm'] as num?)?.toDouble(),
       targetDurationMinutes: (map['targetDurationMinutes'] as num?)?.toInt(),
       notes: map['notes'] as String?,
+      targetReps: (map['targetReps'] as num?)?.toInt(),
+      targetSegmentDistanceM: (map['targetSegmentDistanceM'] as num?)?.toInt(),
     );
   }
 
@@ -908,6 +943,9 @@ class AiCoachWorkoutTarget {
       if (targetDurationMinutes != null)
         'targetDurationMinutes': targetDurationMinutes,
       if (notes != null) 'notes': notes,
+      if (targetReps != null) 'targetReps': targetReps,
+      if (targetSegmentDistanceM != null)
+        'targetSegmentDistanceM': targetSegmentDistanceM,
     };
   }
 }

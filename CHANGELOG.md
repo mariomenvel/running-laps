@@ -1,5 +1,125 @@
 # CHANGELOG — Running Laps
 
+## [AI Coach] — Reset semanal automático del chat (Cloud Function)
+- Scheduled Function resetWeeklyChatUsage: cada lunes 00:05 (Europe/Madrid)
+  resetea messagesUsed a 0 y actualiza periodStart/periodEnd para todos los
+  usuarios con plan athlete_chat_weekly y messagesUsed > 0
+- Más robusto que el reset en cliente (que dependía de que el usuario abriera
+  la app esa semana); ahora el reset ocurre aunque el usuario no abra la app
+- Batches de 500 documentos para escalar sin límite de usuarios
+- firestore.indexes.json: índice collectionGroup "settings" por plan +
+  messagesUsed, necesario para la query de la función
+- firebase.json: añadida referencia a firestore.indexes.json
+
+## [AI Coach] — Progresión intra-sesión semana a semana
+- AiCoachWorkoutTarget: targetReps (int?) y targetSegmentDistanceM (int?) —
+  el LLM especifica reps y metros por rep directamente en la decisión semanal
+- coachSignals.lastSessionByCategory: datos de la última sesión ejecutada por
+  categoría (seriesCount, avgSeriesDistanceM, paceCompliance, rpe) construidos
+  cruzando AiCoachTrainingSummary con Entrenamiento para obtener reps reales
+- Schema JSON: targetReps y targetSegmentDistanceM añadidos con descripción
+- Prompt: sección explícita de progresión con umbrales paceCompliance (75/90%)
+  y regla de 3 niveles (progresar/mantener/reducir); rangos por categoría
+- Generador: series_cortas/largas/medias/cuestas respetan targetReps y
+  targetSegmentDistanceM del LLM con fallback al cálculo anterior
+
+## [AI Coach] — Auto-guardar marcas desde entrenos
+- PbDetector (lib/features/ai_coach/data/pb_detector.dart): detecta marcas
+  en 5K/10K/HM/M con tolerancia ±3% de distancia e interpolación lineal
+  si hay diferencia de metros respecto a la distancia exacta
+- Solo activo en entrenos con GPS (training.gps == true) — distancia fiable
+- Si mejora el PB actual → actualiza AiCoachProfile en Firestore via saveProfile
+- Snackbar de celebración al detectar nuevo récord (etiqueta legible + tiempo)
+- Integrado en training_start_view._saveTrainingToFirebase, antes de navegar
+  al resumen — fire-and-forget con try/catch para no bloquear el flujo
+
+## [AI Coach] — FC en zonas + TSB al LLM + path lesión
+- SessionBlock: nuevo campo targetFcBpm (int?) — punto medio de la zona
+  en bpm calculado desde fcMax del perfil (Z1=52%, Z2=65%, Z3=75%, Z4=85%, Z5=95%)
+- Todos los helpers del generador propagamos fcBpm: _buildBaseRunBlocks,
+  _buildRepeatedSeriesBlocks, _buildFartlekBlocks, _buildTempoBlocks,
+  _buildTestBlocks, _buildProgressiveLongRunBlocks, _buildMixedSeriesBlocks
+- Prompt: sección TSB con umbrales explícitos (+10 fresco, −5/+10 óptimo,
+  −10 fatigado, −20 deload inmediato). TSB ya estaba calculado y persistido
+  en AiCoachWeeklyState — ahora el LLM tiene instrucciones para interpretarlo
+- Generador: guard de seguridad para lesión/recuperación — cualquier sesión
+  intensa (quality category) se redirige automáticamente a _buildBaseRunBlocks
+  con rpe≤5.5, km≤6, min≤40 y nota explicativa cuando hay lesión o adjustment
+  es recover/reduce. effectiveRpe/effectiveZone aplicados en el resto de casos
+
+## [AI Coach] — Protocolo de evaluación inicial
+- coachSignals: nuevos campos isNewAthlete, hasNoPbs, weekOfPlan,
+  needsBaselineAssessment (true si sin marcas y weekOfPlan ≤ 3)
+- Prompt: protocolo explícito semana 1 (solo base/regenerativo),
+  semana 2 (fartlek suave opcional), semana 3 (test 5K/3K de referencia)
+- _buildTestBlocks: protocolo real — calentamiento específico (progresivos),
+  bloque de test con instrucciones claras, vuelta a la calma extendida 10 min
+- Nueva categoría 'evaluacion': rodaje sin pace objetivo con nota explicativa;
+  normaliza también 'evaluation' y 'baseline'
+
+## [AI Coach — Pendiente] — Actualización automática de marcas
+- Cuando el sistema detecte un nuevo RP en 5K/10K/HM/M durante el resumen
+  de un entreno, actualizar automáticamente pb*Seconds en AiCoachProfile
+- Punto de integración: TrainingSummaryScreen o el servicio que detecta RPs,
+  tras confirmar el récord
+- Sin intervención manual del atleta
+
+## [AI Coach — Pendiente] — Test de FCmáx guiado
+- Protocolo de 20-30 min: rodaje progresivo hasta esfuerzo máximo con pulsómetro BLE
+- Resultado: fcMax real guardado en AiCoachProfile
+- Beneficio: zonas de FC calibradas individualmente en lugar de 220-edad
+- Dependencia: pulsómetro BLE conectado (HeartRateService)
+- Integrar en AiCoachSettingsView como opción avanzada
+
+## [AI Coach] — Paces personalizados por VDOT
+- Nuevo VdotCalculator (fórmulas Daniels & Gilbert 1979): estima VDOT desde
+  marcas del perfil, calcula paces por zona (Z1-Z5) vía Newton-Raphson
+- Series cortas: Z5/R-pace personalizado, reps clamp 4-12 (antes mín 6 sin tope)
+- Series largas: Z4/I-pace personalizado, reps clamp 3-8 (antes mín 3 sin tope)
+- Series cuestas: adapta reps/distancia/descanso al complexityTier
+  (antes hardcoded 10×200m 75s para todos los niveles)
+- Fartlek: intercala bloques de recuperación Z1 entre estímulos Z3
+  (antes bloques de esfuerzo consecutivos sin recovery explícito)
+- Tempo: paces Z3 personalizados en las 3 variantes A/B/C; si no hay
+  marcas, fallback a valores hardcodeados previos
+- Fallback completo a valores hardcodeados cuando el perfil no tiene marcas
+
+## [AI Coach] — Marcas estructuradas en el perfil
+- AiCoachProfile: nuevos campos pb5kSeconds, pb10kSeconds, pbHalfMarathonSeconds,
+  pbMarathonSeconds (int?, segundos totales) con toMap/fromMap/copyWith (sentinel)
+- AiCoachSettingsView: sección "MARCAS PERSONALES" con campos MM:SS para 4 distancias
+  ubicada entre OBJETIVO y DISPONIBILIDAD
+- Onboarding: paso 5 opcional "¿Tienes marcas personales?" con botón "Saltar" y
+  "Crear mi plan →" en paralelo; si se salta, el perfil queda sin marcas
+- Payload LLM: marcas formateadas como "MM:SS" en athleteProfile.pb5k / pb10k /
+  pbHalfMarathon / pbMarathon — el LLM puede usarlas para calibrar intensidad y pace
+- Próximo: calcular paces VDOT desde estas marcas en el generador Dart
+
+## [AI Coach] — Retroalimentación de ediciones manuales
+- AthleteSession: nuevo campo originalDate (String?) — se fija al crear la
+  sesión en createSession(), nunca se modifica en updateSession()
+- Si date != originalDate: sesión fue movida por el atleta → se incluye en
+  athleteEdits del payload con movedFrom/movedTo
+- Si suggestion.status == 'edited': sesión fue modificada en bloques/intensidad
+  → se incluye en athleteEdits con edited: true
+- AiCoachPlannedSessionSummary: nuevo campo originalDate propagado desde
+  AthleteSession vía AiCoachContextBuilder
+- _buildAthleteEdits() en AiCoachPromptBuilder construye el bloque y lo
+  mezcla en el payload solo si hay ediciones
+
+## [AI Coach] — Mejoras de prompt y periodización
+- System prompt reescrito con principios 80/20, regla de 48h entre sesiones
+  intensas, guía de fase (base/specific/taper/race_week) y respuesta al
+  rendimiento real del atleta
+- Payload ampliado con planContext (weeksRemaining, targetDate, phase) —
+  calculado en Dart a partir de targetDate, no delegado al LLM
+- _phaseForWeeksRemaining() helper nuevo en AiCoachPromptBuilder
+- Validación de preferredDay contra availableDays ya existía en _pickDay()
+  del generador (availableDays.contains) — confirmado, sin cambios necesarios
+- Ediciones manuales (wasManuallyEdited): campo no existe en AthleteSession —
+  PENDIENTE implementar; athleteEdits ya mencionado en prompt para cuando se añada
+- Rama: feat/ai-coach-prompt-improvements
+
 ## [UI] — WorkoutEditorScreen: eliminado AppBar
 - AppBar con título "Nueva sesión" + X + tick eliminado — redundante con
   swipe atrás (iOS) y botón "Guardar sesión" del footer

@@ -6,6 +6,7 @@ initializeApp();
 export { callOpenRouter } from "./openrouter";
 export { syncEmailVerified } from "./auth";
 export { joinWaitlist } from "./waitlist";
+export { resetWeeklyChatUsage } from "./resetChatUsage";
 
 export const ping = onCall((request) => {
   if (!request.auth) {
