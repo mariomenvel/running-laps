@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
+import 'package:running_laps/core/widgets/rpe_slider.dart';
 
 import '../data/entrenamiento.dart';
 import '../data/serie.dart';
@@ -636,41 +637,9 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
           ),
         ),
         const SizedBox(height: 20),
-        Slider(
+        RpeSlider(
           value: _rpe,
-          min: 1,
-          max: 10,
-          divisions: 18,
-          activeColor: _rpeColor(_rpe),
-          inactiveColor: AppColors.borderOf(context),
           onChanged: (v) => setState(() => _rpe = v),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Muy fácil',
-              style: TextStyle(
-                color: AppColors.textSecondary(context),
-                fontSize: 11,
-              ),
-            ),
-            Text(
-              _rpe.toStringAsFixed(1),
-              style: TextStyle(
-                color: _rpeColor(_rpe),
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            Text(
-              'Máximo esfuerzo',
-              style: TextStyle(
-                color: AppColors.textSecondary(context),
-                fontSize: 11,
-              ),
-            ),
-          ],
         ),
       ],
     );

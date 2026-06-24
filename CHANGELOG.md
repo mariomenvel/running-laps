@@ -1,5 +1,14 @@
 # CHANGELOG — Running Laps
 
+## [UI] — RpeSlider: componente compartido
+- Nuevo lib/core/widgets/rpe_slider.dart: slider
+  con track de gradiente verde→ámbar→coral→rojo,
+  thumb con color semántico, etiquetas Suave/Máximo
+- Aplicado en training_summary_screen.dart
+  (sustituye Slider Material estándar) y
+  segment_bottom_sheet.dart (_RpeRow)
+- Rama: feat/rpe-slider-shared
+
 ## [Fix] — Crash al iniciar entrenamiento
 - workout_execution_screen.dart: targetRpe se
   casteaba como int pero TrainingSessionView

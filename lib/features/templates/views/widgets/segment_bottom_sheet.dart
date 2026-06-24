@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/widgets/ios_picker.dart';
+import 'package:running_laps/core/widgets/rpe_slider.dart';
 import 'package:running_laps/features/templates/data/target_config.dart';
 import 'package:running_laps/features/templates/data/workout_segment.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
@@ -1297,92 +1298,18 @@ class _RpeRow extends StatelessWidget {
   final VoidCallback onClear;
   final BuildContext context;
 
-  static const double _thumbRadius = 12.0;
-  static const double _trackHeight = 4.0;
-
   @override
   Widget build(BuildContext outerContext) {
-    final activeColor = rpe != null
-        ? AppColors.effortColor(rpe!.toDouble())
-        : AppColors.iconMutedOf(outerContext);
     return Row(
       children: [
         Expanded(
-          child: SizedBox(
-            height: 36,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Track con gradiente (detrás)
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: _thumbRadius),
-                  child: Container(
-                    height: _trackHeight,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(_trackHeight / 2),
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF639922),
-                          Color(0xFFEF9F27),
-                          Color(0xFFD85A30),
-                          Color(0xFFE24B4A),
-                        ],
-                        stops: [0.0, 0.45, 0.75, 1.0],
-                      ),
-                    ),
-                  ),
-                ),
-                // Slider encima con track invisible
-                SliderTheme(
-                  data: SliderTheme.of(outerContext).copyWith(
-                    trackHeight: _trackHeight,
-                    activeTrackColor: Colors.transparent,
-                    inactiveTrackColor: Colors.transparent,
-                    thumbColor: activeColor,
-                    thumbShape: const RoundSliderThumbShape(
-                      enabledThumbRadius: _thumbRadius,
-                      elevation: 2,
-                    ),
-                    overlayShape:
-                        const RoundSliderOverlayShape(overlayRadius: 20),
-                    overlayColor: activeColor.withValues(alpha: 0.12),
-                  ),
-                  child: Slider(
-                    min: 1,
-                    max: 10,
-                    divisions: 9,
-                    value: sliderValue,
-                    onChanged: onSliderChanged,
-                  ),
-                ),
-              ],
-            ),
+          child: RpeSlider(
+            value: rpe?.toDouble() ?? 1.0,
+            onChanged: onSliderChanged,
+            showClear: rpe != null,
+            onClear: onClear,
           ),
         ),
-        SizedBox(
-          width: 32,
-          child: Text(
-            rpe != null ? '$rpe' : '–',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w500,
-              color: rpe != null
-                  ? activeColor
-                  : AppColors.textSecondary(outerContext),
-            ),
-          ),
-        ),
-        if (rpe != null)
-          GestureDetector(
-            onTap: onClear,
-            child: Padding(
-              padding: const EdgeInsets.only(left: AppSpacing.xs),
-              child: Icon(Icons.close,
-                  size: 16, color: AppColors.iconMutedOf(outerContext)),
-            ),
-          ),
       ],
     );
   }
