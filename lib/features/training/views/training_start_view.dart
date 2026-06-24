@@ -48,6 +48,8 @@ import 'package:running_laps/features/athlete/data/progress_repository.dart';
 import 'package:running_laps/features/profile/data/zones_repository.dart';
 import '../../templates/data/athlete_session_mapper.dart';
 import 'pre_execution_screen.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
+import 'package:running_laps/features/ai_coach/data/pb_detector.dart';
 
 
 // ===============================================================
@@ -1300,6 +1302,11 @@ class _TrainingStartViewState extends State<TrainingStartView>
 
       if (!mounted) return;
 
+      // Detectar nueva marca personal si el entreno tiene GPS
+      await _checkForNewPb(savedEntrenamiento);
+
+      if (!mounted) return;
+
       Navigator.pushAndRemoveUntil(
         context,
         AppModalRoute(
@@ -1390,6 +1397,45 @@ class _TrainingStartViewState extends State<TrainingStartView>
       }
     } catch (e) {
       debugPrint('checkPersonalRecords error: $e');
+    }
+  }
+
+  Future<void> _checkForNewPb(Entrenamiento training) async {
+    // Solo tiene sentido con GPS activo (distancia fiable)
+    if (!training.gps) return;
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
+
+      final distanceM = training.distanciaTotalM();
+      final timeSeconds = training.tiempoTotalSec().round();
+      if (distanceM < 1000) return;
+
+      final profile = await AiCoachRepository().getProfile(uid: uid);
+      if (profile == null) return;
+
+      final pb = PbDetector.detect(
+        distanceM: distanceM,
+        timeSeconds: timeSeconds,
+        profile: profile,
+      );
+      if (pb == null) return;
+
+      final updated = PbDetector.applyPb(
+        profile: profile,
+        field: pb.field,
+        seconds: pb.seconds,
+      );
+      await AiCoachRepository().saveProfile(updated);
+
+      if (!mounted) return;
+      final label = PbDetector.labelFor(pb.field);
+      ModernSnackBar.showSuccess(
+        context,
+        '🎉 ¡Nuevo récord en $label! ${PbDetector.format(pb.seconds)}',
+      );
+    } catch (e) {
+      debugPrint('[PbDetector] error: $e');
     }
   }
 

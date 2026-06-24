@@ -1,5 +1,15 @@
 # CHANGELOG — Running Laps
 
+## [AI Coach] — Auto-guardar marcas desde entrenos
+- PbDetector (lib/features/ai_coach/data/pb_detector.dart): detecta marcas
+  en 5K/10K/HM/M con tolerancia ±3% de distancia e interpolación lineal
+  si hay diferencia de metros respecto a la distancia exacta
+- Solo activo en entrenos con GPS (training.gps == true) — distancia fiable
+- Si mejora el PB actual → actualiza AiCoachProfile en Firestore via saveProfile
+- Snackbar de celebración al detectar nuevo récord (etiqueta legible + tiempo)
+- Integrado en training_start_view._saveTrainingToFirebase, antes de navegar
+  al resumen — fire-and-forget con try/catch para no bloquear el flujo
+
 ## [AI Coach] — FC en zonas + TSB al LLM + path lesión
 - SessionBlock: nuevo campo targetFcBpm (int?) — punto medio de la zona
   en bpm calculado desde fcMax del perfil (Z1=52%, Z2=65%, Z3=75%, Z4=85%, Z5=95%)
