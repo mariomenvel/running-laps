@@ -457,6 +457,18 @@ class AiCoachSessionGenerator {
           targetKm: targetKm,
           notes: target.notes,
         );
+      case 'evaluacion':
+        return _buildBaseRunBlocks(
+          sessionIndex: sessionIndex,
+          targetKm: targetKm,
+          targetMinutes: targetMinutes,
+          rpe: rpe,
+          zone: zone,
+          notes: target.notes ??
+              'Rodaje de evaluación — corre por sensaciones '
+              '(RPE ${rpe.toStringAsFixed(0)}), sin mirar el ritmo. '
+              'El objetivo es conocer tu estado de forma actual.',
+        );
       case 'rodaje_largo':
         if (complexityTier >= 2) {
           return _buildProgressiveLongRunBlocks(
@@ -673,6 +685,10 @@ class AiCoachSessionGenerator {
         return 'gimnasio_fuerza';
       case 'test':
         return 'test';
+      case 'evaluacion':
+      case 'evaluation':
+      case 'baseline':
+        return 'evaluacion';
       case 'race':
       case 'competicion':
         return 'competicion';
@@ -926,16 +942,42 @@ class AiCoachSessionGenerator {
     required double targetKm,
     String? notes,
   }) {
-    final distance = targetKm >= 5 ? 5000 : 3000;
+    final testDistance = targetKm >= 5 ? 5000 : 3000;
+    final label = testDistance == 5000 ? '5K' : '3K';
+
     return [
       SessionBlock(
-        id: 'block_${sessionIndex}_1',
+        id: 'block_${sessionIndex}_warmup_extra',
         order: 0,
+        type: SessionBlockType.continuousTime,
+        durationMinutes: 5,
+        targetRpe: 6.5,
+        targetZone: 3,
+        notes: '2-3 progresivos de 100m para activar. '
+            'Último minuto a ritmo de test.',
+      ),
+      SessionBlock(
+        id: 'block_${sessionIndex}_test',
+        order: 1,
         type: SessionBlockType.continuousDistance,
-        distanceM: distance,
+        distanceM: testDistance,
         targetRpe: 8.5,
         targetZone: 4,
-        notes: notes ?? 'Test controlado para medir estado de forma',
+        notes: notes ??
+            'Test de $label — esfuerzo máximo sostenible y uniforme. '
+            'No salgas demasiado rápido. '
+            'Apunta el tiempo al terminar: '
+            'es tu nueva marca de referencia para el plan.',
+      ),
+      SessionBlock(
+        id: 'block_${sessionIndex}_cooldown_extra',
+        order: 2,
+        type: SessionBlockType.continuousTime,
+        durationMinutes: 10,
+        targetRpe: 3.0,
+        targetZone: 1,
+        notes: 'Trote muy suave. Tómate el tiempo para '
+            'recuperarte bien después del test.',
       ),
     ];
   }

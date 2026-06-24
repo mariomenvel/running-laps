@@ -88,9 +88,36 @@ class AiCoachPromptBuilder {
         'interpreta esto como señal de sus preferencias reales — '
         'ajusta futuras asignaciones de días en consecuencia.\n\n'
 
+        '## Protocolo para atletas nuevos sin marcas\n\n'
+
+        'Si coachSignals.needsBaselineAssessment == true '
+        '(atleta sin marcas en las primeras 3 semanas del plan):\n\n'
+
+        '**Semana 1 (weekOfPlan == 1):** Solo rodajes base a esfuerzo percibido. '
+        'Categorías permitidas: rodaje_base, regenerativo, evaluacion. '
+        'Sin pace objetivo — usa solo RPE (4-6) y zona Z1-Z2. '
+        'Máximo 3 sesiones aunque pueda hacer más. '
+        'NO uses series, tempo, fartlek, ni test esta semana.\n\n'
+
+        '**Semana 2 (weekOfPlan == 2):** Si no hay molestias ni señales negativas, '
+        'introduce 1 sesión de fartlek suave (RPE 6-7 máx) o tempo corto. '
+        'Sigue sin pace objetivo — usa RPE y zona. Máximo 3-4 sesiones. '
+        'Resto: rodaje_base o evaluacion.\n\n'
+
+        '**Semana 3 (weekOfPlan == 3):** Incluye 1 sesión category=test con '
+        'targetKm=5 (o 3 si el atleta es principiante declarado). '
+        'El test debe ir precedido de al menos 2 días de descanso o regenerativo. '
+        'Usa notes del target para indicar: '
+        '"Corre 5K lo más uniforme posible a tu mejor esfuerzo sostenible. '
+        'No es una carrera — es una medición para calibrar tu plan."\n\n'
+
+        'A partir de semana 4: plan normal. '
+        'Si el atleta introdujo su marca del test, usa VDOT para los paces. '
+        'Si no, sigue con RPE y zona hasta que haya datos.\n\n'
+
         '**Categorías válidas para workoutTargets.category (EXCLUSIVAMENTE):** '
         'series_cortas, series_largas, series_cuestas, series_mixtas, fartlek, tempo, '
-        'rodaje_base, rodaje_largo, regenerativo, gimnasio_fuerza, test, competicion. '
+        'rodaje_base, rodaje_largo, regenerativo, gimnasio_fuerza, test, competicion, evaluacion. '
         'NO uses otras categorías. '
         'Si el atleta pide "cuestas" → series_cuestas. '
         '"gimnasio"/"fuerza" → gimnasio_fuerza. '

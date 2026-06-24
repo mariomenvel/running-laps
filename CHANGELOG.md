@@ -1,5 +1,15 @@
 # CHANGELOG — Running Laps
 
+## [AI Coach] — Protocolo de evaluación inicial
+- coachSignals: nuevos campos isNewAthlete, hasNoPbs, weekOfPlan,
+  needsBaselineAssessment (true si sin marcas y weekOfPlan ≤ 3)
+- Prompt: protocolo explícito semana 1 (solo base/regenerativo),
+  semana 2 (fartlek suave opcional), semana 3 (test 5K/3K de referencia)
+- _buildTestBlocks: protocolo real — calentamiento específico (progresivos),
+  bloque de test con instrucciones claras, vuelta a la calma extendida 10 min
+- Nueva categoría 'evaluacion': rodaje sin pace objetivo con nota explicativa;
+  normaliza también 'evaluation' y 'baseline'
+
 ## [AI Coach — Pendiente] — Actualización automática de marcas
 - Cuando el sistema detecte un nuevo RP en 5K/10K/HM/M durante el resumen
   de un entreno, actualizar automáticamente pb*Seconds en AiCoachProfile

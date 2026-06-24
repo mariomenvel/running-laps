@@ -150,6 +150,20 @@ class AiCoachContextBuilder {
       sessions: sessions,
       weeks: 8,
     );
+    // Señales de atleta nuevo / sin marcas
+    final isNewAthlete = recentTrainings.isEmpty &&
+        effectiveProfile != null &&
+        effectiveProfile.createdAt.isAfter(
+            now.subtract(const Duration(days: 30)));
+    final hasNoPbs = effectiveProfile == null ||
+        (effectiveProfile.pb5kSeconds == null &&
+            effectiveProfile.pb10kSeconds == null &&
+            effectiveProfile.pbHalfMarathonSeconds == null &&
+            effectiveProfile.pbMarathonSeconds == null);
+    final weekOfPlan = effectiveProfile != null
+        ? now.difference(effectiveProfile.createdAt).inDays ~/ 7 + 1
+        : 1;
+
     final coachSignals = <String, dynamic>{
       'daysSinceLastTraining': weeklyState.daysSinceLastTraining,
       'consecutiveMissedWeeks': weeklyState.consecutiveMissedWeeks,
@@ -171,6 +185,10 @@ class AiCoachContextBuilder {
       'needsConservativeWeek': weeklyState.needsDeload ||
           weeklyState.daysSinceLastTraining >= 10,
       'athleteMemory': athleteMemory.toMap(),
+      'isNewAthlete': isNewAthlete,
+      'hasNoPbs': hasNoPbs,
+      'weekOfPlan': weekOfPlan,
+      'needsBaselineAssessment': hasNoPbs && weekOfPlan <= 3,
       ..._buildAthleteStyleSignals(trainings.take(20).toList()),
     };
 
