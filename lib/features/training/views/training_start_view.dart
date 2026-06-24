@@ -152,6 +152,9 @@ class _TrainingStartViewState extends State<TrainingStartView>
   String? _selectedTrainingType;
   AthleteSession? _plannedSession;
   bool _ignoreSession = false;
+  AthleteSession? _todaySession;
+  bool _loadingTodaySession = true;
+  bool _showQuickSession = false;
 
   // --- Configuración por tipo ---
   final _cfgDistKmCtrl   = TextEditingController(); // rodaje/largo: dist objetivo km
@@ -190,12 +193,45 @@ class _TrainingStartViewState extends State<TrainingStartView>
     }
   }
 
+  Future<void> _loadTodaySession() async {
+    // Si llegó con athleteSessionId explícito, la búsqueda automática no aplica.
+    if (widget.athleteSessionId != null) {
+      if (mounted) setState(() => _loadingTodaySession = false);
+      return;
+    }
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) {
+        if (mounted) setState(() => _loadingTodaySession = false);
+        return;
+      }
+      final today = DateTime.now();
+      final dateStr =
+          '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+      final sessions = await AthleteSessionRepository()
+          .getSessionsForDate(uid: uid, date: dateStr);
+      final planned = sessions
+          .where((s) => s.status == AthleteSessionStatus.planned)
+          .toList();
+      if (mounted) {
+        setState(() {
+          _todaySession = planned.isNotEmpty ? planned.first : null;
+          _loadingTodaySession = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('[TrainingStart] _loadTodaySession error: $e');
+      if (mounted) setState(() => _loadingTodaySession = false);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _loadUserPreferences();
     _loadFcMax();
     _loadPlannedSession();
+    _loadTodaySession();
     // CAMBIO 4: reconectar pulsómetro si hay uno guardado
     if (HeartRateService().connectionState.value ==
         HrConnectionState.disconnected) {
@@ -463,16 +499,16 @@ class _TrainingStartViewState extends State<TrainingStartView>
 
   void _selectType(String type) => setState(() => _selectedTrainingType = type);
 
-  /// Mapea el tipo legacy al WorkoutType del nuevo editor.
+  /// Mapea el tipo al WorkoutType del editor.
   WorkoutType _workoutTypeFor(String type) {
     switch (type) {
       case 'series':
         return WorkoutType.intervals;
       case 'fartlek':
         return WorkoutType.fartlek;
-      case 'libre':
-        return WorkoutType.free;
-      default: // rodaje, tempo, largo
+      case 'cuestas':
+        return WorkoutType.intervals;
+      default: // continuo, competicion
         return WorkoutType.continuous;
     }
   }
@@ -521,21 +557,19 @@ class _TrainingStartViewState extends State<TrainingStartView>
 
   String _labelForType(String type) {
     switch (type) {
-      case 'series':  return 'Series';
-      case 'tempo':   return 'Tempo';
-      case 'fartlek': return 'Fartlek';
-      case 'largo':   return 'Largo';
-      case 'libre':   return 'Sesión libre';
-      default:        return 'Rodaje';
+      case 'series':     return 'Series';
+      case 'fartlek':    return 'Fartlek';
+      case 'cuestas':    return 'Cuestas';
+      case 'competicion': return 'Competición';
+      default:           return 'Continuo';
     }
   }
 
   /// Devuelve (min, sec) del pace de config según el tipo activo, o null.
   (int, int)? _cfgPaceParsed() {
     final type = _selectedTrainingType;
-    if (type == 'rodaje' || type == 'largo') return _parsePace(_cfgPaceCtrl.text);
+    if (type == 'continuo') return _parsePace(_cfgPaceCtrl.text);
     if (type == 'series') return _parsePace(_cfgSeriesPaceCtrl.text);
-    if (type == 'tempo') return _parsePace(_cfgTempoPaceCtrl.text);
     return null;
   }
 
@@ -1660,6 +1694,8 @@ class _TrainingStartViewState extends State<TrainingStartView>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: AppSpacing.l),
+
+          // Rama 0: athleteSessionId explícito desde athlete_hub (prioridad)
           if (widget.athleteSessionId != null && !_ignoreSession)
             _plannedSession != null
                 ? _buildSessionCard()
@@ -1667,14 +1703,29 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     padding: EdgeInsets.all(AppSpacing.xl),
                     child: Center(child: CircularProgressIndicator()),
                   )
+
+          // Rama 1: sesión planificada para hoy (automática)
+          else if (_loadingTodaySession)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_todaySession != null && !_ignoreSession)
+            _buildTodaySessionCard(_todaySession!)
+
+          // Rama 2: plantilla cargada manualmente
           else if (_vm.source != null) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
               child: _buildTemplateCard(),
             ),
             const SizedBox(height: AppSpacing.m),
-          ] else
-            _buildTypeSelector(),
+          ]
+
+          // Rama 3: sin sesión planificada ni plantilla
+          else
+            _buildNoSessionOptions(),
+
           _buildSectionDivider(),
           _buildSensors(),
           _buildSectionDivider(),
@@ -1809,6 +1860,192 @@ class _TrainingStartViewState extends State<TrainingStartView>
     );
   }
 
+  Widget _buildTodaySessionCard(AthleteSession session) {
+    const brand = AppColors.brand;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceOf(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderOf(context), width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.l),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.s),
+                  decoration: BoxDecoration(
+                    color: brand.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.calendar_today, color: brand, size: 18),
+                ),
+                const SizedBox(width: AppSpacing.m),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'SESIÓN PLANIFICADA PARA HOY',
+                      style: AppTypography.small.copyWith(
+                        color: brand,
+                        letterSpacing: 1.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (session.category != null)
+                      Text(
+                        session.category!,
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.textPrimary(context),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Divider(color: AppColors.borderOf(context), thickness: 0.5, height: 0.5),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.l),
+            child: Column(
+              children: [
+                if (session.warmup != null)
+                  _buildBlockRow(
+                    'Calentamiento',
+                    durationMinutes: session.warmup!.durationMinutes,
+                    icon: Icons.whatshot_outlined,
+                  ),
+                ...session.blocks.asMap().entries.map(
+                  (e) => _buildBlockRow(
+                    'Bloque ${e.key + 1}',
+                    block: e.value,
+                    icon: Icons.directions_run,
+                  ),
+                ),
+                if (session.cooldown != null)
+                  _buildBlockRow(
+                    'Vuelta calma',
+                    durationMinutes: session.cooldown!.durationMinutes,
+                    icon: Icons.self_improvement,
+                  ),
+              ],
+            ),
+          ),
+          Divider(color: AppColors.borderOf(context), thickness: 0.5, height: 0.5),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.m),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => setState(() => _ignoreSession = true),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.textSecondary(context),
+                      side: BorderSide(color: AppColors.borderOf(context)),
+                    ),
+                    child: const Text('Ignorar'),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.m),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => _launchPlannedSession(session),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.brand,
+                    ),
+                    child: const Text('Empezar sesión'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _launchPlannedSession(AthleteSession session) {
+    setState(() {
+      _plannedSession = session;
+      _selectedTrainingType = 'libre';
+    });
+    _showCountdown();
+  }
+
+  Widget _buildNoSessionOptions() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '¿Qué hacemos hoy?',
+            style: AppTypography.h2.copyWith(
+              color: AppColors.textPrimary(context),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.l),
+
+          FilledButton.icon(
+            icon: const Icon(Icons.play_arrow_rounded),
+            label: const Text('Correr libre'),
+            onPressed: _startContinuousRun,
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.brand,
+              minimumSize: const Size(double.infinity, 52),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.m),
+
+          OutlinedButton.icon(
+            icon: const Icon(Icons.edit_calendar_outlined),
+            label: const Text('Planificar sesión de hoy'),
+            onPressed: () {
+              final today = DateTime.now();
+              final dateStr =
+                  '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+              MainShell.shellKey.currentState?.navigateTo(
+                13,
+                params: AthleteSessionShellParams(
+                  date: dateStr,
+                  session: null,
+                ),
+              );
+            },
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 52),
+              foregroundColor: AppColors.brand,
+              side: BorderSide(color: AppColors.brand.withValues(alpha: 0.4)),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.m),
+
+          OutlinedButton.icon(
+            icon: const Icon(Icons.tune_outlined),
+            label: const Text('Sesión rápida'),
+            onPressed: () => setState(() => _showQuickSession = !_showQuickSession),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 52),
+              foregroundColor: AppColors.textSecondary(context),
+              side: BorderSide(color: AppColors.borderOf(context)),
+            ),
+          ),
+
+          if (_showQuickSession) ...[
+            const SizedBox(height: AppSpacing.l),
+            _buildTypeSelector(),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildBlockRow(
     String titulo, {
     SessionBlock? block,
@@ -1892,12 +2129,11 @@ class _TrainingStartViewState extends State<TrainingStartView>
             physics: const NeverScrollableScrollPhysics(),
             childAspectRatio: 1.6,
             children: [
-              _buildTypeCard('Rodaje', Icons.directions_run, 'rodaje'),
+              _buildTypeCard('Continuo', Icons.directions_run, 'continuo'),
               _buildTypeCard('Series', Icons.repeat, 'series'),
-              _buildTypeCard('Tempo', Icons.speed, 'tempo'),
-              _buildTypeCard('Largo', Icons.landscape, 'largo'),
+              _buildTypeCard('Cuestas', Icons.landscape, 'cuestas'),
+              _buildTypeCard('Competición', Icons.emoji_events, 'competicion'),
               _buildTypeCard('Fartlek', Icons.shuffle, 'fartlek'),
-              _buildTypeCard('Libre', Icons.play_arrow, 'libre'),
             ],
           ),
         ),
@@ -2050,9 +2286,9 @@ class _TrainingStartViewState extends State<TrainingStartView>
     final type = _selectedTrainingType;
     Widget content;
 
-    if (type == 'rodaje' || type == 'largo') {
+    if (type == 'continuo') {
       content = Column(
-        key: ValueKey(type),
+        key: const ValueKey('continuo'),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _cfgLabel('Distancia objetivo (km, opcional)'),
@@ -2106,26 +2342,6 @@ class _TrainingStartViewState extends State<TrainingStartView>
           _cfgTextField(_cfgSeriesPaceCtrl, 'ej. 4:15', keyboard: TextInputType.text),
         ],
       );
-    } else if (type == 'tempo') {
-      content = Column(
-        key: const ValueKey('tempo'),
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _cfgSliderRow(
-            label: 'Duración',
-            value: _cfgTempoDur.toDouble(),
-            min: 10,
-            max: 60,
-            divisions: 10,
-            valueLabel: '${_cfgTempoDur} min',
-            onChanged: (v) => setState(() => _cfgTempoDur = v.round()),
-          ),
-          const SizedBox(height: AppSpacing.m),
-          _cfgLabel('Pace objetivo (mm:ss/km, opcional)'),
-          const SizedBox(height: AppSpacing.s),
-          _cfgTextField(_cfgTempoPaceCtrl, 'ej. 4:45', keyboard: TextInputType.text),
-        ],
-      );
     } else if (type == 'fartlek') {
       content = Column(
         key: const ValueKey('fartlek'),
@@ -2149,17 +2365,6 @@ class _TrainingStartViewState extends State<TrainingStartView>
             onChanged: (v) => setState(() => _cfgFartlekBloques = v),
           ),
         ],
-      );
-    } else if (type == 'libre') {
-      content = Center(
-        key: const ValueKey('libre'),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.m),
-          child: Text(
-            'Entrena sin restricciones',
-            style: AppTypography.body.copyWith(color: AppColors.textSecondary(context)),
-          ),
-        ),
       );
     } else {
       content = const SizedBox.shrink(key: ValueKey('none'));

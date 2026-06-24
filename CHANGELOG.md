@@ -1,5 +1,20 @@
 # CHANGELOG — Running Laps
 
+## [UX] — Rediseño flujo FAB de inicio de entrenamiento
+- FAB detecta automáticamente sesión planificada para hoy
+  (getSessionsForDate, sin necesitar pasar athleteSessionId)
+- Sin sesión: 3 opciones claras (Correr libre /
+  Planificar sesión / Sesión rápida con grid colapsable)
+- Con sesión: card con botón "Empezar sesión" prominente
+  + "Ignorar" como opción secundaria
+- Simplificadas las categorías de sesión rápida:
+  Continuo / Series / Cuestas / Competición / Fartlek
+  (eliminadas Rodaje, Libre, Tempo, Largo como categorías
+  separadas — todas eran continuas)
+- athleteSessionId explícito (desde athlete_hub_view)
+  sigue teniendo prioridad sobre búsqueda automática
+- Rama: feat/fab-flow-redesign
+
 ## [UI] — RPE post-serie: RpeSlider + lógica corregida
 - _showRpePicker (training_session_view.dart):
   sustituido IosPicker por RpeSlider — consistente
