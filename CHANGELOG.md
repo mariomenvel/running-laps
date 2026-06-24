@@ -1,5 +1,11 @@
 # CHANGELOG — Running Laps
 
+## [UI] — WorkoutEditorScreen: eliminado AppBar
+- AppBar con título "Nueva sesión" + X + tick eliminado — redundante con
+  swipe atrás (iOS) y botón "Guardar sesión" del footer
+- Añadido PopScope(canPop: false) para que el swipe/back nativo pase
+  por _onClose y su diálogo de confirmación de descarte
+
 ## [UI] — WorkoutTypeSelector: grid → chips horizontales
 - Sustituido GridView.count (6 tarjetas cuadradas) por Wrap de chips pill (5 tipos)
 - Eliminada "Libre" como tipo seleccionable en el editor (sigue existiendo en el

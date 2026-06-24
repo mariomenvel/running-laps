@@ -453,44 +453,14 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
   Widget build(BuildContext context) {
     final isNew = widget.initialSession == null;
 
-    return Scaffold(
-      backgroundColor: AppColors.background(context),
-      appBar: AppBar(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _onClose();
+      },
+      child: Scaffold(
         backgroundColor: AppColors.background(context),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          color: AppColors.textPrimary(context),
-          onPressed: _onClose,
-        ),
-        title: Text(
-          isNew ? 'Nueva sesión' : 'Editar sesión',
-          style: TextStyle(
-            color: AppColors.textPrimary(context),
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        actions: [
-          ValueListenableBuilder2<WorkoutType?, List<WorkoutBlock>>(
-            first: _selectedType,
-            second: _blocks,
-            builder: (_, type, blocks, __) {
-              final disabled = type == null && blocks.isEmpty;
-              return IconButton(
-                icon: Icon(
-                  Icons.check,
-                  color: disabled
-                      ? AppColors.iconMutedOf(context)
-                      : AppColors.brand,
-                ),
-                onPressed: disabled ? null : _onSave,
-              );
-            },
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
+        body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -686,6 +656,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 
