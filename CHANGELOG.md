@@ -1,5 +1,18 @@
 # CHANGELOG — Running Laps
 
+## [AI Coach] — Paces personalizados por VDOT
+- Nuevo VdotCalculator (fórmulas Daniels & Gilbert 1979): estima VDOT desde
+  marcas del perfil, calcula paces por zona (Z1-Z5) vía Newton-Raphson
+- Series cortas: Z5/R-pace personalizado, reps clamp 4-12 (antes mín 6 sin tope)
+- Series largas: Z4/I-pace personalizado, reps clamp 3-8 (antes mín 3 sin tope)
+- Series cuestas: adapta reps/distancia/descanso al complexityTier
+  (antes hardcoded 10×200m 75s para todos los niveles)
+- Fartlek: intercala bloques de recuperación Z1 entre estímulos Z3
+  (antes bloques de esfuerzo consecutivos sin recovery explícito)
+- Tempo: paces Z3 personalizados en las 3 variantes A/B/C; si no hay
+  marcas, fallback a valores hardcodeados previos
+- Fallback completo a valores hardcodeados cuando el perfil no tiene marcas
+
 ## [AI Coach] — Marcas estructuradas en el perfil
 - AiCoachProfile: nuevos campos pb5kSeconds, pb10kSeconds, pbHalfMarathonSeconds,
   pbMarathonSeconds (int?, segundos totales) con toMap/fromMap/copyWith (sentinel)
