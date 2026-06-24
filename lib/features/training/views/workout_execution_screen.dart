@@ -116,6 +116,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     debugPrint('[Rest] completedReps=$completedReps totalReps=$totalReps');
     debugPrint('[Rest] isLastRep=$isLastRep');
 
+    debugPrint('[ExecScreen] Antes de Navigator.push TrainingSessionView');
     final result = await Navigator.of(context).push<Serie>(
       AppRoute(
         page: TrainingSessionView(
@@ -128,7 +129,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
           targetPaceSeconds: params['targetPaceSeconds'],
           targetPaceMaxMinutes: params['targetPaceMaxMinutes'],
           targetPaceMaxSeconds: params['targetPaceMaxSeconds'],
-          targetRpe: params['targetRpe'],
+          targetRpe: (params['targetRpe'] as num?)?.toDouble(),
           targetZone: params['targetZone'],
           fcMax: widget.fcMax?.round(),
           alarmIntervalMs: alarmIntervalMs,
@@ -138,6 +139,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
         ),
       ),
     );
+    debugPrint('[ExecScreen] Navigator.push resolvió, result=$result');
     if (result != null && mounted) {
       _onSerieComplete(result);
       debugPrint('[Rest] tras recordSerie, intentando rest');

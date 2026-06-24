@@ -1,5 +1,30 @@
 # CHANGELOG — Running Laps
 
+## [Fix] — Crash al iniciar entrenamiento
+- workout_execution_screen.dart: targetRpe se
+  casteaba como int pero TrainingSessionView
+  espera double? — fix con (params['targetRpe']
+  as num?)?.toDouble()
+- Bug presente en Android e iOS, ahora resuelto
+
+## [Debug] — Logs de diagnóstico en flujo de inicio de entrenamiento (temporal)
+- Añadidos debugPrint en workout_execution_screen,
+  training_session_view y gps_service para acotar
+  el punto de bloqueo en "Ejecutando entrenamiento..."
+- PENDIENTE: eliminar estos logs una vez resuelto
+  el bug
+
+## [iOS] — Fix congelación al iniciar entrenamiento
+- GPSService.initialize(): timeout de 8s en
+  Geolocator.requestPermission() y 5s en
+  sensorService.initialize()
+- Evita que la app se quede en "Ejecutando
+  entrenamiento..." indefinidamente si iOS no
+  responde al diálogo de permisos (comportamiento
+  detectado en iOS 26 beta)
+- Cuando el timeout se dispara, la app muestra
+  un mensaje de error en lugar de congelarse
+
 ## [Fix — iOS] Live Activity apagada durante el descanso entre series
 - Síntoma reportado inicialmente: "pace y tiempo no se actualizan bien"
   durante la sesión. Tras auditoría, esa sospecha se descartó — `pace`
