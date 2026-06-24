@@ -741,6 +741,7 @@ class AiCoachTrainingSummary {
 class AiCoachPlannedSessionSummary {
   final String sessionId;
   final String date;
+  final String? originalDate;
   final String? category;
   final String status;
   final bool isAiSuggested;
@@ -750,6 +751,7 @@ class AiCoachPlannedSessionSummary {
   const AiCoachPlannedSessionSummary({
     required this.sessionId,
     required this.date,
+    this.originalDate,
     required this.category,
     required this.status,
     required this.isAiSuggested,

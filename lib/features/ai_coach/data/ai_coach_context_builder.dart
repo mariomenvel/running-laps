@@ -133,6 +133,7 @@ class AiCoachContextBuilder {
       return AiCoachPlannedSessionSummary(
         sessionId: session.id,
         date: session.date,
+        originalDate: session.originalDate,
         category: session.category,
         status: session.status.toValue,
         isAiSuggested: session.suggestion?.origin == AthleteSessionOrigin.ai,

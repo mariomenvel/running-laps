@@ -393,6 +393,10 @@ class AthleteSession {
 
   final String? athleteNote;       // nota libre del atleta (ej: ajuste de intensidad)
 
+  // Fecha original de planificación — se fija al crear, nunca se modifica.
+  // Si date != originalDate, el atleta movió la sesión.
+  final String? originalDate;
+
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -416,6 +420,7 @@ class AthleteSession {
     this.raceDistanceM,
     this.targetTimeSeconds,
     this.athleteNote,
+    this.originalDate,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -455,6 +460,7 @@ class AthleteSession {
       raceDistanceM:        map['raceDistanceM']     as int?,
       targetTimeSeconds:    map['targetTimeSeconds'] as int?,
       athleteNote:          map['athleteNote']       as String?,
+      originalDate:         map['originalDate']      as String?,
       createdAt:            _toDateTime(map['createdAt']),
       updatedAt:            _toDateTime(map['updatedAt']),
     );
@@ -482,6 +488,7 @@ class AthleteSession {
       if (raceDistanceM        != null) 'raceDistanceM':        raceDistanceM,
       if (targetTimeSeconds    != null) 'targetTimeSeconds':    targetTimeSeconds,
       if (athleteNote          != null) 'athleteNote':          athleteNote,
+      if (originalDate         != null) 'originalDate':         originalDate,
     };
   }
 
@@ -505,6 +512,7 @@ class AthleteSession {
     Object? raceDistanceM       = _sentinel,
     Object? targetTimeSeconds   = _sentinel,
     Object? athleteNote         = _sentinel,
+    Object? originalDate        = _sentinel,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -528,6 +536,7 @@ class AthleteSession {
       raceDistanceM:       raceDistanceM       == _sentinel ? this.raceDistanceM       : raceDistanceM       as int?,
       targetTimeSeconds:   targetTimeSeconds   == _sentinel ? this.targetTimeSeconds   : targetTimeSeconds   as int?,
       athleteNote:         athleteNote         == _sentinel ? this.athleteNote         : athleteNote         as String?,
+      originalDate:        originalDate        == _sentinel ? this.originalDate        : originalDate        as String?,
       createdAt:           createdAt           ?? this.createdAt,
       updatedAt:           updatedAt           ?? this.updatedAt,
     );
