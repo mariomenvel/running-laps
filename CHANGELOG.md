@@ -1,5 +1,30 @@
 # CHANGELOG — Running Laps
 
+## [AI Coach] — Retroalimentación de ediciones manuales
+- AthleteSession: nuevo campo originalDate (String?) — se fija al crear la
+  sesión en createSession(), nunca se modifica en updateSession()
+- Si date != originalDate: sesión fue movida por el atleta → se incluye en
+  athleteEdits del payload con movedFrom/movedTo
+- Si suggestion.status == 'edited': sesión fue modificada en bloques/intensidad
+  → se incluye en athleteEdits con edited: true
+- AiCoachPlannedSessionSummary: nuevo campo originalDate propagado desde
+  AthleteSession vía AiCoachContextBuilder
+- _buildAthleteEdits() en AiCoachPromptBuilder construye el bloque y lo
+  mezcla en el payload solo si hay ediciones
+
+## [AI Coach] — Mejoras de prompt y periodización
+- System prompt reescrito con principios 80/20, regla de 48h entre sesiones
+  intensas, guía de fase (base/specific/taper/race_week) y respuesta al
+  rendimiento real del atleta
+- Payload ampliado con planContext (weeksRemaining, targetDate, phase) —
+  calculado en Dart a partir de targetDate, no delegado al LLM
+- _phaseForWeeksRemaining() helper nuevo en AiCoachPromptBuilder
+- Validación de preferredDay contra availableDays ya existía en _pickDay()
+  del generador (availableDays.contains) — confirmado, sin cambios necesarios
+- Ediciones manuales (wasManuallyEdited): campo no existe en AthleteSession —
+  PENDIENTE implementar; athleteEdits ya mencionado en prompt para cuando se añada
+- Rama: feat/ai-coach-prompt-improvements
+
 ## [UI] — WorkoutEditorScreen: eliminado AppBar
 - AppBar con título "Nueva sesión" + X + tick eliminado — redundante con
   swipe atrás (iOS) y botón "Guardar sesión" del footer
