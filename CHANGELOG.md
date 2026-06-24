@@ -1,5 +1,17 @@
 # CHANGELOG — Running Laps
 
+## [Fix] — FAB: navegar a PreExecutionScreen tras planificar sesión de hoy
+- AthleteSessionShellParams: nuevo campo onSaved
+  (callback con la AthleteSession recién creada)
+- WorkoutEditorScreen._onSave: llama onSaved tras
+  crear sesión nueva con shellParams
+- TrainingStartView: "Planificar sesión de hoy"
+  pasa onSaved → _launchPlannedSession, eliminando
+  el workaround Future.delayed(1s)
+- Resultado: guardar sesión desde el editor →
+  navega directo a PreExecutionScreen con la
+  estructura completa
+
 ## [Fix] — FAB: _launchPlannedSession usa flujo correcto
 - _launchPlannedSession ahora usa
   mapAthleteSessionToWorkout + PreExecutionScreen,

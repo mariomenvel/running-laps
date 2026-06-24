@@ -2011,7 +2011,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
           OutlinedButton.icon(
             icon: const Icon(Icons.edit_calendar_outlined),
             label: const Text('Planificar sesión de hoy'),
-            onPressed: () async {
+            onPressed: () {
               final today = DateTime.now();
               final dateStr =
                   '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
@@ -2020,12 +2020,11 @@ class _TrainingStartViewState extends State<TrainingStartView>
                 params: AthleteSessionShellParams(
                   date: dateStr,
                   session: null,
+                  onSaved: (athleteSession) {
+                    if (mounted) _launchPlannedSession(athleteSession);
+                  },
                 ),
               );
-              // Workaround: recarga por si el usuario creó la sesión y volvió.
-              // Pendiente mejorar con callback real desde WorkoutEditorScreen al guardar.
-              await Future.delayed(const Duration(seconds: 1));
-              if (mounted) _loadTodaySession();
             },
             style: OutlinedButton.styleFrom(
               minimumSize: const Size(double.infinity, 52),

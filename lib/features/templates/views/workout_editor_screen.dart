@@ -435,6 +435,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
             );
           } else {
             await repo.createSession(athleteSession);
+            widget.shellParams?.onSaved?.call(athleteSession);
           }
         }
       } catch (e) {

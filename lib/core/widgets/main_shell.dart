@@ -39,7 +39,12 @@ class TemplateEditorShellParams {
 class AthleteSessionShellParams {
   final String date;
   final AthleteSession? session;
-  const AthleteSessionShellParams({required this.date, this.session});
+  final void Function(AthleteSession)? onSaved;
+  const AthleteSessionShellParams({
+    required this.date,
+    this.session,
+    this.onSaved,
+  });
 }
 
 // ─── MainShell ───────────────────────────────────────────────────────────────
