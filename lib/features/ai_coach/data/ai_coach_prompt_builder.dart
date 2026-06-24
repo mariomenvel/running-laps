@@ -201,6 +201,12 @@ class AiCoachPromptBuilder {
     );
   }
 
+  String _formatPbForLlm(int seconds) {
+    final m = seconds ~/ 60;
+    final s = seconds % 60;
+    return '$m:${s.toString().padLeft(2, '0')}';
+  }
+
   String _phaseForWeeksRemaining(int weeksRemaining) {
     if (weeksRemaining <= 1) return 'race_week';
     if (weeksRemaining <= 3) return 'taper';
@@ -246,6 +252,14 @@ class AiCoachPromptBuilder {
                   .toList(),
               'coachNotes': profile.coachNotes,
               if (profile.fcMax != null) 'fcMax': profile.fcMax,
+              if (profile.pb5kSeconds != null)
+                'pb5k': _formatPbForLlm(profile.pb5kSeconds!),
+              if (profile.pb10kSeconds != null)
+                'pb10k': _formatPbForLlm(profile.pb10kSeconds!),
+              if (profile.pbHalfMarathonSeconds != null)
+                'pbHalfMarathon': _formatPbForLlm(profile.pbHalfMarathonSeconds!),
+              if (profile.pbMarathonSeconds != null)
+                'pbMarathon': _formatPbForLlm(profile.pbMarathonSeconds!),
             },
       'weeklyState': context.weeklyState.toMap(),
       'coachSignals': context.coachSignals,

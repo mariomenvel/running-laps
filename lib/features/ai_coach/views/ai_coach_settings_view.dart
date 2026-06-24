@@ -42,6 +42,12 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
   final List<String> _strengthConstraints = [];
   final List<String> _otherConstraints = [];
 
+  // Marcas personales (en segundos totales)
+  int? _pb5kSeconds;
+  int? _pb10kSeconds;
+  int? _pbHalfMarathonSeconds;
+  int? _pbMarathonSeconds;
+
   @override
   void initState() {
     super.initState();
@@ -102,6 +108,11 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
               .where((item) => item.type != AiCoachConstraintType.strengthTraining)
               .map((item) => item.label),
         );
+
+        _pb5kSeconds = profile.pb5kSeconds;
+        _pb10kSeconds = profile.pb10kSeconds;
+        _pbHalfMarathonSeconds = profile.pbHalfMarathonSeconds;
+        _pbMarathonSeconds = profile.pbMarathonSeconds;
       } else {
         _goalDescriptionCtrl.text = 'Mejorar la consistencia semanal';
       }
@@ -169,6 +180,10 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
         coachNotes: _coachNotesCtrl.text.trim().isEmpty
             ? null
             : _coachNotesCtrl.text.trim(),
+        pb5kSeconds: _pb5kSeconds,
+        pb10kSeconds: _pb10kSeconds,
+        pbHalfMarathonSeconds: _pbHalfMarathonSeconds,
+        pbMarathonSeconds: _pbMarathonSeconds,
         createdAt: previousProfile?.createdAt ?? now,
         updatedAt: now,
       );
@@ -461,6 +476,41 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
                         Padding(
                           padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
                           child: _buildDatePicker(context),
+                        ),
+                        _sectionHeader(
+                          'MARCAS PERSONALES',
+                          subtitle: 'Opcional. El coach las usará para calibrar el ritmo objetivo.',
+                        ),
+                        Divider(height: 1, color: AppColors.borderOf(context)),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                          child: Column(
+                            children: [
+                              _buildPbField(
+                                label: '5K',
+                                valueSeconds: _pb5kSeconds,
+                                onChanged: (v) => setState(() => _pb5kSeconds = v),
+                              ),
+                              const SizedBox(height: 12),
+                              _buildPbField(
+                                label: '10K',
+                                valueSeconds: _pb10kSeconds,
+                                onChanged: (v) => setState(() => _pb10kSeconds = v),
+                              ),
+                              const SizedBox(height: 12),
+                              _buildPbField(
+                                label: 'Media maratón',
+                                valueSeconds: _pbHalfMarathonSeconds,
+                                onChanged: (v) => setState(() => _pbHalfMarathonSeconds = v),
+                              ),
+                              const SizedBox(height: 12),
+                              _buildPbField(
+                                label: 'Maratón',
+                                valueSeconds: _pbMarathonSeconds,
+                                onChanged: (v) => setState(() => _pbMarathonSeconds = v),
+                              ),
+                            ],
+                          ),
                         ),
                         _sectionHeader(
                           'DISPONIBILIDAD',
@@ -1159,5 +1209,96 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
       default:
         return 'Domingo';
     }
+  }
+
+  Widget _buildPbField({
+    required String label,
+    required int? valueSeconds,
+    required ValueChanged<int?> onChanged,
+  }) {
+    final minutes = valueSeconds != null ? valueSeconds ~/ 60 : null;
+    final seconds = valueSeconds != null ? valueSeconds % 60 : null;
+
+    final minCtrl = TextEditingController(
+      text: minutes != null ? '$minutes' : '',
+    );
+    final secCtrl = TextEditingController(
+      text: seconds != null ? seconds.toString().padLeft(2, '0') : '',
+    );
+
+    return Row(
+      children: [
+        SizedBox(
+          width: 100,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary(context),
+            ),
+          ),
+        ),
+        const Spacer(),
+        SizedBox(
+          width: 52,
+          child: TextField(
+            controller: minCtrl,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            maxLength: 3,
+            decoration: _inputDecoration(context, hint: '--').copyWith(
+              counterText: '',
+              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+            ),
+            style: TextStyle(fontSize: 15, color: AppColors.textPrimary(context)),
+            onChanged: (v) {
+              final m = int.tryParse(v);
+              final s = int.tryParse(secCtrl.text) ?? 0;
+              onChanged(m != null ? m * 60 + s.clamp(0, 59) : null);
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Text(
+            ':',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary(context),
+            ),
+          ),
+        ),
+        SizedBox(
+          width: 52,
+          child: TextField(
+            controller: secCtrl,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            maxLength: 2,
+            decoration: _inputDecoration(context, hint: '00').copyWith(
+              counterText: '',
+              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+            ),
+            style: TextStyle(fontSize: 15, color: AppColors.textPrimary(context)),
+            onChanged: (v) {
+              final s = int.tryParse(v);
+              final m = int.tryParse(minCtrl.text) ?? 0;
+              if (s == null) return;
+              onChanged(m * 60 + s.clamp(0, 59));
+            },
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          'min:seg',
+          style: TextStyle(
+            fontSize: 12,
+            color: AppColors.textSecondary(context),
+          ),
+        ),
+      ],
+    );
   }
 }

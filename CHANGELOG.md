@@ -1,5 +1,16 @@
 # CHANGELOG — Running Laps
 
+## [AI Coach] — Marcas estructuradas en el perfil
+- AiCoachProfile: nuevos campos pb5kSeconds, pb10kSeconds, pbHalfMarathonSeconds,
+  pbMarathonSeconds (int?, segundos totales) con toMap/fromMap/copyWith (sentinel)
+- AiCoachSettingsView: sección "MARCAS PERSONALES" con campos MM:SS para 4 distancias
+  ubicada entre OBJETIVO y DISPONIBILIDAD
+- Onboarding: paso 5 opcional "¿Tienes marcas personales?" con botón "Saltar" y
+  "Crear mi plan →" en paralelo; si se salta, el perfil queda sin marcas
+- Payload LLM: marcas formateadas como "MM:SS" en athleteProfile.pb5k / pb10k /
+  pbHalfMarathon / pbMarathon — el LLM puede usarlas para calibrar intensidad y pace
+- Próximo: calcular paces VDOT desde estas marcas en el generador Dart
+
 ## [AI Coach] — Retroalimentación de ediciones manuales
 - AthleteSession: nuevo campo originalDate (String?) — se fija al crear la
   sesión en createSession(), nunca se modifica en updateSession()
