@@ -46,6 +46,8 @@ import 'package:running_laps/core/services/session_recovery_service.dart';
 import 'package:running_laps/core/services/training_load_service.dart';
 import 'package:running_laps/features/athlete/data/progress_repository.dart';
 import 'package:running_laps/features/profile/data/zones_repository.dart';
+import '../../templates/data/athlete_session_mapper.dart';
+import 'pre_execution_screen.dart';
 
 
 // ===============================================================
@@ -154,7 +156,6 @@ class _TrainingStartViewState extends State<TrainingStartView>
   bool _ignoreSession = false;
   AthleteSession? _todaySession;
   bool _loadingTodaySession = true;
-  bool _showQuickSession = false;
 
   // --- Configuración por tipo ---
   final _cfgDistKmCtrl   = TextEditingController(); // rodaje/largo: dist objetivo km
@@ -1971,11 +1972,15 @@ class _TrainingStartViewState extends State<TrainingStartView>
   }
 
   void _launchPlannedSession(AthleteSession session) {
-    setState(() {
-      _plannedSession = session;
-      _selectedTrainingType = 'libre';
-    });
-    _showCountdown();
+    final workoutSession = mapAthleteSessionToWorkout(session);
+    if (workoutSession != null) {
+      Navigator.of(context).push(AppRoute(
+        page: PreExecutionScreen(
+          session: workoutSession,
+          athleteSession: session,
+        ),
+      ));
+    }
   }
 
   Widget _buildNoSessionOptions() {
@@ -2006,7 +2011,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
           OutlinedButton.icon(
             icon: const Icon(Icons.edit_calendar_outlined),
             label: const Text('Planificar sesión de hoy'),
-            onPressed: () {
+            onPressed: () async {
               final today = DateTime.now();
               final dateStr =
                   '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
@@ -2017,6 +2022,10 @@ class _TrainingStartViewState extends State<TrainingStartView>
                   session: null,
                 ),
               );
+              // Workaround: recarga por si el usuario creó la sesión y volvió.
+              // Pendiente mejorar con callback real desde WorkoutEditorScreen al guardar.
+              await Future.delayed(const Duration(seconds: 1));
+              if (mounted) _loadTodaySession();
             },
             style: OutlinedButton.styleFrom(
               minimumSize: const Size(double.infinity, 52),
@@ -2024,23 +2033,6 @@ class _TrainingStartViewState extends State<TrainingStartView>
               side: BorderSide(color: AppColors.brand.withValues(alpha: 0.4)),
             ),
           ),
-          const SizedBox(height: AppSpacing.m),
-
-          OutlinedButton.icon(
-            icon: const Icon(Icons.tune_outlined),
-            label: const Text('Sesión rápida'),
-            onPressed: () => setState(() => _showQuickSession = !_showQuickSession),
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 52),
-              foregroundColor: AppColors.textSecondary(context),
-              side: BorderSide(color: AppColors.borderOf(context)),
-            ),
-          ),
-
-          if (_showQuickSession) ...[
-            const SizedBox(height: AppSpacing.l),
-            _buildTypeSelector(),
-          ],
         ],
       ),
     );

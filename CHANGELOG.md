@@ -1,5 +1,18 @@
 # CHANGELOG — Running Laps
 
+## [Fix] — FAB: _launchPlannedSession usa flujo correcto
+- _launchPlannedSession ahora usa
+  mapAthleteSessionToWorkout + PreExecutionScreen,
+  igual que el calendario (antes usaba _startContinuousRun,
+  ignorando toda la estructura de la sesión planificada)
+- _buildNoSessionOptions simplificado a 2 opciones:
+  "Correr libre" y "Planificar sesión de hoy"
+  (eliminada "Sesión rápida" redundante)
+- Recarga de sesión tras planificar: workaround con
+  Future.delayed(1s) — pendiente callback real desde
+  WorkoutEditorScreen al guardar
+- Rama: feat/fab-flow-redesign
+
 ## [UX] — Rediseño flujo FAB de inicio de entrenamiento
 - FAB detecta automáticamente sesión planificada para hoy
   (getSessionsForDate, sin necesitar pasar athleteSessionId)
