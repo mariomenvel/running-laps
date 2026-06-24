@@ -1451,7 +1451,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
       context,
       AppRoute(
         page: TrainingSessionView(
-          gpsActivo: true,
+          gpsActivo: _vm.gpsOn,
           distancia: "Libre",
           descanso:  "0",
           fcMax:     _fcMax,
@@ -1727,12 +1727,10 @@ class _TrainingStartViewState extends State<TrainingStartView>
           else
             _buildNoSessionOptions(),
 
-          _buildSectionDivider(),
-          _buildSensors(),
-          _buildSectionDivider(),
           _buildAlerts(),
           const SizedBox(height: AppSpacing.xl),
-          _buildStartButtonNew(),
+          if (_todaySession == null || _ignoreSession)
+            _buildStartButtonNew(),
           const SizedBox(height: AppSpacing.xl),
         ],
       ),
@@ -2005,6 +2003,15 @@ class _TrainingStartViewState extends State<TrainingStartView>
               backgroundColor: AppColors.brand,
               minimumSize: const Size(double.infinity, 52),
             ),
+          ),
+          const SizedBox(height: AppSpacing.s),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface2Of(context),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.borderOf(context)),
+            ),
+            child: _buildSensors(),
           ),
           const SizedBox(height: AppSpacing.m),
 

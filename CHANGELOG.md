@@ -1,5 +1,16 @@
 # CHANGELOG — Running Laps
 
+## [UX] — Toggles GPS/pulsómetro junto a "Correr libre"
+- _buildSensors() movido a _buildNoSessionOptions(),
+  debajo de "Correr libre" — ya no aparece en todas
+  las ramas del FAB (solo relevante para correr libre)
+- Fix: _startContinuousRun() usaba gpsActivo: true
+  hardcodeado ignorando el toggle del usuario —
+  ahora usa _vm.gpsOn
+- _buildStartButtonNew() (play circular) oculto
+  cuando hay sesión planificada para hoy (redundante
+  con el botón "Empezar sesión" de la card)
+
 ## [Fix] — FAB: navegar a PreExecutionScreen tras planificar sesión de hoy
 - AthleteSessionShellParams: nuevo campo onSaved
   (callback con la AthleteSession recién creada)
