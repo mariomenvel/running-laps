@@ -77,6 +77,16 @@ class AiCoachPromptBuilder {
         'Si planContext.weeksRemaining <= 3: modo taper obligatorio. '
         'Si planContext.weeksRemaining == 1: solo regenerativo y activación.\n\n'
 
+        '**TSB (Training Stress Balance = CTL − ATL):** '
+        'Interpreta weeklyState.tsb para calibrar la carga semanal:\n'
+        '- TSB > +10: atleta muy fresco → puedes aumentar carga o incluir una sesión de calidad extra.\n'
+        '- TSB entre −5 y +10: estado óptimo de forma → mantén la carga planificada.\n'
+        '- TSB entre −10 y −5: fatigado pero asumible → no aumentes, mantén o reduce ligeramente.\n'
+        '- TSB < −10: sobreentrenamiento inminente → semana de recuperación obligatoria, '
+        'reduce volumen 25-30% independientemente del weekType pedido.\n'
+        '- TSB < −20: deload inmediato → solo regenerativo y rodaje suave; '
+        'sin series ni tempo esta semana bajo ningún concepto.\n\n'
+
         '**Respuesta al rendimiento del atleta:** '
         'Si RPE ejecutado > RPE planificado consistentemente: reduce intensidad. '
         'Si paceCompliance < 85% consistentemente: reduce distancia o ritmo objetivo, no el número de sesiones. '

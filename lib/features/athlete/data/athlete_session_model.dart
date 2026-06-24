@@ -51,6 +51,7 @@ class SessionBlock {
   final int? targetPaceMaxSec;  // rango pace máximo — segundos
   final double? targetRpe;      // 1.0–10.0
   final int? targetZone;        // 1–5
+  final int? targetFcBpm;       // FC objetivo en bpm (punto medio de la zona)
   final Map<String, dynamic>? alertsMap;
 
   const SessionBlock({
@@ -68,6 +69,7 @@ class SessionBlock {
     this.targetPaceMaxSec,
     this.targetRpe,
     this.targetZone,
+    this.targetFcBpm,
     this.alertsMap,
   });
 
@@ -87,6 +89,7 @@ class SessionBlock {
       targetPaceMaxSec: map['targetPaceMaxSec'] as int?,
       targetRpe:        (map['targetRpe'] as num?)?.toDouble(),
       targetZone:       map['targetZone'] as int?,
+      targetFcBpm:      map['targetFcBpm'] as int?,
       alertsMap:        map['alerts'] != null
                           ? Map<String, dynamic>.from(map['alerts'] as Map)
                           : null,
@@ -109,6 +112,7 @@ class SessionBlock {
       if (targetPaceMaxSec != null) 'targetPaceMaxSec': targetPaceMaxSec,
       if (targetRpe        != null) 'targetRpe':        targetRpe,
       if (targetZone       != null) 'targetZone':       targetZone,
+      if (targetFcBpm      != null) 'targetFcBpm':      targetFcBpm,
       if (alertsMap        != null) 'alerts':           alertsMap,
     };
   }
@@ -128,6 +132,7 @@ class SessionBlock {
     Object? targetPaceMaxSec = _sentinel,
     Object? targetRpe        = _sentinel,
     Object? targetZone       = _sentinel,
+    Object? targetFcBpm      = _sentinel,
     Object? alertsMap        = _sentinel,
   }) {
     return SessionBlock(
@@ -145,6 +150,7 @@ class SessionBlock {
       targetPaceMaxSec: targetPaceMaxSec == _sentinel ? this.targetPaceMaxSec : targetPaceMaxSec as int?,
       targetRpe:        targetRpe        == _sentinel ? this.targetRpe        : targetRpe        as double?,
       targetZone:       targetZone       == _sentinel ? this.targetZone       : targetZone       as int?,
+      targetFcBpm:      targetFcBpm      == _sentinel ? this.targetFcBpm      : targetFcBpm      as int?,
       alertsMap:        alertsMap        == _sentinel ? this.alertsMap        : alertsMap        as Map<String, dynamic>?,
     );
   }

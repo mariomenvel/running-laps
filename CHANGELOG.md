@@ -1,5 +1,19 @@
 # CHANGELOG — Running Laps
 
+## [AI Coach] — FC en zonas + TSB al LLM + path lesión
+- SessionBlock: nuevo campo targetFcBpm (int?) — punto medio de la zona
+  en bpm calculado desde fcMax del perfil (Z1=52%, Z2=65%, Z3=75%, Z4=85%, Z5=95%)
+- Todos los helpers del generador propagamos fcBpm: _buildBaseRunBlocks,
+  _buildRepeatedSeriesBlocks, _buildFartlekBlocks, _buildTempoBlocks,
+  _buildTestBlocks, _buildProgressiveLongRunBlocks, _buildMixedSeriesBlocks
+- Prompt: sección TSB con umbrales explícitos (+10 fresco, −5/+10 óptimo,
+  −10 fatigado, −20 deload inmediato). TSB ya estaba calculado y persistido
+  en AiCoachWeeklyState — ahora el LLM tiene instrucciones para interpretarlo
+- Generador: guard de seguridad para lesión/recuperación — cualquier sesión
+  intensa (quality category) se redirige automáticamente a _buildBaseRunBlocks
+  con rpe≤5.5, km≤6, min≤40 y nota explicativa cuando hay lesión o adjustment
+  es recover/reduce. effectiveRpe/effectiveZone aplicados en el resto de casos
+
 ## [AI Coach] — Protocolo de evaluación inicial
 - coachSignals: nuevos campos isNewAthlete, hasNoPbs, weekOfPlan,
   needsBaselineAssessment (true si sin marcas y weekOfPlan ≤ 3)

@@ -331,6 +331,54 @@ class AiCoachSessionGenerator {
     int pMin(int secPerKm) => secPerKm ~/ 60;
     int pSec(int secPerKm) => secPerKm % 60;
 
+    // FC objetivo por zona basada en fcMax del perfil
+    // Límites: Z1 0-60%, Z2 60-70%, Z3 70-80%, Z4 80-90%, Z5 90%+
+    // Punto medio de cada zona como target bpm
+    final profileFcMax = profile?.fcMax;
+    int? fcForZone(int targetZone) {
+      if (profileFcMax == null) return null;
+      switch (targetZone) {
+        case 1: return (profileFcMax * 0.52).round();
+        case 2: return (profileFcMax * 0.65).round();
+        case 3: return (profileFcMax * 0.75).round();
+        case 4: return (profileFcMax * 0.85).round();
+        case 5: return (profileFcMax * 0.95).round();
+        default: return null;
+      }
+    }
+
+    // Guard lesión/recuperación: redirige sesiones intensas a rodaje suave
+    final isRecoveryAdjustment =
+        decision.adjustment == AiCoachAdjustmentType.recover ||
+        decision.adjustment == AiCoachAdjustmentType.reduce;
+    final isInjuryContext = decision.restrictions.any((r) {
+      final l = r.toLowerCase();
+      return l.contains('lesion') ||
+          l.contains('lesión') ||
+          l.contains('dolor') ||
+          l.contains('molestia');
+    });
+
+    if ((isInjuryContext || isRecoveryAdjustment) &&
+        _isQualityCategory(category)) {
+      return _buildBaseRunBlocks(
+        sessionIndex: sessionIndex,
+        targetKm: math.min(targetKm, 6.0),
+        targetMinutes: math.min(targetMinutes, 40),
+        rpe: math.min(rpe, 5.5),
+        zone: 2,
+        fcBpm: fcForZone(2),
+        notes: isInjuryContext
+            ? 'Rodaje suave por precaución. '
+              'Escucha tu cuerpo — para si hay molestias.'
+            : 'Rodaje de recuperación activa. '
+              'Mantén el esfuerzo bajo (Z2 máx).',
+      );
+    }
+
+    final effectiveRpe = isRecoveryAdjustment ? math.min(rpe, 6.0) : rpe;
+    final effectiveZone = isRecoveryAdjustment ? math.min(zone, 3) : zone;
+
     switch (category) {
       case 'series_cortas':
         final repDistance = complexityTier >= 2 ? 500 : 400;
@@ -340,8 +388,9 @@ class AiCoachSessionGenerator {
           reps: math.max(4, reps),
           distanceM: repDistance,
           restSeconds: complexityTier <= 1 ? 70 : 55,
-          rpe: rpe,
-          zone: zone,
+          rpe: effectiveRpe,
+          zone: effectiveZone,
+          fcBpm: fcForZone(effectiveZone),
           paceMinMin: paces != null ? pMin(paces.z5MinSecPerKm) : 4,
           paceMinSec: paces != null ? pSec(paces.z5MinSecPerKm) : 10,
           paceMaxMin: paces != null ? pMin(paces.z5MaxSecPerKm) : 4,
@@ -356,8 +405,9 @@ class AiCoachSessionGenerator {
           reps: math.max(3, reps),
           distanceM: repDistance,
           restSeconds: complexityTier == 0 ? 105 : 85,
-          rpe: rpe,
-          zone: zone,
+          rpe: effectiveRpe,
+          zone: effectiveZone,
+          fcBpm: fcForZone(effectiveZone),
           paceMinMin: paces != null ? pMin(paces.z4MinSecPerKm) : 4,
           paceMinSec: paces != null ? pSec(paces.z4MinSecPerKm) : 35,
           paceMaxMin: paces != null ? pMin(paces.z4MaxSecPerKm) : 5,
@@ -375,8 +425,9 @@ class AiCoachSessionGenerator {
           distanceM: hillDist,
           roundDistance: false,
           restSeconds: hillRest,
-          rpe: math.min(8.5, rpe + 0.5),
+          rpe: math.min(8.5, effectiveRpe + 0.5),
           zone: 4,
+          fcBpm: fcForZone(4),
           // Sin pace en cuestas — el ritmo depende del desnivel
           notes: target.notes ??
               'Cuesta constante, esfuerzo sostenido, '
@@ -386,8 +437,9 @@ class AiCoachSessionGenerator {
         return _buildMixedSeriesBlocks(
           sessionIndex: sessionIndex,
           targetKm: targetKm,
-          rpe: rpe,
+          rpe: effectiveRpe,
           zone: 4,
+          fcBpm: fcForZone(4),
           complexityTier: complexityTier,
           notes: target.notes,
         );
@@ -397,6 +449,7 @@ class AiCoachSessionGenerator {
           totalMinutes: math.max(20, targetMinutes),
           complexityTier: complexityTier,
           paces: paces,
+          profileFcMax: profileFcMax,
           notes: target.notes,
         );
       case 'tempo':
@@ -405,6 +458,7 @@ class AiCoachSessionGenerator {
           totalMinutes: math.max(20, targetMinutes),
           complexityTier: complexityTier,
           paces: paces,
+          profileFcMax: profileFcMax,
           notes: target.notes,
         );
       case 'rodaje_base':
@@ -417,6 +471,7 @@ class AiCoachSessionGenerator {
             sessionIndex: sessionIndex,
             totalMinutes: math.max(50, targetMinutes),
             complexityTier: complexityTier,
+            profileFcMax: profileFcMax,
             notes: target.notes,
           );
         }
@@ -424,8 +479,9 @@ class AiCoachSessionGenerator {
           sessionIndex: sessionIndex,
           targetKm: targetKm,
           targetMinutes: targetMinutes,
-          rpe: rpe,
-          zone: zone,
+          rpe: effectiveRpe,
+          zone: effectiveZone,
+          fcBpm: fcForZone(effectiveZone),
           notes: target.notes,
         );
       case 'regenerativo':
@@ -435,8 +491,9 @@ class AiCoachSessionGenerator {
             order: 0,
             type: SessionBlockType.continuousTime,
             durationMinutes: math.max(25, targetMinutes),
-            targetRpe: math.min(4.0, rpe),
+            targetRpe: math.min(4.0, effectiveRpe),
             targetZone: 1,
+            targetFcBpm: fcForZone(1),
             notes: target.notes ?? 'Muy suave, sensación de soltura',
           ),
         ];
@@ -455,6 +512,7 @@ class AiCoachSessionGenerator {
         return _buildTestBlocks(
           sessionIndex: sessionIndex,
           targetKm: targetKm,
+          profileFcMax: profileFcMax,
           notes: target.notes,
         );
       case 'evaluacion':
@@ -462,11 +520,12 @@ class AiCoachSessionGenerator {
           sessionIndex: sessionIndex,
           targetKm: targetKm,
           targetMinutes: targetMinutes,
-          rpe: rpe,
-          zone: zone,
+          rpe: effectiveRpe,
+          zone: effectiveZone,
+          fcBpm: fcForZone(effectiveZone),
           notes: target.notes ??
               'Rodaje de evaluación — corre por sensaciones '
-              '(RPE ${rpe.toStringAsFixed(0)}), sin mirar el ritmo. '
+              '(RPE ${effectiveRpe.toStringAsFixed(0)}), sin mirar el ritmo. '
               'El objetivo es conocer tu estado de forma actual.',
         );
       case 'rodaje_largo':
@@ -475,6 +534,7 @@ class AiCoachSessionGenerator {
             sessionIndex: sessionIndex,
             totalMinutes: math.max(50, targetMinutes),
             complexityTier: complexityTier,
+            profileFcMax: profileFcMax,
             notes: target.notes,
           );
         }
@@ -482,8 +542,9 @@ class AiCoachSessionGenerator {
           sessionIndex: sessionIndex,
           targetKm: targetKm,
           targetMinutes: math.max(50, targetMinutes),
-          rpe: rpe,
-          zone: zone,
+          rpe: effectiveRpe,
+          zone: effectiveZone,
+          fcBpm: fcForZone(effectiveZone),
           notes: target.notes,
         );
       case 'series_medias':
@@ -500,8 +561,9 @@ class AiCoachSessionGenerator {
           reps: repsMed,
           distanceM: repDistanceMed,
           restSeconds: restSecondsMed,
-          rpe: rpe,
-          zone: zone,
+          rpe: effectiveRpe,
+          zone: effectiveZone,
+          fcBpm: fcForZone(effectiveZone),
           paceMinMin: 4,
           paceMinSec: paceMinSecMed,
           paceMaxMin: 4,
@@ -516,8 +578,9 @@ class AiCoachSessionGenerator {
             type: SessionBlockType.continuousDistance,
             distanceM: _roundRunDistance(
                 math.max(5000, (targetKm * 1000).round())),
-            targetRpe: rpe,
-            targetZone: zone,
+            targetRpe: effectiveRpe,
+            targetZone: effectiveZone,
+            targetFcBpm: fcForZone(effectiveZone),
             notes: '${target.notes ?? 'Rodaje controlado'} · carga estimada ${targetLoad.toStringAsFixed(0)}',
           ),
         ];
@@ -546,6 +609,7 @@ class AiCoachSessionGenerator {
     required int targetMinutes,
     required double rpe,
     required int zone,
+    int? fcBpm,
     String? notes,
   }) {
     return [
@@ -562,6 +626,7 @@ class AiCoachSessionGenerator {
             : null,
         targetRpe: rpe,
         targetZone: zone,
+        targetFcBpm: fcBpm,
         notes: notes ?? 'Rodaje controlado',
       ),
     ];
@@ -571,13 +636,25 @@ class AiCoachSessionGenerator {
     required int sessionIndex,
     required int totalMinutes,
     required int complexityTier,
+    int? profileFcMax,
     String? notes,
   }) {
+    int? fcZ(int z) {
+      if (profileFcMax == null) return null;
+      switch (z) {
+        case 1: return (profileFcMax * 0.52).round();
+        case 2: return (profileFcMax * 0.65).round();
+        case 3: return (profileFcMax * 0.75).round();
+        default: return null;
+      }
+    }
+
     final baseA = complexityTier >= 2 ? 0.45 : 0.55;
     final baseB = complexityTier >= 2 ? 0.35 : 0.30;
     final blockA = (totalMinutes * baseA).round();
     final blockB = (totalMinutes * baseB).round();
     final blockC = math.max(complexityTier >= 2 ? 10 : 8, totalMinutes - blockA - blockB);
+    final finalZone = complexityTier >= 2 ? 3 : 2;
     return [
       SessionBlock(
         id: 'block_${sessionIndex}_1',
@@ -586,6 +663,7 @@ class AiCoachSessionGenerator {
         durationMinutes: blockA,
         targetRpe: 5.0,
         targetZone: 2,
+        targetFcBpm: fcZ(2),
         notes: notes ?? 'Inicio cómodo, respiración controlada',
       ),
       SessionBlock(
@@ -595,6 +673,7 @@ class AiCoachSessionGenerator {
         durationMinutes: blockB,
         targetRpe: 5.8,
         targetZone: 2,
+        targetFcBpm: fcZ(2),
         notes: 'Parte media sostenida',
       ),
       SessionBlock(
@@ -603,7 +682,8 @@ class AiCoachSessionGenerator {
         type: SessionBlockType.continuousTime,
         durationMinutes: blockC,
         targetRpe: 6.4,
-        targetZone: complexityTier >= 2 ? 3 : 2,
+        targetZone: finalZone,
+        targetFcBpm: fcZ(finalZone),
         notes: complexityTier >= 2
             ? 'Final progresivo en ritmo controlado de umbral bajo'
             : 'Final progresivo sin entrar en fatiga excesiva',
@@ -704,6 +784,7 @@ class AiCoachSessionGenerator {
     required int restSeconds,
     required double rpe,
     required int zone,
+    int? fcBpm,
     bool roundDistance = true,
     int? paceMinMin,
     int? paceMinSec,
@@ -723,6 +804,7 @@ class AiCoachSessionGenerator {
         restSeconds: restSeconds,
         targetRpe: rpe,
         targetZone: zone,
+        targetFcBpm: fcBpm,
         targetPaceMinMin: paceMinMin,
         targetPaceMinSec: paceMinSec,
         targetPaceMaxMin: paceMaxMin,
@@ -737,6 +819,7 @@ class AiCoachSessionGenerator {
     required double targetKm,
     required double rpe,
     required int zone,
+    int? fcBpm,
     required int complexityTier,
     String? notes,
   }) {
@@ -758,6 +841,7 @@ class AiCoachSessionGenerator {
         restSeconds: index == distances.length - 1 ? 0 : (complexityTier >= 2 ? 75 : 90),
         targetRpe: math.min(8.3, rpe + (index * 0.1)),
         targetZone: zone,
+        targetFcBpm: fcBpm,
         targetPaceMinMin: 4,
         targetPaceMinSec: 20,
         targetPaceMaxMin: 5,
@@ -774,8 +858,18 @@ class AiCoachSessionGenerator {
     required int totalMinutes,
     required int complexityTier,
     TrainingPaces? paces,
+    int? profileFcMax,
     String? notes,
   }) {
+    int? fcZ(int z) {
+      if (profileFcMax == null) return null;
+      switch (z) {
+        case 1: return (profileFcMax * 0.52).round();
+        case 3: return (profileFcMax * 0.75).round();
+        default: return null;
+      }
+    }
+
     final workMinutes = complexityTier >= 2 ? 4 : (totalMinutes >= 40 ? 4 : 3);
     final reps = complexityTier >= 2 ? 6 : (totalMinutes >= 40 ? 5 : 4);
     final recoveryMinutes = (workMinutes / 2).ceil(); // 2 min típicamente
@@ -793,6 +887,7 @@ class AiCoachSessionGenerator {
           durationMinutes: workMinutes,
           targetRpe: complexityTier >= 2 ? 7.2 : 7.0,
           targetZone: 3,
+          targetFcBpm: fcZ(3),
           targetPaceMinMin: paces != null ? paces.z3MinSecPerKm ~/ 60 : null,
           targetPaceMinSec: paces != null ? paces.z3MinSecPerKm % 60 : null,
           targetPaceMaxMin: paces != null ? paces.z3MaxSecPerKm ~/ 60 : null,
@@ -812,6 +907,7 @@ class AiCoachSessionGenerator {
             durationMinutes: recoveryMinutes,
             targetRpe: 4.0,
             targetZone: 1,
+            targetFcBpm: fcZ(1),
             notes: i == 0 ? 'Trote suave de recuperación' : null,
           ),
         );
@@ -827,8 +923,11 @@ class AiCoachSessionGenerator {
     required int totalMinutes,
     required int complexityTier,
     TrainingPaces? paces,
+    int? profileFcMax,
     String? notes,
   }) {
+    final fcZ3 = profileFcMax != null ? (profileFcMax * 0.75).round() : null;
+
     // Pace base Z3: personalizado si hay marcas, hardcoded si no
     final z3Min = paces?.z3MinSecPerKm;
     final z3Max = paces?.z3MaxSecPerKm;
@@ -854,6 +953,7 @@ class AiCoachSessionGenerator {
           durationMinutes: 10,
           targetRpe: 6.8,
           targetZone: 3,
+          targetFcBpm: fcZ3,
           targetPaceMinMin: pMin(minA) ?? 4,
           targetPaceMinSec: pSec(minA) ?? 55,
           targetPaceMaxMin: pMin(maxA) ?? 5,
@@ -867,6 +967,7 @@ class AiCoachSessionGenerator {
           durationMinutes: 8,
           targetRpe: 7.2,
           targetZone: 3,
+          targetFcBpm: fcZ3,
           targetPaceMinMin: pMin(minB) ?? 4,
           targetPaceMinSec: pSec(minB) ?? 45,
           targetPaceMaxMin: pMin(maxB) ?? 5,
@@ -880,6 +981,7 @@ class AiCoachSessionGenerator {
           durationMinutes: 8,
           targetRpe: 7.4,
           targetZone: 3,
+          targetFcBpm: fcZ3,
           targetPaceMinMin: pMin(minC) ?? 4,
           targetPaceMinSec: pSec(minC) ?? 40,
           targetPaceMaxMin: pMin(maxC) ?? 5,
@@ -898,6 +1000,7 @@ class AiCoachSessionGenerator {
           durationMinutes: 12,
           targetRpe: 6.8,
           targetZone: 3,
+          targetFcBpm: fcZ3,
           targetPaceMinMin: pMin(z3Min != null ? (z3Min * 1.02).round() : null) ?? 4,
           targetPaceMinSec: pSec(z3Min != null ? (z3Min * 1.02).round() : null) ?? 50,
           targetPaceMaxMin: pMin(z3Max) ?? 5,
@@ -911,6 +1014,7 @@ class AiCoachSessionGenerator {
           durationMinutes: 10,
           targetRpe: 7.1,
           targetZone: 3,
+          targetFcBpm: fcZ3,
           targetPaceMinMin: pMin(z3Min) ?? 4,
           targetPaceMinSec: pSec(z3Min) ?? 45,
           targetPaceMaxMin: pMin(z3Max != null ? (z3Max * 0.97).round() : null) ?? 5,
@@ -928,6 +1032,7 @@ class AiCoachSessionGenerator {
         durationMinutes: math.max(20, totalMinutes),
         targetRpe: 7,
         targetZone: 3,
+        targetFcBpm: fcZ3,
         targetPaceMinMin: pMin(z3Min) ?? 4,
         targetPaceMinSec: pSec(z3Min) ?? 45,
         targetPaceMaxMin: pMin(z3Max) ?? 5,
@@ -940,10 +1045,14 @@ class AiCoachSessionGenerator {
   List<SessionBlock> _buildTestBlocks({
     required int sessionIndex,
     required double targetKm,
+    int? profileFcMax,
     String? notes,
   }) {
     final testDistance = targetKm >= 5 ? 5000 : 3000;
     final label = testDistance == 5000 ? '5K' : '3K';
+    final fcZ3 = profileFcMax != null ? (profileFcMax * 0.75).round() : null;
+    final fcZ4 = profileFcMax != null ? (profileFcMax * 0.85).round() : null;
+    final fcZ1 = profileFcMax != null ? (profileFcMax * 0.52).round() : null;
 
     return [
       SessionBlock(
@@ -953,6 +1062,7 @@ class AiCoachSessionGenerator {
         durationMinutes: 5,
         targetRpe: 6.5,
         targetZone: 3,
+        targetFcBpm: fcZ3,
         notes: '2-3 progresivos de 100m para activar. '
             'Último minuto a ritmo de test.',
       ),
@@ -963,6 +1073,7 @@ class AiCoachSessionGenerator {
         distanceM: testDistance,
         targetRpe: 8.5,
         targetZone: 4,
+        targetFcBpm: fcZ4,
         notes: notes ??
             'Test de $label — esfuerzo máximo sostenible y uniforme. '
             'No salgas demasiado rápido. '
@@ -976,6 +1087,7 @@ class AiCoachSessionGenerator {
         durationMinutes: 10,
         targetRpe: 3.0,
         targetZone: 1,
+        targetFcBpm: fcZ1,
         notes: 'Trote muy suave. Tómate el tiempo para '
             'recuperarte bien después del test.',
       ),
