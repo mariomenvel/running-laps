@@ -1,5 +1,13 @@
 # CHANGELOG — Running Laps
 
+## [UI] — WorkoutTypeSelector: grid → chips horizontales
+- Sustituido GridView.count (6 tarjetas cuadradas) por Wrap de chips pill (5 tipos)
+- Eliminada "Libre" como tipo seleccionable en el editor (sigue existiendo en el
+  enum para datos históricos, pero no aparece en la UI)
+- Tipos disponibles: Continuo / Series / Cuestas / Competición / Fartlek
+- `WorkoutType.competition` es el valor del enum real (no `race`); ajustado respecto
+  al enunciado original
+
 ## [UX] — Toggles GPS/pulsómetro junto a "Correr libre"
 - _buildSensors() movido a _buildNoSessionOptions(),
   debajo de "Correr libre" — ya no aparece en todas
