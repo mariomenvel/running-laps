@@ -1,5 +1,16 @@
 # CHANGELOG — Running Laps
 
+## [AI Coach] — Reset semanal automático del chat (Cloud Function)
+- Scheduled Function resetWeeklyChatUsage: cada lunes 00:05 (Europe/Madrid)
+  resetea messagesUsed a 0 y actualiza periodStart/periodEnd para todos los
+  usuarios con plan athlete_chat_weekly y messagesUsed > 0
+- Más robusto que el reset en cliente (que dependía de que el usuario abriera
+  la app esa semana); ahora el reset ocurre aunque el usuario no abra la app
+- Batches de 500 documentos para escalar sin límite de usuarios
+- firestore.indexes.json: índice collectionGroup "settings" por plan +
+  messagesUsed, necesario para la query de la función
+- firebase.json: añadida referencia a firestore.indexes.json
+
 ## [AI Coach] — Progresión intra-sesión semana a semana
 - AiCoachWorkoutTarget: targetReps (int?) y targetSegmentDistanceM (int?) —
   el LLM especifica reps y metros por rep directamente en la decisión semanal
