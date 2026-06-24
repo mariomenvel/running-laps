@@ -189,6 +189,13 @@ class AiCoachContextBuilder {
       'hasNoPbs': hasNoPbs,
       'weekOfPlan': weekOfPlan,
       'needsBaselineAssessment': hasNoPbs && weekOfPlan <= 3,
+      'lastSessionByCategory': _buildLastSessionByCategory(
+        recentTrainings: recentTrainings,
+        trainingById: {
+          for (final t in trainings)
+            if (t.id != null) t.id!: t,
+        },
+      ),
       ..._buildAthleteStyleSignals(trainings.take(20).toList()),
     };
 
@@ -630,6 +637,46 @@ class AiCoachContextBuilder {
         category == 'series_cuestas' ||
         category == 'tempo' ||
         category == 'fartlek';
+  }
+
+  bool _isSeriesCategory(String category) =>
+      category.startsWith('series_') ||
+      category == 'fartlek' ||
+      category == 'tempo';
+
+  /// Construye un mapa con los datos de la última sesión ejecutada
+  /// para cada categoría de series/calidad, para guiar la progresión
+  /// semana a semana.
+  Map<String, Map<String, dynamic>> _buildLastSessionByCategory({
+    required List<AiCoachTrainingSummary> recentTrainings,
+    required Map<String, Entrenamiento> trainingById,
+  }) {
+    final result = <String, Map<String, dynamic>>{};
+    for (final summary in recentTrainings) {
+      final category = summary.category;
+      if (!_isSeriesCategory(category)) continue;
+      if (result.containsKey(category)) continue; // ya tenemos el más reciente
+
+      final raw = trainingById[summary.trainingId];
+      final seriesCount = raw?.series.length ?? 0;
+      final avgDistM = seriesCount > 0
+          ? (raw!.series.map((s) => s.distanciaM).reduce((a, b) => a + b) /
+                  seriesCount)
+              .round()
+          : null;
+
+      result[category] = {
+        'date': summary.date.toIso8601String().substring(0, 10),
+        'totalKm': double.parse(summary.distanceKm.toStringAsFixed(2)),
+        if (seriesCount > 0) 'seriesCount': seriesCount,
+        if (avgDistM != null && avgDistM > 0) 'avgSeriesDistanceM': avgDistM,
+        if (summary.paceCompliancePercent != null)
+          'paceCompliance': summary.paceCompliancePercent!.round(),
+        if (summary.rpe != null)
+          'rpe': double.parse(summary.rpe!.toStringAsFixed(1)),
+      };
+    }
+    return result;
   }
 
   String _inferCategory(Entrenamiento training) {

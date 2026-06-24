@@ -901,6 +901,8 @@ class AiCoachWorkoutTarget {
   final double? targetDistanceKm;
   final int? targetDurationMinutes;
   final String? notes;
+  final int? targetReps;             // reps objetivo especificadas por el LLM
+  final int? targetSegmentDistanceM; // metros por rep especificados por el LLM
 
   const AiCoachWorkoutTarget({
     required this.category,
@@ -911,6 +913,8 @@ class AiCoachWorkoutTarget {
     this.targetDistanceKm,
     this.targetDurationMinutes,
     this.notes,
+    this.targetReps,
+    this.targetSegmentDistanceM,
   });
 
   factory AiCoachWorkoutTarget.fromMap(Map<String, dynamic> map) {
@@ -923,6 +927,8 @@ class AiCoachWorkoutTarget {
       targetDistanceKm: (map['targetDistanceKm'] as num?)?.toDouble(),
       targetDurationMinutes: (map['targetDurationMinutes'] as num?)?.toInt(),
       notes: map['notes'] as String?,
+      targetReps: (map['targetReps'] as num?)?.toInt(),
+      targetSegmentDistanceM: (map['targetSegmentDistanceM'] as num?)?.toInt(),
     );
   }
 
@@ -937,6 +943,9 @@ class AiCoachWorkoutTarget {
       if (targetDurationMinutes != null)
         'targetDurationMinutes': targetDurationMinutes,
       if (notes != null) 'notes': notes,
+      if (targetReps != null) 'targetReps': targetReps,
+      if (targetSegmentDistanceM != null)
+        'targetSegmentDistanceM': targetSegmentDistanceM,
     };
   }
 }

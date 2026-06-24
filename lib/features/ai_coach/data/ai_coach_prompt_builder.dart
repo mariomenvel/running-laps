@@ -98,6 +98,34 @@ class AiCoachPromptBuilder {
         'interpreta esto como señal de sus preferencias reales — '
         'ajusta futuras asignaciones de días en consecuencia.\n\n'
 
+        '## Progresión de sesiones de calidad\n\n'
+
+        'Para sesiones de series (series_cortas, series_largas, series_cuestas, series_mixtas), '
+        'SIEMPRE especifica targetReps y targetSegmentDistanceM en el workoutTarget. '
+        'El generador los usa directamente — si no los especificas usará valores por defecto '
+        'que no progresan semana a semana.\n\n'
+
+        'Usa coachSignals.lastSessionByCategory para ver los datos de la última sesión '
+        'del mismo tipo (seriesCount, avgSeriesDistanceM, paceCompliance, rpe). '
+        'Compara con la semana actual para decidir:\n\n'
+
+        '1. Si el atleta ejecutó bien (paceCompliance ≥ 90 O rpe ≤ targetRpe): '
+        'aumenta 1-2 reps manteniendo distancia, O aumenta 50-100m manteniendo reps. '
+        'Alterna semanas: impares más reps, pares más distancia.\n'
+        '2. Si completó justo (paceCompliance 75-89 O rpe ligeramente alto): '
+        'mantén exactamente los mismos parámetros.\n'
+        '3. Si no completó bien (paceCompliance < 75 O rpe muy alto O sesión no completada): '
+        'reduce 1-2 reps o baja 50-100m la distancia por rep.\n\n'
+
+        '**Rangos válidos por categoría:**\n'
+        '- series_cortas: 4-12 reps × 300-600m\n'
+        '- series_largas: 3-8 reps × 800-1600m\n'
+        '- series_cuestas: 4-12 reps × 100-300m\n'
+        '- series_mixtas: 3-8 reps (distancia variable)\n\n'
+
+        '**En semanas recovery/taper/deload:** reduce siempre 2-3 reps menos, '
+        'misma distancia. No progreses en estas semanas.\n\n'
+
         '## Protocolo para atletas nuevos sin marcas\n\n'
 
         'Si coachSignals.needsBaselineAssessment == true '
@@ -514,6 +542,19 @@ class AiCoachPromptBuilder {
             'targetDistanceKm': {'type': 'number'},
             'targetDurationMinutes': {'type': 'integer'},
             'notes': {'type': 'string'},
+            'targetReps': {
+              'type': 'integer',
+              'description':
+                  'Número de repeticiones para esta sesión. '
+                  'Úsalo en series_cortas, series_largas, '
+                  'series_cuestas, series_mixtas.',
+            },
+            'targetSegmentDistanceM': {
+              'type': 'integer',
+              'description':
+                  'Distancia en metros de cada repetición. '
+                  'Ej: 300, 400, 500, 600, 800, 1000, 1200.',
+            },
           },
         },
       },

@@ -381,8 +381,12 @@ class AiCoachSessionGenerator {
 
     switch (category) {
       case 'series_cortas':
-        final repDistance = complexityTier >= 2 ? 500 : 400;
-        final reps = (targetKm * 1000 / repDistance).round().clamp(4, 12);
+        final repDistance =
+            target.targetSegmentDistanceM ??
+            (complexityTier >= 2 ? 500 : 400);
+        final reps = (target.targetReps ??
+                (targetKm * 1000 / repDistance).round())
+            .clamp(4, 12);
         return _buildRepeatedSeriesBlocks(
           sessionIndex: sessionIndex,
           reps: math.max(4, reps),
@@ -398,8 +402,12 @@ class AiCoachSessionGenerator {
           notes: target.notes,
         );
       case 'series_largas':
-        final repDistance = complexityTier >= 2 ? 1200 : 1000;
-        final reps = (targetKm * 1000 / repDistance).round().clamp(3, 8);
+        final repDistance =
+            target.targetSegmentDistanceM ??
+            (complexityTier >= 2 ? 1200 : 1000);
+        final reps = (target.targetReps ??
+                (targetKm * 1000 / repDistance).round())
+            .clamp(3, 8);
         return _buildRepeatedSeriesBlocks(
           sessionIndex: sessionIndex,
           reps: math.max(3, reps),
@@ -415,9 +423,12 @@ class AiCoachSessionGenerator {
           notes: target.notes,
         );
       case 'series_cuestas':
-        // Adapta reps/distancia/descanso al complexityTier
-        final hillReps = complexityTier == 0 ? 6 : complexityTier == 1 ? 8 : 10;
-        final hillDist = complexityTier == 0 ? 150 : complexityTier == 1 ? 200 : 250;
+        final hillReps =
+            target.targetReps ??
+            (complexityTier == 0 ? 6 : complexityTier == 1 ? 8 : 10);
+        final hillDist =
+            target.targetSegmentDistanceM ??
+            (complexityTier == 0 ? 150 : complexityTier == 1 ? 200 : 250);
         final hillRest = complexityTier == 0 ? 90 : complexityTier == 1 ? 75 : 60;
         return _buildRepeatedSeriesBlocks(
           sessionIndex: sessionIndex,
@@ -550,9 +561,13 @@ class AiCoachSessionGenerator {
       case 'series_medias':
         // Series medias: 800-1000m en Z4 (VO2max)
         // Entre velocidad pura (cortas) y umbral (largas)
-        final repDistanceMed = complexityTier >= 2 ? 1000 : 800;
-        final repsMed =
-            math.max(4, (targetKm * 1000 / repDistanceMed).round());
+        final repDistanceMed =
+            target.targetSegmentDistanceM ??
+            (complexityTier >= 2 ? 1000 : 800);
+        final repsMed = math.max(
+            4,
+            target.targetReps ??
+                (targetKm * 1000 / repDistanceMed).round());
         final restSecondsMed = complexityTier >= 2 ? 80 : 90;
         final paceMinSecMed = complexityTier >= 2 ? 10 : 25;
         final paceMaxSecMed = complexityTier >= 2 ? 45 : 55;

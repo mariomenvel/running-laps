@@ -1,5 +1,17 @@
 # CHANGELOG — Running Laps
 
+## [AI Coach] — Progresión intra-sesión semana a semana
+- AiCoachWorkoutTarget: targetReps (int?) y targetSegmentDistanceM (int?) —
+  el LLM especifica reps y metros por rep directamente en la decisión semanal
+- coachSignals.lastSessionByCategory: datos de la última sesión ejecutada por
+  categoría (seriesCount, avgSeriesDistanceM, paceCompliance, rpe) construidos
+  cruzando AiCoachTrainingSummary con Entrenamiento para obtener reps reales
+- Schema JSON: targetReps y targetSegmentDistanceM añadidos con descripción
+- Prompt: sección explícita de progresión con umbrales paceCompliance (75/90%)
+  y regla de 3 niveles (progresar/mantener/reducir); rangos por categoría
+- Generador: series_cortas/largas/medias/cuestas respetan targetReps y
+  targetSegmentDistanceM del LLM con fallback al cálculo anterior
+
 ## [AI Coach] — Auto-guardar marcas desde entrenos
 - PbDetector (lib/features/ai_coach/data/pb_detector.dart): detecta marcas
   en 5K/10K/HM/M con tolerancia ±3% de distancia e interpolación lineal
