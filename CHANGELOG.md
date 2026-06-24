@@ -1,5 +1,16 @@
 # CHANGELOG — Running Laps
 
+## [UI] — RPE post-serie: RpeSlider + lógica corregida
+- _showRpePicker (training_session_view.dart):
+  sustituido IosPicker por RpeSlider — consistente
+  con editor de segmento y resumen de entreno
+- training_summary_screen.dart: _showRpe ahora oculta
+  el slider de RPE global cuando ya hay RPE capturado
+  por serie individual (antes solo lo ocultaba si
+  series.length > 1, lo cual era incorrecto para
+  entrenos de 1 serie donde el RPE ya se capturó)
+- Rama: feat/rpe-slider-shared
+
 ## [UI] — RpeSlider: componente compartido
 - Nuevo lib/core/widgets/rpe_slider.dart: slider
   con track de gradiente verde→ámbar→coral→rojo,

@@ -6,7 +6,7 @@ import 'dart:math' show pi;
 import 'dart:ui' show FontFeature;
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import '../../../core/widgets/modern_snackbar.dart';
-import '../../../core/widgets/ios_picker.dart';
+import '../../../core/widgets/rpe_slider.dart';
 import '../../../core/services/settings_service.dart';
 
 import '../data/serie.dart';
@@ -136,6 +136,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
   @override
   void initState() {
     super.initState();
+    debugPrint('[TrainingSession] initState START');
 
     WidgetsBinding.instance.addObserver(this);
 
@@ -181,10 +182,12 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     } else {
       _initializeNotificationService();
     }
+    debugPrint('[TrainingSession] initState END');
   }
 
   /// Inicializa el GPS service
   Future<void> _initializeGPS() async {
+    debugPrint('[TrainingSession] _initializeGPS START');
     _gpsService = GPSService();
 
     // Register the notification-button listener immediately after construction
@@ -192,6 +195,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     _gpsService!.notificationAction.addListener(_onNotificationAction);
 
     final bool initialized = await _gpsService!.initialize();
+    debugPrint('[TrainingSession] _initializeGPS END initialized=$initialized');
 
     if (initialized) {
       // "Libre" means a continuous free run; any integer distance is an interval.
@@ -251,6 +255,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
   /// The notification will show the serie number and the stopwatch elapsed
   /// time, updated every ~30 ms by [_startTimer].
   Future<void> _initializeNotificationService() async {
+    debugPrint('[TrainingSession] _initializeNotificationService START');
     _gpsService = GPSService();
     _gpsService!.notificationAction.addListener(_onNotificationAction);
 
@@ -262,6 +267,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
       mode: mode,
       serieNumber: widget.currentSeries ?? 1,
     );
+    debugPrint('[TrainingSession] _initializeNotificationService END');
   }
 
   void _onHrChanged() {
@@ -1658,10 +1664,6 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
 
 
   Future<void> _showRpePicker() async {
-    final double rpeInicial = _rpeSeleccionado;
-    final int initialItemIndex = ((_rpeSeleccionado - 1.0) * 2).round();
-
-
     // Capturar contexto antes de entrar al sheet
     final int serieNum = widget.currentSeries ?? 1;
     final Duration elapsed = _stopwatch.elapsed;
@@ -1679,7 +1681,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
         return WillPopScope(
           onWillPop: () async => false,
           child: Container(
-            height: 390,
+            height: 340,
             decoration: BoxDecoration(
               color: Theme.of(ctx).colorScheme.surface,
               borderRadius: const BorderRadius.only(
@@ -1759,27 +1761,17 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                 ),
                 const Divider(height: 1, thickness: 0.5),
 
-                // Picker
-                Expanded(
-                  child: IosPicker(
-                    itemCount: 19,
-                    initialItem: initialItemIndex,
-                    onChanged: (index) {
-                      _rpeSeleccionado = (index * 0.5) + 1.0;
-                    },
-                    textBuilder: (index) =>
-                        ((index * 0.5) + 1.0).toStringAsFixed(1),
-                    itemExtent: 32,
-                    width: double.infinity,
-                  ),
-                ),
-
-                // Nota informativa abajo
+                // Slider
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 30.0, top: 4),
-                  child: Text(
-                    "1 = Muy suave   ·   10 = Máximo esfuerzo",
-                    style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.35), fontSize: 12),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                  child: StatefulBuilder(
+                    builder: (ctx, setStateLocal) => RpeSlider(
+                      value: _rpeSeleccionado,
+                      onChanged: (v) {
+                        setStateLocal(() {});
+                        _rpeSeleccionado = v;
+                      },
+                    ),
                   ),
                 )
               ],

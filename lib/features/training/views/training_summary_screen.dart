@@ -57,7 +57,17 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
   late final int? _ritmoSecKm;
   late final double? _fcMedia;
 
-  bool get _showRpe => widget.entrenamiento.series.length == 1;
+  bool get _showRpe {
+    // Solo mostrar si el entreno no tiene series con RPE
+    // ya capturado individualmente (en ese caso el RPE
+    // del resumen sería redundante)
+    final series = widget.entrenamiento.series;
+    if (series.isEmpty) return true;
+    // Si alguna serie tiene RPE registrado, no mostrar
+    // el slider global (ya se capturó por serie)
+    final tieneRpePorSerie = series.any((s) => s.rpe > 0);
+    return !tieneRpePorSerie;
+  }
 
   WorkoutType _getSessionType() {
     final planned = widget.entrenamiento.plannedComparison;
