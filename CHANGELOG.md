@@ -1,5 +1,19 @@
 # CHANGELOG — Running Laps
 
+## [AI Coach — Pendiente] — Actualización automática de marcas
+- Cuando el sistema detecte un nuevo RP en 5K/10K/HM/M durante el resumen
+  de un entreno, actualizar automáticamente pb*Seconds en AiCoachProfile
+- Punto de integración: TrainingSummaryScreen o el servicio que detecta RPs,
+  tras confirmar el récord
+- Sin intervención manual del atleta
+
+## [AI Coach — Pendiente] — Test de FCmáx guiado
+- Protocolo de 20-30 min: rodaje progresivo hasta esfuerzo máximo con pulsómetro BLE
+- Resultado: fcMax real guardado en AiCoachProfile
+- Beneficio: zonas de FC calibradas individualmente en lugar de 220-edad
+- Dependencia: pulsómetro BLE conectado (HeartRateService)
+- Integrar en AiCoachSettingsView como opción avanzada
+
 ## [AI Coach] — Paces personalizados por VDOT
 - Nuevo VdotCalculator (fórmulas Daniels & Gilbert 1979): estima VDOT desde
   marcas del perfil, calcula paces por zona (Z1-Z5) vía Newton-Raphson
