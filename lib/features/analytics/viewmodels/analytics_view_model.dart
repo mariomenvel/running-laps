@@ -89,7 +89,7 @@ class AnalyticsViewModel {
     _computeVolume(filtered, range);
     _computeIntensity(filtered);
     _computeConsistency(allWorkouts, filtered, range);
-    _computeLoad(allWorkouts);
+    _computeLoad(allWorkouts, filtered, range);
     _computeTrainingStress(allWorkouts);
     _computeEfficiency(filtered);
   }
@@ -214,13 +214,27 @@ class AnalyticsViewModel {
   // ── Entrenamiento ──────────────────────────────────────────────────────────
 
   void _computeVolume(List<Entrenamiento> filtered, AnalyticsTimeRange range) {
+    // Rango anual: agrupar por mes (12 barras)
+    if (range == AnalyticsTimeRange.year) {
+      final byMonth = <DateTime, double>{};
+      for (final w in filtered) {
+        final key = DateTime(w.fecha.year, w.fecha.month);
+        byMonth[key] = (byMonth[key] ?? 0) + w.distanciaTotalM() / 1000.0;
+      }
+      final sorted = byMonth.keys.toList()..sort();
+      weeklyVolumes.value =
+          sorted.map((m) => AnalyticsWeeklyVolume(weekStart: m, km: byMonth[m]!)).toList();
+      return;
+    }
+
+    // Resto de rangos: agrupar por semana
     final now = DateTime.now();
     final weeksToShow = switch (range) {
       AnalyticsTimeRange.week        => 1,
       AnalyticsTimeRange.month       => 4,
       AnalyticsTimeRange.threeMonths => 12,
-      AnalyticsTimeRange.year        => 52,
       AnalyticsTimeRange.custom      => 8,
+      AnalyticsTimeRange.year        => 52, // nunca llega aquí
     };
 
     final weeks = <DateTime, double>{};
@@ -332,15 +346,18 @@ class AnalyticsViewModel {
 
   // ── Forma ──────────────────────────────────────────────────────────────────
 
-  void _computeLoad(List<Entrenamiento> all) {
+  void _computeLoad(
+    List<Entrenamiento> all,
+    List<Entrenamiento> filtered,
+    AnalyticsTimeRange range,
+  ) {
     final now = DateTime.now();
 
-    // Carga aguda: últimos 7 días
+    // Carga aguda y crónica (ACWR): siempre sobre todo el historial
     acuteLoad.value = all
         .where((w) => w.fecha.isAfter(now.subtract(const Duration(days: 7))))
         .fold(0.0, (s, w) => s + _getLoadScore(w));
 
-    // Carga crónica: media de las 4 semanas anteriores
     double weekSum = 0;
     for (int i = 0; i < 4; i++) {
       final wStart = now.subtract(Duration(days: (i + 1) * 7));
@@ -352,26 +369,29 @@ class AnalyticsViewModel {
     chronicLoad.value = weekSum / 4;
     acwrRatio.value   = chronicLoad.value > 0 ? acuteLoad.value / chronicLoad.value : 0;
 
-    // RPE medio por semana (últimas 4 semanas)
-    final rpeByWeek = <double>[];
-    for (int i = 3; i >= 0; i--) {
-      final wStart = now.subtract(Duration(days: (i + 1) * 7));
-      final wEnd   = now.subtract(Duration(days: i * 7));
-      final ws     = all.where((w) => w.fecha.isAfter(wStart) && w.fecha.isBefore(wEnd)).toList();
-      rpeByWeek.add(ws.isEmpty ? 0 : ws.fold(0.0, (s, w) => s + w.rpePromedio()) / ws.length);
+    // RPE por semana: desde filtered (responde al filtro)
+    final rpeMap = <DateTime, List<double>>{};
+    for (final w in filtered) {
+      final rpe = w.rpePromedio();
+      if (rpe <= 0) continue;
+      rpeMap.putIfAbsent(_mondayOf(w.fecha), () => []).add(rpe);
     }
-    weeklyRpeAvg.value = rpeByWeek;
+    final rpeKeys = rpeMap.keys.toList()..sort();
+    weeklyRpeAvg.value = rpeKeys
+        .map((k) {
+          final vals = rpeMap[k]!;
+          return vals.reduce((a, b) => a + b) / vals.length;
+        })
+        .toList();
 
-    // Carga por semana (últimas 8 semanas)
-    final loadByWeek = <double>[];
-    for (int i = 7; i >= 0; i--) {
-      final wStart = now.subtract(Duration(days: (i + 1) * 7));
-      final wEnd   = now.subtract(Duration(days: i * 7));
-      loadByWeek.add(all
-          .where((w) => w.fecha.isAfter(wStart) && w.fecha.isBefore(wEnd))
-          .fold(0.0, (s, w) => s + _getLoadScore(w)));
+    // Carga por semana: desde filtered (responde al filtro)
+    final loadMap = <DateTime, double>{};
+    for (final w in filtered) {
+      final monday = _mondayOf(w.fecha);
+      loadMap[monday] = (loadMap[monday] ?? 0) + _getLoadScore(w);
     }
-    weeklyLoads.value = loadByWeek;
+    final loadKeys = loadMap.keys.toList()..sort();
+    weeklyLoads.value = loadKeys.map((k) => loadMap[k]!).toList();
   }
 
   void _computeTrainingStress(List<Entrenamiento> all) {

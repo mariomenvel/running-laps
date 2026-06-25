@@ -586,7 +586,11 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
     final vols = _vm.weeklyVolumes.value;
     if (vols.isEmpty) return const SizedBox();
 
-    final maxKm = vols.map((v) => v.km).reduce((a, b) => a > b ? a : b);
+    final isYear  = _ctrl!.selectedRange.value == AnalyticsTimeRange.year;
+    const monthAbbr = ['Ene','Feb','Mar','Abr','May','Jun',
+                        'Jul','Ago','Sep','Oct','Nov','Dic'];
+
+    final maxKm   = vols.map((v) => v.km).reduce((a, b) => a > b ? a : b);
     final totalKm = vols.fold(0.0, (s, v) => s + v.km);
     final avgKm   = totalKm / vols.length;
     final lastKm  = vols.last.km;
@@ -594,7 +598,9 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader('VOLUMEN SEMANAL (${_rangeLabel()})'),
+        _SectionHeader(
+            isYear ? 'VOLUMEN MENSUAL (${_rangeLabel()})'
+                   : 'VOLUMEN SEMANAL (${_rangeLabel()})'),
         const SizedBox(height: AppSpacing.m),
         _Card(
           child: Padding(
@@ -614,7 +620,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                           color: isLast
                               ? AppColors.brand
                               : AppColors.brand.withOpacity(0.5),
-                          width: 18,
+                          width: isYear ? 14 : 18,
                           borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(4)),
                         ),
@@ -626,8 +632,14 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                           showTitles: true,
                           getTitlesWidget: (x, _) {
                             final i = x.toInt();
-                            if (i < 0 || i >= vols.length) {
-                              return const SizedBox();
+                            if (i < 0 || i >= vols.length) return const SizedBox();
+                            if (isYear) {
+                              return Text(
+                                monthAbbr[vols[i].weekStart.month - 1],
+                                style: TextStyle(
+                                    fontSize: 9,
+                                    color: AppColors.iconMutedOf(context)),
+                              );
                             }
                             final w = vols[i].weekStart;
                             return Text('${w.day}/${w.month}',
@@ -650,7 +662,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                       touchTooltipData: BarTouchTooltipData(
                         getTooltipColor: (_) => AppColors.surfaceOf(context),
                         getTooltipItem: (g, gi, rod, ri) => BarTooltipItem(
-                          '${rod.toY.toStringAsFixed(1)} km',
+                          '${rod.toY.toStringAsFixed(0)} km',
                           TextStyle(
                               color: AppColors.textPrimary(context),
                               fontSize: 11),
@@ -664,12 +676,12 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                   children: [
                     Expanded(
                         child: _StatBlock(
-                            label: 'Esta semana',
-                            value: '${lastKm.toStringAsFixed(1)} km')),
+                            label: isYear ? 'Este mes' : 'Esta semana',
+                            value: '${lastKm.toStringAsFixed(0)} km')),
                     Expanded(
                         child: _StatBlock(
                             label: 'Media',
-                            value: '${avgKm.toStringAsFixed(1)} km')),
+                            value: '${avgKm.toStringAsFixed(0)} km')),
                     Expanded(
                         child: _StatBlock(
                             label: 'Total',
@@ -931,7 +943,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
           ],
         ),
         const SizedBox(height: 2),
-        Text('Calculado sobre los últimos 6 meses',
+        Text('Calculado sobre los últimos 180 días',
             style: TextStyle(fontSize: 11, color: AppColors.textSecondary(context))),
         const SizedBox(height: AppSpacing.m),
         _Card(
@@ -1205,7 +1217,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader('RPE TENDENCIA (4 semanas)'),
+        _SectionHeader('RPE TENDENCIA (${_rangeLabel()})'),
         const SizedBox(height: AppSpacing.m),
         _Card(
           child: Padding(
@@ -1242,12 +1254,9 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                         sideTitles: SideTitles(
                           showTitles: true,
                           getTitlesWidget: (x, _) {
-                            final labels = ['S1', 'S2', 'S3', 'S4'];
                             final i = x.toInt();
-                            if (i < 0 || i >= labels.length) {
-                              return const SizedBox();
-                            }
-                            return Text(labels[i],
+                            if (i < 0 || i >= rpes.length) return const SizedBox();
+                            return Text('S${i + 1}',
                                 style: TextStyle(
                                     fontSize: 10,
                                     color: AppColors.iconMutedOf(context)));
@@ -1317,7 +1326,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader('CARGA POR SEMANA (8 semanas)'),
+        _SectionHeader('CARGA POR SEMANA (${_rangeLabel()})'),
         const SizedBox(height: AppSpacing.m),
         _Card(
           child: Padding(
@@ -1392,6 +1401,9 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SectionHeader('EFICIENCIA AERÓBICA'),
+        const SizedBox(height: 2),
+        Text('Período: ${_rangeLabel()}',
+            style: TextStyle(fontSize: 11, color: AppColors.textSecondary(context))),
         const SizedBox(height: AppSpacing.m),
         _Card(
           child: Padding(
