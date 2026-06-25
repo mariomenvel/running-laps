@@ -248,7 +248,7 @@ class AnalyticsViewModel {
     }
     int easy = 0, hard = 0;
     for (final w in filtered) {
-      if (w.rpePromedio() <= 5) {
+      if (w.rpePromedio() < 7) {
         easy++;
       } else {
         hard++;
