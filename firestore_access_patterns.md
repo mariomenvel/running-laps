@@ -14,6 +14,11 @@
 | `users/{uid}/tags/{id}` | Solo el propietario | Solo el propietario | `read/write: isOwner` |
 | `users/{uid}/groups/{groupId}` | Solo el propietario | Solo el propietario | `read/write: isOwner` |
 | `users/{uid}/result_notifications/{id}` | Solo el propietario | Propietario (update/delete) · Cualquier autenticado (create) ⚠️ | `read/delete: isOwner` · `create: isSignedIn()` |
+| `users/{uid}/athleteSessions/{id}` | Solo el propietario | Propietario + Cloud Functions | `read/write: isOwner` |
+| `users/{uid}/aiCoachEvents/{id}` | Solo el propietario | Solo el propietario | `read/write: isOwner` |
+| `users/{uid}/settings/aiCoachProfile` | Solo el propietario | Solo el propietario | `read/write: isOwner` |
+| `users/{uid}/settings/aiCoachUsage` | Solo el propietario | Propietario + Cloud Functions (reset semanal) | `read/write: isOwner` |
+| `appConfig/aiCoachProvider` | Cualquier autenticado | Solo app-admin | `read: isSignedIn()` · `write: isAdmin` |
 | `groups/{groupId}` | Cualquier autenticado | Create: cualquier autenticado · Update/delete: admin del grupo | `read/create: isSignedIn()` · `update/delete: isGroupAdmin` |
 | `groups/{groupId}/members/{uid}` | Miembros del grupo | El propio usuario · Admin del grupo | `read: isGroupMember` · `write: isOwner \|\| isGroupAdmin` |
 | `groups/{groupId}/challenges/{id}` | Miembros del grupo | Solo admin del grupo | `read: isGroupMember` · `write: isGroupAdmin` |

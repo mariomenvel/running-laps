@@ -190,7 +190,9 @@ Se pueden combinar — por ejemplo, pace 4:30/km + Z4 + RPE 8 para una serie de 
 
 ## Free vs Premium
 
-| Funcionalidad | Free | Premium |
+> **Estado actual (beta):** todo está disponible de forma gratuita. La separación Free/Premium está diseñada pero el paywall (RevenueCat) no está activo aún.
+
+| Funcionalidad | Free | Premium (diseño) |
 |---|---|---|
 | Todos los tipos de entrenamiento | ✅ | ✅ |
 | Editor de sesiones con bloques | ✅ | ✅ |
@@ -200,11 +202,11 @@ Se pueden combinar — por ejemplo, pace 4:30/km + Z4 + RPE 8 para una serie de 
 | Récords personales | ✅ | ✅ |
 | Analytics básicos | ✅ | ✅ |
 | Zonas genéricas (% FCmáx) | ✅ | ✅ |
-| **Coach IA semanal** | ❌ | ✅ |
-| **ATL/CTL/TSB (fatiga y forma)** | ❌ | ✅ |
-| **Test de umbral individualizado** | ❌ | ✅ |
-| **Zonas calibradas por FCumbral** | ❌ | ✅ |
-| **Análisis aeróbico avanzado** | ❌ | ✅ Pro |
+| **Coach IA semanal** | ❌ | ✅ (ahora free en beta) |
+| **ATL/CTL/TSB (fatiga y forma)** | ❌ | ✅ (ahora free en beta) |
+| **Generador por prompt (8/mes)** | ✅ | ✅ (60/mes) |
+| **Test de umbral individualizado** | ❌ | ✅ (pendiente implementar) |
+| **Zonas calibradas por FCumbral** | ❌ | ✅ (pendiente implementar) |
 
 ---
 

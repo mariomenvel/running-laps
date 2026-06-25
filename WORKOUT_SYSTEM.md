@@ -6,16 +6,31 @@
 
 ## 1. Visión general
 
-El sistema de entrenamiento de Running Laps se estructura en **3 niveles jerárquicos**:
+El sistema tiene **dos modelos de sesión paralelos** con roles distintos:
 
 ```
-WorkoutSession        ← la sesión completa (lo que se planifica en el calendario)
-└── WorkoutBlock[]    ← bloques: calentamiento, bloque principal, vuelta a la calma
-    └── WorkoutSegment[]  ← lo que se ejecuta dentro del bloque (esfuerzo + descanso)
-        └── TargetConfig  ← el objetivo fisiológico del segmento
+AthleteSession + SessionBlock[]
+  ← modelo de Firestore: lo que el Coach IA genera y el calendario almacena
+  ← path: users/{uid}/athleteSessions/{id}
+  ← archivo: lib/features/athlete/data/athlete_session_model.dart
+
+WorkoutSession + WorkoutBlock[] + WorkoutSegment[] + TargetConfig
+  ← modelo del editor: lo que WorkoutEditorScreen usa para editar/visualizar
+  ← archivos: lib/features/templates/data/workout_*.dart, target_config.dart
 ```
 
-Este modelo es retrocompatible con el sistema actual de plantillas (lista plana de bloques). Los entrenamientos legacy se mapean como un único `WorkoutBlock` con `role: main`.
+`athlete_session_mapper.dart` convierte `AthleteSession → WorkoutSession` al abrir el editor. **Nunca al revés** — al guardar, el editor escribe directamente en `AthleteSession`.
+
+⚠️ **Bug conocido (pendiente):** `_mapCategory()` en el mapper asigna `WorkoutType.free` a `gimnasio_fuerza` y `WorkoutType.continuous` a `regenerativo/rodaje_base/tempo` — categorías distintas que comparten el mismo `WorkoutType`. Ver deuda técnica en CLAUDE.md.
+
+### Jerarquía del modelo editor (WorkoutSession)
+
+```
+WorkoutSession        ← la sesión completa
+└── WorkoutBlock[]    ← bloques: calentamiento, principal, vuelta a la calma
+    └── WorkoutSegment[]  ← esfuerzo + descanso dentro del bloque
+        └── TargetConfig  ← objetivo fisiológico del segmento (opcional)
+```
 
 ---
 
@@ -49,7 +64,7 @@ enum WorkoutType {
 
 ### 3.1 WorkoutSession
 
-Representa una sesión completa, tanto planificada como ejecutada.
+Modelo del editor (`WorkoutEditorScreen`). No se persiste directamente en Firestore — se convierte a/desde `AthleteSession` mediante el mapper.
 
 ```dart
 class WorkoutSession {
@@ -59,15 +74,14 @@ class WorkoutSession {
   final WorkoutType type;
   final List<WorkoutBlock> blocks;
   final DateTime? scheduledDate;      // null si no está planificada
+  final TimeOfDay? scheduledTime;     // hora de la sesión (opcional)
+  final String? notes;                // notas de planificación
   final bool isTemplate;              // true = plantilla reutilizable
   final String? templateId;           // referencia si viene de plantilla
 }
 ```
 
-**Firestore path:**
-- Sesión planificada: `users/{uid}/plannedSessions/{sessionId}`
-- Plantilla: `users/{uid}/templates/{templateId}`
-- Entrenamiento ejecutado: referencia en `users/{uid}/trainings/{trainingId}.sessionId`
+**Nota sobre Firestore:** `WorkoutSession` NO tiene path propio. Lo que se guarda en Firestore es `AthleteSession` (`users/{uid}/athleteSessions/{id}`). Las plantillas se guardan como `TrainingTemplate` en `users/{uid}/templates/{id}` via `TemplatesRepository`.
 
 ### 3.2 WorkoutBlock
 
@@ -361,40 +375,33 @@ Antes de guardar cualquier `WorkoutSession` en Firestore, validar:
 
 ---
 
-## 9. Archivos a crear / modificar
+## 9. Archivos implementados ✅
 
-Al implementar este sistema:
-
-### Nuevos archivos
 ```
 lib/features/templates/data/
-├── workout_session.dart       ← WorkoutSession, WorkoutType
-├── workout_block.dart         ← WorkoutBlock, BlockRole
-├── workout_segment.dart       ← WorkoutSegment, SegmentType, RecoveryType
-└── target_config.dart         ← TargetConfig, HeartRateZone
+├── workout_session.dart        ← WorkoutSession, WorkoutType ✅
+├── workout_block.dart          ← WorkoutBlock, BlockRole ✅
+├── workout_segment.dart        ← WorkoutSegment, SegmentType, RecoveryType ✅
+├── target_config.dart          ← TargetConfig, HeartRateZone ✅
+├── athlete_session_mapper.dart ← AthleteSession ↔ WorkoutSession ✅
+├── template_models.dart        ← TrainingTemplate, TemplateBlock (modelo legacy plantillas)
+├── saved_block.dart            ← bloques guardados reutilizables
+├── saved_blocks_repository.dart
+└── templates_repository.dart
 
-wear_os/.../
-└── WorkoutModels.kt           ← Espejo Kotlin de los modelos Dart
+lib/features/athlete/data/
+├── athlete_session_model.dart  ← AthleteSession, SessionBlock, SessionBlockType ✅
+└── athlete_session_repository.dart ← CRUD Firestore athleteSessions ✅
 ```
 
-### Archivos a modificar
-```
-lib/features/templates/data/template_repository.dart  ← CRUD nuevo modelo
-lib/features/athlete/data/planned_session_repository.dart  ← sessions planificadas
-lib/features/training/data/training_repository.dart   ← referencia sessionId
-```
-
-### No tocar todavía
-```
-lib/features/training/views/training_session_view.dart  ← ejecución activa
-wear_os/.../SeriesTrainingService.kt                    ← ejecutor Wear OS
-```
+**Pendiente (Wear OS):**
+`SeriesTrainingService.kt` ejecuta bloques como lista plana. Al implementar sesiones estructuradas hay que adaptar `applyBlock()` para iterar `WorkoutBlock.repetitions` y alternar interval/recovery.
 
 ---
 
 ## 10. Relación con el Coach IA (Premium)
 
-La IA genera sesiones en exactamente este formato. Cuando el Coach IA planifica la semana, crea `WorkoutSession` objects con sus bloques y los escribe en `users/{uid}/plannedSessions/`. El atleta los ve en el calendario sin diferencia visual respecto a los planificados manualmente.
+La IA genera sesiones en formato `AthleteSession` con `SessionBlock[]` y las escribe en `users/{uid}/athleteSessions/`. El atleta las ve en el calendario sin diferencia visual respecto a las planificadas manualmente. Cuando el usuario abre el editor, el mapper convierte `AthleteSession → WorkoutSession` para edición.
 
 Ver `PREMIUM_AI_COACH.md` para el detalle del sistema IA.
 

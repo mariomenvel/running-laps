@@ -231,6 +231,22 @@ Toda la UI vira a azul. El usuario percibe el cambio de estado sin leer.
 
 ---
 
+## Aliases deprecados — no usar
+
+El archivo `app_colors.dart` contiene aliases `@deprecated` por compatibilidad histórica. **No usarlos en código nuevo:**
+
+| Alias deprecated | Usar en su lugar |
+|---|---|
+| `surfaceDark`, `surfaceLight` | `surfaceOf(context)` |
+| `surfaceVariantDark/Light` | `surface2Of(context)` |
+| `backgroundDark/Light` | `background(context)` |
+| `textPrimaryDark/Light` | `textPrimary(context)` |
+| `textSecondaryDark/Light` | `textSecondary(context)` |
+| `brandPurple`, `brandPurpleLight` | `brand`, `brandLight` |
+| `paceFast/Medium/Slow` | `rpeLow`, `rpeMid`, `rpeMax` |
+
+---
+
 ## Lo que está prohibido
 
 - ❌ Degradados en tarjetas (usar colores sólidos)
@@ -259,10 +275,11 @@ class AppColors {
   static const brandBorder  = Color(0xFF3D2A6E);
 
   // Esfuerzo / acento
-  static const effort        = Color(0xFFD85A30);
-  static const effortLight   = Color(0xFFF0997B);
-  static const effortSurface = Color(0xFF2A1208);
-  static const effortBorder  = Color(0xFF993C1D);
+  static const effort             = Color(0xFFD85A30);
+  static const effortLight        = Color(0xFFF0997B);
+  static const effortSurfaceConst = Color(0xFF2A1208); // const — para uso directo
+  static const effortBorder       = Color(0xFF993C1D);
+  // Nota: effortSurface(double rpe) es el método dinámico según RPE
 
   // Descanso
   static const rest        = Color(0xFF378ADD);
@@ -313,6 +330,41 @@ class AppColors {
     if (rpe <= 8) return const Color(0xFF993C1D);
     return const Color(0xFF791F1F);
   }
+
+  // ── Tokens semánticos de pantalla (usar estos, no reconstruir el color) ───
+
+  // Serie activa
+  static const serieBackground       = Color(0xFF111111);
+  static const serieTimerText        = Color(0xFFFFFFFF);
+  static const serieHeaderUnderline  = brand;
+  static const serieMetricsSecondary = Color(0xFFAAAAAA);
+  static const serieButtonFinish     = brand;
+
+  // Descanso
+  static const descansoBackground    = restSurface;
+  static const descansoCountdown     = rest;
+  static const descansoResumenBg     = restSurface;
+  static const descansoResumenBorder = restBorder;
+  static const descansoPaceText      = effortLight;
+  static const descansoSkipButton    = rest;
+
+  // Config previa (TrainingStartView)
+  static const configCardBg               = surface2;
+  static const configValueAccent          = brand;
+  static const configToggleOff            = Color(0xFF333333);
+  static const configToggleOn             = brandSurface;
+  static const configToggleThumb          = brand;
+  static const configButtonPrimary        = brand;
+  static const configButtonSecondaryBg    = surface2;
+  static const configButtonSecondaryBorder = border;
+
+  // Retos (por tipo)
+  static const retoDistanciaBg     = Color(0xFF2A1208); // = effortSurfaceConst
+  static const retoDistanciaAccent = effort;
+  static const retoTiempoBg        = Color(0xFF0A1825);
+  static const retoTiempoAccent    = rest;
+  static const retoRpeBg           = brandSurface;
+  static const retoRpeAccent       = brand;
 
   // Calendario
   static Color weekLoadColor(double trimp, bool hasCompetition, BuildContext context) {

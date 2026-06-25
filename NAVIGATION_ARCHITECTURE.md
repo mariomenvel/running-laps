@@ -12,34 +12,36 @@ Implementado mediante tabs ocultos en MainShell — todas las pantallas secundar
 ---
  
 ## Tabs visibles (con botón en BottomNav)
- 
+
+BottomNav: **4 tabs + FAB central** (sin tab de Historial visible).
+
 | Índice | Pantalla | Botón |
 |---|---|---|
 | 0 | HomeView | Inicio |
 | 1 | CalendarView | Calendario |
+| — | FAB | Entrenar → navega a índice 15 |
 | 2 | AnalyticsHubScreen | Analytics |
 | 3 | ProfileView | Perfil |
-| 4 | HistoryScreen | Historial |
- 
-El FAB central (Entrenar) no tiene índice fijo — navega a índice 15.
  
 ---
  
 ## Tabs ocultos (sin botón en BottomNav)
- 
-| Índice | Pantalla | Accesible desde |
-|---|---|---|
-| 5 | TrainingDetailView | premium_training_card.dart |
-| 6 | GroupsListScreen | ProfileView |
-| 7 | GroupScreen | GroupsListScreen |
-| 8 | AccountSettingsView | ProfileView |
-| 9 | ZonesConfigScreen | ProfileView |
-| 10 | HeartRateMonitorView | ProfileView + TrainingStartView |
-| 11 | TemplatesListView | ProfileView + TrainingStartView |
-| 12 | TemplateEditorView | TemplatesListView |
-| 13 | AthleteSessionEditorView | CalendarView |
-| 14 | AvatarCustomizerView | ProfileView |
-| 15 | TrainingStartView | FAB central |
+
+| Índice | Pantalla | Accesible desde | Params |
+|---|---|---|---|
+| 4 | HistoryScreen | — (sin acceso directo desde nav) | — |
+| 5 | TrainingDetailView | `premium_training_card.dart` | `Entrenamiento` |
+| 6 | GroupsListScreen | ProfileView | — |
+| 7 | GroupScreen | GroupsListScreen | `String groupId` |
+| 8 | AccountSettingsView | ProfileView | `Map<String, dynamic>` |
+| 9 | ZonesConfigScreen | ProfileView | — |
+| 10 | HeartRateMonitorView | ProfileView + TrainingStartView | — |
+| 11 | TemplatesListView | ProfileView + TrainingStartView | — |
+| 12 | TemplateEditorView | TemplatesListView | `TemplateEditorShellParams` |
+| 13 | WorkoutEditorScreen | CalendarView | `AthleteSessionShellParams` |
+| 14 | AvatarCustomizerView | ProfileView | `AvatarConfig?` |
+| 15 | TrainingStartView | FAB central | — |
+| 16 | AiCoachSettingsView | HomeView (modo atleta) | — |
  
 ---
  
@@ -63,9 +65,12 @@ Estas pantallas NO tienen header ni footer — comportamiento intencional:
 MainShell.shellKey.currentState?.navigateTo(int index);
  
 // Navegar con parámetros (pantallas que necesitan datos)
-MainShell.shellKey.currentState?.navigateTo(5, params: training);
-MainShell.shellKey.currentState?.navigateTo(7, params: groupId);
-MainShell.shellKey.currentState?.navigateTo(12, params: template); // null para nueva
+MainShell.shellKey.currentState?.navigateTo(5, params: training);         // Entrenamiento
+MainShell.shellKey.currentState?.navigateTo(7, params: groupId);           // String
+MainShell.shellKey.currentState?.navigateTo(8, params: {'name': n, 'onUpdated': cb});
+MainShell.shellKey.currentState?.navigateTo(12, params: TemplateEditorShellParams(...));
+MainShell.shellKey.currentState?.navigateTo(13, params: AthleteSessionShellParams(...));
+MainShell.shellKey.currentState?.navigateTo(14, params: avatarConfig);     // AvatarConfig?
  
 // Volver a tab anterior o home
 MainShell.shellKey.currentState?.navigateBack();

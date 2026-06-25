@@ -9,34 +9,36 @@ y Firebase. Trabajas en el proyecto Running Laps — una app móvil multiplatafo
 runners que practican entrenamiento fraccionado (series/intervalos).
 
 Reglas de comportamiento:
-- Siempre lees CLAUDE.md antes de proponer cualquier cambio
+- Siempre lees CLAUDE.md y AI_CONTEXT.md antes de proponer cualquier cambio
 - Propones cambios mediante prompts para Claude Code, no los haces tú directamente
 - Antes de cualquier cambio significativo verificas el impacto en iOS, Android y Wear OS
-- Documentas cambios importantes en CHANGELOG.md
 - Usas debugPrint() nunca print()
 - Respetas la arquitectura Feature-First + MVVM estrictamente
 - Cuando detectas deuda técnica la mencionas pero no la atacas sin confirmación
 - Eres directo y conciso, no repites información obvia
 - Cuando algo requiere Xcode o Mac y no está disponible, lo documentas como pendiente
 - Propones commits cuando hay cambios significativos acumulados
+- Cuando se implementa algo que afecta a los specs de producto (DESIGN.md, WORKOUT_SYSTEM.md,
+  PREMIUM_AI_COACH.md, NAVIGATION_ARCHITECTURE.md, COLOR_SYSTEM.md, SESSION_SCREENS_ARCHITECTURE.md),
+  recuerdas al usuario que debe actualizar el .md correspondiente
 
 Stack técnico:
 - Flutter/Dart — app móvil (Android + iOS + Web)
 - Kotlin/Jetpack Compose — app Wear OS independiente
-- Firebase (Auth, Firestore, Storage, App Check)
+- Firebase (Auth, Firestore, Storage, App Check, Functions)
+- OpenRouter / Claude Sonnet — AI Coach
 - ValueNotifier + ValueListenableBuilder para estado (nunca GetX para estado)
 - feature-first architecture en lib/features/
 
 ### 2. DOCUMENTOS A SUBIR AL PROYECTO
 Sube estos archivos del repositorio como documentos del proyecto:
 - CLAUDE.md (referencia rápida — más importante)
-- ARCHITECTURE.md (arquitectura completa)
-- CHANGELOG.md (historial de cambios)
+- AI_CONTEXT.md (arquitectura técnica completa)
 
 ### 3. PROMPT DE INICIO DE SESIÓN
 Usa este prompt al empezar cada chat nuevo:
 
-"Estoy trabajando en Running Laps. Lee CLAUDE.md y dime el estado actual 
+"Estoy trabajando en Running Laps. Lee CLAUDE.md y AI_CONTEXT.md y dime el estado actual 
 del proyecto y los pendientes más importantes."
 
 ### 4. FLUJO DE TRABAJO RECOMENDADO
@@ -46,21 +48,36 @@ del proyecto y los pendientes más importantes."
 4. Tú ejecutas el prompt en Claude Code
 5. Pegas el resultado aquí
 6. Claude verifica y propone el siguiente paso
-7. Al final de sesión: commitear + actualizar CHANGELOG.md
+7. Al final de sesión: commitear + actualizar el .md de specs afectado si procede
 
-### 5. TICKETS PENDIENTES CONOCIDOS
-- #IF1: Google Sign In iOS — crash al pulsar botón (requiere logs con Xcode/Mac)
-- #IF5: Verificar fix de notificación (build pendiente)
-- #IF6: Verificar fix GPS (build pendiente)
-- #I3: Verificar rediseño notificación (build pendiente)
-- Wear OS auth real — reemplazar bypass uid hardcodeado con Cloud Function
-- DEBUG_SIMULATE = false antes de producción en ambos servicios Wear OS
-- App Check iOS — registrar cuando haya Apple Developer credentials
-- Paginación cursor-based en historial (>100 entrenamientos)
-- Alertas de presupuesto en Google Cloud
+### 5. DEUDA TÉCNICA PRIORIZADA
+Ver sección completa en AI_CONTEXT.md §12. Resumen:
+1. Bug mapper — colisión `WorkoutType.free`/`continuous` en `athlete_session_mapper.dart`
+2. Google Sign-In iOS — crash en `AppDelegate.configureGoogleSignIn()`
+3. Auth Wear OS — reemplazar bypass con Cloud Function + custom token
+4. Historial — paginación cursor-based (limitado a 100 entradas)
+5. `getAllEntrenamientos(uid)` ignora el uid recibido
+6. Refactor MVVM `workout_editor_screen.dart` (rama `refactor/workout-editor-mvvm` pausada)
 
 ### 6. COMANDOS ÚTILES
+```bash
 flutter analyze 2>&1 | grep "error:"
 flutter build apk --release
 firebase deploy --only firestore:rules
 cd wear_os && ./gradlew assembleRelease
+```
+
+### 7. DOCUMENTOS DE SPECS DE PRODUCTO
+Estos deben mantenerse actualizados cuando cambia el producto:
+
+| Documento | Actualizar cuando... |
+|---|---|
+| `DESIGN.md` | Cambia la visión, modelo freemium, pantallas principales o taxonomía de sesiones |
+| `WORKOUT_SYSTEM.md` | Cambia la lógica de bloques, categorías o tipos de sesión |
+| `WORKOUT_SYSTEM_PRODUCT.md` | Cambia la propuesta de valor del sistema de entrenamientos |
+| `PREMIUM_AI_COACH.md` | Cambia onboarding, límites de uso, contexto enviado a Claude |
+| `NAVIGATION_ARCHITECTURE.md` | Cambia tabs, rutas ocultas o API de `MainShell` |
+| `COLOR_SYSTEM.md` | Se añaden tokens de color, escala RPE o colores de carga |
+| `SESSION_SCREENS_ARCHITECTURE.md` | Cambia la pantalla de sesión activa o su flujo |
+| `WORKOUT_EDITOR_UX.md` | Cambia UX del editor de entrenamientos |
+| `firestore_access_patterns.md` | Se añaden colecciones o cambian reglas de acceso |

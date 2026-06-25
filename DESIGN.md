@@ -16,6 +16,8 @@ Running Laps evoluciona de app social de running a herramienta seria para atleta
 
 **Mismo app, contenido adaptado según `isAthleteMode`.**
 
+`isAthleteMode` es un campo `bool` en Firestore (`users/{uid}.isAthleteMode`). Lo lee `HomeViewModel`, `CalendarViewModel` y `ProfileView`. El Coach IA solo opera si `isAthleteMode == true`. El usuario puede cambiar de modo desde el home (icono sync en header) o completando el onboarding del Coach.
+
 ---
 
 ## 2. Modelo de producto — 3 capas
@@ -28,13 +30,13 @@ Running Laps evoluciona de app social de running a herramienta seria para atleta
 - Récords personales
 - El atleta se autoplanifica. Zonas genéricas. Métricas básicas de progreso.
 
-### Capa 2 — Premium (siguiente gran feature)
-- Modo atleta completo con Coach IA
-- Calendario de planificación avanzado
-- ATL/CTL/TSB
-- Comparador de entrenamientos
-- Plan semanal automático (IA)
-- Test de umbral individualizado
+### Capa 2 — Premium (pendiente monetizar)
+- Modo atleta completo con Coach IA ✅ implementado, actualmente **Free durante beta**
+- Calendario de planificación avanzado ✅ implementado
+- ATL/CTL/TSB ✅ implementado
+- Comparador de entrenamientos ✅ implementado
+- Plan semanal automático (IA) ✅ implementado
+- Test de umbral individualizado (pendiente)
 
 ### Capa 3 — Business (futuro)
 - Interfaz web para entrenadores con sus atletas
@@ -46,7 +48,8 @@ Running Laps evoluciona de app social de running a herramienta seria para atleta
 ## 3. Monetización
 
 - **Modelo:** Freemium puro — Free para siempre, Premium de pago
-- **Prueba:** 30 días de Premium gratis al registrarse
+- **Estado actual:** todo Free durante beta (sin paywall activo). El Coach IA se habilita via `weeklyPlanningEnabled` en `appConfig/aiCoachProvider` (Firestore), no por suscripción.
+- **Prueba:** 30 días de Premium gratis al registrarse (pendiente activar con RevenueCat)
 - **Ciclos:** Mensual + anual con descuento del 20-30%
 - **Precio:** A definir antes del lanzamiento
 - **Plataforma:** RevenueCat (pendiente implementar)
@@ -158,17 +161,14 @@ Almacenamiento: `users/{uid}/trainings/{id}.tags` como `List<String>` mixta.
 
 #### Estado Atleta (con sesión planificada hoy)
 ```
+[Banners: feedback semanal / plan faltante / CTA Coach si no configurado]
+
 SESIÓN DE HOY
 ├─ Título + tipo + bloques
 ├─ Pace objetivo + RPE
 └─ [EMPEZAR ENTRENAMIENTO] → TrainingStartView
 
-PRÓXIMOS ENTRENAMIENTOS (esta semana)
-
-PROGRESO SEMANAL
-├─ Volumen: 32/60km
-├─ Zonas: Z1-Z2 60% | Z3-Z5 40%
-└─ Estado: Fresco (TSB +8)
+SESIONES DE LA SEMANA (lista)
 
 ÚLTIMOS ENTRENAMIENTOS (5)
 └─ [Ver todos] → HistoryScreen
@@ -177,15 +177,17 @@ PROGRESO SEMANAL
 #### Estado Recreativo
 ```
 [▶ ENTRENAR AHORA] → TrainingStartView
-[◆ PASAR A MODO ATLETA] → Onboarding Wizard
+[◆ PASAR A MODO ATLETA] → Onboarding Coach IA
 
 ÚLTIMOS ENTRENAMIENTOS (5)
 └─ [Ver todos] → HistoryScreen
 
 TU PROGRESO
-├─ TP 1km, 5km, 10km
+├─ Récords personales (5K, 10K, etc.)
 └─ Mejor pace reciente
 ```
+
+Switching: icono sync en el header permite alternar entre modo atleta y recreativo sin salir de home (`toggleAthleteMode()` en ViewModel).
 
 ---
 
@@ -502,9 +504,10 @@ Actualización: `_LiveAvatarBadge` con StreamBuilder en tiempo real
 
 ---
 
-### 8.11 ONBOARDING ATLETA (pendiente implementar)
+### 8.11 ONBOARDING ATLETA ✅ implementado
 
-Wizard 4 pasos para activar modo atleta desde modo recreativo:
+Wizard multi-paso para activar modo atleta desde modo recreativo.
+Archivos: `ai_coach_onboarding_view.dart` + `ai_coach_onboarding_launcher.dart`.
 
 **Paso 1 — Objetivo**
 ```
@@ -542,7 +545,8 @@ Disponibilidad: 5 días/semana
 [ACTIVAR MODO ATLETA]
 ```
 
-Al activar: `isAthleteMode = true` en Firestore → HOME vuelve a modo atleta.
+Al activar: `isAthleteMode = true` en Firestore → HOME muestra contenido atleta.
+El launcher (`launchAiCoachOnboarding()`) verifica si ya existe perfil IA; si existe, va directamente a settings (tab 16).
 
 ---
 
@@ -735,11 +739,11 @@ No mostrar hasta mínimo 6 semanas de datos.
 ## 16. Pendientes
 
 ### Pendientes de implementar
-- Onboarding atleta (wizard 4 pasos)
-- Coach IA (Claude API, Premium)
-- RevenueCat (suscripciones)
-- Rediseño grupos, perfil secundarias, plantillas, atleta, auth, admin
-- Eliminar archivos legacy cuando todo esté estable
+- RevenueCat (suscripciones) — monetización aún no activa
+- Test de umbral individualizado (Premium)
+- Grupo atleta (ver sección 12)
+- Apple Watch (Swift, WatchConnectivity + HealthKit)
+- Interfaz web entrenador (Business)
 
 ### Aparcados conscientemente
 - Temperatura y FC (afecta validez de métricas)
@@ -753,8 +757,8 @@ No mostrar hasta mínimo 6 semanas de datos.
 
 - **COLOR_SYSTEM.md** — fuente de verdad para colores y tokens
 - **NAVIGATION_ARCHITECTURE.md** — índices de tabs, API de navegación
-- **PROMPTS_PENDIENTES.md** — prompts listos para Claude Code
 - **PREMIUM_AI_COACH.md** — especificación del Coach IA
-- **ANALYTICS_ROADMAP.md** — roadmap detallado de analytics
+- **WORKOUT_SYSTEM.md** — lógica de bloques, categorías y tipos de sesión
+- **SESSION_SCREENS_ARCHITECTURE.md** — pantalla de sesión activa
 - **CLAUDE.md** — guía de desarrollo para Claude Code
-- **CHANGELOG.md** — historial de cambios
+- **AI_CONTEXT.md** — arquitectura técnica completa

@@ -46,6 +46,55 @@ Features activas en `lib/features/`:
 
 ---
 
+## Componentes compartidos (`lib/core/widgets/`)
+
+Widgets reutilizables — usar siempre estos, no reinventar:
+
+| Widget | Archivo | Uso |
+|---|---|---|
+| `RpeBadge` | `rpe_badge.dart` | Badge RPE con color automático (verde→rojo). 3 tamaños: `text`, `chip`, `stat`. |
+| `RpeSlider` | `rpe_slider.dart` | Slider RPE con track gradiente y thumb dinámico. |
+| `IosPicker` | `ios_picker.dart` | Rueda CupertinoPicker estilo iOS. Usar via `NumberPickerField`. |
+| `NumberPickerField` | `number_picker_field.dart` | Campo numérico — abre `IosPicker`. **Nunca usar teclado para números.** |
+| `BlockPreviewTile` | `block_preview_tile.dart` | Preview de sesión/bloque. Estilos: `compact` (texto) o `card` (franja color). |
+| `ModernSnackBar` | `modern_snackbar.dart` | `.showSuccess/showError/showWarning(context, msg)` — único snackbar permitido. |
+| `AppHeader` | `app_header.dart` | Header global: logo izq + avatar dch (stream Firestore). |
+| `AppFooter` | `app_footer.dart` | BottomNav 5 tabs + FAB central (Entrenar). |
+| `MainShell` | `main_shell.dart` | Shell principal IndexedStack: 5 visibles + ocultos. API: `.navigateTo(int, params)`. |
+| `EmptyStateWidget` | `empty_state_widget.dart` | Estados vacíos: icono, título, subtítulo, botón opcional. |
+| `KpiCardWithDelta` | `kpi_card_with_delta.dart` | Card KPI con delta coloreado (verde=mejora, rojo=empeora). |
+| `SkeletonShimmer` | `skeleton_shimmer.dart` | Skeleton loader con shimmer para UI en carga. |
+
+---
+
+## AI Coach — Estado actual
+
+El Coach IA usa **Claude Sonnet** vía OpenRouter (cliente en `ai_coach/data/openrouter_client.dart`).
+
+Arquitectura de servicios en `lib/features/ai_coach/data/`:
+- `ai_coach_weekly_planner_service.dart` — genera plan semanal automático cada domingo
+- `ai_coach_context_builder.dart` — extrae contexto de Firestore (perfil, 7 semanas historial, TRIMP, zonas FC)
+- `ai_coach_prompt_builder.dart` — construye el prompt con contexto del atleta
+- `ai_coach_chat_service.dart` — chat con Coach (límite 5 turnos/conversación, reset semanal)
+- `ai_coach_automation_service.dart` — automatización: genera plan cada domingo
+- `ai_coach_decision_service.dart` — decide qué acción tomar (generar / sugerir / custom)
+- `pb_detector.dart` — detecta marcas personales (PB) en 5K/10K/HM/Maratón con interpolación ±3%
+- `vdot_calculator.dart` — calcula VDOT desde PBs y edad
+- `ai_coach_session_generator.dart` — genera sesión individual desde prompt
+- `ai_coach_repository.dart` — CRUD Firestore: `users/{uid}/settings/aiCoachProfile` + `aiCoachUsage`
+
+Modelos principales (`ai_coach_models.dart`):
+- `AiCoachProfile` — objetivo (7 tipos), nivel (3), días disponibles, PBs, limitaciones
+- `AiCoachUsage` — cuotas: `generationQuotaThisMonth`, `chatTokensUsed`, `lastGenerationDate`
+- `AiCoachGoalType` — `race_5k`, `race_10k`, `race_half_marathon`, `race_marathon`, `improve_base`, `lose_weight`, `general_fitness`
+
+Vistas:
+- `ai_coach_onboarding_view.dart` — wizard 4 pasos (objetivo → competición → disponibilidad → resumen)
+- `ai_coach_settings_view.dart` — configuración del Coach
+- `ai_coach_weekly_feedback_view.dart` — feedback semanal: análisis, sugerencias, trend
+
+---
+
 ## ⚠️ Advertencias críticas
 
 **1. Wear OS — bypass auth (TEMPORAL)**
@@ -65,6 +114,28 @@ Cualquier campo nuevo en `IOSLiveActivityPayload` requiere actualizar también:
 **5. `HomeEstadisticaRepository` es singleton**
 No instanciar con `HomeEstadisticaRepository()` esperando instancia independiente.
 
+**6. Inputs numéricos — sin teclado**
+Para cualquier campo numérico (tiempo, distancia, descanso, RPE) usar `NumberPickerField` o `IosPicker`. Nunca `TextField` con `keyboardType: numeric`.
+
+---
+
+## Mantenimiento de documentación
+
+Cuando implementes algo que afecte a los specs de producto, actualiza el .md correspondiente **en el mismo commit**:
+
+| Cambias... | Actualiza... |
+|---|---|
+| Pantallas, flujos, tabs | `NAVIGATION_ARCHITECTURE.md` |
+| Lógica de bloques / tipos de sesión | `WORKOUT_SYSTEM.md` |
+| Pantalla de sesión activa | `SESSION_SCREENS_ARCHITECTURE.md` |
+| AI Coach (onboarding, límites, prompts) | `PREMIUM_AI_COACH.md` |
+| Tokens de color, escala RPE | `COLOR_SYSTEM.md` |
+| UX del editor de entrenamientos | `WORKOUT_EDITOR_UX.md` |
+| Colecciones Firestore o reglas de acceso | `firestore_access_patterns.md` |
+| Visión del producto / freemium | `DESIGN.md` |
+
+Guías de trabajo (`CLAUDE.md`, `AI_CONTEXT.md`) — actualizar siempre que cambie arquitectura, modelos, servicios, advertencias o deuda técnica.
+
 ---
 
 ## Convenciones
@@ -73,6 +144,8 @@ No instanciar con `HomeEstadisticaRepository()` esperando instancia independient
 - `debugPrint()` en lugar de `print()`
 - `if (!mounted) return;` tras cualquier `await` en un `State`
 - Imports Dart: `dart:` → `flutter/` → `firebase_*` → paquetes externos → locales
+- Colores RPE: nunca hardcodear — usar escala automática de `RpeBadge` / `AppColors`
+- Números siempre via `NumberPickerField` / `IosPicker`, nunca teclado
 
 ---
 
@@ -85,7 +158,7 @@ No instanciar con `HomeEstadisticaRepository()` esperando instancia independient
 | GPS + Live Activity | ✅ OK |
 | App Check | ❌ Omitido (sin Apple Developer) |
 | Notificación persistente | ⚠️ Solo barra GPS — `flutter_foreground_task` no funciona en iOS |
-| Code signing / Development Team | ❌ No configurado — build falla en Codemagic con "requires a selected Development Team with a Provisioning Profile". Requiere cuenta Apple Developer Program activa + configuración de firma en Codemagic (API Key de App Store Connect o certificados manuales). Bloquea cualquier build firmado para dispositivo real, incluyendo TestFlight. |
+| Code signing / Development Team | ❌ No configurado — build falla en Codemagic con "requires a selected Development Team with a Provisioning Profile". Requiere cuenta Apple Developer Program activa + configuración de firma en Codemagic. Bloquea TestFlight. |
 
 ---
 
@@ -94,7 +167,9 @@ No instanciar con `HomeEstadisticaRepository()` esperando instancia independient
 1. **Google Sign-In iOS** — `assertionFailure` en `AppDelegate.configureGoogleSignIn()`
 2. **Auth Wear OS** — reemplazar bypass con Cloud Function + custom token
 3. **Historial** — limitado a 100 entradas, implementar paginación con cursor
-4. `getAllEntrenamientos(uid)` en `TrainingRepository` ignora el uid recibido
-5. `getAllEntrenamientos(uid)` en `TrainingRepository` — alias de `getTrainings()` que ignora el uid; confuso para futuros devs
-6. **Refactor MVVM de `workout_editor_screen.dart`** — iniciado y pausado en rama `refactor/workout-editor-mvvm` (sin mergear). Reveló bug real: colisión `WorkoutType.free`/`continuous` en `athlete_session_mapper.dart` (mismo valor de categoría Firestore para ambos). Retomar el refactor cuando haya tiempo; el bug del mapper es independiente y de mayor prioridad.
-7. **`GPSService.updateSerie()` — método muerto.** Definido en `gps_service.dart:191-194` pero sin ninguna llamada en todo el código. Investigado: no es un bug, `GPSService` se reinstancia por serie (no es singleton), así que el número de serie ya llega correcto vía constructor en `startTracking()`. Candidato a eliminar en una limpieza futura, o documentar su propósito si se planea usar para algo distinto.
+4. `getAllEntrenamientos(uid)` en `TrainingRepository` ignora el uid recibido (alias de `getTrainings()`)
+5. **Refactor MVVM de `workout_editor_screen.dart`** — iniciado y pausado en rama `refactor/workout-editor-mvvm` (sin mergear).
+6. **Vistas huérfanas** — 10 archivos marcados con `⚠️ HUÉRFANO` en su cabecera pendientes de eliminar tras testing manual: `session_editor_view.dart`, `athlete_session_editor_view.dart`, `home_view_legacy.dart`, `profile_menu_screen.dart` (ojo: la versión **sin** `_legacy` es la huérfana; la activa es `profile_menu_screen_legacy.dart`), `analytics_hub_screen_legacy.dart`, `analytics_hub_view.dart`, `group_rewards_screen.dart`, `edit_profile_picture_view.dart`, `session_planner_view.dart`, `global_challenge_card.dart`.
+7. **Templates de sesión completa** — `TrainingTemplatesRepository` implementado pero sin UI (pantalla "crear desde plantilla"). No es MVP — solo las plantillas de segmento son MVP actualmente. El switch "Guardar como plantilla" fue eliminado del editor hasta que exista la UI de carga.
+8. **`GPSService.updateSerie()`** — método muerto (`gps_service.dart:191-194`), sin llamadas. Candidato a eliminar.
+7. **`GPSService.updateSerie()`** — método muerto (`gps_service.dart:191-194`), sin llamadas. `GPSService` se reinstancia por serie (no singleton), así que el número llega correcto vía constructor. Candidato a eliminar.

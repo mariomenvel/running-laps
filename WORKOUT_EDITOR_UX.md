@@ -7,18 +7,23 @@
 
 ## 1. Contexto y puntos de entrada
 
-El editor se usa en dos contextos que comparten la misma UI base:
+El editor (`WorkoutEditorScreen`) se usa en varios contextos que comparten la misma UI:
 
 | Contexto | Dónde se abre | Qué se guarda |
 |---|---|---|
-| **Crear sesión planificada** | Calendario → día vacío → "Añadir sesión" | `plannedSessions/{id}` |
-| **Crear / editar plantilla** | Perfil → Mis plantillas → "+" o editar existente | `templates/{id}` |
+| **Crear/editar sesión planificada** | Calendario → día vacío o sesión existente | `users/{uid}/athleteSessions/{id}` via `AthleteSessionRepository` |
+| **Editar sesión del Coach IA** | Calendario → sesión generada → Editar | `users/{uid}/athleteSessions/{id}` (sobreescribe) |
+| **Crear plantilla** | Perfil → Mis plantillas → "+" | callback `onSave` — la pantalla llamante gestiona el repositorio |
+| **Quick start** | TrainingStartView (`isQuickStart: true`) | callback `onSave` — arranca ejecución directa |
 
-En ambos casos el editor es **el mismo widget**. La diferencia está en el título de la pantalla y en qué repositorio se llama al guardar.
+**Lógica de guardado:**
+- Si viene del calendario (`shellParams != null` o `scheduledDate != null`) → convierte `WorkoutSession → AthleteSession` via mapper y guarda en `athleteSessions`
+- Si no → llama al callback `onSave(WorkoutSession)` y la pantalla llamante decide qué hacer
 
-Adicionalmente, el editor puede abrirse **precargado** con:
-- Una plantilla existente (duplicar o usar como base)
-- Una sesión generada por el Coach IA (solo lectura inicialmente, editable si el atleta quiere modificarla)
+El editor puede abrirse **precargado** con:
+- Una `AthleteSession` existente (mapper convierte a `WorkoutSession` para edición)
+- Una `WorkoutSession` directa (plantilla, quick start)
+- Vacío (nueva sesión desde cero)
 
 ---
 
@@ -83,9 +88,19 @@ El flujo no es lineal obligatoriamente. El atleta puede saltar entre pasos. El b
 - Al seleccionar, aparece la siguiente sección con `AnimatedSwitcher` (no navega a nueva pantalla).
 - El tipo `Libre` salta directamente al paso de nombre + guardar (sin bloques).
 
-### Nombre default por tipo
+### Título — auto-generación inteligente
 
-| Tipo | Nombre default |
+Si el atleta no edita el nombre manualmente, el título se genera desde el contenido al guardar:
+
+| Condición | Título generado |
+|---|---|
+| intervals/hills + distancia | `"5×1000m"` / `"8×100m"` |
+| intervals/hills + tiempo | `"5×3'30\""` |
+| continuous + distancia | `"Rodaje 8km"` |
+| continuous + tiempo | `"Rodaje 45 min"` |
+| fallback | nombre default del tipo (ver abajo) |
+
+| Tipo | Nombre default (fallback) |
 |---|---|
 | `continuous` | "Rodaje base" |
 | `intervals` | "Series" |
@@ -316,22 +331,47 @@ La duración y distancia estimadas se calculan:
 
 ---
 
-## 9. Guardar como plantilla
+## 9. Panel de generación por IA
 
-En cualquier punto del editor, el atleta puede marcar "Guardar también como plantilla":
+El editor incluye un panel desplegable (`WorkoutAiPanelViewModel`) para generar bloques mediante prompt de texto libre:
 
 ```
-□ Guardar como plantilla reutilizable
+┌────────────────────────────────────┐
+│ ✨ Generar con IA     [▼ expandir] │
+│                                    │
+│ [  Describe el entrenamiento...  ] │ ← TextField, máx 500 chars
+│                      [GENERAR →]   │
+└────────────────────────────────────┘
 ```
 
-Si está marcado, la sesión se guarda en dos lugares:
-- `plannedSessions/{id}` — la sesión del día en el calendario
-- `templates/{templateId}` — plantilla con `isTemplate: true`
+### Comportamiento
+- Usa `AiCoachPromptSessionGenerator` → Claude Haiku 4.5 via OpenRouter (rápido, parsing simple)
+- Al generar, carga los bloques directamente en el editor — el atleta revisa y edita antes de guardar
+- Solo disponible si `isAthleteMode == true` y Coach IA habilitado (`weeklyPlanningEnabled`)
 
-Las plantillas aparecen en:
-- Perfil → Mis plantillas
-- Training Start → "Cargar plantilla"
-- Wear OS → TemplatePickerScreen
+### Cuotas (diseño, pendiente activar con paywall)
+- Free: 8 generaciones/mes
+- Premium: 60 generaciones/mes
+- Reset el día 1 de cada mes
+
+### Ejemplo de prompt
+```
+"Ponme un calentamiento de 2km, luego 4×400m a 4:30 con 90
+segundos de descanso, y 1km de vuelta a la calma a RPE 5"
+```
+
+Output esperado: `WorkoutSession` con warmup 2000m + main 4× (400m pace 4:30 + 90s rest) + cooldown 1000m RPE 5.
+
+### Errores
+- Sin conexión → mensaje claro, no genera
+- Cuota agotada → mensaje de límite alcanzado
+- API error → reintento automático 1 vez, luego mensaje manual
+- Respuesta inválida → mensaje + reintentar
+
+### Pendiente
+- Botón micrófono (transcripción STT via `SpeechToTextService`) — diseñado, no implementado en el editor
+
+> **Nota:** La función "Guardar también como plantilla" (checkbox) está diseñada pero no implementada. Las plantillas se crean desde Perfil → Mis plantillas de forma independiente.
 
 ---
 
@@ -380,8 +420,9 @@ Los cambios se perderán.
 - Día vacío → tap → "Añadir sesión" → abre editor en modo `plannedSession`.
 - Sesión existente → tap → `SessionDetailView` → botón "Editar" → abre editor precargado.
 
-### Desde Training Start
-- "Cargar plantilla" → `TemplatesListView` → seleccionar → carga en editor o directamente en sesión activa.
+### Desde Training Start (isQuickStart)
+- Editor abre con `isQuickStart: true` — al guardar, lanza directamente la ejecución sin navegar al calendario.
+- "Cargar plantilla" → `TemplatesListView` → seleccionar → precarga el editor.
 
 ### Desde el Coach IA (Premium)
 - La IA genera la sesión. El atleta la ve en el calendario.
