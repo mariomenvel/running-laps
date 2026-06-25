@@ -293,7 +293,11 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader('RECORDS PERSONALES'),
+        Row(children: [
+          _SectionHeader('RECORDS PERSONALES'),
+          const SizedBox(width: AppSpacing.xs),
+          _HelpIconButton(onTap: _showRecordsHelp),
+        ]),
         const SizedBox(height: 2),
         Text('Todo el historial',
             style: TextStyle(fontSize: 11, color: AppColors.textSecondary(context))),
@@ -320,7 +324,11 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SectionHeader('RITMO EN SERIES (${_rangeLabel()})'),
+          Row(children: [
+            _SectionHeader('RITMO EN SERIES (${_rangeLabel()})'),
+            const SizedBox(width: AppSpacing.xs),
+            _HelpIconButton(onTap: _showRhythmHelp),
+          ]),
           const SizedBox(height: AppSpacing.m),
           _Card(
             child: Padding(
@@ -516,7 +524,11 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader('RITMO MEDIO (período seleccionado)'),
+        Row(children: [
+          _SectionHeader('RITMO MEDIO (período seleccionado)'),
+          const SizedBox(width: AppSpacing.xs),
+          _HelpIconButton(onTap: _showAvgPaceHelp),
+        ]),
         const SizedBox(height: AppSpacing.m),
         _Card(
           child: Padding(
@@ -598,9 +610,13 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(
-            isYear ? 'VOLUMEN MENSUAL (${_rangeLabel()})'
-                   : 'VOLUMEN SEMANAL (${_rangeLabel()})'),
+        Row(children: [
+          _SectionHeader(
+              isYear ? 'VOLUMEN MENSUAL (${_rangeLabel()})'
+                     : 'VOLUMEN SEMANAL (${_rangeLabel()})'),
+          const SizedBox(width: AppSpacing.xs),
+          _HelpIconButton(onTap: _showVolumeHelp),
+        ]),
         const SizedBox(height: AppSpacing.m),
         _Card(
           child: Padding(
@@ -719,7 +735,11 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader('DISTRIBUCIÓN DE INTENSIDAD'),
+        Row(children: [
+          _SectionHeader('DISTRIBUCIÓN DE INTENSIDAD'),
+          const SizedBox(width: AppSpacing.xs),
+          _HelpIconButton(onTap: _showIntensityHelp),
+        ]),
         const SizedBox(height: AppSpacing.m),
         _Card(
           child: Padding(
@@ -772,7 +792,11 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader('CONSISTENCIA'),
+        Row(children: [
+          _SectionHeader('CONSISTENCIA'),
+          const SizedBox(width: AppSpacing.xs),
+          _HelpIconButton(onTap: _showConsistencyHelp),
+        ]),
         const SizedBox(height: AppSpacing.m),
         _Card(
           child: Padding(
@@ -841,7 +865,11 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader('POR TIPO'),
+        Row(children: [
+          _SectionHeader('POR TIPO'),
+          const SizedBox(width: AppSpacing.xs),
+          _HelpIconButton(onTap: _showByTypeHelp),
+        ]),
         const SizedBox(height: AppSpacing.m),
         _Card(
           child: Padding(
@@ -935,11 +963,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
           children: [
             _SectionHeader('ESTADO DE FORMA'),
             const SizedBox(width: AppSpacing.xs),
-            GestureDetector(
-              onTap: _showTSBHelp,
-              child: Icon(Icons.help_outline,
-                  size: 14, color: AppColors.iconMutedOf(context)),
-            ),
+            _HelpIconButton(onTap: _showTSBHelp),
           ],
         ),
         const SizedBox(height: 2),
@@ -1132,7 +1156,11 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader('CARGA DE ENTRENAMIENTO (ACWR)'),
+        Row(children: [
+          _SectionHeader('CARGA DE ENTRENAMIENTO (ACWR)'),
+          const SizedBox(width: AppSpacing.xs),
+          _HelpIconButton(onTap: _showAcwrHelp),
+        ]),
         const SizedBox(height: 2),
         Text('Aguda: 7 días · Crónica: 28 días',
             style: TextStyle(fontSize: 11, color: AppColors.textSecondary(context))),
@@ -1217,7 +1245,11 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader('RPE TENDENCIA (${_rangeLabel()})'),
+        Row(children: [
+          _SectionHeader('RPE TENDENCIA (${_rangeLabel()})'),
+          const SizedBox(width: AppSpacing.xs),
+          _HelpIconButton(onTap: _showRpeTrendHelp),
+        ]),
         const SizedBox(height: AppSpacing.m),
         _Card(
           child: Padding(
@@ -1329,7 +1361,11 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader('CARGA POR SEMANA (${_rangeLabel()})'),
+        Row(children: [
+          _SectionHeader('CARGA POR SEMANA (${_rangeLabel()})'),
+          const SizedBox(width: AppSpacing.xs),
+          _HelpIconButton(onTap: _showWeeklyLoadHelp),
+        ]),
         const SizedBox(height: AppSpacing.m),
         _Card(
           child: Padding(
@@ -1403,7 +1439,11 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader('EFICIENCIA AERÓBICA'),
+        Row(children: [
+          _SectionHeader('EFICIENCIA AERÓBICA'),
+          const SizedBox(width: AppSpacing.xs),
+          _HelpIconButton(onTap: _showAerobicHelp),
+        ]),
         const SizedBox(height: 2),
         Text('Período: ${_rangeLabel()}',
             style: TextStyle(fontSize: 11, color: AppColors.textSecondary(context))),
@@ -1476,7 +1516,163 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
     );
   }
 
-  // ── Bottom sheet de ayuda TSB ──────────────────────────────────────────────
+  // ── Bottom sheets de ayuda ─────────────────────────────────────────────────
+
+  void _showHelpSheet(String title, Widget content) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: const EdgeInsets.all(AppSpacing.l),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceOf(context),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title,
+                style:
+                    AppTypography.h3.copyWith(color: AppColors.textPrimary(context))),
+            const SizedBox(height: AppSpacing.m),
+            content,
+            const SizedBox(height: AppSpacing.l),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showRecordsHelp() => _showHelpSheet(
+        'Récords personales',
+        Text(
+          'El mejor tiempo registrado para cada distancia estándar en todos '
+          'tus entrenamientos. Solo se actualizan cuando superas tu marca anterior.',
+          style: AppTypography.body.copyWith(color: AppColors.textSecondary(context)),
+        ),
+      );
+
+  void _showRhythmHelp() => _showHelpSheet(
+        'Ritmo en series',
+        Text(
+          'Evolución del ritmo medio por kilómetro en tus sesiones de series. '
+          'Una línea descendente indica mejora (vas más rápido). Cada punto es '
+          'la media de todas las series de esa sesión.',
+          style: AppTypography.body.copyWith(color: AppColors.textSecondary(context)),
+        ),
+      );
+
+  void _showAvgPaceHelp() => _showHelpSheet(
+        'Ritmo medio',
+        Text(
+          'Ritmo medio por kilómetro en el período seleccionado, comparado con '
+          'el período anterior equivalente. El delta muestra si has mejorado o '
+          'empeorado respecto a antes.',
+          style: AppTypography.body.copyWith(color: AppColors.textSecondary(context)),
+        ),
+      );
+
+  void _showVolumeHelp() => _showHelpSheet(
+        'Volumen semanal',
+        Text(
+          'Kilómetros totales agrupados por semana (o mes si el período es 1 año). '
+          'La barra morada es la semana/mes actual. La línea de media ayuda a ver '
+          'si estás por encima o por debajo de tu ritmo habitual.',
+          style: AppTypography.body.copyWith(color: AppColors.textSecondary(context)),
+        ),
+      );
+
+  void _showIntensityHelp() => _showHelpSheet(
+        'Distribución de intensidad (regla 80/20)',
+        Text(
+          'Los corredores de élite hacen el 80% del volumen a intensidad baja '
+          '(RPE < 7) y solo el 20% a intensidad alta. Si tu porcentaje "intenso" '
+          'supera el 25-30%, aumentas el riesgo de lesión y sobreentrenamiento.',
+          style: AppTypography.body.copyWith(color: AppColors.textSecondary(context)),
+        ),
+      );
+
+  void _showConsistencyHelp() => _showHelpSheet(
+        'Consistencia',
+        Text(
+          'La consistencia es el factor más importante del progreso a largo plazo. '
+          'Cada punto representa un día: morado si entrenaste, gris si no. '
+          'La racha activa cuenta los días consecutivos con al menos un entreno.',
+          style: AppTypography.body.copyWith(color: AppColors.textSecondary(context)),
+        ),
+      );
+
+  void _showByTypeHelp() => _showHelpSheet(
+        'Distribución por tipo',
+        Text(
+          'Qué porcentaje del volumen total corresponde a cada tipo de entreno '
+          'en el período seleccionado. Útil para ver si tu entrenamiento está equilibrado.',
+          style: AppTypography.body.copyWith(color: AppColors.textSecondary(context)),
+        ),
+      );
+
+  void _showAcwrHelp() => _showHelpSheet(
+        'Carga aguda/crónica (ACWR)',
+        Text.rich(
+          TextSpan(
+            style: AppTypography.body.copyWith(color: AppColors.textSecondary(context)),
+            children: const [
+              TextSpan(
+                  text: 'Ratio entre la carga de los últimos 7 días (aguda, lo que '
+                      'has hecho esta semana) y la carga de las últimas 4 semanas '
+                      '(crónica, tu base habitual).\n\n'),
+              TextSpan(text: '• < 0.8: '),
+              TextSpan(text: 'infraentrenamiento, puedes aumentar\n'),
+              TextSpan(text: '• 0.8 - 1.3: '),
+              TextSpan(text: 'zona óptima de adaptación\n'),
+              TextSpan(text: '• > 1.3: '),
+              TextSpan(text: 'zona de riesgo de lesión\n'),
+              TextSpan(text: '• > 1.5: '),
+              TextSpan(text: 'riesgo alto, reduce carga'),
+            ],
+          ),
+        ),
+      );
+
+  void _showRpeTrendHelp() => _showHelpSheet(
+        'Tendencia de esfuerzo percibido (RPE)',
+        Text(
+          'Media del RPE por semana en el período seleccionado. Un RPE creciente '
+          'con el mismo volumen indica fatiga acumulada. Un RPE decreciente con '
+          'el mismo volumen indica adaptación y mejora de la forma.',
+          style: AppTypography.body.copyWith(color: AppColors.textSecondary(context)),
+        ),
+      );
+
+  void _showWeeklyLoadHelp() => _showHelpSheet(
+        'Carga semanal',
+        Text(
+          'Carga de entrenamiento estimada por semana (kilómetros × RPE). Permite '
+          'comparar semanas con distinto volumen e intensidad. Una semana de 40km '
+          'a RPE 5 tiene la misma carga que 25km a RPE 8.',
+          style: AppTypography.body.copyWith(color: AppColors.textSecondary(context)),
+        ),
+      );
+
+  void _showAerobicHelp() => _showHelpSheet(
+        'Eficiencia aeróbica',
+        Text.rich(
+          TextSpan(
+            style: AppTypography.body.copyWith(color: AppColors.textSecondary(context)),
+            children: const [
+              TextSpan(
+                  text: 'Relación entre el ritmo de carrera y la frecuencia cardíaca. '
+                      'Un valor que mejora (baja) significa que corres más rápido con '
+                      'menos esfuerzo cardíaco — señal directa de mejora de la forma '
+                      'aeróbica.\n\n'),
+              TextSpan(
+                  text: 'Solo aparece cuando tienes datos de FC en tus entrenamientos.'),
+            ],
+          ),
+        ),
+      );
 
   void _showTSBHelp() {
     showModalBottomSheet(
@@ -1835,6 +2031,23 @@ class _IntensityBar extends StatelessWidget {
                   fontWeight: FontWeight.w600)),
         ),
       ],
+    );
+  }
+}
+
+class _HelpIconButton extends StatelessWidget {
+  const _HelpIconButton({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: Icon(Icons.help_outline,
+            size: 14, color: AppColors.iconMutedOf(context)),
+      ),
     );
   }
 }
