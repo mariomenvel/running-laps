@@ -51,13 +51,13 @@ del proyecto y los pendientes más importantes."
 7. Al final de sesión: commitear + actualizar el .md de specs afectado si procede
 
 ### 5. DEUDA TÉCNICA PRIORIZADA
-Ver sección completa en AI_CONTEXT.md §12. Resumen:
-1. Bug mapper — colisión `WorkoutType.free`/`continuous` en `athlete_session_mapper.dart`
-2. Google Sign-In iOS — crash en `AppDelegate.configureGoogleSignIn()`
-3. Auth Wear OS — reemplazar bypass con Cloud Function + custom token
-4. Historial — paginación cursor-based (limitado a 100 entradas)
-5. `getAllEntrenamientos(uid)` ignora el uid recibido
-6. Refactor MVVM `workout_editor_screen.dart` (rama `refactor/workout-editor-mvvm` pausada)
+Ver sección completa en CLAUDE.md §Deuda técnica. Resumen:
+1. Google Sign-In iOS — crash en `AppDelegate.configureGoogleSignIn()`
+2. Auth Wear OS — reemplazar bypass con Cloud Function + custom token
+3. Historial — paginación cursor-based (limitado a 100 entradas)
+4. `getAllEntrenamientos(uid)` ignora el uid recibido
+5. Refactor MVVM `workout_editor_screen.dart` (rama `refactor/workout-editor-mvvm` pausada)
+6. Vistas huérfanas — 10 archivos marcados ⚠️ HUÉRFANO pendientes de eliminar
 
 ### 6. COMANDOS ÚTILES
 ```bash
