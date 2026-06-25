@@ -84,7 +84,7 @@ class AnalyticsViewModel {
     AnalyticsTimeRange range,
   ) {
     _computeRecords(allWorkouts);
-    _computePaceProgression(allWorkouts);
+    _computePaceProgression(filtered);
     _computeAvgPace(filtered, allWorkouts, range);
     _computeVolume(filtered, range);
     _computeIntensity(filtered);
@@ -141,12 +141,10 @@ class AnalyticsViewModel {
     personalRecords.value = records;
   }
 
-  void _computePaceProgression(List<Entrenamiento> all) {
-    final cutoff = DateTime.now().subtract(const Duration(days: 56));
+  void _computePaceProgression(List<Entrenamiento> filtered) {
     final byDist = <int, List<(DateTime, double)>>{};
 
-    for (final w in all) {
-      if (w.fecha.isBefore(cutoff)) continue;
+    for (final w in filtered) {
       for (final s in w.series) {
         if (s.distanciaM <= 0 || s.tiempoSec <= 0) continue;
         for (final d in _standardDistances) {
@@ -289,11 +287,11 @@ class AnalyticsViewModel {
     }
     currentStreak.value = streak;
 
-    // Dots: últimos 56 días
+    // Dots: últimos 56 días, coloreados según el filtro activo
     final dots = <bool>[];
     for (int i = 55; i >= 0; i--) {
       final day = DateTime(now.year, now.month, now.day).subtract(Duration(days: i));
-      dots.add(all.any((w) {
+      dots.add(filtered.any((w) {
         final d = DateTime(w.fecha.year, w.fecha.month, w.fecha.day);
         return d == day;
       }));

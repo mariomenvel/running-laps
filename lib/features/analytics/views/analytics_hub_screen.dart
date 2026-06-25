@@ -86,7 +86,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
           bottom: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
-                AppSpacing.xl, AppSpacing.xl, AppSpacing.xl, AppSpacing.m),
+                AppSpacing.xl, 8, AppSpacing.xl, AppSpacing.m),
             child: Row(
               children: [
                 Text(
@@ -130,6 +130,14 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
       ],
     );
   }
+
+  String _rangeLabel() => switch (_ctrl!.selectedRange.value) {
+    AnalyticsTimeRange.week        => '7 días',
+    AnalyticsTimeRange.month       => '30 días',
+    AnalyticsTimeRange.threeMonths => '3 meses',
+    AnalyticsTimeRange.year        => '1 año',
+    AnalyticsTimeRange.custom      => 'período seleccionado',
+  };
 
   Widget _buildWeeklySummary() {
     return ValueListenableBuilder<bool>(
@@ -286,6 +294,9 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SectionHeader('RECORDS PERSONALES'),
+        const SizedBox(height: 2),
+        Text('Todo el historial',
+            style: TextStyle(fontSize: 11, color: AppColors.textSecondary(context))),
         const SizedBox(height: AppSpacing.m),
         _Card(
           child: Column(
@@ -309,7 +320,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SectionHeader('RITMO EN SERIES (8 semanas)'),
+          _SectionHeader('RITMO EN SERIES (${_rangeLabel()})'),
           const SizedBox(height: AppSpacing.m),
           _Card(
             child: Padding(
@@ -379,7 +390,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader('RITMO EN SERIES (8 semanas)'),
+        _SectionHeader('RITMO EN SERIES (${_rangeLabel()})'),
         const SizedBox(height: AppSpacing.m),
         _Card(
           child: Padding(
@@ -583,7 +594,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader('VOLUMEN SEMANAL (8 semanas)'),
+        _SectionHeader('VOLUMEN SEMANAL (${_rangeLabel()})'),
         const SizedBox(height: AppSpacing.m),
         _Card(
           child: Padding(
@@ -919,6 +930,9 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
             ),
           ],
         ),
+        const SizedBox(height: 2),
+        Text('Calculado sobre los últimos 6 meses',
+            style: TextStyle(fontSize: 11, color: AppColors.textSecondary(context))),
         const SizedBox(height: AppSpacing.m),
         _Card(
           child: Padding(
@@ -1107,6 +1121,9 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SectionHeader('CARGA DE ENTRENAMIENTO (ACWR)'),
+        const SizedBox(height: 2),
+        Text('Aguda: 7 días · Crónica: 28 días',
+            style: TextStyle(fontSize: 11, color: AppColors.textSecondary(context))),
         const SizedBox(height: AppSpacing.m),
         _Card(
           child: Padding(
