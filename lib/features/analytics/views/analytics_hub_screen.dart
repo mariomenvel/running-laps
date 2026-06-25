@@ -82,22 +82,19 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
     return Column(
       children: [
         // Header
-        SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-                AppSpacing.xl, 8, AppSpacing.xl, AppSpacing.m),
-            child: Row(
-              children: [
-                Text(
-                  'Analytics',
-                  style: AppTypography.h2
-                      .copyWith(color: AppColors.textPrimary(context)),
-                ),
-                const Spacer(),
-                _RangeChip(ctrl: _ctrl!, onChanged: _onFilteredChanged),
-              ],
-            ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl, 4, AppSpacing.xl, AppSpacing.m),
+          child: Row(
+            children: [
+              Text(
+                'Analytics',
+                style: AppTypography.h2
+                    .copyWith(color: AppColors.textPrimary(context)),
+              ),
+              const Spacer(),
+              _RangeChip(ctrl: _ctrl!, onChanged: _onFilteredChanged),
+            ],
           ),
         ),
 
