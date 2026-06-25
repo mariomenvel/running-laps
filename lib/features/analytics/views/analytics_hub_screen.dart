@@ -84,7 +84,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
         // Header
         Padding(
           padding: const EdgeInsets.fromLTRB(
-              AppSpacing.xl, 4, AppSpacing.xl, AppSpacing.m),
+              AppSpacing.l, AppSpacing.m, AppSpacing.l, AppSpacing.m),
           child: Row(
             children: [
               Text(
