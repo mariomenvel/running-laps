@@ -101,6 +101,9 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
           ),
         ),
 
+        // Resumen semanal
+        _buildWeeklySummary(),
+
         // Tab bar
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
@@ -125,6 +128,224 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
         // Content
         Expanded(child: _buildContent()),
       ],
+    );
+  }
+
+  Widget _buildWeeklySummary() {
+    if (!_ctrlReady || _ctrl!.isLoading.value) return const SizedBox.shrink();
+
+    final tsb = _vm.currentTSB.value;
+
+    // Estado TSB
+    final Color dotColor;
+    final Color badgeBg;
+    final Color badgeFg;
+    final Color messageBg;
+    final Color messageFg;
+    final String statusLabel;
+    final String message;
+
+    if (tsb >= 5) {
+      dotColor   = const Color(0xFF639922);
+      badgeBg    = const Color(0xFFEAF3DE);
+      badgeFg    = const Color(0xFF3B6D11);
+      messageBg  = AppColors.surface2Of(context);
+      messageFg  = AppColors.textSecondary(context);
+      statusLabel = 'Fresco y listo';
+      message    = 'Buena semana para añadir una sesión de calidad.';
+    } else if (tsb >= -10) {
+      dotColor   = const Color(0xFFEF9F27);
+      badgeBg    = const Color(0xFFFAEEDA);
+      badgeFg    = const Color(0xFF854F0B);
+      messageBg  = AppColors.surface2Of(context);
+      messageFg  = AppColors.textSecondary(context);
+      statusLabel = 'Cargado';
+      message    = 'Semana de mucha carga. Prioriza el descanso y el rodaje suave.';
+    } else {
+      dotColor   = const Color(0xFFE24B4A);
+      badgeBg    = const Color(0xFFFCEBEB);
+      badgeFg    = const Color(0xFFA32D2D);
+      messageBg  = const Color(0xFFFCEBEB);
+      messageFg  = const Color(0xFFA32D2D);
+      statusLabel = 'Fatigado';
+      message    = 'Señales de sobreentrenamiento. Esta semana: solo regenerativo.';
+    }
+
+    // Volumen semana actual y anterior — desde allData (independiente del filtro)
+    final now       = DateTime.now();
+    final thisMonday = DateTime(now.year, now.month, now.day)
+        .subtract(Duration(days: now.weekday - 1));
+    final prevMonday = thisMonday.subtract(const Duration(days: 7));
+
+    double thisWeekKm = 0;
+    double prevWeekKm = 0;
+    for (final w in _ctrl!.allData) {
+      final day = DateTime(w.fecha.year, w.fecha.month, w.fecha.day);
+      if (!day.isBefore(thisMonday)) {
+        thisWeekKm += w.distanciaTotalM() / 1000.0;
+      } else if (!day.isBefore(prevMonday)) {
+        prevWeekKm += w.distanciaTotalM() / 1000.0;
+      }
+    }
+
+    final volumeLabel = '${thisWeekKm.toStringAsFixed(0)} km';
+    String volumeDelta = '';
+    Color volumeDeltaColor = AppColors.textSecondary(context);
+    if (prevWeekKm > 0) {
+      final delta = ((thisWeekKm - prevWeekKm) / prevWeekKm * 100).round();
+      final sign  = delta >= 0 ? '↑ +' : '↓ ';
+      volumeDelta = '$sign${delta.abs()}% vs semana anterior';
+      volumeDeltaColor = delta > 20
+          ? const Color(0xFFA32D2D)
+          : delta > 0
+              ? const Color(0xFF3B6D11)
+              : AppColors.textSecondary(context);
+    }
+
+    // Distribución fácil/intenso
+    final easyPct  = _vm.intensityEasyPct.value;
+    final hardPct  = _vm.intensityHardPct.value;
+    final easyLabel = '${easyPct.toStringAsFixed(0)}% fácil';
+    final String distNote;
+    final Color distNoteColor;
+    if (easyPct >= 75) {
+      distNote      = '${hardPct.toStringAsFixed(0)}% intenso · cerca del 80/20';
+      distNoteColor = AppColors.textSecondary(context);
+    } else if (easyPct >= 60) {
+      distNote      = '${hardPct.toStringAsFixed(0)}% intenso · demasiado';
+      distNoteColor = const Color(0xFF854F0B);
+    } else {
+      distNote      = '${hardPct.toStringAsFixed(0)}% intenso · peligroso';
+      distNoteColor = const Color(0xFFA32D2D);
+    }
+
+    return ValueListenableBuilder<double>(
+      valueListenable: _vm.currentTSB,
+      builder: (_, __, ___) => Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceOf(context),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.borderOf(context), width: 0.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header: estado + badge TSB
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 10, height: 10,
+                    decoration: BoxDecoration(shape: BoxShape.circle, color: dotColor),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      statusLabel,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary(context),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: badgeBg,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'TSB ${tsb >= 0 ? '+' : ''}${tsb.toStringAsFixed(0)}',
+                      style: TextStyle(fontSize: 12, color: badgeFg),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Divider(height: 0.5, thickness: 0.5, color: AppColors.borderOf(context)),
+            // Métricas: volumen + distribución
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Volumen esta semana',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textSecondary(context),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          volumeLabel,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textPrimary(context),
+                          ),
+                        ),
+                        if (volumeDelta.isNotEmpty)
+                          Text(
+                            volumeDelta,
+                            style: TextStyle(fontSize: 11, color: volumeDeltaColor),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Distribución',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textSecondary(context),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          easyLabel,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textPrimary(context),
+                          ),
+                        ),
+                        Text(
+                          distNote,
+                          style: TextStyle(fontSize: 11, color: distNoteColor),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Mensaje accionable
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: messageBg,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                message,
+                style: TextStyle(fontSize: 13, color: messageFg),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
