@@ -216,7 +216,12 @@ class AnalyticsViewModel {
   void _computeVolume(List<Entrenamiento> filtered, AnalyticsTimeRange range) {
     // Rango anual: agrupar por mes (12 barras)
     if (range == AnalyticsTimeRange.year) {
+      final now = DateTime.now();
       final byMonth = <DateTime, double>{};
+      // Scaffold: garantiza los 12 meses del año en curso
+      for (int m = 1; m <= 12; m++) {
+        byMonth[DateTime(now.year, m)] = 0.0;
+      }
       for (final w in filtered) {
         final key = DateTime(w.fecha.year, w.fecha.month);
         byMonth[key] = (byMonth[key] ?? 0) + w.distanciaTotalM() / 1000.0;

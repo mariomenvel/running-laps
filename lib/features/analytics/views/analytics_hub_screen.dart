@@ -1256,6 +1256,9 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                           getTitlesWidget: (x, _) {
                             final i = x.toInt();
                             if (i < 0 || i >= rpes.length) return const SizedBox();
+                            final step = rpes.length <= 8 ? 1
+                                : rpes.length <= 16 ? 2 : 4;
+                            if (i % step != 0) return const SizedBox();
                             return Text('S${i + 1}',
                                 style: TextStyle(
                                     fontSize: 10,
@@ -1438,6 +1441,22 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                     ),
                     gridData: const FlGridData(show: false),
                     borderData: FlBorderData(show: false),
+                    lineTouchData: LineTouchData(
+                      touchTooltipData: LineTouchTooltipData(
+                        getTooltipColor: (_) => AppColors.surfaceOf(context),
+                        tooltipBorder: BorderSide(
+                            color: AppColors.borderOf(context), width: 0.5),
+                        tooltipBorderRadius: BorderRadius.circular(8),
+                        getTooltipItems: (spots) => spots
+                            .map((s) => LineTooltipItem(
+                                  s.y.toStringAsFixed(1),
+                                  TextStyle(
+                                      color: AppColors.textPrimary(context),
+                                      fontSize: 11),
+                                ))
+                            .toList(),
+                      ),
+                    ),
                   )),
                 ),
                 const SizedBox(height: AppSpacing.m),
