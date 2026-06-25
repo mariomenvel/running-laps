@@ -154,3 +154,16 @@ Fecha: 2026-05-27
 - `apiKey`: `'sk-or-...'`
 - `weeklyPlanningEnabled`: `true/false`
 - `chatAdjustmentsEnabled`: `true/false`
+
+## Ajuste adicional (2026-06-25) - IDs de modelos OpenRouter
+
+- Se corrigen los IDs hardcodeados usados por las llamadas actuales a OpenRouter:
+  - `anthropic/claude-sonnet-4-5` -> `anthropic/claude-sonnet-4.5`
+  - `anthropic/claude-haiku-4-5` -> `anthropic/claude-haiku-4.5`
+- Archivo modificado:
+  - `lib/features/ai_coach/data/ai_coach_models_config.dart`
+- Nota tecnica:
+  - En el estado actual de `main`, `appConfig/aiCoachProvider` se usa para habilitar/deshabilitar el proveedor, pero las llamadas principales usan `AiCoachModels`.
+  - Si se quiere que el modelo de Firestore controle realmente todas las llamadas, hay que cambiar el contrato de `AiCoachDecisionService`, `AiCoachChatService`, onboarding y generador por prompt.
+- Riesgo pendiente:
+  - Si OpenRouter/Anthropic sigue fallando tras corregir los IDs, revisar el JSON Schema enviado a `response_format`. Los logs previos indicaban rechazo por `minimum`/`maximum` en campos `integer`.
