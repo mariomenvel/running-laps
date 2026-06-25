@@ -141,10 +141,10 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
           builder: (_, tsb, __) {
             final Color dotColor;
             final String statusLabel;
-            if (tsb >= 5) {
+            if (tsb >= 15) {
               dotColor    = const Color(0xFF639922);
               statusLabel = 'Fresco';
-            } else if (tsb >= -10) {
+            } else if (tsb >= -30) {
               dotColor    = const Color(0xFFEF9F27);
               statusLabel = 'Cargado';
             } else {
@@ -1475,23 +1475,23 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   Color _tsbZoneColor(double tsb) {
-    if (tsb > 5) return AppColors.rpeLow;
-    if (tsb > -10) return AppColors.brand;
-    if (tsb > -20) return AppColors.effort;
+    if (tsb > 15)  return AppColors.rpeLow;
+    if (tsb > -30) return AppColors.brand;
+    if (tsb > -60) return AppColors.effort;
     return AppColors.rpeMax;
   }
 
   String _tsbZoneLabel(double tsb) {
-    if (tsb > 20) return 'Muy fresco';
-    if (tsb > 5) return 'Fresco';
-    if (tsb > -10) return 'Cargando';
-    if (tsb > -20) return 'Fatigado';
+    if (tsb > 40)  return 'Muy fresco';
+    if (tsb > 15)  return 'Fresco';
+    if (tsb > -30) return 'Cargando';
+    if (tsb > -60) return 'Fatigado';
     return 'Peligro';
   }
 
   IconData _tsbZoneIcon(double tsb) {
-    if (tsb > 5) return Icons.check_circle_outline;
-    if (tsb > -10) return Icons.info_outline;
+    if (tsb > 15)  return Icons.check_circle_outline;
+    if (tsb > -30) return Icons.info_outline;
     return Icons.warning_amber_rounded;
   }
 

@@ -415,11 +415,11 @@ class AnalyticsViewModel {
 
   String _tsbInsight(double tsb) {
     final t = tsb.toStringAsFixed(0);
-    if (tsb > 20)  return 'Muy fresco (TSB +$t). Momento ideal para competir o hacer test.';
-    if (tsb > 5)   return 'Fresco (TSB +$t). Buen momento para sesiones intensas.';
-    if (tsb > -10) return 'Cargando (TSB $t). Normal durante bloques de entrenamiento.';
-    if (tsb > -20) return 'Fatiga acumulada (TSB $t). Considera reducir volumen esta semana.';
-    return 'Muy fatigado (TSB $t). Descansa 2-3 días para evitar lesión.';
+    if (tsb > 40)  return 'Muy fresco (TSB +$t). Momento ideal para competir o hacer test.';
+    if (tsb > 15)  return 'Fresco y preparado (TSB +$t). Buen momento para sesiones intensas.';
+    if (tsb > -30) return 'Cargado pero asumible (TSB $t). Normal durante bloques de entrenamiento.';
+    if (tsb > -60) return 'Fatiga acumulada alta (TSB $t). Considera reducir volumen esta semana.';
+    return 'Riesgo de sobreentrenamiento (TSB $t). Descansa 2-3 días para evitar lesión.';
   }
 
   void _computeEfficiency(List<Entrenamiento> filtered) {
