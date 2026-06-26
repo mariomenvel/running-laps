@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../data/auth_repository.dart';
 import 'package:running_laps/core/services/user_service.dart';
@@ -89,6 +90,10 @@ class AuthController {
 
       // Enviar email de verificación
       await _repo.sendEmailVerification();
+
+      // Forzar re-emisión en authStateChanges para que AuthWrapper
+      // reconstruya y muestre EmailVerificationPendingView
+      await FirebaseAuth.instance.currentUser?.reload();
     } catch (e) {
       rethrow;
     } finally {
