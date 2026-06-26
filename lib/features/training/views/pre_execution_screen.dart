@@ -284,7 +284,6 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
       ),
       trailing: Switch(
         value: _warmupEnabled,
-        activeThumbColor: AppColors.brand,
         onChanged: (v) => setState(() {
           _warmupEnabled = v;
           if (!v) {
@@ -331,7 +330,6 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
       ),
       trailing: Switch(
         value: _cooldownEnabled,
-        activeThumbColor: AppColors.brand,
         onChanged: (v) => setState(() {
           _cooldownEnabled = v;
           if (!v) {
@@ -452,7 +450,6 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
       ),
       trailing: Switch(
         value: _gpsOn,
-        activeThumbColor: AppColors.brand,
         onChanged: (v) => setState(() => _gpsOn = v),
       ),
     );
