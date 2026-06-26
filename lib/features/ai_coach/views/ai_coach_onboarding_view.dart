@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -149,6 +150,12 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
         jsonSchema: _profileExtractionSchema,
         temperature: 0.2,
         schemaName: 'onboarding_profile',
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw TimeoutException(
+          'La conexión tardó demasiado. '
+          'Comprueba tu conexión e inténtalo de nuevo.',
+        ),
       );
 
       final raw = jsonDecode(result.content) as Map<String, dynamic>;
@@ -200,10 +207,10 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
     } catch (e) {
       debugPrint('[AiCoachOnboarding] _processOnboarding error: $e');
       if (!mounted) return;
-      ModernSnackBar.showError(
-        context,
-        'No se pudo crear el perfil. ${e.toString().replaceFirst('Exception: ', '')}',
-      );
+      final msg = e is TimeoutException
+          ? 'La conexión tardó demasiado. Comprueba tu conexión e inténtalo de nuevo.'
+          : 'No se pudo crear el perfil. Comprueba tu conexión e inténtalo de nuevo.';
+      ModernSnackBar.showError(context, msg);
       setState(() => _isProcessing = false);
     }
   }
@@ -234,8 +241,16 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Preparando tu plan personalizado',
+            'Esto puede tardar unos segundos',
             style: TextStyle(color: AppColors.textSecondary(context)),
+          ),
+          const SizedBox(height: 32),
+          TextButton(
+            onPressed: () => setState(() => _isProcessing = false),
+            child: Text(
+              'Cancelar',
+              style: TextStyle(color: AppColors.textSecondary(context)),
+            ),
           ),
         ],
       ),
@@ -567,8 +582,13 @@ class _PbStepPage extends StatelessWidget {
     final textSecondary =
         isDark ? const Color(0xFF8E8E93) : const Color(0xFF6C6C70);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 28),
+    return SingleChildScrollView(
+      padding: EdgeInsets.only(
+        left: 28,
+        right: 28,
+        top: 28,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 28,
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,

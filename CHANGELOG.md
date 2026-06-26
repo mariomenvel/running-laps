@@ -1,5 +1,20 @@
 # CHANGELOG — Running Laps
 
+## [Fix] — Bugs críticos del onboarding (rama: fix/onboarding-bugs)
+- Timeout de 30 s en la llamada al LLM del onboarding del AI Coach; antes podía
+  quedarse cargando hasta 60 s (límite de Cloud Function) sin feedback
+- Mensaje de error diferenciado para timeout vs. error de red/servidor
+- Botón "Cancelar" en la pantalla de loading del onboarding para salir sin
+  esperar a que venza el timeout
+- Fix overflow en el paso de marcas personales cuando el teclado sube
+  (SingleChildScrollView + padding adaptativo)
+- Fix sheet de fecha/sexo (ZonesConfigScreen) que podía aparecer encima del
+  onboarding del AI Coach; ahora se suprime si hay una ruta modal encima
+- Verificación de email tras registro: ya implementada en AuthController
+  (sendEmailVerification) + AuthWrapper redirige a EmailVerificationPendingView
+- Google Sign-In: implementado pero crashea en iOS (assertionFailure en
+  AppDelegate.configureGoogleSignIn) — pendiente Xcode/logs
+
 ## [AI Coach] — Reset semanal automático del chat (Cloud Function)
 - Scheduled Function resetWeeklyChatUsage: cada lunes 00:05 (Europe/Madrid)
   resetea messagesUsed a 0 y actualiza periodStart/periodEnd para todos los
