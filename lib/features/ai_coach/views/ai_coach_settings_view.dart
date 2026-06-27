@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
@@ -425,7 +426,7 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
               ),
             ),
       body: _isLoading
-          ? const Center(child: CupertinoActivityIndicator(radius: 12))
+          ? Center(child: CupertinoActivityIndicator(color: AppColors.brand, radius: 12))
           : SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -621,7 +622,7 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
                                 ),
                               ),
                               child: _isSaving
-                                  ? const SizedBox(
+                                  ? SizedBox(
                                       width: 18,
                                       height: 18,
                                       child: CupertinoActivityIndicator(

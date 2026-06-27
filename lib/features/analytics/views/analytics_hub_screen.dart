@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
@@ -78,7 +79,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
   @override
   Widget build(BuildContext context) {
     if (!_ctrlReady) {
-      return const Center(child: CupertinoActivityIndicator(color: AppColors.brand, radius: 12));
+      return Center(child: CupertinoActivityIndicator(color: AppColors.brand, radius: 12));
     }
     return Column(
       children: [
@@ -230,7 +231,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
 
   Widget _buildContent() {
     if (_ctrl!.isLoading.value) {
-      return const Center(child: CupertinoActivityIndicator(color: AppColors.brand, radius: 12));
+      return Center(child: CupertinoActivityIndicator(color: AppColors.brand, radius: 12));
     }
     final data = _ctrl!.filteredData.value;
     if (data.isEmpty) {
