@@ -64,6 +64,7 @@ Widgets reutilizables — usar siempre estos, no reinventar:
 | `EmptyStateWidget` | `empty_state_widget.dart` | Estados vacíos: icono, título, subtítulo, botón opcional. |
 | `KpiCardWithDelta` | `kpi_card_with_delta.dart` | Card KPI con delta coloreado (verde=mejora, rojo=empeora). |
 | `SkeletonShimmer` | `skeleton_shimmer.dart` | Skeleton loader con shimmer para UI en carga. |
+| `showAppDatePicker` | `app_date_picker.dart` | Selector de fecha estilo iOS (CupertinoDatePicker en BottomSheet). Usar siempre en lugar de `showDatePicker()` de Material. Parámetros: `initialDate`, `minimumDate`, `maximumDate`, `title`. |
 
 ---
 
