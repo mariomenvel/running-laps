@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../viewmodels/admin_controller.dart';
 import 'package:intl/intl.dart';
@@ -21,7 +22,7 @@ class AdminDashboardTab extends StatelessWidget {
       animation: controller,
       builder: (context, _) {
         if (controller.isLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: CupertinoActivityIndicator(radius: 12));
         }
 
         final stats = controller.stats;

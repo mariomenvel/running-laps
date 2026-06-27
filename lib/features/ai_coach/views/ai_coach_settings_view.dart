@@ -425,7 +425,7 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
               ),
             ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CupertinoActivityIndicator(radius: 12))
           : SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -624,9 +624,9 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
                                   ? const SizedBox(
                                       width: 18,
                                       height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
+                                      child: CupertinoActivityIndicator(
                                         color: Colors.white,
+                                        radius: 9,
                                       ),
                                     )
                                   : const Text(

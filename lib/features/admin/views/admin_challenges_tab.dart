@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../groups/data/models/challenge_models.dart';
@@ -246,7 +247,7 @@ class AdminChallengesTab extends StatelessWidget {
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-                child: CircularProgressIndicator(color: AppColors.brand));
+                child: CupertinoActivityIndicator(color: AppColors.brand, radius: 12));
           }
 
           final challenges = snapshot.data ?? [];

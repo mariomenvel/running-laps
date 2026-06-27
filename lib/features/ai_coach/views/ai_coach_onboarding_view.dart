@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
@@ -257,7 +258,7 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const CircularProgressIndicator(color: AppColors.brand),
+          const CupertinoActivityIndicator(color: AppColors.brand, radius: 12),
           const SizedBox(height: 24),
           const Text(
             'Analizando tu perfil...',

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
@@ -136,9 +137,9 @@ class _AppFooterState extends State<AppFooter>
                   ? const SizedBox(
                       width: 40,
                       height: 40,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 3,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.brand),
+                      child: CupertinoActivityIndicator(
+                        color: AppColors.brand,
+                        radius: 14,
                       ),
                     )
                   : const Icon(Icons.play_arrow, color: AppColors.brand, size: 40.0),

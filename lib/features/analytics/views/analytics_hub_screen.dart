@@ -78,7 +78,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
   @override
   Widget build(BuildContext context) {
     if (!_ctrlReady) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.brand));
+      return const Center(child: CupertinoActivityIndicator(color: AppColors.brand, radius: 12));
     }
     return Column(
       children: [
@@ -230,7 +230,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
 
   Widget _buildContent() {
     if (_ctrl!.isLoading.value) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.brand));
+      return const Center(child: CupertinoActivityIndicator(color: AppColors.brand, radius: 12));
     }
     final data = _ctrl!.filteredData.value;
     if (data.isEmpty) {

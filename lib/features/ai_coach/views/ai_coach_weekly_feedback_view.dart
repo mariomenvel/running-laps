@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -346,9 +347,9 @@ class _AiCoachWeeklyFeedbackViewState
                                 SizedBox(
                                   width: 16,
                                   height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
+                                  child: CupertinoActivityIndicator(
                                     color: Colors.white,
+                                    radius: 8,
                                   ),
                                 ),
                                 SizedBox(width: 10),
