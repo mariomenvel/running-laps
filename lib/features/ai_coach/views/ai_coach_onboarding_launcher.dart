@@ -45,7 +45,9 @@ Future<void> launchAiCoachOnboarding(
       page: AiCoachOnboardingView(
         uid: uid,
         onCompleted: () async {
-          Navigator.of(context).pop();
+          if (context.mounted) {
+            Navigator.of(context).pop();
+          }
           try {
             await AiCoachAutomationService()
                 .forceGenerateCurrentWeekPlan(uid);
