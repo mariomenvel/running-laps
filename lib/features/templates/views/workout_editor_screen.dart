@@ -467,54 +467,6 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
 
             _divider(context),
 
-            // ── Sección 1b: Hora ─────────────────────────────────────
-            ValueListenableBuilder<TimeOfDay?>(
-              valueListenable: _scheduledTime,
-              builder: (_, time, __) => GestureDetector(
-                onTap: _pickTime,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.schedule,
-                        size: 20,
-                        color: AppColors.iconMutedOf(context),
-                      ),
-                      const SizedBox(width: AppSpacing.s),
-                      Text(
-                        'Hora',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary(context),
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        time == null
-                            ? 'Sin hora'
-                            : '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: time == null
-                              ? AppColors.textSecondary(context)
-                              : AppColors.brand,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.chevron_right,
-                        size: 18,
-                        color: AppColors.iconMutedOf(context),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            _divider(context),
-
             // ── Sección 2: Nombre ────────────────────────────────────
             _SectionLabel('NOMBRE'),
             const SizedBox(height: AppSpacing.s),
