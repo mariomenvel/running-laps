@@ -80,8 +80,6 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
     }
   }
 
-  void _skipToProcess() => _processOnboarding();
-
   String? _validateCoachText(String? value) {
     if (value == null || value.isEmpty) return null;
     final lower = value.toLowerCase();
@@ -332,6 +330,12 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
                 isDark: isDark,
                 optional: true,
               ),
+              _BirthDateStepPage(
+                birthDate: _birthDate,
+                sex: _biologicalSex,
+                onBirthDateChanged: (d) => setState(() => _birthDate = d),
+                onSexChanged: (s) => setState(() => _biologicalSex = s),
+              ),
               _PbStepPage(
                 isDark: isDark,
                 pb5kSeconds: _pb5kSeconds,
@@ -343,24 +347,16 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
                 onChangedHalf: (v) => setState(() => _pbHalfMarathonSeconds = v),
                 onChangedMarathon: (v) => setState(() => _pbMarathonSeconds = v),
               ),
-              _BirthDateStepPage(
-                birthDate: _birthDate,
-                sex: _biologicalSex,
-                onBirthDateChanged: (d) => setState(() => _birthDate = d),
-                onSexChanged: (s) => setState(() => _biologicalSex = s),
-              ),
             ],
           ),
         ),
-        if (_currentStep == 4)
-          _PbStepButtons(onSkip: _skipToProcess, onCreate: _processOnboarding)
-        else if (_currentStep == 5)
-          _PbStepButtons(onSkip: _skipToProcess, onCreate: _processOnboarding)
+        if (_currentStep == 5)
+          _CreatePlanButton(onCreate: _processOnboarding)
         else
           _NextButton(
             isLastStep: false,
             controller: _controllerForStep(_currentStep),
-            isOptional: _currentStep == 3,
+            isOptional: _currentStep == 3 || _currentStep == 4,
             onNext: _nextStep,
           ),
         const SizedBox(height: 32),
@@ -938,54 +934,32 @@ class _BirthDateStepPage extends StatelessWidget {
   }
 }
 
-class _PbStepButtons extends StatelessWidget {
-  final VoidCallback onSkip;
+class _CreatePlanButton extends StatelessWidget {
   final VoidCallback onCreate;
 
-  const _PbStepButtons({required this.onSkip, required this.onCreate});
+  const _CreatePlanButton({required this.onCreate});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 28),
-      child: Row(
-        children: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: onSkip,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.brand,
-                side: const BorderSide(color: AppColors.brand),
-                minimumSize: const Size.fromHeight(54),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: const Text(
-                'Saltar',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
+      child: SizedBox(
+        width: double.infinity,
+        child: FilledButton(
+          onPressed: onCreate,
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.brand,
+            foregroundColor: Colors.white,
+            minimumSize: const Size.fromHeight(54),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: FilledButton(
-              onPressed: onCreate,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.brand,
-                foregroundColor: Colors.white,
-                minimumSize: const Size.fromHeight(54),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: const Text(
-                'Crear mi plan →',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-              ),
-            ),
+          child: const Text(
+            'Crear mi plan →',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
           ),
-        ],
+        ),
       ),
     );
   }
