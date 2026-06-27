@@ -48,13 +48,14 @@ Future<void> launchAiCoachOnboarding(
           if (context.mounted) {
             Navigator.of(context).pop();
           }
+          onCompleted?.call();
+          await Future.delayed(const Duration(milliseconds: 500));
           try {
             await AiCoachAutomationService()
                 .forceGenerateCurrentWeekPlan(uid);
           } catch (e) {
             debugPrint('[Onboarding] error generando plan: $e');
           }
-          onCompleted?.call();
         },
       ),
     ),
