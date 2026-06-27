@@ -70,6 +70,14 @@ class _AuthWrapperState extends State<AuthWrapper> {
               );
             }
 
+            // Si el documento aún no existe (usuario recién creado, Firestore
+            // aún escribiendo), esperar en lugar de asumir onboardingCompleted: true
+            if (userSnap.data == null || !userSnap.data!.exists) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+
             // Usuarios existentes sin el campo → true (ya hicieron onboarding)
             final onboardingCompleted =
                 userSnap.data?.data()?['onboardingCompleted'] as bool? ?? true;
