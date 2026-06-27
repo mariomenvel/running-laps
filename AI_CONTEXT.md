@@ -349,8 +349,8 @@ Campo nuevo en `IOSLiveActivityPayload` → actualizar también:
 **`HomeEstadisticaRepository` es singleton**
 No instanciar con `HomeEstadisticaRepository()` esperando instancia independiente.
 
-**Bug mapper (pendiente)**
-Colisión `WorkoutType.free`/`continuous` en `athlete_session_mapper.dart`: ambos usan el mismo valor de categoría en Firestore. Prioridad alta — antes del refactor MVVM de `workout_editor_screen.dart`.
+~~**Bug mapper**~~ — ✅ Resuelto (jun 2026, CHANGELOG)
+Colisión `WorkoutType.free`/`continuous` en `athlete_session_mapper.dart` corregida.
 
 ---
 
@@ -372,13 +372,15 @@ Colisión `WorkoutType.free`/`continuous` en `athlete_session_mapper.dart`: ambo
 
 ## 12. Deuda técnica priorizada
 
-1. **Bug mapper** — colisión `WorkoutType.free`/`continuous` en `athlete_session_mapper.dart`
-2. **Google Sign-In iOS** — `assertionFailure` en `AppDelegate.configureGoogleSignIn()`
-3. **Auth Wear OS** — reemplazar bypass con Cloud Function + custom token
-4. **Historial paginación** — limitado a 100 entradas, implementar cursor-based pagination
-5. `getAllEntrenamientos(uid)` — ignora el uid recibido (alias de `getTrainings()`)
-6. **Refactor MVVM** `workout_editor_screen.dart` — rama `refactor/workout-editor-mvvm` pausada
-7. **`GPSService.updateSerie()`** — método muerto en `gps_service.dart:191-194`, candidato a eliminar
+1. **Google Sign-In iOS** — `assertionFailure` en `AppDelegate.configureGoogleSignIn()`
+2. **Auth Wear OS** — reemplazar bypass con Cloud Function + custom token
+3. **Historial paginación** — limitado a 100 entradas, implementar cursor-based pagination
+4. **Refactor MVVM** `workout_editor_screen.dart` — rama `refactor/workout-editor-mvvm` pausada
+5. **`GPSService.updateSerie()`** — método muerto en `gps_service.dart:191-194`, candidato a eliminar
+
+### ✅ Resueltos (jun 2026)
+- ~~**Bug mapper**~~ — colisión `WorkoutType.free`/`continuous` corregida (CHANGELOG jun 2026)
+- ~~`getAllEntrenamientos(uid)` ignoraba el uid~~ — verificado: pasa `uid` correctamente a `getTrainings(uid: uid)` (training_repository.dart:163)
 
 ---
 

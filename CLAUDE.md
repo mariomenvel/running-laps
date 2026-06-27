@@ -167,9 +167,10 @@ Guías de trabajo (`CLAUDE.md`, `AI_CONTEXT.md`) — actualizar siempre que camb
 1. **Google Sign-In iOS** — `assertionFailure` en `AppDelegate.configureGoogleSignIn()`
 2. **Auth Wear OS** — reemplazar bypass con Cloud Function + custom token
 3. **Historial** — limitado a 100 entradas, implementar paginación con cursor
-4. `getAllEntrenamientos(uid)` en `TrainingRepository` ignora el uid recibido (alias de `getTrainings()`)
-5. **Refactor MVVM de `workout_editor_screen.dart`** — iniciado y pausado en rama `refactor/workout-editor-mvvm` (sin mergear).
-6. **Vistas huérfanas** — 10 archivos marcados con `⚠️ HUÉRFANO` en su cabecera pendientes de eliminar tras testing manual: `session_editor_view.dart`, `athlete_session_editor_view.dart`, `home_view_legacy.dart`, `profile_menu_screen.dart` (ojo: la versión **sin** `_legacy` es la huérfana; la activa es `profile_menu_screen_legacy.dart`), `analytics_hub_screen_legacy.dart`, `analytics_hub_view.dart`, `group_rewards_screen.dart`, `edit_profile_picture_view.dart`, `session_planner_view.dart`, `global_challenge_card.dart`.
-7. **Templates de sesión completa** — `TrainingTemplatesRepository` implementado pero sin UI (pantalla "crear desde plantilla"). No es MVP — solo las plantillas de segmento son MVP actualmente. El switch "Guardar como plantilla" fue eliminado del editor hasta que exista la UI de carga.
-8. **`GPSService.updateSerie()`** — método muerto (`gps_service.dart:191-194`), sin llamadas. Candidato a eliminar.
+4. **Refactor MVVM de `workout_editor_screen.dart`** — iniciado y pausado en rama `refactor/workout-editor-mvvm` (sin mergear).
+5. **Vistas huérfanas** — 10 archivos marcados con `⚠️ HUÉRFANO` en su cabecera pendientes de eliminar tras testing manual: `session_editor_view.dart`, `athlete_session_editor_view.dart`, `home_view_legacy.dart`, `profile_menu_screen.dart` (ojo: la versión **sin** `_legacy` es la huérfana; la activa es `profile_menu_screen_legacy.dart`), `analytics_hub_screen_legacy.dart`, `analytics_hub_view.dart`, `group_rewards_screen.dart`, `edit_profile_picture_view.dart`, `session_planner_view.dart`, `global_challenge_card.dart`.
+6. **Templates de sesión completa** — `TrainingTemplatesRepository` implementado pero sin UI (pantalla "crear desde plantilla"). No es MVP — solo las plantillas de segmento son MVP actualmente. El switch "Guardar como plantilla" fue eliminado del editor hasta que exista la UI de carga.
 7. **`GPSService.updateSerie()`** — método muerto (`gps_service.dart:191-194`), sin llamadas. `GPSService` se reinstancia por serie (no singleton), así que el número llega correcto vía constructor. Candidato a eliminar.
+
+### ✅ Resuelto (jun 2026)
+- ~~`getAllEntrenamientos(uid)` ignoraba el uid~~ — verificado: pasa `uid` correctamente a `getTrainings(uid: uid)` (training_repository.dart:163)
