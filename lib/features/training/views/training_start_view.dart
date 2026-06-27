@@ -17,6 +17,7 @@ import 'package:running_laps/core/widgets/rpe_badge.dart';
 import 'package:running_laps/core/widgets/ios_picker.dart';
 import '../../../core/services/gps_service.dart';
 import '../../../core/services/ios_live_activity_service.dart';
+import '../../../core/widgets/app_confirm_dialog.dart';
 import '../../../core/widgets/modern_snackbar.dart';
 import '../../../core/services/settings_service.dart';
 import '../../../core/utils/app_transitions.dart';
@@ -1476,16 +1477,12 @@ class _TrainingStartViewState extends State<TrainingStartView>
 
   void _startContinuousRun() async {
     if (_vm.series.isNotEmpty) {
-       bool confirm = await showDialog(
-         context: context, 
-         builder: (_) => AlertDialog(
-           title: const Text("Iniciar nueva sesión"),
-           content: const Text("Al iniciar una carrera continua se perderán las series actuales. ¿Continuar?"),
-           actions: [
-             TextButton(onPressed: ()=>Navigator.pop(context, false), child: const Text("Cancelar")),
-             TextButton(onPressed: ()=>Navigator.pop(context, true), child: const Text("Continuar")),
-           ],
-         )
+       bool confirm = await showAppConfirmDialog(
+         context: context,
+         title: 'Iniciar nueva sesión',
+         message: 'Al iniciar una carrera continua se perderán las series actuales. ¿Continuar?',
+         confirmLabel: 'Continuar',
+         isDestructive: true,
        ) ?? false;
        if (!confirm) return;
     }
@@ -1529,16 +1526,12 @@ class _TrainingStartViewState extends State<TrainingStartView>
 
   void _startContinuousRunWithConfig() async {
     if (_vm.series.isNotEmpty) {
-      final confirm = await showDialog<bool>(
+      final confirm = await showAppConfirmDialog(
         context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Iniciar nueva sesión'),
-          content: const Text('Al iniciar una carrera continua se perderán las series actuales. ¿Continuar?'),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
-            TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Continuar')),
-          ],
-        ),
+        title: 'Iniciar nueva sesión',
+        message: 'Al iniciar una carrera continua se perderán las series actuales. ¿Continuar?',
+        confirmLabel: 'Continuar',
+        isDestructive: true,
       ) ?? false;
       if (!confirm) return;
     }

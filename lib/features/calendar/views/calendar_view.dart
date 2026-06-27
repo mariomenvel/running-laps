@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
+import 'package:running_laps/core/widgets/app_confirm_dialog.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
@@ -1461,27 +1462,12 @@ class _CalendarViewState extends State<CalendarView>
                                   ),
                                 GestureDetector(
                                   onTap: () async {
-                                    final confirm = await showDialog<bool>(
+                                    final confirm = await showAppConfirmDialog(
                                       context: context,
-                                      builder: (_) => AlertDialog(
-                                        title: const Text('Eliminar sesión'),
-                                        content: Text(
-                                          '¿Eliminar "${s.title?.isNotEmpty == true ? s.title! : 'esta sesión'}"?',
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(context, false),
-                                            child: const Text('Cancelar'),
-                                          ),
-                                          FilledButton(
-                                            onPressed: () => Navigator.pop(context, true),
-                                            style: FilledButton.styleFrom(
-                                              backgroundColor: AppColors.rpeMax,
-                                            ),
-                                            child: const Text('Eliminar'),
-                                          ),
-                                        ],
-                                      ),
+                                      title: 'Eliminar sesión',
+                                      message: '¿Eliminar "${s.title?.isNotEmpty == true ? s.title! : 'esta sesión'}"?',
+                                      confirmLabel: 'Eliminar',
+                                      isDestructive: true,
                                     );
                                     if (confirm != true || !mounted) return;
                                     final uid = FirebaseAuth.instance.currentUser?.uid;

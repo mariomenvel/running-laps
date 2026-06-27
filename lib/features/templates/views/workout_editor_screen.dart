@@ -9,6 +9,7 @@ import 'package:running_laps/features/ai_coach/data/ai_coach_prompt_session_gene
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 import 'package:running_laps/features/templates/data/athlete_session_mapper.dart';
+import 'package:running_laps/core/widgets/app_confirm_dialog.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/templates/data/workout_block.dart';
 import 'package:running_laps/features/templates/data/workout_segment.dart';
@@ -307,32 +308,13 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
       if (mounted) _navigateBack();
       return;
     }
-    final leave = await showDialog<bool>(
+    final leave = await showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surfaceOf(context),
-        title: Text(
-          '¿Salir sin guardar?',
-          style: TextStyle(color: AppColors.textPrimary(context)),
-        ),
-        content: Text(
-          'Los cambios se perderán.',
-          style: TextStyle(color: AppColors.textSecondary(context)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Salir'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(
-              'Seguir editando',
-              style: TextStyle(color: AppColors.brand),
-            ),
-          ),
-        ],
-      ),
+      title: '¿Salir sin guardar?',
+      message: 'Los cambios se perderán.',
+      confirmLabel: 'Salir',
+      cancelLabel: 'Seguir editando',
+      isDestructive: true,
     );
     if ((leave ?? false) && mounted) _navigateBack();
   }
