@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +18,13 @@ class AuthWrapper extends StatefulWidget {
 
 class _AuthWrapperState extends State<AuthWrapper> {
   bool _notificationsSynced = false;
+  Timer? _verificationTimer;
+
+  @override
+  void dispose() {
+    _verificationTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +41,19 @@ class _AuthWrapperState extends State<AuthWrapper> {
         if (user == null) return const AuthPage();
 
         if (!user.emailVerified) {
+          _verificationTimer ??= Timer.periodic(
+            const Duration(seconds: 3),
+            (_) async {
+              await FirebaseAuth.instance.currentUser?.reload();
+              if (mounted) setState(() {});
+            },
+          );
           return EmailVerificationPendingView(
             onVerified: () => setState(() {}),
           );
+        } else {
+          _verificationTimer?.cancel();
+          _verificationTimer = null;
         }
 
         return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
