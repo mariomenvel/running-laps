@@ -93,11 +93,16 @@ class CalendarViewModel {
   // ── API pública ───────────────────────────────────────────────────────────
 
   Future<void> loadAll() async {
+    if (_disposed) return;
     isLoading.value = true;
     try {
       isAthleteMode.value = await _userService.getIsAthleteMode(userId);
+      if (_disposed) return;
+
       // Siempre cargar todos los entrenamientos (necesario para vista semanal y temporada)
       await _loadTrainingDates();
+      if (_disposed) return;
+
       if (isAthleteMode.value) {
         _subscribeToMonth(DateTime.now());
         _subscribeToSeason();
