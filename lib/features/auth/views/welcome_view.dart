@@ -73,16 +73,23 @@ class WelcomeView extends StatelessWidget {
                       launchAiCoachOnboarding(
                         context,
                         onCompleted: () async {
-                          final uid =
-                              FirebaseAuth.instance.currentUser?.uid;
-                          if (uid == null) return;
-                          await FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(uid)
-                              .update({
-                            'onboardingCompleted': true,
-                            'isAthleteMode': true,
-                          });
+                          try {
+                            final uid =
+                                FirebaseAuth.instance.currentUser?.uid;
+                            if (uid == null) return;
+                            await FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(uid)
+                                .update({
+                              'onboardingCompleted': true,
+                              'isAthleteMode': true,
+                            });
+                            debugPrint(
+                                '[WelcomeView] onboardingCompleted: true ✓');
+                          } catch (e) {
+                            debugPrint(
+                                '[WelcomeView] error escribiendo onboardingCompleted: $e');
+                          }
                         },
                       );
                     },

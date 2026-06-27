@@ -1030,7 +1030,7 @@ class _PlanningTabState extends State<_PlanningTab> {
   Future<void> _openAiSettings() async {
     await launchAiCoachOnboarding(
       context,
-      onCompleted: () {
+      onCompleted: () async {
         if (!mounted) return;
         setState(() {
           _aiEnabledFuture = _loadAiEnabled();
@@ -1398,7 +1398,7 @@ class _PlanningTabState extends State<_PlanningTab> {
                             child: OutlinedButton.icon(
                               onPressed: () => launchAiCoachOnboarding(
                                 context,
-                                onCompleted: () => setState(() => _hasAiCoachProfile = true),
+                                onCompleted: () async => setState(() => _hasAiCoachProfile = true),
                               ),
                               icon: const Icon(Icons.auto_awesome_rounded),
                               label: const Text('Configura tu entrenador IA'),
