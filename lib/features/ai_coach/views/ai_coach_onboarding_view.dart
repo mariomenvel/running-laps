@@ -204,14 +204,6 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
         '¡Perfil creado! Generando tu primer plan...',
       );
       widget.onCompleted();
-      // Si el pop() falló y el widget sigue montado, resetear al paso 0
-      if (mounted) {
-        setState(() {
-          _isProcessing = false;
-          _currentStep = 0;
-        });
-        _pageController.jumpToPage(0);
-      }
     } catch (e) {
       debugPrint('[AiCoachOnboarding] _processOnboarding error: $e');
       if (!mounted) return;
