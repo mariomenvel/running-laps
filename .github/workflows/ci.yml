@@ -28,5 +28,8 @@ jobs:
       - name: Analyze
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
-      - name: Run unit tests
+      - name: Test unitarios
         run: flutter test test/unit/ --reporter=github
+
+      - name: Test de widget
+        run: flutter test test/widget/ --reporter=github
