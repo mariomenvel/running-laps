@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/services/heart_rate_service.dart';
@@ -282,8 +283,9 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
         _describeBlock(block),
         style: TextStyle(color: AppColors.textSecondary(context)),
       ),
-      trailing: Switch(
+      trailing: CupertinoSwitch(
         value: _warmupEnabled,
+        activeTrackColor: AppColors.brand,
         onChanged: (v) => setState(() {
           _warmupEnabled = v;
           if (!v) {
@@ -328,8 +330,9 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
         _describeBlock(block),
         style: TextStyle(color: AppColors.textSecondary(context)),
       ),
-      trailing: Switch(
+      trailing: CupertinoSwitch(
         value: _cooldownEnabled,
+        activeTrackColor: AppColors.brand,
         onChanged: (v) => setState(() {
           _cooldownEnabled = v;
           if (!v) {
@@ -448,8 +451,9 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
         _gpsOn ? 'Activado' : 'Desactivado',
         style: TextStyle(color: AppColors.textSecondary(context)),
       ),
-      trailing: Switch(
+      trailing: CupertinoSwitch(
         value: _gpsOn,
+        activeTrackColor: AppColors.brand,
         onChanged: (v) => setState(() => _gpsOn = v),
       ),
     );

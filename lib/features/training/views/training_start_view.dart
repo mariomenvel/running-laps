@@ -2485,10 +2485,10 @@ class _TrainingStartViewState extends State<TrainingStartView>
             label: 'GPS',
             subtitle: _vm.gpsOn ? 'Ubicación activa' : 'Desactivado',
             iconColor: _vm.gpsOn ? AppColors.brand : AppColors.iconMutedOf(context),
-            toggle: Switch(
+            toggle: CupertinoSwitch(
               value: _vm.gpsOn,
               onChanged: (v) => setState(() => _vm.setGpsOn(v)),
-              activeColor: AppColors.brand,
+              activeTrackColor: AppColors.brand,
             ),
           ),
           ListenableBuilder(
@@ -2527,8 +2527,9 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     label: deviceName ?? 'Pulsómetro',
                     subtitle: subtitle,
                     iconColor: isConnected ? AppColors.rpeLow : AppColors.iconMutedOf(context),
-                    toggle: Switch(
+                    toggle: CupertinoSwitch(
                       value: _bleEnabled && isConfigured,
+                      activeTrackColor: AppColors.brand,
                       onChanged: (v) async {
                         if (!isConfigured) {
                           MainShell.shellKey.currentState?.navigateTo(10);
@@ -2542,7 +2543,6 @@ class _TrainingStartViewState extends State<TrainingStartView>
                           HeartRateService().disconnect();
                         }
                       },
-                      activeColor: AppColors.brand,
                     ),
                   ),
                 ],
@@ -2622,13 +2622,13 @@ class _TrainingStartViewState extends State<TrainingStartView>
                 'Activar alertas',
                 style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
               ),
-              Switch(
+              CupertinoSwitch(
                 value: _alarmEnabled,
                 onChanged: (v) {
                   setState(() => _alarmEnabled = v);
                   _updateAlarmInterval();
                 },
-                activeColor: AppColors.brand,
+                activeTrackColor: AppColors.brand,
               ),
             ],
           ),

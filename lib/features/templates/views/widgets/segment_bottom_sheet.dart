@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
@@ -1023,11 +1024,10 @@ class _AlertSection extends StatelessWidget {
               style: TextStyle(fontSize: 11, color: AppColors.textSecondary(outerContext)),
             ),
             const Spacer(),
-            Switch(
+            CupertinoSwitch(
               value: enabled,
               onChanged: onToggleEnabled,
-              activeColor: AppColors.brand,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              activeTrackColor: AppColors.brand,
             ),
           ],
         ),

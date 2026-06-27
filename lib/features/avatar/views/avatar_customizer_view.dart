@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -556,10 +557,10 @@ class _ToggleRow extends StatelessWidget {
             style: AppTypography.body
                 .copyWith(color: AppColors.textPrimary(context)),
           ),
-          Switch(
+          CupertinoSwitch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.brand,
+            activeTrackColor: AppColors.brand,
           ),
         ],
       ),

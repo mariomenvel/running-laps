@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -836,13 +837,10 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                 icon: Icon(Icons.settings_suggest_rounded, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35), size: 20),
                 onPressed: onSettingsTap,
               ),
-            Transform.scale(
-              scale: 0.9,
-              child: Switch(
-                value: value,
-                onChanged: onChanged,
-                activeColor: AppColors.brand,
-              ),
+            CupertinoSwitch(
+              value: value,
+              onChanged: onChanged,
+              activeTrackColor: AppColors.brand,
             ),
           ],
         ),
