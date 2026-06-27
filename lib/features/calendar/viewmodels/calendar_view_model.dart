@@ -93,11 +93,16 @@ class CalendarViewModel {
   // ── API pública ───────────────────────────────────────────────────────────
 
   Future<void> loadAll() async {
+    if (_disposed) return;
     isLoading.value = true;
     try {
       isAthleteMode.value = await _userService.getIsAthleteMode(userId);
+      if (_disposed) return;
+
       // Siempre cargar todos los entrenamientos (necesario para vista semanal y temporada)
       await _loadTrainingDates();
+      if (_disposed) return;
+
       if (isAthleteMode.value) {
         _subscribeToMonth(DateTime.now());
         _subscribeToSeason();
@@ -204,8 +209,12 @@ class CalendarViewModel {
 
   void _subscribeToMonth(DateTime month) {
     _sessionSub?.cancel();
-    final first = DateTime(month.year, month.month, 1);
-    final last  = DateTime(month.year, month.month + 1, 0);
+    final firstOfMonth = DateTime(month.year, month.month, 1);
+    final lastOfMonth  = DateTime(month.year, month.month + 1, 0);
+    // Expandir al lunes/domingo de las semanas que desbordan el mes natural,
+    // para que sesiones en días visibles del mes anterior/siguiente también aparezcan.
+    final first = firstOfMonth.subtract(Duration(days: firstOfMonth.weekday - 1));
+    final last  = lastOfMonth.add(Duration(days: 7 - lastOfMonth.weekday));
     _sessionSub = _sessionRepo
         .streamSessionsInRange(
           uid:       userId,

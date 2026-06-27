@@ -541,7 +541,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           borderRadius: BorderRadius.circular(20),
           onTap: () => launchAiCoachOnboarding(
             context,
-            onCompleted: () {
+            onCompleted: () async {
               if (!mounted) return;
               setState(() => _hasAiCoachProfile = true);
             },

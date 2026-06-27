@@ -12,7 +12,7 @@ import 'package:running_laps/core/widgets/main_shell.dart';
 /// Si weeklyPlanningEnabled está desactivado, muestra error y no navega.
 Future<void> launchAiCoachOnboarding(
   BuildContext context, {
-  VoidCallback? onCompleted,
+  Future<void> Function()? onCompleted,
 }) async {
   final uid = FirebaseAuth.instance.currentUser?.uid;
   if (uid == null) return;
@@ -45,14 +45,17 @@ Future<void> launchAiCoachOnboarding(
       page: AiCoachOnboardingView(
         uid: uid,
         onCompleted: () async {
-          Navigator.of(context).pop();
+          if (context.mounted) {
+            Navigator.of(context).pop();
+          }
+          await onCompleted?.call();
+          await Future.delayed(const Duration(milliseconds: 500));
           try {
             await AiCoachAutomationService()
                 .forceGenerateCurrentWeekPlan(uid);
           } catch (e) {
             debugPrint('[Onboarding] error generando plan: $e');
           }
-          onCompleted?.call();
         },
       ),
     ),

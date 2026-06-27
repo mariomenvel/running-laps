@@ -1,5 +1,66 @@
 # CHANGELOG — Running Laps
 
+## [Fix] — Onboarding completo de extremo a extremo (fix/onboarding-bugs)
+
+### Registro y verificación de email
+- `EmailVerificationPendingView` se muestra siempre tras el registro (antes a
+  veces requería recargar la app manualmente)
+- `AuthWrapper` espera a que exista el documento `users/{uid}` en Firestore
+  antes de decidir la ruta (evitaba salto directo a `MainShell` con documento
+  aún no creado)
+- Fix overflow en `EmailVerificationPendingView` que rompía el render en
+  pantallas pequeñas o con teclado abierto (`SingleChildScrollView` +
+  `ConstrainedBox` + `IntrinsicHeight`)
+- Timer periódico (3 s) en `AuthWrapper` detecta verificación de email
+  automáticamente sin parpadeo ni rebuild innecesario
+
+### Onboarding AI Coach — flujo y navegación
+- Timeout 30 s + botón Cancelar en pantalla de carga del LLM
+- Fix overflow en paso de marcas personales con teclado abierto
+- `onCompleted` cambiado de `VoidCallback` a `Future<void> Function()` para
+  esperar la escritura en Firestore antes de generar el plan
+- `isAthleteMode: true` se escribe en Firestore antes de llamar a
+  `forceGenerateCurrentWeekPlan` (elimina race condition)
+- `popUntil(isFirst)` limpia el stack de navegación completo tras el onboarding
+- `_isProcessing` + `_currentStep` se resetean en el happy path y en Cancelar
+- Guard `context.mounted` antes de `Navigator.pop` en el launcher
+
+### Onboarding AI Coach — calidad del perfil
+- Schema del LLM: constraint `enum` en `goal` (7 valores exactos) + description
+  en `goalDescription` para evitar que el modelo confunda ambos campos
+- Nuevo paso 5: fecha de nacimiento + sexo biológico (opcionales; se guardan en
+  `users/{uid}.birthDate` (ISO8601) y `.sex`)
+- Paso de marcas personales reordenado al paso 6 (último); eliminado botón
+  "Saltar" redundante — sustituido por botón único "Crear mi plan →"
+- Eliminado sheet automático de fecha/sexo en `ZonesConfigScreen` (los datos
+  ya se recogen en el onboarding del Coach)
+
+### Generación del plan semanal
+- Fallback a semana siguiente si `feasibleWeekdays` queda vacío al generar
+  a mitad de semana
+- `_subscribeToMonth` en `CalendarViewModel` ahora cubre semanas completas
+  (lunes a domingo) que desbordan el mes natural, para que sesiones del mes
+  siguiente visibles en la cuadrícula aparezcan sin navegar de mes
+- Guards `_disposed` tras cada `await` en `CalendarViewModel.loadAll()` para
+  evitar escrituras en `ValueNotifier` ya destruidos
+
+---
+
+## [Fix] — Bugs críticos del onboarding (rama: fix/onboarding-bugs)
+- Timeout de 30 s en la llamada al LLM del onboarding del AI Coach; antes podía
+  quedarse cargando hasta 60 s (límite de Cloud Function) sin feedback
+- Mensaje de error diferenciado para timeout vs. error de red/servidor
+- Botón "Cancelar" en la pantalla de loading del onboarding para salir sin
+  esperar a que venza el timeout
+- Fix overflow en el paso de marcas personales cuando el teclado sube
+  (SingleChildScrollView + padding adaptativo)
+- Fix sheet de fecha/sexo (ZonesConfigScreen) que podía aparecer encima del
+  onboarding del AI Coach; ahora se suprime si hay una ruta modal encima
+- Verificación de email tras registro: ya implementada en AuthController
+  (sendEmailVerification) + AuthWrapper redirige a EmailVerificationPendingView
+- Google Sign-In: implementado pero crashea en iOS (assertionFailure en
+  AppDelegate.configureGoogleSignIn) — pendiente Xcode/logs
+
 ## [AI Coach] — Reset semanal automático del chat (Cloud Function)
 - Scheduled Function resetWeeklyChatUsage: cada lunes 00:05 (Europe/Madrid)
   resetea messagesUsed a 0 y actualiza periodStart/periodEnd para todos los

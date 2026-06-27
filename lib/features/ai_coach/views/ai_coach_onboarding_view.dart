@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models_config.dart';
@@ -38,6 +41,10 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
   int? _pbHalfMarathonSeconds;
   int? _pbMarathonSeconds;
 
+  // Paso 6 — datos físicos (opcionales)
+  DateTime? _birthDate;
+  String? _biologicalSex;
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -62,7 +69,7 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
   }
 
   void _nextStep() {
-    if (_currentStep < 4) {
+    if (_currentStep < 5) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,
@@ -72,8 +79,6 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
       _processOnboarding();
     }
   }
-
-  void _skipToProcess() => _processOnboarding();
 
   String? _validateCoachText(String? value) {
     if (value == null || value.isEmpty) return null;
@@ -149,6 +154,12 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
         jsonSchema: _profileExtractionSchema,
         temperature: 0.2,
         schemaName: 'onboarding_profile',
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw TimeoutException(
+          'La conexión tardó demasiado. '
+          'Comprueba tu conexión e inténtalo de nuevo.',
+        ),
       );
 
       final raw = jsonDecode(result.content) as Map<String, dynamic>;
@@ -191,19 +202,38 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
 
       await AiCoachRepository().saveProfile(profile);
 
+      // Guardar fecha de nacimiento y sexo en users/{uid} para que
+      // ZonesConfigScreen no vuelva a pedir estos datos tras el onboarding
+      if (_birthDate != null || _biologicalSex != null) {
+        final updates = <String, dynamic>{};
+        if (_birthDate != null) {
+          updates['birthDate'] =
+              '${_birthDate!.year}-${_birthDate!.month.toString().padLeft(2, '0')}-${_birthDate!.day.toString().padLeft(2, '0')}';
+        }
+        if (_biologicalSex != null) updates['sex'] = _biologicalSex;
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(widget.uid)
+            .update(updates);
+      }
+
       if (!mounted) return;
       ModernSnackBar.showSuccess(
         context,
         '¡Perfil creado! Generando tu primer plan...',
       );
       widget.onCompleted();
+      // Si el widget sigue montado tras onCompleted, forzar navegación limpia al root
+      if (mounted) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
     } catch (e) {
       debugPrint('[AiCoachOnboarding] _processOnboarding error: $e');
       if (!mounted) return;
-      ModernSnackBar.showError(
-        context,
-        'No se pudo crear el perfil. ${e.toString().replaceFirst('Exception: ', '')}',
-      );
+      final msg = e is TimeoutException
+          ? 'La conexión tardó demasiado. Comprueba tu conexión e inténtalo de nuevo.'
+          : 'No se pudo crear el perfil. Comprueba tu conexión e inténtalo de nuevo.';
+      ModernSnackBar.showError(context, msg);
       setState(() => _isProcessing = false);
     }
   }
@@ -234,8 +264,22 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Preparando tu plan personalizado',
+            'Esto puede tardar unos segundos',
             style: TextStyle(color: AppColors.textSecondary(context)),
+          ),
+          const SizedBox(height: 32),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _isProcessing = false;
+                _currentStep = 0;
+              });
+              _pageController.jumpToPage(0);
+            },
+            child: Text(
+              'Cancelar',
+              style: TextStyle(color: AppColors.textSecondary(context)),
+            ),
           ),
         ],
       ),
@@ -246,7 +290,7 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
     return Column(
       children: [
         const SizedBox(height: 24),
-        _StepIndicator(currentStep: _currentStep, totalSteps: 5),
+        _StepIndicator(currentStep: _currentStep, totalSteps: 6),
         Expanded(
           child: PageView(
             controller: _pageController,
@@ -286,6 +330,12 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
                 isDark: isDark,
                 optional: true,
               ),
+              _BirthDateStepPage(
+                birthDate: _birthDate,
+                sex: _biologicalSex,
+                onBirthDateChanged: (d) => setState(() => _birthDate = d),
+                onSexChanged: (s) => setState(() => _biologicalSex = s),
+              ),
               _PbStepPage(
                 isDark: isDark,
                 pb5kSeconds: _pb5kSeconds,
@@ -300,13 +350,13 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
             ],
           ),
         ),
-        if (_currentStep == 4)
-          _PbStepButtons(onSkip: _skipToProcess, onCreate: _processOnboarding)
+        if (_currentStep == 5)
+          _CreatePlanButton(onCreate: _processOnboarding)
         else
           _NextButton(
             isLastStep: false,
             controller: _controllerForStep(_currentStep),
-            isOptional: _currentStep == 3,
+            isOptional: _currentStep == 3 || _currentStep == 4,
             onNext: _nextStep,
           ),
         const SizedBox(height: 32),
@@ -327,8 +377,25 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
       'coachNotes',
     ],
     'properties': {
-      'goal': {'type': 'string'},
-      'goalDescription': {'type': 'string'},
+      'goal': {
+        'type': 'string',
+        'enum': [
+          'race_5k', 'race_10k', 'race_half_marathon',
+          'race_marathon', 'improve_pace',
+          'improve_endurance', 'return_to_running',
+        ],
+        'description': 'Objetivo principal del atleta '
+            'como valor del enum. Elige el más cercano '
+            'a lo que describe el usuario.',
+      },
+      'goalDescription': {
+        'type': 'string',
+        'description': 'Resumen en texto libre de lo que '
+            'el atleta quiere conseguir, tal como lo ha '
+            'expresado. Ejemplo: "Quiero bajar de 25 min '
+            'en 5K antes de verano". NO pongas aquí el '
+            'valor del enum — eso va en el campo goal.',
+      },
       'level': {'type': 'string'},
       'availableWeekdays': {
         'type': 'array',
@@ -567,8 +634,13 @@ class _PbStepPage extends StatelessWidget {
     final textSecondary =
         isDark ? const Color(0xFF8E8E93) : const Color(0xFF6C6C70);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 28),
+    return SingleChildScrollView(
+      padding: EdgeInsets.only(
+        left: 28,
+        right: 28,
+        top: 28,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 28,
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -743,54 +815,151 @@ class _OnboardingPbField extends StatelessWidget {
   }
 }
 
-class _PbStepButtons extends StatelessWidget {
-  final VoidCallback onSkip;
+// ─────────────────────────────────────────────────────────────────────────────
+// _BirthDateStepPage — paso 6 (opcional): fecha de nacimiento + sexo biológico
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _BirthDateStepPage extends StatelessWidget {
+  final DateTime? birthDate;
+  final String? sex;
+  final ValueChanged<DateTime?> onBirthDateChanged;
+  final ValueChanged<String?> onSexChanged;
+
+  const _BirthDateStepPage({
+    required this.birthDate,
+    required this.sex,
+    required this.onBirthDateChanged,
+    required this.onSexChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.only(
+        left: AppSpacing.xl,
+        right: AppSpacing.xl,
+        top: AppSpacing.xl,
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Un par de datos más\npara personalizar\ntu plan.',
+            style: Theme.of(context)
+                .textTheme
+                .headlineMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: AppSpacing.s),
+          Text(
+            'Con tu edad estimamos tu FCmáx y ajustamos '
+            'las zonas de entrenamiento. Puedes omitirlo.',
+            style: TextStyle(color: AppColors.textSecondary(context)),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          GestureDetector(
+            onTap: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: birthDate ?? DateTime(DateTime.now().year - 30),
+                firstDate: DateTime(1940),
+                lastDate: DateTime(DateTime.now().year - 10),
+              );
+              if (picked != null) onBirthDateChanged(picked);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceOf(context),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.cake_outlined,
+                      color: AppColors.textSecondary(context)),
+                  const SizedBox(width: 12),
+                  Text(
+                    birthDate != null
+                        ? '${birthDate!.day}/${birthDate!.month}/${birthDate!.year}'
+                        : 'Fecha de nacimiento',
+                    style: TextStyle(
+                      color: birthDate != null
+                          ? null
+                          : AppColors.textSecondary(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.l),
+          Text(
+            'Sexo biológico (opcional)',
+            style: TextStyle(
+                color: AppColors.textSecondary(context), fontSize: 13),
+          ),
+          const SizedBox(height: AppSpacing.s),
+          Row(
+            children: [
+              for (final option in [
+                ('male', 'Hombre'),
+                ('female', 'Mujer'),
+                ('other', 'Otro'),
+              ])
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: OutlinedButton(
+                      onPressed: () => onSexChanged(option.$1),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: sex == option.$1
+                            ? AppColors.brand.withValues(alpha: 0.1)
+                            : null,
+                        side: BorderSide(
+                          color: sex == option.$1
+                              ? AppColors.brand
+                              : AppColors.borderOf(context),
+                        ),
+                      ),
+                      child: Text(option.$2),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CreatePlanButton extends StatelessWidget {
   final VoidCallback onCreate;
 
-  const _PbStepButtons({required this.onSkip, required this.onCreate});
+  const _CreatePlanButton({required this.onCreate});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 28),
-      child: Row(
-        children: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: onSkip,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.brand,
-                side: const BorderSide(color: AppColors.brand),
-                minimumSize: const Size.fromHeight(54),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: const Text(
-                'Saltar',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
+      child: SizedBox(
+        width: double.infinity,
+        child: FilledButton(
+          onPressed: onCreate,
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.brand,
+            foregroundColor: Colors.white,
+            minimumSize: const Size.fromHeight(54),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: FilledButton(
-              onPressed: onCreate,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.brand,
-                foregroundColor: Colors.white,
-                minimumSize: const Size.fromHeight(54),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: const Text(
-                'Crear mi plan →',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-              ),
-            ),
+          child: const Text(
+            'Crear mi plan →',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
           ),
-        ],
+        ),
       ),
     );
   }

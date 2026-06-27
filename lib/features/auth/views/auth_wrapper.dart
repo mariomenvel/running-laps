@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +18,13 @@ class AuthWrapper extends StatefulWidget {
 
 class _AuthWrapperState extends State<AuthWrapper> {
   bool _notificationsSynced = false;
+  Timer? _verificationTimer;
+
+  @override
+  void dispose() {
+    _verificationTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +41,21 @@ class _AuthWrapperState extends State<AuthWrapper> {
         if (user == null) return const AuthPage();
 
         if (!user.emailVerified) {
+          _verificationTimer ??= Timer.periodic(
+            const Duration(seconds: 3),
+            (_) async {
+              await FirebaseAuth.instance.currentUser?.reload();
+              final verified =
+                  FirebaseAuth.instance.currentUser?.emailVerified ?? false;
+              if (verified && mounted) setState(() {});
+            },
+          );
           return EmailVerificationPendingView(
             onVerified: () => setState(() {}),
           );
+        } else {
+          _verificationTimer?.cancel();
+          _verificationTimer = null;
         }
 
         return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
@@ -44,6 +65,14 @@ class _AuthWrapperState extends State<AuthWrapper> {
               .snapshots(),
           builder: (context, userSnap) {
             if (userSnap.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            // Si el documento aún no existe (usuario recién creado, Firestore
+            // aún escribiendo), esperar en lugar de asumir onboardingCompleted: true
+            if (userSnap.data == null || !userSnap.data!.exists) {
               return const Scaffold(
                 body: Center(child: CircularProgressIndicator()),
               );

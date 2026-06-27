@@ -55,9 +55,9 @@ class AiCoachWeeklyPlannerService {
     }
 
     final anchor = referenceDate ?? DateTime.now();
-    final nextWeekStart =
+    var nextWeekStart =
         targetWeekStart != null ? _mondayOf(targetWeekStart) : _mondayOf(anchor).add(const Duration(days: 7));
-    final nextWeekEnd = nextWeekStart.add(const Duration(days: 6));
+    var nextWeekEnd = nextWeekStart.add(const Duration(days: 6));
     final today = DateTime.now();
     final minDate = DateTime(today.year, today.month, today.day);
 
@@ -127,12 +127,30 @@ class AiCoachWeeklyPlannerService {
         .map((session) => DateTime.tryParse(session.date)?.weekday)
         .whereType<int>()
         .toSet();
-    final feasibleWeekdays = _resolveFeasibleWeekdays(
+    var feasibleWeekdays = _resolveFeasibleWeekdays(
       profile: profile,
       weekStart: nextWeekStart,
       minDate: minDate,
       fallbackTargetSessions: decision.targetSessions,
     );
+
+    // Si no quedan días válidos esta semana, generar para la semana siguiente
+    if (feasibleWeekdays.isEmpty) {
+      debugPrint(
+        '[AiCoachWeeklyPlanner] No quedan días esta semana → '
+        'generando para la semana siguiente',
+      );
+      nextWeekStart = nextWeekStart.add(const Duration(days: 7));
+      nextWeekEnd = nextWeekStart.add(const Duration(days: 6));
+      final today = DateTime.now();
+      feasibleWeekdays = _resolveFeasibleWeekdays(
+        profile: profile,
+        weekStart: nextWeekStart,
+        minDate: DateTime(today.year, today.month, today.day),
+        fallbackTargetSessions: decision.targetSessions,
+      );
+    }
+
     final freeFeasibleSlots = feasibleWeekdays
         .where((day) => !occupiedWeekdays.contains(day))
         .length;
@@ -160,7 +178,6 @@ class AiCoachWeeklyPlannerService {
       'available=${profile?.availableWeekdays} occupied=$occupiedWeekdays '
       'feasibleWeekdays=$feasibleWeekdays remainingSlots=$remainingSlots generated=${sessions.length}',
     );
-
     final gate = _runQualityGate(
       sessions: sessions,
       decision: decision,
