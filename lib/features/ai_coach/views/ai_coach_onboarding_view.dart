@@ -199,6 +199,7 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
       await AiCoachRepository().saveProfile(profile);
 
       if (!mounted) return;
+      setState(() => _isProcessing = false);
       ModernSnackBar.showSuccess(
         context,
         '¡Perfil creado! Generando tu primer plan...',
