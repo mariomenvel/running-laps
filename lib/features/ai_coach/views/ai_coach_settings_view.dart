@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/app_date_picker.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
@@ -207,11 +208,12 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
-    final picked = await showDatePicker(
+    final picked = await showAppDatePicker(
       context: context,
-      firstDate: now,
-      lastDate: DateTime(now.year + 2),
+      title: 'Fecha del objetivo',
       initialDate: _targetDate ?? now.add(const Duration(days: 90)),
+      minimumDate: now,
+      maximumDate: DateTime(now.year + 2),
     );
     if (picked == null) return;
     setState(() => _targetDate = picked);

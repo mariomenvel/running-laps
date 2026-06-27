@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/app_date_picker.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/features/profile/viewmodels/zones_viewmodel.dart';
@@ -371,11 +372,12 @@ class _OnboardingSheetState extends State<_OnboardingSheet> {
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
-    final picked = await showDatePicker(
+    final picked = await showAppDatePicker(
       context: context,
+      title: 'Fecha de nacimiento',
       initialDate: _selectedDate ?? DateTime(now.year - 25),
-      firstDate: DateTime(1930),
-      lastDate: DateTime(now.year - 5),
+      minimumDate: DateTime(1930),
+      maximumDate: DateTime(now.year - 5),
     );
     if (!mounted) return;
     if (picked != null) setState(() => _selectedDate = picked);

@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
+import 'package:running_laps/core/widgets/app_date_picker.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models_config.dart';
@@ -860,11 +861,12 @@ class _BirthDateStepPage extends StatelessWidget {
           const SizedBox(height: AppSpacing.xl),
           GestureDetector(
             onTap: () async {
-              final picked = await showDatePicker(
+              final picked = await showAppDatePicker(
                 context: context,
+                title: 'Fecha de nacimiento',
                 initialDate: birthDate ?? DateTime(DateTime.now().year - 30),
-                firstDate: DateTime(1940),
-                lastDate: DateTime(DateTime.now().year - 10),
+                minimumDate: DateTime(1940),
+                maximumDate: DateTime(DateTime.now().year - 10),
               );
               if (picked != null) onBirthDateChanged(picked);
             },
