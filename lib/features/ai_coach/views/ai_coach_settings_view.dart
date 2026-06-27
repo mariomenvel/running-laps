@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/app_bottom_sheet.dart';
 import 'package:running_laps/core/widgets/app_date_picker.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
@@ -276,25 +277,15 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
   void _showGoalBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.background(context),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.borderOf(context),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
+        return AppBottomSheetContainer(
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+              const SizedBox(height: 8),
               Text(
                 'Selecciona tu Objetivo',
                 style: TextStyle(
@@ -334,7 +325,8 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
               ),
             ],
           ),
-        );
+        ),
+      );
       },
     );
   }
@@ -342,26 +334,16 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
   void _showLongRunDayBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.background(context),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) {
         final availableDaysSorted = _availableWeekdays.toList()..sort();
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.borderOf(context),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
+        return AppBottomSheetContainer(
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+              const SizedBox(height: 8),
               Text(
                 'Día de Tirada Larga',
                 style: TextStyle(
@@ -421,7 +403,8 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
               ),
             ],
           ),
-        );
+        ),
+      );
       },
     );
   }

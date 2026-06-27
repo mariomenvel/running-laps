@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
+import 'package:running_laps/core/widgets/app_bottom_sheet.dart';
 import 'package:running_laps/features/analytics/viewmodels/analytics_hub_controller.dart';
 import 'package:running_laps/features/analytics/viewmodels/analytics_view_model.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
@@ -1674,40 +1675,40 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
   void _showTSBHelp() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(AppSpacing.l),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Estado de Forma',
-                style: AppTypography.h3
-                    .copyWith(color: AppColors.textPrimary(context))),
-            const SizedBox(height: AppSpacing.l),
-            _HelpItem('CTL (Chronic Training Load)',
-                'Tu forma física acumulada. Sube con entrenamiento consistente (media de 42 días).',
-                AppColors.brand),
-            _HelpItem('ATL (Acute Training Load)',
-                'Tu fatiga reciente. Sube con entrenos duros y baja con descanso (media de 7 días).',
-                AppColors.effort),
-            _HelpItem('TSB (Training Stress Balance)',
-                'CTL menos ATL. Positivo = fresco, negativo = cansado.',
-                AppColors.rpeLow),
-            const SizedBox(height: AppSpacing.l),
-            Text('Cómo interpretarlo',
-                style: AppTypography.body.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary(context))),
-            const SizedBox(height: AppSpacing.s),
-            _ZoneExplain('TSB > +20', 'Muy fresco — ideal para competir', AppColors.rpeLow),
-            _ZoneExplain('TSB +5 a +20', 'Fresco — meter intensidad', AppColors.rpeLow),
-            _ZoneExplain('TSB -10 a +5', 'Cargando — normal en bloque', AppColors.brand),
-            _ZoneExplain('TSB < -10', 'Fatigado — reducir volumen', AppColors.rpeMax),
-            const SizedBox(height: AppSpacing.xl),
-          ],
+      backgroundColor: Colors.transparent,
+      builder: (_) => AppBottomSheetContainer(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.l),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Estado de Forma',
+                  style: AppTypography.h3
+                      .copyWith(color: AppColors.textPrimary(context))),
+              const SizedBox(height: AppSpacing.l),
+              _HelpItem('CTL (Chronic Training Load)',
+                  'Tu forma física acumulada. Sube con entrenamiento consistente (media de 42 días).',
+                  AppColors.brand),
+              _HelpItem('ATL (Acute Training Load)',
+                  'Tu fatiga reciente. Sube con entrenos duros y baja con descanso (media de 7 días).',
+                  AppColors.effort),
+              _HelpItem('TSB (Training Stress Balance)',
+                  'CTL menos ATL. Positivo = fresco, negativo = cansado.',
+                  AppColors.rpeLow),
+              const SizedBox(height: AppSpacing.l),
+              Text('Cómo interpretarlo',
+                  style: AppTypography.body.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary(context))),
+              const SizedBox(height: AppSpacing.s),
+              _ZoneExplain('TSB > +20', 'Muy fresco — ideal para competir', AppColors.rpeLow),
+              _ZoneExplain('TSB +5 a +20', 'Fresco — meter intensidad', AppColors.rpeLow),
+              _ZoneExplain('TSB -10 a +5', 'Cargando — normal en bloque', AppColors.brand),
+              _ZoneExplain('TSB < -10', 'Fatigado — reducir volumen', AppColors.rpeMax),
+              const SizedBox(height: AppSpacing.xl),
+            ],
+          ),
         ),
       ),
     );
@@ -1837,35 +1838,35 @@ class _RangeChipState extends State<_RangeChip> {
   void _showPicker() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(AppSpacing.l),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Período',
-                style: AppTypography.h3
-                    .copyWith(color: AppColors.textPrimary(context))),
-            const SizedBox(height: AppSpacing.l),
-            ..._labels.entries.map((e) => ListTile(
-                  title: Text(e.value,
-                      style: AppTypography.body
-                          .copyWith(color: AppColors.textPrimary(context))),
-                  trailing: widget.ctrl.selectedRange.value == e.key
-                      ? const Icon(Icons.check_rounded,
-                          color: AppColors.brand, size: 20)
-                      : null,
-                  onTap: () {
-                    widget.ctrl.setRange(e.key);
-                    widget.onChanged();
-                    Navigator.pop(context);
-                    if (mounted) setState(() {});
-                  },
-                )),
-            const SizedBox(height: AppSpacing.l),
-          ],
+      backgroundColor: Colors.transparent,
+      builder: (_) => AppBottomSheetContainer(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.l),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Período',
+                  style: AppTypography.h3
+                      .copyWith(color: AppColors.textPrimary(context))),
+              const SizedBox(height: AppSpacing.l),
+              ..._labels.entries.map((e) => ListTile(
+                    title: Text(e.value,
+                        style: AppTypography.body
+                            .copyWith(color: AppColors.textPrimary(context))),
+                    trailing: widget.ctrl.selectedRange.value == e.key
+                        ? const Icon(Icons.check_rounded,
+                            color: AppColors.brand, size: 20)
+                        : null,
+                    onTap: () {
+                      widget.ctrl.setRange(e.key);
+                      widget.onChanged();
+                      Navigator.pop(context);
+                      if (mounted) setState(() {});
+                    },
+                  )),
+              const SizedBox(height: AppSpacing.l),
+            ],
+          ),
         ),
       ),
     );
