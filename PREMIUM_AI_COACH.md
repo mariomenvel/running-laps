@@ -76,9 +76,26 @@ Archivos: `ai_coach_onboarding_view.dart` + `ai_coach_onboarding_launcher.dart`
 3. **Disponibilidad** — días/semana (1-7), días concretos (L-D multi-select), tiempo por sesión (min)
 4. **Estado actual** — marcas opcionales (5K, 10K, HM, Maratón en segundos), lesiones/limitaciones (texto libre), preferencias (texto libre)
 
-Al completar: `isAthleteMode = true` en Firestore + crea `AiCoachProfile`.
+Al completar: `isAthleteMode = true` + `onboardingCompleted = true` en Firestore (escritura atómica en un solo `update()`) → `AuthWrapper` reacciona automáticamente al stream.
 
 El launcher (`launchAiCoachOnboarding()`) verifica si ya existe perfil; si existe, va directamente a settings (tab 16).
+
+### Flujo de navegación al completar
+
+1. `AiCoachOnboardingView` llama `widget.onCompleted()` (tipo `VoidCallback`)
+2. El launcher ejecuta `onCompleted?.call()` (escribe Firestore) y luego `forceGenerateCurrentWeekPlan()` con 500 ms de delay para respetar el orden
+3. Si el widget sigue montado tras `onCompleted`, `popUntil(isFirst)` limpia el stack completo
+4. `AuthWrapper` detecta el cambio en Firestore y muestra `MainShell`
+
+### Timeout y cancelación
+
+- La llamada al LLM tiene timeout de **30 segundos** (`.timeout(Duration(seconds: 30))`)
+- Si supera el tiempo: `ModernSnackBar.showError` con mensaje de conexión
+- Botón **Cancelar** disponible durante el procesamiento; resetea al paso 0
+
+### Schema de extracción de perfil
+
+El LLM recibe un JSON schema con constraint `enum` estricto para el campo `goal` (7 valores exactos de `AiCoachGoalType`). Esto evita que el modelo hallucine valores no reconocidos por el parser Dart.
 
 ---
 
@@ -88,6 +105,7 @@ El launcher (`launchAiCoachOnboarding()`) verifica si ya existe perfil; si exist
 - Generación automática: cada domingo para la semana siguiente (`ai_coach_automation_service.dart`)
 - Regeneración manual: límite 5/semana
 - Solo semana siguiente (no plan completo de meses)
+- **Fallback mid-week**: si se genera en mitad de semana y no quedan días disponibles (`feasibleWeekdays` vacío), el planner salta automáticamente a la semana siguiente en lugar de no generar nada
 
 ### Modelos de IA
 - **Claude Sonnet 4.6** — Coach principal (razonamiento complejo, planes semanales)

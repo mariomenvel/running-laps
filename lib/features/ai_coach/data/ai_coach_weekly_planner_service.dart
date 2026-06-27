@@ -178,7 +178,6 @@ class AiCoachWeeklyPlannerService {
       'available=${profile?.availableWeekdays} occupied=$occupiedWeekdays '
       'feasibleWeekdays=$feasibleWeekdays remainingSlots=$remainingSlots generated=${sessions.length}',
     );
-
     final gate = _runQualityGate(
       sessions: sessions,
       decision: decision,
