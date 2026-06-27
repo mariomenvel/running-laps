@@ -150,6 +150,11 @@ Guías de trabajo (`CLAUDE.md`, `AI_CONTEXT.md`) — actualizar siempre que camb
 - Colores RPE: nunca hardcodear — usar escala automática de `RpeBadge` / `AppColors`
 - Números siempre via `NumberPickerField` / `IosPicker`, nunca teclado
 
+## Espaciado y radios
+
+- `AppSpacing` está definido en `lib/core/theme/app_theme.dart` — usar en código nuevo, no migrar el existente
+- Colores de etiquetas de entrenamiento en `tag_utils.dart` son intencionales (paleta de datos, no UI) — no migrar a AppColors
+
 ---
 
 ## Estado iOS
