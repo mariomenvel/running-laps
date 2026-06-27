@@ -30,15 +30,6 @@ class _ZonesConfigScreenState extends State<ZonesConfigScreen> {
     _vm.loadProfile(widget.uid).then((_) {
       if (!mounted) return;
       _syncControllersFromProfile();
-      if (_vm.needsBirthDate && !_onboardingShown) {
-        _onboardingShown = true;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          // No mostrar el sheet si hay un modal o ruta encima (ej. onboarding AI Coach)
-          if (Navigator.of(context).canPop()) return;
-          _showOnboardingSheet();
-        });
-      }
     });
   }
 
