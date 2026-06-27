@@ -45,7 +45,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
             const Duration(seconds: 3),
             (_) async {
               await FirebaseAuth.instance.currentUser?.reload();
-              if (mounted) setState(() {});
+              final verified =
+                  FirebaseAuth.instance.currentUser?.emailVerified ?? false;
+              if (verified && mounted) setState(() {});
             },
           );
           return EmailVerificationPendingView(
