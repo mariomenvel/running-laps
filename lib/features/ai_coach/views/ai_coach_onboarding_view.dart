@@ -342,8 +342,25 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
       'coachNotes',
     ],
     'properties': {
-      'goal': {'type': 'string'},
-      'goalDescription': {'type': 'string'},
+      'goal': {
+        'type': 'string',
+        'enum': [
+          'race_5k', 'race_10k', 'race_half_marathon',
+          'race_marathon', 'improve_pace',
+          'improve_endurance', 'return_to_running',
+        ],
+        'description': 'Objetivo principal del atleta '
+            'como valor del enum. Elige el más cercano '
+            'a lo que describe el usuario.',
+      },
+      'goalDescription': {
+        'type': 'string',
+        'description': 'Resumen en texto libre de lo que '
+            'el atleta quiere conseguir, tal como lo ha '
+            'expresado. Ejemplo: "Quiero bajar de 25 min '
+            'en 5K antes de verano". NO pongas aquí el '
+            'valor del enum — eso va en el campo goal.',
+      },
       'level': {'type': 'string'},
       'availableWeekdays': {
         'type': 'array',
