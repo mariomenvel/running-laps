@@ -21,22 +21,16 @@ class WorkoutInstance {
   Serie? get bestSerie {
     if (entrenamiento.series.isEmpty) return null;
     return entrenamiento.series.reduce((a, b) {
-      try {
-        return a.ritmoSecPorKm() < b.ritmoSecPorKm() ? a : b;
-      } catch (e) {
-        return a;
-      }
+      final paceA = a.ritmoSecPorKm();
+      final paceB = b.ritmoSecPorKm();
+      if (paceA == null) return b;
+      if (paceB == null) return a;
+      return paceA < paceB ? a : b;
     });
   }
 
   /// Ritmo de la mejor serie
-  int? get bestSeriePace {
-    try {
-      return bestSerie?.ritmoSecPorKm();
-    } catch (e) {
-      return null;
-    }
-  }
+  int? get bestSeriePace => bestSerie?.ritmoSecPorKm();
 }
 
 /// Patrón de entrenamientos similares agrupados por estructura
@@ -244,12 +238,12 @@ double calculatePaceConsistency(Entrenamiento entrenamiento) {
   
   final paces = <int>[];
   for (var serie in entrenamiento.series) {
-    try {
-      paces.add(serie.ritmoSecPorKm());
-    } catch (e) {
+    final pace = serie.ritmoSecPorKm();
+    if (pace == null) {
       // Ignorar series sin distancia válida
       continue;
     }
+    paces.add(pace);
   }
   
   if (paces.length < 2) return 0;

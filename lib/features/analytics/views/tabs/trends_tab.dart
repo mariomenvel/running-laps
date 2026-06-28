@@ -273,9 +273,12 @@ class TrendsTab extends StatelessWidget {
     for (var workout in data) {
       for (var serie in workout.series) {
         if (serie.distanciaM >= minDist && serie.distanciaM <= maxDist) {
-          final pace = serie.ritmoSecPorKm().toDouble();
-          if (pace > 0 && (bestPace == null || pace < bestPace)) {
-            bestPace = pace;
+          final paceSec = serie.ritmoSecPorKm();
+          if (paceSec != null) {
+            final pace = paceSec.toDouble();
+            if (pace > 0 && (bestPace == null || pace < bestPace)) {
+              bestPace = pace;
+            }
           }
         }
       }
@@ -380,10 +383,7 @@ class _PaceEvolutionChart extends StatelessWidget {
     final displayData = sorted.length > 20 ? sorted.sublist(sorted.length - 20) : sorted;
 
     final spots = displayData.asMap().entries.map((e) {
-      double pace = 0;
-      try {
-        pace = e.value.ritmoMedioSecPorKm().toDouble();
-      } catch (_) {}
+      final pace = (e.value.ritmoMedioSecPorKm() ?? 0).toDouble();
       return FlSpot(e.key.toDouble(), pace);
     }).toList();
 

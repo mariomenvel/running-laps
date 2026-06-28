@@ -58,12 +58,10 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
     
     for (var t in trainings) {
       km += t.distanciaTotalM() / 1000.0;
-      try {
-        if (t.distanciaTotalM() > 500) { // filter very short runs
-          final pace = t.ritmoMedioSecPorKm();
-          if (pace > 0 && pace < bestSecKm) bestSecKm = pace;
-        }
-      } catch (_) {}
+      if (t.distanciaTotalM() > 500) { // filter very short runs
+        final pace = t.ritmoMedioSecPorKm();
+        if (pace != null && pace > 0 && pace < bestSecKm) bestSecKm = pace;
+      }
     }
 
     String paceText = "-";

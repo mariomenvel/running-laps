@@ -39,11 +39,9 @@ class Serie {
 
 
   /// Secundos por kilómetro (ritmo) como entero.
-  /// Lanza excepción si distancia es 0 o negativa.
-  int ritmoSecPorKm() {
-    if (distanciaM <= 0) {
-      throw StateError('distanciaM debe ser > 0 para calcular ritmo');
-    }
+  /// Devuelve null si distancia es 0 o negativa.
+  int? ritmoSecPorKm() {
+    if (distanciaM <= 0) return null;
     final double km = distanciaM / 1000.0;
     final double secPerKm = tiempoSec / km;
     return secPerKm.round(); // o .toInt() si prefieres truncar
@@ -52,7 +50,8 @@ class Serie {
 
   /// Ritmo formateado "mm:ss /km"
   String ritmoTexto() {
-    final int secKm = ritmoSecPorKm();
+    final int? secKm = ritmoSecPorKm();
+    if (secKm == null) return '--:--';
     final int mm = secKm ~/ 60;
     final int ss = secKm % 60;
     final String ss2 = ss < 10 ? '0' + ss.toString() : ss.toString();

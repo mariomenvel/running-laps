@@ -74,7 +74,7 @@ class AiCoachContextBuilder {
         distanceKm: training.distanciaTotalM() / 1000.0,
         durationMinutes: training.tiempoTotalSec() / 60.0,
         paceSecPerKm: training.distanciaTotalM() > 0
-            ? training.ritmoMedioSecPorKm().toDouble()
+            ? training.ritmoMedioSecPorKm()?.toDouble()
             : null,
         rpe: training.series.isEmpty ? null : training.rpePromedio(),
         load: training.loadScore,
@@ -94,7 +94,7 @@ class AiCoachContextBuilder {
             ? (mainBlock.targetPaceMaxMin! * 60 + mainBlock.targetPaceMaxSec!).toDouble()
             : null;
         final realPace = training.distanciaTotalM() > 0
-            ? training.ritmoMedioSecPorKm().toDouble()
+            ? training.ritmoMedioSecPorKm()?.toDouble()
             : null;
         final paceCompliance = targetPaceSec != null &&
                 realPace != null &&

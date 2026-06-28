@@ -116,19 +116,19 @@ class Entrenamiento {
     return total / series.length;
   }
 
-  int ritmoMedioSecPorKm() {
+  /// Devuelve null si no hay distancia registrada.
+  int? ritmoMedioSecPorKm() {
     final int distanciaM = distanciaTotalM();
     final double tiempoSec = tiempoTotalSec();
-    if (distanciaM <= 0) {
-      throw StateError('distanciaTotalM debe ser > 0 para calcular ritmo');
-    }
+    if (distanciaM <= 0) return null;
     final double km = distanciaM / 1000.0;
     final double secPerKm = tiempoSec / km;
     return secPerKm.round();
   }
 
   String ritmoMedioTexto() {
-    final int secKm = ritmoMedioSecPorKm();
+    final int? secKm = ritmoMedioSecPorKm();
+    if (secKm == null) return '--:--';
     final int mm = secKm ~/ 60;
     final int ss = secKm % 60;
     final String ss2 = ss < 10 ? '0' + ss.toString() : ss.toString();
@@ -153,11 +153,7 @@ class Entrenamiento {
     };
 
     // Si quieres guardar también el ritmo medio (opcional):
-    try {
-      base['ritmoMedioSecKm'] = ritmoMedioSecPorKm();
-    } catch (_) {
-      base['ritmoMedioSecKm'] = null; // sin distancia no hay ritmo
-    }
+    base['ritmoMedioSecKm'] = ritmoMedioSecPorKm(); // null si no hay distancia
 
     // Guardar tags si existen
     if (tags != null) {

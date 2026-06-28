@@ -414,8 +414,16 @@ class PdfGeneratorService {
   static pw.Widget _buildPaceChart(Entrenamiento training) {
     if (training.series.isEmpty) return pw.SizedBox();
     
-    final maxPace = training.series.map((s) => s.ritmoSecPorKm()).reduce((a, b) => a > b ? a : b).toDouble();
-    final minPace = training.series.map((s) => s.ritmoSecPorKm()).reduce((a, b) => a < b ? a : b).toDouble();
+    final validPaces = training.series
+        .map((s) => s.ritmoSecPorKm())
+        .whereType<int>()
+        .toList();
+    final maxPace = validPaces.isEmpty
+        ? 0.0
+        : validPaces.reduce((a, b) => a > b ? a : b).toDouble();
+    final minPace = validPaces.isEmpty
+        ? 0.0
+        : validPaces.reduce((a, b) => a < b ? a : b).toDouble();
     final range = maxPace - minPace;
     
     return pw.Column(
@@ -443,7 +451,7 @@ class PdfGeneratorService {
             mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
             children: List.generate(training.series.length, (i) {
               final serie = training.series[i];
-              final pace = serie.ritmoSecPorKm().toDouble();
+              final pace = (serie.ritmoSecPorKm() ?? 0).toDouble();
               final normalizedHeight = range > 0 
                   ? ((pace - minPace) / range) * 96
                   : 48.0;

@@ -330,10 +330,8 @@ class PatternComparisonView extends StatelessWidget {
     final count = listA.length < listB.length ? listA.length : listB.length; // Comparar hasta el min length
 
     return List.generate(count, (index) {
-      double valA = 0;
-      double valB = 0;
-      try { valA = listA[index].ritmoSecPorKm().toDouble(); } catch(e){}
-      try { valB = listB[index].ritmoSecPorKm().toDouble(); } catch(e){}
+      final valA = (listA[index].ritmoSecPorKm() ?? 0).toDouble();
+      final valB = (listB[index].ritmoSecPorKm() ?? 0).toDouble();
 
       return BarChartGroupData(
         x: index,

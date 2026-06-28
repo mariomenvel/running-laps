@@ -28,10 +28,8 @@ class PatternDetector {
         // Validar que la serie tiene datos válidos
         if (serie.distanciaM <= 0) continue;
         
-        int? paceSecKm;
-        try {
-          paceSecKm = serie.ritmoSecPorKm();
-        } catch (e) {
+        final paceSecKm = serie.ritmoSecPorKm();
+        if (paceSecKm == null) {
           // Serie sin distancia válida para calcular ritmo
           continue;
         }
@@ -114,13 +112,12 @@ class PatternDetector {
       final patternKey = generateWorkoutPatternKey(entreno);
       
       // Calcular métricas del entrenamiento
-      double averagePace;
-      try {
-        averagePace = entreno.ritmoMedioSecPorKm().toDouble();
-      } catch (e) {
+      final ritmoMedio = entreno.ritmoMedioSecPorKm();
+      if (ritmoMedio == null) {
         // Entrenamiento sin distancia válida
         continue;
       }
+      final double averagePace = ritmoMedio.toDouble();
 
       final consistency = calculatePaceConsistency(entreno);
 

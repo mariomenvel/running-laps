@@ -83,11 +83,10 @@ class GamificationService {
       totalKm += t.distanciaTotalM() / 1000.0;
       
       // Ritmo (sec/km). Si es < 300 (5 min/km) y distancia > 1km (para evitar errores de GPS cortos)
-      try {
-        if (t.distanciaTotalM() > 1000 && t.ritmoMedioSecPorKm() < 300) {
-          hasFastRun = true;
-        }
-      } catch (_) {}
+      final ritmo = t.ritmoMedioSecPorKm();
+      if (t.distanciaTotalM() > 1000 && ritmo != null && ritmo < 300) {
+        hasFastRun = true;
+      }
     }
 
     // 2. Verificar condiciones

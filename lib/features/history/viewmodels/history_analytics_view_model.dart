@@ -110,11 +110,8 @@ class HistoryAnalyticsViewModel {
     final sorted = List<Entrenamiento>.from(trainings)..sort((a,b) => a.fecha.compareTo(b.fecha));
     
     return sorted.map((t) {
-      int pace = 0;
-      try {
-        pace = t.ritmoMedioSecPorKm();
-      } catch (_) {}
-      
+      final pace = t.ritmoMedioSecPorKm() ?? 0;
+
       return {
         'date': t.fecha,
         'paceSeconds': pace,

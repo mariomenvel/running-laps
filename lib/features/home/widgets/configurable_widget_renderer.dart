@@ -95,9 +95,7 @@ class ConfigurableWidgetRenderer extends StatelessWidget {
         final e = sortedData[i];
         double yVal = 0;
         if (metric == 'pace') {
-            try {
-               yVal = e.ritmoMedioSecPorKm().toDouble();
-            } catch (_) {}
+            yVal = (e.ritmoMedioSecPorKm() ?? 0).toDouble();
         } else if (metric == 'rpe') {
             yVal = e.rpePromedio();
         }

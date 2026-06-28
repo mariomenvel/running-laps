@@ -261,9 +261,12 @@ class OverviewTab extends StatelessWidget {
     for (var workout in data) {
       for (var serie in workout.series) {
         if ((serie.distanciaM - targetDistance).abs() <= targetDistance * 0.05) {
-          final pace = serie.ritmoSecPorKm().toDouble();
-          if (pace > 0 && (bestPace == null || pace < bestPace)) {
-            bestPace = pace;
+          final paceSec = serie.ritmoSecPorKm();
+          if (paceSec != null) {
+            final pace = paceSec.toDouble();
+            if (pace > 0 && (bestPace == null || pace < bestPace)) {
+              bestPace = pace;
+            }
           }
         }
       }
@@ -482,8 +485,7 @@ class _PaceEvolutionChart extends StatelessWidget {
     final sorted = List<Entrenamiento>.from(workouts)..sort((a, b) => a.fecha.compareTo(b.fecha));
     final displayData = sorted.length > 20 ? sorted.sublist(sorted.length - 20) : sorted;
     final spots = displayData.asMap().entries.map((e) {
-      double pace = 0;
-      try { pace = e.value.ritmoMedioSecPorKm().toDouble(); } catch (_) {}
+      final pace = (e.value.ritmoMedioSecPorKm() ?? 0).toDouble();
       return FlSpot(e.key.toDouble(), pace);
     }).toList();
     if (spots.isEmpty) return const Center(child: Text('Sin datos'));
