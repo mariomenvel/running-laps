@@ -278,6 +278,18 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                     const SizedBox(height: AppSpacing.m),
                     _buildDateHeader(isAthlete),
                     const SizedBox(height: AppSpacing.xl),
+                    ValueListenableBuilder<int>(
+                      valueListenable: _vm!.totalSessions,
+                      builder: (_, sessions, __) {
+                        if (sessions > 0) return const SizedBox.shrink();
+                        return Column(
+                          children: [
+                            _buildWelcomeCard(isAthlete),
+                            const SizedBox(height: AppSpacing.xl),
+                          ],
+                        );
+                      },
+                    ),
                     if (isAthlete) ..._buildAthleteContent(),
                     if (!isAthlete) ..._buildRecreativoContent(),
                     _buildRecentWorkouts(),
@@ -1201,6 +1213,95 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     if (diff == 1) return 'Ayer';
     const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
     return '${d.day} ${meses[d.month - 1]}';
+  }
+
+  Widget _buildWelcomeCard(bool isAthlete) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.l),
+      decoration: BoxDecoration(
+        color: AppColors.brand.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.brand.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.brand.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              isAthlete
+                  ? Icons.calendar_month_rounded
+                  : Icons.directions_run_rounded,
+              color: AppColors.brand,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.m),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isAthlete ? 'Tu plan está listo 🎯' : '¡Bienvenido a Running Laps!',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  isAthlete
+                      ? 'Ve al calendario para ver tus sesiones de esta semana.'
+                      : 'Pulsa el botón central para registrar tu primer entrenamiento.',
+                  style: TextStyle(
+                    color: AppColors.textSecondary(context),
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+                if (isAthlete) ...[
+                  const SizedBox(height: AppSpacing.m),
+                  TextButton(
+                    onPressed: () =>
+                        MainShell.shellKey.currentState?.navigateTo(1),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Ver calendario',
+                          style: TextStyle(
+                            color: AppColors.brand,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          color: AppColors.brand,
+                          size: 14,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
