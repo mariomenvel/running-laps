@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../../core/services/heart_rate_service.dart';
 import '../../../core/services/settings_service.dart';
 import '../../../core/theme/app_colors.dart';
@@ -66,6 +68,15 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
   Future<void> _loadGpsDefault() async {
     final gps = await SettingsService().getGpsDefault();
     if (mounted) setState(() => _gpsOn = gps);
+    if (gps) await _requestGpsPermissions();
+  }
+
+  Future<void> _requestGpsPermissions() async {
+    final locPerm = await Geolocator.checkPermission();
+    if (locPerm == LocationPermission.denied) {
+      await Geolocator.requestPermission();
+    }
+    await Permission.activityRecognition.request();
   }
 
   Future<void> _onStart() async {
@@ -454,7 +465,10 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
       trailing: CupertinoSwitch(
         value: _gpsOn,
         activeTrackColor: AppColors.brand,
-        onChanged: (v) => setState(() => _gpsOn = v),
+        onChanged: (v) async {
+          setState(() => _gpsOn = v);
+          if (v) await _requestGpsPermissions();
+        },
       ),
     );
   }
