@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:geolocator/geolocator.dart';
@@ -132,19 +133,16 @@ class GPSService with WidgetsBindingObserver {
       return false;
     }
 
-    // En iOS, elevar a "always" para tracking en background con pantalla
-    // bloqueada. Solo se pide si ya tenemos whileInUse — Apple requiere
-    // este orden obligatoriamente (segunda llamada dispara el diálogo).
+    // En iOS, solicitar "Siempre" via canal nativo — Geolocator no llama
+    // requestAlwaysAuthorization() internamente, hay que hacerlo desde Swift.
     if (!kIsWeb &&
         defaultTargetPlatform == TargetPlatform.iOS &&
         perm == LocationPermission.whileInUse) {
       try {
-        perm = await Geolocator.requestPermission()
-            .timeout(const Duration(seconds: 8));
-        debugPrint('[GPS] requestAlways=$perm');
-      } on TimeoutException {
-        debugPrint('[GPS] requestAlways timeout');
-        // No bloqueante — seguimos con whileInUse
+        const channel = MethodChannel('com.runninglaps/permissions');
+        await channel.invokeMethod('requestAlwaysLocation');
+      } catch (e) {
+        debugPrint('[GPS] requestAlways error: $e');
       }
     }
 

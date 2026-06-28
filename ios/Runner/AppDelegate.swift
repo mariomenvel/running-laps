@@ -1,11 +1,15 @@
+import CoreLocation
 import Flutter
 import UIKit
 import GoogleSignIn
 
 @main
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, CLLocationManagerDelegate {
   private let liveActivityChannelName = "running_laps/live_activity"
   private let liveActivityActionsChannelName = "running_laps/live_activity_actions"
+  private let permissionsChannelName = "com.runninglaps/permissions"
+
+  private var locationManager: CLLocationManager?
 
   override func application(
     _ application: UIApplication,
@@ -14,6 +18,7 @@ import GoogleSignIn
     configureGoogleSignIn()
     GeneratedPluginRegistrant.register(with: self)
     configureLiveActivityChannels()
+    configurePermissionsChannel()
 
     if let url = launchOptions?[.url] as? URL {
       _ = handleCustomURL(url)
@@ -94,6 +99,43 @@ import GoogleSignIn
       binaryMessenger: controller.binaryMessenger
     )
     eventChannel.setStreamHandler(LiveActivityActionStreamHandler.shared)
+  }
+
+  private func configurePermissionsChannel() {
+    guard let controller = window?.rootViewController as? FlutterViewController else {
+      return
+    }
+
+    let channel = FlutterMethodChannel(
+      name: permissionsChannelName,
+      binaryMessenger: controller.binaryMessenger
+    )
+    channel.setMethodCallHandler { [weak self] call, result in
+      switch call.method {
+      case "requestAlwaysLocation":
+        self?.requestAlwaysAuthorization()
+        result(nil)
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+  }
+
+  /// Llamado desde Flutter via MethodChannel cuando el usuario activa GPS
+  /// y ya tiene whenInUse. Solicita el upgrade a "Siempre" que iOS muestra
+  /// como banner en la parte superior de la pantalla.
+  private func requestAlwaysAuthorization() {
+    locationManager = CLLocationManager()
+    locationManager?.delegate = self
+    locationManager?.requestAlwaysAuthorization()
+  }
+
+  // CLLocationManagerDelegate — no necesario para la solicitud pero evita warnings.
+  func locationManager(
+    _ manager: CLLocationManager,
+    didChangeAuthorization status: CLAuthorizationStatus
+  ) {
+    // El plugin geolocator maneja el estado — no hacer nada aquí.
   }
 
   private func handleCustomURL(_ url: URL) -> Bool {
