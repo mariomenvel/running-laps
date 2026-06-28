@@ -90,13 +90,6 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       return;
     }
 
-    // No mostrar feedback a usuarios nuevos sin ningún entrenamiento registrado —
-    // no tiene sentido preguntar "¿por qué paraste?" si nunca han empezado
-    if ((_vm?.totalSessions.value ?? 0) == 0) {
-      if (mounted) setState(() => _showFeedbackBanner = false);
-      return;
-    }
-
     final weekToEval = _feedbackWeekToEvaluate();
 
     if (weekToEval.isEmpty) {
