@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'serie.dart';
 import '../../templates/data/template_models.dart';
 import '../../../../core/services/gps_service.dart';
@@ -142,7 +143,7 @@ class Entrenamiento {
 
     final Map<String, dynamic> base = <String, dynamic>{
       'titulo': titulo,
-      'fecha': fecha.toIso8601String(),
+      'fecha': fecha.toUtc().toIso8601String(),
       'gps': gps,
       'series': listaSeries,
       // Derivadas (opcional pero útil para consultas rápidas):
@@ -266,16 +267,15 @@ class Entrenamiento {
 
   static const Object _entrSentinel = Object();
 
-  // Acepta ISO-8601 (String) o miliSecundos epoch (int).
+  // Acepta ISO-8601 (String), milisegundos epoch (int) o Timestamp de Firestore.
   static DateTime _parseFechaFlexible(dynamic v) {
-    if (v is String) {
-      return DateTime.parse(v);
-    }
-    if (v is int) {
-      return DateTime.fromMillisecondsSinceEpoch(v);
-    }
-    // Si más adelante usas Timestamp de Firestore, adapta aquí.
-    // Por ahora, fallback:
+    if (v is String) return DateTime.parse(v).toLocal();
+    if (v is int) return DateTime.fromMillisecondsSinceEpoch(v);
+    try {
+      final ts = v as dynamic;
+      if (ts?.toDate != null) return (ts.toDate() as DateTime).toLocal();
+    } catch (_) {}
+    debugPrint('[Entrenamiento] _parseFechaFlexible: tipo desconocido ${v.runtimeType} — usando now()');
     return DateTime.now();
   }
 }
