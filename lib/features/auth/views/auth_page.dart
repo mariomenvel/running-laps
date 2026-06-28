@@ -97,11 +97,12 @@ class _AuthPageState extends State<AuthPage> {
     try {
       await _authCtrl.signInWithGoogle();
       if (!mounted) return;
-
-      ModernSnackBar.showSuccess(context, 'Sesión iniciada con Google');
-
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const AuthWrapper()),
+        (route) => false,
+      );
     } catch (e) {
+      if (!mounted) return;
       _showError(e);
     }
   }
