@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
+import 'package:running_laps/features/onboarding/views/athlete_tutorial_view.dart';
 
 class WelcomeView extends StatelessWidget {
   const WelcomeView({super.key});
@@ -89,6 +90,15 @@ class WelcomeView extends StatelessWidget {
                             });
                             debugPrint(
                                 '[WelcomeView] onboardingCompleted: true ✓');
+                            if (!context.mounted) return;
+                            await Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const AthleteTutorialView(
+                                  dismissible: false,
+                                ),
+                                fullscreenDialog: true,
+                              ),
+                            );
                           } catch (e) {
                             debugPrint(
                                 '[WelcomeView] error escribiendo onboardingCompleted: $e');

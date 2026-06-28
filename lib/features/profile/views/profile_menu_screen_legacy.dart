@@ -7,6 +7,7 @@ import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
+import 'package:running_laps/features/onboarding/views/athlete_tutorial_view.dart';
 
 // Auth
 import 'package:firebase_auth/firebase_auth.dart';
@@ -55,6 +56,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
   late final Animation<double> _aPersonal;   // 260ms – fade + slide bottom
   late final Animation<double> _aAdmin;      // 320ms – fade + slide bottom
   late final Animation<double> _aCuenta;     // 440ms – fade + slide bottom
+  late final Animation<double> _aAyuda;      // 470ms – fade + slide bottom
   late final Animation<double> _aSesion;     // 500ms – fade + slide bottom
   // ────────────────────────────────────────────────────────────────
 
@@ -69,6 +71,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
     _aPersonal   = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.217, 0.733, curve: Curves.easeOutQuart));
     _aAdmin      = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.267, 0.783, curve: Curves.easeOutQuart));
     _aCuenta     = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.367, 0.883, curve: Curves.easeOutQuart));
+    _aAyuda      = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.392, 0.908, curve: Curves.easeOutQuart));
     _aSesion     = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.417, 0.933, curve: Curves.easeOutQuart));
     if (!_entrancePlayed) {
       _entrancePlayed = true;
@@ -530,6 +533,28 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                                   AppRoute(page: const HeartRateMonitorView()),
                                 );
                               },
+                            );
+                          },
+                        ),
+                      ],
+                    )),
+
+                    // SECTION 4.5: AYUDA
+                    _slideFromBottom(_aAyuda, Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader("Ayuda"),
+                        _buildMenuTile(
+                          title: "Cómo funciona Running Laps",
+                          icon: Icons.school_rounded,
+                          color: AppColors.brand,
+                          subtitle: "Tutorial del modo atleta",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              AppRoute(
+                                page: const AthleteTutorialView(dismissible: true),
+                              ),
                             );
                           },
                         ),
