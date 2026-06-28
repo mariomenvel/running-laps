@@ -92,26 +92,64 @@ class GPSService with WidgetsBindingObserver {
   }
 
   Future<bool> initialize() async {
-    await _sensorService.initialize();
+    debugPrint('[GPS] initialize START');
+    try {
+      await _sensorService.initialize().timeout(const Duration(seconds: 5));
+      debugPrint('[GPS] sensorService done');
+    } on TimeoutException {
+      debugPrint('[GPS] sensorService.initialize timeout');
+      // no bloqueante — continuamos sin sensor
+    }
 
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    debugPrint('[GPS] serviceEnabled=$serviceEnabled');
     if (!serviceEnabled) {
       status.value = GpsStatus.disabled;
+      debugPrint('[GPS] initialize END → returning false');
       return false;
     }
 
     LocationPermission perm = await Geolocator.checkPermission();
+    debugPrint('[GPS] checkPermission=$perm');
     if (perm == LocationPermission.denied) {
-      perm = await Geolocator.requestPermission();
+      try {
+        perm = await Geolocator.requestPermission()
+            .timeout(const Duration(seconds: 8));
+        debugPrint('[GPS] requestPermission=$perm');
+      } on TimeoutException {
+        debugPrint('[GPS] requestPermission timeout — '
+            'iOS puede estar bloqueando el diálogo');
+        status.value = GpsStatus.permissionDenied;
+        debugPrint('[GPS] initialize END → returning false');
+        return false;
+      }
     }
 
     if (perm == LocationPermission.denied ||
         perm == LocationPermission.deniedForever) {
       status.value = GpsStatus.permissionDenied;
+      debugPrint('[GPS] initialize END → returning false');
       return false;
     }
 
+    // En iOS, elevar a "always" para tracking en background con pantalla
+    // bloqueada. Solo se pide si ya tenemos whileInUse — Apple requiere
+    // este orden obligatoriamente (segunda llamada dispara el diálogo).
+    if (!kIsWeb &&
+        defaultTargetPlatform == TargetPlatform.iOS &&
+        perm == LocationPermission.whileInUse) {
+      try {
+        perm = await Geolocator.requestPermission()
+            .timeout(const Duration(seconds: 8));
+        debugPrint('[GPS] requestAlways=$perm');
+      } on TimeoutException {
+        debugPrint('[GPS] requestAlways timeout');
+        // No bloqueante — seguimos con whileInUse
+      }
+    }
+
     status.value = GpsStatus.paused;
+    debugPrint('[GPS] initialize END → returning true');
     return true;
   }
 
