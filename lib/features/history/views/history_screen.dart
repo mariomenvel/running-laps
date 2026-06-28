@@ -165,15 +165,6 @@ class _HistoryScreenState extends State<HistoryScreen>
         builder: (context, query, _) {
           return Row(
             children: [
-              // Back button
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Icon(Icons.chevron_left_rounded,
-                      color: AppColors.textPrimary(context), size: 28),
-                ),
-              ),
               // Search pill
               Expanded(
                 child: Container(
