@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
@@ -49,12 +51,20 @@ class SpeechToTextService {
     recognizedText.value = '';
     lastError.value = null;
     isListening.value = true;
+    // Web no expone Platform — fallback a español en ese caso.
+    final localeId = kIsWeb
+        ? 'es-ES'
+        : Platform.localeName.replaceAll('_', '-');
+
     await _speech.listen(
       onResult: (result) {
         recognizedText.value = result.recognizedWords;
         if (result.finalResult) isListening.value = false;
       },
-      listenOptions: SpeechListenOptions(cancelOnError: true),
+      listenOptions: SpeechListenOptions(
+        cancelOnError: true,
+        localeId: localeId,
+      ),
     );
   }
 
