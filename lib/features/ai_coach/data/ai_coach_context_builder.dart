@@ -406,6 +406,9 @@ class AiCoachContextBuilder {
     required DateTime now,
     required List<Entrenamiento> trainings,
   }) {
+    // Usuario nuevo sin entrenamientos — no ha "parado", nunca ha empezado
+    if (trainings.isEmpty) return 0;
+
     final todayMonday = _mondayOf(now);
     var missed = 0;
     for (var i = 0; i < 6; i++) {
