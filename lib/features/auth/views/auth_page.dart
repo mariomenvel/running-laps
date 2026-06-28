@@ -763,9 +763,12 @@ class _AuthPageState extends State<AuthPage> {
                   SizedBox(
                     height: logoHeight > 140 ? 140 : logoHeight,
                     child: Center(
-                      child: Image.asset(
-                        'assets/images/Icon.png',
-                        fit: BoxFit.contain,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Image.asset(
+                          'assets/images/icono_launcher.png',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                   ),

@@ -39,10 +39,13 @@ class WelcomeView extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'assets/images/Icon.png',
-                  height: 100,
-                  fit: BoxFit.contain,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.asset(
+                    'assets/images/icono_launcher.png',
+                    height: 100,
+                    fit: BoxFit.contain,
+                  ),
                 ),
                 const SizedBox(height: 40),
                 Text(

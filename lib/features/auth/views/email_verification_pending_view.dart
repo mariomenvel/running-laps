@@ -112,10 +112,13 @@ class _EmailVerificationPendingViewState
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                Image.asset(
-                  'assets/images/Icon.png',
-                  height: 80,
-                  fit: BoxFit.contain,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: Image.asset(
+                    'assets/images/icono_launcher.png',
+                    height: 80,
+                    fit: BoxFit.contain,
+                  ),
                 ),
                 const SizedBox(height: 40),
                 Icon(
