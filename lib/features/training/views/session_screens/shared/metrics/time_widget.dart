@@ -33,20 +33,26 @@ class TimeWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final timeText = Text(
+      _format(elapsed),
+      style: TextStyle(
+        fontSize: hero ? 88 : fontSize,
+        fontWeight: hero ? FontWeight.w800 : FontWeight.w700,
+        color: AppColors.textPrimary(context),
+        height: 1.0,
+        letterSpacing: -1.0,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
+    );
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          _format(elapsed),
-          style: TextStyle(
-            fontSize: hero ? 88 : fontSize,
-            fontWeight: hero ? FontWeight.w800 : FontWeight.w700,
-            color: AppColors.textPrimary(context),
-            height: 1.0,
-            letterSpacing: -1.0,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
-        ),
+        hero
+            ? FittedBox(
+                fit: BoxFit.scaleDown,
+                child: timeText,
+              )
+            : timeText,
         if (target != null) ...[
           const SizedBox(height: 4),
           Text(
