@@ -10,6 +10,7 @@ import '../../../core/services/ios_live_activity_service.dart';
 import '../../../core/utils/app_transitions.dart';
 import '../../athlete/data/athlete_session_model.dart';
 import '../../athlete/data/athlete_session_repository.dart';
+import '../../home/viewmodels/home_view_model.dart';
 import '../../templates/data/workout_block.dart';
 import '../../templates/data/workout_segment.dart';
 import '../../templates/data/workout_session.dart';
@@ -377,6 +378,10 @@ class _DoneLoaderState extends State<_DoneLoader> {
     } catch (e) {
       debugPrint('[WorkoutExecution] markAsCompleted error: $e');
     }
+    // Notificar al Home que la sesión completó
+    // para que todaySession se actualice y el
+    // botón "Empezar entrenamiento" desaparezca
+    HomeViewModel.needsReload.value++;
   }
 
   Map<String, dynamic> _buildPlannedComparison(WorkoutSession session) {
