@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -78,7 +80,25 @@ class HistoryController {
       await loadTrainings();
       return;
     }
-    await FirebaseAuth.instance.authStateChanges().firstWhere((u) => u != null);
+
+    // Timeout de 5s para evitar espera indefinida
+    // si Firebase Auth no emite en iOS
+    try {
+      await FirebaseAuth.instance
+          .authStateChanges()
+          .firstWhere((u) => u != null)
+          .timeout(const Duration(seconds: 5));
+    } on TimeoutException {
+      debugPrint('[HistoryController] '
+          'loadWhenReady timeout — '
+          'usuario no disponible');
+      if (!_disposed) {
+        error.value =
+            'No se pudo conectar. '
+            'Comprueba tu conexión.';
+      }
+      return;
+    }
     await loadTrainings();
   }
 
@@ -98,7 +118,13 @@ class HistoryController {
         return;
       }
 
-      final page = await _trainingRepo.getTrainings(uid: uid, pageSize: 20);
+      final page = await _trainingRepo
+          .getTrainings(uid: uid, pageSize: 20)
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw TimeoutException(
+                'Tiempo de espera agotado'),
+          );
       if (_disposed) return;
       _allTrainings.value = page.trainings;
       _lastDocument = page.lastDocument;
