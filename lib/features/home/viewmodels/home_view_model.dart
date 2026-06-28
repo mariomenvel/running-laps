@@ -12,6 +12,10 @@ import 'package:running_laps/features/training/data/training_repository.dart';
 class HomeViewModel {
   HomeViewModel({required this.userId});
 
+  /// Incrementar para forzar recarga del Home.
+  /// Usar tras marcar sesión como completada.
+  static final needsReload = ValueNotifier<int>(0);
+
   final String userId;
 
   bool _disposed = false;

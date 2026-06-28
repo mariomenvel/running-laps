@@ -166,9 +166,14 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   }
 
   @override
+  void _onNeedsReload() {
+    _vm?.loadAll();
+  }
+
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    HomeViewModel.needsReload.addListener(_onNeedsReload);
     _initWithAuth();
     MainShell.shellKey.currentState?.tabIndexNotifier
         .addListener(_onTabChanged);
@@ -217,6 +222,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    HomeViewModel.needsReload.removeListener(_onNeedsReload);
     MainShell.shellKey.currentState?.tabIndexNotifier
         .removeListener(_onTabChanged);
     _vm?.dispose();

@@ -50,6 +50,7 @@ import 'package:running_laps/features/profile/data/zones_repository.dart';
 import '../../templates/data/athlete_session_mapper.dart';
 import 'pre_execution_screen.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
+import 'package:running_laps/features/home/viewmodels/home_view_model.dart';
 import 'package:running_laps/features/ai_coach/data/pb_detector.dart';
 
 
@@ -1188,6 +1189,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
               sessionId:  widget.athleteSessionId!,
               trainingId: newTrainingId,
             );
+            HomeViewModel.needsReload.value++;
             // Guardar comparativa planificado vs ejecutado
             try {
               final planned = await AthleteSessionRepository()
@@ -1227,6 +1229,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                       sessionId:  session.id,
                       trainingId: newTrainingId,
                     );
+                    HomeViewModel.needsReload.value++;
                   },
                   parentContext: context,
                 ),
