@@ -1,5 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
+
+// iOS usa San Francisco (sistema nativo); Android/Web usa GeneralSans.
+String? get _platformFontFamily {
+  if (kIsWeb) return 'GeneralSans';
+  if (defaultTargetPlatform == TargetPlatform.iOS) return null;
+  return 'GeneralSans';
+}
 
 /// ThemeData de Running Laps — dark mode por defecto.
 /// No hay light mode implementado.
@@ -7,7 +15,7 @@ class AppTheme {
   AppTheme._();
 
   static ThemeData light() => ThemeData(
-    fontFamily: 'GeneralSans',
+    fontFamily: _platformFontFamily,
     brightness: Brightness.light,
     scaffoldBackgroundColor: AppColors.lightBackground,
     colorScheme: const ColorScheme.light(
@@ -34,7 +42,7 @@ class AppTheme {
   );
 
   static ThemeData dark() => ThemeData(
-    fontFamily: 'GeneralSans',
+    fontFamily: _platformFontFamily,
     brightness: Brightness.dark,
     scaffoldBackgroundColor: const Color(0xFF111111),
     colorScheme: const ColorScheme.dark(
