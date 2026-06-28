@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:running_laps/features/auth/viewmodels/auth_controller.dart';
+import 'package:running_laps/features/auth/views/auth_wrapper.dart';
+import 'package:running_laps/features/auth/views/email_verification_pending_view.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
@@ -60,7 +62,10 @@ class _AuthPageState extends State<AuthPage> {
     try {
       await _authCtrl.signIn();
       if (!mounted) return;
-      ModernSnackBar.showSuccess(context, 'Sesión iniciada');
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const AuthWrapper()),
+        (route) => false,
+      );
     } catch (e) {
       if (!mounted) return;
       _showError(e);
@@ -70,6 +75,18 @@ class _AuthPageState extends State<AuthPage> {
   Future<void> _signUp() async {
     try {
       await _authCtrl.signUp();
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => EmailVerificationPendingView(
+            onVerified: () => Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const AuthWrapper()),
+              (route) => false,
+            ),
+          ),
+        ),
+        (route) => false,
+      );
     } catch (e) {
       if (!mounted) return;
       _showError(e);
