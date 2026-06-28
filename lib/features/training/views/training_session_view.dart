@@ -2375,7 +2375,7 @@ class _RpeStatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1530),
+        color: AppColors.brand.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -2388,7 +2388,7 @@ class _RpeStatChip extends StatelessWidget {
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: AppColors.brandLight,
+              color: AppColors.brand,
             ),
           ),
         ],
