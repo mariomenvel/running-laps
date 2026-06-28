@@ -612,81 +612,127 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
   Widget _buildTodaySessionCard() {
     return ValueListenableBuilder<AthleteSession?>(
-      valueListenable: _vm!.todaySession,
-      builder: (_, session, __) {
-        return _card(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [
-                const Text('◇', style: TextStyle(color: AppColors.brand, fontSize: 14)),
-                const SizedBox(width: 8),
-                Text(
-                  'SESIÓN DE HOY',
-                  style: AppTypography.small.copyWith(
-                    color: AppColors.brand,
-                    letterSpacing: 1.2,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ]),
-              const SizedBox(height: 12),
-              if (session != null) ...[
-                Text(
-                  _categoryLabel(session.category),
-                  style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context)),
-                ),
-                if (session.blocks.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  ...session.blocks.take(3).map((b) =>
-                      BlockPreviewTile(
-                        block: b,
-                        style: BlockPreviewStyle.card,
-                      )),
-                ],
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.brand,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppDimens.buttonRadius),
+      valueListenable: _vm!.completedTodaySession,
+      builder: (_, completed, __) {
+        return ValueListenableBuilder<AthleteSession?>(
+          valueListenable: _vm!.todaySession,
+          builder: (_, session, __) {
+            return _card(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    const Text('◇', style: TextStyle(color: AppColors.brand, fontSize: 14)),
+                    const SizedBox(width: 8),
+                    Text(
+                      'SESIÓN DE HOY',
+                      style: AppTypography.small.copyWith(
+                        color: AppColors.brand,
+                        letterSpacing: 1.2,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    onPressed: () {
-                      final workoutSession = mapAthleteSessionToWorkout(session);
-                      if (workoutSession != null) {
-                        Navigator.of(context).push(AppRoute(
-                          page: PreExecutionScreen(
-                            session: workoutSession,
-                            athleteSession: session,
-                          ),
-                        ));
-                      } else {
-                        Navigator.push(context, AppRoute(page: const TrainingStartView()));
-                      }
-                    },
-                    child: const Text('EMPEZAR ENTRENAMIENTO'),
-                  ),
-                ),
-              ] else ...[
-                Text(
-                  'No hay sesión planificada para hoy',
-                  style: AppTypography.body.copyWith(color: AppColors.iconMutedOf(context)),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Puedes entrenar libre o planificar en el calendario',
-                  style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
-                ),
-              ],
-            ],
-          ),
+                  ]),
+                  const SizedBox(height: 12),
+                  if (session != null)
+                    ..._buildPlannedSessionContent(session)
+                  else if (completed != null)
+                    ..._buildCompletedSessionContent(completed)
+                  else
+                    ..._buildNoSessionContent(),
+                ],
+              ),
+            );
+          },
         );
       },
     );
+  }
+
+  List<Widget> _buildPlannedSessionContent(AthleteSession session) {
+    return [
+      Text(
+        _categoryLabel(session.category),
+        style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context)),
+      ),
+      if (session.blocks.isNotEmpty) ...[
+        const SizedBox(height: 8),
+        ...session.blocks.take(3).map((b) =>
+            BlockPreviewTile(
+              block: b,
+              style: BlockPreviewStyle.card,
+            )),
+      ],
+      const SizedBox(height: 16),
+      SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.brand,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppDimens.buttonRadius),
+            ),
+          ),
+          onPressed: () {
+            final workoutSession = mapAthleteSessionToWorkout(session);
+            if (workoutSession != null) {
+              Navigator.of(context).push(AppRoute(
+                page: PreExecutionScreen(
+                  session: workoutSession,
+                  athleteSession: session,
+                ),
+              ));
+            } else {
+              Navigator.push(context, AppRoute(page: const TrainingStartView()));
+            }
+          },
+          child: const Text('EMPEZAR ENTRENAMIENTO'),
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _buildCompletedSessionContent(AthleteSession session) {
+    return [
+      Row(
+        children: [
+          const Icon(Icons.check_circle_rounded, color: AppColors.rpeLow, size: 18),
+          const SizedBox(width: 6),
+          Text(
+            'Sesión completada',
+            style: AppTypography.small.copyWith(
+              color: AppColors.rpeLow,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 8),
+      Text(
+        session.title ?? _categoryLabel(session.category),
+        style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context)),
+      ),
+      const SizedBox(height: 4),
+      Text(
+        '¡Buen trabajo! Revisa tu resumen en el historial.',
+        style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
+      ),
+    ];
+  }
+
+  List<Widget> _buildNoSessionContent() {
+    return [
+      Text(
+        'No hay sesión planificada para hoy',
+        style: AppTypography.body.copyWith(color: AppColors.iconMutedOf(context)),
+      ),
+      const SizedBox(height: 4),
+      Text(
+        'Puedes entrenar libre o planificar en el calendario',
+        style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
+      ),
+    ];
   }
 
   Widget _buildWeekSessionsList() {

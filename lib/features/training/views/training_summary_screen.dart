@@ -9,7 +9,10 @@ import '../data/serie.dart';
 import '../data/training_repository.dart';
 import '../data/tag_manager.dart';
 import '../data/tag_model.dart';
+import '../../athlete/data/athlete_session_model.dart';
+import '../../athlete/data/athlete_session_repository.dart';
 import '../../history/viewmodels/history_controller.dart';
+import '../../home/viewmodels/home_view_model.dart';
 import '../../templates/data/workout_session.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/constants/training_tags.dart';
@@ -25,10 +28,12 @@ import 'session_screens/summary_cards/free_stats_card.dart';
 
 class TrainingSummaryScreen extends StatefulWidget {
   final Entrenamiento entrenamiento;
+  final AthleteSession? athleteSession;
 
   const TrainingSummaryScreen({
     Key? key,
     required this.entrenamiento,
+    this.athleteSession,
   }) : super(key: key);
 
   @override
@@ -332,6 +337,18 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
 
       if (!mounted) return;
 
+      if (widget.athleteSession != null) {
+        try {
+          await AthleteSessionRepository().markAsCompleted(
+            uid: uid,
+            sessionId: widget.athleteSession!.id,
+            trainingId: id,
+          );
+        } catch (e) {
+          debugPrint('[Summary] markAsCompleted error: $e');
+        }
+      }
+      HomeViewModel.needsReload.value++;
       HistoryController.needsReload.value++;
 
       // Pop to root (MainShell from AuthWrapper) then switch to History tab

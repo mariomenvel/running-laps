@@ -47,6 +47,7 @@ class HomeViewModel {
 
   // Modo atleta
   final todaySession = ValueNotifier<AthleteSession?>(null);
+  final completedTodaySession = ValueNotifier<AthleteSession?>(null);
   final weekSessions = ValueNotifier<List<AthleteSession>>([]);
 
   // Modo recreativo
@@ -144,6 +145,7 @@ class HomeViewModel {
     weeklyLoadTotal.dispose();
     weeklyZoneSeconds.dispose();
     todaySession.dispose();
+    completedTodaySession.dispose();
     weekSessions.dispose();
     personalRecords.dispose();
   }
@@ -210,6 +212,8 @@ class HomeViewModel {
     if (_disposed) return;
     todaySession.value =
         todaySessions.where((s) => s.status == AthleteSessionStatus.planned).firstOrNull;
+    completedTodaySession.value =
+        todaySessions.where((s) => s.status == AthleteSessionStatus.completed).firstOrNull;
     weekSessions.value = week;
   }
 

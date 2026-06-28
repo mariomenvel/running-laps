@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
@@ -9,8 +8,6 @@ import '../../../core/services/heart_rate_service.dart';
 import '../../../core/services/ios_live_activity_service.dart';
 import '../../../core/utils/app_transitions.dart';
 import '../../athlete/data/athlete_session_model.dart';
-import '../../athlete/data/athlete_session_repository.dart';
-import '../../home/viewmodels/home_view_model.dart';
 import '../../templates/data/workout_block.dart';
 import '../../templates/data/workout_segment.dart';
 import '../../templates/data/workout_session.dart';
@@ -354,34 +351,17 @@ class _DoneLoaderState extends State<_DoneLoader> {
   Future<void> _goToSummary() async {
     if (!mounted) return;
     final entrenamiento = _buildEntrenamiento(widget.state);
+    if (!mounted) return;
     await Navigator.of(context).pushReplacement(
       AppRoute(
-        page: TrainingSummaryScreen(entrenamiento: entrenamiento),
+        page: TrainingSummaryScreen(
+          entrenamiento: entrenamiento,
+          athleteSession: widget.athleteSession,
+        ),
       ),
     );
-    if (!mounted) return;
-    await _markAthleteSessionCompleted(entrenamiento.id ?? '');
+    // markAsCompleted ya ocurre en _saveTraining() del resumen — no hace falta aquí
     widget.onCompleted?.call();
-  }
-
-  Future<void> _markAthleteSessionCompleted(String trainingId) async {
-    final session = widget.athleteSession;
-    if (session == null) return;
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-    try {
-      await AthleteSessionRepository().markAsCompleted(
-        uid: uid,
-        sessionId: session.id,
-        trainingId: trainingId,
-      );
-    } catch (e) {
-      debugPrint('[WorkoutExecution] markAsCompleted error: $e');
-    }
-    // Notificar al Home que la sesión completó
-    // para que todaySession se actualice y el
-    // botón "Empezar entrenamiento" desaparezca
-    HomeViewModel.needsReload.value++;
   }
 
   Map<String, dynamic> _buildPlannedComparison(WorkoutSession session) {
