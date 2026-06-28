@@ -42,7 +42,7 @@ class WelcomeView extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(20),
                   child: Image.asset(
-                    'assets/images/icono_launcher.png',
+                    'assets/images/Icon.png',
                     height: 100,
                     fit: BoxFit.contain,
                   ),
@@ -51,7 +51,7 @@ class WelcomeView extends StatelessWidget {
                 Text(
                   '¡Bienvenido a Running Laps!',
                   style: TextStyle(
-                    fontSize: 26,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: isDark ? Colors.white : const Color(0xFF1C1C1E),
                   ),
