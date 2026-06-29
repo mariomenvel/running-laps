@@ -136,7 +136,7 @@ class ChallengeDetailController {
           displayName: data['nombre'] ?? 'Usuario',
           photoUrl: data['photoUrl'] ?? data['profileImageUrl'],
           profilePicType: data['profilePicType'] ?? 'none',
-          avatarConfig: data['avatarConfig'] as Map<String, dynamic>?,
+          avatarConfig: data['generativeAvatarConfig'] as Map<String, dynamic>?,
         );
       }).toList();
 

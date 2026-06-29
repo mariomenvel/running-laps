@@ -155,7 +155,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
              name: data['nombre'] ?? data['username'] ?? "Usuario", // Fallback a nombre, luego username
              photoUrl: data['profileImageUrl'],
              profilePicType: data['profilePicType'],
-             avatarConfig: data['avatarConfig'],
+             avatarConfig: data['generativeAvatarConfig'],
            )),
          );
        }

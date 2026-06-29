@@ -31,7 +31,7 @@ class AdminRepository {
 
       final onboardedSnap = await _firestore
           .collection('users')
-          .where('avatarConfig', isNull: false)
+          .where('generativeAvatarConfig', isNull: false)
           .count()
           .get();
       onboardedUsers = onboardedSnap.count ?? 0;

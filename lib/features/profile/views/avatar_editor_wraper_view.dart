@@ -50,8 +50,8 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
           await FirebaseFirestore.instance.collection('users').doc(userId).get();
 
 
-      if (doc.exists && doc.data()!['avatarConfig'] != null) {
-        final configData = doc.data()!['avatarConfig'] as Map<String, dynamic>;
+      if (doc.exists && doc.data()!['generativeAvatarConfig'] != null) {
+        final configData = doc.data()!['generativeAvatarConfig'] as Map<String, dynamic>;
         controller.updateFromJson(configData);
       }
     } catch (e) {
@@ -75,7 +75,7 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
 
       await FirebaseFirestore.instance.collection('users').doc(userId).set({
         'profilePicType': 'avatar',
-        'avatarConfig': avatarData,
+        'generativeAvatarConfig': avatarData,
       }, SetOptions(merge: true));
 
 

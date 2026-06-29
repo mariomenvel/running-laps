@@ -315,7 +315,7 @@ class _ProfileViewState extends State<ProfileView> {
             name: data['nombre'] ?? data['username'] ?? 'Usuario',
             photoUrl: data['profileImageUrl'],
             profilePicType: data['profilePicType'],
-            avatarConfig: data['avatarConfig'],
+            avatarConfig: data['generativeAvatarConfig'],
           ),
         ),
       );

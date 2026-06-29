@@ -98,7 +98,7 @@ class GroupRewardsController {
           displayName: userData['nombre'] as String? ?? userData['displayName'] as String?,
           photoUrl: (userData['photoUrl'] as String?) ?? (userData['profileImageUrl'] as String?),
           profilePicType: userData['profilePicType'] as String?,
-          avatarConfig: userData['avatarConfig'] as Map<String, dynamic>?,
+          avatarConfig: userData['generativeAvatarConfig'] as Map<String, dynamic>?,
         );
       } catch (e) {
         return m;
@@ -119,7 +119,7 @@ class GroupRewardsController {
           displayName: userData['nombre'] as String? ?? userData['displayName'] as String?,
           photoUrl: (userData['photoUrl'] as String?) ?? (userData['profileImageUrl'] as String?),
           profilePicType: userData['profilePicType'] as String?,
-          avatarConfig: userData['avatarConfig'] as Map<String, dynamic>?,
+          avatarConfig: userData['generativeAvatarConfig'] as Map<String, dynamic>?,
         );
       } catch (e) {
         return b;
@@ -164,7 +164,7 @@ class GroupRewardsController {
         photoUrl:
             data?['photoUrl'] as String? ?? data?['profileImageUrl'] as String?,
         profilePicType: data?['profilePicType'] as String?,
-        avatarConfig: data?['avatarConfig'] as Map<String, dynamic>?,
+        avatarConfig: data?['generativeAvatarConfig'] as Map<String, dynamic>?,
       ));
     }
 
@@ -179,7 +179,7 @@ class GroupRewardsController {
         photoUrl:
             data?['photoUrl'] as String? ?? data?['profileImageUrl'] as String?,
         profilePicType: data?['profilePicType'] as String?,
-        avatarConfig: data?['avatarConfig'] as Map<String, dynamic>?,
+        avatarConfig: data?['generativeAvatarConfig'] as Map<String, dynamic>?,
       ));
     }
 

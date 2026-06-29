@@ -33,7 +33,7 @@ class AvatarHelper {
         return construirAvatar(
           radius: radius,
           type: data?['profilePicType'] ?? 'none',
-          config: data?['avatarConfig'] as Map<String, dynamic>?,
+          config: data?['generativeAvatarConfig'] as Map<String, dynamic>?,
           url: data?['profileImageUrl'],
         );
       },

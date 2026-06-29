@@ -81,7 +81,7 @@ class GroupDetailRepository {
         totalKm: totalKm,
         photoUrl: userData['photoUrl'],
         profilePicType: userData['profilePicType'],
-        avatarConfig: userData['avatarConfig'],
+        avatarConfig: userData['generativeAvatarConfig'],
         status: status,
       );
     } catch (e) {
@@ -193,7 +193,7 @@ class GroupDetailRepository {
         totalKm: km, // Aquí guardamos el progreso del reto
         photoUrl: userData['photoUrl'],
         profilePicType: userData['profilePicType'],
-        avatarConfig: userData['avatarConfig'],
+        avatarConfig: userData['generativeAvatarConfig'],
       );
     } catch (e) {
       return null;
