@@ -32,6 +32,7 @@ import 'package:running_laps/core/services/heart_rate_service.dart';
 // Widgets comunes
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'package:running_laps/core/widgets/app_confirm_dialog.dart';
 
 class ProfileMenuView extends StatefulWidget {
   const ProfileMenuView({Key? key}) : super(key: key);
@@ -47,6 +48,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
 
   String _nombreUsuario = "";
   bool _isAdmin = false;
+  bool _isAthleteMode = false;
 
   // ── Entrance animation ──────────────────────────────────────────
   late final AnimationController _entranceCtrl;
@@ -84,6 +86,13 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
     String? nombre = await _authCtrl.getUserName();
     bool admin = await _authCtrl.isUserAdmin();
 
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    bool athleteMode = false;
+    if (uid != null) {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      athleteMode = doc.data()?['isAthleteMode'] as bool? ?? false;
+    }
+
     if (mounted) {
       setState(() {
         if (nombre != null) {
@@ -92,8 +101,19 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
           _nombreUsuario = "";
         }
         _isAdmin = admin;
+        _isAthleteMode = athleteMode;
       });
     }
+  }
+
+  Future<void> _desactivarModoAtleta() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .update({'isAthleteMode': false});
+    if (mounted) setState(() => _isAthleteMode = false);
   }
 
   @override
@@ -510,6 +530,26 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                             );
                           },
                         ),
+                        if (_isAthleteMode)
+                          _buildMenuTile(
+                            icon: Icons.person_outline_rounded,
+                            title: 'Volver a modo recreativo',
+                            subtitle: 'Desactivarás el plan y el coach IA',
+                            color: AppColors.rpeMax,
+                            isDestructive: true,
+                            onTap: () async {
+                              final confirm = await showAppConfirmDialog(
+                                context: context,
+                                title: '¿Volver a modo recreativo?',
+                                message: 'Perderás acceso a tu plan semanal y al coach IA. Tus entrenamientos no se borrarán.',
+                                confirmLabel: 'Sí, desactivar',
+                                cancelLabel: 'Cancelar',
+                                isDestructive: true,
+                              );
+                              if (confirm != true) return;
+                              await _desactivarModoAtleta();
+                            },
+                          ),
                         ListenableBuilder(
                           listenable: Listenable.merge([
                             HeartRateService().connectionState,

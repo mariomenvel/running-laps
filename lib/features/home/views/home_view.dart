@@ -350,14 +350,6 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
               ],
             ),
             const Spacer(),
-            Tooltip(
-              message: isAthlete ? 'Cambiar a modo libre' : 'Cambiar a modo atleta',
-              child: IconButton(
-                icon: const Icon(Icons.sync_rounded),
-                color: AppColors.iconMutedOf(context),
-                onPressed: _vm!.toggleAthleteMode,
-              ),
-            ),
           ],
         );
       },
