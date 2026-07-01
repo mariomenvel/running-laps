@@ -177,13 +177,23 @@ class GPSService with WidgetsBindingObserver {
 
     final locationSettings =
         !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
-            ? const LocationSettings(
+            ? AppleSettings(
                 accuracy: LocationAccuracy.bestForNavigation,
+                activityType: ActivityType.fitness,
                 distanceFilter: 0,
+                pauseLocationUpdatesAutomatically: false,
+                allowBackgroundLocationUpdates: true,
+                showBackgroundLocationIndicator: true,
               )
-            : const LocationSettings(
+            : AndroidSettings(
                 accuracy: LocationAccuracy.bestForNavigation,
                 distanceFilter: 0,
+                foregroundNotificationConfig:
+                    const ForegroundNotificationConfig(
+                  notificationText: 'Registrando tu entrenamiento',
+                  notificationTitle: 'Running Laps',
+                  enableWakeLock: true,
+                ),
               );
 
     _positionSubscription = Geolocator.getPositionStream(
