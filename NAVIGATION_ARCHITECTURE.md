@@ -76,6 +76,15 @@ MainShell.shellKey.currentState?.navigateTo(14, params: avatarConfig);     // Av
 MainShell.shellKey.currentState?.navigateBack();
 ```
  
+## Toggle modo atleta
+
+El toggle bidireccional de desarrollo (icono `sync` en el header) fue **eliminado** (commit `e78dbdd`). Flujo actual:
+
+- **Activar modo atleta:** tutorial de bienvenida post-registro (`welcome_view.dart`) o completando el onboarding del Coach IA.
+- **Desactivar modo atleta:** Perfil → sección Cuenta → tile "Volver a modo recreativo" (solo visible si `isAthleteMode == true`). Requiere confirmación con `showAppConfirmDialog` destructivo.
+
+---
+
 ## Casos especiales
  
 ### Footer oculto en TrainingStartView

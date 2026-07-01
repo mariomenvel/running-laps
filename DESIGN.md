@@ -16,7 +16,7 @@ Running Laps evoluciona de app social de running a herramienta seria para atleta
 
 **Mismo app, contenido adaptado según `isAthleteMode`.**
 
-`isAthleteMode` es un campo `bool` en Firestore (`users/{uid}.isAthleteMode`). Lo lee `HomeViewModel`, `CalendarViewModel` y `ProfileView`. El Coach IA solo opera si `isAthleteMode == true`. El usuario puede cambiar de modo desde el home (icono sync en header) o completando el onboarding del Coach.
+`isAthleteMode` es un campo `bool` en Firestore (`users/{uid}.isAthleteMode`). Lo lee `HomeViewModel`, `CalendarViewModel` y `ProfileView`. El Coach IA solo opera si `isAthleteMode == true`. El usuario activa modo atleta completando el onboarding del Coach o desde el tutorial de bienvenida. Para desactivarlo: Perfil → Cuenta → "Volver a modo recreativo" (con confirmación destructiva).
 
 ---
 
@@ -47,12 +47,14 @@ Running Laps evoluciona de app social de running a herramienta seria para atleta
 
 ## 3. Monetización
 
-- **Modelo:** Freemium puro — Free para siempre, Premium de pago
-- **Estado actual:** todo Free durante beta (sin paywall activo). El Coach IA se habilita via `weeklyPlanningEnabled` en `appConfig/aiCoachProvider` (Firestore), no por suscripción.
-- **Prueba:** 30 días de Premium gratis al registrarse (pendiente activar con RevenueCat)
-- **Ciclos:** Mensual + anual con descuento del 20-30%
-- **Precio:** A definir antes del lanzamiento
-- **Plataforma:** RevenueCat (pendiente implementar)
+- **Modelo:** 3 niveles de acceso — ver `docs/MONETIZATION_ARCHITECTURE.md` para el diseño completo.
+- **Estado actual:** todo Free durante beta (`betaFreeAccess: true` en `appConfig/global`). El Coach IA se habilita via `weeklyPlanningEnabled` en `appConfig/aiCoachProvider`, no por suscripción.
+- **Nivel 1 — Recreativo** (`isAthleteMode: false`): historial, analytics básicos, grupos. Siempre gratis.
+- **Nivel 2 — Atleta** (`isAthleteMode: true`): calendario, sesiones manuales, zonas, planificación propia. Siempre gratis.
+- **Nivel 3 — Coach IA** (`hasPremiumCoach: true` en Firestore, escrito por webhook Stripe): plan semanal automático, chat coach, ATL/CTL/TSB avanzado. De pago en Fase 2.
+- **Separación crítica:** `isAthleteMode` ≠ premium. El calendario y la planificación manual **nunca** deben requerir pago.
+- **Prueba:** 30 días gestionados por Stripe natively. El cliente solo lee `hasPremiumCoach` (bool), nunca calcula fechas.
+- **Plataforma:** Stripe + Cloud Function webhook (pendiente implementar en Fase 2).
 
 ---
 

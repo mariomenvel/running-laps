@@ -19,6 +19,7 @@
 | `users/{uid}/settings/aiCoachProfile` | Solo el propietario | Solo el propietario | `read/write: isOwner` |
 | `users/{uid}/settings/aiCoachUsage` | Solo el propietario | Propietario + Cloud Functions (reset semanal) | `read/write: isOwner` |
 | `appConfig/aiCoachProvider` | Cualquier autenticado | Solo app-admin | `read: isSignedIn()` · `write: isAdmin` |
+| `appConfig/global` | Cualquier autenticado | Solo app-admin | `read: isSignedIn()` · `write: isAdmin` · campo `betaFreeAccess: bool` — durante beta: `true`; lanzamiento: `false` |
 | `groups/{groupId}` | Cualquier autenticado | Create: cualquier autenticado · Update/delete: admin del grupo | `read/create: isSignedIn()` · `update/delete: isGroupAdmin` |
 | `groups/{groupId}/members/{uid}` | Miembros del grupo | El propio usuario · Admin del grupo | `read: isGroupMember` · `write: isOwner \|\| isGroupAdmin` |
 | `groups/{groupId}/challenges/{id}` | Miembros del grupo | Solo admin del grupo | `read: isGroupMember` · `write: isGroupAdmin` |
@@ -39,7 +40,7 @@
 ### Auth (`features/auth/`)
 | Operación | Colección | Regla |
 |-----------|-----------|-------|
-| Registro — crear perfil | `users/{uid}` | `create: isOwner` |
+| Registro — crear perfil | `users/{uid}` | `create: isOwner` · campos relevantes: `isAthleteMode` (bool, gratis), `hasPremiumCoach` (bool, escrito solo por Cloud Function webhook Stripe — no editar desde cliente) |
 | Google login — crear/actualizar perfil | `users/{uid}` | `create: isOwner` · `update: isOwner` |
 | Leer `isAdmin` para acceso al panel admin | `users/{uid}` | `read: isSignedIn()` |
 | Buscar usuario por email (invite lookup) | `users` (query) | `read: isSignedIn()` |
