@@ -139,6 +139,8 @@ Cuando implementes algo que afecte a los specs de producto, actualiza el .md cor
 
 Guías de trabajo (`CLAUDE.md`, `AI_CONTEXT.md`) — actualizar siempre que cambie arquitectura, modelos, servicios, advertencias o deuda técnica.
 
+Arquitectura de monetización (3 niveles, Stripe, gates del coach) — diseño pendiente de implementar → `docs/MONETIZATION_ARCHITECTURE.md`
+
 ---
 
 ## Convenciones
