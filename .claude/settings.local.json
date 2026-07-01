@@ -13,7 +13,25 @@
       "Bash(Remove-Item \"c:\\\\Users\\\\mario\\\\Desktop\\\\rl\\\\lib\\\\features\\\\ai_coach\\\\views\\\\ai_coach_prompt_view.dart\")",
       "Skill(claude-api)",
       "Skill(claude-api:*)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(awk '/Future<void> _onSave/,0' /tmp/old_screen.dart)",
+      "Bash(cd \"c:/Users/mario/Desktop/rl\" && awk '/void initState/,/^  }$/' /tmp/old_screen.dart > /tmp/old_init.txt && cat /tmp/old_init.txt)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(flutter analyze *)",
+      "Bash(ls test/unit/)",
+      "Bash(ls test/widget/)",
+      "Bash(ls .github/workflows/)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git revert *)",
+      "Bash(find test *)",
+      "Bash(ls test/)",
+      "Bash(ls test/unit)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
     ]
   }
 }

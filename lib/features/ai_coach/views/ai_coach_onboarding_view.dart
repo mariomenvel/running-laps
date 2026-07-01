@@ -658,7 +658,7 @@ class _PbStepPage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Si no las tienes o no quieres añadirlas, pulsa "Saltar".',
+            'Si no las tienes o no quieres añadirlas, pulsa "Crear mi plan".',
             style: TextStyle(fontSize: 14, color: textSecondary),
           ),
           const SizedBox(height: 32),

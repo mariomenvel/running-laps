@@ -169,7 +169,7 @@ class _AiCoachWeeklyFeedbackViewState
         leading: TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(
-            'Saltar',
+            'Volver atrás',
             style: TextStyle(color: AppColors.textSecondary(context)),
           ),
         ),
