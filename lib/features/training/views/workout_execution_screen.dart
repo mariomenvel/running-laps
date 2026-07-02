@@ -11,6 +11,8 @@ import '../../athlete/data/athlete_session_model.dart';
 import '../../templates/data/workout_block.dart';
 import '../../templates/data/workout_segment.dart';
 import '../../templates/data/workout_session.dart';
+import '../../../core/services/gps_service.dart';
+import '../../../core/utils/rdp_smoother.dart';
 import '../data/entrenamiento.dart';
 import '../data/serie.dart';
 import '../data/workout_execution_controller.dart';
@@ -411,6 +413,16 @@ class _DoneLoaderState extends State<_DoneLoader> {
         ? null
         : fcMediaValues.reduce((a, b) => a + b) / fcMediaValues.length;
 
+    // Componer trazado global desde los gpsPoints de cada serie
+    var trackPoints = <GpsPoint>[
+      for (final s in allSeries)
+        for (final m in (s.gpsPoints ?? const []))
+          GpsPoint.fromMap(m),
+    ];
+    if (trackPoints.length > 10) {
+      trackPoints = RDPSmoother.simplify(trackPoints, epsilon: 2.0);
+    }
+
     return Entrenamiento(
       id: const Uuid().v4(),
       titulo: state.session.title,
@@ -422,6 +434,7 @@ class _DoneLoaderState extends State<_DoneLoader> {
       notas: '',
       tags: _tagsFromSession(state.session),
       plannedComparison: _buildPlannedComparison(widget.originalSession ?? widget.session),
+      trackPoints: trackPoints,
     );
   }
 
