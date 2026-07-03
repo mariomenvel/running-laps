@@ -419,9 +419,13 @@ class _DoneLoaderState extends State<_DoneLoader> {
         for (final m in (s.gpsPoints ?? const []))
           GpsPoint.fromMap(m),
     ];
+    final preRdpCount = trackPoints.length;
     if (trackPoints.length > 10) {
       trackPoints = RDPSmoother.simplify(trackPoints, epsilon: 2.0);
     }
+    // TODO(diagnóstico GPS): eliminar tras validar calidad de traza en device
+    debugPrint('[TrackPoints] series: ${allSeries.length}, '
+        'pre-RDP: $preRdpCount, post-RDP: ${trackPoints.length}');
 
     return Entrenamiento(
       id: const Uuid().v4(),
