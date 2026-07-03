@@ -10,7 +10,6 @@ import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/theme/theme_service.dart';
 import 'package:running_laps/core/services/heart_rate_service.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
-import 'package:running_laps/core/widgets/app_confirm_dialog.dart';
 import 'package:running_laps/features/auth/viewmodels/auth_controller.dart';
 import 'package:running_laps/features/auth/views/auth_page.dart';
 import 'package:running_laps/features/onboarding/views/athlete_tutorial_view.dart';
@@ -293,29 +292,6 @@ class _ProfileViewState extends State<ProfileView> {
     }
   }
 
-  Future<void> _desactivarModoAtleta() async {
-    final confirm = await showAppConfirmDialog(
-      context: context,
-      title: '¿Volver a modo recreativo?',
-      message: 'Perderás acceso a tu plan '
-          'semanal y al coach IA. Tus '
-          'entrenamientos no se borrarán.',
-      confirmLabel: 'Sí, desactivar',
-      cancelLabel: 'Cancelar',
-      isDestructive: true,
-    );
-    if (confirm != true) return;
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(uid)
-        .update({'isAthleteMode': false});
-    if (!mounted) return;
-    ModernSnackBar.showSuccess(
-        context, 'Modo recreativo activado');
-  }
-
   String _currentThemeLabel() {
     switch (ThemeService.themeMode.value) {
       case ThemeMode.dark:   return 'Oscuro';
@@ -491,16 +467,6 @@ class _ProfileViewState extends State<ProfileView> {
                 );
               },
             ),
-            if (_isAthleteMode) ...[
-              const _MenuDivider(),
-              _MenuItem(
-                icon: Icons.person_outline_rounded,
-                label: 'Volver a modo recreativo',
-                subtitle: 'Desactivarás el plan y el coach IA',
-                subtitleColor: AppColors.rpeMax,
-                onTap: _desactivarModoAtleta,
-              ),
-            ],
             const _MenuDivider(),
             _MenuItem(
               icon: Icons.settings_outlined,
