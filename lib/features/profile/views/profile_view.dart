@@ -10,9 +10,10 @@ import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/theme/theme_service.dart';
 import 'package:running_laps/core/services/heart_rate_service.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'package:running_laps/core/widgets/app_confirm_dialog.dart';
 import 'package:running_laps/features/auth/viewmodels/auth_controller.dart';
 import 'package:running_laps/features/auth/views/auth_page.dart';
-import 'package:running_laps/features/groups/views/participant_profile_screen.dart';
+import 'package:running_laps/features/onboarding/views/athlete_tutorial_view.dart';
 import 'package:running_laps/features/training/views/manual_training_view.dart';
 import 'package:running_laps/features/admin/views/admin_panel_screen.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_settings_view.dart';
@@ -292,37 +293,27 @@ class _ProfileViewState extends State<ProfileView> {
     }
   }
 
-  Future<void> _openPublicProfile() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    showDialog(
+  Future<void> _desactivarModoAtleta() async {
+    final confirm = await showAppConfirmDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator(color: AppColors.brand)),
+      title: '¿Volver a modo recreativo?',
+      message: 'Perderás acceso a tu plan '
+          'semanal y al coach IA. Tus '
+          'entrenamientos no se borrarán.',
+      confirmLabel: 'Sí, desactivar',
+      cancelLabel: 'Cancelar',
+      isDestructive: true,
     );
-
-    try {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      if (mounted) Navigator.pop(context);
-      if (!doc.exists || !mounted) return;
-      final data = doc.data() as Map<String, dynamic>;
-      Navigator.push(
-        context,
-        AppModalRoute(
-          page: ParticipantProfileScreen(
-            uid: user.uid,
-            name: data['nombre'] ?? data['username'] ?? 'Usuario',
-            photoUrl: data['profileImageUrl'],
-            profilePicType: data['profilePicType'],
-            avatarConfig: data['generativeAvatarConfig'],
-          ),
-        ),
-      );
-    } catch (e) {
-      if (mounted) Navigator.pop(context);
-      if (mounted) ModernSnackBar.showError(context, 'Error: $e');
-    }
+    if (confirm != true) return;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .update({'isAthleteMode': false});
+    if (!mounted) return;
+    ModernSnackBar.showSuccess(
+        context, 'Modo recreativo activado');
   }
 
   String _currentThemeLabel() {
@@ -440,12 +431,6 @@ class _ProfileViewState extends State<ProfileView> {
           const SizedBox(height: AppSpacing.s),
           _MenuCard(children: [
             _MenuItem(
-              icon: Icons.fitness_center_outlined,
-              label: 'Mis plantillas',
-              onTap: () => MainShell.shellKey.currentState?.navigateTo(11),
-            ),
-            const _MenuDivider(),
-            _MenuItem(
               icon: Icons.favorite_outline,
               label: 'Zonas de entrenamiento',
               subtitle: 'FC máx, zonas personalizadas',
@@ -470,25 +455,6 @@ class _ProfileViewState extends State<ProfileView> {
               label: 'Registrar entrenamiento',
               subtitle: 'Sesión pasada sin móvil',
               onTap: () => Navigator.push(context, AppRoute(page: const ManualTrainingView())),
-            ),
-          ]),
-
-          const SizedBox(height: AppSpacing.xl),
-
-          // ── Social ────────────────────────────────────────────────
-          const _SectionTitle('SOCIAL'),
-          const SizedBox(height: AppSpacing.s),
-          _MenuCard(children: [
-            _MenuItem(
-              icon: Icons.group_outlined,
-              label: 'Mis grupos',
-              onTap: () => MainShell.shellKey.currentState?.navigateTo(6),
-            ),
-            const _MenuDivider(),
-            _MenuItem(
-              icon: Icons.person_outline,
-              label: 'Mi perfil público',
-              onTap: _openPublicProfile,
             ),
           ]),
 
@@ -525,6 +491,16 @@ class _ProfileViewState extends State<ProfileView> {
                 );
               },
             ),
+            if (_isAthleteMode) ...[
+              const _MenuDivider(),
+              _MenuItem(
+                icon: Icons.person_outline_rounded,
+                label: 'Volver a modo recreativo',
+                subtitle: 'Desactivarás el plan y el coach IA',
+                subtitleColor: AppColors.rpeMax,
+                onTap: _desactivarModoAtleta,
+              ),
+            ],
             const _MenuDivider(),
             _MenuItem(
               icon: Icons.settings_outlined,
@@ -625,6 +601,25 @@ class _ProfileViewState extends State<ProfileView> {
               ),
             ]),
           ],
+
+          const SizedBox(height: AppSpacing.xl),
+          const _SectionTitle('AYUDA'),
+          const SizedBox(height: AppSpacing.s),
+          _MenuCard(children: [
+            _MenuItem(
+              icon: Icons.school_rounded,
+              label: 'Cómo funciona Running Laps',
+              subtitle: 'Tutorial del modo atleta',
+              onTap: () => Navigator.push(
+                context,
+                AppRoute(
+                  page: const AthleteTutorialView(
+                    dismissible: true,
+                  ),
+                ),
+              ),
+            ),
+          ]),
 
           const SizedBox(height: AppSpacing.xxl),
 
