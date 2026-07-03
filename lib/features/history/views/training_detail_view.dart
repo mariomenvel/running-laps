@@ -898,6 +898,8 @@ class _SerieExpansionTileState extends State<_SerieExpansionTile> {
     return Theme(
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
+        backgroundColor: Colors.transparent,
+        collapsedBackgroundColor: Colors.transparent,
         tilePadding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.l, vertical: 0),
         childrenPadding: EdgeInsets.zero,
