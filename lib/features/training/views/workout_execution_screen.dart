@@ -117,6 +117,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     debugPrint('[Rest] isLastRep=$isLastRep');
 
     debugPrint('[ExecScreen] Antes de Navigator.push TrainingSessionView');
+    debugPrint('[LaunchRep] blockRole=${block.role}, gpsActivo=${widget.gpsActivo}');
     final result = await Navigator.of(context).push<Serie>(
       AppRoute(
         page: TrainingSessionView(
