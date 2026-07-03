@@ -88,7 +88,7 @@ class GPSService with WidgetsBindingObserver {
   String? _userId;
 
   GPSService() {
-    _initForegroundTask();
+    if (!kIsWeb) _initForegroundTask();
     _initIOSLiveActivityActions();
   }
 
@@ -300,7 +300,7 @@ class GPSService with WidgetsBindingObserver {
 
     if (_useIOSLiveActivity) {
       await IOSLiveActivityService.instance.stop();
-    } else {
+    } else if (!kIsWeb) {
       await FlutterForegroundTask.stopService();
     }
   }
@@ -322,7 +322,7 @@ class GPSService with WidgetsBindingObserver {
 
   void dispose() {
     _unregisterObserver();
-    if (!_useIOSLiveActivity) {
+    if (!_useIOSLiveActivity && !kIsWeb) {
       FlutterForegroundTask.removeTaskDataCallback(_onDataFromTask);
     }
     _positionSubscription?.cancel();
@@ -332,7 +332,7 @@ class GPSService with WidgetsBindingObserver {
 
     if (_useIOSLiveActivity) {
       unawaited(IOSLiveActivityService.instance.stop());
-    } else {
+    } else if (!kIsWeb) {
       FlutterForegroundTask.stopService();
     }
     _ekf.reset();
@@ -402,6 +402,8 @@ class GPSService with WidgetsBindingObserver {
       return;
     }
 
+    if (kIsWeb) return;
+
     await FlutterForegroundTask.startService(
       serviceId: 500,
       notificationTitle: title,
@@ -448,6 +450,8 @@ class GPSService with WidgetsBindingObserver {
       );
       return;
     }
+
+    if (kIsWeb) return;
 
     FlutterForegroundTask.sendDataToTask({
       'distance': _formatDistance(totalDistanceMeters.value),
