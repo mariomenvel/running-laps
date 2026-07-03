@@ -76,7 +76,9 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
     if (locPerm == LocationPermission.denied) {
       await Geolocator.requestPermission();
     }
-    await Permission.activityRecognition.request();
+    if (!kIsWeb) {
+      await Permission.activityRecognition.request();
+    }
   }
 
   Future<void> _onStart() async {

@@ -56,13 +56,15 @@ class SensorService {
   Future<bool> initialize() async {
     if (_isInitialized) return true;
 
-    var permissionStatus = await Permission.activityRecognition.status;
-    if (permissionStatus.isDenied) {
-      permissionStatus = await Permission.activityRecognition.request();
-    }
+    if (!kIsWeb) {
+      var permissionStatus = await Permission.activityRecognition.status;
+      if (permissionStatus.isDenied) {
+        permissionStatus = await Permission.activityRecognition.request();
+      }
 
-    if (permissionStatus.isGranted) {
-      _initStreams();
+      if (permissionStatus.isGranted) {
+        _initStreams();
+      }
     }
 
     _initImuStreams();
