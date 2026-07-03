@@ -15,12 +15,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:running_laps/features/auth/viewmodels/auth_controller.dart';
 import 'package:running_laps/features/auth/views/auth_page.dart';
 import 'package:running_laps/features/history/views/history_screen.dart';
-import '../../templates/views/templates_list_view.dart';
 import 'avatar_editor_wraper_view.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
 import 'package:running_laps/features/training/views/manual_training_view.dart';
-import '../../groups/views/groups_list_screen.dart';
-import '../../groups/views/participant_profile_screen.dart';
 import 'package:running_laps/features/analytics/views/analytics_hub_screen.dart';
 import '../../admin/views/admin_panel_screen.dart';
 import 'account_settings_view.dart';
@@ -54,7 +51,6 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
   late final AnimationController _entranceCtrl;
   bool _entrancePlayed = false;
   late final Animation<double> _aName;       // 0ms   – fade + slide left
-  late final Animation<double> _aSocial;     // 200ms – fade + slide bottom
   late final Animation<double> _aPersonal;   // 260ms – fade + slide bottom
   late final Animation<double> _aAdmin;      // 320ms – fade + slide bottom
   late final Animation<double> _aCuenta;     // 440ms – fade + slide bottom
@@ -69,7 +65,6 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
     _cargarNombre();
     _entranceCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
     _aName       = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.000, 0.517, curve: Curves.easeOutQuart));
-    _aSocial     = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.167, 0.683, curve: Curves.easeOutQuart));
     _aPersonal   = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.217, 0.733, curve: Curves.easeOutQuart));
     _aAdmin      = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.267, 0.783, curve: Curves.easeOutQuart));
     _aCuenta     = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.367, 0.883, curve: Curves.easeOutQuart));
@@ -139,50 +134,6 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
       context,
       AppModalRoute(page: const AvatarEditorWrapperView()),
     );
-  }
-
-  // --- NUEVA FUNCIÓN PARA GRUPOS ---
-  void _openGroups() {
-    Navigator.push(
-      context,
-      AppRoute(page: const GroupsListScreen()),
-    );
-  }
-
-  // --- NUEVA FUNCIÓN PARA PERFIL PÚBLICO ---
-  Future<void> _openPublicProfile() async {
-     final user = FirebaseAuth.instance.currentUser;
-     if (user == null) return;
-     
-     // Mostrar loading rápido
-     showDialog(
-       context: context, 
-       barrierDismissible: false,
-       builder: (c) => const Center(child: CircularProgressIndicator(color: AppColors.brand)),
-     );
-     
-     try {
-       final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-       if (mounted) Navigator.pop(context); // cerrar loading
-       
-       if (doc.exists && mounted) {
-         final data = doc.data() as Map<String, dynamic>;
-         
-         Navigator.push(
-           context,
-           AppModalRoute(page: ParticipantProfileScreen(
-             uid: user.uid,
-             name: data['nombre'] ?? data['username'] ?? "Usuario", // Fallback a nombre, luego username
-             photoUrl: data['profileImageUrl'],
-             profilePicType: data['profilePicType'],
-             avatarConfig: data['generativeAvatarConfig'],
-           )),
-         );
-       }
-     } catch (e) {
-       if (mounted) Navigator.pop(context); // cerrar loading en error
-       if (mounted) ModernSnackBar.showError(context, "Error: $e");
-     }
   }
 
   Future<void> _logout() async {
@@ -394,26 +345,6 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
 
                     const SizedBox(height: 30),
 
-                    // SECTION 1: SOCIAL
-                    _slideFromBottom(_aSocial, Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSectionHeader("Social"),
-                        _buildMenuTile(
-                          title: "Mis grupos",
-                          icon: Icons.groups_rounded,
-                          color: AppColors.rest,
-                          onTap: _openGroups,
-                        ),
-                        _buildMenuTile(
-                          title: "Mi perfil público",
-                          icon: Icons.person_pin_rounded,
-                          color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
-                          onTap: _openPublicProfile,
-                        ),
-                      ],
-                    )),
-
                     // SECTION 2: PERSONAL
                     _slideFromBottom(_aPersonal, Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -427,17 +358,6 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                             Navigator.push(
                               context,
                               AppRoute(page: const AnalyticsHubScreen()),
-                            );
-                          },
-                        ),
-                        _buildMenuTile(
-                          title: "Mis plantillas",
-                          icon: Icons.list_alt_rounded,
-                          color: AppColors.brand,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              AppRoute(page: const TemplatesListView()),
                             );
                           },
                         ),
