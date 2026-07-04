@@ -996,7 +996,9 @@ class _SerieExpansionTileState extends State<_SerieExpansionTile> {
     if (gpsPoints != null && gpsPoints.length >= 3) {
       for (int j = 0; j < gpsPoints.length; j++) {
         final pt = gpsPoints[j];
-        final speed = (pt.speed as num?)?.toDouble() ?? 0.0;
+        final speed = pt is Map
+            ? ((pt['speed'] as num?)?.toDouble() ?? 0.0)
+            : ((pt.speed as num?)?.toDouble() ?? 0.0);
         if (speed > 0.3) {
           final pace = 1000 / speed / 60; // min/km
           pacePoints.add(FlSpot(j.toDouble(), pace.clamp(2.0, 10.0)));
