@@ -1,5 +1,44 @@
 # CHANGELOG — Running Laps
 
+## [Fix] — MVP forzado a light mode únicamente — 2026-07-05
+Decisión de producto: el MVP lanza solo en modo claro. El toggle
+sistema/claro/oscuro ya estaba implementado y en producción (no era código
+muerto, ver auditoría debajo), pero `AppTheme.dark()` reutiliza el mismo
+morado de marca sobre fondos oscuros y el contraste resulta insuficiente —
+queda pendiente de pulir para una fase futura antes de reactivarlo.
+- `ThemeService.themeMode` fijo en `ThemeMode.light`; `init()` ya no lee
+  preferencia persistida (no-op) — ver
+  [theme_service.dart](lib/core/theme/theme_service.dart).
+- Quitado el selector de tema de `Perfil` (`_showThemePicker`,
+  `_currentThemeLabel`, clase `_ThemeOption`) — ver
+  [profile_view.dart](lib/features/profile/views/profile_view.dart).
+- Quitado el selector de tema de `Ajustes de cuenta` (`_buildThemeSelector`,
+  `_buildThemeOption`) — ver
+  [account_settings_view.dart](lib/features/profile/views/account_settings_view.dart).
+- `AppTheme.dark()` y la lógica de persistencia de `ThemeService.setTheme()`
+  se mantienen intactas en el código, sin exponerse en UI, para cuando se
+  retome dark mode.
+
+## [Auditoría] — Estado real de theming (dark/light) — 2026-07-05
+Se pidió revertir un supuesto rewrite "dark-only" de `app_theme.dart` del
+2026-04-28 (con `AppTheme.light()` eliminado y `main.dart` forzando
+`ThemeMode.dark`). Auditoría de `git log --since="2026-04-28" -- lib/` y del
+código actual no encontró tal commit ni tal estado:
+- `AppTheme.light()` existe y está completo en
+  [app_theme.dart](lib/core/theme/app_theme.dart).
+- `main.dart` no fija `ThemeMode.dark`: usa
+  [`ThemeService.themeMode`](lib/core/theme/theme_service.dart), un
+  `ValueNotifier<ThemeMode>` persistido en SharedPreferences que soporta
+  `system` (default), `light` y `dark`.
+- No se tocó código de theming en esta tarea — solo se corrige la
+  documentación de `COLOR_SYSTEM.md` para que no describa `AppTheme.dark()`
+  como código muerto de una fase futura, cuando en realidad ya está expuesto
+  y activo.
+
+Si la decisión de producto sigue siendo "MVP solo en light mode", falta un
+cambio de código real (fijar `ThemeMode.light` en `main.dart` y no exponer
+el toggle) que no se ha aplicado todavía.
+
 ## [Fix] — Onboarding completo de extremo a extremo (fix/onboarding-bugs)
 
 ### Registro y verificación de email

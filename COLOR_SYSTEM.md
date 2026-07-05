@@ -293,7 +293,9 @@ class AppColors {
   static const rpeHigh = Color(0xFFD85A30);
   static const rpeMax  = Color(0xFFE24B4A);
 
-  // Neutros dark mode
+  // Neutros dark mode — activos: AppTheme.dark() está expuesto en main.dart
+  // vía ThemeService (system/light/dark persistido en SharedPreferences),
+  // no es código muerto de una fase futura.
   static const surface   = Color(0xFF1A1A1A);
   static const surface2  = Color(0xFF1E1E1E);
   static const border    = Color(0xFF2A2A2A);

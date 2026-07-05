@@ -7,7 +7,6 @@ import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
-import 'package:running_laps/core/theme/theme_service.dart';
 import 'package:running_laps/core/services/heart_rate_service.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/auth/viewmodels/auth_controller.dart';
@@ -292,41 +291,6 @@ class _ProfileViewState extends State<ProfileView> {
     }
   }
 
-  String _currentThemeLabel() {
-    switch (ThemeService.themeMode.value) {
-      case ThemeMode.dark:   return 'Oscuro';
-      case ThemeMode.light:  return 'Claro';
-      case ThemeMode.system: return 'Sistema';
-    }
-  }
-
-  void _showThemePicker() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (_) => ValueListenableBuilder<ThemeMode>(
-        valueListenable: ThemeService.themeMode,
-        builder: (ctx, current, __) => Padding(
-          padding: const EdgeInsets.all(AppSpacing.l),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Apariencia', style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context))),
-              const SizedBox(height: AppSpacing.l),
-              _ThemeOption('Oscuro',  ThemeMode.dark,   Icons.dark_mode_outlined,            current),
-              _ThemeOption('Claro',   ThemeMode.light,  Icons.light_mode_outlined,           current),
-              _ThemeOption('Sistema', ThemeMode.system, Icons.settings_brightness_outlined,  current),
-              const SizedBox(height: AppSpacing.l),
-            ],
-          ),
-        ),
-      ),
-    ).then((_) => setState(() {})); // refresca el subtitle tras cerrar
-  }
-
   void _openAvatarCustomizer() {
     MainShell.shellKey.currentState?.navigateTo(14, params: _avatarConfig);
   }
@@ -440,13 +404,6 @@ class _ProfileViewState extends State<ProfileView> {
           const _SectionTitle('CONFIGURACIÓN'),
           const SizedBox(height: AppSpacing.s),
           _MenuCard(children: [
-            _MenuItem(
-              icon: Icons.brightness_6_outlined,
-              label: 'Apariencia',
-              subtitle: _currentThemeLabel(),
-              onTap: _showThemePicker,
-            ),
-            const _MenuDivider(),
             ListenableBuilder(
               listenable: Listenable.merge([
                 HeartRateService().connectionState,
@@ -710,33 +667,3 @@ class _MenuDivider extends StatelessWidget {
   }
 }
 
-class _ThemeOption extends StatelessWidget {
-  const _ThemeOption(this.label, this.mode, this.icon, this.current);
-
-  final String label;
-  final ThemeMode mode;
-  final IconData icon;
-  final ThemeMode current;
-
-  @override
-  Widget build(BuildContext context) {
-    final selected = current == mode;
-    return ListTile(
-      leading: Icon(icon, color: selected ? AppColors.brand : AppColors.iconMutedOf(context)),
-      title: Text(
-        label,
-        style: AppTypography.body.copyWith(
-          color: selected ? AppColors.brand : AppColors.textPrimary(context),
-          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-        ),
-      ),
-      trailing: selected
-          ? const Icon(Icons.check_rounded, color: AppColors.brand, size: 20)
-          : null,
-      onTap: () {
-        ThemeService.setTheme(mode);
-        Navigator.pop(context);
-      },
-    );
-  }
-}

@@ -12,31 +12,22 @@ class ThemeService {
   static const _key = 'app_theme_mode';
 
   /// Current [ThemeMode]. Mutate via [setTheme] — never directly.
+  ///
+  /// MVP: forzado a [ThemeMode.light]. AppTheme.dark() no está pulido para
+  /// el morado de marca (se ve mal sobre negro) — queda para una fase
+  /// futura. El selector de tema está oculto en Perfil/Ajustes; no leer ni
+  /// persistir preferencia mientras tanto.
   static final ValueNotifier<ThemeMode> themeMode =
-      ValueNotifier(ThemeMode.system);
+      ValueNotifier(ThemeMode.light);
 
-  /// Load persisted preference. Must be called once before [runApp].
-  static Future<void> init() async {
-    final prefs = await SharedPreferences.getInstance();
-    themeMode.value = _fromString(prefs.getString(_key));
-  }
+  /// MVP: no-op — el tema queda fijo en light hasta que se pula dark mode.
+  static Future<void> init() async {}
 
   /// Persist and immediately apply [mode].
   static Future<void> setTheme(ThemeMode mode) async {
     themeMode.value = mode;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, _toString(mode));
-  }
-
-  static ThemeMode _fromString(String? s) {
-    switch (s) {
-      case 'light':
-        return ThemeMode.light;
-      case 'dark':
-        return ThemeMode.dark;
-      default:
-        return ThemeMode.system;
-    }
   }
 
   static String _toString(ThemeMode mode) {
