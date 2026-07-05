@@ -74,11 +74,14 @@ class AppTheme {
 class AppTypography {
   AppTypography._();
 
-  static const h1 = TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -0.5);
-  static const h2 = TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -0.5);
-  static const h3 = TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white);
-  static const body = TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: Colors.white, letterSpacing: -0.1);
-  static const small = TextStyle(fontSize: 12, fontWeight: FontWeight.normal, color: Color(0xFFCCCCCC), letterSpacing: -0.1);
+  static const display = TextStyle(fontSize: 56, fontWeight: FontWeight.w400, letterSpacing: -0.5, height: 1.0);
+  static const h1 = TextStyle(fontSize: 32, fontWeight: FontWeight.w600, letterSpacing: -0.5, height: 1.15);
+  static const h2 = TextStyle(fontSize: 24, fontWeight: FontWeight.w500, letterSpacing: -0.5, height: 1.15);
+  static const h3 = TextStyle(fontSize: 20, fontWeight: FontWeight.w500, letterSpacing: -0.5, height: 1.15);
+  static const body = TextStyle(fontSize: 14, fontWeight: FontWeight.w400, letterSpacing: -0.1, height: 1.5);
+  static const small = TextStyle(fontSize: 12, fontWeight: FontWeight.w400, letterSpacing: -0.1, height: 1.5);
+  static const label = TextStyle(fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 1.2, height: 1.2);
+  static const caption = TextStyle(fontSize: 11, fontWeight: FontWeight.w400, letterSpacing: -0.1, height: 1.5);
 }
 
 /// Espaciado semántico — usar en padding, gap, margin.
