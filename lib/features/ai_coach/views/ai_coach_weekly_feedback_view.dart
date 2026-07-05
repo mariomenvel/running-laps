@@ -6,6 +6,7 @@ import '../data/ai_coach_automation_service.dart';
 import '../data/ai_coach_models.dart';
 import '../data/ai_coach_repository.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart' show AppMotion;
 import '../../../core/widgets/modern_snackbar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -212,7 +213,7 @@ class _AiCoachWeeklyFeedbackViewState
                         return GestureDetector(
                           onTap: () => setState(() => _sensaciones = val),
                           child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
+                            duration: AppMotion.base,
                             width: 60,
                             height: 60,
                             padding: EdgeInsets.all(selected ? 3 : 6),
@@ -392,7 +393,7 @@ class _AiCoachWeeklyFeedbackViewState
     return GestureDetector(
       onTap: () => setState(() => _motivoParon = selected ? null : value),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: AppMotion.base,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: selected
@@ -423,7 +424,7 @@ class _AiCoachWeeklyFeedbackViewState
     return GestureDetector(
       onTap: () => setState(() => _sueno = value),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: AppMotion.base,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: selected

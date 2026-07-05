@@ -84,6 +84,23 @@ class AppTypography {
   static const caption = TextStyle(fontSize: 11, fontWeight: FontWeight.w400, letterSpacing: -0.1, height: 1.5);
 }
 
+/// Sistema oficial de animación de Running Laps.
+class AppMotion {
+  AppMotion._();
+
+  // Duraciones
+  static const fast = Duration(milliseconds: 120);
+  static const base = Duration(milliseconds: 200);
+  static const medium = Duration(milliseconds: 250); // hover, press de cards, transiciones intermedias
+  static const slow = Duration(milliseconds: 320);
+  static const enter = Duration(milliseconds: 400);
+
+  // Curvas
+  static const snap = Cubic(0.2, 0, 0, 1);      // press, toggles, feedback táctil
+  static const easeEnter = Curves.easeOutCubic;  // entradas de pantalla, cards, modales
+  static const easeExit = Curves.easeInCubic;    // salidas, fades out
+}
+
 /// Espaciado semántico — usar en padding, gap, margin.
 class AppSpacing {
   AppSpacing._();

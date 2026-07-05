@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/widgets/rpe_slider.dart';
+import 'package:running_laps/core/theme/app_theme.dart' show AppMotion;
 
 import '../data/entrenamiento.dart';
 import '../data/serie.dart';
@@ -119,7 +120,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _checkScale = CurvedAnimation(parent: _checkCtrl, curve: Curves.elasticOut);
+    _checkScale = CurvedAnimation(parent: _checkCtrl, curve: AppMotion.easeEnter);
     _checkCtrl.forward();
 
     _similarFuture = _fetchSimilar();

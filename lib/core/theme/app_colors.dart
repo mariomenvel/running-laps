@@ -22,6 +22,9 @@ class AppColors {
   static const brandLight   = Color(0xFFCE93D8); // Texto sobre fondos oscuros morados
   static const brandSurface = Color(0xFF1E1530); // Fondo tarjetas con acento morado (dark mode)
   static const brandBorder  = Color(0xFF3D2A6E); // Borde tarjetas con acento morado (dark mode)
+  static const brandDisabled = Color(0xFF8E24AA); // se usará con opacity en el widget
+  static Color brandDisabledColor() => brand.withValues(alpha: 0.35); // botón primario deshabilitado
+  static Color brandGhost() => brand.withValues(alpha: 0.10); // fondo ghost variant de IconButton
 
   // ── Capa 2 · Acento / Esfuerzo (coral-naranja) ────────────────────
   static const effort        = Color(0xFFD85A30); // Retos distancia, RPE alto, ritmo al acabar serie

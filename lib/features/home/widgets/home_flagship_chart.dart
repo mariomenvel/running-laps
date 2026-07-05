@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/theme/app_theme.dart' show AppMotion;
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'dart:math' as math;
 
@@ -182,7 +183,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
               _touchedIndex = null;
             }),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
+              duration: AppMotion.base,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
                 color: isSelected ? _metricColor : Colors.transparent,
@@ -332,8 +333,8 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
           );
         }).toList(),
       ),
-      duration: const Duration(milliseconds: 300), // Fixed: swapAnimationDuration -> duration
-      curve: Curves.easeInOutCubic, // Fixed: swapAnimationCurve -> curve
+      duration: AppMotion.slow, // Fixed: swapAnimationDuration -> duration
+      curve: AppMotion.snap, // Fixed: swapAnimationCurve -> curve
     );
   }
   

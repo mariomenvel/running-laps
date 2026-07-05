@@ -24,6 +24,8 @@ El color de identidad de la app. Ancla el logo, el Live Activity, el botón prin
 | `AppColors.brandLight` | `#CE93D8` | Texto sobre fondos oscuros morados |
 | `AppColors.brandSurface` | `#1E1530` | Fondo de tarjetas con acento morado (dark mode) |
 | `AppColors.brandBorder` | `#3D2A6E` | Borde de tarjetas con acento morado (dark mode) |
+| `AppColors.brandDisabledColor()` | `brand` @ alpha 0.35 | Botón primario deshabilitado (método, no const — usa `withValues`) |
+| `AppColors.brandGhost()` | `brand` @ alpha 0.10 | Fondo del ghost variant de `IconButton` (método, no const — usa `withValues`) |
 
 ### Capa 2 · Acento — coral/naranja
 
@@ -205,17 +207,42 @@ Toda la UI vira a azul. El usuario percibe el cambio de estado sin leer.
 
 ---
 
-## Tipografía — reglas de peso
+## Tipografía — escala oficial (`AppTypography` en `app_theme.dart`)
 
-| Elemento | fontWeight | letterSpacing |
+8 roles. Ninguno lleva `color` fijo — el color lo aplica cada widget vía `AppColors.textPrimary(context)` / `textSecondary(context)` según contexto (excepción: `display`, solo usado en pantalla de sesión activa sobre `#111`, siempre `Colors.white` explícito en el widget).
+
+| Rol | fontSize | fontWeight | letterSpacing | height |
+|---|---|---|---|---|
+| `display` | 56 | w400 | -0.5 | 1.0 |
+| `h1` | 32 | w600 | -0.5 | 1.15 |
+| `h2` | 24 | w500 | -0.5 | 1.15 |
+| `h3` | 20 | w500 | -0.5 | 1.15 |
+| `body` | 14 | w400 | -0.1 | 1.5 |
+| `small` | 12 | w400 | -0.1 | 1.5 |
+| `label` | 10 | w600 | 1.2 | 1.2 |
+| `caption` | 11 | w400 | -0.1 | 1.5 |
+
+**REGLA:** Nunca `FontWeight.bold` ni `w700` — solo `w400`/`w500`/`w600`. `label` es para texto en mayúsculas (SERIES, SENSORES...), el uppercase lo aplica el widget consumidor, no el `TextStyle`.
+
+---
+
+## Movimiento — `AppMotion` (`app_theme.dart`)
+
+Sistema oficial de animación. Sustituye curvas/duraciones hardcodeadas en `training`, `home`, `calendar`, `ai_coach` (MVP activo). `features/groups/` y archivos `_legacy` quedan fuera, sin migrar.
+
+| Duración | Valor | Uso |
 |---|---|---|
-| Título de sesión/pantalla | w600 | -0.4 |
-| Stats y números grandes (h1/h2) | w400–w500 | -0.4 |
-| Body texto | w400 | -0.3 |
-| Small texto | w400 | -0.3 |
-| Labels MAYÚSCULAS (SERIES, SENSORES...) | w500–w600 | 1.2–1.5 (intencional) |
+| `AppMotion.fast` | 120ms | — |
+| `AppMotion.base` | 200ms | Toggles, chips, containers de estado |
+| `AppMotion.medium` | 250ms | Hover, press de cards, transiciones intermedias |
+| `AppMotion.slow` | 320ms | Expansión/colapso de paneles |
+| `AppMotion.enter` | 400ms | — |
 
-**REGLA:** Sin `FontWeight.bold` ni `w700` en listas, historial ni detalles. Solo títulos de sesión usan w600.
+| Curva | Valor | Uso |
+|---|---|---|
+| `AppMotion.snap` | `Cubic(0.2, 0, 0, 1)` | Press, toggles, feedback táctil (sustituye `easeInOut`/`easeInOutCubic`) |
+| `AppMotion.easeEnter` | `Curves.easeOutCubic` | Entradas de pantalla, cards, modales (sustituye `easeOutCubic`/`easeOutQuart`/`easeOut`/`elasticOut`/`easeOutBack` — sin rebote) |
+| `AppMotion.easeExit` | `Curves.easeInCubic` | Salidas, fades out (sustituye `easeInCubic`/`easeIn`) |
 
 ---
 
@@ -263,7 +290,7 @@ El archivo `app_colors.dart` contiene aliases `@deprecated` por compatibilidad h
 
 ---
 
-## Implementación en app_theme.dart
+## Implementación en app_colors.dart (referencia — puede desviarse ligeramente del código real)
 
 ```dart
 class AppColors {
@@ -388,3 +415,4 @@ class AppColors {
 |---|---|
 | 2026-04-08 | Sistema de color inicial definido tras auditoría completa |
 | 2026-05-09 | Añadido sistema de colores para calendario (TRIMP, no km). Brand reservado para competición. Añadidas reglas de tipografía (sin bold en listas). Añadidas reglas de inputs (NumberPickerField). Añadido sistema de etiquetas predefinidas/custom. Fix: GPS activo en brand no en rpeLow. Fix: backgroundColor nunca Colors.transparent. |
+| 2026-07-05 | `AppTypography` ampliada a 8 roles (`display`, `label`, `caption` nuevos; `h3` completa letterSpacing) y sin `color` fijo — lo aplica cada widget por contexto. Añadido `AppMotion` (duraciones `fast/base/medium/slow/enter` + curvas `snap/easeEnter/easeExit`) como sistema oficial de animación, aplicado en `training`/`home`/`ai_coach` (MVP activo). Añadidos `AppColors.brandDisabledColor()` y `AppColors.brandGhost()` (métodos con `withValues`, no const). |

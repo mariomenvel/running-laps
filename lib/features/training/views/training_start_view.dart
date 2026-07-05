@@ -2440,7 +2440,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
     return GestureDetector(
       onTap: () => _openWorkoutEditor(type),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: AppMotion.base,
         padding: const EdgeInsets.all(AppSpacing.l),
         decoration: BoxDecoration(
           color: selected ? brand.withOpacity(0.08) : AppColors.surfaceOf(context),
@@ -3519,7 +3519,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                   
                   // Preview
                   AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
+                    duration: AppMotion.base,
                     height: hasValue ? 32 : 0,
                     child: hasValue
                         ? Row(
@@ -3633,7 +3633,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
         }
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
+        duration: AppMotion.slow,
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16.0),
@@ -3977,7 +3977,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
 
   Widget _buildGpsToggle() {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
+      duration: AppMotion.slow,
       margin: const EdgeInsets.only(top: 12.0),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
@@ -4072,7 +4072,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
         final deviceName  = HeartRateService().connectedDeviceName.value ?? 'Pulsómetro';
 
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
+          duration: AppMotion.slow,
           margin: const EdgeInsets.only(top: 8.0),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
@@ -4963,7 +4963,7 @@ class _CountdownDialogState extends State<_CountdownDialog>
       duration: const Duration(milliseconds: 800),
     );
     _scaleAnim = Tween<double>(begin: 1.4, end: 0.8).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeOut),
+      CurvedAnimation(parent: _animController, curve: AppMotion.easeEnter),
     );
     _animController.forward();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {

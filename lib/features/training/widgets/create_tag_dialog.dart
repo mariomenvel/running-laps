@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/theme/app_theme.dart' show AppMotion;
 import '../data/tag_model.dart';
 import '../data/tag_manager.dart';
 
@@ -23,7 +24,7 @@ class _CreateTagDialogState extends State<CreateTagDialog> with SingleTickerProv
     super.initState();
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 200),
+      duration: AppMotion.base,
     );
   }
 
@@ -184,8 +185,8 @@ class _CreateTagDialogState extends State<CreateTagDialog> with SingleTickerProv
                         _animController.forward(from: 0);
                       },
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeInOut,
+                  duration: AppMotion.base,
+                  curve: AppMotion.snap,
                   width: _selectedColorIndex == index ? 50 : 46,
                   height: _selectedColorIndex == index ? 50 : 46,
                   decoration: BoxDecoration(

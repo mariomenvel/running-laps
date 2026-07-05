@@ -74,7 +74,7 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
     if (_currentStep < 5) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 350),
-        curve: Curves.easeInOut,
+        curve: AppMotion.snap,
       );
       setState(() => _currentStep++);
     } else {

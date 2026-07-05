@@ -3,6 +3,7 @@ import 'package:running_laps/features/home/viewmodels/home_config_controller.dar
 import 'package:running_laps/features/home/data/home_layout_config.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/theme/app_theme.dart' show AppMotion;
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 
 class EditHomeView extends StatefulWidget {
@@ -288,7 +289,7 @@ class _EditHomeViewState extends State<EditHomeView> {
                 }
               },
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+                duration: AppMotion.base,
                 width: 26,
                 height: 26,
                 decoration: BoxDecoration(

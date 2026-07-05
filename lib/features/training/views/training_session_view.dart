@@ -13,6 +13,7 @@ import '../data/serie.dart';
 import '../data/fc_reading.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/theme/app_theme.dart' show AppMotion;
 import 'package:running_laps/core/constants/app_help_content.dart';
 import 'package:running_laps/core/widgets/info_tooltip.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -147,7 +148,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     );
     _fadeAnimation = CurvedAnimation(
       parent: _fadeController,
-      curve: Curves.easeIn,
+      curve: AppMotion.easeExit,
     );
     _fadeController.forward();
 
@@ -161,7 +162,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
       vsync: this,
     )..repeat(reverse: true);
     _pulseAnimation = Tween<double>(begin: 1.0, end: 0.3).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+      CurvedAnimation(parent: _pulseController, curve: AppMotion.snap),
     );
 
     // Parsear los valores de la serie
@@ -1623,7 +1624,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
       child: GestureDetector(
         onTap: _isRunning ? _finishSeries : null,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: AppMotion.base,
           width: double.infinity,
           height: 58,
           decoration: BoxDecoration(
@@ -1791,7 +1792,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
         }
 
         // Small delay to allow the previous sheet to close smoothly
-        await Future.delayed(const Duration(milliseconds: 200));
+        await Future.delayed(AppMotion.base);
 
         if (mounted) {
            // Si es carrera Libre (Continua), usamos SIEMPRE el GPS sin preguntar

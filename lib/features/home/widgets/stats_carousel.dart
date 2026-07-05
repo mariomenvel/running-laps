@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/theme/app_theme.dart' show AppMotion;
 import 'package:running_laps/features/history/viewmodels/history_analytics_view_model.dart';
 // import 'package:running_laps/features/profile/views/analytics_detail_screen.dart'; // Deleted/Moved
 
@@ -67,7 +68,7 @@ class _StatsCarouselState extends State<StatsCarousel> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(pages.length, (index) {
             return AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
+              duration: AppMotion.slow,
               margin: const EdgeInsets.symmetric(horizontal: 4),
               width: _currentPage == index ? 24 : 8,
               height: 8,

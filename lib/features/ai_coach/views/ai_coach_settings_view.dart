@@ -12,6 +12,7 @@ import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_weekly_feedback_view.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/core/services/user_service.dart';
+import 'package:running_laps/core/theme/app_theme.dart' show AppMotion;
 
 class AiCoachSettingsView extends StatefulWidget {
   const AiCoachSettingsView({super.key});
@@ -743,7 +744,7 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
                 child: GestureDetector(
                   onTap: () => setState(() => _level = value),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
+                    duration: AppMotion.base,
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
                       color: isSelected
