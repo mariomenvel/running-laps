@@ -407,4 +407,33 @@ Ver `PREMIUM_AI_COACH.md` para el detalle del sistema IA.
 
 ---
 
+## 11. Completar sesión planificada manualmente ✅ implementado
+
+Archivo: `lib/features/training/views/complete_session_manually_view.dart` (`CompleteSessionManuallyView`).
+
+Caso de uso: el atleta ejecuta la sesión fuera de la app (pista con cronómetro, cinta, etc.) y quiere registrarla contra el plan sin usar GPS en vivo.
+
+- **Formulario pre-estructurado** desde `AthleteSession.blocks` — nunca un formulario en blanco. Por cada `SessionBlock`:
+  - `SessionBlockType.series` → una fila por repetición (`reps`), pre-rellenada con `distanceM` del bloque; tiempo y RPE se introducen a mano.
+  - `continuousTime` / `continuousDistance` → una única fila (mismo patrón).
+  - Calentamiento/vuelta a la calma: toggle on/off (default ON) que usa la duración/distancia del plan tal cual — no son editables campo a campo.
+- **Filas sin tiempo introducido (tiempoSec == 0) se descartan** al guardar — no se crean como `Serie`. El coach ve la desviación real (menos series de las planificadas), no un dato falso.
+- **RPE**: opcional por fila; si ninguna fila tiene RPE, el campo "RPE global" pasa a ser obligatorio. Si alguna fila sí lo tiene, se calcula la media automáticamente como valor inicial del RPE global (editable).
+- **Pipeline de guardado — idéntico al flujo GPS** (`training_summary_screen.dart`): `TrainingRepository().createTraining()` → `AthleteSessionRepository().markAsCompleted(uid, sessionId, trainingId)` → `HomeViewModel.needsReload++` / `HistoryController.needsReload++` → `AiCoachSessionAnalysisService().generateAnalysis(...)` fire-and-forget (sin `await`).
+- `plannedComparison` se omite intencionadamente: hoy solo lo calcula el flujo GPS (`workout_execution_screen.dart` → consumido en `training_summary_screen.dart`), y no existe un builder reutilizable en el modelo. El training queda igualmente vinculado a la `AthleteSession`, así que el coach recibe contexto planificado vs ejecutado en su propio análisis post-sesión.
+- Tags: mapeo local `_tagForCategory()` (categoría → tag predefinida más cercana). No existe una función de mapeo compartida en el flujo GPS — allí el usuario elige las etiquetas manualmente via chips en `TrainingSummaryScreen`.
+- **Guard de fecha**: solo se ofrece la entrada si `status == planned` y la fecha es hoy o anterior (`athleteSessionCanCompleteManually()`, ignora la hora). Nunca aparece para sesiones futuras.
+- **Puntos de entrada**: card "SESIÓN DE HOY" del Home (`home_view.dart`) y el detalle de sesión del calendario (`calendar_view.dart` → `_buildSessionCard`), como alternativa junto al botón "EMPEZAR" existente.
+
+### ⚠️ Deuda técnica — dos conceptos de "completar manualmente"
+
+Tras esta funcionalidad coexisten **dos** caminos distintos llamados "manual" en la app, sin unificar:
+
+1. **`TrainingStartView` / `_onFinishTrainingTap()`** — abre el diálogo de nombre + etiquetas con las series que ya hubiera en `_vm.series` en memoria (viene del flujo de ejecución con cronómetro en pantalla, no de un formulario dedicado).
+2. **`CompleteSessionManuallyView`** (esta sección) — formulario pre-estructurado desde cero, siempre vinculado a una `AthleteSession` planificada.
+
+No se ha tocado `TrainingStartView` ni `athlete_hub_view.dart` en esta tarea — mantienen su "Rellenar manual" existente intacto. Pendiente decidir en el futuro si conviene unificar ambos conceptos cuando se resuelva la convivencia `TrainingStartView` vs `PreExecutionScreen`/`WorkoutExecutionScreen`.
+
+---
+
 *Documento creado: Mayo 2026. Actualizar al añadir nuevos WorkoutType o campos en los modelos.*

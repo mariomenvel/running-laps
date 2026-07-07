@@ -14,6 +14,7 @@ import 'package:running_laps/features/home/viewmodels/home_view_model.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/templates/data/athlete_session_mapper.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
+import 'package:running_laps/features/training/views/complete_session_manually_view.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_automation_service.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
@@ -676,6 +677,16 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
             }
           },
           child: const Text('EMPEZAR ENTRENAMIENTO'),
+        ),
+      ),
+      Center(
+        child: TextButton(
+          style: TextButton.styleFrom(foregroundColor: AppColors.textSecondary(context)),
+          onPressed: () => Navigator.push(
+            context,
+            AppRoute(page: CompleteSessionManuallyView(session: session)),
+          ),
+          child: const Text('Completar manualmente'),
         ),
       ),
     ];
