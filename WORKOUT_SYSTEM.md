@@ -423,16 +423,7 @@ Caso de uso: el atleta ejecuta la sesión fuera de la app (pista con cronómetro
 - `plannedComparison` se omite intencionadamente: hoy solo lo calcula el flujo GPS (`workout_execution_screen.dart` → consumido en `training_summary_screen.dart`), y no existe un builder reutilizable en el modelo. El training queda igualmente vinculado a la `AthleteSession`, así que el coach recibe contexto planificado vs ejecutado en su propio análisis post-sesión.
 - Tags: mapeo local `_tagForCategory()` (categoría → tag predefinida más cercana). No existe una función de mapeo compartida en el flujo GPS — allí el usuario elige las etiquetas manualmente via chips en `TrainingSummaryScreen`.
 - **Guard de fecha**: solo se ofrece la entrada si `status == planned` y la fecha es hoy o anterior (`athleteSessionCanCompleteManually()`, ignora la hora). Nunca aparece para sesiones futuras.
-- **Puntos de entrada**: card "SESIÓN DE HOY" del Home (`home_view.dart`) y el detalle de sesión del calendario (`calendar_view.dart` → `_buildSessionCard`), como alternativa junto al botón "EMPEZAR" existente.
-
-### ⚠️ Deuda técnica — dos conceptos de "completar manualmente"
-
-Tras esta funcionalidad coexisten **dos** caminos distintos llamados "manual" en la app, sin unificar:
-
-1. **`TrainingStartView` / `_onFinishTrainingTap()`** — abre el diálogo de nombre + etiquetas con las series que ya hubiera en `_vm.series` en memoria (viene del flujo de ejecución con cronómetro en pantalla, no de un formulario dedicado).
-2. **`CompleteSessionManuallyView`** (esta sección) — formulario pre-estructurado desde cero, siempre vinculado a una `AthleteSession` planificada.
-
-No se ha tocado `TrainingStartView` ni `athlete_hub_view.dart` en esta tarea — mantienen su "Rellenar manual" existente intacto. Pendiente decidir en el futuro si conviene unificar ambos conceptos cuando se resuelva la convivencia `TrainingStartView` vs `PreExecutionScreen`/`WorkoutExecutionScreen`.
+- **Puntos de entrada — un único camino unificado**: card "SESIÓN DE HOY" del Home (`home_view.dart`), detalle de sesión del calendario (`calendar_view.dart` → `_buildSessionCard`), y el botón "Rellenar manual" de `TrainingStartView` (`_buildTodaySessionCard`, sesión de hoy detectada automáticamente) — los tres navegan a `CompleteSessionManuallyView`. Ya no existen dos conceptos distintos de "completar manual": el botón de `TrainingStartView` dejó de abrir el diálogo de nombre+tags con `_vm.series` (normalmente vacío en ese punto) y ahora abre el mismo formulario pre-estructurado desde los bloques planificados.
 
 ---
 

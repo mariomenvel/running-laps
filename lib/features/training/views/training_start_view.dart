@@ -25,6 +25,7 @@ import '../../../core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/widgets/number_picker_field.dart';
 import 'training_summary_screen.dart';
+import 'complete_session_manually_view.dart';
 import '../viewmodels/training_viewmodel.dart';
 import '../data/tag_model.dart';
 import '../data/tag_manager.dart';
@@ -1886,7 +1887,16 @@ class _TrainingStartViewState extends State<TrainingStartView>
                 const SizedBox(width: AppSpacing.m),
                 Expanded(
                   child: TextButton(
-                    onPressed: _onFinishTrainingTap,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        AppRoute(
+                          page: CompleteSessionManuallyView(
+                            session: session,
+                          ),
+                        ),
+                      );
+                    },
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.textSecondary(context),
                     ),
