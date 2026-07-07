@@ -58,13 +58,13 @@ void main() {
     test('trainingFocus=volume inyecta el bloque de preferencia', () {
       final prompt = systemPromptFor('volume');
       expect(prompt, contains('PREFERENCIA DEL ATLETA: prioriza volumen aeróbico'));
-      expect(prompt, contains('NUNCA anula los guards de seguridad'));
+      expect(prompt, contains('SIEMPRE SECUNDARIA a cualquier instrucción marcada como MANDATO'));
     });
 
     test('trainingFocus=quality inyecta el bloque de preferencia', () {
       final prompt = systemPromptFor('quality');
       expect(prompt, contains('PREFERENCIA DEL ATLETA: prioriza calidad'));
-      expect(prompt, contains('NUNCA anula los guards de seguridad'));
+      expect(prompt, contains('SIEMPRE SECUNDARIA a cualquier instrucción marcada como MANDATO'));
     });
 
     test('trainingFocus=null no añade ningún bloque de preferencia', () {

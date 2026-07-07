@@ -202,16 +202,22 @@ class AiCoachPromptBuilder {
         return 'PREFERENCIA DEL ATLETA: prioriza volumen aeróbico. '
             'Reduce sesiones de calidad a 1/semana salvo semana de test, '
             'alarga rodajes dentro del rango seguro del nivel. '
-            'Esta preferencia NUNCA anula los guards de seguridad anteriores '
-            '(TSB bajo, lesión, needsBaselineAssessment, semanas de recuperación/taper/deload) — '
-            'esos guards tienen siempre prioridad.';
+            'Esta preferencia es SIEMPRE SECUNDARIA a cualquier instrucción '
+            'marcada como MANDATO en el contexto del usuario (p.ej. '
+            'instruccionParon por lesión), a un TSB bajo, a '
+            'needsBaselineAssessment, o a semanas de recuperación/taper/deload. '
+            'Si detectas cualquiera de esas señales, ignora esta preferencia '
+            'por completo y sigue el guard correspondiente.';
       case 'quality':
         return 'PREFERENCIA DEL ATLETA: prioriza calidad. '
             'Hasta 2 sesiones de intensidad/semana si el TSB lo permite, '
             'rodajes en el rango bajo del volumen. '
-            'Esta preferencia NUNCA anula los guards de seguridad anteriores '
-            '(TSB bajo, lesión, needsBaselineAssessment, semanas de recuperación/taper/deload) — '
-            'esos guards tienen siempre prioridad.';
+            'Esta preferencia es SIEMPRE SECUNDARIA a cualquier instrucción '
+            'marcada como MANDATO en el contexto del usuario (p.ej. '
+            'instruccionParon por lesión), a un TSB bajo, a '
+            'needsBaselineAssessment, o a semanas de recuperación/taper/deload. '
+            'Si detectas cualquiera de esas señales, ignora esta preferencia '
+            'por completo y sigue el guard correspondiente.';
       default:
         return null;
     }
