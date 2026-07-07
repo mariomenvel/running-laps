@@ -32,6 +32,9 @@ class Entrenamiento {
   // Comparativa planificado vs ejecutado (solo si viene de sesión planificada)
   final Map<String, dynamic>? plannedComparison;
 
+  // Análisis post-sesión generado por el Coach IA (solo sesiones planificadas)
+  final Map<String, dynamic>? coachAnalysis;
+
   Entrenamiento({
     this.id,
     required this.titulo,
@@ -49,6 +52,7 @@ class Entrenamiento {
     this.notas,
     this.fcMediaSesion,
     this.plannedComparison,
+    this.coachAnalysis,
   });
 
   Entrenamiento copyWith({
@@ -68,6 +72,7 @@ class Entrenamiento {
     String? notas,
     Object? fcMediaSesion = _entrSentinel,
     Object? plannedComparison = _entrSentinel,
+    Object? coachAnalysis = _entrSentinel,
   }) {
     return Entrenamiento(
       id: id ?? this.id,
@@ -88,6 +93,8 @@ class Entrenamiento {
           ? this.fcMediaSesion : fcMediaSesion as double?,
       plannedComparison: identical(plannedComparison, _entrSentinel)
           ? this.plannedComparison : plannedComparison as Map<String, dynamic>?,
+      coachAnalysis: identical(coachAnalysis, _entrSentinel)
+          ? this.coachAnalysis : coachAnalysis as Map<String, dynamic>?,
     );
   }
 
@@ -193,6 +200,9 @@ class Entrenamiento {
     if (plannedComparison != null) {
       base['plannedComparison'] = plannedComparison;
     }
+    if (coachAnalysis != null) {
+      base['coachAnalysis'] = coachAnalysis;
+    }
 
     return base;
   }
@@ -258,6 +268,9 @@ class Entrenamiento {
       notas: map['notas'] as String?,
       fcMediaSesion: (map['fcMediaSesion'] as num?)?.toDouble(),
       plannedComparison: map['plannedComparison'] as Map<String, dynamic>?,
+      coachAnalysis: map['coachAnalysis'] != null
+          ? Map<String, dynamic>.from(map['coachAnalysis'] as Map)
+          : null,
     );
   }
 

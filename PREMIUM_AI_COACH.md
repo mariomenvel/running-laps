@@ -299,4 +299,22 @@ Las `athleteSessions` generadas incluyen `targetReps` y `targetSegmentDistanceM`
 - Objetivos: Trail/Ultra, "Salud general"
 - Test de umbral individualizado (zonas Premium)
 - "He vuelto" button tras inactividad prolongada
+
+---
+
+## Análisis post-sesión ✅ implementado (Fase 1)
+
+Archivo: `ai_coach/data/ai_coach_session_analysis_service.dart`
+
+- **Trigger:** al guardar un entrenamiento vinculado a una sesión planificada (`training_summary_screen.dart` → `_saveTraining()`), fire-and-forget (sin `await`) tras el `set()` exitoso.
+- **Contexto:** perfil resumido (nivel, objetivo), bloques de la sesión planificada con targets, series ejecutadas (distancia, tiempo, pace, RPE, FC), próximas sesiones planificadas de la semana. No reutiliza el builder semanal completo.
+- **Modelo:** `AiCoachModels.decision` (Claude Sonnet), respuesta JSON con campo `analysis`, 3-5 frases en español.
+- **Persistencia:** `users/{uid}/trainings/{id}.coachAnalysis = {text, generatedAt}` vía `update()`. Es inmutable — no se regenera.
+- **Gate:** mismo check que el chat (`isAthleteMode` + `providerConfig.provider == 'openrouter'`). Cualquier error → `debugPrint` + `null`, nunca rompe el guardado.
+- **No consume cuota de chat** (no usa `AiCoachUsage`).
+- **Superficies:**
+  - Detalle del historial (`training_detail_view.dart`) — card "ANÁLISIS DEL COACH" tras notas.
+  - Home (`home_view.dart`) — primera frase bajo la card de sesión completada de hoy (`HomeViewModel.completedTodayCoachAnalysis`, un read extra puntual del training vinculado).
+  - Resumen de sesión: no se muestra (llega en background, ~5-10s después de guardar).
+- Solo aplica a sesiones vinculadas a un plan (`athleteSession != null`); entrenamientos libres no generan análisis.
 - Traducción a otros idiomas

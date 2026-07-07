@@ -12,6 +12,7 @@ import '../data/tag_manager.dart';
 import '../data/tag_model.dart';
 import '../../athlete/data/athlete_session_model.dart';
 import '../../athlete/data/athlete_session_repository.dart';
+import '../../ai_coach/data/ai_coach_session_analysis_service.dart';
 import '../../history/viewmodels/history_controller.dart';
 import '../../home/viewmodels/home_view_model.dart';
 import '../../templates/data/workout_session.dart';
@@ -348,6 +349,13 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
         } catch (e) {
           debugPrint('[Summary] markAsCompleted error: $e');
         }
+
+        // Fire-and-forget: no await, no bloquea el flujo de guardado
+        AiCoachSessionAnalysisService().generateAnalysis(
+          uid: uid,
+          entrenamiento: widget.entrenamiento,
+          plannedSession: widget.athleteSession!,
+        );
       }
       HomeViewModel.needsReload.value++;
       HistoryController.needsReload.value++;

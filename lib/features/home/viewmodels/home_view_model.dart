@@ -25,6 +25,7 @@ class HomeViewModel {
   final _progressRepo = ProgressRepository();
   final _userService  = UserService();
   final _recovery     = SessionRecoveryService();
+  final _db           = FirebaseFirestore.instance;
 
   // ── Estado reactivo ──────────────────────────────────────────────────────
 
@@ -48,6 +49,7 @@ class HomeViewModel {
   // Modo atleta
   final todaySession = ValueNotifier<AthleteSession?>(null);
   final completedTodaySession = ValueNotifier<AthleteSession?>(null);
+  final completedTodayCoachAnalysis = ValueNotifier<String?>(null);
   final weekSessions = ValueNotifier<List<AthleteSession>>([]);
 
   // Modo recreativo
@@ -146,6 +148,7 @@ class HomeViewModel {
     weeklyZoneSeconds.dispose();
     todaySession.dispose();
     completedTodaySession.dispose();
+    completedTodayCoachAnalysis.dispose();
     weekSessions.dispose();
     personalRecords.dispose();
   }
@@ -212,9 +215,30 @@ class HomeViewModel {
     if (_disposed) return;
     todaySession.value =
         todaySessions.where((s) => s.status == AthleteSessionStatus.planned).firstOrNull;
-    completedTodaySession.value =
+    final completed =
         todaySessions.where((s) => s.status == AthleteSessionStatus.completed).firstOrNull;
+    completedTodaySession.value = completed;
     weekSessions.value = week;
+
+    completedTodayCoachAnalysis.value = null;
+    final completedTrainingId = completed?.completedTrainingId;
+    if (completedTrainingId != null) {
+      try {
+        final doc = await _db
+            .collection('users')
+            .doc(userId)
+            .collection('trainings')
+            .doc(completedTrainingId)
+            .get();
+        if (_disposed) return;
+        final analysis = doc.data()?['coachAnalysis'];
+        if (analysis is Map) {
+          completedTodayCoachAnalysis.value = analysis['text'] as String?;
+        }
+      } catch (e) {
+        debugPrint('[HomeViewModel] coachAnalysis fetch error: $e');
+      }
+    }
   }
 
   Future<void> _loadRecreativoData() async {

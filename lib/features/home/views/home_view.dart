@@ -618,7 +618,14 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                   if (session != null)
                     ..._buildPlannedSessionContent(session)
                   else if (completed != null)
-                    ..._buildCompletedSessionContent(completed)
+                    ValueListenableBuilder<String?>(
+                      valueListenable: _vm!.completedTodayCoachAnalysis,
+                      builder: (_, analysis, __) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children:
+                            _buildCompletedSessionContent(completed, analysis),
+                      ),
+                    )
                   else
                     ..._buildNoSessionContent(),
                 ],
@@ -674,7 +681,11 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     ];
   }
 
-  List<Widget> _buildCompletedSessionContent(AthleteSession session) {
+  List<Widget> _buildCompletedSessionContent(
+      AthleteSession session, String? coachAnalysis) {
+    final firstSentence = coachAnalysis != null && coachAnalysis.isNotEmpty
+        ? coachAnalysis.split('. ').first
+        : null;
     return [
       Row(
         children: [
@@ -699,6 +710,15 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         '¡Buen trabajo! Revisa tu resumen en el historial.',
         style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
       ),
+      if (firstSentence != null) ...[
+        const SizedBox(height: 6),
+        Text(
+          firstSentence,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: AppTypography.small.copyWith(color: AppColors.textSecondary(context)),
+        ),
+      ],
     ];
   }
 

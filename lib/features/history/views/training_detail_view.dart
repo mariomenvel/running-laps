@@ -85,6 +85,10 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
         _buildDivider(),
         _buildNotasSection(),
       ],
+      if (training.coachAnalysis != null) ...[
+        _buildDivider(),
+        _buildCoachAnalysisSection(),
+      ],
       const SizedBox(height: 40),
     ];
 
@@ -689,6 +693,55 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
                 ),
               );
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCoachAnalysisSection() {
+    final text = training.coachAnalysis?['text'] as String?;
+    if (text == null || text.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'ANÁLISIS DEL COACH',
+            style: AppTypography.small.copyWith(
+              color: AppColors.textSecondary(context),
+              letterSpacing: 1.5,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.m),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceOf(context),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.borderOf(context)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.auto_awesome_outlined,
+                    size: 18, color: AppColors.brand),
+                const SizedBox(width: AppSpacing.s),
+                Expanded(
+                  child: Text(
+                    text,
+                    style: AppTypography.body.copyWith(
+                      color: AppColors.textPrimary(context),
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
