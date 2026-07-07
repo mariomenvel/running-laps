@@ -889,7 +889,7 @@ class _CalendarViewState extends State<CalendarView>
                           boxShadow: hasPendingAiSuggestion
                               ? [
                                   BoxShadow(
-                                    color: AppColors.brand.withOpacity(0.22),
+                                    color: AppColors.brand.withValues(alpha: 0.22),
                                     blurRadius: 8,
                                     spreadRadius: 1,
                                   ),
@@ -2452,7 +2452,7 @@ class _CalendarViewState extends State<CalendarView>
     if (sessions.any((s) => s.status == AthleteSessionStatus.completed)) colors.add(AppColors.rpeLow);
     if (sessions.any((s) => s.status == AthleteSessionStatus.planned && s.category != 'competicion')) colors.add(AppColors.brand);
     if (sessions.any((s) => s.category == 'competicion')) colors.add(AppColors.rpeMax);
-    if (sessions.any((s) => s.status == AthleteSessionStatus.skipped)) colors.add(AppColors.rpeMax.withOpacity(0.6));
+    if (sessions.any((s) => s.status == AthleteSessionStatus.skipped)) colors.add(AppColors.rpeMax.withValues(alpha: 0.6));
     return colors.take(3).toList();
   }
 
