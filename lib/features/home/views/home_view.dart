@@ -683,40 +683,52 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
   List<Widget> _buildCompletedSessionContent(
       AthleteSession session, String? coachAnalysis) {
-    final firstSentence = coachAnalysis != null && coachAnalysis.isNotEmpty
-        ? coachAnalysis.split('. ').first
-        : null;
+    final hasAnalysis = coachAnalysis != null && coachAnalysis.isNotEmpty;
     return [
       Row(
         children: [
-          const Icon(Icons.check_circle_rounded, color: AppColors.rpeLow, size: 18),
+          const Icon(Icons.check_circle_rounded, color: AppColors.rpeLow, size: 16),
           const SizedBox(width: 6),
-          Text(
-            'Sesión completada',
-            style: AppTypography.small.copyWith(
-              color: AppColors.rpeLow,
-              fontWeight: FontWeight.w600,
+          Expanded(
+            child: Text(
+              session.title ?? _categoryLabel(session.category),
+              style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context)),
             ),
           ),
         ],
       ),
-      const SizedBox(height: 8),
-      Text(
-        session.title ?? _categoryLabel(session.category),
-        style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context)),
-      ),
-      const SizedBox(height: 4),
-      Text(
-        '¡Buen trabajo! Revisa tu resumen en el historial.',
-        style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
-      ),
-      if (firstSentence != null) ...[
-        const SizedBox(height: 6),
+      if (!hasAnalysis) ...[
+        const SizedBox(height: 4),
         Text(
-          firstSentence,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: AppTypography.small.copyWith(color: AppColors.textSecondary(context)),
+          '¡Buen trabajo! Revisa tu resumen en el historial.',
+          style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
+        ),
+      ],
+      if (hasAnalysis) ...[
+        const SizedBox(height: 10),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.brand.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.auto_awesome_outlined, size: 15, color: AppColors.brand),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  coachAnalysis,
+                  style: AppTypography.small.copyWith(
+                    color: AppColors.textPrimary(context),
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     ];
