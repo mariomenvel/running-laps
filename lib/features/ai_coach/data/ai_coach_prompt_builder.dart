@@ -175,16 +175,46 @@ class AiCoachPromptBuilder {
         'No generes entrenamientos completos. Devuelve solo una decisión semanal estructurada. '
         'Responde únicamente con JSON válido que cumpla el esquema.';
 
+    var result = base;
     if (profile != null && profile.availableWeekdays.isNotEmpty) {
       final dayNames = _weekdayNamesList(profile.availableWeekdays);
-      return '$base'
+      result = '$result'
           ' IMPORTANTE: El atleta SOLO puede entrenar los dias: $dayNames.'
           ' Distribuye las sesiones UNICAMENTE en esos dias.'
           ' No pongas sesiones en otros dias.'
           ' Si el atleta tiene restricciones recurrentes o notas del entrenador (coachNotes),'
           ' respeta siempre esas preferencias al asignar dias.';
     }
-    return base;
+
+    // Preferencia de enfoque del atleta — se aplica DESPUÉS de todas las
+    // reglas de seguridad (TSB, protocolo de atleta nuevo, restricciones
+    // recurrentes). Los guards de seguridad siempre ganan sobre esta preferencia.
+    final focusBlock = _trainingFocusBlock(profile?.trainingFocus);
+    if (focusBlock != null) {
+      result = '$result\n\n$focusBlock';
+    }
+    return result;
+  }
+
+  String? _trainingFocusBlock(String? trainingFocus) {
+    switch (trainingFocus) {
+      case 'volume':
+        return 'PREFERENCIA DEL ATLETA: prioriza volumen aeróbico. '
+            'Reduce sesiones de calidad a 1/semana salvo semana de test, '
+            'alarga rodajes dentro del rango seguro del nivel. '
+            'Esta preferencia NUNCA anula los guards de seguridad anteriores '
+            '(TSB bajo, lesión, needsBaselineAssessment, semanas de recuperación/taper/deload) — '
+            'esos guards tienen siempre prioridad.';
+      case 'quality':
+        return 'PREFERENCIA DEL ATLETA: prioriza calidad. '
+            'Hasta 2 sesiones de intensidad/semana si el TSB lo permite, '
+            'rodajes en el rango bajo del volumen. '
+            'Esta preferencia NUNCA anula los guards de seguridad anteriores '
+            '(TSB bajo, lesión, needsBaselineAssessment, semanas de recuperación/taper/deload) — '
+            'esos guards tienen siempre prioridad.';
+      default:
+        return null;
+    }
   }
 
   String _weekdayNamesList(List<int> weekdays) {

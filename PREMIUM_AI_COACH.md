@@ -248,6 +248,23 @@ Configurados en `ai_coach_models_config.dart`:
 
 ---
 
+## Filosofía y enfoque
+
+### Vista "Cómo entrena tu coach" ✅ implementado
+`coach_philosophy_view.dart` — vista estática (sin ViewModel) accesible desde `AiCoachSettingsView` (tile inicial). Comunica 4 principios fijos: base aeróbica primero (70-80% volumen suave), intensidad con criterio (VDOT, no tablas genéricas), tu fatiga manda (TSB) y progresión sostenible. Sin CTA — puramente informativa.
+
+### `AiCoachProfile.trainingFocus` ✅ implementado
+Campo opcional `String? trainingFocus` — `'volume' | 'balanced' | 'quality'`, `null`/`'balanced'` = comportamiento actual sin cambios. Seleccionable en `AiCoachSettingsView`, sección "ENFOQUE DE ENTRENAMIENTO". No se pide en el onboarding (el wizard ya tiene 6 pasos); el atleta lo descubre en settings.
+
+Efecto en `ai_coach_prompt_builder.dart` (`_buildDecisionSystemPrompt`):
+- `volume`: reduce sesiones de calidad a 1/semana salvo semana de test, alarga rodajes en el rango seguro del nivel.
+- `quality`: hasta 2 sesiones de intensidad/semana si el TSB lo permite, rodajes en el rango bajo del volumen.
+- `balanced`/`null`: no añade instrucción — plan generado igual que antes de este campo.
+
+El bloque se inserta **después** de todas las reglas de seguridad del prompt (TSB, protocolo de atleta nuevo, restricciones recurrentes, día disponibles) y declara explícitamente que nunca anula esos guards — el LLM prioriza siempre lesión/TSB bajo/needsBaselineAssessment sobre la preferencia de enfoque.
+
+---
+
 ## Progresión intra-sesión
 
 Las `athleteSessions` generadas incluyen `targetReps` y `targetSegmentDistanceM` para que la pantalla de entrenamiento compare planificado vs ejecutado en tiempo real.

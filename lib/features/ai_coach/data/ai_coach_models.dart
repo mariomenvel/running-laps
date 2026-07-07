@@ -360,6 +360,8 @@ class AiCoachProfile {
   final int? pb10kSeconds;
   final int? pbHalfMarathonSeconds;
   final int? pbMarathonSeconds;
+  // 'volume' | 'balanced' | 'quality' — null = balanced
+  final String? trainingFocus;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -380,6 +382,7 @@ class AiCoachProfile {
     this.pb10kSeconds,
     this.pbHalfMarathonSeconds,
     this.pbMarathonSeconds,
+    this.trainingFocus,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -412,6 +415,7 @@ class AiCoachProfile {
       pb10kSeconds: (map['pb10kSeconds'] as num?)?.toInt(),
       pbHalfMarathonSeconds: (map['pbHalfMarathonSeconds'] as num?)?.toInt(),
       pbMarathonSeconds: (map['pbMarathonSeconds'] as num?)?.toInt(),
+      trainingFocus: map['trainingFocus'] as String?,
       createdAt: _toDateTime(map['createdAt']),
       updatedAt: _toDateTime(map['updatedAt']),
     );
@@ -433,6 +437,7 @@ class AiCoachProfile {
     Object? pb10kSeconds = _sentinel,
     Object? pbHalfMarathonSeconds = _sentinel,
     Object? pbMarathonSeconds = _sentinel,
+    Object? trainingFocus = _sentinel,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -455,6 +460,7 @@ class AiCoachProfile {
       pb10kSeconds: pb10kSeconds == _sentinel ? this.pb10kSeconds : pb10kSeconds as int?,
       pbHalfMarathonSeconds: pbHalfMarathonSeconds == _sentinel ? this.pbHalfMarathonSeconds : pbHalfMarathonSeconds as int?,
       pbMarathonSeconds: pbMarathonSeconds == _sentinel ? this.pbMarathonSeconds : pbMarathonSeconds as int?,
+      trainingFocus: trainingFocus == _sentinel ? this.trainingFocus : trainingFocus as String?,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -484,6 +490,7 @@ class AiCoachProfile {
       if (pb10kSeconds != null) 'pb10kSeconds': pb10kSeconds,
       if (pbHalfMarathonSeconds != null) 'pbHalfMarathonSeconds': pbHalfMarathonSeconds,
       if (pbMarathonSeconds != null) 'pbMarathonSeconds': pbMarathonSeconds,
+      if (trainingFocus != null) 'trainingFocus': trainingFocus,
     };
   }
 }

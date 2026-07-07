@@ -10,6 +10,7 @@ import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_weekly_feedback_view.dart';
+import 'package:running_laps/features/ai_coach/views/coach_philosophy_view.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'package:running_laps/core/theme/app_theme.dart' show AppMotion;
@@ -51,6 +52,8 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
   int? _pb10kSeconds;
   int? _pbHalfMarathonSeconds;
   int? _pbMarathonSeconds;
+
+  String? _trainingFocus;
 
   @override
   void initState() {
@@ -117,6 +120,7 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
         _pb10kSeconds = profile.pb10kSeconds;
         _pbHalfMarathonSeconds = profile.pbHalfMarathonSeconds;
         _pbMarathonSeconds = profile.pbMarathonSeconds;
+        _trainingFocus = profile.trainingFocus;
       } else {
         _goalDescriptionCtrl.text = 'Mejorar la consistencia semanal';
       }
@@ -188,6 +192,7 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
         pb10kSeconds: _pb10kSeconds,
         pbHalfMarathonSeconds: _pbHalfMarathonSeconds,
         pbMarathonSeconds: _pbMarathonSeconds,
+        trainingFocus: _trainingFocus,
         createdAt: previousProfile?.createdAt ?? now,
         updatedAt: now,
       );
@@ -432,6 +437,15 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                        ListTile(
+                          leading: const Icon(Icons.menu_book_outlined, color: AppColors.brand),
+                          title: const Text('Cómo entrena tu coach'),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: () => Navigator.of(context).push(
+                            AppRoute(page: const CoachPhilosophyView()),
+                          ),
+                        ),
+                        Divider(height: 1, color: AppColors.borderOf(context)),
                         _sectionHeader(
                           'OBJETIVO',
                           subtitle: 'Define el contexto estable para que la IA planifique como un entrenador serio.',
@@ -521,6 +535,15 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
                               _buildLongRunDaySelector(context),
                             ],
                           ),
+                        ),
+                        _sectionHeader(
+                          'ENFOQUE DE ENTRENAMIENTO',
+                          subtitle: 'Cómo quieres repartir el volumen y la calidad en tu plan.',
+                        ),
+                        Divider(height: 1, color: AppColors.borderOf(context)),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                          child: _buildTrainingFocusSelector(context),
                         ),
                         _sectionHeader(
                           'RESTRICCIONES',
@@ -1002,6 +1025,72 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTrainingFocusSelector(BuildContext context) {
+    const options = [
+      (value: 'volume', label: 'Más volumen', subtitle: 'Prioriza kilómetros suaves y resistencia'),
+      (value: 'balanced', label: 'Equilibrado', subtitle: 'Mezcla clásica de base y calidad'),
+      (value: 'quality', label: 'Más calidad', subtitle: 'Prioriza series y ritmos, menos volumen'),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: options.map((option) {
+        final isSelected = (_trainingFocus ?? 'balanced') == option.value;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: InkWell(
+            onTap: () => setState(() {
+              _trainingFocus = option.value == 'balanced' ? null : option.value;
+            }),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.brand.withValues(alpha: 0.08)
+                    : AppColors.surfaceOf(context),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected ? AppColors.brand : AppColors.borderOf(context),
+                  width: isSelected ? 1.5 : 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          option.label,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                            color: isSelected ? AppColors.brand : AppColors.textPrimary(context),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          option.subtitle,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isSelected)
+                    const Icon(Icons.check_rounded, color: AppColors.brand, size: 20),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 

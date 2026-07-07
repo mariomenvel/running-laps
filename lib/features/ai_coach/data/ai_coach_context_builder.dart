@@ -182,6 +182,7 @@ class AiCoachContextBuilder {
       'preferredWeeklySessions':
           effectiveProfile?.preferredWeeklySessions ?? 3,
       'preferredLongRunWeekday': effectiveProfile?.preferredLongRunWeekday,
+      'trainingFocus': effectiveProfile?.trainingFocus,
       'needsConservativeWeek': weeklyState.needsDeload ||
           weeklyState.daysSinceLastTraining >= 10,
       'athleteMemory': athleteMemory.toMap(),
