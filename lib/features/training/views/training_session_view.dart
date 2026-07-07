@@ -1077,20 +1077,25 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     // Demo values — only active when _demoMode is true.
     const int _demoDist = 3470;        // 3.47 km
     const String _demoPace = '5:12';   // moderado / amber
+    final bool showGpsStats = widget.gpsActivo || _demoMode;
 
     return Column(
       children: [
-        // Top half — DISTANCIA is the protagonist
+        // Top half — DISTANCIA is the protagonist (solo si hay GPS: sin
+        // tracking, la distancia se quedaría fija en 0 y mostrarla induce
+        // a error). Sin GPS, el tiempo pasa a ser el dato protagonista.
         Expanded(
           flex: 5,
-          child: _demoMode
-              ? Center(child: _buildDistanciaHero(_demoDist))
-              : ValueListenableBuilder<int>(
-                  valueListenable: _gpsService?.totalDistanceMeters ?? ValueNotifier(0),
-                  builder: (ctx, dist, _) => Center(
-                    child: _buildDistanciaHero(dist),
-                  ),
-                ),
+          child: showGpsStats
+              ? (_demoMode
+                  ? Center(child: _buildDistanciaHero(_demoDist))
+                  : ValueListenableBuilder<int>(
+                      valueListenable: _gpsService?.totalDistanceMeters ?? ValueNotifier(0),
+                      builder: (ctx, dist, _) => Center(
+                        child: _buildDistanciaHero(dist),
+                      ),
+                    ))
+              : Center(child: _buildNoGpsHero()),
         ),
         // Bottom half — RITMO speedometer card + TIEMPO below it
         Expanded(
@@ -1100,22 +1105,24 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _demoMode
-                    ? _buildRitmoSpeedometer(_demoPace)
-                    : ValueListenableBuilder<String>(
-                        valueListenable: _gpsService?.currentPace ?? ValueNotifier("--:--"),
-                        builder: (ctx, pace, _) => _buildRitmoSpeedometer(pace),
-                      ),
-                const SizedBox(height: 10),
+                if (showGpsStats) ...[
+                  _demoMode
+                      ? _buildRitmoSpeedometer(_demoPace)
+                      : ValueListenableBuilder<String>(
+                          valueListenable: _gpsService?.currentPace ?? ValueNotifier("--:--"),
+                          builder: (ctx, pace, _) => _buildRitmoSpeedometer(pace),
+                        ),
+                  const SizedBox(height: 10),
+                ],
                 _HeartRateIndicator(fcMax: widget.fcMax),
                 const SizedBox(height: 4),
-                // TIEMPO — centered, small, unobtrusive
+                // TIEMPO — protagonista si no hay GPS; discreto si sí lo hay.
                 Text(
                   _tiempoMostrado,
                   style: TextStyle(
-                    fontSize: 50,
-                    fontWeight: FontWeight.w300,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                    fontSize: showGpsStats ? 50 : 72,
+                    fontWeight: showGpsStats ? FontWeight.w300 : FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(showGpsStats ? 0.35 : 1.0),
                     height: 1.0,
                     fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
                   ),
@@ -1125,6 +1132,42 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
           ),
         ),
       ],
+    );
+  }
+
+  // Estado sin GPS: en vez de una distancia falsa fija en 0, mostramos
+  // un aviso claro de que el registro es solo por tiempo.
+  Widget _buildNoGpsHero() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.location_off_outlined,
+            size: 48,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'GPS desactivado',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Solo se registrará el tiempo. Introduce la distancia al terminar.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

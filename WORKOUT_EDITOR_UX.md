@@ -400,6 +400,16 @@ Los cambios se perderán.
 [Salir]  [Seguir editando]
 ```
 
+### ✅ Corregido — botón "Guardar sesión" sin estado sucio/limpio
+
+Antes, `_onSave()` no comprobaba nunca `_hasChanges()`: al editar una sesión existente sin tocar nada, el botón "Guardar sesión" reescribía igualmente el documento en Firestore y no daba ninguna señal visual de que no había cambios reales — se sentía como un tap que "no hacía nada".
+
+Ahora el botón principal escucha en vivo los 5 `ValueNotifier` que ya comparaba `_hasChanges()` (tipo, título, bloques, hora, notas) vía `AnimatedBuilder` + `Listenable.merge`:
+
+- **Editando una sesión existente sin cambios:** botón en gris neutro (`AppColors.surface2Of`), texto **"Sin cambios"**. Al pulsarlo cierra la pantalla al instante (`_navigateBack()`), sin escritura a Firestore.
+- **Con algún cambio real:** vuelve a `AppColors.brand`, texto **"Guardar sesión"**, comportamiento normal (persiste y cierra).
+- **Sesión nueva sin bloques:** sigue bloqueado como antes (`disabled`), independientemente del estado de cambios.
+
 ---
 
 ## 11. Accesibilidad y usabilidad

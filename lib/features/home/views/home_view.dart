@@ -1,5 +1,6 @@
 import 'dart:math' show min;
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
@@ -7,6 +8,7 @@ import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/widgets/block_preview_tile.dart';
+import 'package:running_laps/core/widgets/rpe_badge.dart';
 import 'package:running_laps/features/training/views/pre_execution_screen.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/progress_repository.dart';
@@ -619,12 +621,16 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                   if (session != null)
                     ..._buildPlannedSessionContent(session)
                   else if (completed != null)
-                    ValueListenableBuilder<String?>(
-                      valueListenable: _vm!.completedTodayCoachAnalysis,
-                      builder: (_, analysis, __) => Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children:
-                            _buildCompletedSessionContent(completed, analysis),
+                    InkWell(
+                      borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+                      onTap: () => _openCompletedTraining(completed),
+                      child: ValueListenableBuilder<String?>(
+                        valueListenable: _vm!.completedTodayCoachAnalysis,
+                        builder: (_, analysis, __) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children:
+                              _buildCompletedSessionContent(completed, analysis),
+                        ),
                       ),
                     )
                   else
@@ -680,13 +686,14 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         ),
       ),
       Center(
-        child: TextButton(
+        child: TextButton.icon(
           style: TextButton.styleFrom(foregroundColor: AppColors.textSecondary(context)),
           onPressed: () => Navigator.push(
             context,
             AppRoute(page: CompleteSessionManuallyView(session: session)),
           ),
-          child: const Text('Completar manualmente'),
+          icon: const Icon(Icons.edit_note_rounded, size: 18),
+          label: const Text('Completar manualmente'),
         ),
       ),
     ];
@@ -706,6 +713,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
               style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context)),
             ),
           ),
+          Icon(Icons.chevron_right_rounded, color: AppColors.iconMutedOf(context)),
         ],
       ),
       if (!hasAnalysis) ...[
@@ -745,6 +753,27 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     ];
   }
 
+  Future<void> _openCompletedTraining(AthleteSession completed) async {
+    final trainingId = completed.completedTrainingId;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (trainingId == null || uid == null) return;
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('trainings')
+          .doc(trainingId)
+          .get();
+      final data = doc.data();
+      if (data == null) return;
+      final entrenamiento = Entrenamiento.fromMap(data, id: doc.id);
+      if (!mounted) return;
+      MainShell.shellKey.currentState?.navigateTo(5, params: entrenamiento);
+    } catch (e) {
+      debugPrint('[HomeView] _openCompletedTraining error: $e');
+    }
+  }
+
   List<Widget> _buildNoSessionContent() {
     return [
       Text(
@@ -780,53 +809,106 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.m),
-                _card(
-                  child: upcoming.isEmpty
-                      ? Text(
+                upcoming.isEmpty
+                    ? _card(
+                        child: Text(
                           'Sin entrenos planificados esta semana',
                           style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
-                        )
-                      : Column(
-                          children: [
-                            for (var i = 0; i < upcoming.length; i++) ...[
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 0,
-                                  vertical: AppSpacing.s,
-                                ),
-                                child: Row(
-                                  children: [
-                                    SizedBox(
-                                      width: 80,
-                                      child: Text(
-                                        _weekdayLabel(upcoming[i].date),
-                                        style: AppTypography.body.copyWith(
-                                          color: AppColors.textSecondary(context),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Text(
-                                        _categoryLabel(upcoming[i].category),
-                                        style: AppTypography.body.copyWith(
-                                          color: AppColors.textPrimary(context),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (i < upcoming.length - 1)
-                                Divider(color: AppColors.borderOf(context), height: 1),
-                            ],
-                          ],
                         ),
-                ),
+                      )
+                    : Column(
+                        children: upcoming.map(_buildUpcomingSessionRow).toList(),
+                      ),
               ],
             );
           },
         );
       },
+    );
+  }
+
+  Widget _buildUpcomingSessionRow(AthleteSession session) {
+    final isAiSuggested = session.suggestion?.origin == AthleteSessionOrigin.ai;
+    final mainBlocks = session.blocks.take(3).toList();
+    final blocksLabel = mainBlocks.isEmpty
+        ? null
+        : mainBlocks.map((b) => BlockPreviewTile(block: b).mainLabel).join(' · ');
+    double? targetRpe;
+    for (final b in mainBlocks) {
+      if (b.targetRpe != null) {
+        targetRpe = b.targetRpe;
+        break;
+      }
+    }
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+      onTap: () => MainShell.shellKey.currentState?.navigateTo(
+        13,
+        params: AthleteSessionShellParams(date: session.date, session: session),
+      ),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.s),
+        padding: const EdgeInsets.all(AppSpacing.m),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceOf(context),
+          border: Border.all(color: AppColors.borderOf(context), width: 0.5),
+          borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 56,
+              child: Text(
+                _weekdayLabel(session.date),
+                style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      if (isAiSuggested) ...[
+                        const Icon(Icons.auto_awesome_outlined, size: 13, color: AppColors.brand),
+                        const SizedBox(width: 4),
+                      ],
+                      Flexible(
+                        child: Text(
+                          session.title?.isNotEmpty == true
+                              ? session.title!
+                              : _categoryLabel(session.category),
+                          style: AppTypography.body.copyWith(
+                            color: AppColors.textPrimary(context),
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (blocksLabel != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      blocksLabel,
+                      style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (targetRpe != null) ...[
+              const SizedBox(width: AppSpacing.s),
+              RpeBadge(rpe: targetRpe, size: RpeBadgeSize.chip),
+            ],
+            const SizedBox(width: AppSpacing.s),
+            Icon(Icons.chevron_right_rounded, color: AppColors.iconMutedOf(context), size: 20),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1169,50 +1251,75 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
   Widget _buildWorkoutRow(Entrenamiento w) {
     final km = (w.distanciaTotalM() / 1000).toStringAsFixed(1);
+    final rpe = w.rpePromedio();
     String pace = '';
     try {
       pace = w.ritmoMedioTexto();
     } catch (_) {}
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.s),
-      padding: const EdgeInsets.all(AppSpacing.m),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceOf(context),
-        border: Border.all(color: AppColors.borderOf(context), width: 0.5),
-        borderRadius: BorderRadius.circular(AppDimens.cardRadius),
-      ),
-      child: Row(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _formatWorkoutDate(w.fecha),
-                style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
+    final totalMin = (w.tiempoTotalSec() / 60).round();
+    final duration = totalMin >= 60
+        ? '${totalMin ~/ 60}h ${(totalMin % 60).toString().padLeft(2, '0')}m'
+        : '$totalMin min';
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+      onTap: () => MainShell.shellKey.currentState?.navigateTo(5, params: w),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.s),
+        padding: const EdgeInsets.all(AppSpacing.m),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceOf(context),
+          border: Border.all(color: AppColors.borderOf(context), width: 0.5),
+          borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _formatWorkoutDate(w.fecha),
+                    style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    w.titulo.isNotEmpty ? w.titulo : 'Entrenamiento libre',
+                    style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Text(
+                        duration,
+                        style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
+                      ),
+                      if (rpe > 0) ...[
+                        const SizedBox(width: 8),
+                        RpeBadge(rpe: rpe, size: RpeBadgeSize.chip),
+                      ],
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(height: 2),
-              Text(
-                w.titulo.isNotEmpty ? w.titulo : 'Entrenamiento libre',
-                style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
-              ),
-            ],
-          ),
-          const Spacer(),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '$km km',
-                style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
-              ),
-              if (pace.isNotEmpty)
-                Text(pace, style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context))),
-            ],
-          ),
-          const SizedBox(width: AppSpacing.s),
-          const Icon(Icons.check_circle, size: 16, color: AppColors.brand),
-        ],
+            ),
+            const SizedBox(width: AppSpacing.s),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '$km km',
+                  style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
+                ),
+                if (pace.isNotEmpty)
+                  Text(pace, style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context))),
+              ],
+            ),
+            const SizedBox(width: AppSpacing.s),
+            Icon(Icons.chevron_right_rounded, color: AppColors.iconMutedOf(context)),
+          ],
+        ),
       ),
     );
   }

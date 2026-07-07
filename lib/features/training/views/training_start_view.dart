@@ -1886,7 +1886,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                 ),
                 const SizedBox(width: AppSpacing.m),
                 Expanded(
-                  child: TextButton(
+                  child: TextButton.icon(
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -1900,7 +1900,8 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.textSecondary(context),
                     ),
-                    child: const Text('Rellenar manual'),
+                    icon: const Icon(Icons.edit_note_rounded, size: 18),
+                    label: const Text('Rellenar manual'),
                   ),
                 ),
               ],
@@ -2016,6 +2017,20 @@ class _TrainingStartViewState extends State<TrainingStartView>
               ],
             ),
           ),
+          Center(
+            child: TextButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  AppRoute(page: CompleteSessionManuallyView(session: session)),
+                );
+              },
+              style: TextButton.styleFrom(foregroundColor: AppColors.textSecondary(context)),
+              icon: const Icon(Icons.edit_note_rounded, size: 18),
+              label: const Text('Completar manualmente'),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s),
         ],
       ),
     );

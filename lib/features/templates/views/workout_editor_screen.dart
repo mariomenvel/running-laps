@@ -553,29 +553,52 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
             const SizedBox(height: AppSpacing.xxl),
 
             // ── Botón principal ──────────────────────────────────────
-            ValueListenableBuilder<List<WorkoutBlock>>(
-              valueListenable: _blocks,
-              builder: (_, blocks, __) {
-                final disabled =
-                    !widget.isQuickStart && blocks.isEmpty;
+            // Escucha todo lo que _hasChanges() compara, para reflejar en
+            // vivo si hay algo que guardar o no — evita el "guardar" que no
+            // hace nada visible cuando el usuario no tocó nada.
+            AnimatedBuilder(
+              animation: Listenable.merge(
+                [_selectedType, _title, _blocks, _scheduledTime, _notes],
+              ),
+              builder: (_, __) {
+                final blocks = _blocks.value;
+                final isEditingExisting = widget.initialSession != null;
+                final hasChanges = _hasChanges();
+                final blocksInvalid = !widget.isQuickStart && blocks.isEmpty;
+                final noopSave = isEditingExisting && !hasChanges;
+                final disabled = blocksInvalid;
+
+                final String label;
+                if (widget.isQuickStart) {
+                  label = 'Empezar entrenamiento';
+                } else if (noopSave) {
+                  label = 'Sin cambios';
+                } else {
+                  label = 'Guardar sesión';
+                }
+
                 return SizedBox(
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: disabled ? null : _onSave,
+                    onPressed: disabled
+                        ? null
+                        : (noopSave ? _navigateBack : _onSave),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          disabled ? AppColors.borderOf(context) : AppColors.brand,
-                      foregroundColor: Colors.white,
+                      backgroundColor: disabled
+                          ? AppColors.borderOf(context)
+                          : noopSave
+                              ? AppColors.surface2Of(context)
+                              : AppColors.brand,
+                      foregroundColor:
+                          noopSave ? AppColors.textSecondary(context) : Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                       elevation: 0,
                     ),
                     child: Text(
-                      widget.isQuickStart
-                          ? 'Empezar entrenamiento'
-                          : 'Guardar sesión',
+                      label,
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,

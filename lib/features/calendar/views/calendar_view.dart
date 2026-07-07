@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
@@ -1349,213 +1350,46 @@ class _CalendarViewState extends State<CalendarView>
       );
     }
 
-    void _showDaySessionsSheet(List<AthleteSession> plannedSessions) {
+
+    void showCompletedSessionsSheet(
+      List<AthleteSession> completed,
+      Future<void> Function(AthleteSession) onOpen,
+    ) {
       showModalBottomSheet(
         context: context,
-        isScrollControlled: true,
         backgroundColor: Theme.of(context).colorScheme.surface,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
-        builder: (_) => DraggableScrollableSheet(
-          initialChildSize: 0.5,
-          minChildSize: 0.35,
-          maxChildSize: 0.85,
-          expand: false,
-          builder: (_, ctrl) => SingleChildScrollView(
-            controller: ctrl,
+        builder: (sheetCtx) => SafeArea(
+          child: Padding(
             padding: const EdgeInsets.all(AppSpacing.l),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: Container(
-                    width: 36, height: 4,
-                    margin: const EdgeInsets.only(bottom: AppSpacing.l),
-                    decoration: BoxDecoration(
-                      color: AppColors.borderOf(context),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
                 Text(
-                  'Sesiones del ${_formatDaySpanish(day)}',
+                  'Sesiones completadas el ${_formatDaySpanish(day)}',
                   style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context)),
                 ),
                 const SizedBox(height: AppSpacing.l),
-                ...plannedSessions.map((s) {
+                ...completed.map((s) {
                   final title = s.title?.isNotEmpty == true
                       ? s.title!
                       : s.category != null
                           ? SessionCategoryX.fromValue(s.category!).label
                           : 'Entrenamiento';
-                  final durMin = s.blocks.fold<int>(
-                    0,
-                    (sum, b) =>
-                        sum +
-                        (b.type == SessionBlockType.continuousTime
-                            ? (b.durationMinutes ?? 0)
-                            : 0),
-                  );
-                  return ValueListenableBuilder<Set<String>>(
-                    valueListenable: _expandedSessions,
-                    builder: (_, expandedIds, __) {
-                      final isExpanded = expandedIds.contains(s.id);
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: AppSpacing.m),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.m,
-                          vertical: AppSpacing.m,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceOf(context),
-                          border: Border.all(color: AppColors.borderOf(context), width: 0.5),
-                          borderRadius: BorderRadius.circular(AppDimens.cardRadius),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 8, height: 8,
-                                  margin: const EdgeInsets.only(right: AppSpacing.m, top: 2),
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.brand,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        title,
-                                        style: AppTypography.body.copyWith(
-                                          color: AppColors.textPrimary(context),
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      if (durMin > 0) ...[
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          '~$durMin min',
-                                          style: AppTypography.small.copyWith(
-                                            color: AppColors.textSecondary(context),
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                                if (s.blocks.isNotEmpty)
-                                  GestureDetector(
-                                    onTap: () => _toggleExpanded(s.id),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(4),
-                                      child: Icon(
-                                        isExpanded
-                                            ? Icons.keyboard_arrow_up
-                                            : Icons.keyboard_arrow_down,
-                                        color: AppColors.iconMutedOf(context),
-                                      ),
-                                    ),
-                                  ),
-                                GestureDetector(
-                                  onTap: () async {
-                                    final confirm = await showAppConfirmDialog(
-                                      context: context,
-                                      title: 'Eliminar sesión',
-                                      message: '¿Eliminar "${s.title?.isNotEmpty == true ? s.title! : 'esta sesión'}"?',
-                                      confirmLabel: 'Eliminar',
-                                      isDestructive: true,
-                                    );
-                                    if (confirm != true || !mounted) return;
-                                    final uid = FirebaseAuth.instance.currentUser?.uid;
-                                    if (uid == null) return;
-                                    await AthleteSessionRepository().deleteSession(
-                                      uid: uid,
-                                      id: s.id,
-                                    );
-                                    if (!mounted) return;
-                                    Navigator.of(context).pop();
-                                    _vm?.loadAll();
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8),
-                                    child: Icon(
-                                      Icons.delete_outline_rounded,
-                                      size: 20,
-                                      color: AppColors.rpeMax,
-                                    ),
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.pop(context);
-                                    _navigateToEditSession(s);
-                                  },
-                                  child: Icon(Icons.edit_outlined, color: AppColors.textSecondary(context), size: 22),
-                                ),
-                                const SizedBox(width: AppSpacing.m),
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.pop(context);
-                                    _navigateToSession(s);
-                                  },
-                                  child: const Icon(Icons.play_circle_outline, color: AppColors.brand, size: 28),
-                                ),
-                              ],
-                            ),
-                            if (isExpanded && s.blocks.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(top: AppSpacing.s),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: s.blocks
-                                      .map((b) => BlockPreviewTile(
-                                            block: b,
-                                            style: BlockPreviewStyle.card,
-                                          ))
-                                      .toList(),
-                                ),
-                              ),
-                          ],
-                        ),
-                      );
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.check_circle, color: AppColors.rpeLow),
+                    title: Text(title, style: AppTypography.body.copyWith(color: AppColors.textPrimary(context))),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () {
+                      Navigator.pop(sheetCtx);
+                      onOpen(s);
                     },
                   );
                 }),
-                const SizedBox(height: AppSpacing.s),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                    _navigateToNewSession();
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.m),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.brand),
-                      borderRadius: BorderRadius.circular(AppDimens.cardRadius),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.add_rounded, color: AppColors.brand, size: 18),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Nueva sesión',
-                          style: AppTypography.body.copyWith(
-                            color: AppColors.brand,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.l),
               ],
             ),
           ),
@@ -1566,18 +1400,53 @@ class _CalendarViewState extends State<CalendarView>
     final plannedSessions = sessions
         .where((s) => s.status == AthleteSessionStatus.planned)
         .toList();
+    final completedSessions = sessions
+        .where((s) => s.status == AthleteSessionStatus.completed)
+        .toList();
+
+    Future<void> openCompletedTraining(AthleteSession completed) async {
+      final trainingId = completed.completedTrainingId;
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (trainingId == null || uid == null) return;
+      try {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .collection('trainings')
+            .doc(trainingId)
+            .get();
+        final data = doc.data();
+        if (data == null) return;
+        final entrenamiento = Entrenamiento.fromMap(data, id: doc.id);
+        if (!mounted) return;
+        MainShell.shellKey.currentState?.navigateTo(5, params: entrenamiento);
+      } catch (e) {
+        debugPrint('[CalendarView] openCompletedTraining error: $e');
+      }
+    }
 
     void onDayTap() {
       try {
-        if (isAthlete) {
-          if (plannedSessions.isNotEmpty) {
-            _showDaySessionsSheet(plannedSessions);
-          } else {
-            _navigateToNewSession();
-          }
-        } else {
+        if (!isAthlete) {
           Navigator.push(context, AppRoute(page: const TrainingStartView()));
+          return;
         }
+        // Los días con sesión planificada ya muestran sus acciones en línea
+        // (editar / completar manualmente / empezar) — el tap del día ya no
+        // abre ningún sheet para ese caso. Solo cubrimos día vacío y día
+        // completado (ir al historial). Un día completado nunca debe mandar
+        // al creador de sesiones.
+        if (plannedSessions.isNotEmpty) {
+          return;
+        } else if (completedSessions.length == 1) {
+          openCompletedTraining(completedSessions.first);
+        } else if (completedSessions.length > 1) {
+          showCompletedSessionsSheet(completedSessions, openCompletedTraining);
+        } else if (sessions.isEmpty) {
+          _navigateToNewSession();
+        }
+        // Si solo quedan sesiones "skipped", no navegamos a ningún sitio —
+        // evita mandar al creador de sesiones sobre un día ya resuelto.
       } catch (e, st) {
         debugPrint('[CalendarView] onDayTap ERROR: $e');
         debugPrint('[CalendarView] stack: $st');
@@ -1586,23 +1455,27 @@ class _CalendarViewState extends State<CalendarView>
 
     Widget actionButton = const SizedBox.shrink();
     if (isAthlete) {
-      if (plannedSessions.isNotEmpty) {
-        actionButton = GestureDetector(
-          onTap: () => _showDaySessionsSheet(plannedSessions),
-          child: Icon(Icons.calendar_today_outlined, color: AppColors.brand, size: 22),
-        );
-      } else if (sessions.isEmpty) {
+      if (sessions.isEmpty) {
         actionButton = GestureDetector(
           onTap: onDayTap,
           child: const Icon(Icons.add_circle_outline, color: AppColors.brand, size: 24),
         );
       } else if (sessions.every((s) => s.status == AthleteSessionStatus.completed)) {
-        actionButton = Container(
-          width: 24,
-          height: 24,
-          decoration: const BoxDecoration(color: AppColors.rpeLow, shape: BoxShape.circle),
-          child: const Center(
-            child: Icon(Icons.check, color: Colors.white, size: 16),
+        actionButton = GestureDetector(
+          onTap: () {
+            if (completedSessions.length == 1) {
+              openCompletedTraining(completedSessions.first);
+            } else if (completedSessions.length > 1) {
+              showCompletedSessionsSheet(completedSessions, openCompletedTraining);
+            }
+          },
+          child: Container(
+            width: 24,
+            height: 24,
+            decoration: const BoxDecoration(color: AppColors.rpeLow, shape: BoxShape.circle),
+            child: const Center(
+              child: Icon(Icons.check, color: Colors.white, size: 16),
+            ),
           ),
         );
       }
@@ -1697,21 +1570,22 @@ class _CalendarViewState extends State<CalendarView>
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    GestureDetector(
-                                      onTap: s.blocks.isNotEmpty
-                                          ? () => _toggleExpanded(s.id)
-                                          : null,
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            width: 6, height: 6,
-                                            decoration: BoxDecoration(
-                                              color: _statusColor(s.status),
-                                              borderRadius: BorderRadius.circular(3),
-                                            ),
+    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Container(
+                                          width: 6, height: 6,
+                                          decoration: BoxDecoration(
+                                            color: _statusColor(s.status),
+                                            borderRadius: BorderRadius.circular(3),
                                           ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: GestureDetector(
+                                            onTap: s.blocks.isNotEmpty
+                                                ? () => _toggleExpanded(s.id)
+                                                : null,
                                             child: Text(
                                               s.title?.isNotEmpty == true
                                                   ? s.title!
@@ -1721,16 +1595,85 @@ class _CalendarViewState extends State<CalendarView>
                                               style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
                                             ),
                                           ),
-                                          if (s.blocks.isNotEmpty)
-                                            Icon(
-                                              isExpanded
-                                                  ? Icons.keyboard_arrow_up
-                                                  : Icons.keyboard_arrow_down,
-                                              size: 18,
-                                              color: AppColors.textSecondary(context),
+                                        ),
+                                        // Acciones en línea — todo en la misma
+                                        // fila que el título, sin sheet intermedio.
+                                        if (s.status == AthleteSessionStatus.planned) ...[
+                                          GestureDetector(
+                                            onTap: () async {
+                                              final confirm = await showAppConfirmDialog(
+                                                context: context,
+                                                title: 'Eliminar sesión',
+                                                message: '¿Eliminar "${s.title?.isNotEmpty == true ? s.title! : 'esta sesión'}"?',
+                                                confirmLabel: 'Eliminar',
+                                                isDestructive: true,
+                                              );
+                                              if (confirm != true || !mounted) return;
+                                              final uid = FirebaseAuth.instance.currentUser?.uid;
+                                              if (uid == null) return;
+                                              await AthleteSessionRepository().deleteSession(uid: uid, id: s.id);
+                                              if (!mounted) return;
+                                              _vm?.loadAll();
+                                            },
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(4),
+                                              child: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.rpeMax),
                                             ),
-                                        ],
-                                      ),
+                                          ),
+                                          GestureDetector(
+                                            onTap: () => _navigateToEditSession(s),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(4),
+                                              child: Icon(Icons.edit_outlined, size: 18, color: AppColors.textSecondary(context)),
+                                            ),
+                                          ),
+                                          if (athleteSessionCanCompleteManually(s))
+                                            GestureDetector(
+                                              onTap: () => Navigator.push(
+                                                context,
+                                                AppRoute(page: CompleteSessionManuallyView(session: s)),
+                                              ),
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(4),
+                                                child: Icon(Icons.edit_note_rounded, size: 18, color: AppColors.textSecondary(context)),
+                                              ),
+                                            ),
+                                          GestureDetector(
+                                            onTap: () => _navigateToSession(s),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(4),
+                                              child: Icon(Icons.play_circle_outline, size: 22, color: AppColors.brand),
+                                            ),
+                                          ),
+                                        ] else if (s.status == AthleteSessionStatus.completed)
+                                          GestureDetector(
+                                            onTap: () => openCompletedTraining(s),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(4),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text('Ver detalle', style: AppTypography.small.copyWith(color: AppColors.brand)),
+                                                  const Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.brand),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        if (s.blocks.isNotEmpty)
+                                          GestureDetector(
+                                            onTap: () => _toggleExpanded(s.id),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(4),
+                                              child: Icon(
+                                                isExpanded
+                                                    ? Icons.keyboard_arrow_up
+                                                    : Icons.keyboard_arrow_down,
+                                                size: 18,
+                                                color: AppColors.textSecondary(context),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
                                     ),
                                     if (isExpanded && s.blocks.isNotEmpty)
                                       Padding(
@@ -2338,13 +2281,14 @@ class _CalendarViewState extends State<CalendarView>
             if (athleteSessionCanCompleteManually(session)) ...[
               const SizedBox(height: AppSpacing.s),
               Center(
-                child: TextButton(
+                child: TextButton.icon(
                   style: TextButton.styleFrom(foregroundColor: AppColors.iconMutedOf(context)),
                   onPressed: () => Navigator.push(
                     context,
                     AppRoute(page: CompleteSessionManuallyView(session: session)),
                   ),
-                  child: const Text('Completar manualmente'),
+                  icon: const Icon(Icons.edit_note_rounded, size: 18),
+                  label: const Text('Completar manualmente'),
                 ),
               ),
             ],

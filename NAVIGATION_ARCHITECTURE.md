@@ -85,6 +85,18 @@ El toggle bidireccional de desarrollo (icono `sync` en el header) fue **eliminad
 
 ---
 
+## Dispatch de tap en tarjetas de sesión — Home y Calendario ✅ corregido
+
+**Regla general:** un día/sesión ya **completado** nunca debe navegar al creador/editor de sesiones (tab 13). Antes había varios sitios donde tocar una sesión completada, o directamente no hacía nada, o mandaba por error a crear una sesión nueva.
+
+- **`calendar_view.dart` → `_buildWeekDayCard` (vista semanal en lista):** `onDayTap()` ahora distingue explícitamente: sesión planificada (acciones en línea, ver abajo) → sesión completada (`openCompletedTraining()`, navega a `TrainingDetailView` vía `completedTrainingId`, tab 5) → día vacío (crear sesión). Si solo quedan sesiones `skipped`, no navega a ningún sitio.
+- **`calendar_view.dart` → acciones en línea (sin sheet):** cada sesión de la vista semanal muestra su fila de iconos **en la misma línea horizontal que el título** (eliminar / editar / completar manualmente / empezar, o "Ver detalle" si está completada) — se eliminó `_showDaySessionsSheet` por completo, ya no hay bottom sheet intermedio para sesiones planificadas.
+- **`home_view.dart` → card "SESIÓN DE HOY" (completada):** ahora tappable, navega a `TrainingDetailView` igual que el calendario.
+- **`home_view.dart` → "Últimos entrenamientos":** cada fila tappable → `TrainingDetailView` directo (ya se tiene el `Entrenamiento` completo en memoria, sin fetch).
+- **`home_view.dart` → "Próximos entrenamientos":** cada fila tappable → editor de sesión (tab 13, `AthleteSessionShellParams`).
+
+---
+
 ## Casos especiales
  
 ### Footer oculto en TrainingStartView

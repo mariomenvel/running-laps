@@ -423,7 +423,13 @@ Caso de uso: el atleta ejecuta la sesión fuera de la app (pista con cronómetro
 - `plannedComparison` se omite intencionadamente: hoy solo lo calcula el flujo GPS (`workout_execution_screen.dart` → consumido en `training_summary_screen.dart`), y no existe un builder reutilizable en el modelo. El training queda igualmente vinculado a la `AthleteSession`, así que el coach recibe contexto planificado vs ejecutado en su propio análisis post-sesión.
 - Tags: mapeo local `_tagForCategory()` (categoría → tag predefinida más cercana). No existe una función de mapeo compartida en el flujo GPS — allí el usuario elige las etiquetas manualmente via chips en `TrainingSummaryScreen`.
 - **Guard de fecha**: solo se ofrece la entrada si `status == planned` y la fecha es hoy o anterior (`athleteSessionCanCompleteManually()`, ignora la hora). Nunca aparece para sesiones futuras.
-- **Puntos de entrada — un único camino unificado**: card "SESIÓN DE HOY" del Home (`home_view.dart`), detalle de sesión del calendario (`calendar_view.dart` → `_buildSessionCard`), y el botón "Rellenar manual" de `TrainingStartView` (`_buildTodaySessionCard`, sesión de hoy detectada automáticamente) — los tres navegan a `CompleteSessionManuallyView`. Ya no existen dos conceptos distintos de "completar manual": el botón de `TrainingStartView` dejó de abrir el diálogo de nombre+tags con `_vm.series` (normalmente vacío en ese punto) y ahora abre el mismo formulario pre-estructurado desde los bloques planificados.
+- **Puntos de entrada — un único camino unificado, icono `Icons.edit_note_rounded` en todos**:
+  - Home: card "SESIÓN DE HOY" (`home_view.dart` → `_buildPlannedSessionContent`).
+  - `TrainingStartView`: **ambas** cards de sesión de hoy — `_buildSessionCard` (llega con `athleteSessionId` explícito desde el hub del atleta) y `_buildTodaySessionCard` (sesión de hoy detectada automáticamente al abrir el FAB "Entrenar"; a esta le faltaba el botón hasta que se detectó que era la ruta más común y no tenía ninguna vía de completar manualmente).
+  - Calendario — **vista mensual** (`_buildSessionCard(session, day)`, día expandido del grid).
+  - Calendario — **vista semanal en lista** (`_buildWeekDayCard`): las acciones (eliminar / editar / completar manualmente / empezar, o "Ver detalle" si ya está completada) están **en línea, en la misma fila que el título de la sesión** — ya no se abre ningún bottom sheet intermedio (`_showDaySessionsSheet` se eliminó por completo). El icono de completar manualmente solo aparece si `athleteSessionCanCompleteManually(session)` es true.
+
+Ya no existen dos conceptos distintos de "completar manual": el botón de `TrainingStartView` dejó de abrir el diálogo de nombre+tags con `_vm.series` (normalmente vacío en ese punto) y ahora abre el mismo formulario pre-estructurado desde los bloques planificados en todas sus ubicaciones.
 
 ---
 

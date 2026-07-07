@@ -190,3 +190,14 @@ WorkoutExecutionController (workout_execution_controller.dart)
 
 - Decoraciones de fondo (pista, montaña): SVG o CustomPaint, no imágenes — 60fps en gama media
 - `training_session_view.dart` sigue activo para entrenamientos sin `WorkoutSession` (free-form). No eliminar hasta migración completa.
+
+### ✅ Corregido — carrera libre sin GPS mostraba distancia falsa
+
+`_buildLibreBody()` (carrera continua / "Entrenar libre") mostraba siempre `_buildDistanciaHero(dist)` usando `_gpsService.totalDistanceMeters`, sin comprobar `widget.gpsActivo`. Con el GPS desactivado, esa distancia nunca se actualiza y quedaba fija en "0.00 km" como si fuera un dato real durante toda la sesión.
+
+Ahora, si `!widget.gpsActivo` (y no es `_demoMode`):
+- No se muestra la distancia ni el velocímetro de ritmo (ambos dependen de GPS).
+- En su lugar, `_buildNoGpsHero()`: icono de ubicación desactivada + "GPS desactivado" + aviso de que solo se registra tiempo.
+- El **tiempo** pasa a ser el dato protagonista (72px, negrita) en vez del tamaño discreto que tiene cuando sí hay GPS (50px, fino) — es lo único que se mide de verdad sin GPS.
+
+En modo series (`_buildIntervalBody`) ya existía la comprobación correcta (`showRitmo = widget.gpsActivo || _demoMode`) porque ahí la distancia es la del plan, no la del GPS — el guard que faltaba era específico de carrera libre, donde la distancia GPS sí es el dato principal.
