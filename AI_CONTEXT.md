@@ -255,7 +255,7 @@ waitlist/{email}                  ← emails recogidos en la landing web (joinWa
 | `heart_rate_service.dart` | FC desde pulsómetro BLE o Wear OS. Stream de lecturas. |
 | `settings_service.dart` | SharedPreferences: alarm defaults, GPS defaults, tema, FCmax. |
 | `user_service.dart` | Gestión usuario: nombre, contraseña, borrar cuenta, reauth, `isGoogleUser()`. |
-| `training_load_service.dart` | Cálculo TRIMP: duración × factor zona (Z1=1 … Z5=5). |
+| `training_load_service.dart` | Cálculo de carga (`loadScore`) híbrido: si la sesión tiene FC media y FCmáx, usa TRIMP de Banister — `duración(min) × ratio × 0.64 × e^(1.92 × ratio)`, con `ratio = (fcAvg − fcRest)/(fcMax − fcRest)` (`_trimp` ~L49). Si no hay FC, fallback proxy: `distancia(km) × intensidad(categoría, rpeAverage)` (`_proxyLoad` ~L61). Persistido en `Entrenamiento.loadScore` (adimensional). |
 | `zones_service.dart` | Zonas FC: 5 zonas por %FCmáx (Z1<60%, Z2 60-70%, Z3 70-80%, Z4 80-90%, Z5>90%). |
 | `notification_service.dart` | Push: recordatorios, logros, resumen semanal. Máx 2/día. |
 | `wear_auth_service.dart` | Auth Wear OS: código 6 dígitos (bypass temporal — ver advertencias). |

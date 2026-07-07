@@ -45,6 +45,13 @@ class AppColors {
   static const rpeHigh = Color(0xFFD85A30); // RPE 8 (= effort)
   static const rpeMax  = Color(0xFFE24B4A); // RPE 9-10 únicamente
 
+  // ── Feedback de UI (toasts/snackbars) — NO es escala RPE ───────────
+  // Semántica de acción del sistema (éxito/error/aviso/info), no de esfuerzo físico.
+  static const feedbackSuccess = Color(0xFF10B981); // ModernSnackBar.showSuccess
+  static const feedbackError   = Color(0xFFEF4444); // ModernSnackBar.showError
+  static const feedbackWarning = Color(0xFFF59E0B); // ModernSnackBar.showWarning
+  static const feedbackInfo    = Color(0xFF3B82F6); // ModernSnackBar.showInfo
+
   // ── Neutros dark mode ─────────────────────────────────────────────
   static const surface   = Color(0xFF1A1A1A); // Fondo tarjetas neutras
   static const surface2  = Color(0xFF1E1E1E); // Fondo tarjetas secundarias

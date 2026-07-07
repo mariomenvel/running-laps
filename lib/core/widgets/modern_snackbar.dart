@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
 
 /// Helper para mostrar SnackBars modernos con estética iOS
 class ModernSnackBar {
@@ -12,7 +13,7 @@ class ModernSnackBar {
     _show(
       context,
       message,
-      backgroundColor: const Color(0xFF10B981), // Verde moderno
+      backgroundColor: AppColors.feedbackSuccess,
       icon: Icons.check_circle_rounded,
       duration: duration,
       action: action,
@@ -29,7 +30,7 @@ class ModernSnackBar {
     _show(
       context,
       message,
-      backgroundColor: const Color(0xFFEF4444), // Rojo moderno
+      backgroundColor: AppColors.feedbackError,
       icon: Icons.error_rounded,
       duration: duration,
       action: action,
@@ -46,7 +47,7 @@ class ModernSnackBar {
     _show(
       context,
       message,
-      backgroundColor: const Color(0xFFF59E0B), // Naranja moderno
+      backgroundColor: AppColors.feedbackWarning,
       icon: Icons.warning_rounded,
       duration: duration,
       action: action,
@@ -63,7 +64,7 @@ class ModernSnackBar {
     _show(
       context,
       message,
-      backgroundColor: const Color(0xFF3B82F6), // Azul moderno
+      backgroundColor: AppColors.feedbackInfo,
       icon: Icons.info_rounded,
       duration: duration,
       action: action,

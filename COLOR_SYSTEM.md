@@ -104,8 +104,10 @@ Color _colorForWeekLoad(double trimp, bool hasCompetition) {
 | Rojo | `rpeMax` | > 500 | Semana pico / sobrecarga |
 | Morado | `brand` | — | **Solo competición** (tag 'competición' o athleteSession.category == 'competición') |
 
-**REGLA CRÍTICA:** `brand` (morado) NUNCA indica volumen alto. Solo competición.
-La competición siempre es morado independientemente del TRIMP.
+**REGLA CRÍTICA (acotada a la capa de SEMANA):** en `weekLoadColor`/`_colorForWeekLoad`,
+`brand` (morado) NUNCA indica volumen alto. Solo competición. La competición
+siempre es morado independientemente del TRIMP. **Esta regla no aplica a la
+capa de DÍA** (ver subsección siguiente), donde competición es roja.
 
 ### Leyenda visual en el calendario
 ```
@@ -113,6 +115,51 @@ CARGA SEMANAL
 ● Sin datos  ● Suave  ● Moderada  ● Carga  ● Pico  ◆ Competición
   (gris)      (verde)  (ámbar)    (coral)  (rojo)   (morado)
 ```
+
+---
+
+## Calendario — color por estado de día
+
+Además de la carga semanal, cada CELDA DE DÍA se pinta con una escala propia
+en `calendar_view.dart` vía `_statusColor()`. No representa TRIMP: representa
+el estado de la sesión de ese día.
+(Existe también `_dotsForSessions()` en el mismo archivo, pensado para pintar
+un punto por sesión cuando hay varias el mismo día, pero hoy no tiene ningún
+caller — código muerto, candidato a eliminar o a cablear si se retoma esa idea.)
+
+| Estado | Color | Token |
+|---|---|---|
+| Completada | Verde | `AppColors.rpeLow` |
+| Planificada | Morado | `AppColors.brand` |
+| Competición | Rojo | `AppColors.rpeMax` |
+| Saltada | Rojo al 60% opacidad | `AppColors.rpeMax.withValues(alpha: 0.6)` |
+| Hoy (círculo del día) | Morado | `AppColors.brand` |
+| Sin sesión | Transparente (texto en `iconMutedOf`) | — |
+
+**Diferencia clave con la capa de semana:** en semana, competición → `brand`
+(morado); en día, competición → `rpeMax` (rojo). El morado a nivel de día se
+reserva para "planificada" y para el indicador de "hoy", no para competición.
+
+---
+
+## Tokens de feedback de UI (toasts/snackbars)
+
+`ModernSnackBar` usa tokens propios de feedback de acción del sistema
+(`AppColors.feedbackSuccess/Error/Warning/Info`), separados de la escala RPE
+aunque compartan tonos visuales similares (verde/rojo/ámbar).
+
+| Método | Token | Hex |
+|---|---|---|
+| `showSuccess` | `feedbackSuccess` | `0xFF10B981` |
+| `showError` | `feedbackError` | `0xFFEF4444` |
+| `showWarning` | `feedbackWarning` | `0xFFF59E0B` |
+| `showInfo` | `feedbackInfo` | `0xFF3B82F6` |
+
+**Excepción documentada a la regla "verde/ámbar/rojo solo para RPE":** los
+toasts de sistema (éxito/error/aviso) son la única excepción permitida. Su
+semántica es de resultado de una acción, no de esfuerzo físico, por eso usan
+tokens `feedback*` dedicados en vez de `rpeLow`/`rpeMid`/`rpeMax` — nunca
+deben mezclarse ni reutilizarse entre sí.
 
 ---
 
