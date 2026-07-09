@@ -66,7 +66,7 @@ class _ProfileViewState extends State<ProfileView> {
       _photoUrl      = data['profileImageUrl'];
       _isAdmin       = data['isAdmin'] ?? false;
       _isAthleteMode = data['isAthleteMode'] ?? false;
-      _avatarConfig  = parsed ?? AvatarConfig.random();
+      _avatarConfig  = parsed ?? AvatarConfig.defaults;
     });
   }
 

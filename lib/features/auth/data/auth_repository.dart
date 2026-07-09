@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'auth_remote.dart';
+import '../../avatar/models/avatar_config.dart';
 
 class AuthRepository {
   AuthRemote _remote;
@@ -37,6 +38,7 @@ class AuthRepository {
       final name = await _remote.getUserName();
       if (name == null) {
         // Es la primera vez que inicia sesión con Google (o no tiene nombre en Firestore)
+        final initialAvatar = AvatarConfig.random();
         await _remote.saveUserDoc(user.uid, <String, dynamic>{
           "nombre": user.displayName ?? "Usuario",
           "email": user.email,
@@ -51,6 +53,7 @@ class AuthRepository {
           "birthDate": null,
           "sex": null,
           "onboardingCompleted": false,
+          "generativeAvatarConfig": initialAvatar.toMap(),
         });
       }
 
@@ -67,6 +70,7 @@ class AuthRepository {
     }
 
     // 2) Guardar documento en Firestore
+    final initialAvatar = AvatarConfig.random();
     await _remote.saveUserDoc(user.uid, <String, dynamic>{
       "nombre": nombre,
       "email": email.trim(),
@@ -80,6 +84,7 @@ class AuthRepository {
       "birthDate": null,
       "sex": null,
       "onboardingCompleted": false,
+      "generativeAvatarConfig": initialAvatar.toMap(),
     });
   }
 
