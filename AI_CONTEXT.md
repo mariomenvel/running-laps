@@ -183,7 +183,11 @@ users/{uid}                         ← doc con campos: uid, nombre, email, phot
                                       isAdmin, isAthleteMode, fcMax, fcReposo,
                                       birthDate, sex, totalKm, totalSessions,
                                       totalTimeMinutes, lastTrainingDate,
-                                      generativeAvatarConfig
+                                      generativeAvatarConfig (se escribe con
+                                      AvatarConfig.random() al crear la cuenta —
+                                      email, Google móvil y Google web; los
+                                      fallbacks de lectura usan
+                                      AvatarConfig.defaults, nunca random())
   ├── trainings/{id}              ← sesiones guardadas
   ├── tags/{id}                   ← etiquetas del usuario
   ├── athleteSessions/{id}        ← sesiones planificadas por el Coach IA

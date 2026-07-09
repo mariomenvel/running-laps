@@ -323,7 +323,7 @@ Las `athleteSessions` generadas incluyen `targetReps` y `targetSegmentDistanceM`
 
 Archivo: `ai_coach/data/ai_coach_session_analysis_service.dart`
 
-- **Trigger:** al guardar un entrenamiento vinculado a una sesión planificada (`training_summary_screen.dart` → `_saveTraining()`), fire-and-forget (sin `await`) tras el `set()` exitoso.
+- **Trigger:** al guardar un entrenamiento vinculado a una sesión planificada, fire-and-forget (sin `await`) tras el guardado exitoso. Dos puntos de disparo: `training_summary_screen.dart` → `_saveTraining()` (flujo GPS) y `complete_session_manually_view.dart` (completar manualmente).
 - **Contexto:** perfil resumido (nivel, objetivo), bloques de la sesión planificada con targets, series ejecutadas (distancia, tiempo, pace, RPE, FC), próximas sesiones planificadas de la semana. No reutiliza el builder semanal completo.
 - **Modelo:** `AiCoachModels.decision` (Claude Sonnet), respuesta JSON con campo `analysis`, 3-5 frases en español.
 - **Persistencia:** `users/{uid}/trainings/{id}.coachAnalysis = {text, generatedAt}` vía `update()`. Es inmutable — no se regenera.
@@ -333,5 +333,11 @@ Archivo: `ai_coach/data/ai_coach_session_analysis_service.dart`
   - Detalle del historial (`training_detail_view.dart`) — card "ANÁLISIS DEL COACH" tras notas.
   - Home (`home_view.dart`) — primera frase bajo la card de sesión completada de hoy (`HomeViewModel.completedTodayCoachAnalysis`, un read extra puntual del training vinculado).
   - Resumen de sesión: no se muestra (llega en background, ~5-10s después de guardar).
+- **Estado de carga (UI de 3 estados):** como el análisis llega en background, ambas superficies distinguen:
+  1. `coachAnalysis` con texto → mostrar análisis.
+  2. Sin `coachAnalysis` pero "generándose" → detalle: card con `CupertinoActivityIndicator` + "Tu coach está analizando esta sesión..."; Home: texto "Analizando tu sesión...".
+  3. Sin `coachAnalysis` y no generándose → detalle omite la sección; Home muestra el texto genérico de buen trabajo.
+  - Heurística de "generándose": `plannedComparison != null` (no existe campo persistido que vincule el training a la AthleteSession) **y** menos de 2 min desde `createdAt`/`fecha`. Limitación conocida: el flujo "completar manualmente" no escribe `plannedComparison`, así que ese caso no muestra el estado de carga.
+  - El detalle además hace polling ligero vía `TrainingRepository.getTrainingById()`: cada 5 s durante máx. 30 s mientras está en estado "generándose"; si llega el análisis hace `setState`. Un timer adicional oculta el spinner al expirar la ventana de 2 min si el análisis nunca llega. Sin Streams permanentes.
 - Solo aplica a sesiones vinculadas a un plan (`athleteSession != null`); entrenamientos libres no generan análisis.
 - Traducción a otros idiomas

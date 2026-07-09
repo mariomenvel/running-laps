@@ -41,7 +41,7 @@
 | Operación | Colección | Regla |
 |-----------|-----------|-------|
 | Registro — crear perfil | `users/{uid}` | `create: isOwner` · campos relevantes: `isAthleteMode` (bool, gratis), `hasPremiumCoach` (bool, escrito solo por Cloud Function webhook Stripe — no editar desde cliente) |
-| Google login — crear/actualizar perfil | `users/{uid}` | `create: isOwner` · `update: isOwner` |
+| Google login — crear perfil inicial | `users/{uid}` | `create: isOwner` · el doc se crea **solo si no existe** (`userDocExists` — get previo); nunca se sobrescribe un doc existente porque la escritura es `set()` sin merge |
 | Leer `isAdmin` para acceso al panel admin | `users/{uid}` | `read: isSignedIn()` |
 | Buscar usuario por email (invite lookup) | `users` (query) | `read: isSignedIn()` |
 

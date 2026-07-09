@@ -84,6 +84,7 @@ Arquitectura de servicios en `lib/features/ai_coach/data/`:
 - `pb_detector.dart` — detecta marcas personales (PB) en 5K/10K/HM/Maratón con interpolación ±3%
 - `vdot_calculator.dart` — calcula VDOT desde PBs y edad
 - `ai_coach_session_generator.dart` — genera sesión individual desde prompt
+- `ai_coach_session_analysis_service.dart` — análisis post-sesión (planificado vs ejecutado), fire-and-forget al guardar; persiste `coachAnalysis` en el training
 - `ai_coach_repository.dart` — CRUD Firestore: `users/{uid}/settings/aiCoachProfile` + `aiCoachUsage`
 
 Modelos principales (`ai_coach_models.dart`):
