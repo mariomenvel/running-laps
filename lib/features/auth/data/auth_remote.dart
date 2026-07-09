@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/auth_failure.dart';
+import '../../avatar/models/avatar_config.dart';
 
 class AuthRemote {
   FirebaseAuth _auth;
@@ -83,6 +84,7 @@ class AuthRemote {
                 "birthDate": null,
                 "sex": null,
                 "onboardingCompleted": false,
+                "generativeAvatarConfig": AvatarConfig.random().toMap(),
               });
             }
           } catch (e) {

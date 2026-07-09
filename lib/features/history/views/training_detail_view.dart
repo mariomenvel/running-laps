@@ -39,6 +39,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
   late final TextEditingController _notasController;
 
   Timer? _coachAnalysisPollTimer;
+  Timer? _coachAnalysisExpiryTimer;
   static const _coachAnalysisPendingWindow = Duration(minutes: 2);
   static const _coachAnalysisPollDuration = Duration(seconds: 30);
   static const _coachAnalysisPollInterval = Duration(seconds: 5);
@@ -49,8 +50,16 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
     _training = widget.training;
     _fcMaxFuture = _loadFcMax();
     _notasController = TextEditingController(text: training.notas ?? '');
-    if (_isCoachAnalysisPending()) {
-      _startCoachAnalysisPolling();
+    _setupCoachAnalysisWatch();
+  }
+
+  @override
+  void didUpdateWidget(TrainingDetailView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.training, widget.training)) {
+      _training = widget.training;
+      _notasController.text = training.notas ?? '';
+      _setupCoachAnalysisWatch();
     }
   }
 
@@ -59,7 +68,23 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
     _editingNotes.dispose();
     _notasController.dispose();
     _coachAnalysisPollTimer?.cancel();
+    _coachAnalysisExpiryTimer?.cancel();
     super.dispose();
+  }
+
+  void _setupCoachAnalysisWatch() {
+    _coachAnalysisPollTimer?.cancel();
+    _coachAnalysisExpiryTimer?.cancel();
+    if (!_isCoachAnalysisPending()) return;
+    _startCoachAnalysisPolling();
+    // Rebuild al expirar la ventana para que el spinner no quede fijo
+    // si el análisis nunca llega y el usuario permanece en la pantalla.
+    final since = training.createdAt ?? training.fecha;
+    final remaining =
+        _coachAnalysisPendingWindow - DateTime.now().difference(since);
+    _coachAnalysisExpiryTimer = Timer(remaining, () {
+      if (mounted) setState(() {});
+    });
   }
 
   bool _isCoachAnalysisPending() {
