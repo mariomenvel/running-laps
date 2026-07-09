@@ -236,8 +236,9 @@ class HomeViewModel {
         if (_disposed) return;
         final data = doc.data();
         final analysis = data?['coachAnalysis'];
-        if (analysis is Map) {
-          completedTodayCoachAnalysis.value = analysis['text'] as String?;
+        final analysisText = analysis is Map ? analysis['text'] : null;
+        if (analysisText is String && analysisText.isNotEmpty) {
+          completedTodayCoachAnalysis.value = analysisText;
         } else if (data?['plannedComparison'] != null) {
           final createdAtRaw = data?['createdAt'] ?? data?['fecha'];
           final createdAt = _parseTimestamp(createdAtRaw);

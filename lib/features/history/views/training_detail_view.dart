@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math' show max, min;
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
@@ -14,6 +13,7 @@ import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/widgets/rpe_badge.dart';
 import 'package:running_laps/features/profile/data/zones_repository.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
+import 'package:running_laps/features/training/data/training_repository.dart';
 import 'package:running_laps/features/training/widgets/tag_chip.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 
@@ -94,41 +94,42 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
     return DateTime.now().difference(since) < _coachAnalysisPendingWindow;
   }
 
+  /// Texto del análisis, o null si no ha llegado o viene malformado.
+  String? get _coachAnalysisText {
+    final t = training.coachAnalysis?['text'];
+    return (t is String && t.isNotEmpty) ? t : null;
+  }
+
   bool _showCoachAnalysisSection() =>
-      training.coachAnalysis != null || _isCoachAnalysisPending();
+      _coachAnalysisText != null || _isCoachAnalysisPending();
 
   void _startCoachAnalysisPolling() {
     final id = training.id;
     if (id == null) return;
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
 
+    final repo = TrainingRepository();
     final deadline = DateTime.now().add(_coachAnalysisPollDuration);
+    var inFlight = false;
     _coachAnalysisPollTimer =
         Timer.periodic(_coachAnalysisPollInterval, (timer) async {
       if (!mounted || DateTime.now().isAfter(deadline)) {
         timer.cancel();
         return;
       }
+      if (inFlight) return;
+      inFlight = true;
       try {
-        final doc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(uid)
-            .collection('trainings')
-            .doc(id)
-            .get();
-        final data = doc.data();
-        final coachAnalysis = data?['coachAnalysis'];
-        if (coachAnalysis != null && mounted) {
-          setState(() {
-            _training = training.copyWith(
-              coachAnalysis: Map<String, dynamic>.from(coachAnalysis as Map),
-            );
-          });
+        final updated = await repo.getTrainingById(id);
+        // El widget pudo cambiar de training mientras esperábamos la lectura
+        if (!mounted || training.id != id) return;
+        if (updated?.coachAnalysis != null) {
+          setState(() => _training = updated!);
           timer.cancel();
         }
       } catch (e) {
         debugPrint('[TrainingDetailView] error polling coachAnalysis: $e');
+      } finally {
+        inFlight = false;
       }
     });
   }
@@ -785,8 +786,8 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
   }
 
   Widget _buildCoachAnalysisSection() {
-    final text = training.coachAnalysis?['text'] as String?;
-    final isPending = text == null || text.isEmpty;
+    final text = _coachAnalysisText;
+    final isPending = text == null;
     if (isPending && !_isCoachAnalysisPending()) return const SizedBox.shrink();
 
     return Padding(

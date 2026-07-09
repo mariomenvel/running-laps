@@ -164,6 +164,15 @@ class TrainingRepository {
     return page.trainings;
   }
 
+  /// Devuelve un entrenamiento por id, o null si no existe.
+  Future<Entrenamiento?> getTrainingById(String trainingId) async {
+    final String uid = _requireUid();
+    final doc = await _userTrainings(uid).doc(trainingId).get();
+    final data = doc.data();
+    if (data == null) return null;
+    return Entrenamiento.fromMap(data, id: doc.id);
+  }
+
   Future<void> updateTrainingAnalysis({
     required String uid,
     required String trainingId,

@@ -162,7 +162,18 @@ class AuthRemote {
 
   // ----- Firestore (perfil básico) -----
   Future<void> saveUserDoc(String uid, Map<String, dynamic> data) async {
-    await _db.collection("users").doc(uid).set(data);  
+    await _db.collection("users").doc(uid).set(data);
+  }
+
+  Future<bool> userDocExists(String uid) async {
+    try {
+      final doc = await _db.collection("users").doc(uid).get();
+      return doc.exists;
+    } catch (_) {
+      // Ante la duda (error de red), asumir que existe: saveUserDoc hace
+      // set() sin merge y recrear el doc borraría los datos del usuario.
+      return true;
+    }
   }
 
   Future<String?> getUserName() async {

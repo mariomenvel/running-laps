@@ -34,10 +34,11 @@ class AuthRepository {
     User? user = cred.user;
 
     if (user != null) {
-      // Verificar si el documento ya existe
-      final name = await _remote.getUserName();
-      if (name == null) {
-        // Es la primera vez que inicia sesión con Google (o no tiene nombre en Firestore)
+      // Crear el doc inicial solo si NO existe. Se comprueba la existencia
+      // real del documento (no un campo) porque saveUserDoc hace set() sin
+      // merge y recrearlo sobrescribiría los datos del usuario.
+      final exists = await _remote.userDocExists(user.uid);
+      if (!exists) {
         final initialAvatar = AvatarConfig.random();
         await _remote.saveUserDoc(user.uid, <String, dynamic>{
           "nombre": user.displayName ?? "Usuario",
