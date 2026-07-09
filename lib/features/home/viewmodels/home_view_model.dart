@@ -50,6 +50,7 @@ class HomeViewModel {
   final todaySession = ValueNotifier<AthleteSession?>(null);
   final completedTodaySession = ValueNotifier<AthleteSession?>(null);
   final completedTodayCoachAnalysis = ValueNotifier<String?>(null);
+  final completedTodayCoachAnalysisPending = ValueNotifier<bool>(false);
   final weekSessions = ValueNotifier<List<AthleteSession>>([]);
 
   // Modo recreativo
@@ -149,6 +150,7 @@ class HomeViewModel {
     todaySession.dispose();
     completedTodaySession.dispose();
     completedTodayCoachAnalysis.dispose();
+    completedTodayCoachAnalysisPending.dispose();
     weekSessions.dispose();
     personalRecords.dispose();
   }
@@ -221,6 +223,7 @@ class HomeViewModel {
     weekSessions.value = week;
 
     completedTodayCoachAnalysis.value = null;
+    completedTodayCoachAnalysisPending.value = false;
     final completedTrainingId = completed?.completedTrainingId;
     if (completedTrainingId != null) {
       try {
@@ -231,14 +234,32 @@ class HomeViewModel {
             .doc(completedTrainingId)
             .get();
         if (_disposed) return;
-        final analysis = doc.data()?['coachAnalysis'];
+        final data = doc.data();
+        final analysis = data?['coachAnalysis'];
         if (analysis is Map) {
           completedTodayCoachAnalysis.value = analysis['text'] as String?;
+        } else if (data?['plannedComparison'] != null) {
+          final createdAtRaw = data?['createdAt'] ?? data?['fecha'];
+          final createdAt = _parseTimestamp(createdAtRaw);
+          if (createdAt != null &&
+              DateTime.now().difference(createdAt) < const Duration(minutes: 2)) {
+            completedTodayCoachAnalysisPending.value = true;
+          }
         }
       } catch (e) {
         debugPrint('[HomeViewModel] coachAnalysis fetch error: $e');
       }
     }
+  }
+
+  DateTime? _parseTimestamp(dynamic v) {
+    if (v == null) return null;
+    if (v is String) return DateTime.tryParse(v);
+    try {
+      final ts = v as dynamic;
+      if (ts.toDate != null) return (ts.toDate() as DateTime).toLocal();
+    } catch (_) {}
+    return null;
   }
 
   Future<void> _loadRecreativoData() async {

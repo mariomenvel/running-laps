@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:math' show max, min;
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/core/services/zones_service.dart';
@@ -28,24 +31,81 @@ class TrainingDetailView extends StatefulWidget {
 }
 
 class _TrainingDetailViewState extends State<TrainingDetailView> {
-  Entrenamiento get training => widget.training;
+  Entrenamiento get training => _training;
+  late Entrenamiento _training;
 
   late final Future<int?> _fcMaxFuture;
   final _editingNotes = ValueNotifier<bool>(false);
   late final TextEditingController _notasController;
 
+  Timer? _coachAnalysisPollTimer;
+  static const _coachAnalysisPendingWindow = Duration(minutes: 2);
+  static const _coachAnalysisPollDuration = Duration(seconds: 30);
+  static const _coachAnalysisPollInterval = Duration(seconds: 5);
+
   @override
   void initState() {
     super.initState();
+    _training = widget.training;
     _fcMaxFuture = _loadFcMax();
     _notasController = TextEditingController(text: training.notas ?? '');
+    if (_isCoachAnalysisPending()) {
+      _startCoachAnalysisPolling();
+    }
   }
 
   @override
   void dispose() {
     _editingNotes.dispose();
     _notasController.dispose();
+    _coachAnalysisPollTimer?.cancel();
     super.dispose();
+  }
+
+  bool _isCoachAnalysisPending() {
+    if (training.coachAnalysis != null) return false;
+    if (training.plannedComparison == null) return false;
+    final since = training.createdAt ?? training.fecha;
+    return DateTime.now().difference(since) < _coachAnalysisPendingWindow;
+  }
+
+  bool _showCoachAnalysisSection() =>
+      training.coachAnalysis != null || _isCoachAnalysisPending();
+
+  void _startCoachAnalysisPolling() {
+    final id = training.id;
+    if (id == null) return;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final deadline = DateTime.now().add(_coachAnalysisPollDuration);
+    _coachAnalysisPollTimer =
+        Timer.periodic(_coachAnalysisPollInterval, (timer) async {
+      if (!mounted || DateTime.now().isAfter(deadline)) {
+        timer.cancel();
+        return;
+      }
+      try {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .collection('trainings')
+            .doc(id)
+            .get();
+        final data = doc.data();
+        final coachAnalysis = data?['coachAnalysis'];
+        if (coachAnalysis != null && mounted) {
+          setState(() {
+            _training = training.copyWith(
+              coachAnalysis: Map<String, dynamic>.from(coachAnalysis as Map),
+            );
+          });
+          timer.cancel();
+        }
+      } catch (e) {
+        debugPrint('[TrainingDetailView] error polling coachAnalysis: $e');
+      }
+    });
   }
 
   Future<int?> _loadFcMax() async {
@@ -85,7 +145,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
         _buildDivider(),
         _buildNotasSection(),
       ],
-      if (training.coachAnalysis != null) ...[
+      if (_showCoachAnalysisSection()) ...[
         _buildDivider(),
         _buildCoachAnalysisSection(),
       ],
@@ -701,7 +761,8 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
 
   Widget _buildCoachAnalysisSection() {
     final text = training.coachAnalysis?['text'] as String?;
-    if (text == null || text.isEmpty) return const SizedBox.shrink();
+    final isPending = text == null || text.isEmpty;
+    if (isPending && !_isCoachAnalysisPending()) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
@@ -728,14 +789,23 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.auto_awesome_outlined,
-                    size: 18, color: AppColors.brand),
+                if (isPending)
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CupertinoActivityIndicator(radius: 9),
+                  )
+                else
+                  const Icon(Icons.auto_awesome_outlined,
+                      size: 18, color: AppColors.brand),
                 const SizedBox(width: AppSpacing.s),
                 Expanded(
                   child: Text(
-                    text,
+                    isPending ? 'Tu coach está analizando esta sesión...' : text,
                     style: AppTypography.body.copyWith(
-                      color: AppColors.textPrimary(context),
+                      color: isPending
+                          ? AppColors.textSecondary(context)
+                          : AppColors.textPrimary(context),
                       height: 1.5,
                     ),
                   ),

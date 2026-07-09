@@ -626,10 +626,13 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                       onTap: () => _openCompletedTraining(completed),
                       child: ValueListenableBuilder<String?>(
                         valueListenable: _vm!.completedTodayCoachAnalysis,
-                        builder: (_, analysis, __) => Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children:
-                              _buildCompletedSessionContent(completed, analysis),
+                        builder: (_, analysis, __) => ValueListenableBuilder<bool>(
+                          valueListenable: _vm!.completedTodayCoachAnalysisPending,
+                          builder: (_, isPending, __) => Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: _buildCompletedSessionContent(
+                                completed, analysis, isPending),
+                          ),
                         ),
                       ),
                     )
@@ -700,7 +703,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   }
 
   List<Widget> _buildCompletedSessionContent(
-      AthleteSession session, String? coachAnalysis) {
+      AthleteSession session, String? coachAnalysis, bool isPending) {
     final hasAnalysis = coachAnalysis != null && coachAnalysis.isNotEmpty;
     return [
       Row(
@@ -716,7 +719,13 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           Icon(Icons.chevron_right_rounded, color: AppColors.iconMutedOf(context)),
         ],
       ),
-      if (!hasAnalysis) ...[
+      if (!hasAnalysis && isPending) ...[
+        const SizedBox(height: 4),
+        Text(
+          'Analizando tu sesión...',
+          style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context)),
+        ),
+      ] else if (!hasAnalysis) ...[
         const SizedBox(height: 4),
         Text(
           '¡Buen trabajo! Revisa tu resumen en el historial.',
