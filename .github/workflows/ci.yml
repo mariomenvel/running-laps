@@ -18,7 +18,9 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.32.0'
+          # Mantener alineado con la versión de desarrollo local.
+          # fl_chart >=1.1.0 usa APIs de Matrix4 que no existen en 3.32.
+          flutter-version: '3.41.1'
           channel: 'stable'
           cache: true
 

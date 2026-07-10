@@ -1,22 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/features/training/data/temporal_series.dart';
 
-/// Punto temporal genérico — eje X en segundos desde inicio
-class TemporalPoint {
-  final double tSec;   // tiempo en segundos
-  final double value;  // valor (pace, bpm, etc.)
-
-  const TemporalPoint({required this.tSec, required this.value});
-}
-
-/// Marcador vertical (línea + label) para indicar eventos
-class TemporalMarker {
-  final double tSec;
-  final String label;
-
-  const TemporalMarker({required this.tSec, required this.label});
-}
+// Re-export para los consumidores del widget que usan los tipos de datos.
+export 'package:running_laps/features/training/data/temporal_series.dart';
 
 class TemporalChart extends StatelessWidget {
   final List<TemporalPoint> points;

@@ -1,7 +1,7 @@
 import 'dart:math' as math;
-import 'package:running_laps/features/history/views/widgets/temporal_chart.dart';
 import 'entrenamiento.dart';
 import 'serie.dart';
+import 'temporal_series.dart';
 
 class TemporalDataExtractor {
   /// Extrae puntos de pace por SERIE.
