@@ -100,7 +100,8 @@ flutter:
   # compilar; en Codemagic la resolución SPM falla contra cachés corruptas
   # del builder ("already exists" / "file not found"). El proyecto iOS está
   # montado sobre CocoaPods (Podfile + pod install) — mantenerlo así.
-  disable-swift-package-manager: true
+  config:
+    enable-swift-package-manager: false
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
