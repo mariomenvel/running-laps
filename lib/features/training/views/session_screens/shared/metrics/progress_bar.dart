@@ -16,7 +16,8 @@ class SessionProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = progress.clamp(0.0, 1.0);
+    // isFinite: un progreso 0/0 (NaN) o x/0 (∞) no debe romper el render
+    final p = progress.isFinite ? progress.clamp(0.0, 1.0) : 0.0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

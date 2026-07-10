@@ -146,21 +146,36 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
       debugPrint('[Rest] tras recordSerie, intentando rest');
       debugPrint('[Rest] mounted=$mounted hasRest=$hasRest isLastRep=$isLastRep');
 
-      if (!isLastRep && hasRest && mounted) {
-        await _launchRestScreen(
-          restDurationSec: restSegment!.durationSec!,
-          nextRepNumber: _controller.value.currentBlock.completedReps + 1,
-          totalReps: totalReps,
-          completedSerie: result,
-          targetPaceMinSec: currentSegment?.target?.paceMinSecPerKm,
-          targetPaceMaxSec: currentSegment?.target?.paceMaxSecPerKm,
-        );
+      if (!isLastRep && mounted) {
+        if (hasRest) {
+          await _launchRestScreen(
+            restDurationSec: restSegment.durationSec!,
+            nextRepNumber: _controller.value.currentBlock.completedReps + 1,
+            totalReps: totalReps,
+            completedSerie: result,
+            targetPaceMinSec: currentSegment?.target?.paceMinSecPerKm,
+            targetPaceMaxSec: currentSegment?.target?.paceMaxSecPerKm,
+          );
+        }
 
+        // Lanzar la siguiente rep SIEMPRE que queden reps — haya o no
+        // descanso configurado. Antes, un bloque multi-rep sin recovery
+        // (p. ej. quick-start con reps subidas en pre-ejecución) se
+        // quedaba clavado en la pantalla placeholder tras la primera serie.
         if (mounted) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) _launchCurrentRep();
           });
         }
+      }
+    } else if (result == null && mounted) {
+      // El usuario salió de la serie sin completarla (back del sistema,
+      // descarte por distancia <30m, etc.). Sin esto se quedaba en la
+      // pantalla placeholder sin salida.
+      if (_controller.value.totalCompletedReps == 0) {
+        Navigator.of(context).maybePop(); // nada hecho → volver a pre-ejecución
+      } else {
+        _controller.finishEarly(); // conservar lo completado → summary
       }
     }
     } finally {
@@ -182,16 +197,22 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     final stopwatch = Stopwatch()..start();
     Timer? timer;
     Timer? liveActivityTimer;
+    // Evita el doble-pop: si el usuario salta el descanso justo cuando el
+    // timer auto-cierra (o pulsa Saltar dos veces), el segundo pop se
+    // llevaría por delante la pantalla de ejecución.
+    var restOpen = true;
 
     timer = Timer.periodic(const Duration(milliseconds: 100), (_) {
       elapsedNotifier.value = stopwatch.elapsed;
-      debugPrint('[RestLaunch] tick: elapsed=${stopwatch.elapsed.inSeconds}s, target=${restDurationSec}s');
       if (stopwatch.elapsed.inSeconds >= restDurationSec) {
         debugPrint('[RestLaunch] auto-cerrando por tiempo');
         timer?.cancel();
         liveActivityTimer?.cancel();
         stopwatch.stop();
-        if (mounted) Navigator.of(context).pop();
+        if (restOpen && mounted) {
+          restOpen = false;
+          Navigator.of(context).pop();
+        }
       }
     });
 
@@ -243,7 +264,11 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
             totalReps: totalReps,
             nextRepInfo: nextInfo,
             fcStartedAt: fcStartedAt,
-            onSkip: () => Navigator.of(context).pop(),
+            onSkip: () {
+              if (!restOpen) return;
+              restOpen = false;
+              Navigator.of(context).pop();
+            },
             elapsedNotifier: elapsedNotifier,
             fcNotifier: HeartRateService().heartRate,
             fcZoneNotifier: ValueNotifier<int?>(null),
@@ -259,7 +284,8 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
       debugPrint('[RestLaunch] stack: $st');
     }
 
-    timer?.cancel();
+    restOpen = false;
+    timer.cancel();
     liveActivityTimer?.cancel();
     stopwatch.stop();
     elapsedNotifier.dispose();
