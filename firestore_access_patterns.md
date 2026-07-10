@@ -44,6 +44,8 @@
 | Google login — crear perfil inicial | `users/{uid}` | `create: isOwner` · el doc se crea **solo si no existe** (`userDocExists` — get previo); nunca se sobrescribe un doc existente porque la escritura es `set()` sin merge |
 | Leer `isAdmin` para acceso al panel admin | `users/{uid}` | `read: isSignedIn()` |
 | Buscar usuario por email (invite lookup) | `users` (query) | `read: isSignedIn()` |
+| Reset de contraseña | — (solo Firebase Auth) | Sin lecturas Firestore: la query previa por email fue eliminada (jul 2026) — corría sin sesión (siempre permission-denied) y era enumeración de cuentas |
+| Borrar cuenta | Cloud Function `deleteUserData` (Admin SDK) | Borra recursivamente `users/{uid}` + artefactos en grupos (member/prefs/medals/badges/participants) + participaciones globales + usuario de Auth. Exige token con `auth_time` < 10 min (la UI reautentica justo antes). Fallback cliente (solo `users/{uid}` + Auth) si la función no está desplegada |
 
 ### Training (`features/training/`)
 | Operación | Colección | Regla |
