@@ -7,6 +7,7 @@ export { callOpenRouter } from "./openrouter";
 export { syncEmailVerified } from "./auth";
 export { joinWaitlist } from "./waitlist";
 export { resetWeeklyChatUsage } from "./resetChatUsage";
+export { deleteUserData } from "./deleteUserData";
 
 export const ping = onCall((request) => {
   if (!request.auth) {

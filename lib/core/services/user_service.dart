@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:running_laps/core/auth_failure.dart';
 
@@ -127,17 +129,51 @@ class UserService {
     final user = currentUser;
     if (user == null) throw AuthFailure('No hay usuario autenticado');
 
-    final uid = user.uid;
-
     try {
-      // 1. Delete user data from Firestore
-      // (Optional: You might want to delete their training history first or in a trigger)
-      await _db.collection('users').doc(uid).delete();
+      // Cloud Function con Admin SDK (functions/src/deleteUserData.ts):
+      // borra recursivamente users/{uid} con todas sus subcolecciones,
+      // limpia sus artefactos en grupos y elimina el usuario de Auth.
+      final callable = FirebaseFunctions.instance.httpsCallable(
+        'deleteUserData',
+        options: HttpsCallableOptions(timeout: const Duration(minutes: 5)),
+      );
+      await callable.call();
 
-      // 2. Delete user from Firebase Auth
+      // El usuario de Auth ya no existe en el servidor — limpiar la sesión
+      // local para que AuthWrapper navegue fuera.
+      await _auth.signOut();
+    } on FirebaseFunctionsException catch (e) {
+      if (e.code == 'not-found' || e.code == 'unimplemented') {
+        // Función aún no desplegada: fallback al borrado parcial antiguo.
+        // Deja subcolecciones huérfanas — desplegar deleteUserData cuanto antes.
+        debugPrint('[UserService] deleteUserData no desplegada, '
+            'usando borrado parcial cliente');
+        await _deleteAccountClientSide(user);
+        return;
+      }
+      if (e.message == 'requires-recent-login' ||
+          e.code == 'failed-precondition') {
+        throw AuthFailure(
+          'Por seguridad, vuelve a iniciar sesión antes de borrar la cuenta.',
+        );
+      }
+      throw AuthFailure('Error al borrar la cuenta: ${e.message ?? e.code}');
+    } on FirebaseAuthException catch (e) {
+      throw AuthFailure.fromCode(e.code, e.message);
+    } catch (e) {
+      if (e is AuthFailure) rethrow;
+      throw AuthFailure(e.toString());
+    }
+  }
+
+  /// Borrado antiguo 100% cliente: solo users/{uid} + Auth user.
+  /// Mantiene la cuenta funcional como fallback mientras la Cloud Function
+  /// no esté desplegada, a costa de dejar subcolecciones huérfanas.
+  Future<void> _deleteAccountClientSide(User user) async {
+    try {
+      await _db.collection('users').doc(user.uid).delete();
       await user.delete();
     } on FirebaseAuthException catch (e) {
-      // If error is 'requires-recent-login', it should have been caught by the UI reauth flow
       throw AuthFailure.fromCode(e.code, e.message);
     } catch (e) {
       throw AuthFailure(e.toString());

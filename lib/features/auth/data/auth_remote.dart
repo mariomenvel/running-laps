@@ -121,21 +121,13 @@ class AuthRemote {
     try {
 
       
-      // 1. Verificar si existe en Firestore
-      // Asumimos que el email es único y verificamos coincidencia exacta
-      final querySnapshot = await _db
-          .collection('users')
-          .where('email', isEqualTo: email)
-          .limit(1)
-          .get();
-
-      if (querySnapshot.docs.isEmpty) {
-        // Lanzamos manualmente el error si no existe en nuestra base de datos
-        throw AuthFailure.fromCode('user-not-found', null);
-      }
-
-
-      await _auth.sendPasswordResetEmail(email: email);
+      // No comprobar existencia previa en Firestore:
+      //  (a) el usuario no está autenticado aquí y las reglas exigen
+      //      isSignedIn() para leer users → la query siempre fallaba
+      //      con permission-denied y el reset nunca se enviaba.
+      //  (b) revelar si un email existe es enumeración de cuentas.
+      // Firebase Auth gestiona emails desconocidos por sí mismo.
+      await _auth.sendPasswordResetEmail(email: email.trim());
 
     } on FirebaseAuthException catch (e) {
       throw AuthFailure.fromCode(e.code, e.message);
