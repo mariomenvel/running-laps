@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:running_laps/core/services/user_service.dart';
@@ -77,7 +79,7 @@ class AiCoachSessionAnalysisService {
           OpenRouterChatMessage(role: 'system', content: systemPrompt),
           OpenRouterChatMessage(
             role: 'user',
-            content: contextMap.toString(),
+            content: jsonEncode(contextMap),
           ),
         ],
         jsonSchema: _jsonSchema,
@@ -116,6 +118,16 @@ class AiCoachSessionAnalysisService {
       final end = trimmed.lastIndexOf('}');
       if (start < 0 || end <= start) return null;
       final decoded = trimmed.substring(start, end + 1);
+
+      // Intento principal: JSON válido
+      try {
+        final map = jsonDecode(decoded);
+        final text = map is Map ? map['analysis'] : null;
+        if (text is String && text.trim().isNotEmpty) return text;
+      } catch (_) {
+        // JSON malformado — caer al regex de abajo
+      }
+
       final match = RegExp(r'"analysis"\s*:\s*"((?:[^"\\]|\\.)*)"')
           .firstMatch(decoded);
       if (match == null) return null;

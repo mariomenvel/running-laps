@@ -601,9 +601,8 @@ class AiCoachChatService {
     if (current.messagesLimit != _weeklyChatLimit ||
         current.periodStart != weekStart ||
         current.periodEnd != weekEnd) {
-      final normalized = AiCoachUsage(
-        plan: current.plan,
-        messagesUsed: current.messagesUsed,
+      // copyWith para conservar previewsGenerated (contador anti-abuso)
+      final normalized = current.copyWith(
         messagesLimit: _weeklyChatLimit,
         periodStart: weekStart,
         periodEnd: weekEnd,
