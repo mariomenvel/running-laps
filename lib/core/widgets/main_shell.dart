@@ -219,6 +219,7 @@ class _MainShellState extends State<MainShell> {
   }
 
   void _launchTraining() {
+    if (_tabIndex == 15) return; // ya estamos en la pestaña de entrenar
     navigateTo(15);
   }
 
@@ -266,14 +267,15 @@ class _MainShellState extends State<MainShell> {
           ),
         ],
       ),
-      bottomNavigationBar: (_tabIndex == 15)
-          ? const SizedBox.shrink()
-          : _NavBar(
-              currentIndex: _tabIndex,
-              onTabTapped: _onTabTapped,
-              onFabTapped: _launchTraining,
-              fabActive: _tabIndex == 15,
-            ),
+      // La barra se mantiene visible también en la pestaña de entrenar (15):
+      // es una pestaña del IndexedStack (sin ruta que hacer pop ni gesto de
+      // volver), así que sin barra el usuario quedaba atrapado.
+      bottomNavigationBar: _NavBar(
+        currentIndex: _tabIndex,
+        onTabTapped: _onTabTapped,
+        onFabTapped: _launchTraining,
+        fabActive: _tabIndex == 15,
+      ),
     );
   }
 }

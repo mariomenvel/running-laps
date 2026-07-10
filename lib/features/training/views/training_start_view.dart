@@ -547,12 +547,16 @@ class _TrainingStartViewState extends State<TrainingStartView>
           isQuickStart: true,
           initialSession: initialSession,
           onSave: (session) {
-            // TODO: TrainingSessionView aún no acepta WorkoutSession.
-            // Cuando se integre, lanzar la sesión activa aquí.
-            debugPrint(
-              '[WorkoutEditor] quickStart session pendiente de integración: '
-              'type=${session.type.name} blocks=${session.blocks.length}',
-            );
+            // El editor hace pop justo después de este callback: empujar la
+            // pre-ejecución en el frame siguiente, sobre esta vista.
+            // Desde ahí: EMPEZAR → WorkoutExecutionScreen → summary (guarda).
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              Navigator.push(
+                context,
+                AppRoute(page: PreExecutionScreen(session: session)),
+              );
+            });
           },
         ),
       ),

@@ -99,14 +99,23 @@ El toggle bidireccional de desarrollo (icono `sync` en el header) fue **eliminad
 
 ## Casos especiales
  
-### Footer oculto en TrainingStartView
+### BottomNav visible en TrainingStartView (jul 2026)
 ```dart
-// En main_shell.dart
-bottomNavigationBar: _tabIndex == 15
-    ? const SizedBox.shrink()
-    : _NavBar(fabActive: _tabIndex == 15)
+// En main_shell.dart — la barra NO se oculta en el tab 15
+bottomNavigationBar: _NavBar(fabActive: _tabIndex == 15)
 ```
-El footer se oculta durante TrainingStartView para no confundir al usuario antes de iniciar.
+Antes el footer se ocultaba en TrainingStartView, pero al ser una pestaña del
+IndexedStack (sin ruta que hacer pop ni gesto de volver) el usuario quedaba
+atrapado sin ninguna forma de salir. La barra permanece visible con el FAB en
+estado activo.
+
+### Quick-start desde el FAB (jul 2026)
+FAB → tab 15 (`TrainingStartView`) → elegir tipo → `WorkoutEditorScreen`
+(`isQuickStart: true`) → "Empezar entrenamiento" → el callback `onSave` empuja
+`PreExecutionScreen(session)` → EMPEZAR → `WorkoutExecutionScreen` →
+`TrainingSummaryScreen` (guarda el entrenamiento y navega al historial).
+Antes el `onSave` era un TODO con debugPrint: la sesión generada no se
+ejecutaba ni se guardaba.
  
 ### Pantallas con parámetros
 Las pantallas que necesitan datos del tab anterior reciben params via `_shellParams`:

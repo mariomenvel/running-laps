@@ -565,7 +565,11 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                 final isEditingExisting = widget.initialSession != null;
                 final hasChanges = _hasChanges();
                 final blocksInvalid = !widget.isQuickStart && blocks.isEmpty;
-                final noopSave = isEditingExisting && !hasChanges;
+                // En quick-start initialSession es el preset mínimo: aunque el
+                // usuario no cambie nada, "Empezar entrenamiento" debe ejecutar
+                // _onSave (que dispara onSave → pre-ejecución), nunca ser no-op.
+                final noopSave =
+                    isEditingExisting && !hasChanges && !widget.isQuickStart;
                 final disabled = blocksInvalid;
 
                 final String label;
