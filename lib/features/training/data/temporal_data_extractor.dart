@@ -153,7 +153,9 @@ class TemporalDataExtractor {
         final relTime = tsCurr.difference(startTs).inMilliseconds / 1000;
 
         accumulatedDistM += distM;
-        final currentTotalTime = accumulatedTimeSec - serie.tiempoSec + relTime;
+        // accumulatedTimeSec solo incluye las series anteriores en este punto
+        // (se incrementa al final del bucle), así que basta sumar relTime.
+        final currentTotalTime = accumulatedTimeSec + relTime;
 
         // Cruzamos un km
         while (accumulatedDistM >= currentKm * 1000) {

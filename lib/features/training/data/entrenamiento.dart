@@ -267,7 +267,9 @@ class Entrenamiento {
       isManual: map['isManual'] as bool? ?? false,
       notas: map['notas'] as String?,
       fcMediaSesion: (map['fcMediaSesion'] as num?)?.toDouble(),
-      plannedComparison: map['plannedComparison'] as Map<String, dynamic>?,
+      plannedComparison: map['plannedComparison'] != null
+          ? Map<String, dynamic>.from(map['plannedComparison'] as Map)
+          : null,
       coachAnalysis: map['coachAnalysis'] != null
           ? Map<String, dynamic>.from(map['coachAnalysis'] as Map)
           : null,

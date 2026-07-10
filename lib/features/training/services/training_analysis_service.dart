@@ -52,11 +52,12 @@ class SplitResult {
 class TrainingAnalysisService {
   /// Calcula los mejores tiempos para distancias estándar (1km, 2km, etc.)
   /// usando una ventana deslizante sobre los puntos GPS.
-  static AnalysisResult calculateBestSplits(List<GpsPoint> points) {
-    if (points.isEmpty) return AnalysisResult(bestSplits: {});
+  static AnalysisResult calculateBestSplits(List<GpsPoint> rawPoints) {
+    if (rawPoints.isEmpty) return AnalysisResult(bestSplits: {});
 
-    // Ordenar por tiempo (por si acaso vienen desordenados)
-    points.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    // Ordenar por tiempo (por si acaso vienen desordenados) sin mutar la lista del caller
+    final points = List<GpsPoint>.of(rawPoints)
+      ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
     // Determinar distancia total y posibles "floors"
     // Calcular distancias acumuladas

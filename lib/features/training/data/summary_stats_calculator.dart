@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:running_laps/features/templates/data/workout_session.dart';
 import 'entrenamiento.dart';
 import 'serie.dart';
@@ -90,7 +92,7 @@ class SummaryStatsCalculator {
       final variance = paces
           .map((p) => (p - mean) * (p - mean))
           .reduce((a, b) => a + b) / paces.length;
-      final stdDev = variance > 0 ? variance.toDouble().abs() : 0.0;
+      final stdDev = variance > 0 ? math.sqrt(variance) : 0.0;
       consistencyPctVariation = mean > 0 ? (stdDev / mean) * 100 : null;
     }
 
@@ -232,6 +234,8 @@ class SummaryStatsCalculator {
       final reps = (block['plannedReps'] as num?)?.toInt() ?? 1;
       final segments = block['segments'] as List? ?? [];
 
+      // Cada segmento ejecutado produce una serie (mismo mapeo que _mainSeries),
+      // tenga o no objetivo de ritmo — el índice avanza siempre.
       for (var r = 0; r < reps; r++) {
         for (final seg in segments) {
           if (serieIdx >= entrenamiento.series.length) break;
@@ -245,8 +249,8 @@ class SummaryStatsCalculator {
               final tMax = (target['paceMaxSecPerKm'] as num?)?.toDouble() ?? tMin + 15;
               if (pace >= tMin - 5 && pace <= tMax + 5) inTarget++;
             }
-            serieIdx++;
           }
+          serieIdx++;
         }
       }
     }

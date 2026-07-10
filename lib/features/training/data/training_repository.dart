@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'entrenamiento.dart';
-import 'serie.dart';
 import '../../../core/services/gps_service.dart';
 import '../../../core/services/rate_limit_service.dart';
 import '../../../core/utils/rdp_smoother.dart';
@@ -58,15 +58,8 @@ class TrainingRepository {
       if (pts == null || pts.length <= 10) return serie;
       final gpsPoints = pts.map((m) => GpsPoint.fromMap(m)).toList();
       final smoothed = RDPSmoother.simplify(gpsPoints, epsilon: 2.5);
-      return Serie(
-        tiempoSec: serie.tiempoSec,
-        distanciaM: serie.distanciaM,
-        descansoSec: serie.descansoSec,
-        rpe: serie.rpe,
-        usedGps: serie.usedGps,
-        usedGpsDistance: serie.usedGpsDistance,
+      return serie.copyWith(
         gpsPoints: smoothed.map((p) => p.toMap()).toList(),
-        finishedAt: serie.finishedAt,
       );
     }).toList();
     e = e.copyWith(series: smoothedSeries);
@@ -88,8 +81,9 @@ class TrainingRepository {
       'totalKm': FieldValue.increment(e.distanciaTotalM() / 1000.0),
       'totalTimeMinutes': FieldValue.increment(e.tiempoTotalSec() / 60.0),
       'lastTrainingDate': e.fecha.toIso8601String(),
-    }).catchError((_) {
+    }).catchError((Object error) {
       // No bloquear si el update falla (campo puede no existir en docs antiguos)
+      debugPrint('[TrainingRepository] update contadores falló: $error');
     });
 
     HomeEstadisticaRepository().clearCache();
@@ -100,8 +94,8 @@ class TrainingRepository {
       entrenamiento: e.copyWith(id: trainingId),
       trainingId: trainingId,
       isUpdate: false,
-    ).catchError((error) {
-      // Log error but don't fail training creation
+    ).catchError((Object error) {
+      debugPrint('[TrainingRepository] sync retos falló: $error');
     });
 
     return trainingId;
@@ -154,8 +148,8 @@ class TrainingRepository {
         entrenamiento: training,
         trainingId: trainingId,
         isUpdate: true,
-      ).catchError((error) {
-        // Log error but don't fail update
+      ).catchError((Object error) {
+        debugPrint('[TrainingRepository] re-sync retos falló: $error');
       });
     }
   }
