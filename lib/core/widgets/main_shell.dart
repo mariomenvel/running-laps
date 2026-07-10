@@ -369,7 +369,7 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = active
         ? AppColors.brand
-        : Theme.of(context).colorScheme.onSurface.withOpacity(0.5);
+        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5);
 
     return Expanded(
       child: GestureDetector(

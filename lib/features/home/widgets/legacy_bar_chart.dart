@@ -77,7 +77,7 @@ class _LegacyBarChartState extends State<LegacyBarChart>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-              color: isDark ? Colors.transparent : Colors.black.withOpacity(0.04),
+              color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.04),
               blurRadius: 16,
               offset: const Offset(0, 8))
         ],
@@ -90,8 +90,8 @@ class _LegacyBarChartState extends State<LegacyBarChart>
           range: widget.range,
           brandColor: widget.brandColor,
           animationValue: _animation.value,
-          gridColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
-          labelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+          gridColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
+          labelColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
         ),
       ),
     );
@@ -132,7 +132,7 @@ class _BarChartPainter extends CustomPainter {
 
     final Paint barPaint = Paint()
       ..shader = LinearGradient(
-        colors: [brandColor, brandColor.withOpacity(0.6)],
+        colors: [brandColor, brandColor.withValues(alpha: 0.6)],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       ).createShader(Rect.fromLTWH(0, marginTop, size.width, chartHeight));

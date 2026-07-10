@@ -44,7 +44,7 @@ class CoachInsightWidget extends StatelessWidget {
   Widget _buildFullCard(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? AppColors.brandSurface : const Color(0xFFF3EFFE);
-    final messageColor = isDark ? Colors.white.withOpacity(0.85) : const Color(0xFF3C3489);
+    final messageColor = isDark ? Colors.white.withValues(alpha: 0.85) : const Color(0xFF3C3489);
 
     return Container(
       width: double.infinity,
@@ -62,7 +62,7 @@ class CoachInsightWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
             decoration: BoxDecoration(
-              color: AppColors.brand.withOpacity(isDark ? 0.2 : 0.12),
+              color: AppColors.brand.withValues(alpha: isDark ? 0.2 : 0.12),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(

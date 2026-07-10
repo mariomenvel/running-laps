@@ -117,7 +117,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -125,7 +125,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppColors.brand.withOpacity(0.1),
+                color: AppColors.brand.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(Icons.person_outline_rounded, size: 40, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
@@ -146,7 +146,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                 ? 'Deberás identificarte con Google para confirmar el cambio.'
                 : 'Introduce tu contraseña para confirmar el cambio.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 14),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 14),
             ),
             const SizedBox(height: 24),
             TextField(
@@ -156,7 +156,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               decoration: InputDecoration(
                 labelText: 'Nuevo nombre',
                 filled: true,
-                fillColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
+                fillColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -173,7 +173,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                 decoration: InputDecoration(
                   labelText: 'Contraseña de confirmación',
                   filled: true,
-                  fillColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
+                  fillColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
@@ -194,7 +194,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     ),
                     child: Text(
                       'Cancelar',
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -209,7 +209,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.brand.withOpacity(0.3),
+                              color: AppColors.brand.withValues(alpha: 0.3),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -301,7 +301,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -309,7 +309,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppColors.rpeMid.withOpacity(0.1),
+                color: AppColors.rpeMid.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.key_rounded, size: 40, color: AppColors.rpeMid),
@@ -328,7 +328,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
             Text(
               'Introduce tu contraseña actual y la nueva dos veces.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 14),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 14),
             ),
             const SizedBox(height: 24),
             TextField(
@@ -338,7 +338,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               decoration: InputDecoration(
                 labelText: 'Contraseña actual',
                 filled: true,
-                fillColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
+                fillColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -354,7 +354,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               decoration: InputDecoration(
                 labelText: 'Contraseña nueva',
                 filled: true,
-                fillColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
+                fillColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -370,7 +370,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               decoration: InputDecoration(
                 labelText: 'Confirmar contraseña nueva',
                 filled: true,
-                fillColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
+                fillColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -413,7 +413,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                             ),
                             child: Text(
                               'Cancelar',
-                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold),
+                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
@@ -428,7 +428,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                                   borderRadius: BorderRadius.circular(16),
                                   boxShadow: allMet ? [
                                     BoxShadow(
-                                      color: AppColors.rpeMid.withOpacity(0.3),
+                                      color: AppColors.rpeMid.withValues(alpha: 0.3),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     ),
@@ -460,7 +460,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                                     padding: const EdgeInsets.symmetric(vertical: 16),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                     disabledBackgroundColor: Colors.transparent,
-                                    disabledForegroundColor: Colors.white.withOpacity(0.7),
+                                    disabledForegroundColor: Colors.white.withValues(alpha: 0.7),
                                   ),
                                   child: isLoading
                                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
@@ -492,7 +492,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
           decoration: BoxDecoration(
             color: isMet ? AppColors.rpeLow : Colors.transparent,
             border: Border.all(
-              color: isMet ? AppColors.rpeLow : Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+              color: isMet ? AppColors.rpeLow : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
             ),
             shape: BoxShape.circle,
           ),
@@ -508,7 +508,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
         Text(
           text,
           style: TextStyle(
-            color: isMet ? AppColors.rpeLow : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            color: isMet ? AppColors.rpeLow : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             fontSize: 13,
             fontWeight: isMet ? FontWeight.w600 : FontWeight.normal,
           ),
@@ -546,7 +546,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -573,7 +573,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
             Text(
               'Esta acción es IRREVERSIBLE. Se borrarán todos tus datos y entrenamientos permanentemente.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 16),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 16),
             ),
             const SizedBox(height: 24),
             if (!isGoogle) ...[
@@ -584,7 +584,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                 decoration: InputDecoration(
                   labelText: 'Introduce tu contraseña',
                   filled: true,
-                  fillColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
+                  fillColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
@@ -625,7 +625,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     ),
                     child: Text(
                       'Cancelar',
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -640,7 +640,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.rpeMax.withOpacity(0.3),
+                              color: AppColors.rpeMax.withValues(alpha: 0.3),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -702,7 +702,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
       child: Text(
         title.toUpperCase(),
         style: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
           fontSize: 12,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
@@ -727,7 +727,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
           BoxShadow(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.transparent
-                : Colors.black.withOpacity(0.03),
+                : Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -745,7 +745,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(icon, color: color, size: 22),
@@ -764,7 +764,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                 Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 16,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
                 ),
               ],
             ),
@@ -792,7 +792,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
           BoxShadow(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.transparent
-                : Colors.black.withOpacity(0.03),
+                : Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -805,7 +805,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 22),
@@ -827,7 +827,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     subtitle,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
                 ],
@@ -835,7 +835,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
             ),
             if (onSettingsTap != null && value)
               IconButton(
-                icon: Icon(Icons.settings_suggest_rounded, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35), size: 20),
+                icon: Icon(Icons.settings_suggest_rounded, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35), size: 20),
                 onPressed: onSettingsTap,
               ),
             CupertinoSwitch(
@@ -858,12 +858,12 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.transparent : Colors.black.withOpacity(0.04),
+            color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.5)),
+        border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5)),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -872,7 +872,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.brand.withOpacity(0.1),
+                color: AppColors.brand.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(Icons.style_rounded, color: isDark ? AppColors.brandLight : AppColors.brand, size: 22),
@@ -892,7 +892,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
             Container(
               padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
@@ -927,7 +927,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
       ),
@@ -947,7 +947,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
           BoxShadow(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.transparent
-                : Colors.black.withOpacity(0.03),
+                : Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -965,7 +965,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF7B1FA2).withOpacity(0.1),
+                    color: const Color(0xFF7B1FA2).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.emoji_events_outlined, color: Color(0xFF7B1FA2), size: 22),
@@ -987,7 +987,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                         distLabel,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -997,7 +997,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                 Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 16,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
                 ),
               ],
             ),
@@ -1046,7 +1046,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1066,7 +1066,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
               'Se usará para calcular tu mejor ritmo en esa distancia.',
               style: TextStyle(
                 fontSize: 13,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
             const SizedBox(height: 20),
@@ -1089,7 +1089,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                       decoration: BoxDecoration(
                         color: isSel
                             ? AppColors.brand
-                            : Theme.of(context).colorScheme.onSurface.withOpacity(0.07),
+                            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.07),
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: Text(
@@ -1099,7 +1099,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                           fontWeight: FontWeight.w700,
                           color: isSel
                               ? Colors.white
-                              : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
                     ),

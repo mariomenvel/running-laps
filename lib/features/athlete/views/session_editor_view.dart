@@ -484,7 +484,7 @@ class _SessionEditorViewState extends State<SessionEditorView> {
 
         // Tipo de sesión
         DropdownButtonFormField<SessionCategory?>(
-          value:       _selectedCategory,
+          initialValue:       _selectedCategory,
           hint:        const Text('Tipo de sesión (opcional)'),
           isExpanded:  true,
           decoration:  _inputDecoration(),
@@ -524,7 +524,7 @@ class _SessionEditorViewState extends State<SessionEditorView> {
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<int?>(
-          value: _standardDistanceM,
+          initialValue: _standardDistanceM,
           isExpanded: true,
           decoration: _inputDecoration(hint: 'Distancia oficial'),
           items: const [

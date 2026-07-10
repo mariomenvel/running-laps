@@ -345,7 +345,7 @@ class _ProfileViewState extends State<ProfileView> {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: _isAthleteMode
-                        ? AppColors.brand.withOpacity(0.15)
+                        ? AppColors.brand.withValues(alpha: 0.15)
                         : AppColors.surfaceOf(context),
                     border: Border.all(
                       color: _isAthleteMode ? AppColors.brand : AppColors.borderOf(context),

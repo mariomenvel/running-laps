@@ -325,8 +325,8 @@ class AdminDashboardTab extends StatelessWidget {
               // CARD SISTEMA
               Card(
                 elevation: 0,
-                color: AppColors.rpeLow.withOpacity(0.1),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: AppColors.rpeLow.withOpacity(0.3))),
+                color: AppColors.rpeLow.withValues(alpha: 0.1),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: AppColors.rpeLow.withValues(alpha: 0.3))),
                 child: const ListTile(
                   leading: Icon(Icons.check_circle, color: AppColors.rpeLow),
                   title: Text("Sistema Operacional", style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.rpeLow)),
@@ -415,7 +415,7 @@ class AdminDashboardTab extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: isDark ? Colors.transparent : Colors.black.withOpacity(0.05),
+                  color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -427,7 +427,7 @@ class AdminDashboardTab extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(icon, color: color, size: 24),
@@ -446,7 +446,7 @@ class AdminDashboardTab extends StatelessWidget {
                 Expanded(
                   child: Text(
                     description,
-                    style: TextStyle(fontSize: 11, color: cs.onSurface.withOpacity(0.5), height: 1.2),
+                    style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5), height: 1.2),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -474,7 +474,7 @@ class AdminDashboardTab extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: isDark ? Colors.transparent : Colors.black.withOpacity(0.05),
+                  color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -486,7 +486,7 @@ class AdminDashboardTab extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.bolt, color: color, size: 24),
@@ -502,7 +502,7 @@ class AdminDashboardTab extends StatelessWidget {
                 Expanded(
                   child: Text(
                     "Nivel de intensidad percibida (Escala 1-10)",
-                    style: TextStyle(fontSize: 11, color: cs.onSurface.withOpacity(0.5), height: 1.2),
+                    style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5), height: 1.2),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -530,7 +530,7 @@ class AdminDashboardTab extends StatelessWidget {
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: cs.outline.withOpacity(0.2)),
+        side: BorderSide(color: cs.outline.withValues(alpha: 0.2)),
       ),
       checkmarkColor: cs.surface,
     );
@@ -550,7 +550,7 @@ class AdminDashboardTab extends StatelessWidget {
       label: Text(label),
       avatar: isSelected
           ? Icon(Icons.date_range, size: 16, color: cs.surface)
-          : Icon(Icons.date_range, size: 16, color: cs.onSurface.withOpacity(0.6)),
+          : Icon(Icons.date_range, size: 16, color: cs.onSurface.withValues(alpha: 0.6)),
       selected: isSelected,
       onSelected: (_) async {
         final DateTimeRange? picked = await showModalBottomSheet<DateTimeRange>(
@@ -585,7 +585,7 @@ class AdminDashboardTab extends StatelessWidget {
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: cs.outline.withOpacity(0.2)),
+        side: BorderSide(color: cs.outline.withValues(alpha: 0.2)),
       ),
       checkmarkColor: cs.surface,
     );
@@ -638,7 +638,7 @@ class AdminDashboardTab extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 decoration: BoxDecoration(
-                  border: Border(bottom: BorderSide(color: cs.outline.withOpacity(0.1))),
+                  border: Border(bottom: BorderSide(color: cs.outline.withValues(alpha: 0.1))),
                 ),
                 child: Column(
                   children: [
@@ -646,7 +646,7 @@ class AdminDashboardTab extends StatelessWidget {
                       width: 40,
                       height: 5,
                       decoration: BoxDecoration(
-                        color: cs.onSurface.withOpacity(0.2),
+                        color: cs.onSurface.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
@@ -667,7 +667,7 @@ class AdminDashboardTab extends StatelessWidget {
                     // Date Range Section
                     Text(
                       "Rango de Fechas",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface.withOpacity(0.5)),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface.withValues(alpha: 0.5)),
                     ),
                     const SizedBox(height: 12),
                     InkWell(
@@ -693,9 +693,9 @@ class AdminDashboardTab extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppColors.brand.withOpacity(0.08),
+                          color: AppColors.brand.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(15),
-                          border: Border.all(color: AppColors.brand.withOpacity(0.2)),
+                          border: Border.all(color: AppColors.brand.withValues(alpha: 0.2)),
                         ),
                         child: Row(
                           children: [
@@ -720,7 +720,7 @@ class AdminDashboardTab extends StatelessWidget {
                       children: [
                         Text(
                           "Métricas a incluir",
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface.withOpacity(0.5)),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface.withValues(alpha: 0.5)),
                         ),
                         TextButton(
                           onPressed: () {
@@ -754,10 +754,10 @@ class AdminDashboardTab extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
-                              color: isSelected ? cs.surface : cs.onSurface.withOpacity(0.04),
+                              color: isSelected ? cs.surface : cs.onSurface.withValues(alpha: 0.04),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: isSelected ? AppColors.brand.withOpacity(0.3) : cs.outline.withOpacity(0.2),
+                                color: isSelected ? AppColors.brand.withValues(alpha: 0.3) : cs.outline.withValues(alpha: 0.2),
                                 width: isSelected ? 2 : 1,
                               ),
                             ),
@@ -765,7 +765,7 @@ class AdminDashboardTab extends StatelessWidget {
                               children: [
                                 Icon(
                                   isSelected ? Icons.check_circle : Icons.circle_outlined,
-                                  color: isSelected ? AppColors.brand : cs.onSurface.withOpacity(0.4),
+                                  color: isSelected ? AppColors.brand : cs.onSurface.withValues(alpha: 0.4),
                                   size: 22,
                                 ),
                                 const SizedBox(width: 12),
@@ -773,7 +773,7 @@ class AdminDashboardTab extends StatelessWidget {
                                   entry.value,
                                   style: TextStyle(
                                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                    color: isSelected ? cs.onSurface : cs.onSurface.withOpacity(0.5),
+                                    color: isSelected ? cs.onSurface : cs.onSurface.withValues(alpha: 0.5),
                                   ),
                                 ),
                               ],

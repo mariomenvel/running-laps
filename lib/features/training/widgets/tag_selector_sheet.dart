@@ -314,7 +314,7 @@ class _TagSelectorSheetState extends State<TagSelectorSheet> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: AppColors.brand.withOpacity(0.1),
+                      color: AppColors.brand.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: AppColors.brand, width: 1),
                     ),
@@ -427,9 +427,9 @@ class _TagToggleChip extends StatelessWidget {
     final Color activeText =
         isDark ? AppColors.brandLight : AppColors.brand;
     final Color inactiveText = AppColors.textSecondary(ctx);
-    final Color activeBg = AppColors.brand.withOpacity(0.15);
+    final Color activeBg = AppColors.brand.withValues(alpha: 0.15);
     final Color inactiveBg = isPredefined
-        ? AppColors.brand.withOpacity(0.05)
+        ? AppColors.brand.withValues(alpha: 0.05)
         : AppColors.surface2Of(ctx);
 
     return GestureDetector(

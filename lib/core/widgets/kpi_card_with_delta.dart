@@ -50,14 +50,14 @@ class KpiCardWithDelta extends StatelessWidget {
         final double iconBoxSize = (width * 0.3).clamp(36.0, 44.0);
 
         final Color titleColor = coloredBackground
-            ? Colors.white.withOpacity(0.85)
+            ? Colors.white.withValues(alpha: 0.85)
             : Theme.of(context).colorScheme.onSurface;
         final Color valueColor = coloredBackground
             ? Colors.white
-            : Theme.of(context).colorScheme.onSurface.withOpacity(0.85);
+            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.85);
         final Color unitColor = coloredBackground
-            ? Colors.white.withOpacity(0.75)
-            : Theme.of(context).colorScheme.onSurface.withOpacity(0.5);
+            ? Colors.white.withValues(alpha: 0.75)
+            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5);
 
         return GestureDetector(
           onTap: onTap,
@@ -68,7 +68,7 @@ class KpiCardWithDelta extends StatelessWidget {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: primaryColor.withOpacity(0.35),
+                        color: primaryColor.withValues(alpha: 0.35),
                         blurRadius: 12,
                         offset: const Offset(0, 6),
                       ),
@@ -122,7 +122,7 @@ class KpiCardWithDelta extends StatelessWidget {
                                 height: iconBoxSize,
                                 decoration: BoxDecoration(
                                   color: coloredBackground
-                                      ? Colors.white.withOpacity(0.2)
+                                      ? Colors.white.withValues(alpha: 0.2)
                                       : (Theme.of(context).brightness == Brightness.dark
                                           ? const Color(0xFF1E1E1E)
                                           : const Color(0xFFF5F5F5)),
@@ -228,7 +228,7 @@ class KpiCardWithDelta extends StatelessWidget {
         
     return Icon(
       isUp ? Icons.trending_up_rounded : Icons.trending_down_rounded,
-      color: color.withOpacity(0.8),
+      color: color.withValues(alpha: 0.8),
       size: 20,
     );
   }
@@ -247,12 +247,12 @@ class KpiCardWithDelta extends StatelessWidget {
                 .map((e) => FlSpot(e.key.toDouble(), e.value))
                 .toList(),
             isCurved: true,
-            color: primaryColor.withOpacity(0.8),
+            color: primaryColor.withValues(alpha: 0.8),
             barWidth: 2.5,
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
-              color: primaryColor.withOpacity(0.1),
+              color: primaryColor.withValues(alpha: 0.1),
             ),
           ),
         ],

@@ -40,7 +40,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
         color: AppColors.surfaceOf(context),
         border: Border(
           bottom: BorderSide(
-            color: cs.outline.withOpacity(0.3),
+            color: cs.outline.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -108,7 +108,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                 boxShadow: [
                   if (isSelected)
                     BoxShadow(
-                      color: _brandPurple.withOpacity(0.4),
+                      color: _brandPurple.withValues(alpha: 0.4),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     )
@@ -116,7 +116,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                     BoxShadow(
                       color: Theme.of(context).brightness == Brightness.dark
                           ? Colors.transparent
-                          : Colors.black.withOpacity(0.05),
+                          : Colors.black.withValues(alpha: 0.05),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     )
@@ -125,7 +125,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
               child: Text(
                 category[index],
                 style: TextStyle(
-                  color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
                 ),
@@ -194,7 +194,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: color.withOpacity(0.4),
+                    color: color.withValues(alpha: 0.4),
                     blurRadius: 6,
                     offset: const Offset(0, 3),
                   )
@@ -225,13 +225,13 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
         width: 50,
         height: 50,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
           shape: component == BackgroundShape.circle ? BoxShape.circle : BoxShape.rectangle,
           borderRadius: component == BackgroundShape.roundedSquare ? BorderRadius.circular(12) : null,
         ),
       );
     }
-    return Icon(Icons.block, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4));
+    return Icon(Icons.block, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4));
   }
 
   // ===========================================================================
@@ -244,9 +244,9 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
     return ColorFiltered(
       colorFilter: src != null
           ? ColorFilter.matrix(<double>[
-              rep.red / src.red, 0, 0, 0, 0,
-              0, rep.green / src.green, 0, 0, 0,
-              0, 0, rep.blue / src.blue, 0, 0,
+              rep.r / src.r, 0, 0, 0, 0,
+              0, rep.g / src.g, 0, 0, 0,
+              0, 0, rep.b / src.b, 0, 0,
               0, 0, 0, 1, 0,
             ])
           : ColorFilter.mode(rep, BlendMode.srcIn),
@@ -306,7 +306,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 10),
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2), borderRadius: BorderRadius.circular(2))),
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2))),
               const SizedBox(height: 20),
               ListTile(
                 onTap: () {
@@ -315,7 +315,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                 },
                 leading: Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: AppColors.rest.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(color: AppColors.rest.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                   child: const Icon(Icons.folder_special, color: AppColors.rest),
                 ),
                 title: const Text("Guardar en la App"),
@@ -328,7 +328,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                 },
                 leading: Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: AppColors.rpeLow.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(color: AppColors.rpeLow.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                   child: const Icon(Icons.photo_library, color: AppColors.rpeLow),
                 ),
                 title: const Text("Guardar en Galería"),
@@ -388,10 +388,10 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                                   Container(
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: Colors.white.withOpacity(0.5),
+                                      color: Colors.white.withValues(alpha: 0.5),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: _brandPurple.withOpacity(0.2),
+                                          color: _brandPurple.withValues(alpha: 0.2),
                                           blurRadius: 40,
                                           spreadRadius: 10,
                                         )
@@ -438,14 +438,14 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
                         border: Border(
                           top: BorderSide(
-                            color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
                             width: 1.5,
                           ),
                         ),
                         boxShadow: Theme.of(context).brightness == Brightness.dark
                             ? [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.4),
+                                  color: Colors.black.withValues(alpha: 0.4),
                                   blurRadius: 8,
                                   offset: const Offset(0, -4),
                                 )
@@ -473,7 +473,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                                     width: 60,
                                     height: 5,
                                     decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                                       borderRadius: BorderRadius.circular(2.5)
                                     ),
                                   ),
@@ -612,14 +612,14 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                       color: AppColors.surface2Of(context),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: selected ? _brandPurple : Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                        color: selected ? _brandPurple : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                         width: selected ? 3 : 1,
                       ),
                       boxShadow: [
                         BoxShadow(
                           color: Theme.of(context).brightness == Brightness.dark
                               ? Colors.transparent
-                              : Colors.black.withOpacity(0.03),
+                              : Colors.black.withValues(alpha: 0.03),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         )
@@ -676,7 +676,7 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
                   : null,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 5),
                 )

@@ -61,7 +61,7 @@ class EmptyStateWidget extends StatelessWidget {
               description,
               style: TextStyle(
                 fontSize: 14,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
@@ -120,12 +120,12 @@ class _EmptyIllustration extends StatelessWidget {
             height: 72,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.brand.withOpacity(0.10),
+              color: AppColors.brand.withValues(alpha: 0.10),
             ),
             child: Icon(
               icon,
               size: 34,
-              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand).withOpacity(0.75),
+              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand).withValues(alpha: 0.75),
             ),
           ),
         ),
@@ -150,13 +150,13 @@ class _RingsPainter extends CustomPainter {
     // Outer dashed-arc ring
     paint
       ..strokeWidth = 1.5
-      ..color = AppColors.brand.withOpacity(0.10);
+      ..color = AppColors.brand.withValues(alpha: 0.10);
     canvas.drawCircle(center, size.width / 2 - 2, paint);
 
     // Inner decorative arc (270° sweep, starting top-right)
     paint
       ..strokeWidth = 2.5
-      ..color = AppColors.brand.withOpacity(0.16);
+      ..color = AppColors.brand.withValues(alpha: 0.16);
     final rect = Rect.fromCircle(center: center, radius: size.width / 2 - 10);
     canvas.drawArc(rect, -pi / 4, 3 * pi / 2, false, paint);
   }

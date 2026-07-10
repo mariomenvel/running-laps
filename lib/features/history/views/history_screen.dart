@@ -389,7 +389,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.rpeMax.withOpacity(0.08),
+                      color: AppColors.rpeMax.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Text('Borrar todo',
@@ -414,10 +414,10 @@ class _HistoryScreenState extends State<HistoryScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.brand.withOpacity(0.08),
+        color: AppColors.brand.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
         border:
-            Border.all(color: AppColors.brand.withOpacity(0.3), width: 0.5),
+            Border.all(color: AppColors.brand.withValues(alpha: 0.3), width: 0.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

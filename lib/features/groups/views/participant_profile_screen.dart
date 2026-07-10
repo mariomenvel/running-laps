@@ -133,7 +133,7 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
                                   BoxShadow(
                                     color: Theme.of(context).brightness == Brightness.dark
                                         ? Colors.transparent
-                                        : Colors.black.withOpacity(0.05),
+                                        : Colors.black.withValues(alpha: 0.05),
                                     blurRadius: 10, offset: const Offset(0, 5),
                                   )
                                 ],
@@ -148,7 +148,7 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: AppColors.brand.withOpacity(0.1),
+                                      color: AppColors.brand.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Text("Corredor/a", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.bold, fontSize: 12)),
@@ -159,9 +159,9 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
                                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                                     children: [
                                       _StatItem(label: "Carreras", value: "$_totalRuns"),
-                                      Container(width: 1, height: 30, color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
+                                      Container(width: 1, height: 30, color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)),
                                       _StatItem(label: "Km Totales", value: _totalKm.toStringAsFixed(1)),
-                                      Container(width: 1, height: 30, color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
+                                      Container(width: 1, height: 30, color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)),
                                       _StatItem(label: "Mejor Ritmo", value: _bestPace),
                                     ],
                                   )
@@ -235,7 +235,7 @@ class _StatItem extends StatelessWidget {
     return Column(
       children: [
         Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
-        Text(label, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
+        Text(label, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5))),
       ],
     );
   }
@@ -253,12 +253,12 @@ class _AchievementCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: unlocked ? cs.surface : cs.onSurface.withOpacity(0.04),
+        color: unlocked ? cs.surface : cs.onSurface.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(20),
-        border: unlocked ? null : Border.all(color: cs.outline.withOpacity(0.3)),
+        border: unlocked ? null : Border.all(color: cs.outline.withValues(alpha: 0.3)),
         boxShadow: unlocked ? [
           BoxShadow(
-            color: item.color.withOpacity(0.2),
+            color: item.color.withValues(alpha: 0.2),
             blurRadius: 10, offset: const Offset(0, 4)
           )
         ] : [],
@@ -269,12 +269,12 @@ class _AchievementCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: unlocked ? item.color.withOpacity(0.1) : cs.onSurface.withOpacity(0.12),
+              color: unlocked ? item.color.withValues(alpha: 0.1) : cs.onSurface.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: Icon(
               item.icon,
-              color: unlocked ? item.color : cs.onSurface.withOpacity(0.4),
+              color: unlocked ? item.color : cs.onSurface.withValues(alpha: 0.4),
               size: 28,
             ),
           ),
@@ -285,7 +285,7 @@ class _AchievementCard extends StatelessWidget {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 14,
-              color: unlocked ? cs.onSurface : cs.onSurface.withOpacity(0.4)
+              color: unlocked ? cs.onSurface : cs.onSurface.withValues(alpha: 0.4)
             ),
           ),
           const SizedBox(height: 4),
@@ -294,7 +294,7 @@ class _AchievementCard extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 10, color: cs.onSurface.withOpacity(0.5)),
+            style: TextStyle(fontSize: 10, color: cs.onSurface.withValues(alpha: 0.5)),
           )
         ],
       ),

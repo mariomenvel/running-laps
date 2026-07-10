@@ -61,7 +61,7 @@ class _SeriesPatternContent extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
             decoration: BoxDecoration(
-              color: AppColors.brand.withOpacity(0.08),
+              color: AppColors.brand.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Column(
@@ -83,7 +83,7 @@ class _SeriesPatternContent extends StatelessWidget {
                   '${pattern.count} series en ${pattern.uniqueWorkoutsCount} entrenamientos',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -135,10 +135,10 @@ class _SeriesPatternContent extends StatelessWidget {
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
+              border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15)),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.brand.withOpacity(0.08),
+                  color: AppColors.brand.withValues(alpha: 0.08),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                   spreadRadius: -4,
@@ -146,7 +146,7 @@ class _SeriesPatternContent extends StatelessWidget {
                 BoxShadow(
                   color: Theme.of(context).brightness == Brightness.dark
                       ? Colors.transparent
-                      : Colors.black.withOpacity(0.04),
+                      : Colors.black.withValues(alpha: 0.04),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -178,7 +178,7 @@ class _SeriesPatternContent extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
           ),
@@ -206,10 +206,10 @@ class _SeriesPatternContent extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.2), width: 1.5),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.15),
+            color: color.withValues(alpha: 0.15),
             blurRadius: 15,
             offset: const Offset(0, 6),
             spreadRadius: -3,
@@ -217,7 +217,7 @@ class _SeriesPatternContent extends StatelessWidget {
           BoxShadow(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.transparent
-                : Colors.black.withOpacity(0.03),
+                : Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -232,7 +232,7 @@ class _SeriesPatternContent extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: color.withOpacity(0.4),
+                  color: color.withValues(alpha: 0.4),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -253,7 +253,7 @@ class _SeriesPatternContent extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
               fontSize: 11,
               fontWeight: FontWeight.w500,
               letterSpacing: 0.3,
@@ -275,12 +275,12 @@ class _SeriesPatternContent extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
+        border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15)),
         boxShadow: [
           BoxShadow(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.transparent
-                : Colors.black.withOpacity(0.04),
+                : Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -304,7 +304,7 @@ class _SeriesPatternContent extends StatelessWidget {
               Text(
                 "Serie #${instance.serieIndex + 1}",
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
@@ -314,9 +314,9 @@ class _SeriesPatternContent extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.brand.withOpacity(0.12),
+              color: AppColors.brand.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.brand.withOpacity(0.3)),
+              border: Border.all(color: AppColors.brand.withValues(alpha: 0.3)),
             ),
             child: Text(
               "$pace /km",
@@ -355,7 +355,7 @@ class _PaceProgressionChart extends StatelessWidget {
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          getDrawingHorizontalLine: (_) => FlLine(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06)),
+          getDrawingHorizontalLine: (_) => FlLine(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06)),
         ),
         titlesData: FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
@@ -369,7 +369,7 @@ class _PaceProgressionChart extends StatelessWidget {
             dotData: const FlDotData(show: true),
             belowBarData: BarAreaData(
               show: true,
-              color: AppColors.brand.withOpacity(0.1),
+              color: AppColors.brand.withValues(alpha: 0.1),
             ),
           ),
         ],

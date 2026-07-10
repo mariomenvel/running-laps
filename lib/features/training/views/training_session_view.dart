@@ -881,7 +881,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
           ],
@@ -955,7 +955,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
         Container(
           width: 1,
           height: 40,
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
           margin: const EdgeInsets.symmetric(horizontal: 28),
         ),
         descansoStat,
@@ -984,7 +984,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(icon, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35)),
+            Icon(icon, size: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35)),
             const SizedBox(width: 5),
             Text(
               value,
@@ -1004,7 +1004,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
           style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
             letterSpacing: 1.5,
           ),
         ),
@@ -1027,8 +1027,8 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
             decoration: BoxDecoration(
               color: _isRunning
-                  ? AppColors.brand.withOpacity(0.08)
-                  : AppColors.rpeMax.withOpacity(0.08),
+                  ? AppColors.brand.withValues(alpha: 0.08)
+                  : AppColors.rpeMax.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -1121,7 +1121,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                   style: TextStyle(
                     fontSize: showGpsStats ? 50 : 72,
                     fontWeight: showGpsStats ? FontWeight.w300 : FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(showGpsStats ? 0.35 : 1.0),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: showGpsStats ? 0.35 : 1.0),
                     height: 1.0,
                     fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
                   ),
@@ -1145,7 +1145,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
           Icon(
             Icons.location_off_outlined,
             size: 48,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 12),
           Text(
@@ -1153,7 +1153,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(height: 4),
@@ -1162,7 +1162,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
             ),
           ),
         ],
@@ -1193,7 +1193,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                       height: 1.0,
                       fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
                       shadows: _isAlarmActive
-                          ? [Shadow(color: AppColors.brand.withOpacity(0.4), blurRadius: 24)]
+                          ? [Shadow(color: AppColors.brand.withValues(alpha: 0.4), blurRadius: 24)]
                           : null,
                     ),
                   ),
@@ -1202,7 +1202,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w400,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
                     ),
                   ),
                 ],
@@ -1215,7 +1215,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
               letterSpacing: 2.0,
             ),
           ),
@@ -1261,7 +1261,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: AppColors.brand.withOpacity(0.08),
+            color: AppColors.brand.withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 8),
             spreadRadius: 4,
@@ -1269,7 +1269,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
           BoxShadow(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.transparent
-                : Colors.black.withOpacity(0.04),
+                : Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -1285,7 +1285,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
               painter: _SpeedometerPainter(
                 fraction: fraction,
                 arcColor: arcColor,
-                trackColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+                trackColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
               ),
               child: Center(
                 child: Column(
@@ -1307,7 +1307,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                       'min/km',
                       style: TextStyle(
                         fontSize: 10,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
                         letterSpacing: 0.5,
                       ),
                     ),
@@ -1328,7 +1328,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
                     letterSpacing: 2.0,
                   ),
                 ),
@@ -1336,7 +1336,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: arcColor.withOpacity(0.10),
+                    color: arcColor.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
@@ -1367,7 +1367,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                   hint,
                   style: TextStyle(
                     fontSize: 11,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
                     height: 1.4,
                   ),
                 ),
@@ -1452,7 +1452,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
       style: TextStyle(
         fontSize: 30,
         fontWeight: FontWeight.w500,
-        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
         letterSpacing: 0.5,
         height: 1.0,
         fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
@@ -1481,7 +1481,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                 shadows: _isAlarmActive
                     ? [
                         Shadow(
-                          color: AppColors.brand.withOpacity(0.5),
+                          color: AppColors.brand.withValues(alpha: 0.5),
                           blurRadius: 30,
                         ),
                       ]
@@ -1496,7 +1496,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
             letterSpacing: 2.0,
           ),
         ),
@@ -1610,7 +1610,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
           BoxShadow(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.transparent
-                : Colors.black.withOpacity(0.06),
+                : Colors.black.withValues(alpha: 0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -1645,8 +1645,8 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: large
-                  ? AppColors.brand.withOpacity(0.55)
-                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                  ? AppColors.brand.withValues(alpha: 0.55)
+                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
               letterSpacing: 0.8,
             ),
           ),
@@ -1672,12 +1672,12 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
           decoration: BoxDecoration(
             color: _isRunning
                 ? AppColors.brand
-                : AppColors.brand.withOpacity(0.35),
+                : AppColors.brand.withValues(alpha: 0.35),
             borderRadius: BorderRadius.circular(16),
             boxShadow: _isRunning
                 ? [
                     BoxShadow(
-                      color: AppColors.brand.withOpacity(0.35),
+                      color: AppColors.brand.withValues(alpha: 0.35),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
@@ -1721,8 +1721,8 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
       isDismissible: false,
       enableDrag: false,
       builder: (BuildContext ctx) {
-        return WillPopScope(
-          onWillPop: () async => false,
+        return PopScope(
+          canPop: false,
           child: Container(
             height: 340,
             decoration: BoxDecoration(
@@ -1744,7 +1744,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                       Text(
                         'Serie completada',
                         style: TextStyle(
-                            fontSize: 13, color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.5)),
+                            fontSize: 13, color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.5)),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -1902,7 +1902,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
-                    color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.2),
+                    color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(2)
                   )
                  ),
@@ -1916,7 +1916,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                const SizedBox(height: 8),
                Text(
                  'Hemos calculado la distancia por GPS. ¿Cuál prefieres usar para esta serie?',
-                 style: TextStyle(fontSize: 14, color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.5)),
+                 style: TextStyle(fontSize: 14, color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.5)),
                  textAlign: TextAlign.center,
                ),
                const SizedBox(height: 24),
@@ -1936,16 +1936,16 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                          decoration: BoxDecoration(
                            color: Theme.of(ctx).colorScheme.surface,
                            borderRadius: BorderRadius.circular(16),
-                           border: Border.all(color: Theme.of(ctx).colorScheme.outline.withOpacity(0.2), width: 2),
+                           border: Border.all(color: Theme.of(ctx).colorScheme.outline.withValues(alpha: 0.2), width: 2),
                            boxShadow: [
-                             BoxShadow(color: Theme.of(ctx).brightness == Brightness.dark ? Colors.transparent : Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
+                             BoxShadow(color: Theme.of(ctx).brightness == Brightness.dark ? Colors.transparent : Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))
                            ]
                          ),
                          child: Column(
                            children: [
                              const Icon(Icons.edit_road, size: 32, color: AppColors.brand),
                              const SizedBox(height: 12),
-                             Text("MANUAL", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.5), letterSpacing: 1)),
+                             Text("MANUAL", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.5), letterSpacing: 1)),
                              const SizedBox(height: 4),
                              Text("$_distanciaInt m", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(ctx).colorScheme.onSurface)),
                            ],
@@ -1970,9 +1970,9 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                            decoration: BoxDecoration(
                              color: Theme.of(ctx).colorScheme.surface,
                              borderRadius: BorderRadius.circular(16),
-                             border: Border.all(color: Theme.of(ctx).colorScheme.outline.withOpacity(0.2), width: 2),
+                             border: Border.all(color: Theme.of(ctx).colorScheme.outline.withValues(alpha: 0.2), width: 2),
                              boxShadow: [
-                               BoxShadow(color: Theme.of(ctx).brightness == Brightness.dark ? Colors.transparent : Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
+                               BoxShadow(color: Theme.of(ctx).brightness == Brightness.dark ? Colors.transparent : Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))
                              ]
                            ),
                            child: Column(
@@ -1998,17 +1998,17 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.06),
+                    color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.compare_arrows, size: 16, color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.6)),
+                      Icon(Icons.compare_arrows, size: 16, color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.6)),
                       const SizedBox(width: 8),
                       Text(
                         "Diferencia de $diferencia m detectada",
-                        style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.7), fontSize: 13, fontWeight: FontWeight.w500),
+                        style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.7), fontSize: 13, fontWeight: FontWeight.w500),
                       )
                     ],
                   ),

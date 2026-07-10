@@ -365,7 +365,7 @@ class _SessionPlannerViewState extends State<SessionPlannerView> {
       final template = TrainingTemplate(
         id:               now.millisecondsSinceEpoch.toString(),
         name:             name,
-        colorValue:       AppColors.brand.value,
+        colorValue:       AppColors.brand.toARGB32(),
         isWarmupCooldown: false,
         blocks:           tBlocks,
         createdAt:        now,

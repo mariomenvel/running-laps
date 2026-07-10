@@ -40,7 +40,7 @@ class FilterBadgeButton extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.brand.withOpacity(0.3),
+                    color: AppColors.brand.withValues(alpha: 0.3),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),

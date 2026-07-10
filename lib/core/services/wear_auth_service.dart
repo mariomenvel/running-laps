@@ -131,7 +131,7 @@ class _WearQRScannerPageState extends State<_WearQRScannerPage> {
               padding:
                   const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.6),
+                color: Colors.black.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Text(

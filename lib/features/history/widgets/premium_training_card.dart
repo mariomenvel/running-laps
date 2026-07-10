@@ -89,7 +89,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
           curve: Curves.easeInOut,
           decoration: BoxDecoration(
             color: widget.isSelected
-                ? AppColors.brand.withOpacity(0.05)
+                ? AppColors.brand.withValues(alpha: 0.05)
                 : AppColors.surfaceOf(context),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
@@ -137,7 +137,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
               height: 40,
               margin: const EdgeInsets.only(right: 12),
               decoration: BoxDecoration(
-                color: AppColors.brand.withOpacity(0.08),
+                color: AppColors.brand.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -172,10 +172,10 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: AppColors.brand.withOpacity(0.1),
+                          color: AppColors.brand.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                              color: AppColors.brand.withOpacity(0.3)),
+                              color: AppColors.brand.withValues(alpha: 0.3)),
                         ),
                         child: Text(
                           'Manual',
@@ -303,7 +303,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
               foregroundColor: Theme.of(context).brightness == Brightness.dark
                   ? AppColors.brandLight
                   : AppColors.brand,
-              side: BorderSide(color: AppColors.brand.withOpacity(0.4)),
+              side: BorderSide(color: AppColors.brand.withValues(alpha: 0.4)),
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
@@ -409,7 +409,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
             height: 22,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: AppColors.brand.withOpacity(0.1),
+              color: AppColors.brand.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Text(
@@ -531,7 +531,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.brand.withOpacity(0.1),
+                    color: AppColors.brand.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(Icons.label_rounded,
@@ -559,7 +559,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.rpeMax.withOpacity(0.1),
+                    color: AppColors.rpeMax.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.picture_as_pdf_rounded,

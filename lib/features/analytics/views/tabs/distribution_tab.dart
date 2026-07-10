@@ -66,10 +66,10 @@ class DistributionTab extends StatelessWidget {
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
+            border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15)),
             boxShadow: [
               BoxShadow(
-                color: AppColors.brand.withOpacity(0.1),
+                color: AppColors.brand.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
                 spreadRadius: -5,
@@ -77,7 +77,7 @@ class DistributionTab extends StatelessWidget {
               BoxShadow(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.transparent
-                    : Colors.black.withOpacity(0.05),
+                    : Colors.black.withValues(alpha: 0.05),
                 blurRadius: 15,
                 offset: const Offset(0, 5),
               ),
@@ -115,10 +115,10 @@ class DistributionTab extends StatelessWidget {
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
+            border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15)),
             boxShadow: [
               BoxShadow(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
                 spreadRadius: -5,
@@ -143,7 +143,7 @@ class DistributionTab extends StatelessWidget {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: color.withOpacity(0.2),
+                            color: color.withValues(alpha: 0.2),
                             blurRadius: 30,
                             spreadRadius: 5,
                           ),
@@ -158,7 +158,7 @@ class DistributionTab extends StatelessWidget {
                         value: 1.0,
                         strokeWidth: 14,
                         strokeCap: StrokeCap.round,
-                        valueColor: AlwaysStoppedAnimation<Color>(onSurface.withOpacity(0.08)),
+                        valueColor: AlwaysStoppedAnimation<Color>(onSurface.withValues(alpha: 0.08)),
                       ),
                     ),
                     // Progreso real
@@ -189,7 +189,7 @@ class DistributionTab extends StatelessWidget {
                           'PUNTOS',
                           style: TextStyle(
                             fontSize: 10,
-                            color: onSurface.withOpacity(0.5),
+                            color: onSurface.withValues(alpha: 0.5),
                             fontWeight: FontWeight.w800,
                             letterSpacing: 2,
                           ),
@@ -204,9 +204,9 @@ class DistributionTab extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: color.withOpacity(0.3)),
+                  border: Border.all(color: color.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   label.toUpperCase(),
@@ -224,7 +224,7 @@ class DistributionTab extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
-                  color: onSurface.withOpacity(0.7),
+                  color: onSurface.withValues(alpha: 0.7),
                   fontWeight: FontWeight.w500,
                   height: 1.4,
                 ),
@@ -261,10 +261,10 @@ class DistributionTab extends StatelessWidget {
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
+            border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15)),
             boxShadow: [
               BoxShadow(
-                color: AppColors.rpeMid.withOpacity(0.1),
+                color: AppColors.rpeMid.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
                 spreadRadius: -5,
@@ -272,7 +272,7 @@ class DistributionTab extends StatelessWidget {
               BoxShadow(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.transparent
-                    : Colors.black.withOpacity(0.05),
+                    : Colors.black.withValues(alpha: 0.05),
                 blurRadius: 15,
                 offset: const Offset(0, 5),
               ),
@@ -287,7 +287,7 @@ class DistributionTab extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.rpeMid.withOpacity(0.5),
+                      color: AppColors.rpeMid.withValues(alpha: 0.5),
                       blurRadius: 12,
                       offset: const Offset(0, 6),
                     ),
@@ -310,14 +310,14 @@ class DistributionTab extends StatelessWidget {
                 'para alcanzar $nextMilestone km',
                 style: TextStyle(
                   fontSize: 16,
-                  color: onSurface.withOpacity(0.7),
+                  color: onSurface.withValues(alpha: 0.7),
                   fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 20),
               LinearProgressIndicator(
                 value: totalKm / nextMilestone,
-                backgroundColor: onSurface.withOpacity(0.12),
+                backgroundColor: onSurface.withValues(alpha: 0.12),
                 valueColor: const AlwaysStoppedAnimation<Color>(AppColors.rpeMid),
                 minHeight: 8,
                 borderRadius: BorderRadius.circular(4),
@@ -468,7 +468,7 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w800,
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                             letterSpacing: 1.2,
                           ),
                         ),
@@ -495,7 +495,7 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
                       decoration: BoxDecoration(
-                        color: isTouched ? color.withOpacity(0.1) : Colors.transparent,
+                        color: isTouched ? color.withValues(alpha: 0.1) : Colors.transparent,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -507,7 +507,7 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
                               color: color,
                               shape: BoxShape.circle,
                               boxShadow: [
-                                BoxShadow(color: color.withOpacity(0.3), blurRadius: 4, spreadRadius: 1)
+                                BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 4, spreadRadius: 1)
                               ]
                             ),
                           ),
@@ -527,7 +527,7 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
                             '$percent%',
                             style: TextStyle(
                               fontSize: 12,
-                              color: isTouched ? color : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                              color: isTouched ? color : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                               fontWeight: isTouched ? FontWeight.w800 : FontWeight.w500,
                             ),
                           ),
@@ -559,12 +559,12 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: color.withOpacity(0.15),
+                    color: color.withValues(alpha: 0.15),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
-                border: Border.all(color: color.withOpacity(0.2)),
+                border: Border.all(color: color.withValues(alpha: 0.2)),
               ),
               child: IntrinsicWidth(
                 child: Row(
@@ -583,7 +583,7 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.1),
+                        color: color.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(

@@ -226,7 +226,7 @@ class _AvatarPreview extends StatelessWidget {
           color: AppColors.surface2Of(context),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.12),
+              color: Colors.black.withValues(alpha: 0.12),
               blurRadius: 20,
               offset: const Offset(0, 6),
             ),
@@ -363,7 +363,7 @@ class _PreviewGrid extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(6, 8, 6, 6),
                 decoration: BoxDecoration(
                   color: isSel
-                      ? AppColors.brand.withOpacity(0.09)
+                      ? AppColors.brand.withValues(alpha: 0.09)
                       : AppColors.surfaceOf(context),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
@@ -451,7 +451,7 @@ class _ColorStrip extends StatelessWidget {
                 boxShadow: isSel
                     ? [
                         BoxShadow(
-                          color: _toColor(hex).withOpacity(0.5),
+                          color: _toColor(hex).withValues(alpha: 0.5),
                           blurRadius: 8,
                           spreadRadius: 1,
                         ),
@@ -516,7 +516,7 @@ class _BgColorStrip extends StatelessWidget {
                 boxShadow: isSel
                     ? [
                         BoxShadow(
-                            color: color.withOpacity(0.5), blurRadius: 8),
+                            color: color.withValues(alpha: 0.5), blurRadius: 8),
                         const BoxShadow(color: Colors.black26, blurRadius: 4),
                       ]
                     : [const BoxShadow(color: Colors.black12, blurRadius: 2)],
@@ -603,7 +603,7 @@ class _AccessoryChips extends StatelessWidget {
                   horizontal: AppSpacing.m, vertical: AppSpacing.s),
               decoration: BoxDecoration(
                 color: isOn
-                    ? AppColors.brand.withOpacity(0.09)
+                    ? AppColors.brand.withValues(alpha: 0.09)
                     : AppColors.surfaceOf(context),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(

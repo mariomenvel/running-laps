@@ -53,7 +53,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
           BoxShadow(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.transparent
-                : Colors.black.withOpacity(0.05),
+                : Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -99,7 +99,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
                   : "Ritmo medio",
               style: TextStyle(
                 fontSize: 14,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -114,7 +114,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -141,7 +141,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
                   BoxShadow(
                     color: Theme.of(context).brightness == Brightness.dark
                         ? Colors.transparent
-                        : Colors.black.withOpacity(0.05),
+                        : Colors.black.withValues(alpha: 0.05),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   )
@@ -151,7 +151,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
         child: Icon(
           icon,
           size: 20,
-          color: isSelected ? (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand) : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+          color: isSelected ? (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand) : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
         ),
       ),
     );
@@ -189,13 +189,13 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
                 color: isSelected ? _metricColor : Colors.transparent,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isSelected ? _metricColor : Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                  color: isSelected ? _metricColor : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                 ),
               ),
               child: Text(
                 label,
                 style: TextStyle(
-                  color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
                 ),
@@ -213,7 +213,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
     final groups = _processData();
 
     if (groups.isEmpty) {
-      return Center(child: Text("Sin datos para este periodo", style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4))));
+      return Center(child: Text("Sin datos para este periodo", style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4))));
     }
 
     final maxY = groups.map((e) => e.displayValue).reduce(math.max);
@@ -286,7 +286,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
                   child: Text(
                     groups[index].shortLabel,
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
 
@@ -305,7 +305,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
           drawVerticalLine: false,
           horizontalInterval: targetMaxY / 4 == 0 ? 1.0 : targetMaxY / 4, 
           getDrawingHorizontalLine: (value) => FlLine(
-             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
+             color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
              strokeWidth: 1,
              dashArray: [10, 10],
           ),

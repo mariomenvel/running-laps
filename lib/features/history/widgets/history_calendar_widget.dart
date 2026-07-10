@@ -49,12 +49,12 @@ class _HistoryCalendarWidgetState extends State<HistoryCalendarWidget> {
           BoxShadow(
             color: isDark
                 ? Colors.transparent
-                : Colors.black.withOpacity(0.08),
+                : Colors.black.withValues(alpha: 0.08),
             offset: const Offset(0, 4),
             blurRadius: 20,
           ),
           BoxShadow(
-            color: AppColors.brand.withOpacity(0.05),
+            color: AppColors.brand.withValues(alpha: 0.05),
             offset: const Offset(0, 2),
             blurRadius: 8,
           ),
@@ -149,7 +149,7 @@ class _HistoryCalendarWidgetState extends State<HistoryCalendarWidget> {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                  color: color.withOpacity(0.4),
+                  color: color.withValues(alpha: 0.4),
                   blurRadius: 2,
                   offset: const Offset(0, 1)),
             ],
@@ -165,7 +165,7 @@ class _HistoryCalendarWidgetState extends State<HistoryCalendarWidget> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
           decoration: BoxDecoration(
-            color: AppColors.brand.withOpacity(0.15),
+            color: AppColors.brand.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(6),
           ),
           child: Text(
@@ -173,7 +173,7 @@ class _HistoryCalendarWidgetState extends State<HistoryCalendarWidget> {
             style: TextStyle(
               fontSize: 8,
               fontWeight: FontWeight.bold,
-              color: brandColor.withOpacity(0.8),
+              color: brandColor.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -287,7 +287,7 @@ class _HistoryCalendarWidgetState extends State<HistoryCalendarWidget> {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                  color: color.withOpacity(0.3),
+                  color: color.withValues(alpha: 0.3),
                   blurRadius: 3,
                   offset: const Offset(0, 1)),
             ],
@@ -308,7 +308,7 @@ class _HistoryCalendarWidgetState extends State<HistoryCalendarWidget> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
+            color: color.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(

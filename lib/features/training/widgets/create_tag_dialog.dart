@@ -71,7 +71,7 @@ class _CreateTagDialogState extends State<CreateTagDialog> with SingleTickerProv
       // Crear tag
       final newTag = TrainingTag(
         name: name,
-        colorValue: TagColors.palette[_selectedColorIndex].value,
+        colorValue: TagColors.palette[_selectedColorIndex].toARGB32(),
       );
 
       await tagManager.createTag(newTag);
@@ -202,14 +202,14 @@ class _CreateTagDialogState extends State<CreateTagDialog> with SingleTickerProv
                         ? [
                             BoxShadow(
                               color: TagColors.palette[index]
-                                  .withOpacity(0.5),
+                                  .withValues(alpha: 0.5),
                               blurRadius: 12,
                               spreadRadius: 2,
                             )
                           ]
                         : [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             )
@@ -290,7 +290,7 @@ class _CreateTagDialogState extends State<CreateTagDialog> with SingleTickerProv
                       borderRadius: BorderRadius.circular(16),
                     ),
                     elevation: 4,
-                    shadowColor: AppColors.brand.withOpacity(0.4),
+                    shadowColor: AppColors.brand.withValues(alpha: 0.4),
                   ),
                   child: _isLoading
                       ? const SizedBox(

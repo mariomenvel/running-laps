@@ -31,7 +31,7 @@ class AnalyticsRangeSelector extends StatelessWidget {
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                  BoxShadow(
-                   color: AppColors.brand.withOpacity(0.4),
+                   color: AppColors.brand.withValues(alpha: 0.4),
                    blurRadius: 10,
                    offset: const Offset(0, 4),
                  ),
@@ -89,7 +89,7 @@ class AnalyticsRangeSelector extends StatelessWidget {
             BoxShadow(
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.transparent
-                  : Colors.black.withOpacity(0.08),
+                  : Colors.black.withValues(alpha: 0.08),
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),
@@ -105,7 +105,7 @@ class AnalyticsRangeSelector extends StatelessWidget {
                height: 4,
                margin: const EdgeInsets.only(bottom: 20),
                decoration: BoxDecoration(
-                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                  borderRadius: BorderRadius.circular(2),
                ),
              ),
@@ -136,11 +136,11 @@ class AnalyticsRangeSelector extends StatelessWidget {
              ListTile(
                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-               tileColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
+               tileColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
                leading: Container(
                  padding: const EdgeInsets.all(8),
                  decoration: BoxDecoration(
-                   color: AppColors.rest.withOpacity(0.1),
+                   color: AppColors.rest.withValues(alpha: 0.1),
                    borderRadius: BorderRadius.circular(10),
                  ),
                  child: const Icon(Icons.date_range_rounded, color: AppColors.rest),
@@ -149,7 +149,7 @@ class AnalyticsRangeSelector extends StatelessWidget {
                  "Rango Personalizado",
                  style: TextStyle(fontWeight: FontWeight.w600),
                ),
-               trailing: Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+               trailing: Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                onTap: () async {
                  Navigator.pop(context);
                  final range = await showModalBottomSheet<DateTimeRange>(
@@ -181,7 +181,7 @@ class AnalyticsRangeSelector extends StatelessWidget {
                  style: TextButton.styleFrom(
                    padding: const EdgeInsets.symmetric(vertical: 16),
                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                   foregroundColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                   foregroundColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                  ),
                  child: const Text("Cancelar", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                ),
@@ -206,15 +206,15 @@ class AnalyticsRangeSelector extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.brand.withOpacity(0.08) : Colors.transparent,
+              color: isSelected ? AppColors.brand.withValues(alpha: 0.08) : Colors.transparent,
               borderRadius: BorderRadius.circular(16),
-              border: isSelected ? Border.all(color: AppColors.brand, width: 1.5) : Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
+              border: isSelected ? Border.all(color: AppColors.brand, width: 1.5) : Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2)),
             ),
             child: Row(
               children: [
                 Icon(
                   icon,
-                  color: isSelected ? AppColors.brand : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  color: isSelected ? AppColors.brand : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                   size: 22,
                 ),
                 const SizedBox(width: 16),

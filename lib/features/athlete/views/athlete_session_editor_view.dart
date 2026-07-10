@@ -440,7 +440,7 @@ class _CategoryPicker extends StatelessWidget {
           side:             BorderSide(
               color: isSelected
                   ? AppColors.brand
-                  : Theme.of(context).colorScheme.outline.withOpacity(0.4)),
+                  : Theme.of(context).colorScheme.outline.withValues(alpha: 0.4)),
           padding:          const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           visualDensity:    VisualDensity.compact,
         );
@@ -627,7 +627,7 @@ class _EmptyBlocksHint extends StatelessWidget {
         ),
         child: Column(children: [
           Icon(Icons.add_circle_outline,
-              size: 32, color: AppColors.brand.withOpacity(0.5)),
+              size: 32, color: AppColors.brand.withValues(alpha: 0.5)),
           const SizedBox(height: 8),
           Text('Añadir bloque',
               style: TextStyle(fontSize: 14, color: secondary)),
@@ -1081,7 +1081,7 @@ class _ZonePicker extends StatelessWidget {
                   : AppColors.textSecondaryLight)),
       const SizedBox(height: 4),
       DropdownButtonFormField<int?>(
-        value:      selected,
+        initialValue:      selected,
         isDense:    true,
         decoration: InputDecoration(
           isDense:        true,

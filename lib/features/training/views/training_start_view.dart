@@ -590,7 +590,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
     showDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.7),
+      barrierColor: Colors.black.withValues(alpha: 0.7),
       builder: (ctx) => _CountdownDialog(
         onComplete: () {
           Navigator.of(ctx).pop();
@@ -740,7 +740,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
               height: 4,
               margin: const EdgeInsets.only(bottom: 24),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -778,7 +778,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
               'Se perderán todas las series registradas de esta sesión.',
               style: TextStyle(
                 fontSize: 15,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                 height: 1.4,
               ),
               textAlign: TextAlign.center,
@@ -798,7 +798,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     borderRadius: BorderRadius.circular(16),
                   ),
                   elevation: 4,
-                  shadowColor: AppColors.rpeMax.withOpacity(0.4),
+                  shadowColor: AppColors.rpeMax.withValues(alpha: 0.4),
                 ),
                 child: const Text(
                   'Descartar',
@@ -822,7 +822,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
             ),
@@ -890,7 +890,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                       height: 4,
                       margin: const EdgeInsets.only(bottom: 24),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -911,17 +911,17 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     style: const TextStyle(fontSize: 18),
                     decoration: InputDecoration(
                       labelText: 'Nombre de la sesión',
-                      labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                      labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
+                        borderSide: BorderSide(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2)),
                       ),
                       focusedBorder: OutlineInputBorder(
                          borderRadius: BorderRadius.circular(12),
                          borderSide: BorderSide(color: _brandAccentColor, width: 2),
                       ),
                       filled: true,
-                      fillColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
+                      fillColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -970,7 +970,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                               const SizedBox(height: 4),
                               Text(
                                 'Puedes reintentar o continuar sin etiquetas',
-                                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 12),
+                                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 12),
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 8),
@@ -998,7 +998,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                           ActionChip(
                             avatar: Icon(Icons.add, size: 16, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
                             label: Text('Nueva', style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand)),
-                            backgroundColor: AppColors.brand.withOpacity(0.1),
+                            backgroundColor: AppColors.brand.withValues(alpha: 0.1),
                             side: BorderSide.none,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                             onPressed: () async {
@@ -1030,12 +1030,12 @@ class _TrainingStartViewState extends State<TrainingStartView>
                               ),
                               selected: isSelected,
                               selectedColor: Color(tag.colorValue),
-                              backgroundColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+                              backgroundColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
                               checkmarkColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                                 side: BorderSide(
-                                  color: isSelected ? Colors.transparent : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                                  color: isSelected ? Colors.transparent : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
                                 ),
                               ),
                               onSelected: (bool selected) {
@@ -1597,7 +1597,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
            Text(
              "Registra tu carrera libremente con GPS. \nSin series ni pausas programadas.",
              textAlign: TextAlign.center,
-             style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+             style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
            ),
            const Spacer(),
            SizedBox(
@@ -1608,7 +1608,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                  backgroundColor: AppColors.brand,
                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                  elevation: 8,
-                 shadowColor: AppColors.brand.withOpacity(0.5),
+                 shadowColor: AppColors.brand.withValues(alpha: 0.5),
                ),
                icon: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 32),
                label: const Text("EMPEZAR AHORA", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1)),
@@ -1663,7 +1663,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                   ),
                   Container(
                     height: 1.0,
-                    color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
                     margin: const EdgeInsets.symmetric(vertical: 8.0),
                   ),
 
@@ -1711,7 +1711,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                   ),
                   Container(
                     height: 1.0,
-                    color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
                     margin: const EdgeInsets.symmetric(vertical: 8.0),
                   ),
                   _buildSeriesList(),
@@ -1812,7 +1812,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.s),
                   decoration: BoxDecoration(
-                    color: brand.withOpacity(0.1),
+                    color: brand.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.calendar_today, color: brand, size: 18),
@@ -1932,7 +1932,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.s),
                   decoration: BoxDecoration(
-                    color: brand.withOpacity(0.1),
+                    color: brand.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.calendar_today, color: brand, size: 18),
@@ -2290,8 +2290,8 @@ class _TrainingStartViewState extends State<TrainingStartView>
           data: SliderTheme.of(context).copyWith(
             activeTrackColor: AppColors.brand,
             thumbColor: AppColors.brand,
-            inactiveTrackColor: AppColors.brand.withOpacity(0.2),
-            overlayColor: AppColors.brand.withOpacity(0.1),
+            inactiveTrackColor: AppColors.brand.withValues(alpha: 0.2),
+            overlayColor: AppColors.brand.withValues(alpha: 0.1),
             trackHeight: 3,
           ),
           child: Slider(
@@ -2468,7 +2468,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
         duration: AppMotion.base,
         padding: const EdgeInsets.all(AppSpacing.l),
         decoration: BoxDecoration(
-          color: selected ? brand.withOpacity(0.08) : AppColors.surfaceOf(context),
+          color: selected ? brand.withValues(alpha: 0.08) : AppColors.surfaceOf(context),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: selected ? brand : AppColors.borderOf(context),
@@ -2672,7 +2672,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                 decoration: BoxDecoration(
                   color: AppColors.surfaceOf(context),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.brand.withOpacity(0.4), width: 0.5),
+                  border: Border.all(color: AppColors.brand.withValues(alpha: 0.4), width: 0.5),
                 ),
                 child: Row(
                   children: [
@@ -2735,12 +2735,12 @@ class _TrainingStartViewState extends State<TrainingStartView>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: _brandAccentColor.withOpacity(0.08),
+            color: _brandAccentColor.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
         ],
-        border: Border.all(color: _brandAccentColor.withOpacity(0.1)),
+        border: Border.all(color: _brandAccentColor.withValues(alpha: 0.1)),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
@@ -2748,7 +2748,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              color: _brandAccentColor.withOpacity(0.05),
+              color: _brandAccentColor.withValues(alpha: 0.05),
               child: Row(
                 children: [
                   Icon(Icons.star_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 18),
@@ -2770,7 +2770,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.surface,
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.rpeMax.withOpacity(0.2)),
+                        border: Border.all(color: AppColors.rpeMax.withValues(alpha: 0.2)),
                       ),
                       child: const Icon(Icons.close_rounded, size: 14, color: AppColors.rpeMax),
                     ),
@@ -2808,7 +2808,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                       label: const Text("EDITAR ESTRUCTURA"),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
-                        side: BorderSide(color: _brandAccentColor.withOpacity(0.3)),
+                        side: BorderSide(color: _brandAccentColor.withValues(alpha: 0.3)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5),
@@ -2847,7 +2847,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
           style: TextStyle(
             fontSize: 9,
             fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             letterSpacing: 0.5,
           ),
         ),
@@ -2864,7 +2864,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
         child: Text(
           'Aquí aparecerán las series que realices.',
           textAlign: TextAlign.center,
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
         ),
       );
     }
@@ -2910,7 +2910,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                         width: 40,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.2),
+                          color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -2932,7 +2932,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                       Text(
                         "La serie #${i + 1} se eliminará permanentemente de esta sesión.",
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 15, color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.6)),
+                        style: TextStyle(fontSize: 15, color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.6)),
                       ),
                       const SizedBox(height: 32),
                       Row(
@@ -2946,7 +2946,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                               ),
                               child: Text(
                                 'Cancelar',
-                                style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold),
+                                style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),
@@ -2958,7 +2958,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.rpeMax.withOpacity(0.3),
+                                    color: AppColors.rpeMax.withValues(alpha: 0.3),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -3000,7 +3000,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                   BoxShadow(
                     color: Theme.of(context).brightness == Brightness.dark
                         ? Colors.transparent
-                        : Colors.black.withOpacity(0.06),
+                        : Colors.black.withValues(alpha: 0.06),
                     offset: const Offset(0, 4),
                     blurRadius: 12,
                   ),
@@ -3018,7 +3018,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: _brandAccentColor.withOpacity(0.4),
+                          color: _brandAccentColor.withValues(alpha: 0.4),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -3063,20 +3063,20 @@ class _TrainingStartViewState extends State<TrainingStartView>
                child: Row(
                  mainAxisAlignment: MainAxisAlignment.center,
                  children: [
-                   Container(width: 20, height: 1, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2)),
+                   Container(width: 20, height: 1, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2)),
                    const SizedBox(width: 8),
-                   Icon(Icons.snooze_rounded, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35)),
+                   Icon(Icons.snooze_rounded, size: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35)),
                    const SizedBox(width: 4),
                    Text(
                      _formatDescanso(serie.descansoSec),
                      style: TextStyle(
                        fontSize: 12,
-                       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                       color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                        fontWeight: FontWeight.w500,
                      ),
                    ),
                    const SizedBox(width: 8),
-                   Container(width: 20, height: 1, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2)),
+                   Container(width: 20, height: 1, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2)),
                  ],
                ),
              ),
@@ -3098,7 +3098,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
           style: TextStyle(
              fontSize: 12,
              fontWeight: FontWeight.w600,
-             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.85),
+             color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.85),
           ),
         ),
       ],
@@ -3218,12 +3218,12 @@ class _TrainingStartViewState extends State<TrainingStartView>
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16.0),
-          border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.2), width: 1.0),
+          border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2), width: 1.0),
           boxShadow: [
             BoxShadow(
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.transparent
-                  : Colors.black.withOpacity(0.05),
+                  : Colors.black.withValues(alpha: 0.05),
               blurRadius: 10.0,
               offset: const Offset(0, 4),
             ),
@@ -3235,14 +3235,14 @@ class _TrainingStartViewState extends State<TrainingStartView>
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, size: 16, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                Icon(icon, size: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
                 const SizedBox(width: 6),
                 Text(
                   label,
                   style: TextStyle(
                     fontSize: 14.0,
                     fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ],
@@ -3276,7 +3276,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
         child: Column(
           children: [
             const SizedBox(height: 12),
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2), borderRadius: BorderRadius.circular(2))),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2))),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
               child: Row(
@@ -3359,7 +3359,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
         child: Column(
           children: [
             const SizedBox(height: 12),
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2), borderRadius: BorderRadius.circular(2))),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2))),
              Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
               child: Row(
@@ -3479,7 +3479,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     height: 4,
                     margin: const EdgeInsets.only(bottom: 20),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -3498,7 +3498,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     isDistance ? 'Introduce los metros' : 'Introduce los segundos',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(height: 28),
@@ -3518,14 +3518,14 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     decoration: InputDecoration(
                       hintText: isDistance ? '400' : '90',
                       hintStyle: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                         fontSize: 48,
                         fontWeight: FontWeight.w300,
                       ),
                       suffixText: isDistance ? 'm' : 's',
                       suffixStyle: TextStyle(
                         fontSize: 24,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                         fontWeight: FontWeight.w500,
                       ),
                       border: OutlineInputBorder(
@@ -3533,7 +3533,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
-                      fillColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
+                      fillColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 24,
                         vertical: 20,
@@ -3584,14 +3584,14 @@ class _TrainingStartViewState extends State<TrainingStartView>
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            side: BorderSide(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
+                            side: BorderSide(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2)),
                           ),
                           child: Text(
                             'Cancelar',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                             ),
                           ),
                         ),
@@ -3620,7 +3620,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                               borderRadius: BorderRadius.circular(16),
                             ),
                             elevation: isValid ? 4 : 0,
-                            shadowColor: _brandAccentColor.withOpacity(0.4),
+                            shadowColor: _brandAccentColor.withValues(alpha: 0.4),
                           ),
                           child: const Text(
                             'Aceptar',
@@ -3665,15 +3665,15 @@ class _TrainingStartViewState extends State<TrainingStartView>
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16.0),
           border: Border.all(
-              color: _alarmEnabled ? AppColors.brand.withOpacity(0.5) : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+              color: _alarmEnabled ? AppColors.brand.withValues(alpha: 0.5) : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
               width: _alarmEnabled ? 2.0 : 1.0),
           boxShadow: [
             BoxShadow(
               color: _alarmEnabled
-                  ? AppColors.brand.withOpacity(0.1)
+                  ? AppColors.brand.withValues(alpha: 0.1)
                   : Theme.of(context).brightness == Brightness.dark
                       ? Colors.transparent
-                      : Colors.black.withOpacity(0.05),
+                      : Colors.black.withValues(alpha: 0.05),
               blurRadius: 10.0,
               offset: const Offset(0, 4),
             ),
@@ -3685,7 +3685,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
             children: [
                Icon(
                 _alarmEnabled ? Icons.notifications_active : Icons.notifications_off_outlined,
-                color: _alarmEnabled ? _brandAccentColor : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                color: _alarmEnabled ? _brandAccentColor : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                 size: 28,
               ),
               const SizedBox(width: 16),
@@ -3698,7 +3698,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                       style: TextStyle(
                         fontSize: 16.0,
                         fontWeight: FontWeight.bold,
-                        color: _alarmEnabled ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                        color: _alarmEnabled ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                     if (hasSpecificConfig)
@@ -3718,7 +3718,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                         padding: const EdgeInsets.only(top: 4.0),
                         child: Text(
                           "Toca para configurar",
-                          style: TextStyle(fontSize: 12.0, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+                          style: TextStyle(fontSize: 12.0, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                         ),
                       ),
                   ],
@@ -3743,10 +3743,10 @@ class _TrainingStartViewState extends State<TrainingStartView>
                        // _showAlarmConfigSheet(context);
                     }
                   },
-                  activeColor: AppColors.brand,
+                  activeThumbColor: AppColors.brand,
                   inactiveThumbColor: Colors.white,
                   inactiveTrackColor: Theme.of(context).brightness == Brightness.dark
-                      ? Theme.of(context).colorScheme.onSurface.withOpacity(0.15)
+                      ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15)
                       : AppColors.surface2,
                 ),
               ),
@@ -3792,7 +3792,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -3826,7 +3826,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                               child: CupertinoSlidingSegmentedControl<AlarmMode>(
                                 groupValue: _alarmMode,
                                 thumbColor: _brandAccentColor,
-                                backgroundColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+                                backgroundColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
                                 children: {
                                   AlarmMode.bySeconds: Padding(
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -3918,7 +3918,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Center(
-          child: Text("Marca tu ritmo objetivo", style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
+          child: Text("Marca tu ritmo objetivo", style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5))),
         ),
         const SizedBox(height: 12),
         SizedBox(
@@ -4010,16 +4010,16 @@ class _TrainingStartViewState extends State<TrainingStartView>
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16.0),
         border: Border.all(
-          color: _vm.gpsOn ? _brandAccentColor.withOpacity(0.5) : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color: _vm.gpsOn ? _brandAccentColor.withValues(alpha: 0.5) : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
           width: _vm.gpsOn ? 2.0 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
             color: _vm.gpsOn
-                ? _brandAccentColor.withOpacity(0.1)
+                ? _brandAccentColor.withValues(alpha: 0.1)
                 : Theme.of(context).brightness == Brightness.dark
                     ? Colors.transparent
-                    : Colors.black.withOpacity(0.05),
+                    : Colors.black.withValues(alpha: 0.05),
             blurRadius: 10.0,
             offset: const Offset(0, 4),
           ),
@@ -4033,7 +4033,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
             children: [
               Icon(
                 _vm.gpsOn ? Icons.location_on : Icons.location_off_outlined,
-                color: _vm.gpsOn ? _brandAccentColor : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                color: _vm.gpsOn ? _brandAccentColor : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                 size: 28,
               ),
               const SizedBox(width: 16),
@@ -4045,7 +4045,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     style: TextStyle(
                       fontSize: 16.0,
                       fontWeight: FontWeight.bold,
-                      color: _vm.gpsOn ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      color: _vm.gpsOn ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                    if (_vm.gpsOn)
@@ -4074,10 +4074,10 @@ class _TrainingStartViewState extends State<TrainingStartView>
                 });
 
               },
-              activeColor: AppColors.brand,
+              activeThumbColor: AppColors.brand,
               inactiveThumbColor: Colors.white,
               inactiveTrackColor: Theme.of(context).brightness == Brightness.dark
-                  ? Theme.of(context).colorScheme.onSurface.withOpacity(0.15)
+                  ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15)
                   : AppColors.surface2,
             ),
           ),
@@ -4106,17 +4106,17 @@ class _TrainingStartViewState extends State<TrainingStartView>
             borderRadius: BorderRadius.circular(16.0),
             border: Border.all(
               color: isConnected
-                  ? AppColors.rpeMax.withOpacity(0.5)
-                  : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                  ? AppColors.rpeMax.withValues(alpha: 0.5)
+                  : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
               width: isConnected ? 2.0 : 1.0,
             ),
             boxShadow: [
               BoxShadow(
                 color: isConnected
-                    ? AppColors.rpeMax.withOpacity(0.08)
+                    ? AppColors.rpeMax.withValues(alpha: 0.08)
                     : Theme.of(context).brightness == Brightness.dark
                         ? Colors.transparent
-                        : Colors.black.withOpacity(0.05),
+                        : Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10.0,
                 offset: const Offset(0, 4),
               ),
@@ -4132,7 +4132,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     isConnected ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
                     color: isConnected
                         ? AppColors.rpeMax
-                        : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                     size: 28,
                   ),
                   const SizedBox(width: 16),
@@ -4146,7 +4146,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                           fontWeight: FontWeight.bold,
                           color: isConnected
                               ? Theme.of(context).colorScheme.onSurface
-                              : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
                       if (isConnected)
@@ -4186,10 +4186,10 @@ class _TrainingStartViewState extends State<TrainingStartView>
                       HeartRateService().disconnect();
                     }
                   },
-                  activeColor: AppColors.rpeMax,
+                  activeThumbColor: AppColors.rpeMax,
                   inactiveThumbColor: Colors.white,
                   inactiveTrackColor: Theme.of(context).brightness == Brightness.dark
-                      ? Theme.of(context).colorScheme.onSurface.withOpacity(0.15)
+                      ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15)
                       : AppColors.surface2,
                 ),
               ),
@@ -4253,10 +4253,10 @@ class _TrainingStartViewState extends State<TrainingStartView>
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: color.withOpacity(isPressed ? 0.3 : 0.1), width: 1.5),
+              border: Border.all(color: color.withValues(alpha: isPressed ? 0.3 : 0.1), width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  color: color.withOpacity(isPressed ? 0.05 : 0.08),
+                  color: color.withValues(alpha: isPressed ? 0.05 : 0.08),
                   blurRadius: isPressed ? 4 : 12,
                   offset: Offset(0, isPressed ? 2 : 6),
                 ),
@@ -4268,7 +4268,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(icon, color: color, size: 22),
@@ -4301,7 +4301,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: _brandAccentColor.withOpacity(0.3),
+            color: _brandAccentColor.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -4404,7 +4404,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                   'Descansando',
                   style: TextStyle(
                     fontSize: 14,
-                    color: const Color(0xFF1A3A5A).withOpacity(0.6),
+                    color: const Color(0xFF1A3A5A).withValues(alpha: 0.6),
                   ),
                 ),
                 const Spacer(),
@@ -4413,7 +4413,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     margin: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
                     padding: const EdgeInsets.all(AppSpacing.l),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.85),
+                      color: Colors.white.withValues(alpha: 0.85),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Column(
@@ -4464,7 +4464,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                           max: 10,
                           divisions: 18,
                           activeColor: _rpeColor(_restRpe),
-                          inactiveColor: _rpeColor(_restRpe).withOpacity(0.2),
+                          inactiveColor: _rpeColor(_restRpe).withValues(alpha: 0.2),
                           onChanged: (v) => setState(() => _restRpe = v),
                         ),
                       ),
@@ -4486,7 +4486,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     margin: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
                     padding: const EdgeInsets.all(AppSpacing.m),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -4541,7 +4541,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
             ),
       child: Column(
         children: [
-          Container(height: 1.0, color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
+          Container(height: 1.0, color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15)),
           Padding(
             padding: const EdgeInsets.symmetric(
               vertical: 10.0, // Reduced from 20.0
@@ -4589,7 +4589,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: (color ?? AppColors.brand).withOpacity(0.2),
+              color: (color ?? AppColors.brand).withValues(alpha: 0.2),
               blurRadius: 20.0,
               offset: const Offset(0, 8),
               spreadRadius: 2,
@@ -4597,7 +4597,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
             BoxShadow(
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.transparent
-                  : Colors.black.withOpacity(0.12),
+                  : Colors.black.withValues(alpha: 0.12),
               blurRadius: 15.0,
               offset: const Offset(0, 5),
             ),

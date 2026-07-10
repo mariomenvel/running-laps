@@ -638,7 +638,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
               Text(
                 unit,
                 style: TextStyle(
-                  color: textColor.withOpacity(0.7),
+                  color: textColor.withValues(alpha: 0.7),
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1395,7 +1395,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
             style: ElevatedButton.styleFrom(
               backgroundColor: saveColor,
               foregroundColor: Colors.white,
-              disabledBackgroundColor: saveColor.withOpacity(0.5),
+              disabledBackgroundColor: saveColor.withValues(alpha: 0.5),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),

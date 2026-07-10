@@ -204,7 +204,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     final template = TrainingTemplate(
       id:               session.id,
       name:             sessionName,
-      colorValue:       AppColors.brand.value,
+      colorValue:       AppColors.brand.toARGB32(),
       isWarmupCooldown: false,
       blocks:           blocks,
       createdAt:        now,
@@ -454,7 +454,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               ],
             ),
           ),
-          Container(height: 1, color: Theme.of(context).colorScheme.outline.withOpacity(0.5)),
+          Container(height: 1, color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5)),
         ],
       ),
     );
@@ -596,7 +596,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           'Aquí verás tus km, ritmo y progreso',
           style: TextStyle(
             fontSize: 14,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             height: 1.4,
           ),
           textAlign: TextAlign.center,
@@ -635,7 +635,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.transparent : Colors.black.withOpacity(0.04),
+            color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.04),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -650,10 +650,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3), size: 22),
+            child: Icon(icon, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3), size: 22),
           ),
           const Spacer(),
           // Label
@@ -661,7 +661,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -672,7 +672,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             style: TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
               height: 1.0,
             ),
           ),
@@ -710,7 +710,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: AppColors.brand.withOpacity(0.12),
+                      color: AppColors.brand.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -762,7 +762,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     decoration: BoxDecoration(
                       color: active
                           ? AppColors.brand
-                          : Theme.of(context).colorScheme.outline.withOpacity(0.4),
+                          : Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(3),
                     ),
                   );
@@ -869,7 +869,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.transparent : Colors.black.withOpacity(0.04),
+            color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.04),
             blurRadius: 20,
             offset: const Offset(0, 10),
           )
@@ -880,7 +880,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.brand.withOpacity(0.1),
+              color: AppColors.brand.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.groups_outlined, size: 48, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
@@ -1181,7 +1181,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             ? null
             : [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
+                  color: Colors.black.withValues(alpha: 0.06),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -1343,7 +1343,7 @@ class _GroupHighlightCard extends StatelessWidget {
               ? null
               : [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
+                    color: Colors.black.withValues(alpha: 0.06),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -1456,7 +1456,7 @@ class _RecoveryBanner extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.effortSurface(9),
-        border: Border.all(color: AppColors.effort.withOpacity(0.5)),
+        border: Border.all(color: AppColors.effort.withValues(alpha: 0.5)),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -1527,7 +1527,7 @@ class _TodaySessionBanner extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 0),
       decoration: BoxDecoration(
         color: bgColor,
-        border: Border.all(color: AppColors.brand.withOpacity(0.4)),
+        border: Border.all(color: AppColors.brand.withValues(alpha: 0.4)),
         borderRadius: BorderRadius.circular(16),
       ),
       padding: const EdgeInsets.all(16),
@@ -1608,9 +1608,9 @@ class _GlassBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.25),
+        color: Colors.black.withValues(alpha: 0.25),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Text(
         label,

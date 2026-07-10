@@ -275,7 +275,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: AppColors.brand.withOpacity(0.1),
+          color: AppColors.brand.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
@@ -415,7 +415,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 color: AppColors.surfaceOf(context)
-                                    .withOpacity(0.85),
+                                    .withValues(alpha: 0.85),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
@@ -1244,7 +1244,7 @@ class _SerieExpansionTileState extends State<_SerieExpansionTile> {
                     dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: AppColors.brand.withOpacity(0.08),
+                      color: AppColors.brand.withValues(alpha: 0.08),
                     ),
                   ),
                 if (_showFc && fcPoints.length >= 3)
@@ -1256,7 +1256,7 @@ class _SerieExpansionTileState extends State<_SerieExpansionTile> {
                     dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: AppColors.rpeMax.withOpacity(0.08),
+                      color: AppColors.rpeMax.withValues(alpha: 0.08),
                     ),
                   ),
               ],
@@ -1288,9 +1288,9 @@ class _TargetChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.25)),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

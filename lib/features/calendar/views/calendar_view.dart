@@ -922,7 +922,7 @@ class _CalendarViewState extends State<CalendarView>
                           color: hasPendingAiSuggestion
                               ? AppColors.brand
                               : hasData
-                              ? (inMonth ? AppColors.brand : AppColors.brand.withOpacity(0.3))
+                              ? (inMonth ? AppColors.brand : AppColors.brand.withValues(alpha: 0.3))
                               : Colors.transparent,
                           shape: BoxShape.circle,
                         ),
@@ -1493,7 +1493,7 @@ class _CalendarViewState extends State<CalendarView>
                 borderRadius: BorderRadius.circular(AppDimens.cardRadius),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.brand.withOpacity(0.18),
+                    color: AppColors.brand.withValues(alpha: 0.18),
                     blurRadius: 10,
                     spreadRadius: 1,
                   ),

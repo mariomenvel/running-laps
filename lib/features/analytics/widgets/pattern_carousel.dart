@@ -55,7 +55,7 @@ class _PatternCarouselState<T> extends State<PatternCarousel<T>> {
                 BoxShadow(
                   color: Theme.of(context).brightness == Brightness.dark
                       ? Colors.transparent
-                      : Colors.black.withOpacity(0.05),
+                      : Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),
@@ -69,7 +69,7 @@ class _PatternCarouselState<T> extends State<PatternCarousel<T>> {
                     Icons.chevron_left,
                     color: _currentPage > 0
                         ? Theme.of(context).primaryColor
-                        : Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                   ),
                   onPressed: _currentPage > 0
                       ? () => _pageController.previousPage(
@@ -90,14 +90,14 @@ class _PatternCarouselState<T> extends State<PatternCarousel<T>> {
                     decoration: BoxDecoration(
                       color: _currentPage == index
                           ? AppColors.brand
-                          : Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                          : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(4),
                       boxShadow: _currentPage == index
                           ? [
                               BoxShadow(
                                 color: Theme.of(context)
                                     .primaryColor
-                                    .withOpacity(0.3),
+                                    .withValues(alpha: 0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
@@ -112,7 +112,7 @@ class _PatternCarouselState<T> extends State<PatternCarousel<T>> {
                     Icons.chevron_right,
                     color: _currentPage < widget.items.length - 1
                         ? Theme.of(context).primaryColor
-                        : Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                   ),
                   onPressed: _currentPage < widget.items.length - 1
                       ? () => _pageController.nextPage(

@@ -154,7 +154,7 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
             ),
           ),
           // Línea divisoria
-          Container(height: 1.0, color: cs.outline.withOpacity(0.3)),
+          Container(height: 1.0, color: cs.outline.withValues(alpha: 0.3)),
         ],
       ),
     );

@@ -244,7 +244,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.2),
+                      color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -252,7 +252,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.brand.withOpacity(0.1),
+                      color: AppColors.brand.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(Icons.info_outline_rounded, color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 40),
@@ -266,7 +266,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                   Text(
                     "Has modificado la plantilla. ¿Quieres actualizar la original o usar estos cambios solo para este entrenamiento?",
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 15, color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.6)),
+                    style: TextStyle(fontSize: 15, color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.6)),
                   ),
                   const SizedBox(height: 32),
                   Row(
@@ -280,7 +280,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                           ),
                           child: Text(
                             'Solo esta vez',
-                            style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold),
+                            style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),
@@ -292,7 +292,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.brand.withOpacity(0.3),
+                                color: AppColors.brand.withValues(alpha: 0.3),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -376,7 +376,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.2),
+                color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -398,7 +398,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
             Text(
               "Tienes cambios sin guardar en esta plantilla. Si sales ahora, se perderán para siempre.",
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.6)),
+              style: TextStyle(fontSize: 15, color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.6)),
             ),
             const SizedBox(height: 32),
             Row(
@@ -412,7 +412,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                     ),
                     child: Text(
                       'Seguir editando',
-                      style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold),
+                      style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -424,7 +424,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.rpeMax.withOpacity(0.3),
+                          color: AppColors.rpeMax.withValues(alpha: 0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -490,7 +490,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                 ),
                 decoration: InputDecoration(
                   hintText: widget.isMomentary ? 'Plantilla Rápida' : 'Nombre de plantilla',
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 16),
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 16),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.zero,
                   isDense: true,
@@ -560,7 +560,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: templateColor.withOpacity(0.1),
+                        color: templateColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -607,7 +607,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                               elevation: 8,
                               color: Theme.of(context).colorScheme.surface,
                               borderRadius: BorderRadius.circular(20),
-                              shadowColor: Colors.black.withOpacity(0.3),
+                              shadowColor: Colors.black.withValues(alpha: 0.3),
                               child: child,
                             );
                           },
@@ -633,7 +633,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
         child: Column(
@@ -642,23 +642,23 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
               child: DropdownButtonFormField<SessionCategory?>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: InputDecoration(
                   labelText: 'Tipo de sesión (opcional)',
                   labelStyle: TextStyle(
                     fontSize: 13,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.55),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                      color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                      color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                     ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -669,7 +669,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                   'Tipo de sesión (opcional)',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
                 ),
                 items: [
@@ -678,7 +678,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                     child: Text(
                       'Sin categoría',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                         fontSize: 14,
                       ),
                     ),
@@ -698,7 +698,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
             ),
 
             const SizedBox(height: 8),
-            Divider(height: 1, color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
+            Divider(height: 1, color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15)),
 
             // Calentamiento
             _buildWarmupCooldownSelector(
@@ -711,7 +711,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
               }),
             ),
 
-            Divider(height: 1, indent: 16, color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
+            Divider(height: 1, indent: 16, color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15)),
 
             // Vuelta a la calma
             _buildWarmupCooldownSelector(
@@ -747,7 +747,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
             Icon(
               label == 'Calentamiento' ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
               size: 16,
-              color: cs.onSurface.withOpacity(0.4),
+              color: cs.onSurface.withValues(alpha: 0.4),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -759,13 +759,13 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: cs.onSurface.withOpacity(0.7),
+                      color: cs.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     'No tienes plantillas de calentamiento aún',
-                    style: TextStyle(fontSize: 12, color: cs.onSurface.withOpacity(0.4)),
+                    style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
                   ),
                 ],
               ),
@@ -819,7 +819,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
             Icon(
               label == 'Calentamiento' ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
               size: 16,
-              color: cs.onSurface.withOpacity(0.4),
+              color: cs.onSurface.withValues(alpha: 0.4),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -828,7 +828,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: cs.onSurface.withOpacity(0.7),
+                  color: cs.onSurface.withValues(alpha: 0.7),
                 ),
               ),
             ),
@@ -838,12 +838,12 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                 fontSize: 13,
                 color: selectedTemplate != null
                     ? cs.onSurface
-                    : cs.onSurface.withOpacity(0.4),
+                    : cs.onSurface.withValues(alpha: 0.4),
                 fontWeight: selectedTemplate != null ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
             const SizedBox(width: 6),
-            Icon(Icons.chevron_right_rounded, size: 16, color: cs.onSurface.withOpacity(0.3)),
+            Icon(Icons.chevron_right_rounded, size: 16, color: cs.onSurface.withValues(alpha: 0.3)),
           ],
         ),
       ),
@@ -873,7 +873,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.2),
+                  color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -901,7 +901,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
               _PickerOption(
                 name: 'Ninguno',
                 isSelected: selectedId == null,
-                color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.3),
+                color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.3),
                 onTap: () {
                   onChanged(null);
                   Navigator.pop(ctx);
@@ -934,13 +934,13 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
             Container(
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: AppColors.brand.withOpacity(0.1),
+                color: AppColors.brand.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.fitness_center_rounded,
                 size: 80,
-                color: AppColors.brand.withOpacity(0.6),
+                color: AppColors.brand.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 24),
@@ -958,7 +958,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 15,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 32),
@@ -994,7 +994,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
             BoxShadow(
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.transparent
-                  : Colors.black.withOpacity(0.04),
+                  : Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -1019,7 +1019,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.brand.withOpacity(0.3),
+                            color: AppColors.brand.withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -1054,12 +1054,12 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              Icon(Icons.timer_outlined, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                              Icon(Icons.timer_outlined, size: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
                               const SizedBox(width: 4),
                               Text(
                                 "Descanso: ${block.restSeconds}s",
                                 style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -1107,7 +1107,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                         const SizedBox(width: 8),
                         ReorderableDragStartListener(
                           index: index,
-                          child: Icon(Icons.drag_indicator_rounded, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.25)),
+                          child: Icon(Icons.drag_indicator_rounded, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25)),
                         ),
                       ],
                     ),
@@ -1128,7 +1128,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, size: 18, color: color),
@@ -1170,7 +1170,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
             const SizedBox(height: 8),
             Text(
               "Elige un color para identificar rápidamente este entrenamiento en tu historial.",
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 14),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 14),
             ),
             const SizedBox(height: 24),
             Center(
@@ -1200,7 +1200,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Color(color).withOpacity(0.3),
+                            color: Color(color).withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 4),
                           ),
@@ -1235,7 +1235,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: AppColors.rpeLow.withOpacity(0.3),
+                color: AppColors.rpeLow.withValues(alpha: 0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -1332,19 +1332,19 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: _isPressed
-              ? Theme.of(context).colorScheme.onSurface.withOpacity(0.08)
+              ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08)
               : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.transparent
-                  : Colors.black.withOpacity(_isPressed ? 0.03 : 0.06),
+                  : Colors.black.withValues(alpha: _isPressed ? 0.03 : 0.06),
               blurRadius: _isPressed ? 4 : 12,
               offset: Offset(0, _isPressed ? 2 : 4),
             ),
           ],
-          border: Border.all(color: widget.color.withOpacity(0.1)),
+          border: Border.all(color: widget.color.withValues(alpha: 0.1)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

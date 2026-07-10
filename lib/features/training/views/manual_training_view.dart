@@ -455,7 +455,7 @@ class _ManualSerieCard extends StatelessWidget {
                 Container(
                   width: 24, height: 24,
                   decoration: BoxDecoration(
-                    color:        AppColors.brand.withOpacity(0.12),
+                    color:        AppColors.brand.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Center(

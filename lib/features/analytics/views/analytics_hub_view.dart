@@ -62,7 +62,7 @@ class _AnalyticsHubViewState extends State<AnalyticsHubView> with SingleTickerPr
           controller: _tabController,
           isScrollable: true, // Allow scrolling if needed on small screens
           labelColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
-          unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+          unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
           indicatorColor: AppColors.brand,
           indicatorWeight: 3,
           labelStyle: const TextStyle(fontWeight: FontWeight.bold),
@@ -101,16 +101,16 @@ class _AnalyticsHubViewState extends State<AnalyticsHubView> with SingleTickerPr
         builder: (context) => Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.bar_chart, size: 48, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+            Icon(Icons.bar_chart, size: 48, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
             const SizedBox(height: 16),
             Text(
               title,
-              style: TextStyle(fontSize: 18, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
               "Se implementará en la siguiente fase",
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
             ),
           ],
         ),

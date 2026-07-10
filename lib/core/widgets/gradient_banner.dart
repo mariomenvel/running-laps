@@ -97,7 +97,7 @@ class _GradientBannerState extends State<GradientBanner>
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(
@@ -128,7 +128,7 @@ class _GradientBannerState extends State<GradientBanner>
                       Text(
                         widget.subtitle!,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.85),
+                          color: Colors.white.withValues(alpha: 0.85),
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),

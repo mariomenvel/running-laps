@@ -433,7 +433,7 @@ class _CompleteSessionManuallyViewState
           ),
           CupertinoSwitch(
             value: value,
-            activeColor: AppColors.brand,
+            activeTrackColor: AppColors.brand,
             onChanged: onChanged,
           ),
         ],

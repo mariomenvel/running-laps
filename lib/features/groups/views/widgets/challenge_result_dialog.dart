@@ -66,7 +66,7 @@ class _ChallengeResultDialogState extends State<ChallengeResultDialog> {
                 borderRadius: BorderRadius.circular(32),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
+                    color: Colors.black.withValues(alpha: 0.15),
                     blurRadius: 30,
                     offset: const Offset(0, 15),
                   ),
@@ -132,7 +132,7 @@ class _ChallengeResultDialogState extends State<ChallengeResultDialog> {
                               elevation: 8,
                               shadowColor: (widget.notification.type == GroupNotificationType.goalMet 
                                 ? AppColors.rpeLow 
-                                : AppColors.brand).withOpacity(0.4),
+                                : AppColors.brand).withValues(alpha: 0.4),
                             ),
                             child: Text(
                               widget.notification.type == GroupNotificationType.goalMet 
@@ -214,7 +214,7 @@ class _ChallengeResultDialogState extends State<ChallengeResultDialog> {
       height: 140,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: gradient.first.withOpacity(0.1),
+        color: gradient.first.withValues(alpha: 0.1),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: Center(
@@ -227,7 +227,7 @@ class _ChallengeResultDialogState extends State<ChallengeResultDialog> {
               height: 100,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: iconColor.withOpacity(0.2), width: 2),
+                border: Border.all(color: iconColor.withValues(alpha: 0.2), width: 2),
               ),
             ),
             Container(
@@ -235,7 +235,7 @@ class _ChallengeResultDialogState extends State<ChallengeResultDialog> {
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: iconColor.withOpacity(0.4), width: 2),
+                border: Border.all(color: iconColor.withValues(alpha: 0.4), width: 2),
               ),
             ),
             

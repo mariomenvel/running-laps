@@ -70,7 +70,7 @@ class WorkoutPatternDetailView extends StatelessWidget {
             // History List
             Align(
               alignment: Alignment.centerLeft,
-              child: Text("Sesiones Realizadas", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
+              child: Text("Sesiones Realizadas", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5))),
             ),
             const SizedBox(height: 12),
             
@@ -100,7 +100,7 @@ class WorkoutPatternDetailView extends StatelessWidget {
           BoxShadow(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.transparent
-                : Colors.black.withOpacity(0.03),
+                : Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -112,7 +112,7 @@ class WorkoutPatternDetailView extends StatelessWidget {
           const SizedBox(height: 8),
           Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
           const SizedBox(height: 4),
-          Text(title, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 11), textAlign: TextAlign.center),
+          Text(title, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 11), textAlign: TextAlign.center),
         ],
       ),
     );
@@ -139,10 +139,10 @@ class WorkoutPatternDetailView extends StatelessWidget {
                Container(
                  padding: const EdgeInsets.all(8),
                  decoration: BoxDecoration(
-                   color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+                   color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
                    shape: BoxShape.circle,
                  ),
-                 child: Icon(Icons.fitness_center, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), size: 16),
+                 child: Icon(Icons.fitness_center, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), size: 16),
                ),
                const SizedBox(width: 12),
                Column(
@@ -155,7 +155,7 @@ class WorkoutPatternDetailView extends StatelessWidget {
                    const SizedBox(height: 4),
                    Text(
                      "Consistencia: ${(instance.consistency * 100).toInt()}%",
-                     style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 12),
+                     style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 12),
                    ),
                  ],
                ),
@@ -164,7 +164,7 @@ class WorkoutPatternDetailView extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: AppColors.brand.withOpacity(0.1),
+                color: AppColors.brand.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
                 ),
               child: Column(
@@ -177,7 +177,7 @@ class WorkoutPatternDetailView extends StatelessWidget {
                   ),
                   Text(
                     "$pace /km",
-                    style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand).withOpacity(0.6), fontSize: 11, fontWeight: FontWeight.w500),
+                    style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand).withValues(alpha: 0.6), fontSize: 11, fontWeight: FontWeight.w500),
                   ),
                 ],
               ),
@@ -209,7 +209,7 @@ class _PerformanceChart extends StatelessWidget {
         gridData: FlGridData(
           show: true, 
           drawVerticalLine: false,
-          getDrawingHorizontalLine: (_) => FlLine(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06)),
+          getDrawingHorizontalLine: (_) => FlLine(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06)),
         ),
         titlesData: FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
@@ -223,7 +223,7 @@ class _PerformanceChart extends StatelessWidget {
             dotData: const FlDotData(show: true),
             belowBarData: BarAreaData(
               show: true,
-              color: AppColors.rest.withOpacity(0.1),
+              color: AppColors.rest.withValues(alpha: 0.1),
             ),
           ),
         ],

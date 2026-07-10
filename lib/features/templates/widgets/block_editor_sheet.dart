@@ -116,7 +116,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.2),
+                color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -170,7 +170,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.2),
+                color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -256,9 +256,9 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
 
     return Container(
       decoration: BoxDecoration(
-        color: cs.onSurface.withOpacity(0.04),
+        color: cs.onSurface.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: cs.outline.withOpacity(0.3)),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -275,8 +275,8 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: _objectivesExpanded || hasObjective
-                          ? AppColors.brand.withOpacity(0.1)
-                          : cs.onSurface.withOpacity(0.08),
+                          ? AppColors.brand.withValues(alpha: 0.1)
+                          : cs.onSurface.withValues(alpha: 0.08),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -284,7 +284,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                       size: 18,
                       color: _objectivesExpanded || hasObjective
                           ? AppColors.brand
-                          : cs.onSurface.withOpacity(0.4),
+                          : cs.onSurface.withValues(alpha: 0.4),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -312,7 +312,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                     _objectivesExpanded
                         ? Icons.expand_less_rounded
                         : Icons.expand_more_rounded,
-                    color: cs.onSurface.withOpacity(0.45),
+                    color: cs.onSurface.withValues(alpha: 0.45),
                     size: 22,
                   ),
                 ],
@@ -322,7 +322,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
 
           // Contenido colapsable
           if (_objectivesExpanded) ...[
-            Divider(height: 1, color: cs.outline.withOpacity(0.3)),
+            Divider(height: 1, color: cs.outline.withValues(alpha: 0.3)),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
               child: Column(
@@ -359,7 +359,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
-            color: cs.onSurface.withOpacity(0.5),
+            color: cs.onSurface.withValues(alpha: 0.5),
             letterSpacing: 0.5,
           ),
         ),
@@ -382,7 +382,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: cs.onSurface.withOpacity(0.6),
+                  color: cs.onSurface.withValues(alpha: 0.6),
                 ),
               ),
             ),
@@ -402,7 +402,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
   }
 
   Widget _buildRpeSlider(ColorScheme cs) {
-    final color = _rpeSet ? _rpeColor(_rpeValue) : cs.onSurface.withOpacity(0.35);
+    final color = _rpeSet ? _rpeColor(_rpeValue) : cs.onSurface.withValues(alpha: 0.35);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -413,7 +413,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
-                color: cs.onSurface.withOpacity(0.5),
+                color: cs.onSurface.withValues(alpha: 0.5),
                 letterSpacing: 0.5,
               ),
             ),
@@ -435,7 +435,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                       key: const ValueKey('rpe_unset'),
                       style: TextStyle(
                         fontSize: 13,
-                        color: cs.onSurface.withOpacity(0.4),
+                        color: cs.onSurface.withValues(alpha: 0.4),
                       ),
                     ),
             ),
@@ -445,9 +445,9 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
             activeTrackColor: color,
-            inactiveTrackColor: cs.onSurface.withOpacity(0.12),
+            inactiveTrackColor: cs.onSurface.withValues(alpha: 0.12),
             thumbColor: color,
-            overlayColor: color.withOpacity(0.15),
+            overlayColor: color.withValues(alpha: 0.15),
             trackHeight: 4,
           ),
           child: Slider(
@@ -475,7 +475,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                 'Limpiar',
                 style: TextStyle(
                   fontSize: 12,
-                  color: cs.onSurface.withOpacity(0.45),
+                  color: cs.onSurface.withValues(alpha: 0.45),
                   decoration: TextDecoration.underline,
                 ),
               ),
@@ -494,7 +494,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
-            color: cs.onSurface.withOpacity(0.5),
+            color: cs.onSurface.withValues(alpha: 0.5),
             letterSpacing: 0.5,
           ),
         ),
@@ -516,13 +516,13 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? zColor.withOpacity(0.15)
-                          : cs.onSurface.withOpacity(0.06),
+                          ? zColor.withValues(alpha: 0.15)
+                          : cs.onSurface.withValues(alpha: 0.06),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                         color: isSelected
-                            ? zColor.withOpacity(0.6)
-                            : cs.outline.withOpacity(0.2),
+                            ? zColor.withValues(alpha: 0.6)
+                            : cs.outline.withValues(alpha: 0.2),
                       ),
                     ),
                     child: Column(
@@ -535,7 +535,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                             fontWeight: FontWeight.w800,
                             color: isSelected
                                 ? zColor
-                                : cs.onSurface.withOpacity(0.4),
+                                : cs.onSurface.withValues(alpha: 0.4),
                           ),
                         ),
                         Container(
@@ -545,7 +545,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? zColor
-                                : cs.onSurface.withOpacity(0.15),
+                                : cs.onSurface.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -588,7 +588,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
               width: 48,
               height: 5,
               decoration: BoxDecoration(
-                color: cs.onSurface.withOpacity(0.2),
+                color: cs.onSurface.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2.5),
               ),
             ),
@@ -650,9 +650,9 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                   // ── Alertas de ritmo ──────────────────────────────
                   Container(
                     decoration: BoxDecoration(
-                      color: cs.onSurface.withOpacity(0.04),
+                      color: cs.onSurface.withValues(alpha: 0.04),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: cs.outline.withOpacity(0.3)),
+                      border: Border.all(color: cs.outline.withValues(alpha: 0.3)),
                     ),
                     child: Column(
                       children: [
@@ -660,13 +660,13 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                           value: _alertsEnabled,
                           onChanged: (v) =>
                               setState(() => _alertsEnabled = v),
-                          activeColor: AppColors.brand,
+                          activeThumbColor: AppColors.brand,
                           secondary: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: _alertsEnabled
-                                  ? AppColors.brand.withOpacity(0.1)
-                                  : cs.onSurface.withOpacity(0.08),
+                                  ? AppColors.brand.withValues(alpha: 0.1)
+                                  : cs.onSurface.withValues(alpha: 0.08),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
@@ -677,7 +677,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                                   ? (isDark
                                       ? AppColors.brandLight
                                       : AppColors.brand)
-                                  : cs.onSurface.withOpacity(0.4),
+                                  : cs.onSurface.withValues(alpha: 0.4),
                               size: 20,
                             ),
                           ),
@@ -700,7 +700,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                                     : 'Basado en Ritmo de Carrera',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: cs.onSurface.withOpacity(0.6),
+                                  color: cs.onSurface.withValues(alpha: 0.6),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -708,7 +708,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                             trailing: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: AppColors.brand.withOpacity(0.05),
+                                color: AppColors.brand.withValues(alpha: 0.05),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
@@ -735,7 +735,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                       color: AppColors.brand,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.brand.withOpacity(0.3),
+                          color: AppColors.brand.withValues(alpha: 0.3),
                           blurRadius: 12,
                           offset: const Offset(0, 6),
                         ),
@@ -783,12 +783,12 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
+              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)),
           boxShadow: [
             BoxShadow(
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.transparent
-                  : Colors.black.withOpacity(0.03),
+                  : Colors.black.withValues(alpha: 0.03),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -805,7 +805,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                     color: Theme.of(context)
                         .colorScheme
                         .onSurface
-                        .withOpacity(0.5)),
+                        .withValues(alpha: 0.5)),
                 const SizedBox(width: 6),
                 Text(
                   label.toUpperCase(),
@@ -813,7 +813,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                     color: Theme.of(context)
                         .colorScheme
                         .onSurface
-                        .withOpacity(0.5),
+                        .withValues(alpha: 0.5),
                     fontWeight: FontWeight.bold,
                     fontSize: 10,
                     letterSpacing: 0.5,
@@ -870,7 +870,7 @@ class _PaceTextField extends StatelessWidget {
         isDense: true,
         labelStyle: TextStyle(
           fontSize: 12,
-          color: cs.onSurface.withOpacity(0.5),
+          color: cs.onSurface.withValues(alpha: 0.5),
         ),
       ),
       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),

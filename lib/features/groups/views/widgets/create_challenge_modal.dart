@@ -101,7 +101,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
                   width: 42,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: cs.outline.withOpacity(0.3),
+                    color: cs.outline.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
@@ -158,7 +158,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
             borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
-                color: gradient.first.withOpacity(0.3),
+                color: gradient.first.withValues(alpha: 0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
@@ -189,7 +189,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
                 "Desafía a tu grupo 🔥",
                 style: TextStyle(
                   fontSize: 13,
-                  color: cs.onSurface.withOpacity(0.5),
+                  color: cs.onSurface.withValues(alpha: 0.5),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -201,10 +201,10 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: cs.onSurface.withOpacity(0.08),
+              color: cs.onSurface.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.close, size: 18, color: cs.onSurface.withOpacity(0.6)),
+            child: Icon(Icons.close, size: 18, color: cs.onSurface.withValues(alpha: 0.6)),
           ),
         ),
       ],
@@ -218,7 +218,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
       style: TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w900,
-        color: cs.onSurface.withOpacity(0.5),
+        color: cs.onSurface.withValues(alpha: 0.5),
         letterSpacing: 1.2,
       ),
     );
@@ -231,16 +231,16 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
       style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: cs.onSurface),
       decoration: InputDecoration(
         hintText: "Ej: Semana de Runner 🏃",
-        hintStyle: TextStyle(color: cs.onSurface.withOpacity(0.4), fontWeight: FontWeight.normal),
+        hintStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.4), fontWeight: FontWeight.normal),
         filled: true,
-        fillColor: cs.onSurface.withOpacity(0.05),
+        fillColor: cs.onSurface.withValues(alpha: 0.05),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: cs.outline.withOpacity(0.2)),
+          borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.2)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: cs.outline.withOpacity(0.2)),
+          borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.2)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
@@ -249,7 +249,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         prefixIcon: Padding(
           padding: const EdgeInsets.only(left: 16, right: 10),
-          child: Icon(Icons.edit_rounded, color: cs.onSurface.withOpacity(0.4)),
+          child: Icon(Icons.edit_rounded, color: cs.onSurface.withValues(alpha: 0.4)),
         ),
       ),
     );
@@ -272,15 +272,15 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
                 curve: Curves.easeOutCubic,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 decoration: BoxDecoration(
-                  color: isSelected ? gradient.first : cs.onSurface.withOpacity(0.05),
+                  color: isSelected ? gradient.first : cs.onSurface.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(18),
                   border: isSelected
                       ? null
-                      : Border.all(color: cs.outline.withOpacity(0.3)),
+                      : Border.all(color: cs.outline.withValues(alpha: 0.3)),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: gradient.first.withOpacity(0.35),
+                            color: gradient.first.withValues(alpha: 0.35),
                             blurRadius: 12,
                             offset: const Offset(0, 6),
                           ),
@@ -291,14 +291,14 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
                   children: [
                     Icon(
                       _kindIcons[kind],
-                      color: isSelected ? Colors.white : cs.onSurface.withOpacity(0.5),
+                      color: isSelected ? Colors.white : cs.onSurface.withValues(alpha: 0.5),
                       size: 26,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       _getKindLabel(kind),
                       style: TextStyle(
-                        color: isSelected ? Colors.white : cs.onSurface.withOpacity(0.6),
+                        color: isSelected ? Colors.white : cs.onSurface.withValues(alpha: 0.6),
                         fontSize: 12,
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                       ),
@@ -327,19 +327,19 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
       decoration: InputDecoration(
         hintText: _getValueHint(),
         hintStyle: TextStyle(
-          color: cs.onSurface.withOpacity(0.4),
+          color: cs.onSurface.withValues(alpha: 0.4),
           fontWeight: FontWeight.normal,
           fontSize: 18,
         ),
         filled: true,
-        fillColor: cs.onSurface.withOpacity(0.05),
+        fillColor: cs.onSurface.withValues(alpha: 0.05),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: cs.outline.withOpacity(0.2)),
+          borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.2)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: cs.outline.withOpacity(0.2)),
+          borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.2)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
@@ -365,10 +365,10 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: cs.onSurface.withOpacity(0.08),
+            color: cs.onSurface.withValues(alpha: 0.08),
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.arrow_forward, color: cs.onSurface.withOpacity(0.4), size: 16),
+          child: Icon(Icons.arrow_forward, color: cs.onSurface.withValues(alpha: 0.4), size: 16),
         ),
         const SizedBox(width: 12),
         Expanded(child: _buildDateCard("Fin", _endDate, false)),
@@ -415,9 +415,9 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: cs.onSurface.withOpacity(0.05),
+          color: cs.onSurface.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: cs.outline.withOpacity(0.3)),
+          border: Border.all(color: cs.outline.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
@@ -425,7 +425,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
               label,
               style: TextStyle(
                 fontSize: 11,
-                color: cs.onSurface.withOpacity(0.5),
+                color: cs.onSurface.withValues(alpha: 0.5),
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
               ),
@@ -442,7 +442,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
             const SizedBox(height: 2),
             Text(
               DateFormat('yyyy').format(date),
-              style: TextStyle(fontSize: 12, color: cs.onSurface.withOpacity(0.4)),
+              style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
             ),
           ],
         ),
@@ -461,7 +461,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(_isCreating ? 0.1 : 0.3),
+              color: Colors.black.withValues(alpha: _isCreating ? 0.1 : 0.3),
               blurRadius: 16,
               offset: const Offset(0, 8),
             ),

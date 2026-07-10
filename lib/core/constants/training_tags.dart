@@ -19,7 +19,7 @@ class TrainingTags {
       String tag, BuildContext context) {
     if (isPredefined(tag)) {
       return (
-        background: AppColors.brand.withOpacity(0.1),
+        background: AppColors.brand.withValues(alpha: 0.1),
         text: Theme.of(context).brightness == Brightness.dark
             ? AppColors.brandLight
             : AppColors.brand,

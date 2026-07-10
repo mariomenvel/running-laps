@@ -135,10 +135,10 @@ class SeriesPatternCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.rest.withOpacity(0.1), width: 1),
+          border: Border.all(color: AppColors.rest.withValues(alpha: 0.1), width: 1),
           boxShadow: [
             BoxShadow(
-              color: AppColors.rest.withOpacity(0.08),
+              color: AppColors.rest.withValues(alpha: 0.08),
               blurRadius: 20,
               offset: const Offset(0, 8),
               spreadRadius: -4,
@@ -146,7 +146,7 @@ class SeriesPatternCard extends StatelessWidget {
             BoxShadow(
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.transparent
-                  : Colors.black.withOpacity(0.03),
+                  : Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -167,7 +167,7 @@ class SeriesPatternCard extends StatelessWidget {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.rest.withOpacity(0.3),
+                                color: AppColors.rest.withValues(alpha: 0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -189,7 +189,7 @@ class SeriesPatternCard extends StatelessWidget {
                   Container(
                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
                      ),
                      child: Text("${pattern.count} veces", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
@@ -220,7 +220,7 @@ Widget _buildMetric(BuildContext context, String label, String value, {String? s
          Text(
            label,
            style: TextStyle(
-             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+             color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
              fontSize: 11,
              fontWeight: FontWeight.w500,
              letterSpacing: 0.5,
@@ -245,7 +245,7 @@ Widget _buildMetric(BuildContext context, String label, String value, {String? s
                  subValue,
                  style: TextStyle(
                    fontSize: 12,
-                   color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                   color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                    fontWeight: FontWeight.w500,
                  ),
                ),
@@ -289,10 +289,10 @@ class WorkoutPatternCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.brand.withOpacity(0.1), width: 1),
+          border: Border.all(color: AppColors.brand.withValues(alpha: 0.1), width: 1),
           boxShadow: [
             BoxShadow(
-              color: AppColors.brand.withOpacity(0.08),
+              color: AppColors.brand.withValues(alpha: 0.08),
               blurRadius: 20,
               offset: const Offset(0, 8),
               spreadRadius: -4,
@@ -300,7 +300,7 @@ class WorkoutPatternCard extends StatelessWidget {
             BoxShadow(
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.transparent
-                  : Colors.black.withOpacity(0.03),
+                  : Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -322,7 +322,7 @@ class WorkoutPatternCard extends StatelessWidget {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.brand.withOpacity(0.3),
+                                  color: AppColors.brand.withValues(alpha: 0.3),
                                   blurRadius: 8,
                                   offset: const Offset(0, 4),
                                 ),
@@ -349,7 +349,7 @@ class WorkoutPatternCard extends StatelessWidget {
                   Container(
                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
                      ),
                      child: Text("${pattern.count} veces", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
@@ -364,10 +364,10 @@ class WorkoutPatternCard extends StatelessWidget {
                   Container(
                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                      decoration: BoxDecoration(
-                        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
+                        border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2)),
                         borderRadius: BorderRadius.circular(4),
                      ),
-                     child: Text("${d}m", style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
+                     child: Text("${d}m", style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5))),
                   )
                ).toList(),
              ),

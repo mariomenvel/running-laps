@@ -111,7 +111,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreenLegacy> with Tick
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: isDark ? Colors.transparent : Colors.black.withOpacity(0.03),
+                        color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.03),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -124,14 +124,14 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreenLegacy> with Tick
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.brand.withOpacity(0.3),
+                          color: AppColors.brand.withValues(alpha: 0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
                       ],
                     ),
                     labelColor: Colors.white,
-                    unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                 dividerColor: Colors.transparent,
                 indicatorSize: TabBarIndicatorSize.tab,
                 splashBorderRadius: BorderRadius.circular(16),
@@ -211,7 +211,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreenLegacy> with Tick
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: isDark ? Colors.transparent : Colors.black.withOpacity(0.03),
+                        color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.03),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -273,16 +273,16 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreenLegacy> with Tick
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 60, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+          Icon(icon, size: 60, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
           const SizedBox(height: 16),
           Text(
             title,
-            style: TextStyle(fontSize: 18, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 18, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
             "Se implementará en la siguiente fase",
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
           ),
         ],
       ),

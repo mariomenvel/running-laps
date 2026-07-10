@@ -1010,7 +1010,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: _loadColor(load).withOpacity(0.15),
+                                      color: _loadColor(load).withValues(alpha: 0.15),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(

@@ -73,7 +73,7 @@ class _StatsCarouselState extends State<StatsCarousel> {
               width: _currentPage == index ? 24 : 8,
               height: 8,
               decoration: BoxDecoration(
-                color: _currentPage == index ? AppColors.brand : Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                color: _currentPage == index ? AppColors.brand : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(4),
               ),
             );
@@ -117,7 +117,7 @@ class _StatsCarouselState extends State<StatsCarousel> {
            barRods: [
              BarChartRodData(
                toY: val,
-               color: i == 0 ? AppColors.brand : AppColors.brand.withOpacity(0.3), // Highlight this week
+               color: i == 0 ? AppColors.brand : AppColors.brand.withValues(alpha: 0.3), // Highlight this week
                width: 12,
                borderRadius: BorderRadius.circular(4),
              )
@@ -197,7 +197,7 @@ class _StatsCarouselState extends State<StatsCarousel> {
               dotData: FlDotData(show: false),
               belowBarData: BarAreaData(
                 show: true, 
-                color: AppColors.rpeLow.withOpacity(0.1)
+                color: AppColors.rpeLow.withValues(alpha: 0.1)
               ),
             ),
           ],
@@ -219,7 +219,7 @@ class _StatsCarouselState extends State<StatsCarousel> {
         borderRadius: BorderRadius.circular(24),
          boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.transparent : Colors.black.withOpacity(0.04),
+            color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.04),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -244,7 +244,7 @@ class _StatsCarouselState extends State<StatsCarousel> {
               for (var dist in frequentDist)
                 ActionChip(
                   label: Text("${dist}m"),
-                  backgroundColor: AppColors.brand.withOpacity(0.1),
+                  backgroundColor: AppColors.brand.withValues(alpha: 0.1),
                   labelStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.bold),
                   onPressed: () {
                     // TODO: Navegar a Detalle Distancia
@@ -281,7 +281,7 @@ class _StatsCarouselState extends State<StatsCarousel> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.transparent : Colors.black.withOpacity(0.04),
+            color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.04),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -297,16 +297,16 @@ class _StatsCarouselState extends State<StatsCarousel> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                    Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
-                   Text(subtitle, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 12)),
+                   Text(subtitle, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 12)),
                 ],
               ),
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8)),
+                child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8)),
               ),
             ],
           ),

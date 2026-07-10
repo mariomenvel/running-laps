@@ -29,7 +29,7 @@ class ConfigurableWidgetRenderer extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.transparent : Colors.black.withOpacity(0.05),
+            color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -131,7 +131,7 @@ class ConfigurableWidgetRenderer extends StatelessWidget {
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
-              color: AppColors.brand.withOpacity(0.1),
+              color: AppColors.brand.withValues(alpha: 0.1),
             ),
           ),
         ],
@@ -240,7 +240,7 @@ class ConfigurableWidgetRenderer extends StatelessWidget {
                 width: 140,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                   color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
+                   color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06),
                    borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -248,7 +248,7 @@ class ConfigurableWidgetRenderer extends StatelessWidget {
                    children: [
                        Text(
                            "${e.fecha.day}/${e.fecha.month}",
-                           style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 12),
+                           style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 12),
                        ),
                        const SizedBox(height: 8),
                        Text(

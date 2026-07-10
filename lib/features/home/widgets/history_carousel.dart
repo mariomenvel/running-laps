@@ -52,17 +52,17 @@ class _HistoryCarouselState extends State<HistoryCarousel> {
        margin: const EdgeInsets.symmetric(horizontal: 20),
        decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06),
           border: Border.all(color: Theme.of(context).colorScheme.outline, style: BorderStyle.solid),
        ),
        child: Column(
          mainAxisAlignment: MainAxisAlignment.center,
          children: [
-           Icon(Icons.history_toggle_off, size: 40, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
+           Icon(Icons.history_toggle_off, size: 40, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
            const SizedBox(height: 12),
            Text(
              "Sin historial reciente",
-             style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.w600),
+             style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.w600),
            )
          ],
        ),
@@ -86,7 +86,7 @@ class _HistoryCarouselState extends State<HistoryCarousel> {
             BoxShadow(
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.transparent
-                  : Colors.black.withOpacity(0.06),
+                  : Colors.black.withValues(alpha: 0.06),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -115,7 +115,7 @@ class _HistoryCarouselState extends State<HistoryCarousel> {
                   width: 150,
                   height: 150,
                   decoration: BoxDecoration(
-                    color: AppColors.brand.withOpacity(0.05),
+                    color: AppColors.brand.withValues(alpha: 0.05),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -143,7 +143,7 @@ class _HistoryCarouselState extends State<HistoryCarousel> {
                         ),
                         Icon(
                           training.gps ? Icons.gps_fixed : Icons.timer, 
-                          color: AppColors.brand.withOpacity(0.5),
+                          color: AppColors.brand.withValues(alpha: 0.5),
                         ),
                       ],
                     ),
@@ -201,7 +201,7 @@ class _HistoryCarouselState extends State<HistoryCarousel> {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -213,7 +213,7 @@ class _HistoryCarouselState extends State<HistoryCarousel> {
     return Container(
       height: 30,
       width: 1,
-      color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+      color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
     );
   }
 

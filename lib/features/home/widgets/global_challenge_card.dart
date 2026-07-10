@@ -105,7 +105,7 @@ class _GlobalChallengeCardState extends State<GlobalChallengeCard> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: accentColor.withOpacity(0.35),
+              color: accentColor.withValues(alpha: 0.35),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
@@ -122,7 +122,7 @@ class _GlobalChallengeCardState extends State<GlobalChallengeCard> {
                 height: 110,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.08),
+                  color: Colors.white.withValues(alpha: 0.08),
                 ),
               ),
             ),
@@ -140,7 +140,7 @@ class _GlobalChallengeCardState extends State<GlobalChallengeCard> {
                       Container(
                         padding: const EdgeInsets.all(7),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(
@@ -153,7 +153,7 @@ class _GlobalChallengeCardState extends State<GlobalChallengeCard> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -190,12 +190,12 @@ class _GlobalChallengeCardState extends State<GlobalChallengeCard> {
                   Row(
                     children: [
                       Icon(Icons.people_outline_rounded,
-                          size: 12, color: Colors.white.withOpacity(0.7)),
+                          size: 12, color: Colors.white.withValues(alpha: 0.7)),
                       const SizedBox(width: 4),
                       Text(
                         '$_participantCount participantes',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.75),
+                          color: Colors.white.withValues(alpha: 0.75),
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
                         ),
@@ -258,7 +258,7 @@ class _GlobalChallengeCardState extends State<GlobalChallengeCard> {
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.12),
+              color: Colors.black.withValues(alpha: 0.12),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -303,7 +303,7 @@ class _GlobalChallengeCardState extends State<GlobalChallengeCard> {
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: progress,
-            backgroundColor: Colors.white.withOpacity(0.25),
+            backgroundColor: Colors.white.withValues(alpha: 0.25),
             color: Colors.white,
             minHeight: 6,
           ),
@@ -328,7 +328,7 @@ class _GlobalChallengeCardState extends State<GlobalChallengeCard> {
                 Text(
                   'de $goalStr',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                   ),

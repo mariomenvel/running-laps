@@ -281,9 +281,9 @@ class AvatarHelper {
     return ColorFiltered(
       colorFilter: src != null
           ? ColorFilter.matrix(<double>[
-              rep.red / src.red, 0, 0, 0, 0,
-              0, rep.green / src.green, 0, 0, 0,
-              0, 0, rep.blue / src.blue, 0, 0,
+              rep.r / src.r, 0, 0, 0, 0,
+              0, rep.g / src.g, 0, 0, 0,
+              0, 0, rep.b / src.b, 0, 0,
               0, 0, 0, 1, 0,
             ])
           : ColorFilter.mode(rep, BlendMode.srcIn),

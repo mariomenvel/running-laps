@@ -634,7 +634,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                           toY: e.value.km,
                           color: isLast
                               ? AppColors.brand
-                              : AppColors.brand.withOpacity(0.5),
+                              : AppColors.brand.withValues(alpha: 0.5),
                           width: isYear ? 14 : 18,
                           borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(4)),
@@ -2102,8 +2102,8 @@ class _RecordRow extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppColors.rpeLow.withOpacity(0.15),
-                      border: Border.all(color: AppColors.rpeLow.withOpacity(0.5)),
+                      color: AppColors.rpeLow.withValues(alpha: 0.15),
+                      border: Border.all(color: AppColors.rpeLow.withValues(alpha: 0.5)),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text('NUEVO RP',

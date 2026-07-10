@@ -186,7 +186,7 @@ class _AuthPageState extends State<AuthPage> {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -206,7 +206,7 @@ class _AuthPageState extends State<AuthPage> {
                     'Introduce tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -223,9 +223,9 @@ class _AuthPageState extends State<AuthPage> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppColors.rpeMax.withOpacity(0.12), // Fondo rojo suave
+                        color: AppColors.rpeMax.withValues(alpha: 0.12), // Fondo rojo suave
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.rpeMax.withOpacity(0.3)),
+                        border: Border.all(color: AppColors.rpeMax.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         children: [
@@ -288,7 +288,7 @@ class _AuthPageState extends State<AuthPage> {
                     child: Text(
                       'Cancelar',
                       style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                       fontWeight: FontWeight.bold,
                     ),
                     ),
@@ -388,13 +388,13 @@ class _AuthPageState extends State<AuthPage> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDark
-              ? Colors.white.withOpacity(0.08)
-              : Colors.black.withOpacity(0.06),
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.black.withValues(alpha: 0.06),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0 : 0.03),
+            color: Colors.black.withValues(alpha: isDark ? 0 : 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -446,7 +446,7 @@ class _AuthPageState extends State<AuthPage> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: AppColors.brand.withOpacity(0.3), // Sombra con color de marca
+                color: AppColors.brand.withValues(alpha: 0.3), // Sombra con color de marca
                 blurRadius: 15,
                 offset: const Offset(0, 8),
               ),
@@ -512,7 +512,7 @@ class _AuthPageState extends State<AuthPage> {
               shape: BoxShape.circle,
               color: AppColors.surfaceOf(context),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
               ),
             ),
             alignment: Alignment.center,
@@ -879,12 +879,12 @@ class _PremiumGoogleButtonState extends State<_PremiumGoogleButton> with SingleT
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.06),
+                color: Colors.black.withValues(alpha: 0.06),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
               BoxShadow(
-                color: AppColors.brand.withOpacity(0.03),
+                color: AppColors.brand.withValues(alpha: 0.03),
                 blurRadius: 30,
                 offset: const Offset(0, 15),
               ),
@@ -915,7 +915,7 @@ class _PremiumGoogleButtonState extends State<_PremiumGoogleButton> with SingleT
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
+                                    color: Colors.black.withValues(alpha: 0.05),
                                     blurRadius: 5,
                                     offset: const Offset(0, 2),
                                   ),

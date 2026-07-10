@@ -90,12 +90,12 @@ class AdminChallengesTab extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outline.withOpacity(0.15)),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.15)),
         boxShadow: [
           BoxShadow(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.transparent
-                : Colors.black.withOpacity(0.04),
+                : Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -110,7 +110,7 @@ class AdminChallengesTab extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: accent.withOpacity(0.12),
+                  color: accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(_metricIcon(challenge.metric), color: accent, size: 18),
@@ -132,7 +132,7 @@ class AdminChallengesTab extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.12),
+                  color: statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -154,25 +154,25 @@ class AdminChallengesTab extends StatelessWidget {
           Row(
             children: [
               Icon(_metricIcon(challenge.metric),
-                  size: 12, color: cs.onSurface.withOpacity(0.4)),
+                  size: 12, color: cs.onSurface.withValues(alpha: 0.4)),
               const SizedBox(width: 4),
               Text(
                 _metricLabel(challenge.metric),
                 style: TextStyle(
                   fontSize: 12,
-                  color: cs.onSurface.withOpacity(0.5),
+                  color: cs.onSurface.withValues(alpha: 0.5),
                   fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(width: 14),
               Icon(Icons.calendar_today_rounded,
-                  size: 12, color: cs.onSurface.withOpacity(0.4)),
+                  size: 12, color: cs.onSurface.withValues(alpha: 0.4)),
               const SizedBox(width: 4),
               Text(
                 '${fmt.format(challenge.startAt)} – ${fmt.format(challenge.endAt)}',
                 style: TextStyle(
                   fontSize: 12,
-                  color: cs.onSurface.withOpacity(0.5),
+                  color: cs.onSurface.withValues(alpha: 0.5),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -189,7 +189,7 @@ class AdminChallengesTab extends StatelessWidget {
                 FilledButton.tonal(
                   onPressed: () => controller.publishGlobalChallenge(challenge.id),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.rpeLow.withOpacity(0.12),
+                    backgroundColor: AppColors.rpeLow.withValues(alpha: 0.12),
                     foregroundColor: AppColors.rpeLow,
                     minimumSize: const Size(0, 34),
                     padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -216,7 +216,7 @@ class AdminChallengesTab extends StatelessWidget {
                 iconSize: 20,
                 color: AppColors.rpeMax,
                 style: IconButton.styleFrom(
-                  backgroundColor: AppColors.rpeMax.withOpacity(0.08),
+                  backgroundColor: AppColors.rpeMax.withValues(alpha: 0.08),
                   minimumSize: const Size(34, 34),
                   padding: EdgeInsets.zero,
                   shape: RoundedRectangleBorder(
@@ -258,12 +258,12 @@ class AdminChallengesTab extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.emoji_events_outlined,
-                      size: 48, color: cs.onSurface.withOpacity(0.2)),
+                      size: 48, color: cs.onSurface.withValues(alpha: 0.2)),
                   const SizedBox(height: 12),
                   Text(
                     'No hay retos globales',
                     style: TextStyle(
-                        color: cs.onSurface.withOpacity(0.5), fontSize: 15),
+                        color: cs.onSurface.withValues(alpha: 0.5), fontSize: 15),
                   ),
                 ],
               ),

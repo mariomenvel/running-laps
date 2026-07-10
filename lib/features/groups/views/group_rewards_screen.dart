@@ -100,7 +100,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(20),
           ),
           child: TabBar(
@@ -111,7 +111,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.brand.withOpacity(0.3),
+                  color: AppColors.brand.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -119,7 +119,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
             ),
             labelColor: Colors.white,
             unselectedLabelColor:
-                Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             labelStyle:
                 const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
             unselectedLabelStyle:
@@ -240,7 +240,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
 
           const SizedBox(height: 28),
           Divider(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15),
             height: 1,
           ),
           const SizedBox(height: 24),
@@ -315,7 +315,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
           BoxShadow(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.transparent
-                : Colors.black.withOpacity(0.03),
+                : Colors.black.withValues(alpha: 0.03),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -357,7 +357,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
                   item.challengeTitle,
                   style: TextStyle(
                     fontSize: 11,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -366,7 +366,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
                   DateFormat('d MMM yyyy', 'es_ES').format(item.awardedAt),
                   style: TextStyle(
                     fontSize: 10,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
                 ),
               ],
@@ -376,7 +376,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
             decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.1),
+              color: accentColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
@@ -401,7 +401,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.brand.withOpacity(0.1),
+            color: AppColors.brand.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, size: 18, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
@@ -412,7 +412,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w900,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             letterSpacing: 1.0,
           ),
         ),
@@ -439,16 +439,16 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.brand.withOpacity(0.1),
+                color: AppColors.brand.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 56, color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand).withOpacity(0.5)),
+              child: Icon(icon, size: 56, color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand).withValues(alpha: 0.5)),
             ),
             const SizedBox(height: 20),
             Text(
               msg,
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -467,20 +467,20 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.inbox_rounded,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
               size: 20),
           const SizedBox(width: 10),
           Text(
             msg,
             style: TextStyle(
                 color:
-                    Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                    Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
                 fontWeight: FontWeight.w500),
           ),
         ],
@@ -505,7 +505,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
           BoxShadow(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.transparent
-                : Colors.black.withOpacity(0.03),
+                : Colors.black.withValues(alpha: 0.03),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -532,7 +532,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
                     color: Theme.of(context)
                         .colorScheme
                         .onSurface
-                        .withOpacity(0.5),
+                        .withValues(alpha: 0.5),
                   ),
                 ),
               ],
@@ -542,7 +542,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
             padding:
                 const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.1),
+              color: accentColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
@@ -583,15 +583,15 @@ class _PremiumMedalCard extends StatelessWidget {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(22),
         border: isTop3
-            ? Border.all(color: rankColor.withOpacity(0.4), width: 2)
+            ? Border.all(color: rankColor.withValues(alpha: 0.4), width: 2)
             : null,
         boxShadow: [
           BoxShadow(
             color: isTop3
-                ? rankColor.withOpacity(0.15)
+                ? rankColor.withValues(alpha: 0.15)
                 : Theme.of(context).brightness == Brightness.dark
                     ? Colors.transparent
-                    : Colors.black.withOpacity(0.04),
+                    : Colors.black.withValues(alpha: 0.04),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -606,12 +606,12 @@ class _PremiumMedalCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: isTop3
                   ? rankColor
-                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
               shape: BoxShape.circle,
               boxShadow: isTop3
                   ? [
                       BoxShadow(
-                        color: rankColor.withOpacity(0.4),
+                        color: rankColor.withValues(alpha: 0.4),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       )
@@ -627,7 +627,7 @@ class _PremiumMedalCard extends StatelessWidget {
                       : Theme.of(context)
                           .colorScheme
                           .onSurface
-                          .withOpacity(0.6),
+                          .withValues(alpha: 0.6),
                   fontWeight: FontWeight.w900,
                   fontSize: 15,
                 ),
@@ -704,7 +704,7 @@ class _PremiumMedalCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.brand.withOpacity(0.3),
+                      color: AppColors.brand.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -727,7 +727,7 @@ class _PremiumMedalCard extends StatelessWidget {
                     color: Theme.of(context)
                         .colorScheme
                         .onSurface
-                        .withOpacity(0.5)),
+                        .withValues(alpha: 0.5)),
               ),
             ],
           ),
@@ -763,7 +763,7 @@ class _PremiumBadgeCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: AppColors.brand.withOpacity(0.08),
+            color: AppColors.brand.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -779,7 +779,7 @@ class _PremiumBadgeCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.brand.withOpacity(0.3),
+                  color: AppColors.brand.withValues(alpha: 0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -846,7 +846,7 @@ class _PremiumBadgeCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.brand.withOpacity(0.3),
+                  color: AppColors.brand.withValues(alpha: 0.3),
                   blurRadius: 8,
                 ),
               ],
@@ -869,7 +869,7 @@ class _PremiumBadgeCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.brand.withOpacity(0.1),
+        color: AppColors.brand.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -886,7 +886,7 @@ class _PremiumBadgeCard extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand).withOpacity(0.7),
+              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand).withValues(alpha: 0.7),
               fontSize: 11,
             ),
           ),
@@ -910,13 +910,13 @@ class _MedalCounter extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
         boxShadow: type == MedalType.gold
             ? [
                 BoxShadow(
-                  color: color.withOpacity(0.3),
+                  color: color.withValues(alpha: 0.3),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 )
@@ -956,12 +956,12 @@ class _MedalIcon extends StatelessWidget {
       width: size + 16,
       height: size + 16,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         shape: BoxShape.circle,
         boxShadow: type == MedalType.gold
             ? [
                 BoxShadow(
-                  color: color.withOpacity(0.35),
+                  color: color.withValues(alpha: 0.35),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 )
@@ -998,7 +998,7 @@ class _BadgeIcon extends StatelessWidget {
       width: size + 16,
       height: size + 16,
       decoration: BoxDecoration(
-        color: AppColors.brand.withOpacity(0.12),
+        color: AppColors.brand.withValues(alpha: 0.12),
         shape: BoxShape.circle,
       ),
       child: Center(
@@ -1086,19 +1086,19 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: _isPressed
-              ? Theme.of(context).colorScheme.onSurface.withOpacity(0.08)
+              ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08)
               : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.transparent
-                  : Colors.black.withOpacity(_isPressed ? 0.03 : 0.06),
+                  : Colors.black.withValues(alpha: _isPressed ? 0.03 : 0.06),
               blurRadius: _isPressed ? 4 : 12,
               offset: Offset(0, _isPressed ? 2 : 4),
             ),
           ],
-          border: Border.all(color: AppColors.brand.withOpacity(0.1)),
+          border: Border.all(color: AppColors.brand.withValues(alpha: 0.1)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

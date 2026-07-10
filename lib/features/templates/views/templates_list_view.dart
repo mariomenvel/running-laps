@@ -57,7 +57,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -86,7 +86,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                 height: 1.4,
               ),
             ),
@@ -102,7 +102,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                     ),
                     child: Text(
                       'Cancelar',
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                   ),
                 ),
@@ -114,7 +114,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.rpeMax.withOpacity(0.3),
+                          color: AppColors.rpeMax.withValues(alpha: 0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -240,7 +240,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                             Text(
                               '${snapshot.error}',
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 14),
+                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 14),
                             ),
                             const SizedBox(height: 24),
                             ElevatedButton(
@@ -319,7 +319,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
       child: Text(
         title.toUpperCase(),
         style: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
           fontSize: 12,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
@@ -335,7 +335,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
         text,
         style: TextStyle(
           fontSize: 14,
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.45),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
         ),
       ),
     );
@@ -352,7 +352,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
         decoration: BoxDecoration(
           color: const Color(0xFF1E1530),
           border: Border.all(
-              color: AppColors.brand.withOpacity(0.4)),
+              color: AppColors.brand.withValues(alpha: 0.4)),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -393,13 +393,13 @@ class _TemplatesListViewState extends State<TemplatesListView> {
           BoxShadow(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.transparent
-                : Colors.black.withOpacity(0.04),
+                : Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
         border: widget.isSelectionMode
-            ? Border.all(color: templateColor.withOpacity(0.4), width: 1.5)
+            ? Border.all(color: templateColor.withValues(alpha: 0.4), width: 1.5)
             : Border.all(color: Theme.of(context).colorScheme.surface, width: 0),
       ),
       child: ClipRRect(
@@ -421,7 +421,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: templateColor.withOpacity(0.15),
+                      color: templateColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(
@@ -451,20 +451,20 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                               ),
                             ),
                             Container(
                               margin: const EdgeInsets.symmetric(horizontal: 8),
                               width: 3, height: 3,
-                              decoration: BoxDecoration(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35), shape: BoxShape.circle),
+                              decoration: BoxDecoration(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35), shape: BoxShape.circle),
                             ),
                             Text(
                               'Total: ${totalDist}m',
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                               ),
                             ),
                           ],
@@ -475,7 +475,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                   if (!widget.isSelectionMode)
                     _DeleteButton(onDelete: () => _deleteTemplate(template))
                   else
-                    Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.25)),
+                    Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25)),
                 ],
               ),
             ),

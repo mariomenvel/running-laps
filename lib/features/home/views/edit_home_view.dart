@@ -28,7 +28,7 @@ class _EditHomeViewState extends State<EditHomeView> {
 
     return Scaffold(
       backgroundColor: isDark
-          ? Theme.of(context).colorScheme.background
+          ? Theme.of(context).colorScheme.surface
           : const Color(0xFFF2F2F7),
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
@@ -52,7 +52,7 @@ class _EditHomeViewState extends State<EditHomeView> {
               'Hasta $_maxActive estadísticas visibles',
               style: TextStyle(
                 fontSize: 12,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.45),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
               ),
             ),
           ],
@@ -107,7 +107,7 @@ class _EditHomeViewState extends State<EditHomeView> {
               fontSize: 12,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.7,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.45),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
             ),
           ),
           if (badge != null) ...[
@@ -115,7 +115,7 @@ class _EditHomeViewState extends State<EditHomeView> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: AppColors.brand.withOpacity(0.13),
+                color: AppColors.brand.withValues(alpha: 0.13),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -145,7 +145,7 @@ class _EditHomeViewState extends State<EditHomeView> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withOpacity(0.25),
+              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.25),
               width: 1.5,
             ),
           ),
@@ -154,7 +154,7 @@ class _EditHomeViewState extends State<EditHomeView> {
               'Pulsa + para añadir estadísticas',
               style: TextStyle(
                 fontSize: 13,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
               ),
             ),
           ),
@@ -215,13 +215,13 @@ class _EditHomeViewState extends State<EditHomeView> {
                   width: 26,
                   height: 26,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.tune_rounded,
                     size: 14,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
               ),
@@ -241,7 +241,7 @@ class _EditHomeViewState extends State<EditHomeView> {
           'Todas las estadísticas están activas.',
           style: TextStyle(
             fontSize: 13,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
           ),
         ),
       );
@@ -322,7 +322,7 @@ class _EditHomeViewState extends State<EditHomeView> {
               ? []
               : [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.07),
+                    color: Colors.black.withValues(alpha: 0.07),
                     blurRadius: 14,
                     offset: const Offset(0, 4),
                   ),
@@ -337,7 +337,7 @@ class _EditHomeViewState extends State<EditHomeView> {
               height: 46,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: AppColors.brand.withOpacity(0.12),
+                color: AppColors.brand.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(_iconForWidget(w.id), size: 22, color: iconColor),
@@ -359,7 +359,7 @@ class _EditHomeViewState extends State<EditHomeView> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.25),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25),
               ),
             ),
           ],
@@ -394,7 +394,7 @@ class _EditHomeViewState extends State<EditHomeView> {
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -429,7 +429,7 @@ class _EditHomeViewState extends State<EditHomeView> {
                         decoration: BoxDecoration(
                           color: isSel
                               ? AppColors.brand
-                              : Theme.of(context).colorScheme.onSurface.withOpacity(0.07),
+                              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.07),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -439,7 +439,7 @@ class _EditHomeViewState extends State<EditHomeView> {
                             fontWeight: FontWeight.w600,
                             color: isSel
                                 ? Colors.white
-                                : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                         ),
                       ),

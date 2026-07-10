@@ -20,11 +20,11 @@ class InfoTooltip extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        color: AppColors.iconMutedOf(context).withOpacity(0.95),
+        color: AppColors.iconMutedOf(context).withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -43,7 +43,7 @@ class InfoTooltip extends StatelessWidget {
         child: Icon(
           Icons.help_outline_rounded,
           size: iconSize,
-          color: iconColor.withOpacity(0.6),
+          color: iconColor.withValues(alpha: 0.6),
         ),
       ),
     );

@@ -167,7 +167,7 @@ class _StandardTableCalendarState<T extends Object>
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: AppColors.brand.withOpacity(0.4),
+                color: AppColors.brand.withValues(alpha: 0.4),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -180,7 +180,7 @@ class _StandardTableCalendarState<T extends Object>
           ),
 
           // Range
-          rangeHighlightColor: AppColors.brand.withOpacity(0.2),
+          rangeHighlightColor: AppColors.brand.withValues(alpha: 0.2),
           rangeStartDecoration: const BoxDecoration(
             color: AppColors.brand,
             shape: BoxShape.circle,

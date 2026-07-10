@@ -110,12 +110,12 @@ class TrendsTab extends StatelessWidget {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: color.withValues(alpha: 0.3),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.2),
+            color: color.withValues(alpha: 0.2),
             blurRadius: 20,
             offset: const Offset(0, 10),
             spreadRadius: -5,
@@ -123,7 +123,7 @@ class TrendsTab extends StatelessWidget {
           BoxShadow(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.transparent
-                : Colors.black.withOpacity(0.05),
+                : Colors.black.withValues(alpha: 0.05),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -138,7 +138,7 @@ class TrendsTab extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: color.withOpacity(0.5),
+                  color: color.withValues(alpha: 0.5),
                   blurRadius: 12,
                   offset: const Offset(0, 6),
                 ),
@@ -152,7 +152,7 @@ class TrendsTab extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
               letterSpacing: 0.5,
             ),
           ),
@@ -191,10 +191,10 @@ class TrendsTab extends StatelessWidget {
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
+            border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15)),
             boxShadow: [
               BoxShadow(
-                color: AppColors.rest.withOpacity(0.1),
+                color: AppColors.rest.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
                 spreadRadius: -5,
@@ -202,7 +202,7 @@ class TrendsTab extends StatelessWidget {
               BoxShadow(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.transparent
-                    : Colors.black.withOpacity(0.05),
+                    : Colors.black.withValues(alpha: 0.05),
                 blurRadius: 15,
                 offset: const Offset(0, 5),
               ),
@@ -237,10 +237,10 @@ class TrendsTab extends StatelessWidget {
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.15)),
+            border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15)),
             boxShadow: [
               BoxShadow(
-                color: AppColors.brand.withOpacity(0.1),
+                color: AppColors.brand.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
                 spreadRadius: -5,
@@ -248,7 +248,7 @@ class TrendsTab extends StatelessWidget {
               BoxShadow(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.transparent
-                    : Colors.black.withOpacity(0.05),
+                    : Colors.black.withValues(alpha: 0.05),
                 blurRadius: 15,
                 offset: const Offset(0, 5),
               ),
@@ -358,7 +358,7 @@ class _WeeklyVolumeChart extends StatelessWidget {
           show: true,
           drawVerticalLine: false,
           getDrawingHorizontalLine: (value) => FlLine(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
             strokeWidth: 1,
           ),
         ),
@@ -434,7 +434,7 @@ class _PaceEvolutionChart extends StatelessWidget {
           show: true,
           drawVerticalLine: false,
           getDrawingHorizontalLine: (value) => FlLine(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
             strokeWidth: 1,
           ),
         ),
@@ -456,8 +456,8 @@ class _PaceEvolutionChart extends StatelessWidget {
               show: true,
               gradient: LinearGradient(
                 colors: [
-                  AppColors.brand.withOpacity(0.3),
-                  AppColors.brand.withOpacity(0.0),
+                  AppColors.brand.withValues(alpha: 0.3),
+                  AppColors.brand.withValues(alpha: 0.0),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,

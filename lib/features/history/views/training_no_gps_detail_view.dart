@@ -219,7 +219,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.brand.withOpacity(0.1),
+                color: AppColors.brand.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(Icons.notes_rounded,
@@ -270,7 +270,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
           BoxShadow(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.transparent
-                : Colors.black.withOpacity(0.04),
+                : Colors.black.withValues(alpha: 0.04),
             offset: const Offset(0, 6),
             blurRadius: 16,
           ),
@@ -282,7 +282,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, size: 18, color: color),
@@ -293,7 +293,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
               letterSpacing: 0.8,
             ),
           ),
@@ -320,7 +320,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.brand.withOpacity(0.1),
+                color: AppColors.brand.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(Icons.list_alt_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 20),
@@ -346,7 +346,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
                 BoxShadow(
                   color: Theme.of(context).brightness == Brightness.dark
                       ? Colors.transparent
-                      : Colors.black.withOpacity(0.03),
+                      : Colors.black.withValues(alpha: 0.03),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -359,7 +359,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
                   height: 32,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: AppColors.brand.withOpacity(0.1),
+                    color: AppColors.brand.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Text(
@@ -435,7 +435,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.rpeMid.withOpacity(0.15),
+            color: AppColors.rpeMid.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(10),
           ),
           child: const Icon(Icons.compare_arrows_rounded,
@@ -492,7 +492,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.transparent : Colors.black.withOpacity(0.04),
+            color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.04),
             offset: const Offset(0, 6),
             blurRadius: 16,
           ),
@@ -592,7 +592,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
                     ],
                   ),
                 ),
-                Divider(color: const Color(0xFF3A3A3C).withOpacity(0.5), height: 1),
+                Divider(color: const Color(0xFF3A3A3C).withValues(alpha: 0.5), height: 1),
               ],
             );
           }),
@@ -628,7 +628,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
     }
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
       child: Row(children: [
         Icon(icon, color: color, size: 16),
         const SizedBox(width: 8),
@@ -905,19 +905,19 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: _isPressed
-              ? Theme.of(context).colorScheme.onSurface.withOpacity(0.08)
+              ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08)
               : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.transparent
-                  : Colors.black.withOpacity(_isPressed ? 0.03 : 0.06),
+                  : Colors.black.withValues(alpha: _isPressed ? 0.03 : 0.06),
               blurRadius: _isPressed ? 4 : 12,
               offset: Offset(0, _isPressed ? 2 : 4),
             ),
           ],
-          border: Border.all(color: AppColors.brand.withOpacity(0.1)),
+          border: Border.all(color: AppColors.brand.withValues(alpha: 0.1)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

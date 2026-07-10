@@ -119,7 +119,7 @@ class _AppFooterState extends State<AppFooter>
                 shape: BoxShape.circle,
                 boxShadow: <BoxShadow>[
                   BoxShadow(
-                    color: AppColors.brand.withOpacity(0.2),
+                    color: AppColors.brand.withValues(alpha: 0.2),
                     blurRadius: 20.0,
                     offset: const Offset(0, 8),
                     spreadRadius: 2,
@@ -127,7 +127,7 @@ class _AppFooterState extends State<AppFooter>
                   BoxShadow(
                     color: Theme.of(context).brightness == Brightness.dark
                         ? Colors.transparent
-                        : Colors.black.withOpacity(0.08),
+                        : Colors.black.withValues(alpha: 0.08),
                     blurRadius: 15.0,
                     offset: const Offset(0, 5),
                   ),

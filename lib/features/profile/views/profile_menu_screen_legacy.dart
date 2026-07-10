@@ -198,7 +198,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
       child: Text(
         title.toUpperCase(),
         style: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
           fontSize: 12,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
@@ -223,12 +223,12 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.transparent : Colors.black.withOpacity(0.04),
+            color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.5)),
+        border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5)),
       ),
       child: Material(
         color: Colors.transparent,
@@ -244,7 +244,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(icon, color: color, size: 22),
@@ -270,7 +270,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                           subtitle,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                           ),
                         ),
                       ],
@@ -281,7 +281,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                 Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 16,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                 ),
               ],
             ),
@@ -335,7 +335,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                            const SizedBox(height: 4),
                            Text(
                              "Gestiona tu cuenta y actividad",
-                             style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 13),
+                             style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 13),
                            )
                         ],
                       ),

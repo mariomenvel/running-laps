@@ -67,7 +67,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                     BoxShadow(
                       color: isDark
                           ? Colors.transparent
-                          : Colors.black.withOpacity(0.03),
+                          : Colors.black.withValues(alpha: 0.03),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -81,7 +81,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                   ),
                   labelColor: Theme.of(context).colorScheme.surface,
                   unselectedLabelColor:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                   dividerColor: Colors.transparent,
                   indicatorSize: TabBarIndicatorSize.tab,
                   splashBorderRadius: BorderRadius.circular(16),

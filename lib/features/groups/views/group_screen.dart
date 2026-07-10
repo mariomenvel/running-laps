@@ -228,7 +228,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: isDark ? Colors.transparent : Colors.black.withOpacity(0.1),
+                    color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.1),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -313,7 +313,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.transparent : Colors.black.withOpacity(0.03),
+            color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -326,7 +326,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: AppColors.brand.withOpacity(0.3),
+              color: AppColors.brand.withValues(alpha: 0.3),
               blurRadius: 8,
               offset: const Offset(0, 3),
             ),
@@ -334,7 +334,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         labelColor: Colors.white,
-        unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+        unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
         dividerColor: Colors.transparent,
         splashBorderRadius: BorderRadius.circular(16),
         tabs: const [
@@ -382,7 +382,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                           challenge: challenge,
                           participant: participant,
                           gradientColors: _metricGradients[challenge.metric] ??
-                              [AppColors.brand, AppColors.brand.withOpacity(0.7)],
+                              [AppColors.brand, AppColors.brand.withValues(alpha: 0.7)],
                           onTap: () {
                             Navigator.of(context).push(
                               AppModalRoute(
@@ -453,7 +453,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           elevation: 4,
-                          shadowColor: AppColors.brand.withOpacity(0.4),
+                          shadowColor: AppColors.brand.withValues(alpha: 0.4),
                         ),
                       ),
                     ),
@@ -525,13 +525,13 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                Container(
                  padding: const EdgeInsets.all(28),
                  decoration: BoxDecoration(
-                   color: AppColors.rest.withOpacity(0.1),
+                   color: AppColors.rest.withValues(alpha: 0.1),
                    shape: BoxShape.circle,
                  ),
                  child: Icon(
                    Icons.people_outline_rounded,
                    size: 56,
-                   color: AppColors.rest.withOpacity(0.5),
+                   color: AppColors.rest.withValues(alpha: 0.5),
                  ),
                ),
                const SizedBox(height: 28),
@@ -571,13 +571,13 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
             Container(
               padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
-                color: AppColors.brand.withOpacity(0.1),
+                color: AppColors.brand.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.fitness_center_outlined,
                 size: 56,
-                color: AppColors.brand.withOpacity(0.5),
+                color: AppColors.brand.withValues(alpha: 0.5),
               ),
             ),
             const SizedBox(height: 28),
@@ -594,7 +594,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
               'Sé el primero en desafiar al grupo\ny comienza la competición.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                 height: 1.5,
                 fontSize: 15,
               ),
@@ -627,7 +627,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
             decoration: BoxDecoration(
               color: AppColors.rpeLow,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: AppColors.rpeLow.withOpacity(0.5)),
+              border: Border.all(color: AppColors.rpeLow.withValues(alpha: 0.5)),
             ),
             child: Row(
               children: [
@@ -638,7 +638,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.rpeLow.withOpacity(0.15),
+                        color: AppColors.rpeLow.withValues(alpha: 0.15),
                         blurRadius: 8,
                       ),
                     ],
@@ -701,7 +701,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
             },
             child: Text(
               'No, preguntar siempre',
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
             ),
           ),
           ElevatedButton(
@@ -814,19 +814,19 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: _isPressed
-              ? Theme.of(context).colorScheme.onSurface.withOpacity(0.06)
+              ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06)
               : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.transparent
-                  : Colors.black.withOpacity(_isPressed ? 0.03 : 0.06),
+                  : Colors.black.withValues(alpha: _isPressed ? 0.03 : 0.06),
               blurRadius: _isPressed ? 4 : 12,
               offset: Offset(0, _isPressed ? 2 : 4),
             ),
           ],
-          border: Border.all(color: AppColors.brand.withOpacity(0.1)),
+          border: Border.all(color: AppColors.brand.withValues(alpha: 0.1)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -897,13 +897,15 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        transform: Matrix4.identity()..scale(_isPressed ? 0.98 : 1.0),
+        transform: _isPressed
+            ? (Matrix4.identity()..scaleByDouble(0.98, 0.98, 0.98, 1))
+            : Matrix4.identity(),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: widget.gradientColors.first.withOpacity(_isPressed ? 0.15 : 0.1),
+              color: widget.gradientColors.first.withValues(alpha: _isPressed ? 0.15 : 0.1),
               blurRadius: _isPressed ? 12 : 24,
               offset: Offset(0, _isPressed ? 4 : 10),
             ),
@@ -922,7 +924,7 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> {
                   height: 100,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: widget.gradientColors.first.withOpacity(0.1),
+                    color: widget.gradientColors.first.withValues(alpha: 0.1),
                   ),
                 ),
               ),
@@ -942,7 +944,7 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: widget.gradientColors.first.withOpacity(0.3),
+                                color: widget.gradientColors.first.withValues(alpha: 0.3),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -973,7 +975,7 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> {
                                 'Objetivo: ${widget.challenge.goal.displayLabel ?? _formatGoalValue(widget.challenge.goal)}',
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -994,7 +996,7 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> {
                         else
                           Icon(
                             Icons.chevron_right,
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                           ),
                       ],
                     ),
@@ -1009,7 +1011,7 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> {
                             "Tu progreso",
                             style: TextStyle(
                               fontSize: 12,
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -1035,7 +1037,7 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> {
                           builder: (context, value, _) {
                             return LinearProgressIndicator(
                               value: value,
-                              backgroundColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
+                              backgroundColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06),
                               color: isCompleted
                                   ? AppColors.rpeLow
                                   : widget.gradientColors.first,
@@ -1064,7 +1066,7 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                             decoration: BoxDecoration(
-                              color: widget.gradientColors.first.withOpacity(0.08),
+                              color: widget.gradientColors.first.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Row(
@@ -1097,7 +1099,7 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> {
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: widget.gradientColors.first.withOpacity(0.3),
+                                      color: widget.gradientColors.first.withValues(alpha: 0.3),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
@@ -1175,17 +1177,17 @@ class _PremiumMemberCard extends StatelessWidget {
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(20),
             border: isPodium && !isPending
-                ? Border.all(color: rankColor.withOpacity(0.3), width: 2)
+                ? Border.all(color: rankColor.withValues(alpha: 0.3), width: 2)
                 : isPending
-                    ? Border.all(color: AppColors.rpeMid.withOpacity(0.5), width: 1.5, style: BorderStyle.solid)
+                    ? Border.all(color: AppColors.rpeMid.withValues(alpha: 0.5), width: 1.5, style: BorderStyle.solid)
                     : null,
             boxShadow: [
               BoxShadow(
                 color: (isPodium && !isPending)
-                    ? rankColor.withOpacity(0.1)
+                    ? rankColor.withValues(alpha: 0.1)
                     : (Theme.of(context).brightness == Brightness.dark
                         ? Colors.transparent
-                        : Colors.black.withOpacity(0.04)),
+                        : Colors.black.withValues(alpha: 0.04)),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
@@ -1199,10 +1201,10 @@ class _PremiumMemberCard extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: isPodium ? rankColor : Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
+                    color: isPodium ? rankColor : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06),
                     shape: BoxShape.circle,
                     boxShadow: isPodium
-                        ? [BoxShadow(color: rankColor.withOpacity(0.3), blurRadius: 8)]
+                        ? [BoxShadow(color: rankColor.withValues(alpha: 0.3), blurRadius: 8)]
                         : null,
                   ),
                   child: Center(
@@ -1212,7 +1214,7 @@ class _PremiumMemberCard extends StatelessWidget {
                             '$rank',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                           ),
                   ),
@@ -1222,7 +1224,7 @@ class _PremiumMemberCard extends StatelessWidget {
                    width: 36,
                    height: 36,
                    decoration: BoxDecoration(
-                     color: AppColors.rpeMid.withOpacity(0.1),
+                     color: AppColors.rpeMid.withValues(alpha: 0.1),
                      shape: BoxShape.circle,
                    ),
                    child: const Icon(Icons.hourglass_empty_rounded, color: AppColors.rpeMid, size: 18),
@@ -1263,7 +1265,7 @@ class _PremiumMemberCard extends StatelessWidget {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: AppColors.rpeMid.withOpacity(0.15),
+                                color: AppColors.rpeMid.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Text(
@@ -1285,7 +1287,7 @@ class _PremiumMemberCard extends StatelessWidget {
                           Icon(
                             Icons.directions_run,
                             size: 14,
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -1312,13 +1314,13 @@ class _PremiumMemberCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.arrow_forward_ios_rounded,
                     size: 14,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
                 ),
             ],
@@ -1569,7 +1571,7 @@ class _InviteSheetState extends State<_InviteSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: cs.outline.withOpacity(0.4),
+                  color: cs.outline.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1582,7 +1584,7 @@ class _InviteSheetState extends State<_InviteSheet> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.brand.withOpacity(0.1),
+                    color: AppColors.brand.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: const Icon(Icons.link_rounded,
@@ -1610,7 +1612,7 @@ class _InviteSheetState extends State<_InviteSheet> {
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.2,
-                color: cs.onSurface.withOpacity(0.45),
+                color: cs.onSurface.withValues(alpha: 0.45),
               ),
             ),
             const SizedBox(height: 12),
@@ -1644,10 +1646,10 @@ class _InviteSheetState extends State<_InviteSheet> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: cs.onSurface.withOpacity(isDark ? 0.06 : 0.04),
+                  color: cs.onSurface.withValues(alpha: isDark ? 0.06 : 0.04),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                      color: AppColors.brand.withOpacity(0.2), width: 1.5),
+                      color: AppColors.brand.withValues(alpha: 0.2), width: 1.5),
                 ),
                 child: Column(
                   children: [
@@ -1668,7 +1670,7 @@ class _InviteSheetState extends State<_InviteSheet> {
                           ),
                           const SizedBox(width: 12),
                           Icon(Icons.copy_rounded,
-                              color: AppColors.brand.withOpacity(0.7),
+                              color: AppColors.brand.withValues(alpha: 0.7),
                               size: 22),
                         ],
                       ),
@@ -1679,7 +1681,7 @@ class _InviteSheetState extends State<_InviteSheet> {
                         'Válido hasta ${DateFormat("d MMM yyyy", "es_ES").format(_expiresAt!)}',
                         style: TextStyle(
                             fontSize: 12,
-                            color: cs.onSurface.withOpacity(0.45)),
+                            color: cs.onSurface.withValues(alpha: 0.45)),
                       ),
                     const SizedBox(height: 20),
 
@@ -1712,7 +1714,7 @@ class _InviteSheetState extends State<_InviteSheet> {
                             style: OutlinedButton.styleFrom(
                               foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                               side: BorderSide(
-                                  color: AppColors.brand.withOpacity(0.4)),
+                                  color: AppColors.brand.withValues(alpha: 0.4)),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(14)),
                               padding:
@@ -1749,11 +1751,11 @@ class _InviteSheetState extends State<_InviteSheet> {
                         onPressed: _isGenerating ? null : _generateCode,
                         icon: Icon(Icons.refresh_rounded,
                             size: 16,
-                            color: cs.onSurface.withOpacity(0.5)),
+                            color: cs.onSurface.withValues(alpha: 0.5)),
                         label: Text(
                           'Generar nuevo código',
                           style: TextStyle(
-                              color: cs.onSurface.withOpacity(0.5),
+                              color: cs.onSurface.withValues(alpha: 0.5),
                               fontSize: 13),
                         ),
                       ),
@@ -1772,7 +1774,7 @@ class _InviteSheetState extends State<_InviteSheet> {
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.2,
-                color: cs.onSurface.withOpacity(0.45),
+                color: cs.onSurface.withValues(alpha: 0.45),
               ),
             ),
             const SizedBox(height: 12),
@@ -1786,9 +1788,9 @@ class _InviteSheetState extends State<_InviteSheet> {
                     decoration: InputDecoration(
                       hintText: 'correo@ejemplo.com',
                       hintStyle:
-                          TextStyle(color: cs.onSurface.withOpacity(0.35)),
+                          TextStyle(color: cs.onSurface.withValues(alpha: 0.35)),
                       filled: true,
-                      fillColor: cs.onSurface.withOpacity(0.04),
+                      fillColor: cs.onSurface.withValues(alpha: 0.04),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -1832,7 +1834,7 @@ class _InviteSheetState extends State<_InviteSheet> {
             Text(
               'El usuario debe estar registrado en la app.',
               style: TextStyle(
-                  fontSize: 12, color: cs.onSurface.withOpacity(0.4)),
+                  fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
             ),
           ],
         ),
@@ -1895,7 +1897,7 @@ class _PremiumFloatingActionButtonState extends State<_PremiumFloatingActionButt
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 6),
                 ),

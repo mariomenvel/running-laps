@@ -36,7 +36,7 @@ class HistoryBottomBar extends StatelessWidget {
           BoxShadow(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.transparent
-                : Colors.black.withOpacity(0.1),
+                : Colors.black.withValues(alpha: 0.1),
             blurRadius: 16,
             offset: const Offset(0, -4),
           ),
@@ -114,7 +114,7 @@ class HistoryBottomBar extends StatelessWidget {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 12,
                     ),
                   ),

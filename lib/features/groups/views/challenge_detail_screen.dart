@@ -177,7 +177,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: accent.withOpacity(0.35),
+            color: accent.withValues(alpha: 0.35),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -189,7 +189,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(
@@ -217,13 +217,13 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               '${DateFormat('dd MMM').format(challenge.startAt)} - ${DateFormat('dd MMM').format(challenge.endAt)}',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.95),
+                color: Colors.white.withValues(alpha: 0.95),
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
@@ -248,7 +248,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                 BoxShadow(
                   color: Theme.of(context).brightness == Brightness.dark
                       ? Colors.transparent
-                      : Colors.black.withOpacity(0.05),
+                      : Colors.black.withValues(alpha: 0.05),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -259,13 +259,13 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                 Icon(
                   Icons.person_add_rounded,
                   size: 48,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'No estás participando',
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -274,7 +274,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                 Text(
                   'Únete al reto desde la pantalla del grupo',
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
                     fontSize: 13,
                   ),
                 ),
@@ -293,7 +293,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: accent.withOpacity(0.12),
+                color: accent.withValues(alpha: 0.12),
                 blurRadius: 30,
                 offset: const Offset(0, 12),
               ),
@@ -322,7 +322,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                           child: CircularProgressIndicator(
                             value: 1.0,
                             strokeWidth: 14,
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
                             backgroundColor: Colors.transparent,
                           ),
                         ),
@@ -356,8 +356,8 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: isCompleted
-                                    ? AppColors.rpeLow.withOpacity(0.7)
-                                    : accent.withOpacity(0.6),
+                                    ? AppColors.rpeLow.withValues(alpha: 0.7)
+                                    : accent.withValues(alpha: 0.6),
                                 fontSize: 11,
                                 letterSpacing: 1.2,
                               ),
@@ -384,12 +384,12 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                   Container(
                     width: 1,
                     height: 45,
-                    color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
                   ),
                   _buildStatColumn(
                     "META",
                     _formatGoal(challenge.goal),
-                    Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                    Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ],
               ),
@@ -403,7 +403,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.rpeLow.withOpacity(0.3),
+                        color: AppColors.rpeLow.withValues(alpha: 0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -449,7 +449,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
           label,
           style: TextStyle(
             fontSize: 11,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             fontWeight: FontWeight.w600,
             letterSpacing: 0.8,
           ),
@@ -499,11 +499,11 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
             ),
             child: Column(
               children: [
-                Icon(Icons.people_outline, size: 48, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2)),
+                Icon(Icons.people_outline, size: 48, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2)),
                 const SizedBox(height: 12),
                 Text(
                   'Sin participantes',
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 15),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 15),
                 ),
               ],
             ),
@@ -558,7 +558,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
       rankWidget = Text(
         '$rank',
         style: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
           fontWeight: FontWeight.bold,
           fontSize: 16,
         ),
@@ -569,21 +569,21 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: isMe ? accent.withOpacity(0.08) : Theme.of(context).colorScheme.surface,
+        color: isMe ? accent.withValues(alpha: 0.08) : Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: isMe
-              ? accent.withOpacity(0.3)
-              : Theme.of(context).colorScheme.outline.withOpacity(0.1),
+              ? accent.withValues(alpha: 0.3)
+              : Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
           width: isMe ? 2 : 1,
         ),
         boxShadow: [
           BoxShadow(
             color: isMe
-                ? accent.withOpacity(0.1)
+                ? accent.withValues(alpha: 0.1)
                 : Theme.of(context).brightness == Brightness.dark
                     ? Colors.transparent
-                    : Colors.black.withOpacity(0.03),
+                    : Colors.black.withValues(alpha: 0.03),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -635,11 +635,11 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: isMe ? AppColors.brandSurface : Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
+              color: isMe ? AppColors.brandSurface : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(12),
               border: isMe
                   ? null
-                  : Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
+                  : Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2)),
             ),
             child: Text(
               _formatScore(participant.score, challenge.metric),
@@ -704,18 +704,18 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: _isPressed ? Theme.of(context).colorScheme.onSurface.withOpacity(0.08) : Theme.of(context).colorScheme.surface,
+          color: _isPressed ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08) : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.transparent
-                  : Colors.black.withOpacity(_isPressed ? 0.03 : 0.06),
+                  : Colors.black.withValues(alpha: _isPressed ? 0.03 : 0.06),
               blurRadius: _isPressed ? 4 : 12,
               offset: Offset(0, _isPressed ? 2 : 4),
             ),
           ],
-          border: Border.all(color: AppColors.brand.withOpacity(0.1)),
+          border: Border.all(color: AppColors.brand.withValues(alpha: 0.1)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

@@ -140,7 +140,7 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
                                   child: Text(
                                     "Acepta una invitación o crea un grupo",
                                     style: TextStyle(
-                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                                       fontStyle: FontStyle.italic,
                                     ),
                                   ),
@@ -183,7 +183,7 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: isDark ? Colors.transparent : Colors.black.withOpacity(0.1),
+                  color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.1),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -221,11 +221,11 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.login_rounded, size: 64, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
+          Icon(Icons.login_rounded, size: 64, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
           const SizedBox(height: 16),
           Text(
             'Inicia sesión para ver tus grupos',
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 16),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 16),
           ),
         ],
       ),
@@ -247,7 +247,7 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
               borderRadius: BorderRadius.circular(28),
               boxShadow: [
                 BoxShadow(
-                  color: isDark ? Colors.transparent : Colors.black.withOpacity(0.04),
+                  color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.04),
                   blurRadius: 16,
                   offset: const Offset(0, 6),
                 ),
@@ -362,7 +362,7 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
           fontSize: 12,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
         ),
       ),
     );
@@ -458,9 +458,9 @@ class _CreateGroupModal extends StatelessWidget {
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             decoration: InputDecoration(
               hintText: "Ej. Corredores Nocturnos",
-              hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
+              hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
               filled: true,
-              fillColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
+              fillColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide: BorderSide.none,
@@ -475,7 +475,7 @@ class _CreateGroupModal extends StatelessWidget {
               ),
               prefixIcon: Padding(
                 padding: const EdgeInsets.only(left: 16, right: 8),
-                child: Icon(Icons.edit_rounded, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
+                child: Icon(Icons.edit_rounded, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
               ),
             ),
           ),
@@ -603,7 +603,7 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: _accentColor.withOpacity(_isPressed ? 0.2 : 0.3),
+                    color: _accentColor.withValues(alpha: _isPressed ? 0.2 : 0.3),
                     blurRadius: _isPressed ? 8 : 12,
                     offset: Offset(0, _isPressed ? 4 : 8),
                     spreadRadius: -2,
@@ -631,7 +631,7 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
                         height: 120,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                         ),
                       ),
                     ),
@@ -643,7 +643,7 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
                         height: 100,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.06),
+                          color: Colors.white.withValues(alpha: 0.06),
                         ),
                       ),
                     ),
@@ -661,9 +661,9 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
                                 width: 56,
                                 height: 56,
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.25),
+                                  color: Colors.white.withValues(alpha: 0.25),
                                   borderRadius: BorderRadius.circular(18),
-                                  border: Border.all(color: Colors.white.withOpacity(0.4)),
+                                  border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
                                 ),
                                 child: Center(
                                   child: Text(
@@ -689,7 +689,7 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
                                     borderRadius: BorderRadius.circular(8),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
+                                        color: Colors.black.withValues(alpha: 0.1),
                                         blurRadius: 4,
                                         offset: const Offset(0, 2),
                                       ),
@@ -737,7 +737,7 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
                                 Text(
                                   group.type == GroupType.private ? "Grupo Privado" : "Comunidad Pública",
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
+                                    color: Colors.white.withValues(alpha: 0.7),
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -750,7 +750,7 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.15),
+                              color: Colors.white.withValues(alpha: 0.15),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -777,7 +777,7 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
       height: 110,
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withOpacity(0.4),
+        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Center(
@@ -786,7 +786,7 @@ class _PremiumGroupCardState extends State<_PremiumGroupCard>
           height: 24,
           child: CircularProgressIndicator(
             strokeWidth: 2, 
-            color: AppColors.brand.withOpacity(0.5)
+            color: AppColors.brand.withValues(alpha: 0.5)
           ),
         ),
       ),
@@ -821,10 +821,10 @@ class _JoinByCodeBanner extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
             decoration: BoxDecoration(
-              color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
+              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(22),
               border: Border.all(
-                color: isDark ? Colors.white.withOpacity(0.1) : AppColors.brand.withOpacity(0.15),
+                color: isDark ? Colors.white.withValues(alpha: 0.1) : AppColors.brand.withValues(alpha: 0.15),
               ),
             ),
             child: Row(
@@ -832,7 +832,7 @@ class _JoinByCodeBanner extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.brand.withOpacity(0.12),
+                    color: AppColors.brand.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: const Icon(Icons.tag_rounded,
@@ -856,13 +856,13 @@ class _JoinByCodeBanner extends StatelessWidget {
                         'Únete directamente a un grupo',
                         style: TextStyle(
                             fontSize: 12,
-                            color: cs.onSurface.withOpacity(0.5)),
+                            color: cs.onSurface.withValues(alpha: 0.5)),
                       ),
                     ],
                   ),
                 ),
                 Icon(Icons.arrow_forward_ios_rounded,
-                    size: 14, color: cs.onSurface.withOpacity(0.35)),
+                    size: 14, color: cs.onSurface.withValues(alpha: 0.35)),
               ],
             ),
           ),
@@ -945,7 +945,7 @@ class _JoinByCodeSheetState extends State<_JoinByCodeSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: cs.outline.withOpacity(0.4),
+                color: cs.outline.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -958,7 +958,7 @@ class _JoinByCodeSheetState extends State<_JoinByCodeSheet> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.brand.withOpacity(0.1),
+                  color: AppColors.brand.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(Icons.tag_rounded,
@@ -980,7 +980,7 @@ class _JoinByCodeSheetState extends State<_JoinByCodeSheet> {
                   Text(
                     'Introduce el código de 6 caracteres',
                     style: TextStyle(
-                        fontSize: 13, color: cs.onSurface.withOpacity(0.5)),
+                        fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5)),
                   ),
                 ],
               ),
@@ -1011,10 +1011,10 @@ class _JoinByCodeSheetState extends State<_JoinByCodeSheet> {
                 fontSize: 28,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 10,
-                color: cs.onSurface.withOpacity(0.18),
+                color: cs.onSurface.withValues(alpha: 0.18),
               ),
               filled: true,
-              fillColor: AppColors.brand.withOpacity(0.05),
+              fillColor: AppColors.brand.withValues(alpha: 0.05),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide: BorderSide.none,
@@ -1150,7 +1150,7 @@ class _InvitationCardState extends State<_InvitationCard> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: brandColor.withOpacity(0.25),
+                color: brandColor.withValues(alpha: 0.25),
                 blurRadius: 15,
                 offset: const Offset(0, 8),
                 spreadRadius: -4,
@@ -1177,7 +1177,7 @@ class _InvitationCardState extends State<_InvitationCard> {
                     height: 40.0 - (i * 10),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.08 + (i * 0.02)),
+                      color: Colors.white.withValues(alpha: 0.08 + (i * 0.02)),
                     ),
                   ),
                 )),
@@ -1192,9 +1192,9 @@ class _InvitationCardState extends State<_InvitationCard> {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white.withOpacity(0.3)),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                         ),
                         child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 22),
                       ),
@@ -1229,7 +1229,7 @@ class _InvitationCardState extends State<_InvitationCard> {
                               child: TextButton(
                                 onPressed: _handleDecline,
                                 style: TextButton.styleFrom(
-                                  foregroundColor: Colors.white.withOpacity(0.8),
+                                  foregroundColor: Colors.white.withValues(alpha: 0.8),
                                   padding: const EdgeInsets.symmetric(vertical: 12),
                                 ),
                                 child: const Text("Declinar", style: TextStyle(fontWeight: FontWeight.w700)),
@@ -1280,9 +1280,9 @@ class _GlassBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1434,7 +1434,7 @@ class _PremiumFloatingActionButtonState extends State<_PremiumFloatingActionButt
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 6),
                 ),

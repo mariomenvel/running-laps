@@ -118,12 +118,12 @@ class HeartRateMonitorView extends StatelessWidget {
     Color bgColor;
     switch (state) {
       case HrConnectionState.connected:
-        bgColor = AppColors.rpeLow.withOpacity(0.1);
+        bgColor = AppColors.rpeLow.withValues(alpha: 0.1);
       case HrConnectionState.scanning:
       case HrConnectionState.connecting:
-        bgColor = AppColors.brand.withOpacity(0.1);
+        bgColor = AppColors.brand.withValues(alpha: 0.1);
       case HrConnectionState.error:
-        bgColor = AppColors.rpeMax.withOpacity(0.1);
+        bgColor = AppColors.rpeMax.withValues(alpha: 0.1);
       case HrConnectionState.disconnected:
         bgColor = isDark ? const Color(0xFF1C1C1E) : const Color(0xFFF2F2F7);
     }
@@ -267,7 +267,7 @@ class HeartRateMonitorView extends StatelessWidget {
               fontSize:      12,
               fontWeight:    FontWeight.w600,
               letterSpacing: 0.8,
-              color:         txtColor.withOpacity(0.5),
+              color:         txtColor.withValues(alpha: 0.5),
             ),
           ),
         ),

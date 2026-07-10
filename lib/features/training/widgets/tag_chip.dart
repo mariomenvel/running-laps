@@ -49,7 +49,7 @@ class TagChip extends StatelessWidget {
                 child: Icon(
                   Icons.close_rounded,
                   size: small ? 14 : 16,
-                  color: style.text.withOpacity(0.7),
+                  color: style.text.withValues(alpha: 0.7),
                 ),
               ),
             ],

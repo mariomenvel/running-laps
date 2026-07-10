@@ -67,7 +67,7 @@ class SeriesPatternDetailView extends StatelessWidget {
             // History List
             Align(
               alignment: Alignment.centerLeft,
-              child: Text("Historial", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
+              child: Text("Historial", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5))),
             ),
             const SizedBox(height: 12),
             
@@ -98,7 +98,7 @@ class SeriesPatternDetailView extends StatelessWidget {
           BoxShadow(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.transparent
-                : Colors.black.withOpacity(0.03),
+                : Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -110,10 +110,10 @@ class SeriesPatternDetailView extends StatelessWidget {
           const SizedBox(height: 8),
           FittedBox(fit: BoxFit.scaleDown, child: Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16))),
           if (subValue != null) ...[
-            Text(subValue, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35), fontSize: 10)),
+            Text(subValue, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35), fontSize: 10)),
           ],
           const SizedBox(height: 4),
-          Text(title, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 11), textAlign: TextAlign.center),
+          Text(title, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 11), textAlign: TextAlign.center),
         ],
       ),
     );
@@ -144,14 +144,14 @@ class SeriesPatternDetailView extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 "Serie #${instance.serieIndex + 1}",
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 12),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 12),
               ),
             ],
           ),
           Container(
              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
              decoration: BoxDecoration(
-               color: AppColors.brand.withOpacity(0.1),
+               color: AppColors.brand.withValues(alpha: 0.1),
                borderRadius: BorderRadius.circular(20),
              ),
              child: Column(
@@ -164,7 +164,7 @@ class SeriesPatternDetailView extends StatelessWidget {
                  ),
                  Text(
                    "$pace /km",
-                   style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand).withOpacity(0.6), fontSize: 11, fontWeight: FontWeight.w500),
+                   style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand).withValues(alpha: 0.6), fontSize: 11, fontWeight: FontWeight.w500),
                  ),
                ],
              ),
@@ -196,7 +196,7 @@ class _PaceProgressionChart extends StatelessWidget {
         gridData: FlGridData(
           show: true, 
           drawVerticalLine: false,
-          getDrawingHorizontalLine: (_) => FlLine(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06)),
+          getDrawingHorizontalLine: (_) => FlLine(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06)),
         ),
         titlesData: FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
@@ -210,7 +210,7 @@ class _PaceProgressionChart extends StatelessWidget {
             dotData: const FlDotData(show: true),
             belowBarData: BarAreaData(
               show: true,
-              color: AppColors.brand.withOpacity(0.1),
+              color: AppColors.brand.withValues(alpha: 0.1),
             ),
           ),
         ],

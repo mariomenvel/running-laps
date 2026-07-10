@@ -350,7 +350,7 @@ class _TabSelector extends StatelessWidget {
                     boxShadow: selected
                         ? [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.08),
+                              color: Colors.black.withValues(alpha: 0.08),
                               blurRadius: 4,
                               offset: const Offset(0, 1),
                             )
@@ -1444,9 +1444,9 @@ class _PlanningTabState extends State<_PlanningTab> {
                   : null;
               final badgeBg = days != null
                   ? (days <= 7
-                      ? AppColors.rpeMax.withOpacity(0.2)
+                      ? AppColors.rpeMax.withValues(alpha: 0.2)
                       : days <= 21
-                          ? AppColors.effort.withOpacity(0.2)
+                          ? AppColors.effort.withValues(alpha: 0.2)
                           : const Color(0xFF2C2C2E))
                   : const Color(0xFF2C2C2E);
               final badgeText = days != null
@@ -1479,7 +1479,7 @@ class _PlanningTabState extends State<_PlanningTab> {
                     decoration: BoxDecoration(
                       color: AppColors.effortSurfaceConst,
                       border: Border.all(
-                          color: AppColors.effort.withOpacity(0.4)),
+                          color: AppColors.effort.withValues(alpha: 0.4)),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -1895,7 +1895,7 @@ class _DeltaBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(label,
@@ -2038,7 +2038,7 @@ class _WeeklyBarPainter extends CustomPainter {
       final barPaint = Paint()
         ..color = isCurrent
             ? AppColors.brand
-            : AppColors.brand.withOpacity(0.4)
+            : AppColors.brand.withValues(alpha: 0.4)
         ..style = PaintingStyle.fill;
       final h = max(minBarH, (v.km / maxKm) * size.height * 0.95);
       final left = i * barW + barPad;
@@ -2193,14 +2193,14 @@ class _RaceCountdownCard extends StatelessWidget {
             color: surfaceColor,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-                color: AppColors.brand.withOpacity(0.3)),
+                color: AppColors.brand.withValues(alpha: 0.3)),
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.brand.withOpacity(0.12),
+                  color: AppColors.brand.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.emoji_events_rounded,
@@ -2699,7 +2699,7 @@ Future<void> _launchGuidedSession(
   final template = TrainingTemplate(
     id: session.id,
     name: sessionName,
-    colorValue: AppColors.brand.value,
+    colorValue: AppColors.brand.toARGB32(),
     isWarmupCooldown: false,
     blocks: blocks,
     createdAt: now,
@@ -2760,12 +2760,12 @@ List<Color> _dotsForDay(
   }
   if (hasPlanned) {
     colors.add(isSelected
-        ? Colors.white.withOpacity(0.7)
+        ? Colors.white.withValues(alpha: 0.7)
         : AppColors.brand);
   }
   if (hasAiPending) {
     colors.add(isSelected
-        ? Colors.white.withOpacity(0.85)
+        ? Colors.white.withValues(alpha: 0.85)
         : const Color(0xFFB084F5));
   }
   if (hasRace) {

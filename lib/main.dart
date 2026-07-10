@@ -25,14 +25,14 @@ void main() async {
   if (!kIsWeb) {
     if (defaultTargetPlatform == TargetPlatform.android) {
       await FirebaseAppCheck.instance.activate(
-        androidProvider: kDebugMode
-            ? AndroidProvider.debug
-            : AndroidProvider.playIntegrity,
+        providerAndroid: kDebugMode
+            ? const AndroidDebugProvider()
+            : const AndroidPlayIntegrityProvider(),
       );
     }
   } else {
     await FirebaseAppCheck.instance.activate(
-      webProvider: ReCaptchaV3Provider('6LcH2acsAAAAAGdH2Wi1X39xnD3EB6o40ZsVjnIo'),
+      providerWeb: ReCaptchaV3Provider('6LcH2acsAAAAAGdH2Wi1X39xnD3EB6o40ZsVjnIo'),
     );
   }
 

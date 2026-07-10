@@ -37,8 +37,8 @@ class TrainingMapView extends StatelessWidget {
         : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 
     final borderColor = isDark
-        ? Colors.black.withOpacity(0.5)
-        : Colors.white.withOpacity(0.5);
+        ? Colors.black.withValues(alpha: 0.5)
+        : Colors.white.withValues(alpha: 0.5);
 
     return Stack(
       children: [
@@ -82,8 +82,8 @@ class TrainingMapView extends StatelessWidget {
             style: TextStyle(
               fontSize: 9,
               color: isDark
-                  ? Colors.white.withOpacity(0.5)
-                  : Colors.black.withOpacity(0.45),
+                  ? Colors.white.withValues(alpha: 0.5)
+                  : Colors.black.withValues(alpha: 0.45),
             ),
           ),
         ),
