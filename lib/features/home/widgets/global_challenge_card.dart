@@ -4,7 +4,6 @@
 // manual antes de eliminar. Ver CHANGELOG.md.
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/groups/data/models/challenge_models.dart';

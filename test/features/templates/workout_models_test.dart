@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:running_laps/features/templates/data/target_config.dart';
 import 'package:running_laps/features/templates/data/workout_block.dart';

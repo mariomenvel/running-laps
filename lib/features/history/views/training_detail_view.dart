@@ -15,7 +15,6 @@ import 'package:running_laps/features/profile/data/zones_repository.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/data/training_repository.dart';
 import 'package:running_laps/features/training/widgets/tag_chip.dart';
-import 'package:running_laps/features/templates/data/template_models.dart';
 
 import '../widgets/training_map_view.dart';
 import 'widgets/temporal_chart.dart';

@@ -6,8 +6,6 @@ import 'package:flutter/rendering.dart';
 import 'package:running_laps/features/avatar/data/assets.dart';
 import 'package:running_laps/features/avatar/viewmodels/avatar_maker_controller.dart';
 import 'package:running_laps/features/avatar/data/background_shape.dart';
-import 'package:running_laps/features/avatar/widgets/avatar_color_picker.dart';
-import 'package:running_laps/features/avatar/widgets/avatar_text_styles.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:gal/gal.dart';

@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'tag_model.dart';
 
 /// Repositorio para gestionar las etiquetas personalizadas del usuario
@@ -76,10 +75,6 @@ class TagManager {
     }
 
     // Crear etiqueta
-    debugPrint('[TagManager] currentUser.uid=${FirebaseAuth.instance.currentUser?.uid}');
-    debugPrint('[TagManager] writing to uid=$uid');
-    debugPrint('[TagManager] tag.name=${tag.name}');
-    await FirebaseAuth.instance.currentUser?.getIdToken(true);
     await _userTags(uid).doc(tag.name).set(tag.toMap());
   }
 

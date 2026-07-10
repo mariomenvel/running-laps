@@ -60,7 +60,7 @@ class WearAuthService {
       'idToken': idToken,
       'authenticatedAt': FieldValue.serverTimestamp(),
     };
-    debugPrint('[WearAuth] Writing to wear_sessions/$code: status=authenticated uid=${user.uid} idToken=${idToken?.substring(0, 20)}...');
+    debugPrint('[WearAuth] Writing to wear_sessions/$code: status=authenticated uid=${user.uid}');
     await _firestore.collection('wear_sessions').doc(code).update(payload);
     debugPrint('[WearAuth] Firestore update complete for code=$code');
 

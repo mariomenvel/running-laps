@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:running_laps/core/services/training_load_service.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
-import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/data/training_repository.dart';
 
 // ── WeeklyLoad ────────────────────────────────────────────────────────────────

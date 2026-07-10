@@ -7,7 +7,6 @@ import 'dart:ui' show FontFeature;
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import '../../../core/widgets/modern_snackbar.dart';
 import '../../../core/widgets/rpe_slider.dart';
-import '../../../core/services/settings_service.dart';
 
 import '../data/serie.dart';
 import '../data/fc_reading.dart';

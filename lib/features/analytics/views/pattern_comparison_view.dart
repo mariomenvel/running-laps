@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/features/analytics/data/workout_pattern.dart';
-import 'package:running_laps/features/training/data/serie.dart';
 
 class PatternComparisonView extends StatelessWidget {
   final WorkoutInstance instanceA;

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
-import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/features/history/viewmodels/history_controller.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/history/widgets/history_filter_sheet.dart';
 import 'package:running_laps/features/history/widgets/history_calendar_widget.dart';
-import 'package:running_laps/features/analytics/views/analytics_hub_screen.dart';
 import 'package:running_laps/features/history/widgets/premium_training_card.dart';
 import 'package:running_laps/core/widgets/skeleton_shimmer.dart';
 import 'package:running_laps/core/widgets/empty_state_widget.dart';

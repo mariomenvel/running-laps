@@ -4,7 +4,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:running_laps/core/services/heart_rate_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
-import 'package:running_laps/core/widgets/modern_snackbar.dart';
 
 class HeartRateMonitorView extends StatelessWidget {
   const HeartRateMonitorView({super.key});

@@ -11,7 +11,6 @@ import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_page_scaffold.dart';
-import '../../../../core/widgets/gradient_banner.dart';
 import '../../profile/views/profile_menu_screen_legacy.dart';
 
 class ChallengeDetailScreen extends StatefulWidget {

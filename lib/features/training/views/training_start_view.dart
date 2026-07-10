@@ -3,8 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart'; // Para SystemSound
-import 'dart:ui' show FontFeature;
-import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:firebase_core/firebase_core.dart'; // Para FirebaseException
 
 import '../data/serie.dart';

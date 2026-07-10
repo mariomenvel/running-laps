@@ -16,13 +16,11 @@ import 'package:running_laps/features/auth/viewmodels/auth_controller.dart';
 import 'package:running_laps/features/auth/views/auth_page.dart';
 import 'package:running_laps/features/history/views/history_screen.dart';
 import 'avatar_editor_wraper_view.dart';
-import 'package:running_laps/features/training/views/training_start_view.dart';
 import 'package:running_laps/features/training/views/manual_training_view.dart';
 import 'package:running_laps/features/analytics/views/analytics_hub_screen.dart';
 import '../../admin/views/admin_panel_screen.dart';
 import 'account_settings_view.dart';
 import 'zones_config_screen.dart';
-import 'package:running_laps/features/ai_coach/views/ai_coach_settings_view.dart';
 import 'package:running_laps/features/profile/views/heart_rate_monitor_view.dart';
 import 'package:running_laps/core/services/heart_rate_service.dart';
 

@@ -14,7 +14,6 @@ import 'package:running_laps/features/auth/views/auth_page.dart';
 import 'package:running_laps/features/onboarding/views/athlete_tutorial_view.dart';
 import 'package:running_laps/features/training/views/manual_training_view.dart';
 import 'package:running_laps/features/admin/views/admin_panel_screen.dart';
-import 'package:running_laps/features/ai_coach/views/ai_coach_settings_view.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:flutter_svg/flutter_svg.dart';

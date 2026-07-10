@@ -20,7 +20,6 @@ import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/gradient_banner.dart';
 import '../../../../core/widgets/skeleton_shimmer.dart';
 import '../../profile/views/profile_menu_screen_legacy.dart';
-import '../../training/views/training_start_view.dart';
 
 class AnalyticsHubScreenLegacy extends StatefulWidget {
   final List<Entrenamiento>? preFilteredData;

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:running_laps/config/app_theme.dart';
 
 /// Search bar estilo iOS para el Historial
 /// 

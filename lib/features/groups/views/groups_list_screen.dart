@@ -24,7 +24,6 @@ import '../../../core/widgets/skeleton_shimmer.dart';
 
 // Navigation
 import 'package:running_laps/core/widgets/main_shell.dart';
-import '../../training/views/training_start_view.dart';
 import '../../profile/views/profile_menu_screen_legacy.dart';
 
 /// Pantalla profesional y moderna que lista todos los grupos del usuario

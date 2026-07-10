@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart'; // for debugPrint
+// for debugPrint
 import '../repositories/challenges_repository.dart';
 import '../repositories/rewards_repository.dart';
 import '../models/challenge_models.dart';
@@ -7,7 +7,6 @@ import '../models/rewards_models.dart';
 import '../models/enums.dart';
 import '../helpers/challenge_ranking_helper.dart';
 import '../models/result_notification_model.dart';
-import '../models/group_models.dart';
 
 /// Service to handle automatic closure of challenges and distribution of rewards
 /// Designed to be called client-side but safe against concurrency via transactions

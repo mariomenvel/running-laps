@@ -16,7 +16,6 @@ import 'package:running_laps/core/widgets/kpi_card_with_delta.dart';
 import 'package:running_laps/core/constants/app_help_content.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/services/settings_service.dart';
-import 'package:running_laps/core/theme/app_colors.dart' hide AppColors;
 
 // GROUPS IMPORTS
 import 'package:running_laps/features/groups/data/repositories/groups_repository.dart';

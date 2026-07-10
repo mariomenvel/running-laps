@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Or wherever Auth is
 import 'package:flutter/foundation.dart';
 import 'package:running_laps/core/services/rate_limit_service.dart';
-import '../../auth/data/auth_repository.dart'; // To get userId
+// To get userId
 import 'template_models.dart';
 import 'workout_session.dart';
 

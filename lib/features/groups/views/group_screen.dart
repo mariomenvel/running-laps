@@ -27,7 +27,6 @@ import '../data/models/group_stats_model.dart';
 // Widgets
 import 'widgets/create_challenge_modal.dart';
 import '../../../../features/groups/data/helpers/challenge_helpers.dart';
-import '../../training/views/training_start_view.dart';
 import '../../profile/views/profile_menu_screen_legacy.dart';
 import '../data/repositories/invites_repository.dart';
 import '../data/helpers/invite_token_helper.dart';

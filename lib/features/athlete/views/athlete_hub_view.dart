@@ -14,7 +14,6 @@ import 'package:running_laps/features/athlete/viewmodels/athlete_calendar_viewmo
 import 'package:running_laps/features/ai_coach/data/ai_coach_automation_service.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_weekly_planner_service.dart';
-import 'package:running_laps/features/ai_coach/views/ai_coach_settings_view.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_weekly_feedback_view.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';

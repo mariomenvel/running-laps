@@ -18,8 +18,7 @@ class RDPSmoother {
 
     // Always include first and last point
     final indices = ({0, points.length - 1, ...result}).toList()..sort();
-    final sorted = indices.toList()..sort();
-    return sorted.map((i) => points[i]).toList();
+    return indices.map((i) => points[i]).toList();
   }
 
   /// Recursive RDP — returns indices of points to keep (excluding first/last).

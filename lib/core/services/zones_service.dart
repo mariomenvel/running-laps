@@ -94,9 +94,7 @@ class ZonesService {
     });
   }
 
-  /// Zona (1-5) a la que pertenece [fc].
-  ///
-  /// Devuelve null si [fcMax] es null.
+  /// Zona (1-5) a la que pertenece [fc] para la [fcMax] dada.
   int? zoneFor(int fc, int fcMax) {
     final zones = zonesFor(fcMax);
     for (final zone in zones.reversed) {

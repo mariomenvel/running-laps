@@ -4,12 +4,10 @@ import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/data/training_repository.dart';
 import 'package:running_laps/features/history/viewmodels/history_analytics_view_model.dart';
 import 'package:running_laps/features/training/data/tag_manager.dart';
-import 'package:running_laps/features/training/data/tag_model.dart';
 import 'package:running_laps/core/utils/tag_utils.dart';
 
 enum TrainingFilter {

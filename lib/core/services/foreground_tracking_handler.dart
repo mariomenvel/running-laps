@@ -1,5 +1,4 @@
 import 'package:running_laps/core/theme/app_colors.dart';
-import 'dart:ui' show Color;
 
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
