@@ -109,12 +109,11 @@ class TrainingLoadService {
   ) {
     final fromDate =
         DateTime(from.year, from.month, from.day);
-    final races = sessions
-        .where((s) =>
-            s.category == 'competicion' &&
-            !DateTime.tryParse(s.date)!
-                .isBefore(fromDate))
-        .toList()
+    final races = sessions.where((s) {
+      if (s.category != 'competicion') return false;
+      final date = DateTime.tryParse(s.date);
+      return date != null && !date.isBefore(fromDate);
+    }).toList()
       ..sort((a, b) => a.date.compareTo(b.date));
     return races.isEmpty ? null : races.first;
   }

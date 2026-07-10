@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart'; // for debugPrint
+// for debugPrint
 import '../../../training/data/entrenamiento.dart';
 import '../models/challenge_models.dart';
 import '../helpers/challenge_helpers.dart';
@@ -299,10 +299,12 @@ class TrainingChallengeSyncService {
     Challenge challenge,
   ) async {
     try {
-      // Query trainings by date range
-      // fecha is stored as ISO string, so we need to compare strings
-      final startStr = challenge.startAt.toIso8601String();
-      final endStr = challenge.endAt.toIso8601String();
+      // Query trainings by date range.
+      // `fecha` se guarda como String ISO8601 en UTC (con 'Z') — los bounds
+      // deben convertirse a UTC para que la comparación lexicográfica sea
+      // una comparación de instantes real.
+      final startStr = challenge.startAt.toUtc().toIso8601String();
+      final endStr = challenge.endAt.toUtc().toIso8601String();
 
       final snapshot = await _firestore
           .collection('users')

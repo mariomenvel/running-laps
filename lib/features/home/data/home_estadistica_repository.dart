@@ -2,8 +2,6 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 // ===================================
 // TIPOS
@@ -66,8 +64,11 @@ class HomeEstadisticaRepository {
           .doc(user.uid)
           .collection('trainings');
 
-      final String startString = startDate.toIso8601String().substring(0, 19);
-      final String endString = endDate.toIso8601String().substring(0, 19);
+      // `fecha` se guarda como ISO8601 en UTC (con 'Z') — los bounds deben ir
+      // también en UTC o los entrenos entre la medianoche local y la UTC
+      // quedan fuera del rango.
+      final String startString = startDate.toUtc().toIso8601String();
+      final String endString = endDate.toUtc().toIso8601String();
 
       final QuerySnapshot snapshot = await trainingsRef
           .where('fecha', isGreaterThanOrEqualTo: startString)
@@ -157,7 +158,8 @@ class HomeEstadisticaRepository {
     final Map<String, List<Map<String, dynamic>>> groups = {};
 
     for (var data in rawData) {
-      final dt = DateTime.parse(data['fecha']);
+      // toLocal(): el string guardado es UTC; el bucket debe ser el mes local
+      final dt = DateTime.parse(data['fecha']).toLocal();
       final key = "${dt.year}-${dt.month.toString().padLeft(2, '0')}";
       groups.putIfAbsent(key, () => []).add(data);
     }
@@ -184,9 +186,9 @@ class HomeEstadisticaRepository {
   ) {
     final Map<DateTime, List<Map<String, dynamic>>> grouped = {};
 
-    // Agrupar datos normalizando la fecha a las 00:00:00
+    // Agrupar datos normalizando la fecha a las 00:00:00 del día LOCAL
     for (var data in rawData) {
-      final dt = DateTime.parse(data['fecha']);
+      final dt = DateTime.parse(data['fecha']).toLocal();
       final dateKey = DateTime(dt.year, dt.month, dt.day);
       grouped.putIfAbsent(dateKey, () => []).add(data);
     }
@@ -276,7 +278,7 @@ class HomeEstadisticaRepository {
     while (currentMonth.isBefore(end) ||
         (currentMonth.month == end.month && currentMonth.year == end.year)) {
       final monthData = rawData.where((d) {
-        final dt = DateTime.parse(d['fecha']);
+        final dt = DateTime.parse(d['fecha']).toLocal();
         return dt.month == currentMonth.month && dt.year == currentMonth.year;
       }).toList();
 
@@ -303,11 +305,13 @@ class HomeEstadisticaRepository {
     if (dataList.isEmpty) return 0.0;
 
     switch (metric) {
+      // Casts con `num`: docs antiguos o creados desde Wear OS pueden traer
+      // int donde ahora se escribe double (y viceversa).
       case HomeMetric.ritmoMedio:
         double totalPace = 0;
         int count = 0;
         for (var d in dataList) {
-          final val = d['ritmoMedioSecKm'] as int?;
+          final val = (d['ritmoMedioSecKm'] as num?)?.toDouble();
           if (val != null && val > 0) {
             totalPace += val;
             count++;
@@ -315,22 +319,22 @@ class HomeEstadisticaRepository {
         }
         return count == 0 ? 0.0 : totalPace / count;
       case HomeMetric.distanciaTotal:
-        int totalM = 0;
+        double totalM = 0;
         for (var d in dataList) {
-          totalM += (d['distanciaTotalM'] as int? ?? 0);
+          totalM += (d['distanciaTotalM'] as num? ?? 0).toDouble();
         }
         return totalM / 1000.0;
       case HomeMetric.tiempoTotal:
         double totalSec = 0;
         for (var d in dataList) {
-          totalSec += (d['tiempoTotalSec'] as double? ?? 0.0);
+          totalSec += (d['tiempoTotalSec'] as num? ?? 0.0).toDouble();
         }
         return totalSec / 60.0;
       case HomeMetric.rpePromedio:
         double totalRpe = 0;
         int count = 0;
         for (var d in dataList) {
-          final val = d['rpePromedio'] as double?;
+          final val = (d['rpePromedio'] as num?)?.toDouble();
           if (val != null && val > 0) {
             totalRpe += val;
             count++;

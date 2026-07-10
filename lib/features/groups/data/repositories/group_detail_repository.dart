@@ -122,14 +122,16 @@ class GroupDetailRepository {
       final DateTime startOfDay = DateTime(start.year, start.month, start.day);
       final DateTime endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
 
-      // Reusamos logica de filtrar entrenamientos
-      // Idealmente, harías una query con filtro de fecha si tienes muchos, pero por ahora encadenamos en memoria
-      // NOTA: Firestore guarda String ISO8601. La comparación lexicográfica funciona si el formato es estándar 'YYYY-MM-DD...'
+      // NOTA: Firestore guarda `fecha` como String ISO8601 **en UTC** (con 'Z').
+      // El bound de la query debe ir también en UTC: un bound local excluiría
+      // los entrenos entre la medianoche local y la medianoche UTC.
+      // El filtro exacto del rango se hace en memoria más abajo.
       final trainingsSnap = await _db
           .collection('users')
           .doc(uid)
           .collection('trainings')
-          .where('fecha', isGreaterThanOrEqualTo: startOfDay.toIso8601String())
+          .where('fecha',
+              isGreaterThanOrEqualTo: startOfDay.toUtc().toIso8601String())
           .limit(200)
           .get();
 
