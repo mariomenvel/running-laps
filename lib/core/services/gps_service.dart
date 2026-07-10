@@ -1,7 +1,6 @@
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -51,6 +50,34 @@ class GpsPoint {
 }
 
 class GPSService with WidgetsBindingObserver {
+  // ── Umbrales de calidad GPS (accuracy en metros) ──────────────────────────
+  /// Accuracy máxima para que una lectura entre al EKF (pondera por accuracy²).
+  static const double _usableAccuracyM = 35.0;
+
+  /// Accuracy máxima para considerar la señal "estable" (calibra zancada).
+  static const double _reliableAccuracyM = 20.0;
+
+  /// Accuracy mínima exigida para inicializar el EKF (esperar señal fina).
+  static const double _ekfInitAccuracyM = 15.0;
+
+  /// Ventana inicial durante la que se exige un fix fino (≤[_ekfInitAccuracyM])
+  /// para anclar el EKF. Pasada la ventana se acepta cualquier fix usable
+  /// (≤[_usableAccuracyM]): el EKF pondera por accuracy² y su covarianza
+  /// inicial se escala con la accuracy del fix, así que un anclaje grueso no
+  /// lo desestabiliza. Crítico en series: cada serie crea un GPSService nuevo
+  /// y una serie corta puede terminar antes de conseguir un fix ≤15 m.
+  static const Duration _ekfStrictInitWindow = Duration(seconds: 10);
+
+  // ── Velocidades límite (m/s) ──────────────────────────────────────────────
+  /// Velocidad GPS máxima plausible corriendo; lecturas mayores se descartan.
+  static const double _maxGpsSpeedMs = 12.0;
+
+  /// Clamp del estado de velocidad del tracker.
+  static const double _maxRunSpeedMs = 10.0;
+
+  /// Tope de velocidad para dead-reckoning por podómetro.
+  static const double _maxPedometerSpeedMs = 4.0;
+
   final ValueNotifier<GpsStatus> status = ValueNotifier(GpsStatus.unknown);
   final ValueNotifier<int> totalDistanceMeters = ValueNotifier(0);
   final ValueNotifier<String> currentPace = ValueNotifier('--:-- /km');
@@ -234,11 +261,6 @@ class GPSService with WidgetsBindingObserver {
     }
   }
 
-  void updateSerie(int n) {
-    _serieNumber = n;
-    _sendNotificationUpdate();
-  }
-
   Future<void> startNotificationOnly({
     TrackingMode mode = TrackingMode.continuous,
     int serieNumber = 1,
@@ -336,6 +358,11 @@ class GPSService with WidgetsBindingObserver {
       FlutterForegroundTask.stopService();
     }
     _ekf.reset();
+
+    // Cada GPSService posee su SensorService: sin esto las suscripciones a
+    // acelerómetro/giroscopio/podómetro se fugan en cada serie (el flujo de
+    // series crea y destruye un GPSService por serie).
+    _sensorService.dispose();
 
     status.dispose();
     totalDistanceMeters.dispose();
@@ -683,13 +710,13 @@ class GPSService with WidgetsBindingObserver {
     final gpsAccuracy = frame.gpsAccuracy ?? double.infinity;
     final hasCoordinates =
         frame.latitude != null && frame.longitude != null;
-    final hasUsableGps = hasCoordinates && gpsAccuracy <= 35;   // EKF pondera por accuracy²
-    final hasReliableGps = hasCoordinates && gpsAccuracy <= 20;
+    final hasUsableGps = hasCoordinates && gpsAccuracy <= _usableAccuracyM;
+    final hasReliableGps = hasCoordinates && gpsAccuracy <= _reliableAccuracyM;
     final hasGpsSpeed =
         frame.gpsSpeed != null &&
         frame.gpsSpeed!.isFinite &&
         frame.gpsSpeed! >= 0.0 &&
-        frame.gpsSpeed! <= 12.0;
+        frame.gpsSpeed! <= _maxGpsSpeedMs;
     final gpsStable = hasReliableGps && hasGpsSpeed;
 
     if (gpsStable) {
@@ -735,16 +762,21 @@ class GPSService with WidgetsBindingObserver {
 
     if (hasUsableGps && frame.latitude != null && frame.longitude != null) {
       if (!_ekf.isInitialized) {
-        if (gpsAccuracy > 15) return state; // esperar señal fina
-        _ekf.initialize(
-          frame.latitude!,
-          frame.longitude!,
-          hasGpsSpeed ? frame.gpsSpeed! : 0.0,
-          state.heading,
-          accuracy: gpsAccuracy,
-        );
-        lat = frame.latitude;
-        lon = frame.longitude;
+        if (gpsAccuracy <= _ekfInitThreshold(frame.timestamp)) {
+          _ekf.initialize(
+            frame.latitude!,
+            frame.longitude!,
+            hasGpsSpeed ? frame.gpsSpeed! : 0.0,
+            state.heading,
+            accuracy: gpsAccuracy,
+          );
+          lat = frame.latitude;
+          lon = frame.longitude;
+        }
+        // Sin fix suficiente NO se descarta el tick entero (antes había un
+        // `return state` aquí que congelaba la distancia de toda la serie
+        // mientras la accuracy estuviera entre 15 y 35 m): el podómetro
+        // sigue midiendo abajo como dead reckoning.
       } else {
         // Adaptive noise
         final velocityDelta = hasGpsSpeed
@@ -769,8 +801,8 @@ class GPSService with WidgetsBindingObserver {
         // Update heading from GPS speed direction when moving
         if (hasGpsSpeed && frame.gpsSpeed! > 0.5) {
           if (state.latitude != null && state.longitude != null) {
-            final dlat = lat! - state.latitude!;
-            final dlon = lon! - state.longitude!;
+            final dlat = lat - state.latitude!;
+            final dlon = lon - state.longitude!;
             if (dlat.abs() > 1e-8 || dlon.abs() > 1e-8) {
               final hdg = math.atan2(dlon, dlat);
               _ekf.updateHeading(hdg);
@@ -821,12 +853,13 @@ class GPSService with WidgetsBindingObserver {
       final pedometerDistance = frame.stepsDelta * state.strideLength;
       if (newUserState == UserTrackingState.movingNoGps) {
         // GPS lost — trust pedometer fully
-        if (pedometerDistance <= 4.0 * deltaTime) {
+        if (pedometerDistance <= _maxPedometerSpeedMs * deltaTime) {
           distance = pedometerDistance;
         }
-      } else if (!hasUsableGps) {
-        // GPS marginal — use pedometer as fallback with cap
-        if (pedometerDistance <= 4.0 * deltaTime) {
+      } else if (!hasUsableGps || !_ekf.isInitialized) {
+        // GPS marginal o EKF aún sin anclar (warm-up de la serie) —
+        // podómetro como fallback con tope de velocidad
+        if (pedometerDistance <= _maxPedometerSpeedMs * deltaTime) {
           distance = pedometerDistance;
         }
       }
@@ -837,7 +870,8 @@ class GPSService with WidgetsBindingObserver {
       velocity = _blendSpeed(state.velocity, frame.gpsSpeed!, 0.45);
     } else if (acceptedGpsSegment) {
       velocity = _blendSpeed(state.velocity, distance / dt, 0.30);
-    } else if (!hasUsableGps && frame.stepsDelta > 0) {
+    } else if ((!hasUsableGps || !_ekf.isInitialized) &&
+        frame.stepsDelta > 0) {
       velocity = _blendSpeed(
         state.velocity,
         (frame.stepsDelta * state.strideLength) / deltaTime,
@@ -862,7 +896,7 @@ class GPSService with WidgetsBindingObserver {
     return TrackingState(
       latitude: lat,
       longitude: lon,
-      velocity: velocity.clamp(0.0, 10.0),
+      velocity: velocity.clamp(0.0, _maxRunSpeedMs),
       heading: state.heading,
       distanceTotal: state.distanceTotal + distance,
       strideLength: stride,
@@ -870,6 +904,20 @@ class GPSService with WidgetsBindingObserver {
       userState: newUserState,
     );
   }
+
+  /// Umbral de accuracy admisible para inicializar el EKF en [now]:
+  /// estricto durante [_ekfStrictInitWindow], relajado después.
+  double _ekfInitThreshold(DateTime now) {
+    final started = _sessionStartTime;
+    if (started == null) return _usableAccuracyM;
+    return ekfInitThresholdFor(now.difference(started));
+  }
+
+  @visibleForTesting
+  static double ekfInitThresholdFor(Duration sinceTrackingStart) =>
+      sinceTrackingStart < _ekfStrictInitWindow
+          ? _ekfInitAccuracyM
+          : _usableAccuracyM;
 
   double _maxAllowedSpeed({
     required double accuracy,
@@ -880,7 +928,7 @@ class GPSService with WidgetsBindingObserver {
         : 50.0;
     final accuracyPenalty = normalizedAccuracy / 25.0;
     final baseline = math.max(referenceSpeed + 2.5, 6.5);
-    return math.min(10.0, baseline + accuracyPenalty);
+    return math.min(_maxRunSpeedMs, baseline + accuracyPenalty);
   }
 
   double _blendSpeed(double previous, double current, double weight) {
@@ -908,11 +956,10 @@ class GPSService with WidgetsBindingObserver {
   }
 
   String _formatPace(double secPerKm) {
-    if (secPerKm > 3600 || secPerKm < 60) {
-      if (secPerKm > 3600) return '--:-- /km';
-    }
-    final m = (secPerKm / 60).floor();
-    final s = (secPerKm % 60).round();
+    if (secPerKm > 3600) return '--:-- /km';
+    final totalSec = secPerKm.round();
+    final m = totalSec ~/ 60;
+    final s = totalSec % 60;
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')} /km';
   }
 }
