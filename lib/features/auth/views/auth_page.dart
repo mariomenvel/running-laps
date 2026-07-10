@@ -142,21 +142,22 @@ class _AuthPageState extends State<AuthPage> {
 
               try {
                 await _authCtrl.recoverPassword(_resetEmailCtrl.text);
-                
-                if (!mounted) return;
+
+                // `context` aquí es el del modal (sombreado por el builder):
+                // el guard correcto es context.mounted, no el mounted del State.
+                if (!context.mounted) return;
                 Navigator.of(context).pop(); // Cerrar modal si éxito
-                
-                // Mostrar éxito en SnackBar (ya no hay modal tapándolo)
+
                 // Mostrar éxito en SnackBar (ya no hay modal tapándolo)
                 ModernSnackBar.showSuccess(
                   context,
                   'Correo enviado. Revisa tu bandeja.',
                 );
               } catch (e) {
+                // Si el modal se cerró durante el await, no tocar su estado
+                if (!context.mounted) return;
                 // Si falla, actualizamos el estado DEL MODAL para mostrar el error
                 setModalState(() {
-                   // Usamos la misma lógica de extracción de mensaje
-                   // pero sin mostrar SnackBar, sino texto rojo.
                    _localError = _extractErrorMessage(e);
                 });
               }

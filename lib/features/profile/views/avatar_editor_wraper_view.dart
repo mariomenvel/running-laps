@@ -77,18 +77,11 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
       }, SetOptions(merge: true));
 
 
-      // --- CAMBIO AQUÍ ---
-      // BORRAR ESTO: Get.back();
-      // PONER ESTO:
-      if (mounted) {
-        Navigator.pop(context);
-      }
-      // -------------------
-
-
+      if (!mounted) return;
+      Navigator.pop(context);
       ModernSnackBar.showSuccess(context, 'Avatar actualizado correctamente');
     } catch (e) {
-
+      if (!mounted) return;
       ModernSnackBar.showError(context, 'Error al actualizar avatar: $e');
     } finally {
        if (mounted) setState(() => _isLoading = false);

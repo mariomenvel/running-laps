@@ -1491,7 +1491,8 @@ class _TrainingStartViewState extends State<TrainingStartView>
 
     _vm.clearSeries();
     _vm.startContinuousSession();
-    
+
+    if (!mounted) return;
     final result = await Navigator.push(
       context,
       AppRoute(
@@ -1543,6 +1544,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
 
     final pace = _cfgPaceParsed();
 
+    if (!mounted) return;
     final result = await Navigator.push(
       context,
       AppRoute(
@@ -3139,7 +3141,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
     );
 
     if (newTemplate != null) {
-      if (newTemplate.blocks.isEmpty) return;
+      if (newTemplate.blocks.isEmpty || !mounted) return;
       setState(() {
         _vm.loadTemplate(newTemplate);
         if (_vm.plannedBlocks.isNotEmpty) {
@@ -3168,6 +3170,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
     );
     
     if (modifiedTemplate != null) {
+      if (!mounted) return;
       setState(() {
          _vm.loadTemplate(modifiedTemplate);
          // Reset to first block of new template if series haven't started?
@@ -3190,6 +3193,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
     );
     
     if (selected != null) {
+      if (!mounted) return;
       setState(() {
         _vm.loadTemplate(selected);
         if (_vm.plannedBlocks.isNotEmpty) {
@@ -4171,7 +4175,8 @@ class _TrainingStartViewState extends State<TrainingStartView>
                       if (lastId != null) {
                         HeartRateService().connect(lastId);
                       } else {
-                        if (!mounted) return;
+                        // context.mounted: el context es del builder, no del State
+                        if (!context.mounted) return;
                         await Navigator.push(
                           context,
                           AppRoute(page: const HeartRateMonitorView()),
@@ -4736,8 +4741,10 @@ class _LinkSessionSheet extends StatelessWidget {
                     onPressed: () async {
                       await onLink(s);
                       if (context.mounted) Navigator.pop(context);
-                      ModernSnackBar.showSuccess(
-                          parentContext, 'Sesión completada ✓');
+                      if (parentContext.mounted) {
+                        ModernSnackBar.showSuccess(
+                            parentContext, 'Sesión completada ✓');
+                      }
                     },
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.brand,

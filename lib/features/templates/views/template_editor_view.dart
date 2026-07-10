@@ -319,9 +319,9 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
          );
          
          if (result == 'temp') {
-           Navigator.pop(context, template);
+           if (mounted) Navigator.pop(context, template);
            return;
-         } 
+         }
          else if (result == 'update') {
            // Proceed to save
          } else {

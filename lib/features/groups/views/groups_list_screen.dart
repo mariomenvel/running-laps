@@ -338,32 +338,14 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
               final userGroupsRepo = UserGroupsRepository();
               await userGroupsRepo.addUserToGroup(_currentUserId!, groupId);
 
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Row(
-                      children: [
-                        Icon(Icons.check_circle, color: Colors.white),
-                        SizedBox(width: 12),
-                        Text("¡Grupo creado!"),
-                      ],
-                    ),
-                    behavior: SnackBarBehavior.floating,
-                    backgroundColor: AppColors.rpeLow,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                );
+              // context.mounted: context del builder del sheet, no el del State.
+              // ModernSnackBar es el único snackbar permitido (convención).
+              if (context.mounted) {
+                ModernSnackBar.showSuccess(context, '¡Grupo creado!');
               }
             } catch (e) {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text("Error: $e"),
-                    backgroundColor: AppColors.rpeMax,
-                  ),
-                );
+              if (context.mounted) {
+                ModernSnackBar.showError(context, 'Error: $e');
               }
             }
           }

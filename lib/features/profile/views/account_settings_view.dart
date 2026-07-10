@@ -229,7 +229,9 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                               // 2. Actualizar nombre
                               await _authCtrl.updateName(nameEditCtrl.text);
                               
-                              if (mounted) {
+                              // mounted (State) para setState; context.mounted
+                              // para el context del sheet (pop/snackbar)
+                              if (mounted && context.mounted) {
                                 setState(() {
                                   _displayName = nameEditCtrl.text;
                                 });
@@ -238,7 +240,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                                 ModernSnackBar.showSuccess(context, 'Nombre actualizado');
                               }
                             } catch (e) {
-                              if (mounted) ModernSnackBar.showError(context, e.toString());
+                              if (context.mounted) ModernSnackBar.showError(context, e.toString());
                             }
                           },
                           style: ElevatedButton.styleFrom(
@@ -443,12 +445,12 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                                       await _authCtrl.reauthenticate(currentPassCtrl.text);
                                       // Actualizar con la NUEVA
                                       await _authCtrl.updatePassword(newPassCtrl.text);
-                                      if (mounted) {
+                                      if (context.mounted) {
                                         Navigator.pop(context);
                                         ModernSnackBar.showSuccess(context, 'Contraseña actualizada correctamente');
                                       }
                                     } catch (e) {
-                                      if (mounted) ModernSnackBar.showError(context, e.toString());
+                                      if (context.mounted) ModernSnackBar.showError(context, e.toString());
                                     }
                                   },
                                   style: ElevatedButton.styleFrom(
@@ -654,17 +656,17 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                                 await _authCtrl.reauthenticate(passCtrl.text);
                               }
                               await _authCtrl.deleteAccount();
-                              if (mounted) {
+                              if (context.mounted) {
                                 Navigator.pop(context);
                                 Navigator.pushAndRemoveUntil(
-                                  context, 
+                                  context,
                                   AppRoute(page: const AuthPage()),
                                   (r) => false
                                 );
                                 ModernSnackBar.showSuccess(context, 'Cuenta eliminada con éxito.');
                               }
                             } catch (e) {
-                              if (mounted) ModernSnackBar.showError(context, e.toString());
+                              if (context.mounted) ModernSnackBar.showError(context, e.toString());
                             }
                           },
                           style: ElevatedButton.styleFrom(
@@ -1143,14 +1145,9 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
         paceSec: result.paceSec,
         segment: result.segmentDistance,
       );
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Ajustes de alarma guardados"),
-          behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 2),
-        ),
-      );
+
+      if (!mounted) return;
+      ModernSnackBar.showSuccess(context, 'Ajustes de alarma guardados');
     }
   }
 
@@ -1161,6 +1158,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
       if (connected) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('watch_connected', true);
+        if (!mounted) return;
         setState(() => _watchConnected = true);
         ModernSnackBar.showSuccess(context, 'Reloj conectado correctamente');
       }

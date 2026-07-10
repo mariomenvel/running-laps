@@ -93,13 +93,16 @@ class _TagSelectorSheetState extends State<TagSelectorSheet> {
         name: name,
         colorValue: 0xFF9E9E9E,
       ));
+      if (!mounted) return;
       _newTagController.clear();
       setState(() => _showNewTagField = false);
       await _loadCustomTags();
+      if (!mounted) return;
       if (_selectedTagNames.length < 5) {
         setState(() => _selectedTagNames.add(name));
       }
     } catch (e) {
+      if (!mounted) return;
       ModernSnackBar.showError(context, 'Error al crear etiqueta');
     }
   }

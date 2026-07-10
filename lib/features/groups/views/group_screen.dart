@@ -395,7 +395,8 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                           },
                           onJoin: () async {
                             await _controller.joinChallenge(challenge.id);
-                            if (mounted) {
+                            // context.mounted: es el context del builder, no el del State
+                            if (context.mounted) {
                               ModernSnackBar.showSuccess(context, '¡Te has unido al reto! 🚀');
                               _confettiController.play();
                             }

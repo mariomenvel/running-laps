@@ -360,6 +360,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
       HomeViewModel.needsReload.value++;
       HistoryController.needsReload.value++;
 
+      if (!mounted) return;
       // Pop to root (MainShell from AuthWrapper) then switch to History tab
       Navigator.popUntil(context, (route) => route.isFirst);
       WidgetsBinding.instance.addPostFrameCallback((_) {
