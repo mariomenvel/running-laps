@@ -41,7 +41,10 @@ class HeartRateService {
   StreamSubscription<DiscoveredDevice>? _scanSub;
   StreamSubscription<ConnectionStateUpdate>? _connectionSub;
   StreamSubscription<List<int>>? _measurementSub;
-  String? _connectedDeviceId;
+
+  // Generación del escaneo activo: si se lanza un startScan mientras otro
+  // espera su timeout, el timeout del viejo no debe parar el escaneo nuevo.
+  int _scanGeneration = 0;
 
   static const _prefKey = 'last_hr_device_id';
 
@@ -106,6 +109,7 @@ class HeartRateService {
     scannedDevices.value = [];
     connectionState.value = HrConnectionState.scanning;
 
+    final generation = ++_scanGeneration;
     _scanSub?.cancel();
     _scanSub = _ble!
         .scanForDevices(
@@ -131,7 +135,10 @@ class HeartRateService {
         );
 
     await Future.delayed(timeout);
-    await stopScan();
+    // Solo parar si este sigue siendo el escaneo activo
+    if (generation == _scanGeneration) {
+      await stopScan();
+    }
   }
 
   Future<void> stopScan() async {
@@ -157,7 +164,6 @@ class HeartRateService {
           (update) async {
             if (update.connectionState ==
                 DeviceConnectionState.connected) {
-              _connectedDeviceId = deviceId;
               connectedDeviceName.value = deviceName;
               connectionState.value = HrConnectionState.connected;
               await _saveLastDevice(deviceId);
@@ -214,7 +220,6 @@ class HeartRateService {
     await _connectionSub?.cancel();
     _measurementSub        = null;
     _connectionSub         = null;
-    _connectedDeviceId     = null;
     heartRate.value        = null;
     connectedDeviceName.value = null;
     connectionState.value  = HrConnectionState.disconnected;

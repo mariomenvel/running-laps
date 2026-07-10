@@ -188,13 +188,6 @@ class PdfGeneratorService {
     );
   }
 
-  static pw.Widget _buildAdminGrid(List<pw.Widget> stats) {
-    return pw.Row(
-      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-      children: stats.map((s) => pw.Expanded(child: s)).toList(),
-    );
-  }
-
   static pw.Widget _buildAdminStat(String label, String value, String sub) {
     return pw.Container(
       margin: const pw.EdgeInsets.symmetric(horizontal: 5),
@@ -452,8 +445,9 @@ class PdfGeneratorService {
             children: List.generate(training.series.length, (i) {
               final serie = training.series[i];
               final pace = (serie.ritmoSecPorKm() ?? 0).toDouble();
-              final normalizedHeight = range > 0 
-                  ? ((pace - minPace) / range) * 96
+              // clamp: una serie sin ritmo (pace 0) daría altura negativa
+              final normalizedHeight = range > 0
+                  ? (((pace - minPace) / range) * 96).clamp(0.0, 96.0)
                   : 48.0;
               
               return pw.Column(
@@ -773,7 +767,7 @@ class PdfGeneratorService {
     }
     final minutes = totalSeconds ~/ 60;
     final seconds = totalSeconds % 60;
-    if (minutes > 60) {
+    if (minutes >= 60) {
       final hours = minutes ~/ 60;
       final mins = minutes % 60;
       return '${hours}h ${mins}m';
