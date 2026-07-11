@@ -59,6 +59,24 @@ class AuthController {
     }
   }
 
+  /// Devuelve true si el login se completó; false si el usuario canceló.
+  Future<bool> signInWithApple() async {
+    isLoading.value = true;
+    try {
+      await _repo.signInWithApple();
+      return true;
+    } catch (e) {
+      final msg = e.toString();
+      if (msg.contains('canceled') || msg.contains('cancelled')) {
+        // El usuario simplemente cerró la hoja de Apple
+        return false;
+      }
+      rethrow;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   // ==========================
   // REGISTRO
   // ==========================
@@ -137,6 +155,7 @@ class AuthController {
   // GESTIÓN DE USUARIO (UserService delegates)
   // ==========================
   bool isGoogleUser() => _userService.isGoogleUser();
+  bool isAppleUser() => _userService.isAppleUser();
 
   Future<void> updateName(String newName) async {
     isLoading.value = true;
@@ -152,6 +171,8 @@ class AuthController {
     try {
       if (isGoogleUser()) {
         await _userService.reauthenticateWithGoogle();
+      } else if (isAppleUser()) {
+        await _userService.reauthenticateWithApple();
       } else {
         await _userService.reauthenticate(password);
       }

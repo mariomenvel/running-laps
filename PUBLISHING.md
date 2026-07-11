@@ -96,12 +96,20 @@
 - [ ] Subir a TestFlight y probar en dispositivo real (Google Sign-In crash, GPS,
   Live Activity).
 
-### Decisión de producto: el login ⚠️
-Apple **obliga a ofrecer Sign in with Apple si ofreces login de terceros**
-(Google Sign-In). Además el Google Sign-In de iOS crashea hoy (deuda #1). Opciones:
-- **A (recomendada para MVP)**: en iOS, ocultar el botón de Google y lanzar solo
-  con email/contraseña → no aplica la obligación de Sign in with Apple.
-- **B**: arreglar Google Sign-In iOS **y** añadir Sign in with Apple.
+### Login: Google + Sign in with Apple ✅ (código listo)
+Apple obliga a ofrecer Sign in with Apple si ofreces login de terceros
+(guideline 4.8). Estado:
+- Google Sign-In iOS **funciona** (el "crash" documentado era un
+  `assertionFailure` solo-debug cuando el plist no tenía CLIENT_ID).
+- **Sign in with Apple implementado** en Dart (firebase_auth
+  `AppleAuthProvider`, sin paquetes nuevos): login + creación del doc inicial +
+  reautenticación (borrar cuenta / cambios sensibles) + botón solo-iOS en
+  AuthPage. **3 pasos manuales al tener la cuenta de Apple Developer:**
+  1. Xcode → target Runner → Signing & Capabilities → añadir capability
+     **"Sign In with Apple"** (regenera el provisioning profile).
+  2. Firebase Console → Authentication → Sign-in method → habilitar **Apple**.
+  3. Probar login/cancelación/reauth en **TestFlight** (no se puede probar sin
+     la capability firmada).
 
 ### Formularios y ficha
 - [ ] **Privacy Nutrition Labels** en App Store Connect (mismo mapeo que Data

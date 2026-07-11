@@ -34,31 +34,46 @@ class AuthRepository {
     User? user = cred.user;
 
     if (user != null) {
-      // Crear el doc inicial solo si NO existe. Se comprueba la existencia
-      // real del documento (no un campo) porque saveUserDoc hace set() sin
-      // merge y recrearlo sobrescribiría los datos del usuario.
-      final exists = await _remote.userDocExists(user.uid);
-      if (!exists) {
-        final initialAvatar = AvatarConfig.random();
-        await _remote.saveUserDoc(user.uid, <String, dynamic>{
-          "nombre": user.displayName ?? "Usuario",
-          "email": user.email,
-          "createdAt": FieldValue.serverTimestamp(),
-          "photoUrl": user.photoURL,
-          "totalSessions": 0,
-          "totalKm": 0.0,
-          "totalTimeMinutes": 0.0,
-          "lastTrainingDate": null,
-          "fcMax": null,
-          "fcReposo": null,
-          "birthDate": null,
-          "sex": null,
-          "onboardingCompleted": false,
-          "generativeAvatarConfig": initialAvatar.toMap(),
-        });
-      }
-
+      await _ensureInitialUserDoc(user);
     }
+  }
+
+  /// Sign in with Apple (solo iOS). Mismo contrato que signInWithGoogle.
+  Future<void> signInWithApple() async {
+    UserCredential cred = await _remote.signInWithApple();
+    User? user = cred.user;
+
+    if (user != null) {
+      await _ensureInitialUserDoc(user);
+    }
+  }
+
+  /// Crea el doc inicial solo si NO existe. Se comprueba la existencia real
+  /// del documento (no un campo) porque saveUserDoc hace set() sin merge y
+  /// recrearlo sobrescribiría los datos del usuario.
+  /// Nota Apple: el nombre solo llega en el PRIMER inicio de sesión — si es
+  /// null se usa "Usuario" y el usuario puede cambiarlo en ajustes.
+  Future<void> _ensureInitialUserDoc(User user) async {
+    final exists = await _remote.userDocExists(user.uid);
+    if (exists) return;
+
+    final initialAvatar = AvatarConfig.random();
+    await _remote.saveUserDoc(user.uid, <String, dynamic>{
+      "nombre": user.displayName ?? "Usuario",
+      "email": user.email,
+      "createdAt": FieldValue.serverTimestamp(),
+      "photoUrl": user.photoURL,
+      "totalSessions": 0,
+      "totalKm": 0.0,
+      "totalTimeMinutes": 0.0,
+      "lastTrainingDate": null,
+      "fcMax": null,
+      "fcReposo": null,
+      "birthDate": null,
+      "sex": null,
+      "onboardingCompleted": false,
+      "generativeAvatarConfig": initialAvatar.toMap(),
+    });
   }
 
   Future<void> signUp(String email, String password, String nombre) async {

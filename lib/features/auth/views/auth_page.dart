@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:running_laps/features/auth/viewmodels/auth_controller.dart';
@@ -97,6 +98,20 @@ class _AuthPageState extends State<AuthPage> {
     try {
       await _authCtrl.signInWithGoogle();
       if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const AuthWrapper()),
+        (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      _showError(e);
+    }
+  }
+
+  Future<void> _signInWithApple() async {
+    try {
+      final signedIn = await _authCtrl.signInWithApple();
+      if (!mounted || !signedIn) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const AuthWrapper()),
         (route) => false,
@@ -483,6 +498,22 @@ class _AuthPageState extends State<AuthPage> {
     );
   }
 
+  /// Sign in with Apple — solo iOS. Obligatorio por la guideline 4.8 de
+  /// App Store al ofrecer login de terceros (Google).
+  Widget _buildAppleButton() {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
+      return const SizedBox.shrink();
+    }
+    return ValueListenableBuilder<bool>(
+      valueListenable: _authCtrl.isLoading,
+      builder: (context, isLoading, child) {
+        return _PremiumAppleButton(
+          onTap: isLoading ? null : _signInWithApple,
+        );
+      },
+    );
+  }
+
   Widget _buildGoogleDivider() {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 24),
@@ -582,6 +613,7 @@ class _AuthPageState extends State<AuthPage> {
     return Column(
       children: [
         _buildGoogleButton(),
+        _buildAppleButton(),
         _buildGoogleDivider(),
         _buildButton(
           text: 'INICIAR SESIÓN',
@@ -934,3 +966,81 @@ class _PremiumGoogleButtonState extends State<_PremiumGoogleButton> with SingleT
   }
 }
 
+
+/// Botón de Sign in with Apple — sigue las guías de marca de Apple
+/// (fondo negro, logo + texto) con el mismo lenguaje táctil que el de Google.
+class _PremiumAppleButton extends StatefulWidget {
+  final VoidCallback? onTap;
+
+  const _PremiumAppleButton({this.onTap});
+
+  @override
+  State<_PremiumAppleButton> createState() => _PremiumAppleButtonState();
+}
+
+class _PremiumAppleButtonState extends State<_PremiumAppleButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.96).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) { if (widget.onTap != null) _controller.forward(); },
+      onTapUp: (_) { if (widget.onTap != null) _controller.reverse(); },
+      onTapCancel: () { if (widget.onTap != null) _controller.reverse(); },
+      onTap: widget.onTap,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: Container(
+          height: 60,
+          margin: const EdgeInsets.only(top: 12),
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.apple, color: Colors.white, size: 26),
+              SizedBox(width: 10),
+              Text(
+                'Continuar con Apple',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

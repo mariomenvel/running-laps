@@ -117,6 +117,24 @@ class AuthRemote {
     }
   }
 
+  /// Sign in with Apple (solo iOS). firebase_auth gestiona el flujo nativo
+  /// completo con signInWithProvider — no requiere paquetes adicionales.
+  /// Requiere la capability "Sign In with Apple" en el proyecto de Xcode y el
+  /// proveedor Apple habilitado en Firebase Console (ver PUBLISHING.md).
+  Future<UserCredential> signInWithApple() async {
+    try {
+      final provider = AppleAuthProvider()
+        ..addScope('email')
+        ..addScope('name');
+      return await _auth.signInWithProvider(provider);
+    } on FirebaseAuthException catch (e) {
+      throw AuthFailure.fromCode(e.code, e.message);
+    } catch (e) {
+      if (e is AuthFailure) rethrow;
+      throw AuthFailure(e.toString());
+    }
+  }
+
   Future<void> sendPasswordResetEmail(String email) async {
     try {
 

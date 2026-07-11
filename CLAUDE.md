@@ -167,7 +167,8 @@ Arquitectura de monetización (3 niveles, Stripe, gates del coach) — diseño p
 | Funcionalidad | Estado |
 |---|---|
 | Auth email/contraseña | ✅ OK |
-| Google Sign-In | ❌ Crash — pendiente Xcode/logs |
+| Google Sign-In | ✅ OK en dispositivo (el "crash" era assertionFailure solo-debug sin CLIENT_ID en el plist) |
+| Sign in with Apple | ⚠️ Código listo — pendiente capability Xcode + Firebase Console + TestFlight (deuda #1) |
 | GPS + Live Activity | ✅ OK |
 | App Check | ❌ Omitido (sin Apple Developer) |
 | Notificación persistente | ⚠️ Solo barra GPS — `flutter_foreground_task` no funciona en iOS |
@@ -177,7 +178,7 @@ Arquitectura de monetización (3 niveles, Stripe, gates del coach) — diseño p
 
 ## Deuda técnica prioritaria
 
-1. **Google Sign-In iOS** — `assertionFailure` en `AppDelegate.configureGoogleSignIn()`
+1. **Sign in with Apple** — código Dart completo (login, doc inicial, reauth, botón solo-iOS en AuthPage). Pendiente de 3 pasos manuales con la cuenta de Apple Developer: capability "Sign In with Apple" en Xcode (target Runner), habilitar el proveedor Apple en Firebase Console → Authentication, y probar en TestFlight. Nota: el antiguo "crash de Google Sign-In iOS" era un `assertionFailure` solo-debug cuando el plist no tenía CLIENT_ID — Google Sign-In funciona en dispositivo (verificado jul 2026).
 2. **Auth Wear OS** — reemplazar bypass con Cloud Function + custom token
 3. **Analytics carga hasta 500 entrenos en memoria** — el historial ya pagina con cursor (`getTrainings` + `loadMore`, pageSize 20), pero `getAllEntrenamientos()` sigue trayendo hasta 500 docs de golpe para analytics/coach.
 4. **Refactor MVVM de `workout_editor_screen.dart`** — iniciado y pausado en rama `refactor/workout-editor-mvvm` (sin mergear).

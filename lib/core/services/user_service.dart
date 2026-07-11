@@ -12,11 +12,16 @@ class UserService {
   User? get currentUser => _auth.currentUser;
 
   /// Checks if the user is signed in with Google
-  bool isGoogleUser() {
+  bool isGoogleUser() => _hasProvider('google.com');
+
+  /// Checks if the user is signed in with Apple
+  bool isAppleUser() => _hasProvider('apple.com');
+
+  bool _hasProvider(String providerId) {
     final user = currentUser;
     if (user == null) return false;
     for (final provider in user.providerData) {
-      if (provider.providerId == 'google.com') return true;
+      if (provider.providerId == providerId) return true;
     }
     return false;
   }
@@ -90,6 +95,19 @@ class UserService {
     }
   }
 
+  Future<void> reauthenticateWithApple() async {
+    final user = currentUser;
+    if (user == null) throw AuthFailure('No hay usuario autenticado');
+
+    try {
+      await user.reauthenticateWithProvider(AppleAuthProvider());
+    } on FirebaseAuthException catch (e) {
+      throw AuthFailure.fromCode(e.code, e.message);
+    } catch (e) {
+      throw AuthFailure(e.toString());
+    }
+  }
+
   // ==========================================
   // PASSWORD MANAGEMENT
   // ==========================================
@@ -97,7 +115,10 @@ class UserService {
   Future<void> updatePassword(String newPassword) async {
     final user = currentUser;
     if (user == null) throw AuthFailure('No hay usuario autenticado');
-    if (isGoogleUser()) throw AuthFailure('Los usuarios de Google no pueden cambiar contraseña localmente');
+    if (isGoogleUser() || isAppleUser()) {
+      throw AuthFailure(
+          'Las cuentas de Google o Apple no pueden cambiar contraseña aquí');
+    }
 
     try {
       await user.updatePassword(newPassword);
