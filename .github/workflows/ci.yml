@@ -33,5 +33,8 @@ jobs:
       - name: Test unitarios
         run: flutter test test/unit/ --reporter=github
 
+      - name: Test de modelos y repositorios (Firestore simulado)
+        run: flutter test test/features/ --reporter=github
+
       - name: Test de widget
         run: flutter test test/widget/ --reporter=github
