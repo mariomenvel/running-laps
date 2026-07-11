@@ -137,6 +137,7 @@ Cuando implementes algo que afecte a los specs de producto, actualiza el .md cor
 | UX del editor de entrenamientos | `WORKOUT_EDITOR_UX.md` |
 | Colecciones Firestore o reglas de acceso | `firestore_access_patterns.md` |
 | Tests (suites nuevas, patrón de repos simulados, ci.yml) | `TESTING.md` |
+| Publicación en stores, permisos del manifest/Info.plist, legal/RGPD | `PUBLISHING.md` |
 | Visión del producto / freemium | `DESIGN.md` |
 
 Guías de trabajo (`CLAUDE.md`, `AI_CONTEXT.md`) — actualizar siempre que cambie arquitectura, modelos, servicios, advertencias o deuda técnica.

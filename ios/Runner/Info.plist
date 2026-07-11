@@ -2,6 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Solo HTTPS estándar: exento de declaración de cifrado en App Store Connect -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Running Laps necesita Bluetooth para conectar tu pulsómetro y medir tu frecuencia cardíaca durante el entrenamiento.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
