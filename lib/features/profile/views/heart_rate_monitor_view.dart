@@ -1,16 +1,70 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:running_laps/core/services/health_consent_service.dart';
 import 'package:running_laps/core/services/heart_rate_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/app_confirm_dialog.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
+import 'package:running_laps/core/widgets/modern_snackbar.dart';
 
 class HeartRateMonitorView extends StatelessWidget {
   const HeartRateMonitorView({super.key});
 
   // ── Acciones ───────────────────────────────────────────────────────────────
 
+  /// Consentimiento explícito para datos de salud (art. 9 RGPD): la FC no se
+  /// recoge hasta que el usuario lo acepta. Ver PUBLISHING.md § Legal.
+  Future<bool> _ensureHealthConsent(BuildContext context) async {
+    final consent = HealthConsentService();
+    if (await consent.hasConsent()) return true;
+    if (!context.mounted) return false;
+
+    final accepted = await showAppConfirmDialog(
+      context: context,
+      title: 'Datos de salud',
+      message:
+          'Para usar el pulsómetro, Running Laps necesita tu consentimiento '
+          'explícito para tratar tu frecuencia cardíaca (un dato de salud). '
+          'Se usa para mostrarte zonas, medias por serie y recuperación, y se '
+          'guarda junto a tus entrenamientos.\n\n'
+          'Puedes retirar el consentimiento en cualquier momento desde esta '
+          'pantalla. Más información en la política de privacidad.',
+      confirmLabel: 'Acepto',
+      cancelLabel: 'Ahora no',
+    );
+    if (accepted != true) return false;
+
+    await consent.grant();
+    return true;
+  }
+
+  Future<void> _revokeHealthConsent(BuildContext context) async {
+    final confirmed = await showAppConfirmDialog(
+      context: context,
+      title: 'Retirar consentimiento',
+      message:
+          'Dejaremos de recoger tu frecuencia cardíaca y se desconectará tu '
+          'pulsómetro. Los datos ya guardados puedes eliminarlos borrando los '
+          'entrenamientos que los contienen o tu cuenta.',
+      confirmLabel: 'Retirar',
+      isDestructive: true,
+    );
+    if (confirmed != true) return;
+
+    await HealthConsentService().revoke();
+    // Sin consentimiento no debe quedar dispositivo guardado: forgetDevice
+    // desconecta y evita la reconexión automática al abrir la app.
+    await HeartRateService().forgetDevice();
+    if (context.mounted) {
+      ModernSnackBar.showSuccess(context, 'Consentimiento retirado');
+    }
+  }
+
   Future<void> _startScan(BuildContext context) async {
+    if (!await _ensureHealthConsent(context)) return;
+    if (!context.mounted) return;
+
     final granted = await HeartRateService().requestPermissions();
     if (!context.mounted) return;
 
@@ -249,6 +303,29 @@ class HeartRateMonitorView extends StatelessWidget {
     );
   }
 
+  /// Enlace para retirar el consentimiento de datos de salud — solo visible
+  /// cuando está concedido (referenciado desde la política de privacidad).
+  Widget _buildConsentFooter(BuildContext context) {
+    return ValueListenableBuilder<bool?>(
+      valueListenable: HealthConsentService.consentGranted,
+      builder: (context, granted, _) {
+        if (granted != true) return const SizedBox.shrink();
+        return Center(
+          child: TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF8E8E93),
+            ),
+            onPressed: () => _revokeHealthConsent(context),
+            child: const Text(
+              'Retirar consentimiento de datos de salud',
+              style: TextStyle(fontSize: 12),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildDeviceList(
       BuildContext context, List<DiscoveredDevice> devices, bool isDark) {
     if (devices.isEmpty) return const SizedBox.shrink();
@@ -320,6 +397,11 @@ class HeartRateMonitorView extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final svc    = HeartRateService();
 
+    // Cargar el estado de consentimiento una sola vez (null = sin cargar)
+    if (HealthConsentService.consentGranted.value == null) {
+      HealthConsentService().hasConsent();
+    }
+
     return Scaffold(
       body: SafeArea(
         top: false,
@@ -348,6 +430,8 @@ class HeartRateMonitorView extends StatelessWidget {
                         const SizedBox(height: 8),
                         _buildScanButton(context, state),
                         _buildDeviceList(context, devices, isDark),
+                        const SizedBox(height: 8),
+                        _buildConsentFooter(context),
                         const SizedBox(height: 32),
                       ],
                     ),

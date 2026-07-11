@@ -119,52 +119,45 @@ Apple **obliga a ofrecer Sign in with Apple si ofreces login de terceros**
 
 ## Legal: privacidad, términos y RGPD
 
-### Estado actual de las páginas
-- `web/terms.html` — **estructura sólida**: disclaimer médico ("no sustituye el
-  consejo de un médico"), disclaimer del coach IA, limitación de responsabilidad,
-  cláusula de plan gratuito/futuros pagos, propiedad de los datos del usuario.
-- `web/privacy.html` — buen esqueleto (recoge GPS, FC, datos del coach IA, no
-  venta de datos, proveedor de IA sin identificadores) pero **incompleta para RGPD**.
-- ⚠️ **Ambas tienen placeholders sin rellenar**: `[fecha]`, `[email-soporte]`,
-  `[edad mínima]` (y el mailto de `support.html` y `delete-account.html`).
-  **Cualquier revisor lo ve. Bloqueante.**
+### Estado (jul 2026): COMPLETADO ✅
+- ✅ `web/privacy.html` **reescrita completa para RGPD**: responsable del
+  tratamiento (Mario Mendoza + email), bases legales por tratamiento (art. 6),
+  sección específica de **datos de salud con consentimiento explícito (art. 9)**
+  y cómo retirarlo, encargados (Firebase, OpenRouter — solo métricas sin
+  identificadores, dictado por voz vía SO), transferencias internacionales
+  (EU-U.S. DPF/SCC), conservación, derechos completos + AEPD, menores (16+),
+  seguridad.
+- ✅ `web/terms.html`: placeholders rellenados, edad mínima 16 en "Tu cuenta",
+  ley aplicable española + protección del consumidor UE. Conserva sus puntos
+  fuertes: disclaimer médico, disclaimer del coach IA, limitación de
+  responsabilidad, plan gratuito/futuros pagos.
+- ✅ `support.html` y `delete-account.html`: email de contacto rellenado.
+- ✅ **Consentimiento explícito de datos de salud EN LA APP** (art. 9):
+  `HealthConsentService` (persistido en `users/{uid}/settings/healthConsent`
+  con fecha y versión de política, auditable) + diálogo de consentimiento antes
+  del primer escaneo de pulsómetro en `heart_rate_monitor_view` + opción
+  "Retirar consentimiento" en la misma pantalla (revoca + olvida el dispositivo
+  para cortar la reconexión automática). Con tests (`health_consent_service_test`).
 
-### Huecos RGPD a cubrir en la política de privacidad
-1. **Responsable del tratamiento**: nombre completo (persona física o sociedad),
-   y email de contacto. Sin esto la política no es válida.
-2. **Bases legales** por tratamiento (Art. 6): ejecución del contrato (la app),
-   consentimiento (datos de salud, notificaciones), interés legítimo (seguridad).
-3. **Datos de salud = categoría especial (Art. 9 RGPD)**. La frecuencia cardíaca
-   y los datos de fitness requieren **consentimiento explícito**:
-   - En la política: base legal "consentimiento explícito" y cómo retirarlo.
-   - ⚠️ **En la app**: hace falta una casilla/pantalla de consentimiento en el
-     onboarding o al conectar el pulsómetro ("Acepto el tratamiento de mis datos
-     de salud para..."). Hoy no existe — **tarea de producto pendiente**.
-4. **Transferencias internacionales**: Google/Firebase y OpenRouter procesan en
-   EE. UU. — citar el EU-U.S. Data Privacy Framework / cláusulas contractuales tipo.
-5. **Plazos de conservación**: mientras la cuenta esté activa + borrado al eliminar.
-6. **Derechos completos**: acceso, rectificación, supresión, **portabilidad,
-   limitación y oposición**, retirada del consentimiento, y **derecho a reclamar
-   ante la AEPD** (www.aepd.es). La página actual solo menciona tres.
-7. **Edad mínima**: en España un menor puede consentir el tratamiento de sus datos
-   desde los **14 años** (LOPDGDD art. 7). Recomendación práctica: fijar 16+
-   (simplifica) o 14+ y decláralo coherentemente en IARC/App Store.
-8. **Encargados del tratamiento**: listar Google/Firebase (infraestructura, auth,
-   analytics si aplica) y OpenRouter/proveedor LLM (generación de planes, solo
-   métricas sin identificadores — como ya dice la política ✅).
+> Datos publicados en las páginas: responsable "Mario Mendoza", contacto
+> `mariomenvel@gmail.com`, edad mínima 16, ley española. Si prefieres un email
+> dedicado de soporte o una sociedad como responsable, es un buscar-y-reemplazar
+> en las 4 páginas + re-deploy.
 
-### Términos: retoques menores
-- Rellenar placeholders (fecha, email, y verificar la cláusula de ley aplicable →
-  España, jurisdicción del consumidor).
-- Añadir mención al **derecho de desistimiento** solo cuando haya pagos (futuro
-  Stripe — ver docs/MONETIZATION_ARCHITECTURE.md; no aplica al MVP gratuito).
+### Pendiente legal (futuro)
+- **Derecho de desistimiento** en los términos cuando haya pagos (Stripe —
+  ver docs/MONETIZATION_ARCHITECTURE.md; no aplica al MVP gratuito).
+- Si cambia el texto del consentimiento de salud de forma sustancial, subir
+  `HealthConsentService.policyVersion` para forzar re-consentimiento.
+- Revisión por un profesional antes del lanzamiento (recomendado: datos de
+  salud + RGPD).
 
 ---
 
 ## Orden recomendado
 
-1. Rellenar placeholders + completar la política de privacidad (RGPD) → deploy hosting.
-2. Añadir el consentimiento explícito de datos de salud en el onboarding de la app.
+1. ~~Placeholders + política de privacidad RGPD + deploy hosting~~ ✅
+2. ~~Consentimiento explícito de datos de salud en la app~~ ✅
 3. Cuenta de Play Console → prueba interna → prueba cerrada (12 testers si aplica)
    — encaja con la fase de validación en campo actual.
 4. Data Safety + declaración de salud + IARC + ficha → producción en Play.
@@ -173,8 +166,10 @@ Apple **obliga a ofrecer Sign in with Apple si ofreces login de terceros**
 
 ## Acciones manuales pendientes ahora mismo
 
-- [ ] `firebase deploy --only hosting` (publica `/delete-account` y cualquier
-  cambio de privacy/terms).
-- [ ] Rellenar `[email-soporte]`, `[fecha]`, `[edad mínima]` en
-  privacy/terms/support/delete-account.
-- [ ] Decidir: ¿cuenta de Play personal u organización?
+- [x] ~~Rellenar placeholders en privacy/terms/support/delete-account~~ ✅
+- [x] ~~Consentimiento de datos de salud en la app~~ ✅
+- [x] ~~Deploy de hosting con las páginas legales~~ ✅
+- [ ] Decidir: ¿cuenta de Play personal u organización? (condiciona la prueba
+  cerrada de 12 testers × 14 días)
+- [ ] Crear cuenta de Play Console / Apple Developer Program.
+- [ ] Assets de ficha (icono 512, feature graphic, capturas).
