@@ -29,8 +29,10 @@ class HomeEstadisticaRepository {
 
   HomeEstadisticaRepository._internal();
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  // Getters perezosos: instanciar el singleton (p. ej. clearCache() desde
+  // tests o desde TrainingRepository) no debe requerir Firebase inicializado.
+  FirebaseAuth get _auth => FirebaseAuth.instance;
+  FirebaseFirestore get _db => FirebaseFirestore.instance;
 
   // --- Cache ---
   final Map<String, List<DailyMetric>> _cache = {};

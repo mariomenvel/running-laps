@@ -21,21 +21,30 @@ class TrainingsPage {
 }
 
 class TrainingRepository {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
-  final TrainingChallengeSyncService _syncService = TrainingChallengeSyncService();
-  final RateLimitService _rateLimitService = RateLimitService();
-
-  TrainingRepository() {
+  // Inyección opcional para tests (fake_cloud_firestore); los defaults
+  // conservan el comportamiento de producción exacto.
+  TrainingRepository({
+    FirebaseFirestore? firestore,
+    TrainingChallengeSyncService? syncService,
+  })  : _db = firestore ?? FirebaseFirestore.instance,
+        _syncService = syncService ?? TrainingChallengeSyncService() {
     _rateLimitService.registerLimit('training:save', const Duration(seconds: 3));
   }
 
+  final FirebaseFirestore _db;
+  final TrainingChallengeSyncService _syncService;
+  final RateLimitService _rateLimitService = RateLimitService();
+
+  /// Uid del usuario autenticado. Sobrescribible en tests
+  /// (mismo patrón que TrainingTemplatesRepository).
+  String? get currentUserId => FirebaseAuth.instance.currentUser?.uid;
+
   String _requireUid() {
-    final User? u = _auth.currentUser;
-    if (u == null) {
+    final uid = currentUserId;
+    if (uid == null) {
       throw Exception('No hay usuario autenticado');
     }
-    return u.uid;
+    return uid;
   }
 
   CollectionReference<Map<String, dynamic>> _userTrainings(String uid) {
@@ -109,13 +118,16 @@ class TrainingRepository {
   }) async {
     final resolvedUid = uid ?? _requireUid();
 
-    Query<Map<String, dynamic>> query = _userTrainings(resolvedUid)
-        .orderBy('fecha', descending: true)
-        .limit(pageSize);
+    // limit() se aplica DESPUÉS del cursor: en Firestore real el orden da
+    // igual, pero fake_cloud_firestore (tests) ignora el cursor si el limit
+    // va antes.
+    Query<Map<String, dynamic>> query =
+        _userTrainings(resolvedUid).orderBy('fecha', descending: true);
 
     if (startAfter != null) {
       query = query.startAfterDocument(startAfter);
     }
+    query = query.limit(pageSize);
 
     final snapshot = await query.get();
     final trainings = snapshot.docs
