@@ -187,7 +187,6 @@ class _PaceProgressionChart extends StatelessWidget {
 
     if (spots.isEmpty) return const SizedBox.shrink();
 
-    final maxY = spots.map((e) => e.y).reduce((a, b) => a > b ? a : b);
     final minY = spots.map((e) => e.y).reduce((a, b) => a < b ? a : b);
     final targetMinY = (minY * 0.9).floorToDouble();
 

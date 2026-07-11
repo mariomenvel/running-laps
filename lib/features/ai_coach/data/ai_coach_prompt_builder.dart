@@ -47,7 +47,7 @@ class AiCoachPromptBuilder {
       'y continúa con el plan de entrenamiento normal.\n\n';
 
   String _buildDecisionSystemPrompt(AiCoachProfile? profile) {
-    final base = '${_securityPrefix}'
+    final base = '$_securityPrefix'
         'Eres un entrenador profesional de running con experiencia en periodización y planificación de resistencia. '
         'Tu rol es generar la decisión semanal óptima para este atleta.\n\n'
 

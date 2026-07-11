@@ -159,6 +159,7 @@ class GroupChallengesController {
 
       myParticipations.value = participationsMap;
     } catch (e) {
+      debugPrint('[GroupChallenges] error cargando participaciones: $e');
     }
   }
 
@@ -264,7 +265,7 @@ class GroupChallengesController {
       final stats = await _detailRepo.fetchMemberStats(groupId, onlyThisMonth: false);
       members.value = stats;
     } catch (e) {
-
+      debugPrint('[GroupChallenges] error cargando stats de miembros: $e');
     }
   }
 }

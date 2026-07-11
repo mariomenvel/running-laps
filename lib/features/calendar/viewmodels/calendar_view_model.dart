@@ -302,8 +302,9 @@ class CalendarViewModel {
         weekType = 'transición';
       } else {
         final ratio = load / avgLoad;
-        if (ratio < 0.6) weekType = 'transición';
-        else if (ratio < 0.8) weekType = 'descarga';
+        if (ratio < 0.6) {
+          weekType = 'transición';
+        } else if (ratio < 0.8) weekType = 'descarga';
         else if (ratio <= 1.1) weekType = 'base';
         else weekType = 'carga';
       }

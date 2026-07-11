@@ -857,12 +857,6 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
     return '${minutes}m ${seconds.toString().padLeft(2, '0')}s';
   }
 
-  String _formatPace(double secPerKm) {
-    final m = secPerKm ~/ 60;
-    final s = (secPerKm % 60).round();
-    return '$m:${s.toString().padLeft(2, '0')} /km';
-  }
-
   bool _hasFcData() =>
       training.series.any((s) => s.fcReadings != null && s.fcReadings!.isNotEmpty);
 }
@@ -958,7 +952,7 @@ class _SerieExpansionTileState extends State<_SerieExpansionTile> {
       );
     }
 
-    Color _paceColor(double? execSec) {
+    Color paceColor(double? execSec) {
       if (execSec == null || paceMin == null) return primary;
       final ref = paceMax ?? paceMin;
       final delta = execSec - ref;
@@ -974,7 +968,7 @@ class _SerieExpansionTileState extends State<_SerieExpansionTile> {
           ? '${_formatPace(paceMin)} – ${_formatPace(paceMax)}'
           : _formatPace((paceMin ?? paceMax)!);
       final execStr = execPaceSec != null ? _formatPace(execPaceSec) : '—';
-      final execColor = _paceColor(execPaceSec);
+      final execColor = paceColor(execPaceSec);
       rows.add(row(
         'Pace',
         Text(planStr, style: valueStyle),
@@ -1269,47 +1263,6 @@ class _SerieExpansionTileState extends State<_SerieExpansionTile> {
 }
 
 // ── Target chip ───────────────────────────────────────────────────
-
-class _TargetChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final BuildContext ctx;
-
-  const _TargetChip({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.ctx,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: color),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: color,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 // ── Chart toggle widget ───────────────────────────────────────────
 

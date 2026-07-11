@@ -22,10 +22,10 @@ class AccountSettingsView extends StatefulWidget {
   final VoidCallback onNameUpdated;
 
   const AccountSettingsView({
-    Key? key, 
+    super.key, 
     required this.currentName,
     required this.onNameUpdated,
-  }) : super(key: key);
+  });
 
   @override
   State<AccountSettingsView> createState() => _AccountSettingsViewState();

@@ -45,12 +45,6 @@ class _CalendarViewState extends State<CalendarView>
       ValueNotifier<Set<String>>({});
   AiCoachAdjustmentPreview? _pendingPreview;
 
-  String _currentWeekStart() {
-    final now = DateTime.now();
-    final monday = now.subtract(Duration(days: now.weekday - 1));
-    return '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
-  }
-
   @override
   void initState() {
     super.initState();
@@ -74,14 +68,12 @@ class _CalendarViewState extends State<CalendarView>
     // currentUser primero (síncrono, disponible si ya autenticado)
     // authStateChanges como fallback con timeout de 5s
     User? user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      user = await FirebaseAuth.instance.authStateChanges()
+    user ??= await FirebaseAuth.instance.authStateChanges()
           .firstWhere((u) => u != null)
           .timeout(
             const Duration(seconds: 5),
             onTimeout: () => FirebaseAuth.instance.currentUser,
           );
-    }
     if (user == null) return;
     if (!mounted) return;
     final uid = user.uid;
@@ -660,27 +652,6 @@ class _CalendarViewState extends State<CalendarView>
     return date.subtract(Duration(days: date.weekday - 1));
   }
 
-  String _weekdayEs(int weekday) {
-    switch (weekday) {
-      case DateTime.monday:
-        return 'Lun';
-      case DateTime.tuesday:
-        return 'Mar';
-      case DateTime.wednesday:
-        return 'Mie';
-      case DateTime.thursday:
-        return 'Jue';
-      case DateTime.friday:
-        return 'Vie';
-      case DateTime.saturday:
-        return 'Sab';
-      case DateTime.sunday:
-        return 'Dom';
-      default:
-        return '-';
-    }
-  }
-
   // ── Skeleton ──────────────────────────────────────────────────────────────
 
   Widget _buildSkeleton() {
@@ -1166,57 +1137,6 @@ class _CalendarViewState extends State<CalendarView>
     return '${meses[d.month - 1]} ${d.year}';
   }
 
-  // Helper para el border top en Container decoration
-  Widget _buildDayContent(bool isAthlete) =>
-      isAthlete ? _buildAthleteDayContent() : _buildRecreativoDayContent();
-
-  Widget _buildAthleteDayContent() {
-    return ValueListenableBuilder<DateTime>(
-      valueListenable: _vm!.selectedDay,
-      builder: (_, day, __) => ValueListenableBuilder<List<AthleteSession>>(
-        valueListenable: _vm!.selectedDaySessions,
-        builder: (_, sessions, __) => SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l, vertical: AppSpacing.m),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(_formatDaySpanish(day), style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context))),
-              const SizedBox(height: AppSpacing.m),
-              if (sessions.isEmpty)
-                _buildEmptyAthleteDay(day)
-              else
-                ...sessions.map((s) => _buildSessionCard(s, day)),
-              const SizedBox(height: 100),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecreativoDayContent() {
-    return ValueListenableBuilder<DateTime>(
-      valueListenable: _vm!.selectedDay,
-      builder: (_, day, __) => ValueListenableBuilder<List<Entrenamiento>>(
-        valueListenable: _vm!.selectedDayWorkouts,
-        builder: (_, workouts, __) => SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l, vertical: AppSpacing.m),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(_formatDaySpanish(day), style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context))),
-              const SizedBox(height: AppSpacing.m),
-              if (workouts.isEmpty) _buildEmptyRecreativoDay() else ...workouts.map(_buildWorkoutCard),
-              const SizedBox(height: AppSpacing.xl),
-              _buildAthleteModeCta(),
-              const SizedBox(height: 100),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   // ── Vista semanal ─────────────────────────────────────────────────────────
 
   Widget _buildWeeklyView(bool isAthlete) {
@@ -1318,7 +1238,7 @@ class _CalendarViewState extends State<CalendarView>
     final now     = DateTime.now();
     final isToday = day.year == now.year && day.month == now.month && day.day == now.day;
 
-    void _navigateToSession(AthleteSession planned) {
+    void navigateToSession(AthleteSession planned) {
       final workoutSession = mapAthleteSessionToWorkout(planned);
       if (workoutSession != null) {
         Navigator.of(context).push(AppRoute(
@@ -1330,7 +1250,7 @@ class _CalendarViewState extends State<CalendarView>
       }
     }
 
-    void _navigateToNewSession() {
+    void navigateToNewSession() {
       MainShell.shellKey.currentState?.navigateTo(
         13,
         params: AthleteSessionShellParams(
@@ -1340,7 +1260,7 @@ class _CalendarViewState extends State<CalendarView>
       );
     }
 
-    void _navigateToEditSession(AthleteSession session) {
+    void navigateToEditSession(AthleteSession session) {
       MainShell.shellKey.currentState?.navigateTo(
         13,
         params: AthleteSessionShellParams(
@@ -1349,7 +1269,6 @@ class _CalendarViewState extends State<CalendarView>
         ),
       );
     }
-
 
     void showCompletedSessionsSheet(
       List<AthleteSession> completed,
@@ -1443,7 +1362,7 @@ class _CalendarViewState extends State<CalendarView>
         } else if (completedSessions.length > 1) {
           showCompletedSessionsSheet(completedSessions, openCompletedTraining);
         } else if (sessions.isEmpty) {
-          _navigateToNewSession();
+          navigateToNewSession();
         }
         // Si solo quedan sesiones "skipped", no navegamos a ningún sitio —
         // evita mandar al creador de sesiones sobre un día ya resuelto.
@@ -1621,7 +1540,7 @@ class _CalendarViewState extends State<CalendarView>
                                             ),
                                           ),
                                           GestureDetector(
-                                            onTap: () => _navigateToEditSession(s),
+                                            onTap: () => navigateToEditSession(s),
                                             child: Padding(
                                               padding: const EdgeInsets.all(4),
                                               child: Icon(Icons.edit_outlined, size: 18, color: AppColors.textSecondary(context)),
@@ -1639,7 +1558,7 @@ class _CalendarViewState extends State<CalendarView>
                                               ),
                                             ),
                                           GestureDetector(
-                                            onTap: () => _navigateToSession(s),
+                                            onTap: () => navigateToSession(s),
                                             child: Padding(
                                               padding: const EdgeInsets.all(4),
                                               child: Icon(Icons.play_circle_outline, size: 22, color: AppColors.brand),
@@ -1967,7 +1886,9 @@ class _CalendarViewState extends State<CalendarView>
       final key = _normalize(day);
       for (final w in workouts) {
         if (_normalize(w.fecha) == key &&
-            w.tags != null && w.tags!.contains('competición')) return true;
+            w.tags != null && w.tags!.contains('competición')) {
+          return true;
+        }
       }
       for (final s in sessions[key] ?? []) {
         if (s.category == 'competicion' || s.category == 'competición') return true;
@@ -2168,219 +2089,6 @@ class _CalendarViewState extends State<CalendarView>
 
   // ── Helpers — cards día (vista mensual) ───────────────────────────────────
 
-  Widget _buildEmptyAthleteDay(DateTime day) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.l),
-      decoration: _cardDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Sin sesión planificada', style: AppTypography.body.copyWith(color: AppColors.iconMutedOf(context))),
-          const SizedBox(height: AppSpacing.m),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.add_rounded, size: 18),
-            label: const Text('Planificar sesión'),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: AppColors.brand),
-              foregroundColor: AppColors.brand,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.buttonRadius)),
-            ),
-            onPressed: () => MainShell.shellKey.currentState?.navigateTo(
-              13,
-              params: AthleteSessionShellParams(date: _normalize(day)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSessionCard(AthleteSession session, DateTime day) {
-    final color = _statusColor(session.status);
-    final label = _statusLabel(session.status);
-    final categoryLabel = session.title?.isNotEmpty == true
-        ? session.title!
-        : session.category != null
-            ? SessionCategoryX.fromValue(session.category!).label
-            : 'Entrenamiento';
-    final why = _suggestionWhyText(session);
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: AppSpacing.m),
-      padding: const EdgeInsets.all(AppSpacing.l),
-      decoration: _cardDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(width: 8, height: 8, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4))),
-              const SizedBox(width: 8),
-              Expanded(child: Text(categoryLabel, style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)))),
-              Text(label, style: AppTypography.small.copyWith(color: color)),
-            ],
-          ),
-          if (session.blocks.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.s),
-            ...session.blocks.take(3).map((b) =>
-                BlockPreviewTile(
-                  block: b,
-                  style: BlockPreviewStyle.card,
-                )),
-          ],
-          if (why.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.s),
-            Text(
-              why,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: AppTypography.small.copyWith(
-                color: AppColors.textSecondary(context),
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ],
-          if (session.status == AthleteSessionStatus.planned) ...[
-            const SizedBox(height: AppSpacing.m),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.brand,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.buttonRadius)),
-                    ),
-                    onPressed: () {
-                      final workoutSession = mapAthleteSessionToWorkout(session);
-                      if (workoutSession != null) {
-                        Navigator.of(context).push(AppRoute(
-                          page: PreExecutionScreen(
-                            session: workoutSession,
-                            athleteSession: session,
-                          ),
-                        ));
-                      }
-                    },
-                    child: const Text('EMPEZAR'),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.m),
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined),
-                  color: AppColors.iconMutedOf(context),
-                  onPressed: () => MainShell.shellKey.currentState?.navigateTo(
-                    13,
-                    params: AthleteSessionShellParams(date: _normalize(day), session: session),
-                  ),
-                ),
-              ],
-            ),
-            if (athleteSessionCanCompleteManually(session)) ...[
-              const SizedBox(height: AppSpacing.s),
-              Center(
-                child: TextButton.icon(
-                  style: TextButton.styleFrom(foregroundColor: AppColors.iconMutedOf(context)),
-                  onPressed: () => Navigator.push(
-                    context,
-                    AppRoute(page: CompleteSessionManuallyView(session: session)),
-                  ),
-                  icon: const Icon(Icons.edit_note_rounded, size: 18),
-                  label: const Text('Completar manualmente'),
-                ),
-              ),
-            ],
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyRecreativoDay() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.l),
-      decoration: _cardDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('No entrenaste este día', style: AppTypography.body.copyWith(color: AppColors.iconMutedOf(context))),
-          const SizedBox(height: AppSpacing.m),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.brand,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.buttonRadius)),
-            ),
-            onPressed: () => Navigator.push(context, AppRoute(page: const TrainingStartView())),
-            child: const Text('ENTRENAR AHORA'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWorkoutCard(Entrenamiento w) {
-    final km = w.distanciaTotalM() / 1000.0;
-    final kmStr = km < 1 ? '${w.distanciaTotalM()}m' : '${km.toStringAsFixed(1)} km';
-    String pace = '';
-    try { pace = w.ritmoMedioTexto(); } catch (_) {}
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.s),
-      padding: const EdgeInsets.all(AppSpacing.m),
-      decoration: _cardDecoration(),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(w.titulo.isNotEmpty ? w.titulo : 'Entrenamiento libre', style: AppTypography.body.copyWith(color: AppColors.textPrimary(context))),
-                Text(kmStr, style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context))),
-              ],
-            ),
-          ),
-          if (pace.isNotEmpty)
-            Text(pace, style: AppTypography.body.copyWith(color: AppColors.brand)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAthleteModeCta() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.l),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceOf(context),
-        border: Border(
-          left: const BorderSide(color: AppColors.brand, width: 3),
-          top: BorderSide(color: AppColors.borderOf(context), width: 0.5),
-          right: BorderSide(color: AppColors.borderOf(context), width: 0.5),
-          bottom: BorderSide(color: AppColors.borderOf(context), width: 0.5),
-        ),
-        borderRadius: BorderRadius.circular(AppDimens.cardRadius),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('¿Quieres planificar tus entrenos?', style: AppTypography.body.copyWith(color: AppColors.textPrimary(context))),
-          const SizedBox(height: 4),
-          Text('Activa el modo atleta para usar el calendario de planificación', style: AppTypography.small.copyWith(color: AppColors.iconMutedOf(context))),
-          const SizedBox(height: AppSpacing.m),
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: AppColors.brand, padding: EdgeInsets.zero),
-            onPressed: _vm!.toggleAthleteMode,
-            child: const Text('Activar modo atleta →'),
-          ),
-        ],
-      ),
-    );
-  }
-
   // ── Helpers generales ─────────────────────────────────────────────────────
 
   BoxDecoration _cardDecoration() => BoxDecoration(
@@ -2396,24 +2104,6 @@ class _CalendarViewState extends State<CalendarView>
       case AthleteSessionStatus.skipped:   return AppColors.rpeMax;
     }
   }
-
-  String _statusLabel(AthleteSessionStatus s) {
-    switch (s) {
-      case AthleteSessionStatus.planned:   return 'Planificada';
-      case AthleteSessionStatus.completed: return 'Completada';
-      case AthleteSessionStatus.skipped:   return 'Saltada';
-    }
-  }
-
-  List<Color> _dotsForSessions(List<AthleteSession> sessions) {
-    final colors = <Color>[];
-    if (sessions.any((s) => s.status == AthleteSessionStatus.completed)) colors.add(AppColors.rpeLow);
-    if (sessions.any((s) => s.status == AthleteSessionStatus.planned && s.category != 'competicion')) colors.add(AppColors.brand);
-    if (sessions.any((s) => s.category == 'competicion')) colors.add(AppColors.rpeMax);
-    if (sessions.any((s) => s.status == AthleteSessionStatus.skipped)) colors.add(AppColors.rpeMax.withValues(alpha: 0.6));
-    return colors.take(3).toList();
-  }
-
 
   String _dayAbbr(int weekday) {
     const days = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
@@ -2443,25 +2133,6 @@ class _CalendarViewState extends State<CalendarView>
   }
 
 // ── Widgets privados ──────────────────────────────────────────────────────────
-
-  String _suggestionWhyText(AthleteSession session) {
-    final suggestion = session.suggestion;
-    if (suggestion == null || suggestion.origin != AthleteSessionOrigin.ai) {
-      return '';
-    }
-    final focus = (suggestion.focus ?? '').trim();
-    final rationale = (suggestion.rationale ?? '').trim();
-    final note = (session.planningNotes ?? '').trim();
-    if (focus.isNotEmpty) return 'Por que: foco en $focus';
-    if (rationale.isNotEmpty) return 'Por que: ${_truncateText(rationale, 90)}';
-    if (note.isNotEmpty) return 'Por que: ${_truncateText(note, 90)}';
-    return '';
-  }
-
-  String _truncateText(String text, int maxLen) {
-    if (text.length <= maxLen) return text;
-    return '${text.substring(0, maxLen - 1)}...';
-  }
 
   bool _isPendingAiSuggestion(AthleteSession session) {
     final suggestion = session.suggestion;
@@ -2519,7 +2190,6 @@ class _MiniStat extends StatelessWidget {
     );
   }
 }
-
 
 class _WeekData {
   final int      weekNumber;

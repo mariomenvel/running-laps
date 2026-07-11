@@ -13,7 +13,7 @@ class PeriodHelper {
   static String currentMonthPeriodKey(DateTime now) {
     final year = now.year;
     final month = now.month;
-    return '${year}-${month.toString().padLeft(2, '0')}';
+    return '$year-${month.toString().padLeft(2, '0')}';
   }
 
   /// Obtiene el inicio de la semana (lunes a las 00:00:00)
@@ -61,13 +61,6 @@ class PeriodHelper {
     // 2. El año de la semana ISO es el año de ese jueves
     final isoYear = thursdayOfThisWeek.year;
 
-    // 3. La semana 1 de ese año comienza el lunes de la semana que contiene el 4 de enero
-    // O simplificado: calcular ordinal date del jueves y dividir por 7
-    final firstJan = DateTime(isoYear, 1, 1);
-    final daysOffset = firstJan.weekday <= 4 ? firstJan.weekday - 1 : firstJan.weekday - 1 - 7;
-    // Si 1 Ene es Lu-Ju, semana 1 empieza el Lunes de esa semana.
-    // Si 1 Ene es Vi-Do, semana 1 empieza el Lunes de la SIGUIENTE semana.
-    // Pero es más fácil: calcular dayOfYear del jueves.
     
     final dayOfYear = int.parse(
       '${thursdayOfThisWeek.difference(DateTime(isoYear, 1, 1)).inDays + 1}'

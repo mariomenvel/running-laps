@@ -7,7 +7,6 @@ import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/config/app_theme.dart';
-import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/app_page_scaffold.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
@@ -21,7 +20,7 @@ import '../data/models/enums.dart';
 class GroupRewardsScreen extends StatelessWidget {
   final String groupId;
 
-  const GroupRewardsScreen({Key? key, required this.groupId}) : super(key: key);
+  const GroupRewardsScreen({super.key, required this.groupId});
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +64,7 @@ class GroupRewardsScreen extends StatelessWidget {
 class GroupRewardsBody extends StatefulWidget {
   final String groupId;
 
-  const GroupRewardsBody({Key? key, required this.groupId}) : super(key: key);
+  const GroupRewardsBody({super.key, required this.groupId});
 
   @override
   State<GroupRewardsBody> createState() => _GroupRewardsBodyState();

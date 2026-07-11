@@ -20,12 +20,12 @@ class LegacyBarChart extends StatefulWidget {
   final Color brandColor;
 
   const LegacyBarChart({
-    Key? key,
+    super.key,
     required this.data,
     required this.metric,
     required this.range,
     required this.brandColor,
-  }) : super(key: key);
+  });
 
   @override
   State<LegacyBarChart> createState() => _LegacyBarChartState();

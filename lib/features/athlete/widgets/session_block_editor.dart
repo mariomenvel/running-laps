@@ -2,7 +2,6 @@
 // (vista huérfana, no conectada al flujo principal)
 // No modificar hasta decidir si se elimina
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/number_picker_field.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
@@ -446,7 +445,7 @@ class _BlockCard extends StatelessWidget {
           final m = block.restSeconds! ~/ 60;
           final s = block.restSeconds! % 60;
           final rest = m > 0
-              ? (s > 0 ? '${m}m ${s}s' : '${m} min')
+              ? (s > 0 ? '${m}m ${s}s' : '$m min')
               : '${s}s';
           parts.add('Desc $rest');
         }
@@ -623,8 +622,9 @@ class _BlockEditorSheetState extends State<_BlockEditorSheet> {
       case SessionBlockType.series:
         final reps = int.tryParse(_repsCtrl.text) ?? 0;
         final dist = int.tryParse(_distCtrl.text) ?? 0;
-        if (reps < 1) error = 'El número de repeticiones debe ser al menos 1';
-        else if (dist <= 0) error = 'La distancia debe ser mayor que 0';
+        if (reps < 1) {
+          error = 'El número de repeticiones debe ser al menos 1';
+        } else if (dist <= 0) error = 'La distancia debe ser mayor que 0';
       case SessionBlockType.continuousTime:
         final dur = int.tryParse(_durCtrl.text) ?? 0;
         if (dur <= 0) error = 'La duración debe ser mayor que 0';

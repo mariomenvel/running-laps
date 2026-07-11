@@ -36,7 +36,7 @@ String _restLabel(int v) {
   if (v < 60) return '${v}s';
   final m = v ~/ 60;
   final s = v % 60;
-  return s > 0 ? "${m}' ${s}s" : "${m}'";
+  return s > 0 ? "$m' ${s}s" : "$m'";
 }
 
 // ── Model ─────────────────────────────────────────────────────────────────────
@@ -428,8 +428,8 @@ class _ManualSerieCard extends StatelessWidget {
     final m = serie.durationMinutes;
     final s = serie.durationSeconds;
     if (m == 0) return '${s}s';
-    if (s == 0) return "${m}'";
-    return "${m}' ${s}s";
+    if (s == 0) return "$m'";
+    return "$m' ${s}s";
   }
 
   @override

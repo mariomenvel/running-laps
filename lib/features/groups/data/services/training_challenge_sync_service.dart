@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-// for debugPrint
+import 'package:flutter/foundation.dart';
 import '../../../training/data/entrenamiento.dart';
 import '../models/challenge_models.dart';
 import '../helpers/challenge_helpers.dart';
@@ -13,15 +12,12 @@ import '../models/enums.dart';
 class TrainingChallengeSyncService {
   final FirebaseFirestore _firestore;
   final ChallengesRepository _challengesRepo;
-  final FirebaseAuth _auth;
 
   TrainingChallengeSyncService({
     FirebaseFirestore? firestore,
     ChallengesRepository? challengesRepo,
-    FirebaseAuth? auth,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _challengesRepo = challengesRepo ?? ChallengesRepository(),
-        _auth = auth ?? FirebaseAuth.instance;
+        _challengesRepo = challengesRepo ?? ChallengesRepository();
 
   // ============================================
   // PUBLIC API
@@ -57,11 +53,10 @@ class TrainingChallengeSyncService {
       }
       
       final duration = DateTime.now().difference(startTime);
-
-          
+      debugPrint('[ChallengeSync] $challengesProcessedCount retos procesados '
+          'en ${duration.inMilliseconds}ms');
     } catch (e) {
       // Log error but don't fail the training save
-
       throw Exception('Error syncing training to challenges: $e');
     }
   }
@@ -358,7 +353,7 @@ class TrainingChallengeSyncService {
       await notifRef.set(notif.toMap());
 
     } catch (e) {
-
+      debugPrint('[ChallengeSync] error creando notificación: $e');
     }
   }
 }

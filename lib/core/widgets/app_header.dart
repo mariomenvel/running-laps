@@ -11,16 +11,14 @@ class AppHeader extends StatelessWidget {
   final Widget? trailing;
 
   const AppHeader({
-    Key? key,
+    super.key,
     this.onTapLeft,
     this.onTapRight,
     this.showBottomDivider = true,
     this.title,
     this.leading,
     this.trailing,
-  }) : super(key: key);
-
-  static const Color _bgGradientColor = Color(0xFFF9F5FB);
+  });
 
   @override
   Widget build(BuildContext context) {

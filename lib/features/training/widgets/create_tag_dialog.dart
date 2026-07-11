@@ -6,7 +6,7 @@ import '../data/tag_manager.dart';
 
 /// Bottom sheet moderno para crear una nueva etiqueta personalizada
 class CreateTagDialog extends StatefulWidget {
-  const CreateTagDialog({Key? key}) : super(key: key);
+  const CreateTagDialog({super.key});
 
   @override
   State<CreateTagDialog> createState() => _CreateTagDialogState();

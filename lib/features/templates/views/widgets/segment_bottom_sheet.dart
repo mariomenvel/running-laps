@@ -223,7 +223,7 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
     if (totalSec < 60) return '= beep cada ${totalSec.toStringAsFixed(1)} seg';
     final m = (totalSec ~/ 60);
     final s = (totalSec % 60).toStringAsFixed(0).padLeft(2, '0');
-    return '= beep cada ${m}:$s min';
+    return '= beep cada $m:$s min';
   }
 
   // ── Build ──────────────────────────────────────────────────────────────────

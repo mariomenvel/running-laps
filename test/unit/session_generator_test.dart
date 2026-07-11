@@ -11,7 +11,7 @@ void main() {
     // null/beginner=0, build=+1   → tier=1  (8 reps × 200m)
     // advanced=2,      build=+1   → tier=3 → clamp 2  (10 reps × 250m)
 
-    AiCoachWeeklyDecision _decision({
+    AiCoachWeeklyDecision decision({
       AiCoachWeekType weekType = AiCoachWeekType.absorb,
       AiCoachAdjustmentType adjustment = AiCoachAdjustmentType.maintain,
       List<AiCoachWorkoutTarget> targets = const [],
@@ -30,7 +30,7 @@ void main() {
           workoutTargets: targets,
         );
 
-    AiCoachWorkoutTarget _target(
+    AiCoachWorkoutTarget target(
       String category, {
       double? km,
       int? minutes,
@@ -51,9 +51,9 @@ void main() {
         final sessions = generator.generateWeekSessions(
           uid: 'test',
           weekStart: DateTime(2025, 6, 23),
-          decision: _decision(
+          decision: decision(
             weekType: AiCoachWeekType.absorb,
-            targets: [_target('rodaje_base', minutes: 70)],
+            targets: [target('rodaje_base', minutes: 70)],
           ),
           profile: null,
         );
@@ -66,10 +66,10 @@ void main() {
         final sessions = generator.generateWeekSessions(
           uid: 'test',
           weekStart: DateTime(2025, 6, 23),
-          decision: _decision(
+          decision: decision(
             weekType: AiCoachWeekType.build,
             adjustment: AiCoachAdjustmentType.progress,
-            targets: [_target('rodaje_base', minutes: 70)],
+            targets: [target('rodaje_base', minutes: 70)],
           ),
           profile: _advancedProfile(),
         );
@@ -86,9 +86,9 @@ void main() {
         final sessions = generator.generateWeekSessions(
           uid: 'test',
           weekStart: DateTime(2025, 6, 23),
-          decision: _decision(
+          decision: decision(
             weekType: AiCoachWeekType.absorb,
-            targets: [_target('series_cuestas')],
+            targets: [target('series_cuestas')],
           ),
           profile: null,
         );
@@ -102,10 +102,10 @@ void main() {
         final sessions = generator.generateWeekSessions(
           uid: 'test',
           weekStart: DateTime(2025, 6, 23),
-          decision: _decision(
+          decision: decision(
             weekType: AiCoachWeekType.build,
             adjustment: AiCoachAdjustmentType.progress,
-            targets: [_target('series_cuestas')],
+            targets: [target('series_cuestas')],
           ),
           profile: _advancedProfile(),
         );
@@ -124,9 +124,9 @@ void main() {
         final sessions = generator.generateWeekSessions(
           uid: 'test',
           weekStart: DateTime(2025, 6, 23),
-          decision: _decision(
+          decision: decision(
             weekType: AiCoachWeekType.absorb,
-            targets: [_target('series_cortas', km: 20)],
+            targets: [target('series_cortas', km: 20)],
           ),
           profile: null,
         );

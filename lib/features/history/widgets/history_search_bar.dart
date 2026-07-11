@@ -10,12 +10,12 @@ class HistorySearchBar extends StatefulWidget {
   final String hintText;
 
   const HistorySearchBar({
-    Key? key,
+    super.key,
     required this.query,
     required this.onChanged,
     required this.onClear,
     this.hintText = 'Buscar entrenamientos...',
-  }) : super(key: key);
+  });
 
   @override
   State<HistorySearchBar> createState() => _HistorySearchBarState();

@@ -1,12 +1,11 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
 /// Standard push route: native Cupertino slide-from-right.
 /// Enables iOS swipe-back gesture automatically.
 /// Use for all regular screen pushes.
 class AppRoute<T> extends CupertinoPageRoute<T> {
-  AppRoute({required Widget page, RouteSettings? settings})
-      : super(builder: (_) => page, settings: settings);
+  AppRoute({required Widget page, super.settings})
+      : super(builder: (_) => page);
 }
 
 /// Modal push route: slide from bottom + fade.

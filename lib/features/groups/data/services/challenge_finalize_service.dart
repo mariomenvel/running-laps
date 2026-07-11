@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-// for debugPrint
+import 'package:flutter/foundation.dart';
 import '../repositories/challenges_repository.dart';
 import '../repositories/rewards_repository.dart';
 import '../models/challenge_models.dart';
@@ -13,15 +13,12 @@ import '../models/result_notification_model.dart';
 class ChallengeFinalizeService {
   final FirebaseFirestore _firestore;
   final ChallengesRepository _challengesRepo;
-  final RewardsRepository _rewardsRepo;
 
   ChallengeFinalizeService({
     FirebaseFirestore? firestore,
     ChallengesRepository? challengesRepo,
-    RewardsRepository? rewardsRepo,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _challengesRepo = challengesRepo ?? ChallengesRepository(),
-        _rewardsRepo = rewardsRepo ?? RewardsRepository();
+        _challengesRepo = challengesRepo ?? ChallengesRepository();
 
   /// Checks for expired active challenges in a group and finalizes them
   Future<void> finalizeExpiredChallengesForGroup(
@@ -29,8 +26,6 @@ class ChallengeFinalizeService {
   ) async {
     final startTime = DateTime.now();
     int challengesClosed = 0;
-    // int totalMedals = 0; // Not used in the provided snippet, can be removed or kept as a placeholder
-    // int totalBadges = 0; // Not used in the provided snippet, can be removed or kept as a placeholder
   
     try {
       // 1. Obtener challenges activos del grupo
@@ -50,11 +45,10 @@ class ChallengeFinalizeService {
           }
         }
       }
-      
 
-      
+      debugPrint('[ChallengeFinalize] $challengesClosed retos cerrados '
+          'en ${DateTime.now().difference(startTime).inMilliseconds}ms');
     } catch (e) {
-
       // Rethrow to let caller know.
       rethrow;
     }
@@ -86,7 +80,7 @@ class ChallengeFinalizeService {
         groupName = groupDoc.data()?['name'] ?? "Grupo";
       }
     } catch (e) {
-
+      debugPrint('[ChallengeFinalize] error: $e');
     }
 
     // 2. Award Medals (if configured)
@@ -227,7 +221,7 @@ class ChallengeFinalizeService {
       });
 
     } catch (e) {
-
+      debugPrint('[ChallengeFinalize] error: $e');
     }
   }
 
@@ -317,7 +311,7 @@ class ChallengeFinalizeService {
       });
 
     } catch (e) {
-
+      debugPrint('[ChallengeFinalize] error: $e');
     }
   }
 

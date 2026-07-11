@@ -18,11 +18,11 @@ class GlobalChallengeCard extends StatefulWidget {
   final GlobalChallengesRepository repository;
 
   const GlobalChallengeCard({
-    Key? key,
+    super.key,
     required this.challenge,
     required this.userId,
     required this.repository,
-  }) : super(key: key);
+  });
 
   @override
   State<GlobalChallengeCard> createState() => _GlobalChallengeCardState();

@@ -14,7 +14,7 @@ import 'package:running_laps/features/profile/views/profile_menu_screen_legacy.d
 
 class TemplatesListView extends StatefulWidget {
   final bool isSelectionMode;
-  const TemplatesListView({Key? key, this.isSelectionMode = false}) : super(key: key);
+  const TemplatesListView({super.key, this.isSelectionMode = false});
 
   @override
   _TemplatesListViewState createState() => _TemplatesListViewState();

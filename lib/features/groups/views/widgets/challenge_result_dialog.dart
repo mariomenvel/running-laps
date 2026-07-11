@@ -9,10 +9,10 @@ class ChallengeResultDialog extends StatefulWidget {
   final VoidCallback onClosed;
 
   const ChallengeResultDialog({
-    Key? key,
+    super.key,
     required this.notification,
     required this.onClosed,
-  }) : super(key: key);
+  });
 
   @override
   State<ChallengeResultDialog> createState() => _ChallengeResultDialogState();
@@ -194,11 +194,6 @@ class _ChallengeResultDialogState extends State<ChallengeResultDialog> {
           gradient = [const Color(0xFFE0E0E0), const Color(0xFF9E9E9E)];
           break;
         case MedalType.bronze:
-          iconColor = const Color(0xFFCD7F32);
-          icon = Icons.emoji_events_rounded;
-          gradient = [const Color(0xFFD7CCC8), const Color(0xFF8D6E63)];
-          break;
-        default:
           iconColor = const Color(0xFFCD7F32);
           icon = Icons.emoji_events_rounded;
           gradient = [const Color(0xFFD7CCC8), const Color(0xFF8D6E63)];

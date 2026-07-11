@@ -389,7 +389,6 @@ class _PaceEvolutionChart extends StatelessWidget {
 
     if (spots.isEmpty) return const Center(child: Text('Sin datos'));
 
-    final maxY = spots.map((e) => e.y).reduce((a, b) => a > b ? a : b);
     final minY = spots.map((e) => e.y).reduce((a, b) => a < b ? a : b);
     final targetMinY = (minY * 0.95).floorToDouble();
 

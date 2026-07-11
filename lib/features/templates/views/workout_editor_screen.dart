@@ -237,14 +237,6 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
     }
   }
 
-  Future<void> _pickTime() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: _scheduledTime.value ?? TimeOfDay.now(),
-    );
-    if (picked != null) _scheduledTime.value = picked;
-  }
-
   Future<void> _initSpeech() async {
     final available = await _aiPanelViewModel.initSpeech();
     if (!available && mounted && _aiPanelViewModel.speechError.value != null) {
@@ -433,7 +425,6 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isNew = widget.initialSession == null;
 
     return PopScope(
       canPop: false,

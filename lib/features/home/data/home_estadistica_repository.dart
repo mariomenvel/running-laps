@@ -80,7 +80,7 @@ class HomeEstadisticaRepository {
       return snapshot.docs
           .map((doc) => doc.data()! as Map<String, dynamic>)
           .toList();
-    } on FirebaseException catch (e) {
+    } on FirebaseException {
       return [];
     }
   }

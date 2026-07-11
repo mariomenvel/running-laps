@@ -8,10 +8,10 @@ class HistoryCarousel extends StatefulWidget {
   final Function(Entrenamiento) onTapTraining;
 
   const HistoryCarousel({
-    Key? key,
+    super.key,
     required this.recentTrainings,
     required this.onTapTraining,
-  }) : super(key: key);
+  });
 
   @override
   State<HistoryCarousel> createState() => _HistoryCarouselState();

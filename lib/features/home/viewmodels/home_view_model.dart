@@ -211,8 +211,8 @@ class HomeViewModel {
       _sessionRepo.getWeekSessions(uid: userId),
     ]);
 
-    final todaySessions = results[0] as List<AthleteSession>;
-    final week          = results[1] as List<AthleteSession>;
+    final todaySessions = results[0];
+    final week          = results[1];
 
     if (_disposed) return;
     todaySession.value =

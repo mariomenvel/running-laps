@@ -22,12 +22,12 @@ class TemplateEditorView extends StatefulWidget {
   final bool isWarmupCooldown;
 
   const TemplateEditorView({
-    Key? key,
+    super.key,
     this.template,
     this.isMomentary = false,
     this.isSelectionMode = false,
     this.isWarmupCooldown = false,
-  }) : super(key: key);
+  });
 
   @override
   _TemplateEditorViewState createState() => _TemplateEditorViewState();

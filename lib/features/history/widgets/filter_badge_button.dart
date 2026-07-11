@@ -8,10 +8,10 @@ class FilterBadgeButton extends StatelessWidget {
   final VoidCallback onTap;
 
   const FilterBadgeButton({
-    Key? key,
+    super.key,
     required this.activeFiltersCount,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

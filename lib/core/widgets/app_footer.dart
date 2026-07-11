@@ -7,8 +7,7 @@ class AppFooter extends StatefulWidget {
   final VoidCallback onTap;
   final bool isLoading;
 
-  const AppFooter({Key? key, required this.onTap, this.isLoading = false})
-      : super(key: key);
+  const AppFooter({super.key, required this.onTap, this.isLoading = false});
 
   @override
   State<AppFooter> createState() => _AppFooterState();
@@ -16,7 +15,6 @@ class AppFooter extends StatefulWidget {
 
 class _AppFooterState extends State<AppFooter>
     with SingleTickerProviderStateMixin {
-  static const Color _bgGradientColor = Color(0xFFF9F5FB);
   
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -100,7 +98,6 @@ class _AppFooterState extends State<AppFooter>
       ),
     );
   }
-
 
   Widget _buildButton() {
     return GestureDetector(

@@ -9,15 +9,12 @@ import '../helpers/invite_token_helper.dart';
 /// Repository para gestión de invitaciones a grupos
 class InvitesRepository {
   final FirebaseFirestore _firestore;
-  final UserGroupsRepository _userGroupsRepo;
   final UserLookupService _userLookup;
 
   InvitesRepository({
     FirebaseFirestore? firestore,
-    UserGroupsRepository? userGroupsRepo,
     UserLookupService? userLookup,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _userGroupsRepo = userGroupsRepo ?? UserGroupsRepository(),
         _userLookup = userLookup ?? UserLookupService();
 
   // ============================================

@@ -14,9 +14,9 @@ class CreateChallengeModal extends StatefulWidget {
   ) onCreate;
 
   const CreateChallengeModal({
-    Key? key,
+    super.key,
     required this.onCreate,
-  }) : super(key: key);
+  });
 
   @override
   State<CreateChallengeModal> createState() => _CreateChallengeModalState();

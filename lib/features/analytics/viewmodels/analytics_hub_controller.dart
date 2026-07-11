@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/services/rate_limit_service.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';

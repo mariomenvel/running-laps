@@ -72,7 +72,7 @@ class PdfGeneratorService {
           _buildMetricGroupIfAny(
             'ACTIVIDAD Y ENTRENAMIENTOS',
             [
-              if (selectedMetrics.contains('totalKm')) _buildAdminStat('Kilómetros', '${(stats['totalKm'] as num? ?? 0).toStringAsFixed(1)}', 'km totales'),
+              if (selectedMetrics.contains('totalKm')) _buildAdminStat('Kilómetros', (stats['totalKm'] as num? ?? 0).toStringAsFixed(1), 'km totales'),
               if (selectedMetrics.contains('consistencyRate')) _buildAdminStat('Consistencia', '${(stats['consistencyRate'] as num? ?? 0).toStringAsFixed(1)}%', 'tasa semanal'),
               if (selectedMetrics.contains('preferredDay')) _buildAdminStat('Día Favorito', '${stats['preferredDay'] ?? "N/A"}', 'más activo'),
             ],
@@ -82,9 +82,9 @@ class PdfGeneratorService {
             'RENDIMIENTO Y ESFUERZO',
             [
               if (selectedMetrics.contains('avgPace')) _buildAdminStat('Ritmo Medio', '${stats['avgPace'] ?? "N/A"}', '/km'),
-              if (selectedMetrics.contains('avgDistancePerTraining')) _buildAdminStat('Distancia / Entreno', '${(stats['avgDistancePerTraining'] as num? ?? 0).toStringAsFixed(1)}', 'km promedio'),
-              if (selectedMetrics.contains('avgWeeklyDistance')) _buildAdminStat('Distancia Semanal', '${(stats['avgWeeklyDistance'] as num? ?? 0).toStringAsFixed(1)}', 'km / usuario'),
-              if (selectedMetrics.contains('avgRpe')) _buildAdminStat('Esfuerzo (RPE)', '${(stats['avgRpe'] as num? ?? 0).toStringAsFixed(1)}', 'escala 1-10'),
+              if (selectedMetrics.contains('avgDistancePerTraining')) _buildAdminStat('Distancia / Entreno', (stats['avgDistancePerTraining'] as num? ?? 0).toStringAsFixed(1), 'km promedio'),
+              if (selectedMetrics.contains('avgWeeklyDistance')) _buildAdminStat('Distancia Semanal', (stats['avgWeeklyDistance'] as num? ?? 0).toStringAsFixed(1), 'km / usuario'),
+              if (selectedMetrics.contains('avgRpe')) _buildAdminStat('Esfuerzo (RPE)', (stats['avgRpe'] as num? ?? 0).toStringAsFixed(1), 'escala 1-10'),
             ],
           ),
 
@@ -601,7 +601,7 @@ class PdfGeneratorService {
                   _buildTableCell('${serie.descansoSec}s', isCenter: true),
                 ],
               );
-            }).toList(),
+            }),
           ],
         ),
       ],

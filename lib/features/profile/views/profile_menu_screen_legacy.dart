@@ -30,7 +30,7 @@ import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/core/widgets/app_confirm_dialog.dart';
 
 class ProfileMenuView extends StatefulWidget {
-  const ProfileMenuView({Key? key}) : super(key: key);
+  const ProfileMenuView({super.key});
 
   @override
   _ProfileMenuViewState createState() {

@@ -28,9 +28,9 @@ class AlarmConfigSheet extends StatefulWidget {
   final TemplateAlerts initialAlerts;
   
   const AlarmConfigSheet({
-    Key? key,
+    super.key,
     required this.initialAlerts,
-  }) : super(key: key);
+  });
 
   @override
   _AlarmConfigSheetState createState() => _AlarmConfigSheetState();

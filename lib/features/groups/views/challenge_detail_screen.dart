@@ -8,7 +8,6 @@ import '../data/models/enums.dart';
 
 import 'package:intl/intl.dart';
 import 'package:running_laps/config/app_theme.dart';
-import 'package:running_laps/core/theme/app_colors.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_page_scaffold.dart';
 import '../../profile/views/profile_menu_screen_legacy.dart';
@@ -18,10 +17,10 @@ class ChallengeDetailScreen extends StatefulWidget {
   final String challengeId;
 
   const ChallengeDetailScreen({
-    Key? key,
+    super.key,
     required this.groupId,
     required this.challengeId,
-  }) : super(key: key);
+  });
 
   @override
   State<ChallengeDetailScreen> createState() => _ChallengeDetailScreenState();

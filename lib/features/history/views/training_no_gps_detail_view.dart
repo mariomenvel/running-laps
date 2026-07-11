@@ -17,7 +17,7 @@ import 'package:running_laps/features/templates/data/template_models.dart';
 class TrainingNoGpsDetailViewLegacy extends StatefulWidget {
   final Entrenamiento training;
 
-  const TrainingNoGpsDetailViewLegacy({Key? key, required this.training}) : super(key: key);
+  const TrainingNoGpsDetailViewLegacy({super.key, required this.training});
 
   @override
   State<TrainingNoGpsDetailViewLegacy> createState() => _TrainingNoGpsDetailViewLegacyState();
@@ -406,7 +406,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
               ],
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }

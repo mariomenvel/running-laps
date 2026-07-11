@@ -928,7 +928,6 @@ class _PlanningTabState extends State<_PlanningTab> {
 
   Future<bool> _loadAiEnabled() async {
     final provider = await AiCoachRepository().getProviderConfig(uid: widget.uid);
-    if (provider == null) return false;
     return provider.weeklyPlanningEnabled &&
         provider.provider == 'openrouter' &&
         (provider.apiKey?.trim().isNotEmpty ?? false);
@@ -1439,9 +1438,7 @@ class _PlanningTabState extends State<_PlanningTab> {
               if (race == null) return const SizedBox.shrink();
 
               final raceDate = DateTime.tryParse(race.date);
-              final days = raceDate != null
-                  ? raceDate.difference(DateTime.now()).inDays
-                  : null;
+              final days = raceDate?.difference(DateTime.now()).inDays;
               final badgeBg = days != null
                   ? (days <= 7
                       ? AppColors.rpeMax.withValues(alpha: 0.2)
@@ -2162,86 +2159,6 @@ class _UpcomingSessionCard extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // _RaceCountdownCard
 // ─────────────────────────────────────────────────────────────────────────────
-
-class _RaceCountdownCard extends StatelessWidget {
-  final AthleteSession session;
-  final bool isDark;
-
-  const _RaceCountdownCard({required this.session, required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    final surfaceColor =
-        isDark ? const Color(0xFF1C1C1E) : const Color(0xFFF2F2F7);
-    final parts = session.date.split('-');
-    final raceDate = parts.length == 3
-        ? DateTime(
-            int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]))
-        : null;
-    final daysLeft =
-        raceDate?.difference(DateTime.now()).inDays;
-    final raceName = session.raceName ?? 'Competición';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _SectionTitle('Próxima competición'),
-        const SizedBox(height: 10),
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: surfaceColor,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-                color: AppColors.brand.withValues(alpha: 0.3)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.brand.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.emoji_events_rounded,
-                    color: AppColors.brand, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(raceName,
-                        style: const TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w600)),
-                    Text(session.date,
-                        style: const TextStyle(
-                            fontSize: 12, color: Color(0xFF8E8E93))),
-                  ],
-                ),
-              ),
-              if (daysLeft != null)
-                Column(
-                  children: [
-                    Text(
-                      '$daysLeft',
-                      style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.brand),
-                    ),
-                    const Text('días',
-                        style: TextStyle(
-                            fontSize: 11, color: Color(0xFF8E8E93))),
-                  ],
-                ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // _MiniLineChart + _MiniLinePainter

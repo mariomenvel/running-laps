@@ -3,7 +3,6 @@
 // nuevo desarrollo. Pendiente de confirmar con testing
 // manual antes de eliminar. Ver CHANGELOG.md.
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/number_picker_field.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';

@@ -12,10 +12,10 @@ class BlockEditorSheet extends StatefulWidget {
   final bool hasFcConfig;
 
   const BlockEditorSheet({
-    Key? key,
+    super.key,
     this.initialBlock,
     this.hasFcConfig = false,
-  }) : super(key: key);
+  });
 
   @override
   _BlockEditorSheetState createState() => _BlockEditorSheetState();

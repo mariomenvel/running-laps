@@ -26,64 +26,10 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
 
   // Colores Premium (Hardcoded para asegurar consistencia con la app principal)
   static const Color _brandPurple = Color(0xFF8E24AA);
-  static const Color _bgGradientStart = Color(0xFFF3E5F5); // Purple 50
-  static const Color _bgGradientEnd = Colors.white;
 
   // ===========================================================================
   // WIDGETS DE UI
   // ===========================================================================
-
-  Widget _buildHeader() {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceOf(context),
-        border: Border(
-          bottom: BorderSide(
-            color: cs.outline.withValues(alpha: 0.3),
-            width: 1,
-          ),
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Botón Atrás
-          IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: Icon(Icons.arrow_back_ios_new_rounded, color: cs.onSurface),
-            style: IconButton.styleFrom(
-              backgroundColor: cs.surface,
-              elevation: 2,
-              shadowColor: Theme.of(context).brightness == Brightness.dark ? Colors.transparent : Colors.black12,
-            ),
-          ),
-
-          Text(
-            "EDITOR DE AVATAR",
-            style: TextStyle(
-              color: cs.onSurface,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              letterSpacing: 1.2,
-            ),
-          ),
-
-          // Botón Guardar
-          IconButton(
-            onPressed: _buildSaveAvatarOptions,
-            icon: const Icon(Icons.save_alt_rounded, color: _brandPurple),
-            style: IconButton.styleFrom(
-              backgroundColor: cs.surface,
-              elevation: 2,
-              shadowColor: Theme.of(context).brightness == Brightness.dark ? Colors.transparent : Colors.black12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildCategoryTabs(AvatarMakerController controller) {
     return Container(
@@ -141,8 +87,9 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
     final selectedCategory = category[controller.selectedCategory];
     final List<int>? colorList;
     
-    if (selectedCategory == "ROPA") colorList = clothingColor;
-    else if (selectedCategory == "ACCESORIOS") colorList = accessoryColor;
+    if (selectedCategory == "ROPA") {
+      colorList = clothingColor;
+    } else if (selectedCategory == "ACCESORIOS") colorList = accessoryColor;
     else if (selectedCategory == "BELLO FACIAL") colorList = facialHairColor;
     else if (selectedCategory == "FONDO") colorList = backgroundColor;
     else if (selectedCategory == "PELO") colorList = hairColor;
@@ -165,8 +112,9 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
           
           // Determinar si está seleccionado
           bool isSelected = false;
-          if (selectedCategory == "ROPA") isSelected = (controller.selectedClothingColor == colorValue);
-          else if (selectedCategory == "ACCESORIOS") isSelected = (controller.selectedAccessoryColor == colorValue);
+          if (selectedCategory == "ROPA") {
+            isSelected = (controller.selectedClothingColor == colorValue);
+          } else if (selectedCategory == "ACCESORIOS") isSelected = (controller.selectedAccessoryColor == colorValue);
           else if (selectedCategory == "BELLO FACIAL") isSelected = (controller.selectedFacialHairColor == colorValue);
           else if (selectedCategory == "FONDO") isSelected = (controller.selectedBackgroundColor == colorValue);
           else if (selectedCategory == "PELO") isSelected = (controller.selectedHairColor == colorValue);
@@ -174,8 +122,9 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
 
           return GestureDetector(
             onTap: () {
-              if (selectedCategory == "ROPA") controller.clothingColor = colorValue;
-              else if (selectedCategory == "ACCESORIOS") controller.accessoryColor = colorValue;
+              if (selectedCategory == "ROPA") {
+                controller.clothingColor = colorValue;
+              } else if (selectedCategory == "ACCESORIOS") controller.accessoryColor = colorValue;
               else if (selectedCategory == "BELLO FACIAL") controller.facialHairColor = colorValue;
               else if (selectedCategory == "FONDO") controller.backgroundColor = colorValue;
               else if (selectedCategory == "PELO") controller.hairColor = colorValue;
@@ -209,8 +158,6 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
       ),
     );
   }
-
-
 
   Widget _buildComponentPreview(dynamic component) {
     if (component is String && component.isNotEmpty) {
@@ -257,89 +204,6 @@ class _AvatarMakerScreenState extends State<AvatarMakerScreen> {
   String generateFileName() {
     final now = DateTime.now();
     return "${now.year}${now.month}${now.day}${now.hour}${now.minute}${now.second}${now.millisecond}";
-  }
-
-  void _saveAvatarToAppFolder() async {
-    try {
-      RenderRepaintBoundary boundary = _avatarKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-      ui.Image image = await boundary.toImage(pixelRatio: 3.0); // Higher quality
-      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      Uint8List pngBytes = byteData!.buffer.asUint8List();
-
-      final directory = await getApplicationDocumentsDirectory();
-      final file = File('${directory.path}/${generateFileName()}.png');
-      await file.writeAsBytes(pngBytes);
-      
-      if (mounted) {
-        ModernSnackBar.showSuccess(context, "Avatar guardado en la app");
-      }
-    } catch (e) {
-
-    }
-  }
-
-  void _saveAvatarToGallery() async {
-    try {
-      RenderRepaintBoundary boundary = _avatarKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      
-      if (byteData != null) {
-        await Gal.putImageBytes(byteData.buffer.asUint8List());
-        if (mounted) {
-          ModernSnackBar.showSuccess(context, "Avatar guardado en Galería");
-        }
-      }
-    } catch (e) {
-
-    }
-  }
-
-  void _buildSaveAvatarOptions() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 10),
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2))),
-              const SizedBox(height: 20),
-              ListTile(
-                onTap: () {
-                  _saveAvatarToAppFolder();
-                  Navigator.pop(context);
-                },
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: AppColors.rest.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                  child: const Icon(Icons.folder_special, color: AppColors.rest),
-                ),
-                title: const Text("Guardar en la App"),
-                subtitle: const Text("Para usarlo en tu perfil"),
-              ),
-              ListTile(
-                onTap: () {
-                  _saveAvatarToGallery();
-                  Navigator.pop(context);
-                },
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: AppColors.rpeLow.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                  child: const Icon(Icons.photo_library, color: AppColors.rpeLow),
-                ),
-                title: const Text("Guardar en Galería"),
-                subtitle: const Text("Descargar imagen PNG"),
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        );
-      }
-    );
   }
 
   // ===========================================================================

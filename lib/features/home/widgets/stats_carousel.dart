@@ -11,10 +11,10 @@ class StatsCarousel extends StatefulWidget {
   final VoidCallback onTapExplore; // Callback para ir a pantalla de detalle genérica
 
   const StatsCarousel({
-    Key? key,
+    super.key,
     required this.viewModel,
     required this.onTapExplore,
-  }) : super(key: key);
+  });
 
   @override
   State<StatsCarousel> createState() => _StatsCarouselState();

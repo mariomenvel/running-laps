@@ -74,7 +74,7 @@ class AdminController extends ChangeNotifier {
              startDate = _customRange!.start;
              endDate = _customRange!.end;
              // Ajustar fin del día para endDate
-             endDate = DateTime(endDate!.year, endDate.month, endDate.day, 23, 59, 59);
+             endDate = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
            }
           break;
       }

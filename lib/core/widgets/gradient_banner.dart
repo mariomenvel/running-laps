@@ -15,7 +15,7 @@ class GradientBanner extends StatefulWidget {
   final VoidCallback? onTapIcon;
 
   const GradientBanner({
-    Key? key,
+    super.key,
     required this.title,
     this.titleWidget,
     this.subtitle,
@@ -26,7 +26,7 @@ class GradientBanner extends StatefulWidget {
     this.trailing,
     this.animate = true,
     this.onTapIcon,
-  }) : super(key: key);
+  });
 
   @override
   State<GradientBanner> createState() => _GradientBannerState();
@@ -154,12 +154,12 @@ class GradientChip extends StatelessWidget {
   final VoidCallback? onTap;
 
   const GradientChip({
-    Key? key,
+    super.key,
     required this.label,
     this.icon,
     this.accentColor,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

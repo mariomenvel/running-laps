@@ -123,7 +123,6 @@ extension GoalKindExtension on GoalKind {
       case GoalKind.distance: return ChallengeMetric.distance;
       case GoalKind.time: return ChallengeMetric.time;
       case GoalKind.sessions: return ChallengeMetric.sessions;
-      case GoalKind.sessions: return ChallengeMetric.sessions;
       default: return ChallengeMetric.distance;
     }
   }

@@ -32,13 +32,6 @@ Color _zoneChipColor(HeartRateZone zone) {
   }
 }
 
-Color _rpeChipColor(int rpe) {
-  if (rpe <= 4) return const Color(0xFF639922);
-  if (rpe <= 6) return const Color(0xFFEF9F27);
-  if (rpe <= 8) return const Color(0xFFD85A30);
-  return const Color(0xFFE24B4A);
-}
-
 Color _fcChipColor(int fcPercent) {
   if (fcPercent < 70) return const Color(0xFF639922);
   if (fcPercent < 80) return const Color(0xFF378ADD);
@@ -62,7 +55,7 @@ String _segmentMainLabel(WorkoutSegment segment) {
   if (segment.durationSec != null) {
     final m = segment.durationSec! ~/ 60;
     final s = segment.durationSec! % 60;
-    base = m > 0 ? (s > 0 ? '${m} min ${s}s' : '${m} min') : '${s}s';
+    base = m > 0 ? (s > 0 ? '$m min ${s}s' : '$m min') : '${s}s';
   } else if (segment.distanceM != null) {
     base = segment.distanceM! >= 1000
         ? '${(segment.distanceM! / 1000).toStringAsFixed(1)} km'
@@ -79,7 +72,9 @@ String _segmentMainLabel(WorkoutSegment segment) {
 
 bool _segmentHasTargets(WorkoutSegment segment) {
   if (segment.type == SegmentType.recovery &&
-      segment.recoveryType == RecoveryType.passive) return false;
+      segment.recoveryType == RecoveryType.passive) {
+    return false;
+  }
   final t = segment.target;
   if (t == null) return false;
   return t.paceMinSecPerKm != null ||

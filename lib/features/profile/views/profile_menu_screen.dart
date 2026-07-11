@@ -31,7 +31,7 @@ import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 
 class ProfileMenuView extends StatefulWidget {
-  const ProfileMenuView({Key? key}) : super(key: key);
+  const ProfileMenuView({super.key});
 
   @override
   _ProfileMenuViewState createState() {

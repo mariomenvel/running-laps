@@ -6,7 +6,6 @@
 // conectada al flujo principal del usuario.
 // No modificar hasta decidir si se elimina
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/number_picker_field.dart';
 import 'package:running_laps/core/widgets/app_header.dart';

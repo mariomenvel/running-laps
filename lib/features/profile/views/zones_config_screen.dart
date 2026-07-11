@@ -21,8 +21,6 @@ class _ZonesConfigScreenState extends State<ZonesConfigScreen> {
   final _fcMaxCtrl = TextEditingController();
   final _fcReposoCtrl = TextEditingController();
 
-  bool _onboardingShown = false;
-
   @override
   void initState() {
     super.initState();
@@ -49,30 +47,6 @@ class _ZonesConfigScreenState extends State<ZonesConfigScreen> {
   }
 
   // ── Onboarding bottom sheet ────────────────────────────────────────
-
-  Future<void> _showOnboardingSheet() async {
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => _OnboardingSheet(
-        uid: widget.uid,
-        onSave: (birthDate, sex) async {
-          Navigator.pop(ctx);
-          await _vm.saveFcConfig(
-            uid: widget.uid,
-            birthDate: birthDate,
-            sex: sex,
-          );
-          if (!mounted) return;
-          _syncControllersFromProfile();
-        },
-        onSkip: () => Navigator.pop(ctx),
-      ),
-    );
-  }
 
   // ── Save ──────────────────────────────────────────────────────────
 

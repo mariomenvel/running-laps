@@ -11,12 +11,12 @@ class HistoryCalendarWidget extends StatefulWidget {
   final Color Function(String?) getTagColor;
 
   const HistoryCalendarWidget({
-    Key? key,
+    super.key,
     required this.events,
     required this.onDaySelected,
     required this.getTagColor,
     this.selectedDay,
-  }) : super(key: key);
+  });
 
   @override
   State<HistoryCalendarWidget> createState() => _HistoryCalendarWidgetState();

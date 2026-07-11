@@ -307,7 +307,6 @@ class _PersonalRecordCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -565,9 +564,7 @@ class _VolumeChart extends StatelessWidget {
   Widget build(BuildContext context) {
     if (volumes.isEmpty) return const SizedBox.shrink();
 
-    const barMaxHeight = 100.0;
     const labelHeight  = 20.0;
-    const barArea      = 100.0; // total height minus label area
 
     final maxKm = volumes.fold<double>(0, (m, w) => max(m, w.km));
 

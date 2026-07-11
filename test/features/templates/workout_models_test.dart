@@ -144,7 +144,7 @@ void main() {
   // ─── WorkoutBlock ────────────────────────────────────────────────────────────
 
   group('WorkoutBlock', () {
-    WorkoutSegment _makeSegment(String id) => WorkoutSegment(
+    WorkoutSegment makeSegment(String id) => WorkoutSegment(
           id: id,
           type: SegmentType.interval,
           distanceM: 400,
@@ -155,7 +155,7 @@ void main() {
         id: 'block-1',
         role: BlockRole.main,
         repetitions: 4,
-        segments: [_makeSegment('s1'), _makeSegment('s2')],
+        segments: [makeSegment('s1'), makeSegment('s2')],
         label: 'Series 400',
       );
       final map = block.toMap();
@@ -173,7 +173,7 @@ void main() {
         () => WorkoutBlock(
           role: BlockRole.warmup,
           repetitions: 3,
-          segments: [_makeSegment('s1')],
+          segments: [makeSegment('s1')],
         ),
         throwsA(isA<AssertionError>()),
       );
@@ -184,7 +184,7 @@ void main() {
         () => WorkoutBlock(
           role: BlockRole.cooldown,
           repetitions: 2,
-          segments: [_makeSegment('s1')],
+          segments: [makeSegment('s1')],
         ),
         throwsA(isA<AssertionError>()),
       );
@@ -194,7 +194,7 @@ void main() {
       final block = WorkoutBlock(
         role: BlockRole.main,
         repetitions: 6,
-        segments: [_makeSegment('s1')],
+        segments: [makeSegment('s1')],
       );
       expect(block.repetitions, 6);
     });
@@ -204,7 +204,7 @@ void main() {
         id: 'block-2',
         role: BlockRole.main,
         repetitions: 3,
-        segments: [_makeSegment('s1')],
+        segments: [makeSegment('s1')],
       );
       final copy = original.copyWith(repetitions: 5, label: 'Nuevo label');
 
@@ -218,7 +218,7 @@ void main() {
   // ─── WorkoutSession ──────────────────────────────────────────────────────────
 
   group('WorkoutSession', () {
-    WorkoutBlock _makeBlock(String id, BlockRole role, {int reps = 1}) =>
+    WorkoutBlock makeBlock(String id, BlockRole role, {int reps = 1}) =>
         WorkoutBlock(
           id: id,
           role: role,
@@ -232,14 +232,14 @@ void main() {
           ],
         );
 
-    WorkoutSession _makeSession() => WorkoutSession(
+    WorkoutSession makeSession() => WorkoutSession(
           id: 'session-1',
           title: 'Test sesión',
           type: WorkoutType.intervals,
           blocks: [
-            _makeBlock('b-warmup', BlockRole.warmup),
-            _makeBlock('b-main', BlockRole.main, reps: 5),
-            _makeBlock('b-cooldown', BlockRole.cooldown),
+            makeBlock('b-warmup', BlockRole.warmup),
+            makeBlock('b-main', BlockRole.main, reps: 5),
+            makeBlock('b-cooldown', BlockRole.cooldown),
           ],
           scheduledDate: DateTime(2026, 6, 1),
           isTemplate: false,
@@ -247,7 +247,7 @@ void main() {
 
     test('toMap/fromMap roundtrip sesión completa (warmup + main + cooldown)',
         () {
-      final session = _makeSession();
+      final session = makeSession();
       final map = session.toMap();
       final restored = WorkoutSession.fromMap(map);
 
@@ -260,7 +260,7 @@ void main() {
     });
 
     test('getter warmupBlock devuelve el bloque correcto', () {
-      final session = _makeSession();
+      final session = makeSession();
       expect(session.warmupBlock?.id, 'b-warmup');
     });
 
@@ -269,7 +269,7 @@ void main() {
         id: 's',
         title: 'Sin warmup',
         type: WorkoutType.free,
-        blocks: [_makeBlock('b-main', BlockRole.main)],
+        blocks: [makeBlock('b-main', BlockRole.main)],
       );
       expect(session.warmupBlock, isNull);
     });
@@ -280,9 +280,9 @@ void main() {
         title: 'Dos bloques main',
         type: WorkoutType.intervals,
         blocks: [
-          _makeBlock('b-main-1', BlockRole.main),
-          _makeBlock('b-main-2', BlockRole.main),
-          _makeBlock('b-cooldown', BlockRole.cooldown),
+          makeBlock('b-main-1', BlockRole.main),
+          makeBlock('b-main-2', BlockRole.main),
+          makeBlock('b-cooldown', BlockRole.cooldown),
         ],
       );
       expect(session.mainBlocks.length, 2);
@@ -290,7 +290,7 @@ void main() {
     });
 
     test('getter cooldownBlock devuelve el bloque correcto', () {
-      final session = _makeSession();
+      final session = makeSession();
       expect(session.cooldownBlock?.id, 'b-cooldown');
     });
 
@@ -299,7 +299,7 @@ void main() {
         id: 's',
         title: 'Sin cooldown',
         type: WorkoutType.free,
-        blocks: [_makeBlock('b-main', BlockRole.main)],
+        blocks: [makeBlock('b-main', BlockRole.main)],
       );
       expect(session.cooldownBlock, isNull);
     });
@@ -322,7 +322,7 @@ void main() {
           id: 's',
           title: 'Sin main',
           type: WorkoutType.free,
-          blocks: [_makeBlock('b-warmup', BlockRole.warmup)],
+          blocks: [makeBlock('b-warmup', BlockRole.warmup)],
         ),
         throwsA(isA<AssertionError>()),
       );
@@ -333,7 +333,7 @@ void main() {
         id: 's',
         title: 'Plantilla',
         type: WorkoutType.intervals,
-        blocks: [_makeBlock('b-main', BlockRole.main)],
+        blocks: [makeBlock('b-main', BlockRole.main)],
         isTemplate: true,
         templateId: 'tmpl-42',
       );
@@ -349,7 +349,7 @@ void main() {
         id: 's',
         title: 'Sin fecha',
         type: WorkoutType.free,
-        blocks: [_makeBlock('b-main', BlockRole.main)],
+        blocks: [makeBlock('b-main', BlockRole.main)],
       );
       final map = session.toMap();
       expect(map.containsKey('scheduledDate'), false);

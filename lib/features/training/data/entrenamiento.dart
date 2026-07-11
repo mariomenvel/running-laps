@@ -138,8 +138,8 @@ class Entrenamiento {
     if (secKm == null) return '--:--';
     final int mm = secKm ~/ 60;
     final int ss = secKm % 60;
-    final String ss2 = ss < 10 ? '0' + ss.toString() : ss.toString();
-    return mm.toString() + ':' + ss2 + ' /km';
+    final String ss2 = ss < 10 ? '0$ss' : ss.toString();
+    return '$mm:$ss2 /km';
   }
 
   Map<String, dynamic> toMap() {

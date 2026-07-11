@@ -267,8 +267,9 @@ class AdminRepository {
             }
           });
           
-          if (bestHour >= 6 && bestHour < 12) peakHourLabel = "Mañana ($bestHour:00)";
-          else if (bestHour >= 12 && bestHour < 16) peakHourLabel = "Mediodía ($bestHour:00)";
+          if (bestHour >= 6 && bestHour < 12) {
+            peakHourLabel = "Mañana ($bestHour:00)";
+          } else if (bestHour >= 12 && bestHour < 16) peakHourLabel = "Mediodía ($bestHour:00)";
           else if (bestHour >= 16 && bestHour < 21) peakHourLabel = "Tarde ($bestHour:00)";
           else peakHourLabel = "Noche/Madrugada ($bestHour:00)";
         }

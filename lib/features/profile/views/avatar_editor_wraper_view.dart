@@ -8,36 +8,26 @@ import 'package:running_laps/features/avatar/viewmodels/avatar_maker_controller.
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-
 // Si tienes una clase Tema global, impórtala. Si no, definimos los colores localmente.
 // import '../../../app/tema.dart';
 
-
 class AvatarEditorWrapperView extends StatefulWidget {
-  const AvatarEditorWrapperView({Key? key}) : super(key: key);
-
+  const AvatarEditorWrapperView({super.key});
 
   @override
   State<AvatarEditorWrapperView> createState() =>
       _AvatarEditorWrapperViewState();
 }
 
-
 class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
   final AvatarMakerController controller = Get.put(AvatarMakerController());
   bool _isLoading = true;
-
-
-  // --- Colores traídos del primer código para el diseño ---
-  static const Color _bgGradientColor = Color(0xFFF9F5FB);
-
 
   @override
   void initState() {
     super.initState();
     _loadAvatarConfig();
   }
-
 
   // --- LÓGICA DE CARGAR ---
   Future<void> _loadAvatarConfig() async {
@@ -46,7 +36,6 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
       final userId = FirebaseAuth.instance.currentUser!.uid;
       final doc =
           await FirebaseFirestore.instance.collection('users').doc(userId).get();
-
 
       if (doc.exists && doc.data()!['generativeAvatarConfig'] != null) {
         final configData = doc.data()!['generativeAvatarConfig'] as Map<String, dynamic>;
@@ -58,24 +47,20 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
     setState(() => _isLoading = false);
   }
 
-
   // --- LÓGICA DE GUARDAR ---
   Future<void> _saveAvatarToFirebase() async {
     if (_isLoading) return;
    
     setState(() => _isLoading = true);
 
-
     try {
       final Map<String, dynamic> avatarData = controller.toJson();
       final userId = FirebaseAuth.instance.currentUser!.uid;
-
 
       await FirebaseFirestore.instance.collection('users').doc(userId).set({
         'profilePicType': 'avatar',
         'generativeAvatarConfig': avatarData,
       }, SetOptions(merge: true));
-
 
       if (!mounted) return;
       Navigator.pop(context);
@@ -87,7 +72,6 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
        if (mounted) setState(() => _isLoading = false);
     }
   }
-
 
   // ===================================================================
   // HEADER (Adaptado del primer código)
@@ -160,7 +144,6 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -169,7 +152,6 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
           children: [
             // 1. Insertamos el Header personalizado
             _buildHeader(),
-
 
             // 2. El contenido del Avatar Maker ocupa el resto del espacio
             Expanded(

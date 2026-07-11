@@ -34,7 +34,9 @@ class SettingsService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_keyAlarmEnabled, value);
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('[SettingsService] error guardando prefs: $e');
+    }
   }
 
   Future<bool> getGpsDefault() async {
@@ -50,7 +52,9 @@ class SettingsService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_keyGpsDefault, value);
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('[SettingsService] error guardando prefs: $e');
+    }
   }
 
   // --- Card Style ---
@@ -71,7 +75,9 @@ class SettingsService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_keyCardStyle, isWhite ? 'white' : 'colored');
       cardStyleNotifier.value = isWhite;
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('[SettingsService] error guardando prefs: $e');
+    }
   }
 
   /// Loads the saved value into [cardStyleNotifier]. Call once on app start.
@@ -157,6 +163,8 @@ class SettingsService {
       await prefs.setInt(_keyAlarmPaceMin, paceMin);
       await prefs.setInt(_keyAlarmPaceSec, paceSec);
       await prefs.setInt(_keyAlarmSegment, segment);
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('[SettingsService] error guardando prefs: $e');
+    }
   }
 }

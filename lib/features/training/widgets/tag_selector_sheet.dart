@@ -12,10 +12,10 @@ class TagSelectorSheet extends StatefulWidget {
   final String trainingId;
 
   const TagSelectorSheet({
-    Key? key,
+    super.key,
     required this.training,
     required this.trainingId,
-  }) : super(key: key);
+  });
 
   @override
   State<TagSelectorSheet> createState() => _TagSelectorSheetState();

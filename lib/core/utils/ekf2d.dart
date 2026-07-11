@@ -277,7 +277,9 @@ class EKF2D {
     final inner = B.length;
     return List.generate(rows, (i) => List.generate(cols, (j) {
       double sum = 0.0;
-      for (int k = 0; k < inner; k++) sum += A[i][k] * B[k][j];
+      for (int k = 0; k < inner; k++) {
+        sum += A[i][k] * B[k][j];
+      }
       return sum;
     }));
   }
@@ -303,8 +305,12 @@ class EKF2D {
 
   /// Wrap angle to [-π, π]
   double _normalizeAngle(double angle) {
-    while (angle >  math.pi) angle -= 2 * math.pi;
-    while (angle < -math.pi) angle += 2 * math.pi;
+    while (angle >  math.pi) {
+      angle -= 2 * math.pi;
+    }
+    while (angle < -math.pi) {
+      angle += 2 * math.pi;
+    }
     return angle;
   }
 }

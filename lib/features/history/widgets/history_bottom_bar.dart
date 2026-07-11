@@ -13,12 +13,12 @@ class HistoryBottomBar extends StatelessWidget {
   final VoidCallback? onCompare;
 
   const HistoryBottomBar({
-    Key? key,
+    super.key,
     this.selectedCount = 0,
     required this.filteredCount,
     this.onViewDashboards,
     this.onCompare,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

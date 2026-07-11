@@ -29,7 +29,7 @@ import '../../profile/views/profile_menu_screen_legacy.dart';
 /// Pantalla profesional y moderna que lista todos los grupos del usuario
 /// Diseño premium con gradientes vibrantes y animaciones fluidas
 class GroupsListScreen extends StatefulWidget {
-  const GroupsListScreen({Key? key}) : super(key: key);
+  const GroupsListScreen({super.key});
 
   @override
   State<GroupsListScreen> createState() => _GroupsListScreenState();
@@ -1141,7 +1141,6 @@ class _InvitationCardState extends State<_InvitationCard> {
       stream: widget.groupsRepo.streamGroup(widget.membership.groupId),
       builder: (context, snapshot) {
         final groupName = snapshot.data?.name ?? "Cargando grupo...";
-        final isDark = Theme.of(context).brightness == Brightness.dark;
         final brandColor = AppColors.brand;
 
         return Container(
@@ -1263,56 +1262,16 @@ class _InvitationCardState extends State<_InvitationCard> {
   }
 }
 
-/// Badge con efecto cristal/glassmorphism
-class _GlassBadge extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-
-  const _GlassBadge({
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /// Animación escalonada mejorada para elementos de lista
 class _StaggeredGroupItem extends StatefulWidget {
   final int index;
   final Widget child;
 
   const _StaggeredGroupItem({
-    Key? key,
+    super.key,
     required this.index,
     required this.child,
-  }) : super(key: key);
+  });
 
   @override
   State<_StaggeredGroupItem> createState() => _StaggeredGroupItemState();
@@ -1461,6 +1420,4 @@ class _PremiumFloatingActionButtonState extends State<_PremiumFloatingActionButt
     );
   }
 }
-
-
 

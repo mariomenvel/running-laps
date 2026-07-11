@@ -21,13 +21,13 @@ class PremiumTrainingCard extends StatefulWidget {
   final VoidCallback? onUpdate;
 
   const PremiumTrainingCard({
-    Key? key,
+    super.key,
     required this.training,
     this.isSelected = false,
     this.selectionMode = false,
     this.onSelectionChanged,
     this.onUpdate,
-  }) : super(key: key);
+  });
 
   @override
   State<PremiumTrainingCard> createState() => _PremiumTrainingCardState();

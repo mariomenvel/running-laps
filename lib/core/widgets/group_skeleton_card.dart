@@ -4,7 +4,7 @@ import 'package:running_laps/core/theme/app_colors.dart';
 /// Skeleton loader card for groups list
 /// Shows animated shimmer effect while groups are loading
 class GroupSkeletonCard extends StatefulWidget {
-  const GroupSkeletonCard({Key? key}) : super(key: key);
+  const GroupSkeletonCard({super.key});
 
   @override
   State<GroupSkeletonCard> createState() => _GroupSkeletonCardState();

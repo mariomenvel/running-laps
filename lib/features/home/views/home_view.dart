@@ -137,20 +137,6 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _generateAiPlanFromHome() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-    final generated = await AiCoachAutomationService()
-        .forceGenerateNextWeekPlan(uid);
-    if (mounted) {
-      if (generated) {
-        ModernSnackBar.showSuccess(context, 'Plan de la próxima semana generado');
-      } else {
-        ModernSnackBar.showError(context, 'No se pudo generar el plan');
-      }
-    }
-  }
-
   Future<void> _scheduleWeeklyFeedbackNotification() async {
     const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'ai_coach_feedback',
@@ -168,11 +154,11 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     );
   }
 
-  @override
   void _onNeedsReload() {
     _vm?.loadAll();
   }
 
+  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
@@ -186,14 +172,12 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     // currentUser primero (síncrono, disponible si ya autenticado)
     // authStateChanges como fallback con timeout de 5s
     User? user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      user = await FirebaseAuth.instance.authStateChanges()
+    user ??= await FirebaseAuth.instance.authStateChanges()
           .firstWhere((u) => u != null)
           .timeout(
             const Duration(seconds: 5),
             onTimeout: () => FirebaseAuth.instance.currentUser,
           );
-    }
     if (user == null) return;
     if (!mounted) return;
     setState(() {
@@ -201,7 +185,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       _vmReady = true;
     });
     _vm!.loadAll();
-    _checkAiCoachProfile(user!.uid);
+    _checkAiCoachProfile(user.uid);
   }
 
   Future<void> _checkAiCoachProfile(String uid) async {

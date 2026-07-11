@@ -17,7 +17,7 @@ import 'avatar_editor_wraper_view.dart';
 
 
 class EditProfilePictureView extends StatelessWidget {
-  const EditProfilePictureView({Key? key}) : super(key: key);
+  const EditProfilePictureView({super.key});
 
   // --- Lógica para SUBIR FOTO ---
   Future<void> _uploadFromGallery() async {

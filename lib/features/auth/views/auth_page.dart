@@ -107,24 +107,10 @@ class _AuthPageState extends State<AuthPage> {
     }
   }
 
-  Future<void> _recoverPassword(String email) async {
-    try {
-      await _authCtrl.recoverPassword(email);
-      if (!mounted) return;
-      Navigator.of(context).pop(); // Cerrar el diálogo
-      ModernSnackBar.showSuccess(
-        context,
-        'Correo de recuperación enviado. Revisa tu bandeja.',
-      );
-    } catch (e) {
-      _showError(e);
-    }
-  }
-
   void _showForgotPasswordDialog() {
-    final TextEditingController _resetEmailCtrl = TextEditingController();
+    final TextEditingController resetEmailCtrl = TextEditingController();
     // Variable local para el error dentro del BottomSheet
-    String? _localError;
+    String? localError;
 
     showModalBottomSheet(
       context: context,
@@ -135,13 +121,13 @@ class _AuthPageState extends State<AuthPage> {
           builder: (context, setModalState) {
             
             // Función interna para manejar el envío y actualizar el estado LOCAL del modal
-            Future<void> _submitRecovery() async {
+            Future<void> submitRecovery() async {
               setModalState(() {
-                _localError = null; // Limpiar error previo
+                localError = null; // Limpiar error previo
               });
 
               try {
-                await _authCtrl.recoverPassword(_resetEmailCtrl.text);
+                await _authCtrl.recoverPassword(resetEmailCtrl.text);
 
                 // `context` aquí es el del modal (sombreado por el builder):
                 // el guard correcto es context.mounted, no el mounted del State.
@@ -158,7 +144,7 @@ class _AuthPageState extends State<AuthPage> {
                 if (!context.mounted) return;
                 // Si falla, actualizamos el estado DEL MODAL para mostrar el error
                 setModalState(() {
-                   _localError = _extractErrorMessage(e);
+                   localError = _extractErrorMessage(e);
                 });
               }
             }
@@ -212,13 +198,13 @@ class _AuthPageState extends State<AuthPage> {
                   ),
                   const SizedBox(height: 32),
                   _buildTextField(
-                    controller: _resetEmailCtrl,
+                    controller: resetEmailCtrl,
                     hintText: 'Correo electrónico',
                     prefixIcon: Icon(Icons.email_outlined, color: AppColors.iconMutedOf(context)),
                   ),
                   
                   // ZONA DE ERROR INLINE
-                  if (_localError != null) ...[
+                  if (localError != null) ...[
                     const SizedBox(height: 16),
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -233,7 +219,7 @@ class _AuthPageState extends State<AuthPage> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              _localError!,
+                              localError!,
                               style: const TextStyle(
                                 color: AppColors.rpeMax,
                                 fontWeight: FontWeight.bold,
@@ -255,7 +241,7 @@ class _AuthPageState extends State<AuthPage> {
                         child: ElevatedButton(
                           onPressed: isLoading
                               ? null
-                              : _submitRecovery, // Llamamos a la función interna
+                              : submitRecovery, // Llamamos a la función interna
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.brand,
                             foregroundColor: Colors.white,
@@ -301,7 +287,6 @@ class _AuthPageState extends State<AuthPage> {
       },
     );
   }
-
 
   Widget _buildPasswordRequirements() {
     // Escuchamos ambos controladores para actualizar si cambia cualquiera
@@ -948,5 +933,4 @@ class _PremiumGoogleButtonState extends State<_PremiumGoogleButton> with SingleT
     );
   }
 }
-
 
