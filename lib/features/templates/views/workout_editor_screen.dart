@@ -83,7 +83,6 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
       _notesController = TextEditingController(text: _notes.value);
       _notesController.addListener(() => _notes.value = _notesController.text);
 
-      _initSpeech();
       _aiPanelViewModel.recognizedText.addListener(_onRecognizedTextChanged);
 
       if (s != null && s.title.isNotEmpty) {
@@ -234,13 +233,6 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
 
     if (isEmpty) {
       _blocks.value = _defaultBlocksForType(type);
-    }
-  }
-
-  Future<void> _initSpeech() async {
-    final available = await _aiPanelViewModel.initSpeech();
-    if (!available && mounted && _aiPanelViewModel.speechError.value != null) {
-      ModernSnackBar.showError(context, _aiPanelViewModel.speechError.value!);
     }
   }
 

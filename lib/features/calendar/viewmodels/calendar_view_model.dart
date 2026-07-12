@@ -51,8 +51,8 @@ class CalendarViewModel {
   ValueNotifier<String> get adjustRecognizedText => _speech.recognizedText;
   ValueNotifier<String?> get adjustSpeechError => _speech.lastError;
 
-  Future<void> initAdjustSpeech() => _speech.initialize();
-
+  // Los permisos de micrófono/voz se piden dentro de startListening()
+  // (inicialización perezosa del servicio) — no inicializar al crear el VM.
   Future<void> toggleAdjustListening() {
     return adjustListening.value
         ? _speech.stopListening()

@@ -154,6 +154,7 @@ Arquitectura de monetización (3 niveles, Stripe, gates del coach) — diseño p
 - Imports Dart: `dart:` → `flutter/` → `firebase_*` → paquetes externos → locales
 - Colores RPE: nunca hardcodear — usar escala automática de `RpeBadge` / `AppColors`
 - Números siempre via `NumberPickerField` / `IosPicker`, nunca teclado
+- Permisos runtime: solo bajo demanda, nunca en el arranque. No instanciar `FlutterReactiveBle` ni llamar a `SpeechToText.initialize()` al construir servicios/vistas — en iOS ambos disparan diálogos del sistema (Bluetooth / micrófono + voz). `HeartRateService` crea el BLE perezosamente y `SpeechToTextService.startListening()` inicializa (y pide permisos) en el primer uso; el botón de micro se muestra de forma optimista (`isAvailable` empieza en `true`).
 
 ## Espaciado y radios
 

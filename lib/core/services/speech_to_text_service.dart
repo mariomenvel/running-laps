@@ -16,7 +16,12 @@ class SpeechToTextService {
 
   final SpeechToText _speech = SpeechToText();
 
-  final ValueNotifier<bool> isAvailable = ValueNotifier(false);
+  /// Optimista: se asume disponible hasta que initialize() demuestre lo
+  /// contrario. Así el botón de micro puede mostrarse sin inicializar el
+  /// motor al construir la vista — inicializar dispara los diálogos de
+  /// permiso de micrófono y reconocimiento de voz del sistema, que solo
+  /// deben aparecer cuando el usuario pulsa el micro por primera vez.
+  final ValueNotifier<bool> isAvailable = ValueNotifier(true);
   final ValueNotifier<bool> isListening = ValueNotifier(false);
   final ValueNotifier<String> recognizedText = ValueNotifier('');
   final ValueNotifier<String?> lastError = ValueNotifier(null);
@@ -47,7 +52,10 @@ class SpeechToTextService {
   }
 
   Future<void> startListening() async {
-    if (!isAvailable.value) return;
+    // Inicialización perezosa: los permisos se piden aquí, en el primer
+    // uso real del dictado, no al abrir la pantalla que lo contiene.
+    final available = await initialize();
+    if (!available) return;
     recognizedText.value = '';
     lastError.value = null;
     isListening.value = true;

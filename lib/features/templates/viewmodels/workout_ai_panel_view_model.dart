@@ -12,8 +12,8 @@ class WorkoutAiPanelViewModel {
   ValueNotifier<String> get recognizedText => _speech.recognizedText;
   ValueNotifier<String?> get speechError => _speech.lastError;
 
-  Future<bool> initSpeech() => _speech.initialize();
-
+  // Los permisos de micrófono/voz se piden dentro de startListening()
+  // (inicialización perezosa del servicio) — no inicializar al crear el VM.
   Future<void> toggleListening() {
     return isListening.value ? _speech.stopListening() : _speech.startListening();
   }

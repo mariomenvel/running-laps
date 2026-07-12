@@ -82,7 +82,6 @@ class _CalendarViewState extends State<CalendarView>
       _vmReady = true;
     });
     _vm!.adjustRecognizedText.addListener(_onAdjustRecognizedTextChanged);
-    _vm!.initAdjustSpeech();
     _vm!.loadAll();
     final profile = await AiCoachRepository().getProfile(uid: uid);
     if (mounted) setState(() => _hasAiCoachProfile = profile != null);

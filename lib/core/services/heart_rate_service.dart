@@ -24,11 +24,16 @@ class HeartRateService {
   static HeartRateService? _instance;
   factory HeartRateService() => _instance ??= HeartRateService._internal();
 
-  // Null on Web — BLE is not available in browsers.
-  final FlutterReactiveBle? _ble;
+  // Lazy: instanciar FlutterReactiveBle crea el CBCentralManager en iOS,
+  // lo que dispara el diálogo de permiso de Bluetooth del sistema. Solo se
+  // crea cuando algo necesita BLE de verdad (scan/connect/status) — nunca
+  // por el mero hecho de construir el servicio al arrancar la app.
+  // En Web no se llega a crear: todos los métodos que lo usan hacen
+  // early-return con kIsWeb antes.
+  FlutterReactiveBle? _bleInstance;
+  FlutterReactiveBle get _ble => _bleInstance ??= FlutterReactiveBle();
 
-  HeartRateService._internal()
-      : _ble = kIsWeb ? null : FlutterReactiveBle();
+  HeartRateService._internal();
 
   // Estado público
   final ValueNotifier<HrConnectionState> connectionState =
@@ -76,7 +81,7 @@ class HeartRateService {
     // El diálogo del sistema aparece automáticamente al iniciar el scan.
     if (Platform.isIOS) {
       try {
-        final status = await _ble!.statusStream.first
+        final status = await _ble.statusStream.first
             .timeout(const Duration(seconds: 3));
         if (status == BleStatus.ready) return true;
         if (status == BleStatus.poweredOff) return false;
@@ -94,7 +99,7 @@ class HeartRateService {
   Future<BleStatus> getBleStatus() async {
     if (kIsWeb) return BleStatus.unsupported;
     try {
-      return await _ble!.statusStream.first
+      return await _ble.statusStream.first
           .timeout(const Duration(seconds: 2));
     } catch (e) {
       return BleStatus.unknown;
@@ -111,7 +116,7 @@ class HeartRateService {
 
     final generation = ++_scanGeneration;
     _scanSub?.cancel();
-    _scanSub = _ble!
+    _scanSub = _ble
         .scanForDevices(
           withServices: [_heartRateServiceUuid],
           scanMode: ScanMode.lowLatency,
@@ -155,7 +160,7 @@ class HeartRateService {
     await disconnect();
     connectionState.value = HrConnectionState.connecting;
 
-    _connectionSub = _ble!
+    _connectionSub = _ble
         .connectToDevice(
           id: deviceId,
           connectionTimeout: const Duration(seconds: 10),
@@ -191,7 +196,7 @@ class HeartRateService {
 
     _measurementSub?.cancel();
     _measurementSub =
-        _ble!.subscribeToCharacteristic(characteristic).listen(
+        _ble.subscribeToCharacteristic(characteristic).listen(
           (data) {
             heartRate.value = _parseHeartRate(data);
           },

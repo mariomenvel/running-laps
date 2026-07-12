@@ -43,6 +43,12 @@
   además del flujo in-app. ⚠️ Pendiente `firebase deploy --only hosting`.
 - ✅ Política de privacidad y términos con URL pública (`/privacy`, `/terms`).
 - ✅ App Check Android (Play Integrity en release, debug provider en debug).
+- ✅ **Permisos just-in-time** (jul 2026): ningún diálogo de permisos en el primer
+  arranque. Bluetooth se pide al emparejar el pulsómetro, micrófono +
+  reconocimiento de voz al pulsar el micro de dictado por primera vez, y
+  ubicación + movimiento en la pantalla previa al entrenamiento. Cumple la
+  guideline 5.1.1 de Apple (peticiones con contexto) — no reintroducir
+  inicializaciones de BLE/speech en el arranque.
 
 ---
 
