@@ -35,7 +35,7 @@ Feature-First + MVVM. Cada feature en `lib/features/<name>/` con subcarpetas `vi
 Paths clave:
 - `lib/config/app_theme.dart` — `Tema.brandPurple = Color(0xFF8E24AA)`, `AvatarHelper` (alias legado)
 - `lib/core/theme/app_colors.dart` — sistema de colores actual (`AppColors.brand`, tokens semánticos)
-- `lib/core/theme/theme_service.dart` — tema claro/oscuro, persistido en SharedPreferences
+- `lib/core/theme/theme_service.dart` — tema sistema/claro/oscuro, persistido en SharedPreferences. Reactivado jul 2026 (estuvo forzado a claro por el contraste del brand en oscuro — resuelto con `AppColors.brandOf(context)`, ver COLOR_SYSTEM.md). Selector en Perfil → Apariencia y en Ajustes de cuenta.
 - `lib/main.dart` — Firebase init, App Check (Android + Web), `AuthWrapper` (StreamBuilder<User?>)
 - `core/services/gps_service.dart` — GPS + Live Activity iOS + Kalman + Haversine
 - `core/services/ios_live_activity_service.dart` — puente MethodChannel/EventChannel Swift↔Dart

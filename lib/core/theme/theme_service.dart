@@ -13,15 +13,28 @@ class ThemeService {
 
   /// Current [ThemeMode]. Mutate via [setTheme] — never directly.
   ///
-  /// MVP: forzado a [ThemeMode.light]. AppTheme.dark() no está pulido para
-  /// el morado de marca (se ve mal sobre negro) — queda para una fase
-  /// futura. El selector de tema está oculto en Perfil/Ajustes; no leer ni
-  /// persistir preferencia mientras tanto.
+  /// Reactivado en jul 2026 para pruebas de dark mode: el contraste del
+  /// brand sobre oscuro se resolvió con AppColors.brandOf(context)
+  /// (ver COLOR_SYSTEM.md § Regla de contraste del brand).
   static final ValueNotifier<ThemeMode> themeMode =
-      ValueNotifier(ThemeMode.light);
+      ValueNotifier(ThemeMode.system);
 
-  /// MVP: no-op — el tema queda fijo en light hasta que se pula dark mode.
-  static Future<void> init() async {}
+  /// Load persisted preference. Must be called once before [runApp].
+  static Future<void> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    themeMode.value = _fromString(prefs.getString(_key));
+  }
+
+  static ThemeMode _fromString(String? s) {
+    switch (s) {
+      case 'light':
+        return ThemeMode.light;
+      case 'dark':
+        return ThemeMode.dark;
+      default:
+        return ThemeMode.system;
+    }
+  }
 
   /// Persist and immediately apply [mode].
   static Future<void> setTheme(ThemeMode mode) async {
