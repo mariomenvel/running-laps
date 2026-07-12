@@ -110,12 +110,30 @@ Apple obliga a ofrecer Sign in with Apple si ofreces login de terceros
 - **Sign in with Apple implementado** en Dart (firebase_auth
   `AppleAuthProvider`, sin paquetes nuevos): login + creación del doc inicial +
   reautenticación (borrar cuenta / cambios sensibles) + botón solo-iOS en
-  AuthPage. **3 pasos manuales al tener la cuenta de Apple Developer:**
-  1. Xcode → target Runner → Signing & Capabilities → añadir capability
-     **"Sign In with Apple"** (regenera el provisioning profile).
+  AuthPage.
+- **El entitlement ya está en el repo** (`ios/Runner/Runner.entitlements` +
+  `CODE_SIGN_ENTITLEMENTS` en las 3 configs del Runner) — **no hace falta Mac
+  ni Xcode** para este paso. Verificable hoy re-lanzando el workflow iOS de
+  Codemagic (simulador).
+- **3 pasos manuales al tener la cuenta de Apple Developer (todo vía web):**
+  1. developer.apple.com → Certificates, Identifiers & Profiles → Identifiers
+     → App ID `com.runninglaps.runningLaps` → marcar capability
+     **"Sign In with Apple"** (la firma automática de Codemagic regenerará el
+     provisioning profile con ella).
   2. Firebase Console → Authentication → Sign-in method → habilitar **Apple**.
   3. Probar login/cancelación/reauth en **TestFlight** (no se puede probar sin
-     la capability firmada).
+     firma con la capability).
+
+### ¿Hace falta un Mac? No.
+- **Compilar, firmar y subir a App Store Connect**: Codemagic (Macs en la nube),
+  con la integración de App Store Connect API key.
+- **Capability/entitlements**: portal web + repo (ya hecho, ver arriba).
+- **Probar**: TestFlight se instala directamente en el iPhone.
+- **Capturas de la ficha**: desde el iPhone físico (o herramientas de framing).
+- Único escenario donde un Mac ayuda: depurar un crash **nativo** raro que solo
+  aparezca en TestFlight — los crash logs llegan igualmente a App Store Connect,
+  y para un caso puntual existe el alquiler de Mac por horas (MacinCloud y
+  similares).
 
 ### Formularios y ficha
 - [ ] **Privacy Nutrition Labels** en App Store Connect (mismo mapeo que Data
