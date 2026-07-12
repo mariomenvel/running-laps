@@ -39,20 +39,27 @@ Entre episodios, el diario X/Threads/Stories (doc 03) mantiene el pulso.
 
 ---
 
-## EP. 1 — "La app que no existía" (presentación + demo)
+## EP. 1 — "La app que me escucha" (presentación + demo)
 **Duración:** 30s · **Formato:** N0 (manos/pantalla/POV) + tu voz · **CTA:** seguir
+
+**La idea del hook:** el momento más cinematográfico de la app no es un botón
+— es el DICTADO. Tú hablas y la app construye el entreno en pantalla. El
+espectador cree durante un segundo que le hablas a él... y entonces ve que le
+hablas a la app. Interrupción de patrón + demo real, todo en 3 segundos. Y
+además establece el lenguaje de toda la saga: tu voz es la interfaz.
 
 | seg | Plano | Voz (tuya, natural) | Texto en pantalla |
 |---|---|---|---|
-| 0-1,5 | Móvil en mano, la app abierta, el dedo pulsa "generar plan" y APARECE la semana entera | "Esta app no está en ninguna tienda." | `ep. 1 — no está en ninguna tienda` |
-| 1,5-8 | Zoom al plan generado: series, ritmos, descansos, días | "Le dices qué días puedes entrenar, tu objetivo... y te monta la semana. Series, ritmos, descansos. Como un entrenador." | `te planifica la semana` |
-| 8-16 | Corte a POV: manos en el teclado, código, terminal con tests pasando | "La estoy construyendo yo. Soy entrenador de fuerza — en el gimnasio nadie entrena sin programa. Empecé a correr, busqué una app que me diera un PLAN de verdad... y no existía." | `entrenador de fuerza` → `no existía` |
-| 16-24 | POV pista/calle corriendo (2-3s) + vuelta a la app: pantalla de sesión activa con el crono | "Así que llevo meses construyéndola a escondidas. Y ya funciona: la semana que viene me entrena a mí por primera vez, en pista." | `ya funciona` |
-| 24-30 | El móvil se bloquea → se ve la app en la pantalla de bloqueo (Live Activity) → negro | "Voy a enseñar todo lo que pase: lo que funcione y lo que explote. Ep. 2 el sábado: el detalle de la app del que más orgulloso estoy." | `ep. 2 — el sábado` |
+| 0-3 | POV: móvil en mano, pulsas el micro de la app y DICES, hablando al móvil: "Seis series de quinientos... descanso minuto y medio." | (tu dictado ES el audio del hook — sin narración encima) | `ep. 1 — mírala` |
+| 3-8 | La app convierte el dictado: aparecen los bloques estructurados — series, descansos, objetivo | "...y esto lo convierte en un entreno de verdad. No está en ninguna tienda. Todavía." | `dictado → entreno ✅` |
+| 8-16 | Corte a POV: manos en el teclado, código, terminal con tests pasando en verde | "La estoy construyendo yo. Soy entrenador de fuerza — en el gimnasio nadie entrena sin programa. Empecé a correr, busqué una app que me diera un PLAN de verdad... y no existía." | `entrenador de fuerza` → `no existía` |
+| 16-24 | La app: el calendario con la semana planificada (sesiones ya puestas en sus días) + 2s POV pista | "Y no es solo esto: te planifica la semana entera según tus días y tu objetivo. Como un entrenador. La semana que viene me entrena a mí por primera vez, en pista." | `te planifica la semana` |
+| 24-30 | El móvil se bloquea → la app sigue viva en la pantalla de bloqueo (Live Activity) → negro | "Voy a enseñar todo lo que pase: lo que funcione y lo que explote. Ep. 2 el sábado: el detalle de la app del que más orgulloso estoy." | `ep. 2 — el sábado` |
 
 **Caption:** "Ep. 1. Llevo meses construyendo la app de running que no encontré. La termino en público — lo bueno y lo que explote. 🏃‍♂️ (Sí, hay lista de espera en la bio, pero de momento solo quiero que veas si esto te interesa.)"
-**Por qué retiene:** demo real en el segundo 0 (no promesa: producto), identidad con conflicto ("de fuerza construyendo de running"), cita concreta con fecha para el ep. 2.
-**Material a grabar:** screen recording del coach generando plan · manos+teclado+terminal (vale `flutter test` pasando en verde) · 3s POV corriendo · Live Activity en pantalla de bloqueo.
+**Por qué retiene:** el hook es una acción en curso (no una promesa), con giro a los 2s (hablabas con la app), demo verificable, identidad con conflicto, y cita con fecha para el ep. 2.
+**Material a grabar:** dictado por voz real en el editor (¡PRUÉBALO antes de grabar!) · bloques apareciendo · manos+teclado+terminal (vale `flutter test` en verde) · calendario con la semana puesta · 2-3s POV pista · Live Activity en pantalla de bloqueo.
+**Plan B si el dictado ese día no está fino:** escribir el prompt a mano a cámara rápida (mismo efecto, menos magia) — o abrir directamente con el calendario llenándose con la semana en un speed-ramp de edición. El "tap → spinner → lista" NUNCA como hook: el resultado es bueno, el momento es un spinner.
 
 ---
 
