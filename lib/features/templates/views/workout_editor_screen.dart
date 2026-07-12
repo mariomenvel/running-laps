@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
+import 'package:running_laps/core/services/notification_service.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_prompt_session_generator.dart';
@@ -402,6 +403,25 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
           } else {
             await repo.createSession(athleteSession);
             widget.shellParams?.onSaved?.call(athleteSession);
+          }
+
+          // Recordatorio "¡Entreno en 1 hora!" si la sesión tiene fecha y
+          // hora concretas (antes solo lo programaba una vista huérfana).
+          final schedDate = session.scheduledDate;
+          final schedTime = session.scheduledTime;
+          if (schedDate != null && schedTime != null) {
+            final sessionDateTime = DateTime(
+              schedDate.year, schedDate.month, schedDate.day,
+              schedTime.hour, schedTime.minute,
+            );
+            NotificationService()
+                .scheduleSessionReminder(
+                  sessionId: session.id,
+                  sessionDateTime: sessionDateTime,
+                  sessionTitle: session.title,
+                )
+                .catchError((Object e) =>
+                    debugPrint('[WorkoutEditor] session reminder: $e'));
           }
         }
       } catch (e) {

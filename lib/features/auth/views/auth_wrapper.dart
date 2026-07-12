@@ -90,16 +90,23 @@ class _AuthWrapperState extends State<AuthWrapper> {
               _notificationsSynced = true;
               final isAthlete =
                   userSnap.data?.data()?['isAthleteMode'] as bool? ?? false;
-              if (isAthlete) {
-                NotificationService()
-                    .scheduleWeeklyFeedbackReminder()
-                    .catchError((Object e) =>
-                        debugPrint('[Notifications] feedback reminder: $e'));
-                NotificationService()
-                    .syncTrainingReminders(user.uid)
-                    .catchError((Object e) =>
-                        debugPrint('[Notifications] training reminders: $e'));
-              }
+              // Sin el permiso del sistema (Android 13+ / iOS) ninguna
+              // notificación se muestra. Se pide una vez tras el login —
+              // el SO recuerda la respuesta y no vuelve a preguntar.
+              NotificationService().requestPermissions().then<void>((granted) {
+                if (!granted) return;
+                if (isAthlete) {
+                  NotificationService()
+                      .scheduleWeeklyFeedbackReminder()
+                      .catchError((Object e) =>
+                          debugPrint('[Notifications] feedback reminder: $e'));
+                  NotificationService()
+                      .syncTrainingReminders(user.uid)
+                      .catchError((Object e) =>
+                          debugPrint('[Notifications] training reminders: $e'));
+                }
+              }).catchError((Object e) =>
+                  debugPrint('[Notifications] permisos: $e'));
             }
 
             return MainShell(key: MainShell.shellKey);
