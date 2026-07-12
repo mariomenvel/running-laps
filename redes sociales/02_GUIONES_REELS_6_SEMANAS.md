@@ -1,4 +1,8 @@
-# Guiones de Reels — Primeras 6 Semanas
+# Guiones de Reels — Primeras 6 Semanas [SUPERSEDIDO PARCIALMENTE]
+> ⚠️ Para las primeras semanas usa el **doc 06 (LA SAGA)** — 8 episodios
+> diseñados sobre el estado real de la app, con mecánica de retención y
+> cliffhangers. Este doc queda como banco de reserva e ideas sueltas.
+>
 > 1-2 Reels/semana · Formatos según la ESCALERA DE EXPOSICIÓN (doc 01 § 2b):
 > por defecto N0 (pantalla/manos + TU voz) o N1 (POV corriendo) — la cara es
 > opcional y puntual (N2) hasta que tú decidas subirla · Subtítulos siempre
