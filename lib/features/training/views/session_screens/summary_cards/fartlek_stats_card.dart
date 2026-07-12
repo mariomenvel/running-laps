@@ -53,16 +53,16 @@ class FartlekStatsCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF4A90A4).withValues(alpha: 0.08),
+              color: AppColors.rest.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(children: [
-              const Icon(Icons.ac_unit_rounded, color: Color(0xFF4A90A4), size: 20),
+              const Icon(Icons.ac_unit_rounded, color: AppColors.rest, size: 20),
               const SizedBox(width: 10),
               const Expanded(child: Text('Tramos suaves',
-                  style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF4A90A4)))),
+                  style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.rest))),
               Text('${stats.slowSegmentsCount}',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF4A90A4))),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.rest)),
             ]),
           ),
           if (stats.avgFcSlow != null) ...[

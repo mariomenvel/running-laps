@@ -20,7 +20,7 @@ class FcWidget extends StatelessWidget {
   Color _zoneColor() {
     if (currentZone == null) return Colors.grey;
     switch (currentZone) {
-      case 1: return const Color(0xFF4A90A4);  // azul Z1
+      case 1: return AppColors.rest;  // azul Z1 (guía: recuperación)
       case 2: return const Color(0xFF7FB069);  // verde Z2
       case 3: return const Color(0xFFE9C46A);  // amarillo Z3
       case 4: return const Color(0xFFE76F51);  // naranja Z4

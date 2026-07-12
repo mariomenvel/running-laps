@@ -46,10 +46,10 @@ class RpeSlider extends StatelessWidget {
                         trackHeight / 2),
                     gradient: const LinearGradient(
                       colors: [
-                        Color(0xFF639922), // verde  RPE 1
-                        Color(0xFFEF9F27), // ámbar  RPE ~5
-                        Color(0xFFD85A30), // coral  RPE ~8
-                        Color(0xFFE24B4A), // rojo   RPE 10
+                        AppColors.rpeLow,      // verde        RPE 1-4
+                        AppColors.rpeMid,      // ámbar        RPE 5-7
+                        AppColors.effortLight, // coral claro  RPE 8 (guía)
+                        AppColors.rpeMax,      // rojo         RPE 9-10
                       ],
                       stops: [0.0, 0.45, 0.75, 1.0],
                     ),

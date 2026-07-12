@@ -45,10 +45,17 @@ class RestScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = SessionTheme.forType(WorkoutType.continuous);
-    const restColor = Color(0xFF4A90A4);
+    // COLOR_SYSTEM.md § Descanso: "Toda la UI vira a azul" — AppColors.rest.
+    const restColor = AppColors.rest;
 
     return SessionLayout(
       theme: theme,
+      // "Fondo que se tiñe de azul de abajo hacia arriba según progreso"
+      // + burbujas flotantes — como recuperar el aliento.
+      backdrop: _RestFillBackdrop(
+        elapsedNotifier: elapsedNotifier,
+        totalDuration: Duration(seconds: restDurationSec),
+      ),
       header: _buildHeader(context, restColor),
       body: _buildBody(context, restColor),
       footerButton: _buildFooterButton(context, restColor),
@@ -347,24 +354,22 @@ class RestScreen extends StatelessWidget {
   }
 
   Widget _buildFooterButton(BuildContext context, Color restColor) {
+    // COLOR_SYSTEM.md § Descanso: "Botón Saltar descanso: textSecondary,
+    // muy discreto" — el descanso es parte del entreno, no se incentiva saltarlo.
     return SizedBox(
       width: double.infinity,
-      child: OutlinedButton(
+      child: TextButton(
         onPressed: onSkip,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: restColor,
-          side: BorderSide(color: restColor, width: 2),
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.textSecondary(context),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
         ),
         child: const Text(
-          'SALTAR DESCANSO',
+          'Saltar descanso',
           style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.5,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.3,
           ),
         ),
       ),
@@ -454,5 +459,117 @@ class RestScreen extends StatelessWidget {
     final m = d.inMinutes;
     final s = d.inSeconds.remainder(60);
     return '$m:${s.toString().padLeft(2, '0')}';
+  }
+}
+
+/// Fondo del descanso (COLOR_SYSTEM.md § Descanso): un "vaso" de azul que se
+/// llena de abajo hacia arriba con el progreso del descanso — recuperar el
+/// aliento — con burbujas flotantes sutiles ascendiendo por la zona llena.
+class _RestFillBackdrop extends StatefulWidget {
+  final ValueListenable<Duration> elapsedNotifier;
+  final Duration totalDuration;
+
+  const _RestFillBackdrop({
+    required this.elapsedNotifier,
+    required this.totalDuration,
+  });
+
+  @override
+  State<_RestFillBackdrop> createState() => _RestFillBackdropState();
+}
+
+class _RestFillBackdropState extends State<_RestFillBackdrop>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _bubbles;
+
+  @override
+  void initState() {
+    super.initState();
+    _bubbles = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 7),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _bubbles.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Spec (light): tinte 0xFFE3F2FD. En dark, mismo gesto con AppColors.rest
+    // translúcido para no romper el fondo oscuro.
+    final fillColor =
+        isDark ? AppColors.rest.withValues(alpha: 0.14) : const Color(0xFFE3F2FD);
+    final bubbleBase = const Color(0xFF90CAF9);
+
+    return ValueListenableBuilder<Duration>(
+      valueListenable: widget.elapsedNotifier,
+      builder: (context, elapsed, _) {
+        final totalMs = widget.totalDuration.inMilliseconds;
+        final progress = totalMs <= 0
+            ? 0.0
+            : (elapsed.inMilliseconds / totalMs).clamp(0.0, 1.0);
+
+        return AnimatedBuilder(
+          animation: _bubbles,
+          builder: (context, _) {
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final h = constraints.maxHeight;
+                final w = constraints.maxWidth;
+                final fillTop = h * (1 - progress);
+
+                return Stack(
+                  children: [
+                    // El agua
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      top: fillTop,
+                      bottom: 0,
+                      child: ColoredBox(color: fillColor),
+                    ),
+                    // Burbujas ascendiendo por la zona llena
+                    for (var i = 0; i < 6; i++)
+                      _bubble(i, w, h, fillTop, bubbleBase, isDark),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Burbuja i: posición y tamaño deterministas por índice, fase desplazada.
+  Widget _bubble(
+      int i, double w, double h, double fillTop, Color base, bool isDark) {
+    final t = (_bubbles.value + i / 6) % 1.0; // fase propia por burbuja
+    final size = 8.0 + (i % 3) * 7.0; // 8, 15, 22
+    final x = w * (0.12 + (i * 0.15) % 0.76);
+    // Asciende desde el fondo hasta la superficie del agua
+    final travel = h - fillTop - size;
+    if (travel <= 0) return const SizedBox.shrink();
+    final y = h - size - travel * t;
+    // Se desvanece al acercarse a la superficie (spec: alpha 0.4–0.7)
+    final alpha = (0.7 - 0.3 * t) * (isDark ? 0.6 : 1.0);
+
+    return Positioned(
+      left: x,
+      top: y,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: base.withValues(alpha: alpha),
+        ),
+      ),
+    );
   }
 }

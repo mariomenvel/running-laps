@@ -12,6 +12,10 @@ class SessionLayout extends StatelessWidget {
   final Widget? footerButton;
   final bool safeArea;
 
+  /// Capa decorativa a pantalla completa entre el fondo del theme y el
+  /// contenido (p. ej. el "vaso llenándose" de la pantalla de descanso).
+  final Widget? backdrop;
+
   const SessionLayout({
     super.key,
     required this.theme,
@@ -19,6 +23,7 @@ class SessionLayout extends StatelessWidget {
     required this.body,
     this.footerButton,
     this.safeArea = true,
+    this.backdrop,
   });
 
   @override
@@ -57,6 +62,8 @@ class SessionLayout extends StatelessWidget {
             ),
           if (deco != null)
             Positioned.fill(child: IgnorePointer(child: deco)),
+          if (backdrop != null)
+            Positioned.fill(child: IgnorePointer(child: backdrop!)),
           content,
         ],
       ),
