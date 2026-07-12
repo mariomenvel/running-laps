@@ -149,7 +149,7 @@ class BlockTransitionScreen extends StatelessWidget {
             motivational,
             style: TextStyle(
               fontSize: 11,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: theme.primary(context),
               letterSpacing: 1.5,
             ),
@@ -204,7 +204,7 @@ class BlockTransitionScreen extends StatelessWidget {
                 _describeBlock(block),
                 style: TextStyle(
                   fontSize: 18,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary(context),
                 ),
               ),

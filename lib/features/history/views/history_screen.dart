@@ -261,7 +261,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                                     style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 9,
-                                        fontWeight: FontWeight.bold)),
+                                        fontWeight: FontWeight.w600)),
                               ),
                             ),
                           ),
@@ -511,7 +511,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                                     Text('Sin resultados',
                                         style: TextStyle(
                                             fontSize: 18,
-                                            fontWeight: FontWeight.w700,
+                                            fontWeight: FontWeight.w600,
                                             color: AppColors.textPrimary(
                                                 context))),
                                     const SizedBox(height: 8),

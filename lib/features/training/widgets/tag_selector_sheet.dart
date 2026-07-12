@@ -150,7 +150,7 @@ class _TagSelectorSheetState extends State<TagSelectorSheet> {
                   'Etiquetas',
                   style: TextStyle(
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary(context),
                   ),
                 ),
@@ -398,7 +398,7 @@ class _SectionLabel extends StatelessWidget {
       label.toUpperCase(),
       style: TextStyle(
         fontSize: 11,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w600,
         color: AppColors.iconMutedOf(context),
         letterSpacing: 1.1,
       ),
@@ -461,7 +461,7 @@ class _TagToggleChip extends StatelessWidget {
               style: TextStyle(
                 color: isSelected ? activeText : inactiveText,
                 fontWeight: isSelected
-                    ? FontWeight.w700
+                    ? FontWeight.w600
                     : FontWeight.w500,
                 fontSize: 14,
               ),

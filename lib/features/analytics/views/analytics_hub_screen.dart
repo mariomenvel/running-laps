@@ -150,10 +150,10 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
               dotColor    = const Color(0xFF639922);
               statusLabel = 'Fresco';
             } else if (tsb >= -30) {
-              dotColor    = const Color(0xFFEF9F27);
+              dotColor    = AppColors.rpeMid;
               statusLabel = 'Cargado';
             } else {
-              dotColor    = const Color(0xFFE24B4A);
+              dotColor    = AppColors.rpeMax;
               statusLabel = 'Fatigado';
             }
 
@@ -471,7 +471,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                             '${_fmtPace(s.y.toInt())}/km\n',
                             AppTypography.small.copyWith(
                                 color: AppColors.textPrimary(context),
-                                fontWeight: FontWeight.bold),
+                                fontWeight: FontWeight.w600),
                             children: [
                               TextSpan(
                                 text: date,
@@ -2108,7 +2108,7 @@ class _RecordRow extends StatelessWidget {
                         style: AppTypography.small.copyWith(
                             color: AppColors.rpeLow,
                             fontSize: 9,
-                            fontWeight: FontWeight.w700)),
+                            fontWeight: FontWeight.w600)),
                   )
                 else if (record!.deltaSec != null) ...[
                   Text(

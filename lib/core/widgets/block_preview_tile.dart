@@ -56,9 +56,9 @@ class BlockPreviewTile extends StatelessWidget {
       switch (block.targetZone!) {
         case 1: return const Color(0xFF639922);
         case 2: return const Color(0xFF378ADD);
-        case 3: return const Color(0xFFEF9F27);
-        case 4: return const Color(0xFFD85A30);
-        case 5: return const Color(0xFFE24B4A);
+        case 3: return AppColors.rpeMid;
+        case 4: return AppColors.rpeHigh;
+        case 5: return AppColors.rpeMax;
       }
     }
     return const Color(0xFF888780);
@@ -122,7 +122,7 @@ class BlockPreviewTile extends StatelessWidget {
             if (index != null) ...[
               Text('${index! + 1}',
                 style: TextStyle(
-                  fontSize: 13, fontWeight: FontWeight.w700,
+                  fontSize: 13, fontWeight: FontWeight.w600,
                   color: selected
                       ? AppColors.brand
                       : AppColors.textSecondary(context))),
@@ -169,9 +169,9 @@ class _ZoneChip extends StatelessWidget {
     switch (zone) {
       case 1: return const Color(0xFF639922);
       case 2: return const Color(0xFF378ADD);
-      case 3: return const Color(0xFFEF9F27);
-      case 4: return const Color(0xFFD85A30);
-      case 5: return const Color(0xFFE24B4A);
+      case 3: return AppColors.rpeMid;
+      case 4: return AppColors.rpeHigh;
+      case 5: return AppColors.rpeMax;
       default: return const Color(0xFF888780);
     }
   }

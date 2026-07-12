@@ -231,7 +231,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
               'NOTAS',
               style: TextStyle(
                   fontSize: 15,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: Theme.of(context).colorScheme.onSurface),
             ),
           ],
@@ -292,7 +292,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
             label.toUpperCase(),
             style: TextStyle(
               fontSize: 10,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
               letterSpacing: 0.8,
             ),
@@ -302,7 +302,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
             value,
             style: TextStyle(
               fontSize: 20,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
@@ -328,7 +328,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
             const SizedBox(width: 12),
             Text(
               "Desglose de Series",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
             ),
           ],
         ),
@@ -365,7 +365,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
                   child: Text(
                     "${index + 1}",
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                       fontSize: 13,
                     ),
@@ -380,11 +380,11 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
                         children: [
                           Text(
                             "${serie.distanciaM}m",
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                           ),
                           Text(
                             _formatDuration(serie.tiempoSec.round()),
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
@@ -446,7 +446,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
           'PLANIFICADO VS EJECUTADO',
           style: TextStyle(
             fontSize: 15,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
@@ -936,7 +936,7 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
                 color: Theme.of(context).brightness == Brightness.dark
                     ? AppColors.brandLight
                     : AppColors.brand,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
             ),

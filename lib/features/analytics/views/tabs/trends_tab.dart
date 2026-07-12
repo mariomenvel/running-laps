@@ -59,7 +59,7 @@ class TrendsTab extends StatelessWidget {
           'Mejores Marcas',
           style: TextStyle(
             fontSize: 24,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.onSurface,
             letterSpacing: -0.5,
           ),
@@ -161,7 +161,7 @@ class TrendsTab extends StatelessWidget {
             pace ?? '-',
             style: TextStyle(
               fontSize: 24,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: color,
               letterSpacing: -0.5,
             ),
@@ -180,7 +180,7 @@ class TrendsTab extends StatelessWidget {
           'Volumen Semanal',
           style: TextStyle(
             fontSize: 24,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.onSurface,
             letterSpacing: -0.5,
           ),
@@ -226,7 +226,7 @@ class TrendsTab extends StatelessWidget {
           'Evolución de Ritmo',
           style: TextStyle(
             fontSize: 24,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.onSurface,
             letterSpacing: -0.5,
           ),
@@ -338,7 +338,7 @@ class _WeeklyVolumeChart extends StatelessWidget {
                 const TextStyle(
                   color: Colors.white70,
                   fontSize: 10,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
                 children: [
                   TextSpan(
@@ -346,7 +346,7 @@ class _WeeklyVolumeChart extends StatelessWidget {
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -412,7 +412,7 @@ class _PaceEvolutionChart extends StatelessWidget {
                   const TextStyle(
                     color: Colors.white70,
                     fontSize: 10,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                   children: [
                     TextSpan(
@@ -420,7 +420,7 @@ class _PaceEvolutionChart extends StatelessWidget {
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],

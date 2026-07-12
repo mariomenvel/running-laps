@@ -197,7 +197,7 @@ class _AuthPageState extends State<AuthPage> {
                     'Recuperar contraseña',
                     style: TextStyle(
                       fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                     ),
                     textAlign: TextAlign.center,
@@ -237,7 +237,7 @@ class _AuthPageState extends State<AuthPage> {
                               localError!,
                               style: const TextStyle(
                                 color: AppColors.rpeMax,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 fontSize: 13,
                               ),
                             ),
@@ -266,7 +266,7 @@ class _AuthPageState extends State<AuthPage> {
                             ),
                             textStyle: const TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                           child: isLoading
@@ -290,7 +290,7 @@ class _AuthPageState extends State<AuthPage> {
                       'Cancelar',
                       style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                     ),
                   ),
@@ -465,7 +465,7 @@ class _AuthPageState extends State<AuthPage> {
                 elevation: 0,
                 textStyle: const TextStyle(
                   fontSize: 14,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   letterSpacing: 1.1,
                 ),
               ),
@@ -594,7 +594,7 @@ class _AuthPageState extends State<AuthPage> {
               '¿Olvidaste tu contraseña?',
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 decoration: TextDecoration.underline,
                 decorationColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
               ),
@@ -729,7 +729,7 @@ class _AuthPageState extends State<AuthPage> {
                 '¿Ya tienes cuenta? Iniciar sesión',
                 style: TextStyle(
                   color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             );

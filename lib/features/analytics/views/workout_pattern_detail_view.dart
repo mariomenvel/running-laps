@@ -55,7 +55,7 @@ class WorkoutPatternDetailView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   const Text("Evolución del Rendimiento", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                   const Text("Evolución del Rendimiento", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
                    const SizedBox(height: 24),
                    SizedBox(
                      height: 200,
@@ -70,7 +70,7 @@ class WorkoutPatternDetailView extends StatelessWidget {
             // History List
             Align(
               alignment: Alignment.centerLeft,
-              child: Text("Sesiones Realizadas", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5))),
+              child: Text("Sesiones Realizadas", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5))),
             ),
             const SizedBox(height: 12),
             
@@ -110,7 +110,7 @@ class WorkoutPatternDetailView extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: 24),
           const SizedBox(height: 8),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
           const SizedBox(height: 4),
           Text(title, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 11), textAlign: TextAlign.center),
         ],
@@ -150,7 +150,7 @@ class WorkoutPatternDetailView extends StatelessWidget {
                  children: [
                    Text(
                      "${instance.fecha.day}/${instance.fecha.month}/${instance.fecha.year}",
-                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                     style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                    ),
                    const SizedBox(height: 4),
                    Text(
@@ -173,7 +173,7 @@ class WorkoutPatternDetailView extends StatelessWidget {
                 children: [
                   Text(
                     WorkoutPattern.formatDuration(instance.entrenamiento.tiempoTotalSec()),
-                    style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.bold, fontSize: 16),
+                    style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.w600, fontSize: 16),
                   ),
                   Text(
                     "$pace /km",
@@ -235,7 +235,7 @@ class _PerformanceChart extends StatelessWidget {
                     final s = (val % 60).toInt();
                     return LineTooltipItem(
                        '$m:${s.toString().padLeft(2, '0')}', 
-                       const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                       const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                     );
                  }).toList();
              }

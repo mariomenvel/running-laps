@@ -320,7 +320,7 @@ class _CompleteSessionManuallyViewState
                       _sessionTitle(),
                       style: TextStyle(
                         fontSize: 20,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary(context),
                       ),
                     ),
@@ -392,7 +392,7 @@ class _CompleteSessionManuallyViewState
                   )
                 : const Text(
                     'GUARDAR SESIÓN',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                   ),
           ),
         ),
@@ -502,7 +502,7 @@ class _CompleteSessionManuallyViewState
               'S${index + 1}',
               style: TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 color: AppColors.brand,
               ),
             ),
@@ -643,7 +643,7 @@ class _CompleteSessionManuallyViewState
           required ? 'RPE GLOBAL' : 'RPE GLOBAL (calculado)',
           style: TextStyle(
             fontSize: 11,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             letterSpacing: 1.2,
             color: AppColors.textSecondary(context),
           ),
@@ -670,7 +670,7 @@ class _CompleteSessionManuallyViewState
           'NOTAS',
           style: TextStyle(
             fontSize: 11,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             letterSpacing: 1.2,
             color: AppColors.textSecondary(context),
           ),

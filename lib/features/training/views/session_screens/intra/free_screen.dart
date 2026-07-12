@@ -223,7 +223,7 @@ class FreeScreen extends StatelessWidget {
           'FINALIZAR CARRERA',
           style: TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             letterSpacing: 0.5,
           ),
         ),

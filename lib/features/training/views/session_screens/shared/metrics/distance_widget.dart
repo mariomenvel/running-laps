@@ -35,7 +35,7 @@ class DistanceWidget extends StatelessWidget {
                 text: _format(meters),
                 style: TextStyle(
                   fontSize: hero ? 96 : fontSize,
-                  fontWeight: hero ? FontWeight.w800 : FontWeight.w700,
+                  fontWeight: hero ? FontWeight.w800 : FontWeight.w600,
                   color: AppColors.textPrimary(context),
                   height: 1.0,
                 ),

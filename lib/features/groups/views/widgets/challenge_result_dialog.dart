@@ -140,7 +140,7 @@ class _ChallengeResultDialogState extends State<ChallengeResultDialog> {
                                 : "¡Genial!",
                               style: const TextStyle(
                                 fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),

@@ -22,7 +22,7 @@ class FartlekStatsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('TRAMOS DEL FARTLEK',
-              style: TextStyle(fontSize: 11, letterSpacing: 2.0, fontWeight: FontWeight.w700, color: accentColor)),
+              style: TextStyle(fontSize: 11, letterSpacing: 2.0, fontWeight: FontWeight.w600, color: accentColor)),
           const SizedBox(height: 16),
 
           // Rápidos
@@ -36,7 +36,7 @@ class FartlekStatsCard extends StatelessWidget {
               const Icon(Icons.local_fire_department_rounded, color: Color(0xFFE76F51), size: 20),
               const SizedBox(width: 10),
               const Expanded(child: Text('Tramos rápidos',
-                  style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFFE76F51)))),
+                  style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFFE76F51)))),
               Text('${stats.fastSegmentsCount}',
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFFE76F51))),
             ]),
@@ -60,7 +60,7 @@ class FartlekStatsCard extends StatelessWidget {
               const Icon(Icons.ac_unit_rounded, color: AppColors.rest, size: 20),
               const SizedBox(width: 10),
               const Expanded(child: Text('Tramos suaves',
-                  style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.rest))),
+                  style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.rest))),
               Text('${stats.slowSegmentsCount}',
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.rest)),
             ]),

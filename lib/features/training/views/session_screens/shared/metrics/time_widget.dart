@@ -37,7 +37,7 @@ class TimeWidget extends StatelessWidget {
       _format(elapsed),
       style: TextStyle(
         fontSize: hero ? 88 : fontSize,
-        fontWeight: hero ? FontWeight.w800 : FontWeight.w700,
+        fontWeight: hero ? FontWeight.w800 : FontWeight.w600,
         color: AppColors.textPrimary(context),
         height: 1.0,
         letterSpacing: -1.0,

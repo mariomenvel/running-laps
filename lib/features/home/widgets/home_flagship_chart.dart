@@ -87,7 +87,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
               "Rendimiento",
               style: TextStyle(
                 fontSize: 20,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.onSurface,
                 letterSpacing: -0.5,
               ),
@@ -234,7 +234,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
                 '${data.label}\n',
                 TextStyle(
                   color: Theme.of(context).colorScheme.onSurface,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
                 children: [

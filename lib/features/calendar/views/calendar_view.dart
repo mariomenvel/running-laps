@@ -356,7 +356,7 @@ class _CalendarViewState extends State<CalendarView>
                               '$remaining/$limit',
                               style: TextStyle(
                                 fontSize: 12,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                                 color: color,
                               ),
                             ),
@@ -1015,7 +1015,7 @@ class _CalendarViewState extends State<CalendarView>
                               '${day.day}',
                               style: AppTypography.body.copyWith(
                                 color: AppColors.textPrimary(context),
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
@@ -1688,7 +1688,7 @@ class _CalendarViewState extends State<CalendarView>
               style: AppTypography.small.copyWith(
                 color: AppColors.iconMutedOf(context),
                 letterSpacing: 1.2,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: AppSpacing.m),
@@ -2100,7 +2100,7 @@ class _CalendarViewState extends State<CalendarView>
     switch (s) {
       case AthleteSessionStatus.planned:   return AppColors.brand;
       case AthleteSessionStatus.completed: return AppColors.rpeLow;
-      case AthleteSessionStatus.skipped:   return AppColors.rpeMax;
+      case AthleteSessionStatus.skipped:   return AppColors.rpeMax.withValues(alpha: 0.6); // spec: saltada al 60%
     }
   }
 

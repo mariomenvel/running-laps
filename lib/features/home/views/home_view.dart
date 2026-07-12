@@ -419,7 +419,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                           _feedbackBannerTitle(),
                           style: TextStyle(
                             fontSize: 14,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary(context),
                           ),
                         ),
@@ -483,7 +483,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                         'No tienes plan para esta semana',
                         style: TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary(context),
                         ),
                       ),
@@ -554,7 +554,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                         'Activa tu entrenador IA',
                         style: TextStyle(
                           fontSize: 15,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary(context),
                         ),
                       ),
@@ -597,7 +597,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                       style: AppTypography.small.copyWith(
                         color: AppColors.brand,
                         letterSpacing: 1.2,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ]),
@@ -798,7 +798,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                   style: AppTypography.small.copyWith(
                     color: AppColors.iconMutedOf(context),
                     letterSpacing: 1.2,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.m),
@@ -935,7 +935,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                         style: AppTypography.small.copyWith(
                           color: AppColors.iconMutedOf(context),
                           letterSpacing: 1.2,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.m),
@@ -1095,7 +1095,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
               style: AppTypography.small.copyWith(
                 color: AppColors.brand,
                 letterSpacing: 1.2,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ]),
@@ -1151,7 +1151,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
               style: AppTypography.small.copyWith(
                 color: AppColors.iconMutedOf(context),
                 letterSpacing: 1.2,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: AppSpacing.m),
@@ -1213,7 +1213,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                   style: AppTypography.small.copyWith(
                     color: AppColors.iconMutedOf(context),
                     letterSpacing: 1.2,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const Spacer(),

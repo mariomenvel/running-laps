@@ -56,7 +56,7 @@ class FilterBadgeButton extends StatelessWidget {
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 10,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),

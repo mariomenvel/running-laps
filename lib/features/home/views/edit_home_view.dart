@@ -122,7 +122,7 @@ class _EditHomeViewState extends State<EditHomeView> {
                 badge,
                 style: const TextStyle(
                   fontSize: 11,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.brand,
                 ),
               ),
@@ -358,7 +358,7 @@ class _EditHomeViewState extends State<EditHomeView> {
               '—',
               style: TextStyle(
                 fontSize: 20,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25),
               ),
             ),

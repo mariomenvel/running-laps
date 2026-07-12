@@ -157,7 +157,7 @@ class _StandardTableCalendarState<T extends Object>
           ),
           todayTextStyle: TextStyle(
             color: brandColor,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             fontSize: 15,
           ),
 
@@ -175,7 +175,7 @@ class _StandardTableCalendarState<T extends Object>
           ),
           selectedTextStyle: const TextStyle(
             color: Colors.white,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             fontSize: 15,
           ),
 
@@ -191,11 +191,11 @@ class _StandardTableCalendarState<T extends Object>
           ),
           rangeStartTextStyle: const TextStyle(
             color: Colors.white,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
           ),
           rangeEndTextStyle: const TextStyle(
             color: Colors.white,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
           ),
           withinRangeDecoration: const BoxDecoration(
             color: Colors.transparent,

@@ -121,7 +121,7 @@ class AdminChallengesTab extends StatelessWidget {
                   challenge.title,
                   style: TextStyle(
                     fontSize: 15,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     color: cs.onSurface,
                   ),
                   maxLines: 2,
@@ -204,7 +204,7 @@ class AdminChallengesTab extends StatelessWidget {
                       SizedBox(width: 6),
                       Text('Publicar',
                           style: TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.w700)),
+                              fontSize: 12, fontWeight: FontWeight.w600)),
                     ],
                   ),
                 ),

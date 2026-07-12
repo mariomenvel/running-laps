@@ -82,7 +82,7 @@ class ModernSnackBar {
     _show(
       context,
       message,
-      backgroundColor: backgroundColor ?? const Color(0xFF8E24AA),
+      backgroundColor: backgroundColor ?? AppColors.brand,
       icon: icon,
       duration: duration,
     );

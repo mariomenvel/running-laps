@@ -39,7 +39,7 @@ class TagChip extends StatelessWidget {
               style: TextStyle(
                 color: style.text,
                 fontSize: small ? 11 : 13,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
               ),
             ),
             if (onDelete != null) ...[

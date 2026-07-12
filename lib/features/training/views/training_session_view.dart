@@ -1120,7 +1120,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                   _tiempoMostrado,
                   style: TextStyle(
                     fontSize: showGpsStats ? 50 : 72,
-                    fontWeight: showGpsStats ? FontWeight.w300 : FontWeight.bold,
+                    fontWeight: showGpsStats ? FontWeight.w300 : FontWeight.w600,
                     color: Theme.of(context).colorScheme.onSurface.withValues(alpha: showGpsStats ? 0.35 : 1.0),
                     height: 1.0,
                     fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
@@ -1187,7 +1187,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                     text: km.toStringAsFixed(2),
                     style: TextStyle(
                       fontSize: 96,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: Theme.of(context).colorScheme.onSurface,
                       letterSpacing: -4,
                       height: 1.0,
@@ -1295,7 +1295,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                       paceDisplay,
                       style: TextStyle(
                         fontSize: 44,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                         color: Theme.of(context).colorScheme.onSurface,
                         letterSpacing: -1,
                         height: 1.0,
@@ -1473,7 +1473,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
               _tiempoMostrado,
               style: TextStyle(
                 fontSize: 88,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.onSurface,
                 letterSpacing: -3,
                 height: 1.0,
@@ -1631,7 +1631,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
               value,
               style: TextStyle(
                 fontSize: large ? 52 : 24,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: large ? AppColors.brand : Theme.of(context).colorScheme.onSurface,
                 letterSpacing: large ? -2.0 : -0.5,
                 height: 1.0,
@@ -1689,7 +1689,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
               label,
               style: const TextStyle(
                 fontSize: 17,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: Colors.white,
                 letterSpacing: 0.3,
               ),
@@ -1751,7 +1751,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                         'Serie $serieNum',
                         style: TextStyle(
                           fontSize: 20,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           color: Theme.of(ctx).colorScheme.onSurface,
                         ),
                       ),
@@ -1796,7 +1796,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                       ),
                       CupertinoButton(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text("Listo", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontSize: 17, fontWeight: FontWeight.bold)),
+                        child: Text("Listo", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontSize: 17, fontWeight: FontWeight.w600)),
                         onPressed: () => Navigator.of(context).pop(true),
                       ),
                     ],
@@ -1910,7 +1910,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
 
                Text(
                  'Confirma la Distancia',
-                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Theme.of(ctx).colorScheme.onSurface),
+                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: Theme.of(ctx).colorScheme.onSurface),
                  textAlign: TextAlign.center,
                ),
                const SizedBox(height: 8),
@@ -1945,9 +1945,9 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                            children: [
                              const Icon(Icons.edit_road, size: 32, color: AppColors.brand),
                              const SizedBox(height: 12),
-                             Text("MANUAL", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.5), letterSpacing: 1)),
+                             Text("MANUAL", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.5), letterSpacing: 1)),
                              const SizedBox(height: 4),
-                             Text("$_distanciaInt m", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(ctx).colorScheme.onSurface)),
+                             Text("$_distanciaInt m", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Theme.of(ctx).colorScheme.onSurface)),
                            ],
                          ),
                        ),
@@ -1979,9 +1979,9 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                              children: [
                                Icon(Icons.gps_fixed, size: 32, color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
                                const SizedBox(height: 12),
-                               Text("GPS", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, letterSpacing: 1)),
+                               Text("GPS", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, letterSpacing: 1)),
                                const SizedBox(height: 4),
-                               Text("$distanciaGps m", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(ctx).colorScheme.onSurface)),
+                               Text("$distanciaGps m", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Theme.of(ctx).colorScheme.onSurface)),
                              ],
                            ),
                          ),

@@ -353,7 +353,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                             Text(
                               isCompleted ? "¡COMPLETADO!" : "PROGRESO",
                               style: TextStyle(
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: isCompleted
                                     ? AppColors.rpeLow.withValues(alpha: 0.7)
                                     : accent.withValues(alpha: 0.6),
@@ -417,7 +417,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
                         "¡Lo conseguiste!",
                         style: TextStyle(
                           color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           fontSize: 15,
                         ),
                       ),
@@ -558,7 +558,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
         '$rank',
         style: TextStyle(
           color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
           fontSize: 16,
         ),
       );
@@ -644,7 +644,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
               _formatScore(participant.score, challenge.metric),
               style: TextStyle(
                 color: isMe ? Colors.white : Theme.of(context).colorScheme.onSurface,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
             ),
@@ -729,7 +729,7 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
               "Volver",
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
             ),

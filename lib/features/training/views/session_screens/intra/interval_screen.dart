@@ -96,7 +96,7 @@ class IntervalScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   letterSpacing: 2.0,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   color: theme.primary(context),
                 ),
               ),
@@ -320,7 +320,7 @@ class IntervalScreen extends StatelessWidget {
           'FINALIZAR SERIE',
           style: TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             letterSpacing: 0.5,
           ),
         ),

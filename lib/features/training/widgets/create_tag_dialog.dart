@@ -122,7 +122,7 @@ class _CreateTagDialogState extends State<CreateTagDialog> with SingleTickerProv
             'Nueva Etiqueta',
             style: TextStyle(
               fontSize: 24,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: Colors.black87,
             ),
           ),
@@ -305,7 +305,7 @@ class _CreateTagDialogState extends State<CreateTagDialog> with SingleTickerProv
                           'Crear',
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                 ),

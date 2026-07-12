@@ -770,7 +770,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
               '¿Descartar entrenamiento?',
               style: TextStyle(
                 fontSize: 22,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.onSurface,
               ),
               textAlign: TextAlign.center,
@@ -808,7 +808,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                   'Descartar',
                   style: TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -903,7 +903,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     'Guardar Entrenamiento',
                     style: TextStyle(
                       fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
                     textAlign: TextAlign.center,
@@ -933,7 +933,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                   // -- SECCIÓN ETIQUETAS --
                   const Text(
                     'Etiquetas',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                   ),
                   const SizedBox(height: 8),
                   FutureBuilder<List<TrainingTag>>(
@@ -967,7 +967,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                                 'Error al cargar etiquetas',
                                 style: TextStyle(
                                   color: AppColors.rpeMax,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                   fontSize: 14,
                                 ),
                               ),
@@ -1029,7 +1029,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                                 tag.name,
                                 style: TextStyle(
                                   color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                                 ),
                               ),
                               selected: isSelected,
@@ -1071,7 +1071,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     ),
                     child: const Text(
                       'Guardar y Terminar',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                     ),
                     onPressed: () {
                       final String trainingName = _trainingNameController.text;
@@ -1595,7 +1595,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
            const SizedBox(height: 24),
            const Text(
              "Carrera Continua",
-             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+             style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
            ),
            const SizedBox(height: 12),
            Text(
@@ -1615,7 +1615,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                  shadowColor: AppColors.brand.withValues(alpha: 0.5),
                ),
                icon: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 32),
-               label: const Text("EMPEZAR AHORA", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1)),
+               label: const Text("EMPEZAR AHORA", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 1)),
                onPressed: _startContinuousRun,
              ),
            ),
@@ -1661,7 +1661,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     'Series Guardadas',
                     style: TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
@@ -1709,7 +1709,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     'Series Guardadas',
                     style: TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
@@ -2761,7 +2761,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     "PLANTILLA ACTIVA",
                     style: TextStyle(
                       fontSize: 11,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                       letterSpacing: 1.5,
                     ),
@@ -2791,7 +2791,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     template.name,
                     style: TextStyle(
                       fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
@@ -2815,7 +2815,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                         side: BorderSide(color: _brandAccentColor.withValues(alpha: 0.3)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5),
+                        textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, letterSpacing: 0.5),
                       ),
                     ),
                   ),
@@ -2840,7 +2840,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
               value,
               style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
@@ -2850,7 +2850,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
           label.toUpperCase(),
           style: TextStyle(
             fontSize: 9,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             letterSpacing: 0.5,
           ),
@@ -2950,7 +2950,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                               ),
                               child: Text(
                                 'Cancelar',
-                                style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.bold),
+                                style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.w600),
                               ),
                             ),
                           ),
@@ -2977,7 +2977,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                                   padding: const EdgeInsets.symmetric(vertical: 16),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                 ),
-                                child: const Text('Sí, borrar', style: TextStyle(fontWeight: FontWeight.bold)),
+                                child: const Text('Sí, borrar', style: TextStyle(fontWeight: FontWeight.w600)),
                               ),
                             ),
                           ),
@@ -3032,7 +3032,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                       '${i + 1}',
                       style: const TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         color: Colors.white,
                       ),
                     ),
@@ -3256,7 +3256,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
               value,
               style: TextStyle(
                 fontSize: 28.0,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
               ),
             ),
@@ -3286,7 +3286,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text("Distancia de la serie", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text("Distancia de la serie", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                   IconButton(
                     icon: Icon(Icons.keyboard, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
                     onPressed: () {
@@ -3315,7 +3315,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                 },
                 children: [
                   ...List.generate(100, (index) => Center(child: Text("${(index + 1) * 50}m"))),
-                  Center(child: Text("Otro...", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.bold))),
+                  Center(child: Text("Otro...", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.w600))),
                 ],
               ),
             ),
@@ -3340,7 +3340,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                    
                    // Verificar si quedó en "Otro..." podríamos hacerlo controlando el índice scroll
                 },
-                child: const Text("Seleccionar", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: const Text("Seleccionar", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
               ),
             ),
           ],
@@ -3369,7 +3369,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text("Tiempo de descanso", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text("Tiempo de descanso", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                   IconButton(
                     icon: Icon(Icons.keyboard, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
                     onPressed: () {
@@ -3397,7 +3397,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                 },
                 children: [
                   ...List.generate(61, (index) => Center(child: Text(_formatMinSec(index * 5)))),
-                  Center(child: Text("Otro...", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.bold))),
+                  Center(child: Text("Otro...", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.w600))),
                 ],
               ),
             ),
@@ -3420,7 +3420,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     // Como no trackeamos index aquí facilmente sin otro estado, asumimos botón teclado.
                     Navigator.pop(context);
                  },
-                 child: const Text("Seleccionar", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                 child: const Text("Seleccionar", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
                ),
              ),
           ],
@@ -3493,7 +3493,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     isDistance ? 'Distancia Manual' : 'Descanso Manual',
                     style: TextStyle(
                       fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
@@ -3630,7 +3630,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                             'Aceptar',
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
@@ -3701,7 +3701,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                       'Avisos de Ritmo',
                       style: TextStyle(
                         fontSize: 16.0,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         color: _alarmEnabled ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
@@ -3809,11 +3809,11 @@ class _TrainingStartViewState extends State<TrainingStartView>
                       children: [
                         const Text(
                           "Configurar Alarma",
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: Text("Listo", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.bold)),
+                          child: Text("Listo", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.w600)),
                         )
                       ],
                     ),
@@ -3957,7 +3957,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
           ),
         ),
         const SizedBox(height: 20),
-        const Text("Sonar cada:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        const Text("Sonar cada:", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
         const SizedBox(height: 8),
         SizedBox(
           height: 140,
@@ -4048,7 +4048,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                     'Registro GPS',
                     style: TextStyle(
                       fontSize: 16.0,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: _vm.gpsOn ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
@@ -4147,7 +4147,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                         isConnected ? deviceName : 'Pulsómetro',
                         style: TextStyle(
                           fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: isConnected
                               ? Theme.of(context).colorScheme.onSurface
                               : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
@@ -4398,7 +4398,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                   '${_restSecondsRemaining}s',
                   style: const TextStyle(
                     fontSize: 96,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     color: Color(0xFF1A3A5A),
                     height: 1.0,
                   ),
@@ -4476,7 +4476,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                         _restRpe.toStringAsFixed(1),
                         style: TextStyle(
                           fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: _rpeColor(_restRpe),
                         ),
                         textAlign: TextAlign.center,
@@ -4696,7 +4696,7 @@ class _LinkSessionSheet extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: Text(
                 '¿Vincular con sesión planificada?',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
               ),
             ),
             const SizedBox(height: 4),
@@ -4877,7 +4877,7 @@ class _RestStat extends StatelessWidget {
           value,
           style: const TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             color: Color(0xFF1A3A5A),
           ),
         ),
@@ -5030,7 +5030,7 @@ class _CountdownDialogState extends State<_CountdownDialog>
             '$_count',
             style: const TextStyle(
               fontSize: 120,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: Colors.white,
             ),
           ),

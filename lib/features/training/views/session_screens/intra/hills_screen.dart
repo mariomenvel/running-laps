@@ -77,7 +77,7 @@ class HillsScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   letterSpacing: 2.0,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   color: theme.primary(context),
                 ),
               ),
@@ -247,7 +247,7 @@ class HillsScreen extends StatelessWidget {
                       '$_targetRpe / 10',
                       style: TextStyle(
                         fontSize: 22,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                         color:
                             AppColors.effortColor(_targetRpe!.toDouble()),
                       ),
@@ -307,7 +307,7 @@ class HillsScreen extends StatelessWidget {
           'COMPLETAR SUBIDA',
           style: TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             letterSpacing: 0.5,
           ),
         ),

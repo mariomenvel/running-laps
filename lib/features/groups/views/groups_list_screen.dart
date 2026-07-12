@@ -360,7 +360,7 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
         title.toUpperCase(),
         style: TextStyle(
           fontSize: 12,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
           letterSpacing: 1.2,
           color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
         ),
@@ -504,7 +504,7 @@ class _CreateGroupModal extends StatelessWidget {
                     "Crear Grupo",
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -1072,7 +1072,7 @@ class _JoinByCodeSheetState extends State<_JoinByCodeSheet> {
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
             ),
@@ -1231,7 +1231,7 @@ class _InvitationCardState extends State<_InvitationCard> {
                                   foregroundColor: Colors.white.withValues(alpha: 0.8),
                                   padding: const EdgeInsets.symmetric(vertical: 12),
                                 ),
-                                child: const Text("Declinar", style: TextStyle(fontWeight: FontWeight.w700)),
+                                child: const Text("Declinar", style: TextStyle(fontWeight: FontWeight.w600)),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -1408,7 +1408,7 @@ class _PremiumFloatingActionButtonState extends State<_PremiumFloatingActionButt
                   widget.label,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     fontSize: 16,
                   ),
                 ),

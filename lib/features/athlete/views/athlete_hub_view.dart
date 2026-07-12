@@ -791,7 +791,7 @@ class _ExecutedSessionDetailState extends State<_ExecutedSessionDetail> {
                   const SizedBox(width: 8),
                   Text(title,
                       style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w700)),
+                          fontSize: 16, fontWeight: FontWeight.w600)),
                   const SizedBox(width: 8),
                   Text(widget.session.date,
                       style: TextStyle(fontSize: 13, color: secondary)),
@@ -845,7 +845,7 @@ class _ExecutedSessionDetailState extends State<_ExecutedSessionDetail> {
                               ? _fmtPace(execPaceSec)
                               : '—',
                           style: const TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w700),
+                              fontSize: 13, fontWeight: FontWeight.w600),
                         ),
                         if (deltaSec != null) ...[
                           const SizedBox(width: 8),
@@ -1329,7 +1329,7 @@ class _PlanningTabState extends State<_PlanningTab> {
                                               '¿Cómo fue la semana?',
                                               style: TextStyle(
                                                 fontSize: 14,
-                                                fontWeight: FontWeight.w700,
+                                                fontWeight: FontWeight.w600,
                                                 color: AppColors.textPrimary(
                                                     context),
                                               ),
@@ -1800,7 +1800,7 @@ class _ProgressGroupCard extends StatelessWidget {
                 child: Text(
                   '${_distLabel(group.baseDistanceM)}  ·  ${group.count} series',
                   style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w700),
+                      fontSize: 14, fontWeight: FontWeight.w600),
                 ),
               ),
               if (trend != null) _TrendBadge(improving: trend! > 0),
@@ -1861,7 +1861,7 @@ class _TrendBadge extends StatelessWidget {
           Text(label,
               style: TextStyle(
                   fontSize: 11,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   color: color)),
         ],
       ),
@@ -1898,7 +1898,7 @@ class _DeltaBadge extends StatelessWidget {
       child: Text(label,
           style: TextStyle(
               fontSize: 11,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: color)),
     );
   }
@@ -1941,7 +1941,7 @@ class _WeekStatChip extends StatelessWidget {
             const SizedBox(height: 6),
             Text(value,
                 style: const TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.w700)),
+                    fontSize: 15, fontWeight: FontWeight.w600)),
             Text(label,
                 style: const TextStyle(
                     fontSize: 11, color: Color(0xFF8E8E93))),
@@ -1995,7 +1995,7 @@ class _WeeklyBarChart extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 8,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.brand,
                   ),
                 ),
@@ -2103,7 +2103,7 @@ class _UpcomingSessionCard extends StatelessWidget {
                 Text(dayNum,
                     style: const TextStyle(
                         fontSize: 18,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                         color: AppColors.brand)),
                 Text(monthStr,
                     style: const TextStyle(
@@ -2837,7 +2837,7 @@ class _RpeVsPaceHalfCard extends StatelessWidget {
               Text(pace,
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     color: valuePaceColor,
                   )),
             ],

@@ -335,7 +335,7 @@ class _AiCoachWeeklyFeedbackViewState
                               'Generando plan...',
                               style: TextStyle(
                                 fontSize: 16,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
@@ -357,7 +357,7 @@ class _AiCoachWeeklyFeedbackViewState
                                   'Guardando...',
                                   style: TextStyle(
                                     fontSize: 16,
-                                    fontWeight: FontWeight.w700,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],
@@ -366,7 +366,7 @@ class _AiCoachWeeklyFeedbackViewState
                               'Enviar al coach',
                               style: TextStyle(
                                 fontSize: 16,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                 ),
@@ -408,7 +408,7 @@ class _AiCoachWeeklyFeedbackViewState
           label,
           style: TextStyle(
             fontSize: 13,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
             color: selected
                 ? AppColors.brand
                 : AppColors.textSecondary(context),
@@ -439,7 +439,7 @@ class _AiCoachWeeklyFeedbackViewState
           label,
           style: TextStyle(
             fontSize: 13,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
             color: selected
                 ? AppColors.brand
                 : AppColors.textSecondary(context),

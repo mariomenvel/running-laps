@@ -52,7 +52,7 @@ class AdminDashboardTab extends StatelessWidget {
                 children: [
                   const Text(
                     "Estado de la Comunidad",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                   ),
                   TextButton.icon(
                     onPressed: () => _showExportDialog(context, controller),
@@ -86,7 +86,7 @@ class AdminDashboardTab extends StatelessWidget {
               // --- SECCIÓN 1: USUARIOS ---
               const Text(
                 "Usuarios",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 16),
               Row(
@@ -110,7 +110,7 @@ class AdminDashboardTab extends StatelessWidget {
                         "${activePct.toStringAsFixed(0)}%",
                         "$activeCount de $total usuarios han entrenado este mes",
                         Icons.local_fire_department,
-                        Colors.deepOrange,
+                        AppColors.effort,
                       );
                     }
                   ),
@@ -134,7 +134,7 @@ class AdminDashboardTab extends StatelessWidget {
               // --- SECCIÓN 2: RETOS ---
                const Text(
                 "Retos",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 16),
               Row(
@@ -202,7 +202,7 @@ class AdminDashboardTab extends StatelessWidget {
               // --- SECCIÓN 3: ANALÍTICAS DE NEGOCIO ---
               const Text(
                 "Analíticas de Negocio",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 16),
               Row(
@@ -249,7 +249,7 @@ class AdminDashboardTab extends StatelessWidget {
               // --- SECCIÓN 4: ENGAGEMENT & MÉTRICAS ---
               const Text(
                 "Engagement & Métricas",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 16),
               
@@ -329,7 +329,7 @@ class AdminDashboardTab extends StatelessWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: AppColors.rpeLow.withValues(alpha: 0.3))),
                 child: const ListTile(
                   leading: Icon(Icons.check_circle, color: AppColors.rpeLow),
-                  title: Text("Sistema Operacional", style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.rpeLow)),
+                  title: Text("Sistema Operacional", style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.rpeLow)),
                   subtitle: Text("Todos los servicios funcionando correctamente"),
                 ),
               ),
@@ -440,7 +440,7 @@ class AdminDashboardTab extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   title,
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: cs.onSurface),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface),
                 ),
                 const SizedBox(height: 4),
                 Expanded(
@@ -496,7 +496,7 @@ class AdminDashboardTab extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   "Esfuerzo Medio (RPE)",
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: cs.onSurface),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface),
                 ),
                 const SizedBox(height: 4),
                 Expanded(
@@ -526,7 +526,7 @@ class AdminDashboardTab extends StatelessWidget {
       selectedColor: cs.onSurface,
       labelStyle: TextStyle(
         color: isSelected ? cs.surface : cs.onSurface,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
@@ -581,7 +581,7 @@ class AdminDashboardTab extends StatelessWidget {
       selectedColor: cs.onSurface,
       labelStyle: TextStyle(
         color: isSelected ? cs.surface : cs.onSurface,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
@@ -653,7 +653,7 @@ class AdminDashboardTab extends StatelessWidget {
                     const SizedBox(height: 15),
                     const Text(
                       "Exportar Reporte Premium",
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
@@ -667,7 +667,7 @@ class AdminDashboardTab extends StatelessWidget {
                     // Date Range Section
                     Text(
                       "Rango de Fechas",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface.withValues(alpha: 0.5)),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
                     ),
                     const SizedBox(height: 12),
                     InkWell(
@@ -703,7 +703,7 @@ class AdminDashboardTab extends StatelessWidget {
                             const SizedBox(width: 12),
                             Text(
                               "${DateFormat('dd/MM/yyyy').format(exportRange.start)} - ${DateFormat('dd/MM/yyyy').format(exportRange.end)}",
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+                              style: TextStyle(fontWeight: FontWeight.w600, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
                             ),
                             const Spacer(),
                             Icon(Icons.edit, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 18),
@@ -720,7 +720,7 @@ class AdminDashboardTab extends StatelessWidget {
                       children: [
                         Text(
                           "Métricas a incluir",
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface.withValues(alpha: 0.5)),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
                         ),
                         TextButton(
                           onPressed: () {
@@ -772,7 +772,7 @@ class AdminDashboardTab extends StatelessWidget {
                                 Text(
                                   entry.value,
                                   style: TextStyle(
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                                     color: isSelected ? cs.onSurface : cs.onSurface.withValues(alpha: 0.5),
                                   ),
                                 ),
@@ -810,7 +810,7 @@ class AdminDashboardTab extends StatelessWidget {
                             },
                       child: const Text(
                         "Generar PDF",
-                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),

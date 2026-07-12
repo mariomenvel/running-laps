@@ -194,7 +194,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     ),
                     child: Text(
                       'Cancelar',
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.bold),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
@@ -252,7 +252,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                           ),
                           child: isLoading
                             ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                            : const Text('GUARDAR', style: TextStyle(fontWeight: FontWeight.bold)),
+                            : const Text('GUARDAR', style: TextStyle(fontWeight: FontWeight.w600)),
                         ),
                       );
                     }
@@ -413,7 +413,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                             ),
                             child: Text(
                               'Cancelar',
-                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.bold),
+                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.w600),
                             ),
                           ),
                         ),
@@ -464,7 +464,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                                   ),
                                   child: isLoading
                                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                    : const Text('CAMBIAR', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    : const Text('CAMBIAR', style: TextStyle(fontWeight: FontWeight.w600)),
                                 ),
                               );
                             }
@@ -625,7 +625,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     ),
                     child: Text(
                       'Cancelar',
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.bold),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
@@ -678,7 +678,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                           ),
                           child: isLoading
                             ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                            : const Text('BORRAR', style: TextStyle(fontWeight: FontWeight.bold)),
+                            : const Text('BORRAR', style: TextStyle(fontWeight: FontWeight.w600)),
                         ),
                       );
                     }
@@ -704,7 +704,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
         style: TextStyle(
           color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
           fontSize: 12,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
           letterSpacing: 1.2,
         ),
       ),
@@ -1096,7 +1096,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                         label,
                         style: TextStyle(
                           fontSize: 15,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           color: isSel
                               ? Colors.white
                               : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),

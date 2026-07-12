@@ -99,7 +99,7 @@ class PatternsTab extends StatelessWidget {
       children: [
         Text(
           title,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
         ),
         if (helpText != null) ...[
           const SizedBox(width: 8),
@@ -179,7 +179,7 @@ class SeriesPatternCard extends StatelessWidget {
                        Text(
                           pattern.distanceFormatted,
                           style: const TextStyle(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             fontSize: 20,
                             letterSpacing: -0.5,
                           ),
@@ -234,7 +234,7 @@ Widget _buildMetric(BuildContext context, String label, String value, {String? s
              Text(
                value,
                style: const TextStyle(
-                 fontWeight: FontWeight.bold,
+                 fontWeight: FontWeight.w600,
                  fontSize: 22,
                  letterSpacing: -0.5,
                ),
@@ -335,7 +335,7 @@ class WorkoutPatternCard extends StatelessWidget {
                            child: Text(
                               title,
                               style: const TextStyle(
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 fontSize: 18,
                                 letterSpacing: -0.5,
                               ),

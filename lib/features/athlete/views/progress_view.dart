@@ -41,7 +41,7 @@ class _ProgressViewState extends State<ProgressView> {
           AppHeader(
             title: const Text(
               'Progreso',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
             ),
           ),
           Expanded(
@@ -264,7 +264,7 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
     );
   }
 }
@@ -347,7 +347,7 @@ class _PersonalRecordCard extends StatelessWidget {
               '—',
               style: TextStyle(
                 fontSize: 22,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 color: Color(0xFFAAAAAA),
               ),
             ),
@@ -396,7 +396,7 @@ class _SeriesProgressCard extends StatelessWidget {
                 child: Text(
                   '${_distLabel(group.baseDistanceM)}  ·  ${group.count} series',
                   style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w700),
+                      fontSize: 14, fontWeight: FontWeight.w600),
                 ),
               ),
               if (trend != null)
@@ -465,7 +465,7 @@ class _TrendBadge extends StatelessWidget {
           const SizedBox(width: 3),
           Text(label,
               style: TextStyle(
-                  fontSize: 11, fontWeight: FontWeight.w700, color: color)),
+                  fontSize: 11, fontWeight: FontWeight.w600, color: color)),
         ],
       ),
     );
@@ -599,7 +599,7 @@ class _VolumeChart extends StatelessWidget {
                   style: TextStyle(
                     fontSize:   isCurrent ? 9 : 8,
                     fontWeight:
-                        isCurrent ? FontWeight.w700 : FontWeight.w400,
+                        isCurrent ? FontWeight.w600 : FontWeight.w400,
                     color: isCurrent
                         ? AppColors.brand
                         : const Color(0xFFAAAAAA),
@@ -805,7 +805,7 @@ class _PveCard extends StatelessWidget {
                     _execPaceLabel(),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.w700),
+                        fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                 ),
                 Expanded(
@@ -814,7 +814,7 @@ class _PveCard extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize:   14,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color:      _deltaColor(deviation!),
                     ),
                   ),
@@ -846,12 +846,12 @@ class _PveCard extends StatelessWidget {
           return Text('$minStr–$maxStr',
               textAlign: TextAlign.center,
               style: const TextStyle(
-                  fontSize: 13, fontWeight: FontWeight.w700));
+                  fontSize: 13, fontWeight: FontWeight.w600));
         }
         return Text('$minStr /km',
             textAlign: TextAlign.center,
             style: const TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w700));
+                fontSize: 14, fontWeight: FontWeight.w600));
       }
     }
     return Text('—',

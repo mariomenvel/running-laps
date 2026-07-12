@@ -461,7 +461,7 @@ class _ManualSerieCard extends StatelessWidget {
                   child: Center(
                     child: Text('${index + 1}',
                         style: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w700,
+                            fontSize: 12, fontWeight: FontWeight.w600,
                             color: AppColors.brand)),
                   ),
                 ),

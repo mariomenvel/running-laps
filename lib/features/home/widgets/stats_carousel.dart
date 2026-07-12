@@ -232,7 +232,7 @@ class _StatsCarouselState extends State<StatsCarousel> {
             children: [
               Icon(Icons.auto_awesome, size: 20, color: AppColors.rpeMid),
               SizedBox(width: 8),
-              Text("Explora tus Datos", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Text("Explora tus Datos", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
             ],
           ),
           const SizedBox(height: 16),
@@ -245,7 +245,7 @@ class _StatsCarouselState extends State<StatsCarousel> {
                 ActionChip(
                   label: Text("${dist}m"),
                   backgroundColor: AppColors.brand.withValues(alpha: 0.1),
-                  labelStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.bold),
+                  labelStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.w600),
                   onPressed: () {
                     // TODO: Navegar a Detalle Distancia
                     // Callback(type: distance, val: dist)
@@ -255,7 +255,7 @@ class _StatsCarouselState extends State<StatsCarousel> {
                  ActionChip(
                   label: Text(sig),
                   backgroundColor: AppColors.rest,
-                  labelStyle: TextStyle(color: AppColors.rest, fontWeight: FontWeight.bold),
+                  labelStyle: TextStyle(color: AppColors.rest, fontWeight: FontWeight.w600),
                   onPressed: () {
                     // TODO: Navegar a Detalle Workout
                   },
@@ -296,7 +296,7 @@ class _StatsCarouselState extends State<StatsCarousel> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
+                   Text(title, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
                    Text(subtitle, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 12)),
                 ],
               ),

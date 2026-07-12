@@ -131,7 +131,7 @@ class _EmailVerificationPendingViewState
                   'Verifica tu email',
                   style: TextStyle(
                     fontSize: 26,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: isDark ? Colors.white : const Color(0xFF1C1C1E),
                   ),
                   textAlign: TextAlign.center,
@@ -171,7 +171,7 @@ class _EmailVerificationPendingViewState
                             'Ya verifiqué mi email',
                             style: TextStyle(
                               fontSize: 15,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                   ),

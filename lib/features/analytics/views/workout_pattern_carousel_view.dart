@@ -102,7 +102,7 @@ class _ComparisonSelectorSheetState extends State<_ComparisonSelectorSheet> {
         children: [
           const Text(
             'Selecciona 2 entrenamientos para comparar',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 16),
           Flexible(
@@ -134,13 +134,13 @@ class _ComparisonSelectorSheetState extends State<_ComparisonSelectorSheet> {
                       isSelectedA ? 'A' : isSelectedB ? 'B' : '${index + 1}',
                       style: TextStyle(
                         color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                   title: Text(
                     "${instance.fecha.day}/${instance.fecha.month}/${instance.fecha.year}",
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   subtitle: Text(
                     _formatPace(instance.averagePace.round()),
@@ -196,7 +196,7 @@ class _ComparisonSelectorSheetState extends State<_ComparisonSelectorSheet> {
               ),
               child: const Text(
                 'Comparar',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -239,7 +239,7 @@ class _WorkoutPatternContent extends StatelessWidget {
                   pattern.patternKey,
                   style: TextStyle(
                     fontSize: 36,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     foreground: Paint()
                       ..shader = LinearGradient(
                         colors: [AppColors.brand, Colors.deepPurple.shade600],
@@ -328,7 +328,7 @@ class _WorkoutPatternContent extends StatelessWidget {
               children: [
                 const Text(
                   "Evolución del Rendimiento",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
@@ -347,7 +347,7 @@ class _WorkoutPatternContent extends StatelessWidget {
             child: Text(
               "Sesiones Realizadas",
               style: TextStyle(
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 fontSize: 16,
                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
               ),
@@ -415,7 +415,7 @@ class _WorkoutPatternContent extends StatelessWidget {
           Text(
             value,
             style: const TextStyle(
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               fontSize: 18,
               letterSpacing: -0.5,
             ),
@@ -486,7 +486,7 @@ class _WorkoutPatternContent extends StatelessWidget {
                   Text(
                     "${instance.fecha.day}/${instance.fecha.month}/${instance.fecha.year}",
                     style: const TextStyle(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       fontSize: 15,
                       letterSpacing: -0.3,
                     ),
@@ -515,7 +515,7 @@ class _WorkoutPatternContent extends StatelessWidget {
               "$pace /km",
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 fontSize: 14,
                 letterSpacing: -0.3,
               ),
@@ -576,7 +576,7 @@ class _PerformanceChart extends StatelessWidget {
                   '$m:${s.toString().padLeft(2, '0')}',
                   const TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 );
               }).toList();

@@ -493,7 +493,7 @@ class _StepPage extends StatelessWidget {
             textAlign: TextAlign.left,
             style: TextStyle(
               fontSize: 24,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               height: 1.3,
               color: textPrimary,
             ),
@@ -595,7 +595,7 @@ class _NextButtonState extends State<_NextButton> {
           ),
           child: Text(
             widget.isLastStep ? 'Crear mi plan →' : 'Siguiente →',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),
       ),
@@ -651,7 +651,7 @@ class _PbStepPage extends StatelessWidget {
             '¿Tienes marcas personales?\nSon opcionales, pero me ayudan\na calibrar mejor tu ritmo.',
             style: TextStyle(
               fontSize: 24,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               height: 1.3,
               color: textPrimary,
             ),
@@ -851,7 +851,7 @@ class _BirthDateStepPage extends StatelessWidget {
             style: Theme.of(context)
                 .textTheme
                 .headlineMedium
-                ?.copyWith(fontWeight: FontWeight.bold),
+                ?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: AppSpacing.s),
           Text(
@@ -960,7 +960,7 @@ class _CreatePlanButton extends StatelessWidget {
           ),
           child: const Text(
             'Crear mi plan →',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),
       ),

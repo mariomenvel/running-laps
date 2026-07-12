@@ -71,7 +71,7 @@ class CompetitionStatsCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('PARCIALES',
-                  style: TextStyle(fontSize: 11, letterSpacing: 2.0, fontWeight: FontWeight.w700, color: accentColor)),
+                  style: TextStyle(fontSize: 11, letterSpacing: 2.0, fontWeight: FontWeight.w600, color: accentColor)),
               const SizedBox(height: 12),
               ...stats.kmSplits.map((split) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),

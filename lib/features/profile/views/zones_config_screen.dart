@@ -183,7 +183,7 @@ class _ZonesConfigScreenState extends State<ZonesConfigScreen> {
                               'Guardar',
                               style: TextStyle(
                                 fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                     ),
@@ -211,7 +211,7 @@ class _SectionTitle extends StatelessWidget {
       text,
       style: TextStyle(
         fontSize: 13,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w600,
         color:
             Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
         letterSpacing: 0.4,
@@ -299,7 +299,7 @@ class _ZoneRow extends StatelessWidget {
                   'Z${zone.zone} · ${zone.name}',
                   style: const TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
@@ -399,7 +399,7 @@ class _OnboardingSheetState extends State<_OnboardingSheet> {
             'Personaliza tus zonas',
             style: TextStyle(
               fontSize: 20,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: onSurface,
             ),
           ),
@@ -512,7 +512,7 @@ class _OnboardingSheetState extends State<_OnboardingSheet> {
                         )
                       : const Text(
                           'Continuar',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                 ),
               ),
@@ -559,7 +559,7 @@ class _SexButton extends StatelessWidget {
           style: TextStyle(
             fontSize: 13,
             fontWeight:
-                selected ? FontWeight.w700 : FontWeight.w500,
+                selected ? FontWeight.w600 : FontWeight.w500,
             color: selected
                 ? AppColors.brand
                 : Theme.of(context).colorScheme.onSurface,

@@ -64,7 +64,7 @@ class FcWidget extends StatelessWidget {
           '$bpm',
           style: TextStyle(
             fontSize: fontSize,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             color: AppColors.textPrimary(context),
           ),
         ),

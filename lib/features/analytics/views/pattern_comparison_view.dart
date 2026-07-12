@@ -97,7 +97,7 @@ class PatternComparisonView extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Text(
                 "Comparativa Serie a Serie",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
             ),
             const SizedBox(height: 16),
@@ -200,7 +200,7 @@ class PatternComparisonView extends StatelessWidget {
             _formatPace(instance.averagePace.toInt()),
             style: TextStyle(
               color: color,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               fontSize: 28,
               letterSpacing: -0.5,
             ),
@@ -274,7 +274,7 @@ class PatternComparisonView extends StatelessWidget {
                   child: Text(
                     valA,
                     style: TextStyle(
-                      fontWeight: winner == -1 ? FontWeight.bold : FontWeight.w600,
+                      fontWeight: winner == -1 ? FontWeight.w600 : FontWeight.w600,
                       color: winner == -1 ? AppColors.rpeLow : cs.onSurface,
                       fontSize: 18,
                       letterSpacing: -0.3,
@@ -307,7 +307,7 @@ class PatternComparisonView extends StatelessWidget {
                   child: Text(
                     valB,
                     style: TextStyle(
-                      fontWeight: winner == 1 ? FontWeight.bold : FontWeight.w600,
+                      fontWeight: winner == 1 ? FontWeight.w600 : FontWeight.w600,
                       color: winner == 1 ? AppColors.rpeLow : cs.onSurface,
                       fontSize: 18,
                       letterSpacing: -0.3,

@@ -30,7 +30,7 @@ class OverviewTab extends StatelessWidget {
           return Center(
             child: Text(
               "No hay datos para el periodo seleccionado",
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), fontWeight: FontWeight.bold),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), fontWeight: FontWeight.w600),
             ),
           );
         }
@@ -54,7 +54,7 @@ class OverviewTab extends StatelessWidget {
                   // 2. RESUMEN GLOBAL (KPIs)
                   const Text(
                     'Resumen Global',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: -0.5),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, letterSpacing: -0.5),
                   ),
                   const SizedBox(height: 16),
                   GridView.count(
@@ -138,7 +138,7 @@ class OverviewTab extends StatelessWidget {
       children: [
         Text(
           'Mejores Marcas',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface, letterSpacing: -0.5),
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface, letterSpacing: -0.5),
         ),
         const SizedBox(height: 16),
         Row(
@@ -186,7 +186,7 @@ class OverviewTab extends StatelessWidget {
           const SizedBox(height: 16),
           Text(distance, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), letterSpacing: 0.5)),
           const SizedBox(height: 8),
-          Text(pace ?? '-', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: color, letterSpacing: -0.5)),
+          Text(pace ?? '-', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: color, letterSpacing: -0.5)),
         ],
       ),
     );
@@ -198,7 +198,7 @@ class OverviewTab extends StatelessWidget {
       children: [
         Text(
           'Volumen Semanal',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface, letterSpacing: -0.5),
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface, letterSpacing: -0.5),
         ),
         const SizedBox(height: 16),
         Container(
@@ -230,7 +230,7 @@ class OverviewTab extends StatelessWidget {
       children: [
         Text(
           'Evolución de Ritmo',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface, letterSpacing: -0.5),
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface, letterSpacing: -0.5),
         ),
         const SizedBox(height: 16),
         Container(
@@ -285,7 +285,7 @@ class OverviewTab extends StatelessWidget {
       children: [
         Text(
           'Balance de Entrenamiento',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface, letterSpacing: -0.5),
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface, letterSpacing: -0.5),
         ),
         const SizedBox(height: 16),
         Container(
@@ -322,7 +322,7 @@ class OverviewTab extends StatelessWidget {
       children: [
         Text(
           'Consistencia',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: onSurface, letterSpacing: -0.5),
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: onSurface, letterSpacing: -0.5),
         ),
         const SizedBox(height: 16),
         Container(
@@ -381,7 +381,7 @@ class OverviewTab extends StatelessWidget {
       children: [
         Text(
           'Próximo Hito',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: onSurface, letterSpacing: -0.5),
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: onSurface, letterSpacing: -0.5),
         ),
         const SizedBox(height: 16),
         Container(
@@ -413,7 +413,7 @@ class OverviewTab extends StatelessWidget {
                 child: const Icon(Icons.emoji_events, color: Colors.white, size: 40),
               ),
               const SizedBox(height: 20),
-              Text('${remaining.toStringAsFixed(1)} km', style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: AppColors.rpeMid, letterSpacing: -1)),
+              Text('${remaining.toStringAsFixed(1)} km', style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w600, color: AppColors.rpeMid, letterSpacing: -1)),
               const SizedBox(height: 8),
               Text('para alcanzar $nextMilestone km', style: TextStyle(fontSize: 16, color: onSurface.withValues(alpha: 0.7), fontWeight: FontWeight.w600)),
               const SizedBox(height: 20),
@@ -471,7 +471,7 @@ class _WeeklyVolumeChart extends StatelessWidget {
     return BarChart(BarChartData(alignment: BarChartAlignment.spaceAround, barTouchData: BarTouchData(touchTooltipData: BarTouchTooltipData(getTooltipColor: (_) => AppColors.iconMuted, tooltipBorderRadius: BorderRadius.circular(8), tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), getTooltipItem: (group, groupIndex, rod, rodIndex) {
       final workout = displayData[groupIndex];
       final date = "${workout.fecha.day}/${workout.fecha.month}";
-      return BarTooltipItem("$date\n", const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold), children: [TextSpan(text: "${rod.toY.toStringAsFixed(1)} km", style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold))]);
+      return BarTooltipItem("$date\n", const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w600), children: [TextSpan(text: "${rod.toY.toStringAsFixed(1)} km", style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600))]);
     })), gridData: FlGridData(show: true, drawVerticalLine: false, getDrawingHorizontalLine: (value) => FlLine(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1), strokeWidth: 1)), titlesData: const FlTitlesData(show: false), borderData: FlBorderData(show: false), barGroups: barGroups));
   }
 }
@@ -499,7 +499,7 @@ class _PaceEvolutionChart extends StatelessWidget {
         final totalSeconds = spot.y.toInt();
         final m = totalSeconds ~/ 60;
         final s = (totalSeconds % 60).toString().padLeft(2, '0');
-        return LineTooltipItem("$date\n", const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold), children: [TextSpan(text: "$m:$s /km", style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold))]);
+        return LineTooltipItem("$date\n", const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w600), children: [TextSpan(text: "$m:$s /km", style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600))]);
       }).toList();
     })), gridData: FlGridData(show: true, drawVerticalLine: false, getDrawingHorizontalLine: (value) => FlLine(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1), strokeWidth: 1)), titlesData: const FlTitlesData(show: false), borderData: FlBorderData(show: false), minY: targetMinY > 0 ? targetMinY : 0, lineBarsData: [LineChartBarData(spots: spots, isCurved: true, curveSmoothness: 0.4, gradient: LinearGradient(colors: [AppColors.brand, AppColors.brand]), barWidth: 4, isStrokeCapRound: true, dotData: const FlDotData(show: false), belowBarData: BarAreaData(show: true, gradient: LinearGradient(colors: [AppColors.brand.withValues(alpha: 0.3), AppColors.brand.withValues(alpha: 0.0)], begin: Alignment.topCenter, end: Alignment.bottomCenter))) ]));
   }
@@ -527,11 +527,12 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
     final sortedEntries = distribution.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
     final top3 = sortedEntries.take(3).toList();
     final cs = Theme.of(context).colorScheme;
-    return Column(children: [SizedBox(height: 220, child: Row(children: [Expanded(flex: 3, child: Stack(alignment: Alignment.center, children: [PieChart(PieChartData(pieTouchData: PieTouchData(touchCallback: (FlTouchEvent event, pieTouchResponse) { setState(() { if (!event.isInterestedForInteractions || pieTouchResponse == null || pieTouchResponse.touchedSection == null) { touchedIndex = -1; return; } touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex; }); }), sections: sortedEntries.asMap().entries.map((e) { final index = e.key; final entry = e.value; final isTouched = index == touchedIndex; final color = _getTagColor(index); final fontSize = isTouched ? 16.0 : 12.0; final radius = isTouched ? 60.0 : 50.0; return PieChartSectionData(color: color, value: entry.value, title: isTouched ? '${entry.value.toStringAsFixed(0)}km' : '', radius: radius, titleStyle: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold, color: Colors.white, shadows: const [Shadow(color: Colors.black26, blurRadius: 4)])); }).toList(), centerSpaceRadius: 55, sectionsSpace: 3, borderData: FlBorderData(show: false))), Column(mainAxisSize: MainAxisSize.min, children: [Text(totalKm >= 100 ? totalKm.toStringAsFixed(0) : totalKm.toStringAsFixed(1), style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, letterSpacing: -1, height: 1.0)), Text('KM TOTALES', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: cs.onSurface.withValues(alpha: 0.5), letterSpacing: 1.2))])])), const SizedBox(width: 16), Expanded(flex: 2, child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: sortedEntries.take(5).toList().asMap().entries.map((e) { final index = e.key; final entry = e.value; final isTouched = index == touchedIndex; final color = _getTagColor(index); final percent = (entry.value / totalKm * 100).toInt(); return AnimatedContainer(duration: const Duration(milliseconds: 200), padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8), decoration: BoxDecoration(color: isTouched ? color.withValues(alpha: 0.1) : Colors.transparent, borderRadius: BorderRadius.circular(8)), child: Row(children: [Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle, boxShadow: [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 4, spreadRadius: 1)])), const SizedBox(width: 8), Expanded(child: Text(entry.key, style: TextStyle(fontSize: 13, fontWeight: isTouched ? FontWeight.bold : FontWeight.w600, color: isTouched ? color : cs.onSurface), overflow: TextOverflow.ellipsis)), Text('$percent%', style: TextStyle(fontSize: 12, color: isTouched ? color : cs.onSurface.withValues(alpha: 0.6), fontWeight: isTouched ? FontWeight.w800 : FontWeight.w500))])); }).toList()))])), const SizedBox(height: 24), Wrap(spacing: 12, runSpacing: 12, alignment: WrapAlignment.center, children: top3.asMap().entries.map((e) { final index = e.key; final entry = e.value; final color = _getTagColor(index); final percent = (entry.value / totalKm * 100).toInt(); return Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), decoration: BoxDecoration(color: cs.surface, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: color.withValues(alpha: 0.15), blurRadius: 10, offset: const Offset(0, 4))], border: Border.all(color: color.withValues(alpha: 0.2))), child: IntrinsicWidth(child: Row(children: [Icon(Icons.stars_rounded, color: color, size: 18), const SizedBox(width: 6), Text(entry.key, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: cs.onSurface)), const SizedBox(width: 6), Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)), child: Text('$percent%', style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w900)))]))); }).toList())]);
+    return Column(children: [SizedBox(height: 220, child: Row(children: [Expanded(flex: 3, child: Stack(alignment: Alignment.center, children: [PieChart(PieChartData(pieTouchData: PieTouchData(touchCallback: (FlTouchEvent event, pieTouchResponse) { setState(() { if (!event.isInterestedForInteractions || pieTouchResponse == null || pieTouchResponse.touchedSection == null) { touchedIndex = -1; return; } touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex; }); }), sections: sortedEntries.asMap().entries.map((e) { final index = e.key; final entry = e.value; final isTouched = index == touchedIndex; final color = _getTagColor(index); final fontSize = isTouched ? 16.0 : 12.0; final radius = isTouched ? 60.0 : 50.0; return PieChartSectionData(color: color, value: entry.value, title: isTouched ? '${entry.value.toStringAsFixed(0)}km' : '', radius: radius, titleStyle: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600, color: Colors.white, shadows: const [Shadow(color: Colors.black26, blurRadius: 4)])); }).toList(), centerSpaceRadius: 55, sectionsSpace: 3, borderData: FlBorderData(show: false))), Column(mainAxisSize: MainAxisSize.min, children: [Text(totalKm >= 100 ? totalKm.toStringAsFixed(0) : totalKm.toStringAsFixed(1), style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, letterSpacing: -1, height: 1.0)), Text('KM TOTALES', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: cs.onSurface.withValues(alpha: 0.5), letterSpacing: 1.2))])])), const SizedBox(width: 16), Expanded(flex: 2, child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: sortedEntries.take(5).toList().asMap().entries.map((e) { final index = e.key; final entry = e.value; final isTouched = index == touchedIndex; final color = _getTagColor(index); final percent = (entry.value / totalKm * 100).toInt(); return AnimatedContainer(duration: const Duration(milliseconds: 200), padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8), decoration: BoxDecoration(color: isTouched ? color.withValues(alpha: 0.1) : Colors.transparent, borderRadius: BorderRadius.circular(8)), child: Row(children: [Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle, boxShadow: [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 4, spreadRadius: 1)])), const SizedBox(width: 8), Expanded(child: Text(entry.key, style: TextStyle(fontSize: 13, fontWeight: isTouched ? FontWeight.w600 : FontWeight.w600, color: isTouched ? color : cs.onSurface), overflow: TextOverflow.ellipsis)), Text('$percent%', style: TextStyle(fontSize: 12, color: isTouched ? color : cs.onSurface.withValues(alpha: 0.6), fontWeight: isTouched ? FontWeight.w800 : FontWeight.w500))])); }).toList()))])), const SizedBox(height: 24), Wrap(spacing: 12, runSpacing: 12, alignment: WrapAlignment.center, children: top3.asMap().entries.map((e) { final index = e.key; final entry = e.value; final color = _getTagColor(index); final percent = (entry.value / totalKm * 100).toInt(); return Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), decoration: BoxDecoration(color: cs.surface, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: color.withValues(alpha: 0.15), blurRadius: 10, offset: const Offset(0, 4))], border: Border.all(color: color.withValues(alpha: 0.2))), child: IntrinsicWidth(child: Row(children: [Icon(Icons.stars_rounded, color: color, size: 18), const SizedBox(width: 6), Text(entry.key, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface)), const SizedBox(width: 6), Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)), child: Text('$percent%', style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w900)))]))); }).toList())]);
   }
 
   Color _getTagColor(int index) {
-    final colors = [AppColors.brand, const Color(0xFF2196F3), const Color(0xFF4CAF50), const Color(0xFFFF9800), const Color(0xFFE91E63), const Color(0xFF00BCD4)];
+    // Paleta de datos derivada de tokens (COLOR_SYSTEM: sin Material/pink/teal)
+    final colors = [AppColors.brand, AppColors.rest, AppColors.rpeLow, AppColors.rpeMid, AppColors.effort, AppColors.brandLight];
     return colors[index % colors.length];
   }
 }

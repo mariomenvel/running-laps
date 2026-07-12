@@ -14,7 +14,7 @@ Widget buildTemplateButtons(BuildContext context, VoidCallback onLoadTemplate, V
           icon: Icon(Icons.folder_open, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
           label: Text(
             'Cargar Plantilla',
-            style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.bold),
+            style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.w600),
           ),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -32,7 +32,7 @@ Widget buildTemplateButtons(BuildContext context, VoidCallback onLoadTemplate, V
           icon: Icon(Icons.flash_on, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
           label: Text(
             'Plantilla Rápida',
-            style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.bold),
+            style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.w600),
           ),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -54,7 +54,7 @@ Widget buildContinuousRunButton(BuildContext context, VoidCallback onPressed) {
       icon: const Icon(Icons.directions_run, color: Colors.white, size: 24),
       label: const Text(
         'Carrera Continua',
-        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
       ),
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.brand,

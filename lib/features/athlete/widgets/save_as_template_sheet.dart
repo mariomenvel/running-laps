@@ -198,7 +198,7 @@ class _SaveAsTemplateSheetState extends State<_SaveAsTemplateSheet> {
             style: TextButton.styleFrom(
                 foregroundColor: AppColors.brand),
             child: const Text('Guardar',
-                style: TextStyle(fontWeight: FontWeight.w700)),
+                style: TextStyle(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -301,7 +301,7 @@ class _SaveAsTemplateSheetState extends State<_SaveAsTemplateSheet> {
                 child: Text(
                   'Guardar como plantilla',
                   style: TextStyle(
-                      fontSize: 17, fontWeight: FontWeight.w700),
+                      fontSize: 17, fontWeight: FontWeight.w600),
                 ),
               ),
             ),

@@ -42,7 +42,7 @@ class _SeasonViewState extends State<SeasonView> {
           AppHeader(
             title: const Text(
               'Temporada',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
             ),
           ),
           Expanded(
@@ -108,7 +108,7 @@ class _SeasonViewState extends State<SeasonView> {
       children: [
         const Text(
           'Carga semanal',
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 2),
         Text(
@@ -176,7 +176,7 @@ class _SeasonViewState extends State<SeasonView> {
                         style: TextStyle(
                           fontSize:   isCurrentWeek ? 10 : 9,
                           fontWeight: isCurrentWeek
-                              ? FontWeight.w700
+                              ? FontWeight.w600
                               : FontWeight.w400,
                           color: isCurrentWeek ? barColor : secondary,
                         ),
@@ -224,7 +224,7 @@ class _SeasonViewState extends State<SeasonView> {
       children: [
         const Text(
           'Próximas competiciones',
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
         if (state.upcomingRaces.isEmpty) ...[
@@ -278,7 +278,7 @@ class _SeasonViewState extends State<SeasonView> {
       children: [
         const Text(
           'Período (16 semanas)',
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
         Row(
@@ -367,7 +367,7 @@ class _RaceCard extends StatelessWidget {
                       ? race.raceName!
                       : 'Competición',
                   style: const TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white,
+                    fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white,
                   ),
                 ),
                 Text(
@@ -389,7 +389,7 @@ class _RaceCard extends StatelessWidget {
             child: Text(
               badgeLabel,
               style: TextStyle(
-                fontSize: 12, fontWeight: FontWeight.w700, color: badgeColor,
+                fontSize: 12, fontWeight: FontWeight.w600, color: badgeColor,
               ),
             ),
           ),

@@ -38,7 +38,7 @@ class IntervalStatsCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               letterSpacing: 2.0,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: accentColor,
             ),
           ),
@@ -124,7 +124,7 @@ class IntervalStatsCard extends StatelessWidget {
           value,
           style: TextStyle(
             fontSize: 14,
-            fontWeight: highlight ? FontWeight.w700 : FontWeight.w600,
+            fontWeight: highlight ? FontWeight.w600 : FontWeight.w600,
             color: valueColor ?? AppColors.textPrimary(context),
           ),
         ),

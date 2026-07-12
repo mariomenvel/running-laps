@@ -90,10 +90,8 @@ class _PremiumDateRangePickerState extends State<PremiumDateRangePicker> {
                         'Selecciona rango',
                         style: TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isDark
-                              ? AppColors.textPrimaryDark
-                              : AppColors.textPrimaryLight,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary(context),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -175,7 +173,7 @@ class _PremiumDateRangePickerState extends State<PremiumDateRangePicker> {
                           ),
                           child: const Text('Aplicar Rango',
                               style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold)),
+                                  fontSize: 16, fontWeight: FontWeight.w600)),
                         ),
                       ),
                     ),

@@ -74,7 +74,7 @@ class RestScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               letterSpacing: 2.0,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: restColor,
             ),
           ),
@@ -227,7 +227,7 @@ class RestScreen extends StatelessWidget {
                           '$fcStartedAt bpm',
                           style: TextStyle(
                             fontSize: 22,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary(context),
                           ),
                         ),
@@ -339,7 +339,7 @@ class RestScreen extends StatelessWidget {
                         nextRepInfo!,
                         style: TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary(context),
                         ),
                       ),
@@ -410,7 +410,7 @@ class RestScreen extends StatelessWidget {
             value,
             style: TextStyle(
               fontSize: 16,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: color ?? AppColors.textPrimary(context),
             ),
           ),

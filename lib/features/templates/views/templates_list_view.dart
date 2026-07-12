@@ -102,7 +102,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                     ),
                     child: Text(
                       'Cancelar',
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.w600, fontSize: 16),
                     ),
                   ),
                 ),
@@ -131,7 +131,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                       ),
                       child: const Text(
                         'Eliminar',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                       ),
                     ),
                   ),
@@ -234,7 +234,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                             const SizedBox(height: 16),
                             Text(
                               'Error al cargar plantillas',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
                             ),
                             const SizedBox(height: 8),
                             Text(
@@ -321,7 +321,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
         style: TextStyle(
           color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
           fontSize: 12,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
           letterSpacing: 1.2,
         ),
       ),
@@ -365,7 +365,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
               label.toUpperCase(),
               style: const TextStyle(
                 color: AppColors.brand,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 fontSize: 13,
                 letterSpacing: 0.8,
               ),
@@ -439,7 +439,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
                           template.name,
                           style: TextStyle(
                             fontSize: 17,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),

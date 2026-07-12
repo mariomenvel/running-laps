@@ -280,7 +280,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                           ),
                           child: Text(
                             'Solo esta vez',
-                            style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.bold),
+                            style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.w600),
                           ),
                         ),
                       ),
@@ -307,7 +307,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             ),
-                            child: const Text('Actualizar original', style: TextStyle(fontWeight: FontWeight.bold)),
+                            child: const Text('Actualizar original', style: TextStyle(fontWeight: FontWeight.w600)),
                           ),
                         ),
                       ),
@@ -412,7 +412,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                     ),
                     child: Text(
                       'Seguir editando',
-                      style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.bold),
+                      style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
@@ -439,7 +439,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-                      child: const Text('Sí, descartar', style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text('Sí, descartar', style: TextStyle(fontWeight: FontWeight.w600)),
                     ),
                   ),
                 ),
@@ -550,7 +550,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                   Text(
                     "Series del Entrenamiento",
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       fontSize: 16,
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
@@ -567,7 +567,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                         "${_blocks.length} ${_blocks.length == 1 ? 'serie' : 'series'}",
                         style: TextStyle(
                           color: templateColor,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           fontSize: 11,
                         ),
                       ),
@@ -795,7 +795,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                       ? AppColors.brandLight
                       : AppColors.brand,
                   fontSize: 13,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
@@ -885,7 +885,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                       label,
                       style: TextStyle(
                         fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         color: Theme.of(ctx).colorScheme.onSurface,
                       ),
                     ),
@@ -948,7 +948,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
               "No hay series añadidas",
               style: TextStyle(
                 fontSize: 20,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
@@ -1030,7 +1030,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                           "${index + 1}",
                           style: const TextStyle(
                             color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             fontSize: 14,
                           ),
                         ),
@@ -1046,7 +1046,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                           Text(
                             "${block.value} metros",
                             style: TextStyle(
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               fontSize: 17,
                               color: Theme.of(context).colorScheme.onSurface,
                             ),
@@ -1082,7 +1082,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                                         style: TextStyle(
                                           color: AppColors.rpeMid,
                                           fontSize: 9,
-                                          fontWeight: FontWeight.bold,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                     ],
@@ -1157,7 +1157,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                   "Color de la Plantilla",
                   style: TextStyle(
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
@@ -1250,7 +1250,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                 "Añadir Serie",
                 style: TextStyle(
                   color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   fontSize: 18,
                 ),
               ),
@@ -1289,7 +1289,7 @@ class _PickerOption extends StatelessWidget {
         name,
         style: TextStyle(
           fontSize: 15,
-          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
           color: Theme.of(context).colorScheme.onSurface,
         ),
       ),
@@ -1359,7 +1359,7 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
               "Volver",
               style: TextStyle(
                 color: widget.color,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
             ),

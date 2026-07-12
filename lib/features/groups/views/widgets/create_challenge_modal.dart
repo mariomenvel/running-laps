@@ -300,7 +300,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
                       style: TextStyle(
                         color: isSelected ? Colors.white : cs.onSurface.withValues(alpha: 0.6),
                         fontSize: 12,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w600,
                       ),
                     ),
                   ],
@@ -349,7 +349,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
         suffixText: _getValueSuffix(),
         suffixStyle: TextStyle(
           color: selectedGradient.first,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
           fontSize: 16,
         ),
       ),
@@ -426,7 +426,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
               style: TextStyle(
                 fontSize: 11,
                 color: cs.onSurface.withValues(alpha: 0.5),
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 letterSpacing: 0.5,
               ),
             ),
@@ -487,7 +487,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 17,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         letterSpacing: 0.5,
                       ),
                     ),

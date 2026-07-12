@@ -110,7 +110,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
                   "Configurar Alarma",
                   style: TextStyle(
                     fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: Colors.black87,
                   ),
                 ),
@@ -123,7 +123,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
                   ),
                   child: const Text(
                     "ACEPTAR",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                   ),
                 )
               ],
@@ -180,7 +180,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
         text,
         style: TextStyle(
           color: isSelected ? (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand) : Colors.black54,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
           fontSize: 14,
         ),
       ),
@@ -278,7 +278,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
         const SizedBox(height: 32),
         const Text(
           "¿Cada cuántos metros debe sonar?",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.black87),
         ),
         const SizedBox(height: 16),
         Container(
@@ -316,7 +316,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
           style: TextStyle(
             fontSize: 11,
             color: AppColors.iconMuted,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             letterSpacing: 1,
           ),
         ),

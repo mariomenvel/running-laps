@@ -53,7 +53,7 @@ class WelcomeView extends StatelessWidget {
                   '¡Bienvenido a Running Laps!',
                   style: TextStyle(
                     fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: isDark ? Colors.white : const Color(0xFF1C1C1E),
                   ),
                   textAlign: TextAlign.center,
@@ -116,7 +116,7 @@ class WelcomeView extends StatelessWidget {
                       'Activar entrenador IA (gratis)',
                       style: TextStyle(
                         fontSize: 15,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),

@@ -126,7 +126,7 @@ class CompetitionScreen extends StatelessWidget {
                 '${(_targetDistanceM! / 1000).toStringAsFixed(1)}K · ${_targetTimeLabel()}',
                 style: TextStyle(
                   fontSize: 11,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   color: theme.primary(context),
                 ),
               ),

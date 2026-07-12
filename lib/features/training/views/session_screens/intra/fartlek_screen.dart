@@ -98,7 +98,7 @@ class FartlekScreen extends StatelessWidget {
               '$currentRep / $totalReps',
               style: TextStyle(
                 fontSize: 11,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 color: theme.primary(context),
               ),
             ),
@@ -272,7 +272,7 @@ class FartlekScreen extends StatelessWidget {
                               '${m.toInt()} m',
                               style: TextStyle(
                                 fontSize: 24,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                                 color: AppColors.textPrimary(context),
                               ),
                             ),
@@ -307,7 +307,7 @@ class FartlekScreen extends StatelessWidget {
           'FINALIZAR TRAMO',
           style: TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             letterSpacing: 0.5,
           ),
         ),

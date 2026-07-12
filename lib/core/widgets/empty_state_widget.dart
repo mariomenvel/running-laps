@@ -49,7 +49,7 @@ class EmptyStateWidget extends StatelessWidget {
               title,
               style: TextStyle(
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.onSurface,
                 letterSpacing: -0.3,
                 height: 1.2,

@@ -461,7 +461,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
             style: TextStyle(
               fontSize: 11,
               letterSpacing: 1.5,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: AppColors.textSecondary(context),
             ),
           ),

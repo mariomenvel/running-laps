@@ -70,7 +70,7 @@ class _SeriesPatternContent extends StatelessWidget {
                   pattern.distanceFormatted,
                   style: TextStyle(
                     fontSize: 40,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     foreground: Paint()
                       ..shader = LinearGradient(
                         colors: [AppColors.brand, AppColors.rest],
@@ -157,7 +157,7 @@ class _SeriesPatternContent extends StatelessWidget {
               children: [
                 const Text(
                   "Progresión del Ritmo",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
@@ -176,7 +176,7 @@ class _SeriesPatternContent extends StatelessWidget {
             child: Text(
               "Historial",
               style: TextStyle(
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 fontSize: 16,
                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
               ),
@@ -244,7 +244,7 @@ class _SeriesPatternContent extends StatelessWidget {
           Text(
             value,
             style: const TextStyle(
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               fontSize: 18,
               letterSpacing: -0.5,
             ),
@@ -295,7 +295,7 @@ class _SeriesPatternContent extends StatelessWidget {
               Text(
                 "${instance.fecha.day}/${instance.fecha.month}/${instance.fecha.year}",
                 style: const TextStyle(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   fontSize: 15,
                   letterSpacing: -0.3,
                 ),
@@ -322,7 +322,7 @@ class _SeriesPatternContent extends StatelessWidget {
               "$pace /km",
               style: const TextStyle(
                 color: AppColors.brand,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 fontSize: 14,
                 letterSpacing: -0.3,
               ),
@@ -383,7 +383,7 @@ class _PaceProgressionChart extends StatelessWidget {
                   '$m:${s.toString().padLeft(2, '0')}',
                   const TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 );
               }).toList();

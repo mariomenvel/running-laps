@@ -39,7 +39,7 @@ class _CountdownDialogState extends State<CountdownDialog> {
           '$_count',
           style: const TextStyle(
             fontSize: 96,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: Colors.white,
           ),
         ),

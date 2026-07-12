@@ -67,7 +67,7 @@ class TargetComparison extends StatelessWidget {
                     currentValue,
                     style: TextStyle(
                       fontSize: 22,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: valueColor,
                     ),
                   ),
@@ -92,7 +92,7 @@ class TargetComparison extends StatelessWidget {
                     targetValue,
                     style: TextStyle(
                       fontSize: 22,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary(context),
                     ),
                   ),

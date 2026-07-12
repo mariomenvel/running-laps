@@ -134,7 +134,7 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
                 'Filtrar Entrenamientos',
                 style: TextStyle(
                   fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: isDark
                       ? AppColors.textPrimaryDark
                       : AppColors.textPrimaryLight,
@@ -253,7 +253,7 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
                                       ? AppColors.textSecondaryDark
                                       : AppColors.textSecondaryLight),
                               fontWeight: isSelected
-                                  ? FontWeight.bold
+                                  ? FontWeight.w600
                                   : FontWeight.normal,
                             ),
                             checkmarkColor: brandColor,
@@ -339,7 +339,7 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
             ),
             child: const Text(
               'Aplicar Filtros',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),
           const SizedBox(height: 10),
@@ -355,7 +355,7 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
       title,
       style: TextStyle(
         fontSize: 13,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w600,
         letterSpacing: 0.5,
         color: isDark
             ? AppColors.textSecondaryDark
@@ -409,7 +409,7 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
                   text,
                   style: TextStyle(
                     fontSize: 15,
-                    fontWeight: isSet ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: isSet ? FontWeight.w600 : FontWeight.normal,
                     color: valueColor,
                   ),
                 ),

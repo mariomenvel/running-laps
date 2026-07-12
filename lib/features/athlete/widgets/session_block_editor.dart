@@ -782,7 +782,7 @@ class _BlockEditorSheetState extends State<_BlockEditorSheet> {
                         'OBJETIVOS',
                         style: TextStyle(
                           fontSize:      11,
-                          fontWeight:    FontWeight.w700,
+                          fontWeight:    FontWeight.w600,
                           letterSpacing: 0.8,
                           color: _showObjectives
                               ? AppColors.brand
@@ -976,7 +976,7 @@ class _BlockEditorSheetState extends State<_BlockEditorSheet> {
                           'Z$z',
                           style: TextStyle(
                             fontSize:   13,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w600,
                             color:      _targetZone == z
                                 ? Colors.white
                                 : _zoneColor(z),

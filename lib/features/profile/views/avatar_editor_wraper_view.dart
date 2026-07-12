@@ -107,7 +107,7 @@ class _AvatarEditorWrapperViewState extends State<AvatarEditorWrapperView> {
                 Text(
                   "EDITOR DE AVATAR",
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     fontSize: 14,
                     color: cs.onSurface,
                     letterSpacing: 1.2,

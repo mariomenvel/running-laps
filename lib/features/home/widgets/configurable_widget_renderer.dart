@@ -43,7 +43,7 @@ class ConfigurableWidgetRenderer extends StatelessWidget {
             title,
             style: TextStyle(
               fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
@@ -253,7 +253,7 @@ class ConfigurableWidgetRenderer extends StatelessWidget {
                        const SizedBox(height: 8),
                        Text(
                            "${(e.distanciaTotalM() / 1000).toStringAsFixed(1)} km",
-                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                        ),
                        Text(
                            e.ritmoMedioTexto(),

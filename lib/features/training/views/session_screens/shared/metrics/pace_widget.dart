@@ -51,7 +51,7 @@ class PaceWidget extends StatelessWidget {
           paceString,
           style: TextStyle(
             fontSize: fontSize,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             color: _colorForPace(context),
             height: 1.0,
           ),

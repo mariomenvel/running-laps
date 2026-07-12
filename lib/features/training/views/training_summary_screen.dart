@@ -384,7 +384,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
           style: TextStyle(
             color: AppColors.textPrimary(ctx),
             fontSize: 17,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
           ),
         ),
         content: Text(
@@ -406,7 +406,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text(
               'Descartar',
-              style: TextStyle(color: AppColors.rpeMax, fontWeight: FontWeight.w700),
+              style: TextStyle(color: AppColors.rpeMax, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -733,7 +733,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
               style: TextStyle(
                 color: accentColor,
                 fontSize: 11,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 letterSpacing: 1.5,
               ),
             ),
@@ -836,7 +836,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
                     style: TextStyle(
                         color: accentColor,
                         fontSize: 11,
-                        fontWeight: FontWeight.w700),
+                        fontWeight: FontWeight.w600),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -866,7 +866,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
                     style: TextStyle(
                         color: deltaColor,
                         fontSize: 12,
-                        fontWeight: FontWeight.w700),
+                        fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
@@ -925,7 +925,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
                     style: TextStyle(
                         color: AppColors.textPrimary(context),
                         fontSize: 18,
-                        fontWeight: FontWeight.w700),
+                        fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -957,7 +957,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
                     style: TextStyle(
                         color: diffColor,
                         fontSize: 18,
-                        fontWeight: FontWeight.w700),
+                        fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -1015,7 +1015,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
               name,
               style: TextStyle(
                 color: isSelected ? activeText : AppColors.textSecondary(context),
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 fontSize: 14,
               ),
             ),
@@ -1184,7 +1184,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
                 style: TextStyle(
                   fontSize: 11,
                   letterSpacing: 1.5,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.textSecondary(context),
                 ),
               ),
@@ -1245,7 +1245,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
                   'Nueva etiqueta',
                   style: TextStyle(
                     fontSize: 17,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary(ctx),
                   ),
                 ),

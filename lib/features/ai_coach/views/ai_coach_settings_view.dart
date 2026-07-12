@@ -679,7 +679,7 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
               title,
               style: const TextStyle(
                 fontSize: 13,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 letterSpacing: 0.5,
                 color: AppColors.brand,
               ),

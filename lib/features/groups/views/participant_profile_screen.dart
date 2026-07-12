@@ -151,7 +151,7 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
                                       color: AppColors.brand.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    child: Text("Corredor/a", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.bold, fontSize: 12)),
+                                    child: Text("Corredor/a", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.w600, fontSize: 12)),
                                   ),
                                   const SizedBox(height: 20),
                                   // STATS ROW
@@ -193,7 +193,7 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
                         // --- ACHIEVEMENTS GRID ---
                         const Align(
                           alignment: Alignment.centerLeft,
-                          child: Text("Logros & Medallas", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          child: Text("Logros & Medallas", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                         ),
                         const SizedBox(height: 15),
                         
@@ -283,7 +283,7 @@ class _AchievementCard extends StatelessWidget {
             item.title,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               fontSize: 14,
               color: unlocked ? cs.onSurface : cs.onSurface.withValues(alpha: 0.4)
             ),

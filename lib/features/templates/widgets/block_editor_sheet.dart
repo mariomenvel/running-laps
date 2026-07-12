@@ -123,7 +123,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
             const Padding(
               padding: EdgeInsets.all(16),
               child: Text('Distancia (m)',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
             ),
             Expanded(
               child: IosPicker(
@@ -177,7 +177,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
             const Padding(
               padding: EdgeInsets.all(16),
               child: Text('Descanso',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
             ),
             Expanded(
               child: IosPicker(
@@ -358,7 +358,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
           'PACE OBJETIVO (MIN/KM)',
           style: TextStyle(
             fontSize: 11,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: cs.onSurface.withValues(alpha: 0.5),
             letterSpacing: 0.5,
           ),
@@ -381,7 +381,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                 ':',
                 style: TextStyle(
                   fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: cs.onSurface.withValues(alpha: 0.6),
                 ),
               ),
@@ -412,7 +412,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
               'RPE OBJETIVO',
               style: TextStyle(
                 fontSize: 11,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: cs.onSurface.withValues(alpha: 0.5),
                 letterSpacing: 0.5,
               ),
@@ -493,7 +493,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
           'ZONA FC OBJETIVO',
           style: TextStyle(
             fontSize: 11,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: cs.onSurface.withValues(alpha: 0.5),
             letterSpacing: 0.5,
           ),
@@ -610,7 +610,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                     widget.initialBlock == null ? 'Nueva Serie' : 'Editar Serie',
                     style: TextStyle(
                       fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: cs.onSurface,
                     ),
                     textAlign: TextAlign.center,
@@ -754,7 +754,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                       child: const Text(
                         'LISTO',
                         style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             fontSize: 16,
                             letterSpacing: 1),
                       ),
@@ -814,7 +814,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                         .colorScheme
                         .onSurface
                         .withValues(alpha: 0.5),
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     fontSize: 10,
                     letterSpacing: 0.5,
                   ),
@@ -826,7 +826,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
               value,
               style: TextStyle(
                 fontSize: 24,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
@@ -873,7 +873,7 @@ class _PaceTextField extends StatelessWidget {
           color: cs.onSurface.withValues(alpha: 0.5),
         ),
       ),
-      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
       onChanged: onChanged,
     );
   }

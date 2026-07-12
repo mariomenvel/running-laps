@@ -84,7 +84,7 @@ class _ContinuousTheme implements SessionTheme {
   @override
   TextStyle heroMetricStyle(BuildContext context) => TextStyle(
         fontSize: 96,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w600,
         color: AppColors.textPrimary(context),
         height: 1.0,
       );
@@ -224,7 +224,7 @@ class _FreeTheme implements SessionTheme {
   @override
   TextStyle heroMetricStyle(BuildContext context) => TextStyle(
         fontSize: 96,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w600,
         color: AppColors.textPrimary(context),
         height: 1.0,
       );

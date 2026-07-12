@@ -172,7 +172,7 @@ class _HistoryCalendarWidgetState extends State<HistoryCalendarWidget> {
             '+${tags.length - displayCount}',
             style: TextStyle(
               fontSize: 8,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: brandColor.withValues(alpha: 0.8),
             ),
           ),
@@ -239,7 +239,7 @@ class _HistoryCalendarWidgetState extends State<HistoryCalendarWidget> {
               'Etiquetas activas',
               style: TextStyle(
                 fontSize: 11,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 color: isDark
                     ? AppColors.textSecondaryDark
                     : AppColors.textSecondaryLight,
@@ -314,7 +314,7 @@ class _HistoryCalendarWidgetState extends State<HistoryCalendarWidget> {
           child: Text(
             count.toString(),
             style:
-                TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color),
+                TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color),
           ),
         ),
       ],

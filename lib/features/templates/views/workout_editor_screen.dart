@@ -659,7 +659,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                           'Crear con IA',
                           style: TextStyle(
                             fontSize: 14,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary(context),
                           ),
                         ),

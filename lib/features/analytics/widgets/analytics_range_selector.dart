@@ -46,7 +46,7 @@ class AnalyticsRangeSelector extends StatelessWidget {
                   label,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     fontSize: 14,
                     letterSpacing: 0.5,
                   ),
@@ -114,7 +114,7 @@ class AnalyticsRangeSelector extends StatelessWidget {
                "Seleccionar Periodo",
                style: TextStyle(
                  fontSize: 20,
-                 fontWeight: FontWeight.bold,
+                 fontWeight: FontWeight.w600,
                  color: Theme.of(context).colorScheme.onSurface,
                ),
              ),
@@ -223,7 +223,7 @@ class AnalyticsRangeSelector extends StatelessWidget {
                     text,
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                       color: isSelected ? AppColors.brand : Theme.of(context).colorScheme.onSurface,
                     ),
                   ),

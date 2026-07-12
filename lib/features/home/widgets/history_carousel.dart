@@ -138,7 +138,7 @@ class _HistoryCarouselState extends State<HistoryCarousel> {
                           ),
                           child: Text(
                             dateStr, 
-                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)
+                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)
                           ),
                         ),
                         Icon(
@@ -157,7 +157,7 @@ class _HistoryCarouselState extends State<HistoryCarousel> {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),

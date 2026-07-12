@@ -176,7 +176,7 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
                         _session.title,
                         style: const TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -243,7 +243,7 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
                   'EMPEZAR',
                   style: TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     letterSpacing: 1.2,
                   ),
                 ),
@@ -410,7 +410,7 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
                       child: Text(
                         '${block.repetitions}×',
                         style: const TextStyle(
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           fontSize: 16,
                         ),
                       ),

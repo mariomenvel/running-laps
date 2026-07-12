@@ -35,7 +35,7 @@ class FreeStatsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('RESUMEN',
-              style: TextStyle(fontSize: 11, letterSpacing: 2.0, fontWeight: FontWeight.w700, color: accentColor)),
+              style: TextStyle(fontSize: 11, letterSpacing: 2.0, fontWeight: FontWeight.w600, color: accentColor)),
           const SizedBox(height: 16),
           _row(context, Icons.straighten_rounded, 'Distancia',
               '${stats.distanceKm.toStringAsFixed(2)} km', highlight: true),

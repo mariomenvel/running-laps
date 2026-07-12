@@ -123,9 +123,8 @@ CARGA SEMANAL
 Además de la carga semanal, cada CELDA DE DÍA se pinta con una escala propia
 en `calendar_view.dart` vía `_statusColor()`. No representa TRIMP: representa
 el estado de la sesión de ese día.
-(Existe también `_dotsForSessions()` en el mismo archivo, pensado para pintar
-un punto por sesión cuando hay varias el mismo día, pero hoy no tiene ningún
-caller — código muerto, candidato a eliminar o a cablear si se retoma esa idea.)
+(El antiguo `_dotsForSessions()` sin callers fue eliminado en la limpieza de
+julio 2026.)
 
 | Estado | Color | Token |
 |---|---|---|
@@ -171,6 +170,45 @@ deben mezclarse ni reutilizarse entre sí.
 | Custom (creada por usuario) | `surface2Of(context)` | `textSecondary(context)` | `borderOf(context)` 0.5px |
 
 Predefinidas: rodaje, series, tempo, largo, fartlek, competición, recuperación.
+
+---
+
+## Paletas de datos — exenciones documentadas
+
+Dos lugares usan paletas de varios colores **como datos, no como UI**, y están
+exentos de la regla "un color = un significado":
+
+1. **Etiquetas de entrenamiento** (`tag_utils.dart`): color determinista por
+   nombre de etiqueta. Paleta intencional, no migrar a tokens.
+2. **Selector de color de plantillas** (`template_editor_view.dart`): colores
+   que el usuario elige para SU plantilla. Es contenido del usuario.
+
+Los **charts categóricos** (distribución por etiqueta, etc.) NO están exentos:
+usan la paleta derivada de tokens `[brand, rest, rpeLow, rpeMid, effort,
+brandLight]` (auditoría jul 2026 — antes usaban Material blue/green/pink/cyan).
+
+---
+
+## Paleta de sesión activa por tipo (`session_theme.dart`)
+
+Capa visual propia de las pantallas intra-sesión (post-guía de mayo, documentada
+en la auditoría de julio 2026). Cada tipo de entreno tiene su color primario —
+es identidad de pantalla, no semántica de esfuerzo:
+
+| Tipo | Color | Hex |
+|---|---|---|
+| Series (intervals) | Terracota | `#B85C38` |
+| Continuo / warmup / cooldown | Azul-verde | `#4A90A4` |
+| Fartlek (tramo suave) | Azul tranquilo | `#4A90A4` |
+| Cuestas | Marrón tierra | `#8B5A3C` |
+| Competición | Dorado mate | `#C9A227` |
+| Libre | Gris medio | `#6B7280` |
+
+⚠️ El azul-verde `#4A90A4` de esta paleta NO es el azul de descanso
+(`AppColors.rest`). La pantalla de DESCANSO usa `rest` y su spec propia
+(§ Descanso). Los fondos con gradient sutil de estas pantallas son parte de
+esta capa y constituyen la segunda excepción a la regla anti-degradados
+(la primera es el Live Activity).
 
 ---
 
@@ -462,4 +500,5 @@ class AppColors {
 |---|---|
 | 2026-04-08 | Sistema de color inicial definido tras auditoría completa |
 | 2026-05-09 | Añadido sistema de colores para calendario (TRIMP, no km). Brand reservado para competición. Añadidas reglas de tipografía (sin bold en listas). Añadidas reglas de inputs (NumberPickerField). Añadido sistema de etiquetas predefinidas/custom. Fix: GPS activo en brand no en rpeLow. Fix: backgroundColor nunca Colors.transparent. |
+| 2026-07-12 | **Auditoría de cumplimiento completa.** Tipografía: 399 usos de `FontWeight.bold`/`w700` migrados a `w600` en 89 archivos activos (la regla ya existía; no se cumplía). Charts categóricos: paleta Material/pink/cyan → tokens. `block_preview_tile`, dots de analytics y admin migrados a tokens. Snackbar default → `brand` token. Aliases deprecated eliminados de `premium_date_range_picker`. Calendario: sesión saltada ahora al 60 % de opacidad (spec de día). Pantalla de descanso implementada según spec (azul `rest`, vaso llenándose, burbujas, skip discreto). Documentadas: paleta de sesión por tipo (`session_theme`), exenciones de paletas de datos, y eliminado el `_dotsForSessions` muerto. Quedan fuera del barrido: vistas legacy/huérfanas (deuda #5) y `pdf_generator` (medio impreso). |
 | 2026-07-05 | `AppTypography` ampliada a 8 roles (`display`, `label`, `caption` nuevos; `h3` completa letterSpacing) y sin `color` fijo — lo aplica cada widget por contexto. Añadido `AppMotion` (duraciones `fast/base/medium/slow/enter` + curvas `snap/easeEnter/easeExit`) como sistema oficial de animación, aplicado en `training`/`home`/`ai_coach` (MVP activo). Añadidos `AppColors.brandDisabledColor()` y `AppColors.brandGhost()` (métodos con `withValues`, no const). |

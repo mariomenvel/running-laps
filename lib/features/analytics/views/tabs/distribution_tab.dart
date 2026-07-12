@@ -55,7 +55,7 @@ class DistributionTab extends StatelessWidget {
           'Balance de Entrenamiento',
           style: TextStyle(
             fontSize: 24,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.onSurface,
             letterSpacing: -0.5,
           ),
@@ -103,7 +103,7 @@ class DistributionTab extends StatelessWidget {
           'Consistencia',
           style: TextStyle(
             fontSize: 24,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: onSurface,
             letterSpacing: -0.5,
           ),
@@ -250,7 +250,7 @@ class DistributionTab extends StatelessWidget {
           'Próximo Hito',
           style: TextStyle(
             fontSize: 24,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: onSurface,
             letterSpacing: -0.5,
           ),
@@ -300,7 +300,7 @@ class DistributionTab extends StatelessWidget {
                 '${remaining.toStringAsFixed(1)} km',
                 style: const TextStyle(
                   fontSize: 36,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.rpeMid,
                   letterSpacing: -1,
                 ),
@@ -438,7 +438,7 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
                             radius: radius,
                             titleStyle: TextStyle(
                               fontSize: fontSize,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               color: Colors.white,
                               shadows: const [Shadow(color: Colors.black26, blurRadius: 4)],
                             ),
@@ -517,7 +517,7 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
                               entry.key,
                               style: TextStyle(
                                 fontSize: 13,
-                                fontWeight: isTouched ? FontWeight.bold : FontWeight.w600,
+                                fontWeight: isTouched ? FontWeight.w600 : FontWeight.w600,
                                 color: isTouched ? color : Theme.of(context).colorScheme.onSurface,
                               ),
                               overflow: TextOverflow.ellipsis,
@@ -575,7 +575,7 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
                       entry.key,
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
@@ -606,13 +606,14 @@ class _TagDistributionContentState extends State<_TagDistributionContent> {
   }
 
   Color _getTagColor(int index) {
+    // Paleta de datos derivada de tokens (COLOR_SYSTEM: sin Material/pink/teal)
     final colors = [
       AppColors.brand,
-      const Color(0xFF2196F3),
-      const Color(0xFF4CAF50),
-      const Color(0xFFFF9800),
-      const Color(0xFFE91E63),
-      const Color(0xFF00BCD4),
+      AppColors.rest,
+      AppColors.rpeLow,
+      AppColors.rpeMid,
+      AppColors.effort,
+      AppColors.brandLight,
     ];
     return colors[index % colors.length];
   }

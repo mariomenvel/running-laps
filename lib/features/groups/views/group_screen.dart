@@ -446,7 +446,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                         icon: const Icon(Icons.person_add_rounded, size: 20, color: Colors.white),
                         label: const Text(
                           "Invitar Miembro",
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.brand,
@@ -655,7 +655,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                         style: TextStyle(
                           color: AppColors.rpeLow,
                           fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       Text(
@@ -841,7 +841,7 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
               "Volver",
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
             ),
@@ -1054,7 +1054,7 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> {
                             style: TextStyle(
                               color: AppColors.rpeLow,
                               fontSize: 13,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         )
@@ -1111,7 +1111,7 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> {
                                       "Unirme",
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontWeight: FontWeight.bold,
+                                        fontWeight: FontWeight.w600,
                                         fontSize: 13,
                                       ),
                                     ),
@@ -1213,7 +1213,7 @@ class _PremiumMemberCard extends StatelessWidget {
                         : Text(
                             '$rank',
                             style: TextStyle(
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                           ),
@@ -1254,7 +1254,7 @@ class _PremiumMemberCard extends StatelessWidget {
                         Text(
                           member.name,
                           style: TextStyle(
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w600,
                             fontSize: 16,
                             color: Theme.of(context).colorScheme.onSurface,
                           ),
@@ -1272,7 +1272,7 @@ class _PremiumMemberCard extends StatelessWidget {
                                 "Pendiente",
                                 style: TextStyle(
                                   fontSize: 10,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                   color: AppColors.rpeMid,
                                 ),
                               ),
@@ -1295,7 +1295,7 @@ class _PremiumMemberCard extends StatelessWidget {
                             style: TextStyle(
                               color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
                               fontSize: 14,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
@@ -1912,7 +1912,7 @@ class _PremiumFloatingActionButtonState extends State<_PremiumFloatingActionButt
                   widget.label,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     fontSize: 16,
                   ),
                 ),
