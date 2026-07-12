@@ -142,9 +142,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
               ),
               child: Icon(
                 Icons.directions_run_rounded,
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.brandLight
-                    : AppColors.brand,
+                color: AppColors.brandOf(context),
                 size: 20,
               ),
             ),
@@ -182,10 +180,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
-                            color: Theme.of(context).brightness ==
-                                    Brightness.dark
-                                ? AppColors.brandLight
-                                : AppColors.brand,
+                            color: AppColors.brandOf(context),
                           ),
                         ),
                       ),
@@ -300,9 +295,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
             label: Text(
                 widget.training.gps ? 'Ver Análisis y Mapa' : 'Ver Análisis'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.brandLight
-                  : AppColors.brand,
+              foregroundColor: AppColors.brandOf(context),
               side: BorderSide(color: AppColors.brand.withValues(alpha: 0.4)),
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
@@ -417,9 +410,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w500,
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.brandLight
-                    : AppColors.brand,
+                color: AppColors.brandOf(context),
               ),
             ),
           ),
@@ -536,9 +527,7 @@ class _PremiumTrainingCardState extends State<PremiumTrainingCard> {
                   ),
                   child: Icon(Icons.label_rounded,
                       size: 18,
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? AppColors.brandLight
-                          : AppColors.brand),
+                      color: AppColors.brandOf(context)),
                 ),
                 const SizedBox(width: 12),
                 Text('Editar etiquetas',

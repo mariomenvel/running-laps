@@ -255,7 +255,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                       color: AppColors.brand.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.info_outline_rounded, color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 40),
+                    child: Icon(Icons.info_outline_rounded, color: AppColors.brandOf(ctx), size: 40),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -791,9 +791,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
               child: Text(
                 'Crear',
                 style: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppColors.brandLight
-                      : AppColors.brand,
+                  color: AppColors.brandOf(context),
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1295,9 +1293,7 @@ class _PickerOption extends StatelessWidget {
       ),
       trailing: isSelected
           ? Icon(Icons.check_rounded,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.brandLight
-                  : AppColors.brand,
+              color: AppColors.brandOf(context),
               size: 20)
           : null,
       onTap: onTap,

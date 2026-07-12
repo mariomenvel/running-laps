@@ -24,7 +24,7 @@ class WorkoutPatternDetailView extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+          icon: Icon(Icons.arrow_back_ios_new, color: AppColors.brandOf(context)),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -173,11 +173,11 @@ class WorkoutPatternDetailView extends StatelessWidget {
                 children: [
                   Text(
                     WorkoutPattern.formatDuration(instance.entrenamiento.tiempoTotalSec()),
-                    style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.w600, fontSize: 16),
+                    style: TextStyle(color: AppColors.brandOf(context), fontWeight: FontWeight.w600, fontSize: 16),
                   ),
                   Text(
                     "$pace /km",
-                    style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand).withValues(alpha: 0.6), fontSize: 11, fontWeight: FontWeight.w500),
+                    style: TextStyle(color: (AppColors.brandOf(context)).withValues(alpha: 0.6), fontSize: 11, fontWeight: FontWeight.w500),
                   ),
                 ],
               ),

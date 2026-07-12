@@ -973,7 +973,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
   Widget _buildTagChip(String name, {required bool isPredefined, StateSetter? setSheetState}) {
     final isSelected = _selectedTags.contains(name);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final activeText = isDark ? AppColors.brandLight : AppColors.brand;
+    final activeText = AppColors.brandOf(context);
     return GestureDetector(
       onTap: () {
         if (isSelected) {
@@ -1027,7 +1027,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
 
   Widget _buildTagsContent(StateSetter setSheetState) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final createColor = isDark ? AppColors.brandLight : AppColors.brand;
+    final createColor = AppColors.brandOf(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

@@ -23,7 +23,7 @@ class SeriesPatternCarouselView extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+          icon: Icon(Icons.arrow_back_ios_new, color: AppColors.brandOf(context)),
           onPressed: () => Navigator.pop(context),
         ),
         titleTextStyle: TextStyle(

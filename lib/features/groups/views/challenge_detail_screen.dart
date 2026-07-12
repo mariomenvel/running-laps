@@ -722,13 +722,13 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
             Icon(
               Icons.arrow_back_ios_new_rounded,
               size: 16,
-              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+              color: AppColors.brandOf(context),
             ),
             const SizedBox(width: 6),
             Text(
               "Volver",
               style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+                color: AppColors.brandOf(context),
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),

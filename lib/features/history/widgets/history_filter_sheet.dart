@@ -96,7 +96,7 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final brandColor =
-        isDark ? AppColors.brandLight : AppColors.brand;
+        AppColors.brandOf(context);
 
     return Container(
       padding: EdgeInsets.only(

@@ -849,7 +849,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Icon(Icons.repeat_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 20),
+                    Icon(Icons.repeat_rounded, color: AppColors.brandOf(context), size: 20),
                     const SizedBox(width: 8),
                     Text(
                       'Serie $serieNum',
@@ -1621,7 +1621,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
         children: [
           Icon(
             icon,
-            color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+            color: AppColors.brandOf(context),
             size: large ? 24 : 18,
           ),
           SizedBox(height: large ? 14 : 8),
@@ -1796,7 +1796,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                       ),
                       CupertinoButton(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text("Listo", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontSize: 17, fontWeight: FontWeight.w600)),
+                        child: Text("Listo", style: TextStyle(color: AppColors.brandOf(context), fontSize: 17, fontWeight: FontWeight.w600)),
                         onPressed: () => Navigator.of(context).pop(true),
                       ),
                     ],
@@ -1977,9 +1977,9 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                            ),
                            child: Column(
                              children: [
-                               Icon(Icons.gps_fixed, size: 32, color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+                               Icon(Icons.gps_fixed, size: 32, color: AppColors.brandOf(ctx)),
                                const SizedBox(height: 12),
-                               Text("GPS", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, letterSpacing: 1)),
+                               Text("GPS", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.brandOf(ctx), letterSpacing: 1)),
                                const SizedBox(height: 4),
                                Text("$distanciaGps m", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Theme.of(ctx).colorScheme.onSurface)),
                              ],

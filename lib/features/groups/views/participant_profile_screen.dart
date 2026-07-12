@@ -151,7 +151,7 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
                                       color: AppColors.brand.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    child: Text("Corredor/a", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.w600, fontSize: 12)),
+                                    child: Text("Corredor/a", style: TextStyle(color: AppColors.brandOf(context), fontWeight: FontWeight.w600, fontSize: 12)),
                                   ),
                                   const SizedBox(height: 20),
                                   // STATS ROW

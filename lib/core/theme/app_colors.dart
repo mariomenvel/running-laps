@@ -154,6 +154,16 @@ class AppColors {
   static Color iconMutedOf(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark ? iconMuted : lightIconMuted;
 
+  /// Brand como TEXTO/ICONO/acento sobre el fondo del tema.
+  ///
+  /// `brand` (#8E24AA) sobre fondo oscuro da ~2.5:1 de contraste (WCAG pide
+  /// 4.5:1 para texto y 3:1 para componentes); `brandLight` (#CE93D8) da
+  /// ~7.3:1. Regla: brand como color de PRIMER PLANO → siempre
+  /// brandOf(context). Los rellenos sólidos (botón morado con texto blanco)
+  /// siguen usando `brand` en ambos temas — ahí el contraste lo da el texto.
+  static Color brandOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? brandLight : brand;
+
   static Color textPrimary(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
           ? Colors.white : lightTextPrimary;

@@ -198,7 +198,7 @@ class _AuthPageState extends State<AuthPage> {
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w600,
-                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+                      color: AppColors.brandOf(context),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -593,10 +593,10 @@ class _AuthPageState extends State<AuthPage> {
             child: Builder(builder: (context) => Text(
               '¿Olvidaste tu contraseña?',
               style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+                color: AppColors.brandOf(context),
                 fontWeight: FontWeight.w600,
                 decoration: TextDecoration.underline,
-                decorationColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+                decorationColor: AppColors.brandOf(context),
               ),
             )),
           ),
@@ -728,7 +728,7 @@ class _AuthPageState extends State<AuthPage> {
               child: Text(
                 '¿Ya tienes cuenta? Iniciar sesión',
                 style: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+                  color: AppColors.brandOf(context),
                   fontWeight: FontWeight.w600,
                 ),
               ),

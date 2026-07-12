@@ -257,7 +257,7 @@ class ConfigurableWidgetRenderer extends StatelessWidget {
                        ),
                        Text(
                            e.ritmoMedioTexto(),
-                           style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.w600),
+                           style: TextStyle(color: AppColors.brandOf(context), fontWeight: FontWeight.w600),
                        ),
                    ],
                 ),

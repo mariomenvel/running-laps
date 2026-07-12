@@ -124,7 +124,7 @@ class _EmailVerificationPendingViewState
                 Icon(
                   Icons.mark_email_unread_outlined,
                   size: 64,
-                  color: isDark ? AppColors.brandLight : AppColors.brand,
+                  color: AppColors.brandOf(context),
                 ),
                 const SizedBox(height: 24),
                 Text(

@@ -11,10 +11,10 @@ Widget buildTemplateButtons(BuildContext context, VoidCallback onLoadTemplate, V
         width: double.infinity,
         child: OutlinedButton.icon(
           onPressed: onLoadTemplate,
-          icon: Icon(Icons.folder_open, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+          icon: Icon(Icons.folder_open, color: AppColors.brandOf(context)),
           label: Text(
             'Cargar Plantilla',
-            style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.w600),
+            style: TextStyle(color: AppColors.brandOf(context), fontWeight: FontWeight.w600),
           ),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -29,10 +29,10 @@ Widget buildTemplateButtons(BuildContext context, VoidCallback onLoadTemplate, V
         width: double.infinity,
         child: OutlinedButton.icon(
           onPressed: onQuickTemplate,
-          icon: Icon(Icons.flash_on, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+          icon: Icon(Icons.flash_on, color: AppColors.brandOf(context)),
           label: Text(
             'Plantilla Rápida',
-            style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.w600),
+            style: TextStyle(color: AppColors.brandOf(context), fontWeight: FontWeight.w600),
           ),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),

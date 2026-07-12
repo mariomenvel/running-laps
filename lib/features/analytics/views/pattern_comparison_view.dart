@@ -56,7 +56,7 @@ class PatternComparisonView extends StatelessWidget {
                       color: AppColors.brand.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.compare_arrows, size: 28, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+                    child: Icon(Icons.compare_arrows, size: 28, color: AppColors.brandOf(context)),
                   ),
                   const SizedBox(width: 20),
                   Expanded(child: _buildHeaderColumn(context, instanceB, AppColors.brand)),

@@ -229,7 +229,7 @@ class AnalyticsRangeSelector extends StatelessWidget {
                   ),
                 ),
                 if (isSelected)
-                  Icon(Icons.check_circle_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 24),
+                  Icon(Icons.check_circle_rounded, color: AppColors.brandOf(context), size: 24),
               ],
             ),
           ),

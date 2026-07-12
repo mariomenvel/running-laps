@@ -125,7 +125,7 @@ class _EmptyIllustration extends StatelessWidget {
             child: Icon(
               icon,
               size: 34,
-              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand).withValues(alpha: 0.75),
+              color: (AppColors.brandOf(context)).withValues(alpha: 0.75),
             ),
           ),
         ),

@@ -23,7 +23,7 @@ class FilterBadgeButton extends StatelessWidget {
           onPressed: onTap,
           icon: Icon(
             Icons.tune_rounded,
-            color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+            color: AppColors.brandOf(context),
           ),
           tooltip: 'Filtros avanzados',
         ),

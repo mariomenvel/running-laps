@@ -26,6 +26,19 @@ El color de identidad de la app. Ancla el logo, el Live Activity, el botón prin
 | `AppColors.brandBorder` | `#3D2A6E` | Borde de tarjetas con acento morado (dark mode) |
 | `AppColors.brandDisabledColor()` | `brand` @ alpha 0.35 | Botón primario deshabilitado (método, no const — usa `withValues`) |
 | `AppColors.brandGhost()` | `brand` @ alpha 0.10 | Fondo del ghost variant de `IconButton` (método, no const — usa `withValues`) |
+| `AppColors.brandOf(context)` | `brand` / `brandLight` según tema | **Brand como texto/icono/acento de primer plano** — contextual |
+
+### ⚠️ Regla de contraste del brand (modo oscuro)
+
+`brand` #8E24AA sobre fondo oscuro da **~2.5:1** de contraste — falla WCAG
+(4.5:1 texto, 3:1 componentes). `brandLight` #CE93D8 da **~7.3:1** ✓.
+
+- Brand como **primer plano** (texto, iconos, underlines, bordes, dots) →
+  **siempre `AppColors.brandOf(context)`**, nunca `brand` directo.
+- Brand como **relleno sólido** (botón morado con texto blanco encima) →
+  `brand` en ambos temas: el contraste lo aporta el texto blanco (~7:1).
+- Los antiguos ternarios ad-hoc `isDark ? brandLight : brand` (99 casos en 36
+  archivos) fueron migrados a `brandOf(context)` en julio 2026.
 
 ### Capa 2 · Acento — coral/naranja
 
@@ -500,5 +513,6 @@ class AppColors {
 |---|---|
 | 2026-04-08 | Sistema de color inicial definido tras auditoría completa |
 | 2026-05-09 | Añadido sistema de colores para calendario (TRIMP, no km). Brand reservado para competición. Añadidas reglas de tipografía (sin bold en listas). Añadidas reglas de inputs (NumberPickerField). Añadido sistema de etiquetas predefinidas/custom. Fix: GPS activo en brand no en rpeLow. Fix: backgroundColor nunca Colors.transparent. |
+| 2026-07-12 | **`AppColors.brandOf(context)`**: token contextual para brand como primer plano (brandLight en oscuro — 7.3:1 vs 2.5:1 de brand). 99 ternarios ad-hoc migrados en 36 archivos. Prepara la reactivación del modo oscuro (hoy forzado a claro en ThemeService por este problema de contraste). |
 | 2026-07-12 | **Auditoría de cumplimiento completa.** Tipografía: 399 usos de `FontWeight.bold`/`w700` migrados a `w600` en 89 archivos activos (la regla ya existía; no se cumplía). Charts categóricos: paleta Material/pink/cyan → tokens. `block_preview_tile`, dots de analytics y admin migrados a tokens. Snackbar default → `brand` token. Aliases deprecated eliminados de `premium_date_range_picker`. Calendario: sesión saltada ahora al 60 % de opacidad (spec de día). Pantalla de descanso implementada según spec (azul `rest`, vaso llenándose, burbujas, skip discreto). Documentadas: paleta de sesión por tipo (`session_theme`), exenciones de paletas de datos, y eliminado el `_dotsForSessions` muerto. Quedan fuera del barrido: vistas legacy/huérfanas (deuda #5) y `pdf_generator` (medio impreso). |
 | 2026-07-05 | `AppTypography` ampliada a 8 roles (`display`, `label`, `caption` nuevos; `h3` completa letterSpacing) y sin `color` fijo — lo aplica cada widget por contexto. Añadido `AppMotion` (duraciones `fast/base/medium/slow/enter` + curvas `snap/easeEnter/easeExit`) como sistema oficial de animación, aplicado en `training`/`home`/`ai_coach` (MVP activo). Añadidos `AppColors.brandDisabledColor()` y `AppColors.brandGhost()` (métodos con `withValues`, no const). |

@@ -83,7 +83,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
   // --- ViewModel ---
   final TrainingViewModel _vm = TrainingViewModel();
 
-  Color get _brandAccentColor => Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand;
+  Color get _brandAccentColor => AppColors.brandOf(context);
 
   // --- Estado UI ---
   bool _isSaving = false;
@@ -983,7 +983,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                                 icon: const Icon(Icons.refresh, size: 18),
                                 label: const Text('Reintentar'),
                                 style: TextButton.styleFrom(
-                                  foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+                                  foregroundColor: AppColors.brandOf(context),
                                 ),
                               ),
                             ],
@@ -1000,8 +1000,8 @@ class _TrainingStartViewState extends State<TrainingStartView>
                         children: [
                           // Botón nueva etiqueta
                           ActionChip(
-                            avatar: Icon(Icons.add, size: 16, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
-                            label: Text('Nueva', style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand)),
+                            avatar: Icon(Icons.add, size: 16, color: AppColors.brandOf(context)),
+                            label: Text('Nueva', style: TextStyle(color: AppColors.brandOf(context))),
                             backgroundColor: AppColors.brand.withValues(alpha: 0.1),
                             side: BorderSide.none,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -1591,7 +1591,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
        child: Column(
          mainAxisAlignment: MainAxisAlignment.center,
          children: [
-           Icon(Icons.directions_run_rounded, size: 80, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+           Icon(Icons.directions_run_rounded, size: 80, color: AppColors.brandOf(context)),
            const SizedBox(height: 24),
            const Text(
              "Carrera Continua",
@@ -2755,14 +2755,14 @@ class _TrainingStartViewState extends State<TrainingStartView>
               color: _brandAccentColor.withValues(alpha: 0.05),
               child: Row(
                 children: [
-                  Icon(Icons.star_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 18),
+                  Icon(Icons.star_rounded, color: AppColors.brandOf(context), size: 18),
                   const SizedBox(width: 8),
                   Text(
                     "PLANTILLA ACTIVA",
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+                      color: AppColors.brandOf(context),
                       letterSpacing: 1.5,
                     ),
                   ),
@@ -2811,7 +2811,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                       icon: const Icon(Icons.edit_rounded, size: 16),
                       label: const Text("EDITAR ESTRUCTURA"),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+                        foregroundColor: AppColors.brandOf(context),
                         side: BorderSide(color: _brandAccentColor.withValues(alpha: 0.3)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -2834,7 +2834,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
       children: [
         Row(
           children: [
-            Icon(icon, size: 16, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+            Icon(icon, size: 16, color: AppColors.brandOf(context)),
             const SizedBox(width: 6),
             Text(
               value,
@@ -3257,7 +3257,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
               style: TextStyle(
                 fontSize: 28.0,
                 fontWeight: FontWeight.w600,
-                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+                color: AppColors.brandOf(context),
               ),
             ),
           ],
@@ -3288,7 +3288,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                 children: [
                   const Text("Distancia de la serie", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                   IconButton(
-                    icon: Icon(Icons.keyboard, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+                    icon: Icon(Icons.keyboard, color: AppColors.brandOf(context)),
                     onPressed: () {
                       Navigator.pop(context);
                       _showManualInputDialog(isDistance: true);
@@ -3315,7 +3315,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                 },
                 children: [
                   ...List.generate(100, (index) => Center(child: Text("${(index + 1) * 50}m"))),
-                  Center(child: Text("Otro...", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.w600))),
+                  Center(child: Text("Otro...", style: TextStyle(color: AppColors.brandOf(context), fontWeight: FontWeight.w600))),
                 ],
               ),
             ),
@@ -3371,7 +3371,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                 children: [
                   const Text("Tiempo de descanso", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                   IconButton(
-                    icon: Icon(Icons.keyboard, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+                    icon: Icon(Icons.keyboard, color: AppColors.brandOf(context)),
                     onPressed: () {
                       Navigator.pop(context);
                       _showManualInputDialog(isDistance: false);
@@ -3397,7 +3397,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                 },
                 children: [
                   ...List.generate(61, (index) => Center(child: Text(_formatMinSec(index * 5)))),
-                  Center(child: Text("Otro...", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.w600))),
+                  Center(child: Text("Otro...", style: TextStyle(color: AppColors.brandOf(context), fontWeight: FontWeight.w600))),
                 ],
               ),
             ),
@@ -3713,7 +3713,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                           style: TextStyle(
                             fontSize: 14.0,
                             fontWeight: FontWeight.w600,
-                            color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+                            color: AppColors.brandOf(context),
                           ),
                         ),
                       )
@@ -3730,7 +3730,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
               ),
               if (_alarmEnabled)
                  IconButton(
-                   icon: Icon(Icons.edit, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+                   icon: Icon(Icons.edit, color: AppColors.brandOf(context)),
                    onPressed: () => _showAlarmConfigSheet(context),
                  ),
               Transform.scale(
@@ -3813,7 +3813,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: Text("Listo", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.w600)),
+                          child: Text("Listo", style: TextStyle(color: AppColors.brandOf(context), fontWeight: FontWeight.w600)),
                         )
                       ],
                     ),
@@ -4060,7 +4060,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                         style: TextStyle(
                           fontSize: 12.0,
                           fontWeight: FontWeight.w600,
-                          color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+                          color: AppColors.brandOf(context),
                         ),
                       ),
                     ),
@@ -4217,7 +4217,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
             onTap: _openTemplateSelector,
             icon: Icons.folder_open_rounded,
             title: 'Cargar\nPlantilla',
-            color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+            color: AppColors.brandOf(context),
           ),
         ),
         const SizedBox(width: 12),

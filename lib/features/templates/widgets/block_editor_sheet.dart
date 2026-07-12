@@ -674,9 +674,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                                   ? Icons.notifications_active_rounded
                                   : Icons.notifications_none_rounded,
                               color: _alertsEnabled
-                                  ? (isDark
-                                      ? AppColors.brandLight
-                                      : AppColors.brand)
+                                  ? (AppColors.brandOf(context))
                                   : cs.onSurface.withValues(alpha: 0.4),
                               size: 20,
                             ),
@@ -714,9 +712,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
                               child: Icon(
                                 Icons.settings_suggest_rounded,
                                 size: 20,
-                                color: isDark
-                                    ? AppColors.brandLight
-                                    : AppColors.brand,
+                                color: AppColors.brandOf(context),
                               ),
                             ),
                             onTap: _openAlarmConfig,

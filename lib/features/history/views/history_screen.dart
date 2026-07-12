@@ -408,9 +408,7 @@ class _HistoryScreenState extends State<HistoryScreen>
   }
 
   Widget _buildChip(_FilterChipData data) {
-    final brandColor = Theme.of(context).brightness == Brightness.dark
-        ? AppColors.brandLight
-        : AppColors.brand;
+    final brandColor = AppColors.brandOf(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(

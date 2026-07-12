@@ -24,7 +24,7 @@ class _EditHomeViewState extends State<EditHomeView> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accentColor = isDark ? AppColors.brandLight : AppColors.brand;
+    final accentColor = AppColors.brandOf(context);
 
     return Scaffold(
       backgroundColor: isDark
@@ -309,7 +309,7 @@ class _EditHomeViewState extends State<EditHomeView> {
 
   Widget _buildCardBase(BuildContext context, HomeWidget w, {required bool dimmed}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final iconColor = isDark ? AppColors.brandLight : AppColors.brand;
+    final iconColor = AppColors.brandOf(context);
     final title = w.config['title'] as String? ?? w.type.displayName;
 
     return Opacity(

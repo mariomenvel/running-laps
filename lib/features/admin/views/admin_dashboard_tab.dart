@@ -58,7 +58,7 @@ class AdminDashboardTab extends StatelessWidget {
                     onPressed: () => _showExportDialog(context, controller),
                     icon: const Icon(Icons.picture_as_pdf, size: 20),
                     label: const Text("Exportar"),
-                    style: TextButton.styleFrom(foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+                    style: TextButton.styleFrom(foregroundColor: AppColors.brandOf(context)),
                   ),
                 ],
               ),
@@ -699,14 +699,14 @@ class AdminDashboardTab extends StatelessWidget {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.calendar_today, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 20),
+                            Icon(Icons.calendar_today, color: AppColors.brandOf(context), size: 20),
                             const SizedBox(width: 12),
                             Text(
                               "${DateFormat('dd/MM/yyyy').format(exportRange.start)} - ${DateFormat('dd/MM/yyyy').format(exportRange.end)}",
-                              style: TextStyle(fontWeight: FontWeight.w600, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+                              style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.brandOf(context)),
                             ),
                             const Spacer(),
-                            Icon(Icons.edit, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 18),
+                            Icon(Icons.edit, color: AppColors.brandOf(context), size: 18),
                           ],
                         ),
                       ),

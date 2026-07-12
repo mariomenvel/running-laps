@@ -684,7 +684,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Row(
           children: [
-            Icon(Icons.auto_awesome, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+            Icon(Icons.auto_awesome, color: AppColors.brandOf(context)),
             const SizedBox(width: 12),
             const Text('Unión Automática'),
           ],
@@ -834,13 +834,13 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
             Icon(
               Icons.arrow_back_ios_new_rounded,
               size: 16,
-              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+              color: AppColors.brandOf(context),
             ),
             const SizedBox(width: 6),
             Text(
               "Volver",
               style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+                color: AppColors.brandOf(context),
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
@@ -1293,7 +1293,7 @@ class _PremiumMemberCard extends StatelessWidget {
                           Text(
                             "${member.totalKm.toStringAsFixed(1)} km",
                             style: TextStyle(
-                              color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+                              color: AppColors.brandOf(context),
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
@@ -1712,7 +1712,7 @@ class _InviteSheetState extends State<_InviteSheet> {
                             icon: const Icon(Icons.copy_rounded, size: 18),
                             label: const Text('Copiar código'),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+                              foregroundColor: AppColors.brandOf(context),
                               side: BorderSide(
                                   color: AppColors.brand.withValues(alpha: 0.4)),
                               shape: RoundedRectangleBorder(

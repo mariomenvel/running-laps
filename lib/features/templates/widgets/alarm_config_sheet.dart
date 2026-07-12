@@ -117,7 +117,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
                 TextButton(
                   onPressed: _save,
                   style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+                    foregroundColor: AppColors.brandOf(context),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
@@ -179,7 +179,7 @@ class _AlarmConfigSheetState extends State<AlarmConfigSheet> {
       child: Text(
         text,
         style: TextStyle(
-          color: isSelected ? (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand) : Colors.black54,
+          color: isSelected ? (AppColors.brandOf(context)) : Colors.black54,
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
           fontSize: 14,
         ),

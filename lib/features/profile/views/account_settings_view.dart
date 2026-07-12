@@ -128,7 +128,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                 color: AppColors.brand.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.person_outline_rounded, size: 40, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+              child: Icon(Icons.person_outline_rounded, size: 40, color: AppColors.brandOf(context)),
             ),
             const SizedBox(height: 24),
             Text(
@@ -161,7 +161,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
                 ),
-                prefixIcon: Icon(Icons.edit_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+                prefixIcon: Icon(Icons.edit_rounded, color: AppColors.brandOf(context)),
               ),
             ),
             if (!isGoogle) ...[
@@ -178,7 +178,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
                   ),
-                  prefixIcon: Icon(Icons.lock_outline, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+                  prefixIcon: Icon(Icons.lock_outline, color: AppColors.brandOf(context)),
                 ),
               ),
             ],
@@ -875,7 +875,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                 color: AppColors.brand.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.style_rounded, color: isDark ? AppColors.brandLight : AppColors.brand, size: 22),
+              child: Icon(Icons.style_rounded, color: AppColors.brandOf(context), size: 22),
             ),
             const SizedBox(width: 16),
             Expanded(

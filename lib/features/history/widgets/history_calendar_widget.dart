@@ -129,7 +129,7 @@ class _HistoryCalendarWidgetState extends State<HistoryCalendarWidget> {
     const int maxMarkers = 3;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final brandColor =
-        isDark ? AppColors.brandLight : AppColors.brand;
+        AppColors.brandOf(context);
     final int displayCount =
         tags.length > maxMarkers ? maxMarkers - 1 : tags.length;
     final List<Widget> markers = [];

@@ -40,13 +40,13 @@ class _WorkoutPatternCarouselViewState
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+          icon: Icon(Icons.arrow_back_ios_new, color: AppColors.brandOf(context)),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           if (widget.patterns[_currentPatternIndex].instances.length >= 2)
             IconButton(
-              icon: Icon(Icons.compare_arrows, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand),
+              icon: Icon(Icons.compare_arrows, color: AppColors.brandOf(context)),
               onPressed: () => _showComparisonSelector(),
             ),
         ],
@@ -514,7 +514,7 @@ class _WorkoutPatternContent extends StatelessWidget {
             child: Text(
               "$pace /km",
               style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+                color: AppColors.brandOf(context),
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
                 letterSpacing: -0.3,

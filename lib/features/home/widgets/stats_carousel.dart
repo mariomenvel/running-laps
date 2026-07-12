@@ -245,7 +245,7 @@ class _StatsCarouselState extends State<StatsCarousel> {
                 ActionChip(
                   label: Text("${dist}m"),
                   backgroundColor: AppColors.brand.withValues(alpha: 0.1),
-                  labelStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, fontWeight: FontWeight.w600),
+                  labelStyle: TextStyle(color: AppColors.brandOf(context), fontWeight: FontWeight.w600),
                   onPressed: () {
                     // TODO: Navegar a Detalle Distancia
                     // Callback(type: distance, val: dist)

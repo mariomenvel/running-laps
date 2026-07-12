@@ -223,7 +223,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(Icons.notes_rounded,
-                  color: isDark ? AppColors.brandLight : AppColors.brand,
+                  color: AppColors.brandOf(context),
                   size: 20),
             ),
             const SizedBox(width: 12),
@@ -323,7 +323,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
                 color: AppColors.brand.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.list_alt_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand, size: 20),
+              child: Icon(Icons.list_alt_rounded, color: AppColors.brandOf(context), size: 20),
             ),
             const SizedBox(width: 12),
             Text(
@@ -366,7 +366,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
                     "${index + 1}",
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+                      color: AppColors.brandOf(context),
                       fontSize: 13,
                     ),
                   ),
@@ -925,17 +925,13 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
             Icon(
               Icons.arrow_back_ios_new_rounded,
               size: 16,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.brandLight
-                  : AppColors.brand,
+              color: AppColors.brandOf(context),
             ),
             const SizedBox(width: 6),
             Text(
               "Volver",
               style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.brandLight
-                    : AppColors.brand,
+                color: AppColors.brandOf(context),
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),

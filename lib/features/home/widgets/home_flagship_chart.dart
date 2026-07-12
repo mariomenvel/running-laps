@@ -151,7 +151,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
         child: Icon(
           icon,
           size: 20,
-          color: isSelected ? (Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand) : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+          color: isSelected ? (AppColors.brandOf(context)) : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
         ),
       ),
     );
@@ -241,7 +241,7 @@ class _HomeFlagshipChartState extends State<HomeFlagshipChart> {
                   TextSpan(
                     text: _formatValue(data.value),
                     style: TextStyle(
-                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
+                      color: AppColors.brandOf(context),
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
                     ),

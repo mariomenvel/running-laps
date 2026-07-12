@@ -100,7 +100,7 @@ class _StandardTableCalendarState<T extends Object>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final brandColor =
-        isDark ? AppColors.brandLight : AppColors.brand;
+        AppColors.brandOf(context);
 
     return ValueListenableBuilder<CalendarFormat>(
       valueListenable: _format,

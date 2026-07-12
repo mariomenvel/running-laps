@@ -284,9 +284,7 @@ class _TagSelectorSheetState extends State<TagSelectorSheet> {
                     TextButton(
                       onPressed: _createInlineTag,
                       style: TextButton.styleFrom(
-                        foregroundColor: isDark
-                            ? AppColors.brandLight
-                            : AppColors.brand,
+                        foregroundColor: AppColors.brandOf(context),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 10),
                       ),
@@ -323,16 +321,12 @@ class _TagSelectorSheetState extends State<TagSelectorSheet> {
                       children: [
                         Icon(Icons.add_circle_outline,
                             size: 16,
-                            color: isDark
-                                ? AppColors.brandLight
-                                : AppColors.brand),
+                            color: AppColors.brandOf(context)),
                         const SizedBox(width: 6),
                         Text(
                           '+ Crear etiqueta',
                           style: TextStyle(
-                            color: isDark
-                                ? AppColors.brandLight
-                                : AppColors.brand,
+                            color: AppColors.brandOf(context),
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
                           ),
@@ -425,7 +419,7 @@ class _TagToggleChip extends StatelessWidget {
   Widget build(BuildContext ctx) {
     final isDark = Theme.of(ctx).brightness == Brightness.dark;
     final Color activeText =
-        isDark ? AppColors.brandLight : AppColors.brand;
+        AppColors.brandOf(context);
     final Color inactiveText = AppColors.textSecondary(ctx);
     final Color activeBg = AppColors.brand.withValues(alpha: 0.15);
     final Color inactiveBg = isPredefined

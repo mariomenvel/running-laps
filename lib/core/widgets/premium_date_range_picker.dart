@@ -59,7 +59,7 @@ class _PremiumDateRangePickerState extends State<PremiumDateRangePicker> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surfaceColor = AppColors.surfaceOf(context);
     final brandColor =
-        isDark ? AppColors.brandLight : AppColors.brand;
+        AppColors.brandOf(context);
 
     return Container(
       decoration: BoxDecoration(
