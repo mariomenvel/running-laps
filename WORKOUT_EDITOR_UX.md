@@ -218,9 +218,11 @@ Al tocar un segmento o "Añadir segmento", aparece un bottom sheet.
 
   ────── OBJETIVO (opcional) ──────
 
-  Pace
+  Pace                 [min/km] [s/100m]   ← toggle de unidad (persistido)
   [ 4 min ] [ 40 seg ] – [ 4 min ] [ 50 seg ]  /km
                                         ← si iguales = pace exacto
+  (modo s/100m: [ 28.0 ] – [ 29.0 ]  s/100m — para atletas de pista;
+   pasos de 0.5 s/100m = 5 s/km, se convierte a seg/km por detrás)
 
   Zona de FC
   [Z1] [Z2] [Z3] [Z4★] [Z5]          ← selector horizontal
@@ -260,7 +262,7 @@ Al tocar un segmento o "Añadir segmento", aparece un bottom sheet.
 - El objetivo es siempre opcional — el atleta puede guardar un segmento sin objetivo.
 - Al cambiar "Por distancia" ↔ "Por tiempo", el valor se resetea.
 - NumberPickerField: nunca teclado numérico. CupertinoPicker para todos los valores numéricos.
-- El pace se introduce como dos NumberPickerField: minutos + segundos (igual que en `TrainingStartView`).
+- El pace se introduce como dos NumberPickerField: minutos + segundos (igual que en `TrainingStartView`). Toggle de unidad `min/km` / `s/100m` en la cabecera de la tarjeta PACE: en modo s/100m se muestra una única rueda por límite (12.0–54.5, pasos de 0.5) y el valor se convierte a seg/km al vuelo — el modelo (`TargetConfig.paceMinSecPerKm`) no cambia. La preferencia se persiste en `SettingsService.getPacePer100()`.
 - La zona se selecciona con chips horizontales, uno activo a la vez.
 - RPE con slider `effortColor(rpe)` dinámico.
 

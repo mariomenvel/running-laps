@@ -1,5 +1,14 @@
 # CHANGELOG — Running Laps
 
+## [UX] — Ritmo objetivo en s/100m para atletas de pista — 2026-07-13
+Toggle `min/km` / `s/100m` en la tarjeta PACE del sheet de segmento: quien
+mide "el 100 en 28" introduce el objetivo directamente en segundos por 100 m
+(ruedas 12.0–54.5, pasos de 0.5 s/100m = 5 s/km, misma granularidad) y la app
+lo convierte a seg/km por detrás — `TargetConfig` y todo lo aguas abajo
+(metrónomo, GPS, coach) no cambian. La preferencia se persiste
+(`SettingsService.getPacePer100`). Con el modo activo, la fila informativa
+del metrónomo muestra "28 s/100m (4:40 /km)".
+
 ## [UX] — Auditoría de navegación: header estándar + sin flechas de volver — 2026-07-13
 Barrido página a página: toda pantalla con header usa el `AppHeader` global
 (logo + avatar; variante con `title:` centrado permitida) y ninguna lleva

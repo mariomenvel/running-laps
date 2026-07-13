@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/services/settings_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/widgets/ios_picker.dart';
@@ -65,6 +66,11 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
   HeartRateZone? _zone;
   int? _rpe;
 
+  /// true = introducir el ritmo objetivo en segundos por 100 m (pista).
+  /// Solo cambia la UI de entrada — el estado canónico sigue siendo
+  /// _paceMin*/_paceMax* en min:seg por km. Preferencia persistida.
+  bool _pacePer100 = false;
+
   // Slider position independent of whether _rpe is actually set
   double _rpeSliderValue = 5;
 
@@ -123,6 +129,10 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
       }
     }
 
+    SettingsService().getPacePer100().then((v) {
+      if (mounted && v != _pacePer100) setState(() => _pacePer100 = v);
+    });
+
     final t = s?.target;
     if (t != null) {
       if (t.paceMinSecPerKm != null) {
@@ -173,7 +183,13 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
   String? get _targetPaceLabel {
     final pace = _targetPaceSecPerKm;
     if (pace == null) return null;
-    return '${pace ~/ 60}:${(pace % 60).toString().padLeft(2, '0')} /km';
+    final km = '${pace ~/ 60}:${(pace % 60).toString().padLeft(2, '0')} /km';
+    if (!_pacePer100) return km;
+    final per100 = pace / 10.0;
+    final s = per100 == per100.roundToDouble()
+        ? per100.toInt().toString()
+        : per100.toStringAsFixed(1);
+    return '$s s/100m ($km)';
   }
 
   bool get _saveDisabled {
@@ -471,13 +487,36 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _cardLabel(context, 'PACE'),
+                          Row(
+                            children: [
+                              _cardLabel(context, 'PACE'),
+                              const Spacer(),
+                              _PaceUnitChip(
+                                label: 'min/km',
+                                selected: !_pacePer100,
+                                onTap: () {
+                                  setState(() => _pacePer100 = false);
+                                  SettingsService().setPacePer100(false);
+                                },
+                              ),
+                              const SizedBox(width: 6),
+                              _PaceUnitChip(
+                                label: 's/100m',
+                                selected: _pacePer100,
+                                onTap: () {
+                                  setState(() => _pacePer100 = true);
+                                  SettingsService().setPacePer100(true);
+                                },
+                              ),
+                            ],
+                          ),
                           const SizedBox(height: 8),
                           _PaceRow(
                             minMin: _paceMinMin,
                             minSec: _paceMinSec,
                             maxMin: _paceMaxMin,
                             maxSec: _paceMaxSec,
+                            per100: _pacePer100,
                             onMinChanged: (min, sec) => setState(() {
                               _paceMinMin = min;
                               _paceMinSec = sec;
@@ -826,6 +865,55 @@ class _WheelPicker extends StatelessWidget {
   }
 }
 
+// ── _PaceUnitChip ─────────────────────────────────────────────────────────────
+
+/// Chip compacto para elegir la unidad de entrada del ritmo objetivo
+/// (min/km vs s/100m) en la cabecera de la tarjeta PACE.
+class _PaceUnitChip extends StatelessWidget {
+  const _PaceUnitChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.brand.withValues(alpha: 0.08)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: selected
+                ? AppColors.brandOf(context)
+                : AppColors.borderOf(context),
+            width: selected ? 1.2 : 0.5,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            color: selected
+                ? AppColors.brandOf(context)
+                : AppColors.textSecondary(context),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // ── _PaceRow ──────────────────────────────────────────────────────────────────
 
 // ── _PacePill ─────────────────────────────────────────────────────────────────
@@ -870,6 +958,7 @@ class _PaceRow extends StatelessWidget {
     required this.minSec,
     required this.maxMin,
     required this.maxSec,
+    this.per100 = false,
     required this.onMinChanged,
     required this.onMaxChanged,
     required this.onClear,
@@ -880,6 +969,11 @@ class _PaceRow extends StatelessWidget {
   final int? minSec;
   final int? maxMin;
   final int? maxSec;
+
+  /// true = las ruedas muestran segundos por 100 m; los callbacks siguen
+  /// devolviendo min:seg por km (1 s/100m = 10 s/km, pasos de 0.5 s/100m
+  /// = 5 s/km — misma granularidad que el modo min/km).
+  final bool per100;
   final void Function(int min, int sec) onMinChanged;
   final void Function(int min, int sec) onMaxChanged;
   final VoidCallback onClear;
@@ -887,6 +981,39 @@ class _PaceRow extends StatelessWidget {
 
   static const _mins = [2, 3, 4, 5, 6, 7, 8];
   static const _secs = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+
+  /// 12.0–54.5 s/100m en pasos de 0.5 (equivale a 2:00–9:05 /km).
+  static final List<double> _per100s = [
+    for (int i = 24; i <= 109; i++) i * 0.5,
+  ];
+
+  double? _toPer100(int? min, int? sec) =>
+      min == null ? null : (min * 60 + (sec ?? 0)) / 10.0;
+
+  Widget _per100Wheel(
+    BuildContext ctx,
+    double? selected,
+    void Function(int min, int sec) onChanged,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface2Of(ctx),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.borderOf(ctx), width: 0.5),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: _MiniWheelPickerDouble(
+        values: _per100s,
+        selected: selected ?? 27.0,
+        width: 44,
+        onChanged: (v) {
+          final totalSecPerKm = (v * 10).round();
+          onChanged(totalSecPerKm ~/ 60, totalSecPerKm % 60);
+        },
+        context: ctx,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext outerContext) {
@@ -900,41 +1027,55 @@ class _PaceRow extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 13,
                     color: AppColors.textSecondary(outerContext))),
-            _PacePill(
-              minutesPicker: _MiniWheelPicker(
-                values: _mins,
-                selected: minMin ?? 4,
-                onChanged: (v) => onMinChanged(v, minSec ?? 0),
-                context: outerContext,
+            if (per100)
+              _per100Wheel(
+                outerContext,
+                _toPer100(minMin, minSec),
+                onMinChanged,
+              )
+            else
+              _PacePill(
+                minutesPicker: _MiniWheelPicker(
+                  values: _mins,
+                  selected: minMin ?? 4,
+                  onChanged: (v) => onMinChanged(v, minSec ?? 0),
+                  context: outerContext,
+                ),
+                secondsPicker: _MiniWheelPicker(
+                  values: _secs,
+                  selected: minSec ?? 0,
+                  onChanged: (v) => onMinChanged(minMin ?? 4, v),
+                  context: outerContext,
+                  pad: true,
+                ),
               ),
-              secondsPicker: _MiniWheelPicker(
-                values: _secs,
-                selected: minSec ?? 0,
-                onChanged: (v) => onMinChanged(minMin ?? 4, v),
-                context: outerContext,
-                pad: true,
-              ),
-            ),
             Text('  a  ',
                 style: TextStyle(
                     fontSize: 13,
                     color: AppColors.textSecondary(outerContext))),
-            _PacePill(
-              minutesPicker: _MiniWheelPicker(
-                values: _mins,
-                selected: maxMin ?? 4,
-                onChanged: (v) => onMaxChanged(v, maxSec ?? 0),
-                context: outerContext,
+            if (per100)
+              _per100Wheel(
+                outerContext,
+                _toPer100(maxMin, maxSec),
+                onMaxChanged,
+              )
+            else
+              _PacePill(
+                minutesPicker: _MiniWheelPicker(
+                  values: _mins,
+                  selected: maxMin ?? 4,
+                  onChanged: (v) => onMaxChanged(v, maxSec ?? 0),
+                  context: outerContext,
+                ),
+                secondsPicker: _MiniWheelPicker(
+                  values: _secs,
+                  selected: maxSec ?? 0,
+                  onChanged: (v) => onMaxChanged(maxMin ?? 4, v),
+                  context: outerContext,
+                  pad: true,
+                ),
               ),
-              secondsPicker: _MiniWheelPicker(
-                values: _secs,
-                selected: maxSec ?? 0,
-                onChanged: (v) => onMaxChanged(maxMin ?? 4, v),
-                context: outerContext,
-                pad: true,
-              ),
-            ),
-            Text('  /km',
+            Text(per100 ? '  s/100m' : '  /km',
                 style: TextStyle(
                     fontSize: 13,
                     color: AppColors.textSecondary(outerContext))),
@@ -1257,12 +1398,14 @@ class _MiniWheelPickerDouble extends StatelessWidget {
     required this.selected,
     required this.onChanged,
     required this.context,
+    this.width = 36,
   });
 
   final List<double> values;
   final double selected;
   final void Function(double) onChanged;
   final BuildContext context;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
@@ -1280,7 +1423,7 @@ class _MiniWheelPickerDouble extends StatelessWidget {
       },
       onChanged: (i) => onChanged(values[i]),
       itemExtent: 28,
-      width: 36,
+      width: width,
     );
   }
 }

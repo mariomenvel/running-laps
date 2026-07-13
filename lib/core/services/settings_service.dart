@@ -6,6 +6,7 @@ class SettingsService {
   static const String _keyAlarmEnabled = 'pref_alarm_enabled';
   static const String _keyGpsDefault = 'pref_gps_default';
   static const String _keyCardStyle = 'home_card_style';
+  static const String _keyPacePer100 = 'pref_pace_per_100';
 
   // Reactive notifier: true = white/Moderno, false = colored/Clásico.
   // Initialized to true (white) until initCardStyle() loads the saved value.
@@ -52,6 +53,29 @@ class SettingsService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_keyGpsDefault, value);
+    } catch (e) {
+      debugPrint('[SettingsService] error guardando prefs: $e');
+    }
+  }
+
+  // --- Unidad de ritmo objetivo ---
+
+  /// true = el atleta introduce el ritmo objetivo en segundos por 100 m
+  /// (pista); false = min/km (default). Solo afecta a la UI de entrada —
+  /// el modelo siempre almacena seg/km.
+  Future<bool> getPacePer100() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(_keyPacePer100) ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<void> setPacePer100(bool value) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_keyPacePer100, value);
     } catch (e) {
       debugPrint('[SettingsService] error guardando prefs: $e');
     }
