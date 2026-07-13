@@ -91,6 +91,9 @@ class AiCoachPromptSessionGenerator {
             '  de type recovery, NO como bloques separados.\n'
             '- warmup y cooldown son opcionales pero recomendados.'
             '  Duración máxima warmup: 15 min. Cooldown: 10 min.\n'
+            ' RANGOS NUMÉRICOS: repetitions entre 1 y 30; rpe entre 1 y 10;'
+            ' fcMaxPercent entre 1 y 100; paces en segundos por km (mínimo 120);'
+            ' durationSec y distanceM siempre positivos.\n'
             ' Responde únicamente con JSON válido que cumpla el esquema.',
       ),
       OpenRouterChatMessage(
@@ -141,7 +144,7 @@ class AiCoachPromptSessionGenerator {
   WorkoutBlock _parseBlock(Map<String, dynamic> map) {
     final roleStr = map['role'] as String? ?? 'main';
     final role = BlockRole.values.asNameMap()[roleStr] ?? BlockRole.main;
-    final repetitions = (map['repetitions'] as num?)?.toInt() ?? 1;
+    final repetitions = ((map['repetitions'] as num?)?.toInt() ?? 1).clamp(1, 30);
     final label = map['label'] as String?;
     final segmentsRaw = map['segments'] as List<dynamic>? ?? const [];
 
@@ -166,8 +169,15 @@ class AiCoachPromptSessionGenerator {
   WorkoutSegment _parseSegment(Map<String, dynamic> map) {
     final typeStr = map['type'] as String? ?? 'interval';
     final type = SegmentType.values.asNameMap()[typeStr] ?? SegmentType.interval;
-    final durationSec = (map['durationSec'] as num?)?.toInt();
-    final distanceM = (map['distanceM'] as num?)?.toInt();
+    // Sin minimum en el esquema (no soportado), valores no positivos se
+    // descartan y caen en los defaults.
+    final rawDurationSec = (map['durationSec'] as num?)?.toInt();
+    final durationSec = (rawDurationSec != null && rawDurationSec > 0)
+        ? rawDurationSec
+        : null;
+    final rawDistanceM = (map['distanceM'] as num?)?.toInt();
+    final distanceM =
+        (rawDistanceM != null && rawDistanceM > 0) ? rawDistanceM : null;
     final recoveryTypeStr = map['recoveryType'] as String?;
     final recoveryType = recoveryTypeStr != null
         ? RecoveryType.values.asNameMap()[recoveryTypeStr]
@@ -193,14 +203,18 @@ class AiCoachPromptSessionGenerator {
         }
       }
 
+      final rawSegmentDistance = (alertsJson['segmentDistanceM'] as num?)?.toInt();
+      final rawTimeSec = (alertsJson['timeSec'] as num?)?.toDouble() ?? 0;
       alerts = SegmentAlerts(
         enabled: true,
         mode: mode,
         timeMin: (alertsJson['timeMin'] as num?)?.toInt() ?? 0,
-        timeSec: (alertsJson['timeSec'] as num?)?.toDouble() ?? 0,
+        timeSec: rawTimeSec < 0 ? 0 : rawTimeSec,
         paceMin: alertPaceMin,
         paceSec: alertPaceSec,
-        segmentDistanceM: (alertsJson['segmentDistanceM'] as num?)?.toInt() ?? 400,
+        segmentDistanceM: (rawSegmentDistance != null && rawSegmentDistance > 0)
+            ? rawSegmentDistance
+            : 400,
       );
     }
 
@@ -216,8 +230,16 @@ class AiCoachPromptSessionGenerator {
 
   TargetConfig? _parseTarget(Map<String, dynamic> map) {
     if (map.isEmpty) return null;
-    final paceMin = (map['paceMinSecPerKm'] as num?)?.toInt();
-    final paceMax = (map['paceMaxSecPerKm'] as num?)?.toInt();
+    // Paces por debajo de 2:00/km (120 s) son irreales — se descartan.
+    var paceMin = (map['paceMinSecPerKm'] as num?)?.toInt();
+    if (paceMin != null && paceMin < 120) paceMin = null;
+    var paceMax = (map['paceMaxSecPerKm'] as num?)?.toInt();
+    if (paceMax != null && paceMax < 120) paceMax = null;
+    if (paceMin != null && paceMax != null && paceMin > paceMax) {
+      final tmp = paceMin;
+      paceMin = paceMax;
+      paceMax = tmp;
+    }
     final rpe = (map['rpe'] as num?)?.toInt();
     final fcMaxPercent = (map['fcMaxPercent'] as num?)?.toInt();
     if (paceMin == null && paceMax == null && rpe == null && fcMaxPercent == null) {
@@ -231,6 +253,10 @@ class AiCoachPromptSessionGenerator {
     );
   }
 
+  // ⚠️ Los structured outputs de Anthropic (via OpenRouter) no soportan
+  // restricciones numéricas (minimum/maximum) ni minItems — la petición
+  // entera falla con 400. Los rangos se indican en el system prompt y se
+  // aplican con clamps en _parseBlock/_parseSegment/_parseTarget.
   static const Map<String, dynamic> _sessionSchema = {
     'type': 'object',
     'additionalProperties': false,
@@ -244,7 +270,6 @@ class AiCoachPromptSessionGenerator {
       },
       'blocks': {
         'type': 'array',
-        'minItems': 1,
         'items': {
           'type': 'object',
           'additionalProperties': false,
@@ -254,11 +279,10 @@ class AiCoachPromptSessionGenerator {
               'type': 'string',
               'enum': ['warmup', 'main', 'cooldown'],
             },
-            'repetitions': {'type': 'integer', 'minimum': 1, 'maximum': 30},
+            'repetitions': {'type': 'integer'},
             'label': {'type': 'string'},
             'segments': {
               'type': 'array',
-              'minItems': 1,
               'items': {
                 'type': 'object',
                 'additionalProperties': false,
@@ -268,8 +292,8 @@ class AiCoachPromptSessionGenerator {
                     'type': 'string',
                     'enum': ['interval', 'recovery'],
                   },
-                  'durationSec': {'type': 'integer', 'minimum': 1},
-                  'distanceM': {'type': 'integer', 'minimum': 1},
+                  'durationSec': {'type': 'integer'},
+                  'distanceM': {'type': 'integer'},
                   'recoveryType': {
                     'type': 'string',
                     'enum': ['active', 'passive'],
@@ -278,10 +302,10 @@ class AiCoachPromptSessionGenerator {
                     'type': 'object',
                     'additionalProperties': false,
                     'properties': {
-                      'paceMinSecPerKm': {'type': 'integer', 'minimum': 120},
-                      'paceMaxSecPerKm': {'type': 'integer', 'minimum': 120},
-                      'rpe': {'type': 'integer', 'minimum': 1, 'maximum': 10},
-                      'fcMaxPercent': {'type': 'integer', 'minimum': 1, 'maximum': 100},
+                      'paceMinSecPerKm': {'type': 'integer'},
+                      'paceMaxSecPerKm': {'type': 'integer'},
+                      'rpe': {'type': 'integer'},
+                      'fcMaxPercent': {'type': 'integer'},
                     },
                   },
                   'alerts': {
@@ -290,8 +314,8 @@ class AiCoachPromptSessionGenerator {
                     'properties': {
                       'enabled': {'type': 'boolean'},
                       'mode': {'type': 'string', 'enum': ['time', 'pace']},
-                      'timeSec': {'type': 'number', 'minimum': 1},
-                      'segmentDistanceM': {'type': 'integer', 'minimum': 1},
+                      'timeSec': {'type': 'number'},
+                      'segmentDistanceM': {'type': 'integer'},
                     },
                   },
                 },
