@@ -6,7 +6,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
-import 'package:running_laps/core/theme/theme_service.dart';
 import '../../auth/viewmodels/auth_controller.dart';
 import '../../auth/views/auth_page.dart';
 import '../../../core/widgets/modern_snackbar.dart';
@@ -1008,108 +1007,6 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
     );
   }
 
-  Widget _buildThemeSelector() {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeService.themeMode,
-      builder: (context, current, _) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.transparent
-                    : Colors.black.withValues(alpha: 0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppColors.brand.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(Icons.brightness_4_rounded,
-                          color: AppColors.brandOf(context), size: 22),
-                    ),
-                    const SizedBox(width: 16),
-                    Text(
-                      'Tema de la app',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    _buildThemeOption(ThemeMode.system,
-                        Icons.phone_android_rounded, 'Sistema', current),
-                    const SizedBox(width: 8),
-                    _buildThemeOption(ThemeMode.light,
-                        Icons.light_mode_rounded, 'Claro', current),
-                    const SizedBox(width: 8),
-                    _buildThemeOption(ThemeMode.dark,
-                        Icons.dark_mode_rounded, 'Oscuro', current),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildThemeOption(
-      ThemeMode mode, IconData icon, String label, ThemeMode current) {
-    final bool selected = current == mode;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => ThemeService.setTheme(mode),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: selected ? AppColors.brand : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: [
-              Icon(icon,
-                  size: 20,
-                  color: selected ? Colors.white : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight:
-                      selected ? FontWeight.w600 : FontWeight.w400,
-                  color: selected ? Colors.white : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Future<void> _saveBestMarkDistance(int distanceM) async {
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -1324,7 +1221,6 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                     ),
                     
                     _buildSectionHeader("Apariencia"),
-                    _buildThemeSelector(),
                     _buildCardStyleSetting(),
 
                     _buildSectionHeader("Estadísticas"),
