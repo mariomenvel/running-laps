@@ -6,6 +6,8 @@ import 'package:running_laps/features/analytics/widgets/pattern_carousel.dart';
 import 'package:running_laps/features/analytics/views/pattern_comparison_view.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/app_header.dart';
+import 'package:running_laps/core/widgets/back_pill.dart';
 
 class WorkoutPatternCarouselView extends StatefulWidget {
   final List<WorkoutPattern> patterns;
@@ -35,31 +37,51 @@ class _WorkoutPatternCarouselViewState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Patrones de Entrenamientos'),
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: AppColors.brandOf(context)),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          if (widget.patterns[_currentPatternIndex].instances.length >= 2)
-            IconButton(
-              icon: Icon(Icons.compare_arrows, color: AppColors.brandOf(context)),
-              onPressed: () => _showComparisonSelector(),
+      body: Column(
+        children: [
+          const AppHeader(showBottomDivider: false),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+            child: Row(
+              children: [
+                BackPill(onTap: () => Navigator.pop(context)),
+                const Spacer(),
+                if (widget.patterns[_currentPatternIndex].instances.length >= 2)
+                  IconButton(
+                    icon: Icon(Icons.compare_arrows,
+                        color: AppColors.brandOf(context)),
+                    onPressed: () => _showComparisonSelector(),
+                  ),
+              ],
             ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Patrones de Entrenamientos',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary(context),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: PatternCarousel<WorkoutPattern>(
+              items: widget.patterns,
+              initialPage: widget.initialIndex,
+              onPageChanged: (index) {
+                setState(() => _currentPatternIndex = index);
+              },
+              itemBuilder: (context, pattern, index) {
+                return _WorkoutPatternContent(pattern: pattern);
+              },
+            ),
+          ),
         ],
-      ),
-      body: PatternCarousel<WorkoutPattern>(
-        items: widget.patterns,
-        initialPage: widget.initialIndex,
-        onPageChanged: (index) {
-          setState(() => _currentPatternIndex = index);
-        },
-        itemBuilder: (context, pattern, index) {
-          return _WorkoutPatternContent(pattern: pattern);
-        },
       ),
     );
   }

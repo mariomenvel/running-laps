@@ -4,6 +4,8 @@ import 'package:running_laps/features/analytics/data/series_pattern.dart';
 import 'package:running_laps/features/analytics/widgets/pattern_carousel.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/app_header.dart';
+import 'package:running_laps/core/widgets/back_pill.dart';
 
 class SeriesPatternCarouselView extends StatelessWidget {
   final List<SeriesPattern> patterns;
@@ -18,26 +20,41 @@ class SeriesPatternCarouselView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Patrones de Series'),
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: AppColors.brandOf(context)),
-          onPressed: () => Navigator.pop(context),
-        ),
-        titleTextStyle: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface,
-          fontSize: 17,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      body: PatternCarousel<SeriesPattern>(
-        items: patterns,
-        initialPage: initialIndex,
-        itemBuilder: (context, pattern, index) {
-          return _SeriesPatternContent(pattern: pattern);
-        },
+      body: Column(
+        children: [
+          const AppHeader(showBottomDivider: false),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+            child: Row(
+              children: [
+                BackPill(onTap: () => Navigator.pop(context)),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Patrones de Series',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary(context),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: PatternCarousel<SeriesPattern>(
+              items: patterns,
+              initialPage: initialIndex,
+              itemBuilder: (context, pattern, index) {
+                return _SeriesPatternContent(pattern: pattern);
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

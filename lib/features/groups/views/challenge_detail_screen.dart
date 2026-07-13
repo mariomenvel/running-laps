@@ -8,6 +8,7 @@ import '../data/models/enums.dart';
 
 import 'package:intl/intl.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/widgets/back_pill.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_page_scaffold.dart';
 import '../../profile/views/profile_menu_screen_legacy.dart';
@@ -77,7 +78,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             child: Row(
               children: [
-                _AnimatedBackButton(onTap: () => Navigator.pop(context)),
+                BackPill(onTap: () => Navigator.pop(context)),
               ],
             ),
           ),
@@ -678,68 +679,6 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
   }
 }
 
-/// Botón de volver animado
-class _AnimatedBackButton extends StatefulWidget {
-  final VoidCallback onTap;
-  const _AnimatedBackButton({required this.onTap});
-
-  @override
-  State<_AnimatedBackButton> createState() => _AnimatedBackButtonState();
-}
-
-class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _isPressed = true),
-      onTapUp: (_) {
-        setState(() => _isPressed = false);
-        widget.onTap();
-      },
-      onTapCancel: () => setState(() => _isPressed = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: _isPressed ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08) : Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.transparent
-                  : Colors.black.withValues(alpha: _isPressed ? 0.03 : 0.06),
-              blurRadius: _isPressed ? 4 : 12,
-              offset: Offset(0, _isPressed ? 2 : 4),
-            ),
-          ],
-          border: Border.all(color: AppColors.brand.withValues(alpha: 0.1)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: 16,
-              color: AppColors.brandOf(context),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              "Volver",
-              style: TextStyle(
-                color: AppColors.brandOf(context),
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 extension GoalKindToMetric on GoalKind {
   ChallengeMetric toMetric() {
     switch (this) {
@@ -754,7 +693,3 @@ extension GoalKindToMetric on GoalKind {
     }
   }
 }
-
-
-
-

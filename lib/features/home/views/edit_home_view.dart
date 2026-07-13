@@ -4,6 +4,8 @@ import 'package:running_laps/features/home/data/home_layout_config.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart' show AppMotion;
+import 'package:running_laps/core/widgets/app_header.dart';
+import 'package:running_laps/core/widgets/back_pill.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 
 class EditHomeView extends StatefulWidget {
@@ -30,66 +32,82 @@ class _EditHomeViewState extends State<EditHomeView> {
       backgroundColor: isDark
           ? Theme.of(context).colorScheme.surface
           : const Color(0xFFF2F2F7),
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: accentColor, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Column(
-          children: [
-            Text(
-              'Personalizar inicio',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+      body: Column(
+        children: [
+          const AppHeader(showBottomDivider: false),
+          Expanded(
+            child: ValueListenableBuilder<HomeLayoutConfig?>(
+              valueListenable: widget.controller.config,
+              builder: (context, config, _) {
+                if (config == null) {
+                  return const Center(
+                      child: CircularProgressIndicator(color: AppColors.brand));
+                }
+
+                final allWidgets = List<HomeWidget>.from(config.widgets)
+                  ..sort((a, b) => a.order.compareTo(b.order));
+                final active = allWidgets.where((w) => w.visible).toList();
+                final available = allWidgets.where((w) => !w.visible).toList();
+
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.only(bottom: 48),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                        child: Row(
+                          children: [
+                            BackPill(onTap: () => Navigator.pop(context)),
+                            const Spacer(),
+                            TextButton(
+                              onPressed: () => _confirmReset(context),
+                              child: Text('Reset',
+                                  style: TextStyle(
+                                      color: accentColor, fontSize: 15)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Personalizar inicio',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Hasta $_maxActive estadísticas visibles',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withValues(alpha: 0.45),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _sectionHeader(context, 'EN TU INICIO', badge: '${active.length}/$_maxActive'),
+                      _buildActiveSection(context, active),
+                      _sectionHeader(context, 'DISPONIBLES'),
+                      _buildAvailableSection(context, available, active.length),
+                    ],
+                  ),
+                );
+              },
             ),
-            Text(
-              'Hasta $_maxActive estadísticas visibles',
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
-              ),
-            ),
-          ],
-        ),
-        centerTitle: true,
-        actions: [
-          TextButton(
-            onPressed: () => _confirmReset(context),
-            child: Text('Reset', style: TextStyle(color: accentColor, fontSize: 15)),
           ),
         ],
-      ),
-      body: ValueListenableBuilder<HomeLayoutConfig?>(
-        valueListenable: widget.controller.config,
-        builder: (context, config, _) {
-          if (config == null) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.brand));
-          }
-
-          final allWidgets = List<HomeWidget>.from(config.widgets)
-            ..sort((a, b) => a.order.compareTo(b.order));
-          final active = allWidgets.where((w) => w.visible).toList();
-          final available = allWidgets.where((w) => !w.visible).toList();
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 48),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _sectionHeader(context, 'EN TU INICIO', badge: '${active.length}/$_maxActive'),
-                _buildActiveSection(context, active),
-                _sectionHeader(context, 'DISPONIBLES'),
-                _buildAvailableSection(context, available, active.length),
-              ],
-            ),
-          );
-        },
       ),
     );
   }

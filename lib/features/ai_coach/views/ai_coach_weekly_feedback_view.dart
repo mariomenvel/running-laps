@@ -6,6 +6,8 @@ import '../data/ai_coach_models.dart';
 import '../data/ai_coach_repository.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart' show AppMotion;
+import '../../../core/widgets/app_header.dart';
+import '../../../core/widgets/back_pill.dart';
 import '../../../core/widgets/modern_snackbar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -163,27 +165,23 @@ class _AiCoachWeeklyFeedbackViewState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surfaceOf(context),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(
-            'Cancelar',
-            style: TextStyle(color: AppColors.textSecondary(context)),
-          ),
-        ),
-        leadingWidth: 80,
-      ),
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
+            const AppHeader(showBottomDivider: false),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Row(
+                      children: [
+                        BackPill(onTap: () => Navigator.of(context).pop()),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
                     Text(
                       '¿Cómo fue la semana?',
                       style: TextStyle(

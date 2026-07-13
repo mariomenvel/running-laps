@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/back_pill.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
@@ -516,7 +517,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Row(
                 children: [
-                  _AnimatedBackButton(
+                  BackPill(
                     color: templateColor,
                     onTap: () {
                       if (_hasChanges) {
@@ -1302,66 +1303,3 @@ class _PickerOption extends StatelessWidget {
 }
 
 /// Botón de volver con animación (Adaptado de GroupScreen)
-class _AnimatedBackButton extends StatefulWidget {
-  final VoidCallback onTap;
-  final Color color;
-  const _AnimatedBackButton({required this.onTap, this.color = AppColors.brand});
-
-  @override
-  State<_AnimatedBackButton> createState() => _AnimatedBackButtonState();
-}
-
-class _AnimatedBackButtonState extends State<_AnimatedBackButton> {
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _isPressed = true),
-      onTapUp: (_) {
-        setState(() => _isPressed = false);
-        widget.onTap();
-      },
-      onTapCancel: () => setState(() => _isPressed = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: _isPressed
-              ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08)
-              : Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.transparent
-                  : Colors.black.withValues(alpha: _isPressed ? 0.03 : 0.06),
-              blurRadius: _isPressed ? 4 : 12,
-              offset: Offset(0, _isPressed ? 2 : 4),
-            ),
-          ],
-          border: Border.all(color: widget.color.withValues(alpha: 0.1)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: 16,
-              color: widget.color,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              "Volver",
-              style: TextStyle(
-                color: widget.color,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

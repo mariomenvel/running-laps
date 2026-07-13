@@ -3,6 +3,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:running_laps/features/analytics/data/workout_pattern.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/app_header.dart';
+import 'package:running_laps/core/widgets/back_pill.dart';
 
 class WorkoutPatternDetailView extends StatelessWidget {
   final WorkoutPattern pattern;
@@ -19,19 +21,33 @@ class WorkoutPatternDetailView extends StatelessWidget {
     final title = pattern.patternKey;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title, overflow: TextOverflow.ellipsis),
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: AppColors.brandOf(context)),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SingleChildScrollView(
+      body: Column(
+        children: [
+          const AppHeader(showBottomDivider: false),
+          Expanded(
+            child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
+            Row(
+              children: [
+                BackPill(onTap: () => Navigator.pop(context)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                title,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary(context),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
             // KPI Header
             Row(
               children: [
@@ -86,6 +102,9 @@ class WorkoutPatternDetailView extends StatelessWidget {
             ),
           ],
         ),
+            ),
+          ),
+        ],
       ),
     );
   }

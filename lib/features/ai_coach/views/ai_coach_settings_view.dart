@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_bottom_sheet.dart';
 import 'package:running_laps/core/widgets/app_date_picker.dart';
+import 'package:running_laps/core/widgets/app_header.dart';
+import 'package:running_laps/core/widgets/back_pill.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
@@ -420,23 +422,26 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background(context),
-      appBar: ShellEmbeddingScope.isEmbedded(context)
-          ? null
-          : AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_rounded),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ),
-      body: _isLoading
-          ? Center(child: CupertinoActivityIndicator(color: AppColors.brand, radius: 12))
-          : SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+      body: Column(
+        children: [
+          // Se oculta solo cuando la vista está embebida en el shell.
+          const AppHeader(showBottomDivider: false),
+          Expanded(
+            child: _isLoading
+                ? Center(child: CupertinoActivityIndicator(color: AppColors.brand, radius: 12))
+                : SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (!ShellEmbeddingScope.isEmbedded(context))
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+                            child: Row(
+                              children: [
+                                BackPill(onTap: () => Navigator.of(context).pop()),
+                              ],
+                            ),
+                          ),
                         ListTile(
                           leading: const Icon(Icons.menu_book_outlined, color: AppColors.brand),
                           title: const Text('Cómo entrena tu coach'),
@@ -667,6 +672,9 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
                       ],
                     ),
                   ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -3,6 +3,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/app_header.dart';
+import 'package:running_laps/core/widgets/back_pill.dart';
 import 'package:running_laps/features/analytics/data/workout_pattern.dart';
 
 class PatternComparisonView extends StatelessWidget {
@@ -21,14 +23,32 @@ class PatternComparisonView extends StatelessWidget {
     // Pero mejor izquierda: A, derecha: B tal cual se pasaron.
     
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Comparar Entrenamientos'),
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
+      body: Column(
+        children: [
+          const AppHeader(showBottomDivider: false),
+          Expanded(
+            child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            Row(
+              children: [
+                BackPill(onTap: () => Navigator.pop(context)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Comparar Entrenamientos',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary(context),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
             // HEADER COMPARACIÓN
             Container(
               padding: const EdgeInsets.all(20),
@@ -166,6 +186,9 @@ class PatternComparisonView extends StatelessWidget {
             ),
           ],
         ),
+            ),
+          ),
+        ],
       ),
     );
   }

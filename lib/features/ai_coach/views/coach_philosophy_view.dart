@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
+import 'package:running_laps/core/widgets/back_pill.dart';
 
 class CoachPhilosophyView extends StatelessWidget {
   const CoachPhilosophyView({super.key});
@@ -45,27 +46,36 @@ class CoachPhilosophyView extends StatelessWidget {
         bottom: false,
         child: Column(
           children: [
-            AppHeader(
-              title: Text(
-                'Cómo entrena tu coach',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary(context),
-                ),
-              ),
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_rounded),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ),
+            const AppHeader(showBottomDivider: false),
             Expanded(
               child: ListView.separated(
                 padding: const EdgeInsets.all(20),
-                itemCount: _blocks.length,
+                itemCount: _blocks.length + 1,
                 separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) =>
-                    _PhilosophyCard(block: _blocks[index]),
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            BackPill(onTap: () => Navigator.of(context).pop()),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          'Cómo entrena tu coach',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary(context),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                  return _PhilosophyCard(block: _blocks[index - 1]);
+                },
               ),
             ),
           ],

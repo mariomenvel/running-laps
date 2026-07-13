@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/app_header.dart';
+import 'package:running_laps/core/widgets/back_pill.dart';
 import 'package:running_laps/core/widgets/ios_picker.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
@@ -249,29 +251,36 @@ class _ManualTrainingViewState extends State<ManualTrainingView> {
 
     return Scaffold(
       backgroundColor: bgColor,
-      appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-        foregroundColor: txtColor,
-        elevation: 0,
-        title: Text('Registro manual',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: txtColor)),
-        actions: [
-          if (_saving)
-            const Padding(
-              padding: EdgeInsets.only(right: 16),
-              child: CupertinoActivityIndicator(),
-            )
-          else
-            TextButton(
-              onPressed: _save,
-              child: const Text('Guardar',
-                  style: TextStyle(color: AppColors.brand, fontWeight: FontWeight.w600)),
-            ),
-        ],
-      ),
-      body: ListView(
+      body: Column(
+        children: [
+          const AppHeader(showBottomDivider: false),
+          Expanded(
+            child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          Row(
+            children: [
+              BackPill(onTap: () => Navigator.pop(context)),
+              const Spacer(),
+              if (_saving)
+                const Padding(
+                  padding: EdgeInsets.only(right: 8),
+                  child: CupertinoActivityIndicator(),
+                )
+              else
+                TextButton(
+                  onPressed: _save,
+                  child: const Text('Guardar',
+                      style: TextStyle(
+                          color: AppColors.brand, fontWeight: FontWeight.w600)),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text('Registro manual',
+              style: TextStyle(
+                  fontSize: 20, fontWeight: FontWeight.w600, color: txtColor)),
+          const SizedBox(height: 16),
           // ── Nombre ────────────────────────────────────────────────────────
           Container(
             decoration: BoxDecoration(
@@ -382,6 +391,9 @@ class _ManualTrainingViewState extends State<ManualTrainingView> {
             ),
           ),
           const SizedBox(height: 32),
+        ],
+            ),
+          ),
         ],
       ),
     );
