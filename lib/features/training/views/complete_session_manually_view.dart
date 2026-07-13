@@ -2,7 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/app_bottom_sheet.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
+import 'package:running_laps/core/widgets/back_pill.dart';
 import 'package:running_laps/core/widgets/ios_picker.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/core/widgets/number_picker_field.dart';
@@ -296,26 +298,29 @@ class _CompleteSessionManuallyViewState
         bottom: false,
         child: Column(
           children: [
-            AppHeader(
-              title: Text(
-                'Completar manualmente',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary(context),
-                ),
-              ),
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_rounded),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ),
+            const AppHeader(showBottomDivider: false),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Row(
+                      children: [
+                        BackPill(onTap: () => Navigator.of(context).pop()),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'COMPLETAR MANUALMENTE',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.2,
+                        color: AppColors.textSecondary(context),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
                     Text(
                       _sessionTitle(),
                       style: TextStyle(
@@ -482,151 +487,100 @@ class _CompleteSessionManuallyViewState
     );
   }
 
+  /// Filas en orden de sesión, aplanadas para navegar entre ellas con
+  /// "Siguiente" dentro del editor sin cerrar la sheet.
+  List<_RowRef> get _flatRows {
+    final refs = <_RowRef>[];
+    for (final block in _sortedBlocks) {
+      final rows = _rowsByBlock[block.id] ?? const <_SeriesRow>[];
+      for (var i = 0; i < rows.length; i++) {
+        refs.add(_RowRef(
+          block: block,
+          row: rows[i],
+          indexInBlock: i,
+          totalInBlock: rows.length,
+        ));
+      }
+    }
+    return refs;
+  }
+
+  void _openRowEditor(_SeriesRow row) {
+    final refs = _flatRows;
+    final start = refs.indexWhere((r) => identical(r.row, row));
+    showAppBottomSheet<void>(
+      context: context,
+      builder: (_) => _RowEditorSheet(
+        rows: refs,
+        initialIndex: start < 0 ? 0 : start,
+        onChanged: () => setState(() {}),
+        onRpeChanged: _recomputeGlobalRpeFromRows,
+      ),
+    );
+  }
+
+  String _fmtTime(int minutes, int seconds) =>
+      '$minutes:${seconds.toString().padLeft(2, '0')}';
+
   Widget _buildRow({
     required int index,
     required _SeriesRow row,
     required bool showIndex,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceOf(context),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderOf(context), width: 0.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (showIndex) ...[
-            Text(
-              'S${index + 1}',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AppColors.brand,
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
-          Row(
-            children: [
-              Expanded(
-                child: NumberPickerField(
-                  label: 'Distancia',
-                  value: row.distanceM,
-                  min: 0,
-                  max: 42000,
-                  step: 50,
-                  unit: 'm',
-                  onChanged: (v) => setState(() => row.distanceM = v),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: NumberPickerField(
-                  label: 'Min',
-                  value: row.minutes,
-                  min: 0,
-                  max: 180,
-                  step: 1,
-                  unit: 'min',
-                  onChanged: (v) => setState(() => row.minutes = v),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: NumberPickerField(
-                  label: 'Seg',
-                  value: row.seconds,
-                  min: 0,
-                  max: 55,
-                  step: 5,
-                  unit: 's',
-                  onChanged: (v) => setState(() => row.seconds = v),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          _buildRowRpeField(row),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRowRpeField(_SeriesRow row) {
+    final hasTime = row.tiempoSec > 0;
     return GestureDetector(
-      onTap: () => _showRpePickerSheet(
-        initial: row.rpe,
-        onSelected: (v) {
-          setState(() => row.rpe = v);
-          _recomputeGlobalRpeFromRows();
-        },
-      ),
+      onTap: () => _openRowEditor(row),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: AppColors.background(context),
-          border: Border.all(color: AppColors.borderOf(context), width: 0.5),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'RPE (opcional)',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary(context)),
-            ),
-            Text(
-              row.rpe == null ? '—' : row.rpe!.toStringAsFixed(0),
-              style: TextStyle(fontSize: 14, color: AppColors.textPrimary(context)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showRpePickerSheet({
-    required double? initial,
-    required ValueChanged<double?> onSelected,
-  }) {
-    final initialItem = initial == null ? 0 : initial.round().clamp(1, 10);
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        height: 260,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
           color: AppColors.surfaceOf(context),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.borderOf(context), width: 0.5),
         ),
-        child: Column(
+        child: Row(
           children: [
-            const SizedBox(height: 12),
-            Text('RPE', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
+            if (showIndex) ...[
+              Text(
+                'S${index + 1}',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.brandOf(context),
+                ),
+              ),
+              const SizedBox(width: 14),
+            ],
             Expanded(
-              child: Center(
-                child: IosPicker(
-                  itemCount: 11,
-                  initialItem: initialItem,
-                  itemExtent: 36,
-                  width: 100,
-                  textBuilder: (i) => i == 0 ? 'Sin RPE' : '$i',
-                  onChanged: (i) => onSelected(i == 0 ? null : i.toDouble()),
+              child: Text.rich(
+                TextSpan(
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary(context),
+                  ),
+                  children: [
+                    TextSpan(text: '${row.distanceM} m'),
+                    const TextSpan(text: '  ·  '),
+                    TextSpan(
+                      text: hasTime ? _fmtTime(row.minutes, row.seconds) : '—:——',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: hasTime
+                            ? AppColors.textPrimary(context)
+                            : AppColors.textSecondary(context),
+                      ),
+                    ),
+                    const TextSpan(text: '  ·  '),
+                    TextSpan(
+                      text: 'RPE ${row.rpe == null ? '—' : row.rpe!.toStringAsFixed(0)}',
+                    ),
+                  ],
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(backgroundColor: AppColors.brand),
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Hecho'),
-                ),
-              ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: AppColors.textSecondary(context),
             ),
           ],
         ),
@@ -694,6 +648,190 @@ class _CompleteSessionManuallyViewState
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Referencia a una fila dentro de su bloque, para el editor navegable.
+class _RowRef {
+  final SessionBlock block;
+  final _SeriesRow row;
+  final int indexInBlock;
+  final int totalInBlock;
+
+  const _RowRef({
+    required this.block,
+    required this.row,
+    required this.indexInBlock,
+    required this.totalInBlock,
+  });
+
+  String get title => block.type == SessionBlockType.series
+      ? 'Serie ${indexInBlock + 1} de $totalInBlock'
+      : 'Bloque continuo';
+}
+
+/// Editor de fila en una única sheet: metros, min, seg y RPE en cuatro
+/// ruedas simultáneas, con "Siguiente" para pasar a la serie siguiente sin
+/// cerrar la sheet.
+class _RowEditorSheet extends StatefulWidget {
+  final List<_RowRef> rows;
+  final int initialIndex;
+  final VoidCallback onChanged;
+  final VoidCallback onRpeChanged;
+
+  const _RowEditorSheet({
+    required this.rows,
+    required this.initialIndex,
+    required this.onChanged,
+    required this.onRpeChanged,
+  });
+
+  @override
+  State<_RowEditorSheet> createState() => _RowEditorSheetState();
+}
+
+class _RowEditorSheetState extends State<_RowEditorSheet> {
+  late int _index = widget.initialIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    final ref = widget.rows[_index];
+    final row = ref.row;
+    final isLast = _index >= widget.rows.length - 1;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            ref.title,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary(context),
+            ),
+          ),
+          if (widget.rows.length > 1) ...[
+            const SizedBox(height: 2),
+            Text(
+              '${_index + 1} de ${widget.rows.length}',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary(context),
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          // KeyedSubtree: al cambiar de fila las ruedas se reconstruyen con
+          // los valores de la nueva fila.
+          KeyedSubtree(
+            key: ValueKey(_index),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                IosPicker(
+                  label: 'Metros',
+                  itemCount: 841,
+                  initialItem: (row.distanceM / 50).round().clamp(0, 840),
+                  textBuilder: (i) => '${i * 50}',
+                  width: 84,
+                  itemExtent: 34,
+                  visibleItems: 5,
+                  onChanged: (i) {
+                    row.distanceM = i * 50;
+                    widget.onChanged();
+                  },
+                ),
+                const SizedBox(width: 12),
+                IosPicker(
+                  label: 'Min',
+                  itemCount: 181,
+                  initialItem: row.minutes.clamp(0, 180),
+                  textBuilder: (i) => '$i',
+                  width: 56,
+                  itemExtent: 34,
+                  visibleItems: 5,
+                  onChanged: (i) {
+                    row.minutes = i;
+                    widget.onChanged();
+                  },
+                ),
+                const SizedBox(width: 12),
+                IosPicker(
+                  label: 'Seg',
+                  itemCount: 60,
+                  initialItem: row.seconds.clamp(0, 59),
+                  textBuilder: (i) => i.toString().padLeft(2, '0'),
+                  width: 56,
+                  itemExtent: 34,
+                  visibleItems: 5,
+                  onChanged: (i) {
+                    row.seconds = i;
+                    widget.onChanged();
+                  },
+                ),
+                const SizedBox(width: 12),
+                IosPicker(
+                  label: 'RPE',
+                  itemCount: 11,
+                  initialItem: row.rpe == null ? 0 : row.rpe!.round().clamp(1, 10),
+                  textBuilder: (i) => i == 0 ? '—' : '$i',
+                  width: 56,
+                  itemExtent: 34,
+                  visibleItems: 5,
+                  onChanged: (i) {
+                    row.rpe = i == 0 ? null : i.toDouble();
+                    widget.onChanged();
+                    widget.onRpeChanged();
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              if (!isLast) ...[
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: BorderSide(color: AppColors.borderOf(context)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Hecho',
+                      style: TextStyle(color: AppColors.textPrimary(context)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.brand,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: isLast
+                      ? () => Navigator.pop(context)
+                      : () => setState(() => _index++),
+                  child: Text(isLast ? 'Hecho' : 'Siguiente'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
