@@ -1,5 +1,42 @@
 # CHANGELOG — Running Laps
 
+## [UX] — Auditoría de navegación: header estándar + sin flechas de volver — 2026-07-13
+Barrido página a página: toda pantalla con header usa el `AppHeader` global
+(logo + avatar; variante con `title:` centrado permitida) y ninguna lleva
+flecha/botón de volver en el header. Volver = swipe iOS (`AppRoute` es
+`CupertinoPageRoute`; `MaterialPageRoute` hereda transición Cupertino en iOS)
++ botón/gesto Android, con la pill "Volver" como affordance visible.
+- Nuevo widget compartido [`BackPill`](lib/core/widgets/back_pill.dart)
+  (antes duplicado como `_AnimatedBackButton`/`_BackPill` en 6 archivos —
+  todos migrados; `color:` opcional para el acento del editor de plantillas).
+- Convertidas de `AppBar`/header custom a `AppHeader` + `BackPill`:
+  `coach_philosophy_view`, `ai_coach_settings_view` (consciente de shell),
+  `ai_coach_weekly_feedback_view` (el "Cancelar" era un AppBar),
+  `workout_pattern_detail/carousel`, `series_pattern_detail/carousel`,
+  `pattern_comparison_view`, `manual_training_view` (acción "Guardar" movida
+  a la fila de la pill), `edit_home_view` ("Reset" ídem), `zones_config_screen`
+  (consciente de shell) y el escáner QR de `wear_auth_service` (pill flotante
+  sobre la cámara).
+- Sin cambios (correctas): vistas con `AppHeader` título-only (`athlete_hub`,
+  `season`, `progress`, `heart_rate_monitor`), pantallas con pill ya existente
+  (grupos, detalle de entreno), huérfanas de deuda #5 (no se tocan), y los dos
+  `PopScope(canPop: false)` intencionales (editor con cambios sin guardar y
+  sesión de entrenamiento activa).
+
+## [UX] — Metrónomo por ritmo hereda el ritmo objetivo del segmento — 2026-07-12
+Si el segmento tiene ritmo objetivo configurado, el aviso "Por ritmo" ya no
+pide el pace otra vez: lo toma del objetivo (punto medio si es un rango) y
+solo pregunta cada cuántos metros debe sonar.
+- `_targetPaceSecPerKm` / `_effectiveAlertPace*` en `_SegmentBottomSheetState`:
+  el pace del aviso se deriva en vivo del objetivo — si editas el ritmo
+  objetivo en la misma sheet, el metrónomo lo sigue. Sin ritmo objetivo, las
+  ruedas de pace del aviso se muestran como antes.
+- En modo ritmo con objetivo: fila informativa "Al ritmo objetivo del
+  segmento · 4:30 /km" en lugar de las dos ruedas.
+- Al activar el metrónomo con ritmo objetivo ya configurado (y sin aviso
+  previo guardado), arranca directamente en modo "Por ritmo".
+- Ver [segment_bottom_sheet.dart](lib/features/templates/views/widgets/segment_bottom_sheet.dart).
+
 ## [Fix] — MVP forzado a light mode únicamente — 2026-07-05
 Decisión de producto: el MVP lanza solo en modo claro. El toggle
 sistema/claro/oscuro ya estaba implementado y en producción (no era código

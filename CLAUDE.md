@@ -35,7 +35,7 @@ Feature-First + MVVM. Cada feature en `lib/features/<name>/` con subcarpetas `vi
 Paths clave:
 - `lib/config/app_theme.dart` — `Tema.brandPurple = Color(0xFF8E24AA)`, `AvatarHelper` (alias legado)
 - `lib/core/theme/app_colors.dart` — sistema de colores actual (`AppColors.brand`, tokens semánticos)
-- `lib/core/theme/theme_service.dart` — tema sistema/claro/oscuro, persistido en SharedPreferences. Reactivado jul 2026 (estuvo forzado a claro por el contraste del brand en oscuro — resuelto con `AppColors.brandOf(context)`, ver COLOR_SYSTEM.md). Selector en Perfil → Apariencia y en Ajustes de cuenta.
+- `lib/core/theme/theme_service.dart` — tema **forzado a claro** (jul 2026): el dark mode se reactivó para pruebas (d67c2e6) pero visualmente no convence todavía — se volvió a desactivar y el selector se retiró de Perfil/Ajustes. Para reactivar más adelante: `git show d67c2e6` (ThemeService con persistencia + selector en ambas vistas).
 - `lib/main.dart` — Firebase init, App Check (Android + Web), `AuthWrapper` (StreamBuilder<User?>)
 - `core/services/gps_service.dart` — GPS + Live Activity iOS + Kalman + Haversine
 - `core/services/ios_live_activity_service.dart` — puente MethodChannel/EventChannel Swift↔Dart
@@ -58,7 +58,8 @@ Widgets reutilizables — usar siempre estos, no reinventar:
 | `NumberPickerField` | `number_picker_field.dart` | Campo numérico — abre `IosPicker`. **Nunca usar teclado para números.** |
 | `BlockPreviewTile` | `block_preview_tile.dart` | Preview de sesión/bloque. Estilos: `compact` (texto) o `card` (franja color). |
 | `ModernSnackBar` | `modern_snackbar.dart` | `.showSuccess/showError/showWarning(context, msg)` — único snackbar permitido. |
-| `AppHeader` | `app_header.dart` | Header global: logo izq + avatar dch (stream Firestore). |
+| `AppHeader` | `app_header.dart` | Header global: logo izq + avatar dch (stream Firestore). **Nunca** poner flecha de volver en `leading` — la variante con `title:` centrado sí es válida. |
+| `BackPill` | `back_pill.dart` | Pill "Volver" al inicio del contenido en vistas pusheadas — única affordance visible de volver (además del swipe iOS / botón Android). `color:` opcional para acento por contexto. Nunca usar `AppBar` ni flechas en el header. |
 | `AppFooter` | `app_footer.dart` | BottomNav 5 tabs + FAB central (Entrenar). |
 | `MainShell` | `main_shell.dart` | Shell principal IndexedStack: 5 visibles + ocultos. API: `.navigateTo(int, params)`. |
 | `EmptyStateWidget` | `empty_state_widget.dart` | Estados vacíos: icono, título, subtítulo, botón opcional. |
@@ -73,6 +74,8 @@ Widgets reutilizables — usar siempre estos, no reinventar:
 ## AI Coach — Estado actual
 
 El Coach IA usa **Claude Sonnet** vía OpenRouter (cliente en `ai_coach/data/openrouter_client.dart`).
+
+⚠️ **JSON Schemas para `callOpenRouter`:** los structured outputs de Anthropic **no soportan** `minimum`/`maximum`/`multipleOf` (numéricos), `minLength`/`maxLength` (strings) ni `minItems` (arrays) — la petición entera falla con 400 "Provider returned error". Indicar los rangos en el system prompt y aplicar clamps al parsear (ver `ai_coach_prompt_session_generator.dart`, corregido jul 2026). Sí se soportan `enum`, `required` y `additionalProperties: false`.
 
 Arquitectura de servicios en `lib/features/ai_coach/data/`:
 - `ai_coach_weekly_planner_service.dart` — genera plan semanal automático cada domingo
