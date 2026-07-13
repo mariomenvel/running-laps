@@ -20,11 +20,26 @@ import GoogleSignIn
     configureLiveActivityChannels()
     configurePermissionsChannel()
 
+    // Proceso nuevo ⇒ cualquier Live Activity previa es huérfana (el entreno
+    // que la creó murió con el proceso anterior). Si se inicia un entreno,
+    // start() crea una nueva.
+    Task {
+      await RunningLapsLiveActivityManager.shared.stop()
+    }
+
     if let url = launchOptions?[.url] as? URL {
       _ = handleCustomURL(url)
     }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  // Con el GPS activo la app corre en background, así que iOS sí invoca este
+  // método al deslizarla fuera del multitarea — sin esto la Live Activity
+  // quedaba en pantalla hasta 8 h tras matar la app en mitad de un entreno.
+  override func applicationWillTerminate(_ application: UIApplication) {
+    RunningLapsLiveActivityManager.shared.endAllImmediately()
+    super.applicationWillTerminate(application)
   }
 
   override func application(

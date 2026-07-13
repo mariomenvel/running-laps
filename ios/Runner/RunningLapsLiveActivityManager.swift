@@ -12,6 +12,10 @@ enum RunningLapsLiveActivityError: Error {
 final class RunningLapsLiveActivityManager {
   static let shared = RunningLapsLiveActivityManager()
 
+  /// Si no llega ningún update en este intervalo (Dart muerto: app matada),
+  /// el sistema marca la actividad como obsoleta.
+  private let staleInterval: TimeInterval = 90
+
   private init() {}
 
   #if canImport(ActivityKit)
@@ -32,11 +36,22 @@ final class RunningLapsLiveActivityManager {
     }
 
     let attributes = RunningLapsActivityAttributes(sessionId: UUID().uuidString)
-    _ = try Activity.request(
-      attributes: attributes,
-      contentState: state,
-      pushType: nil
-    )
+    if #available(iOS 16.2, *) {
+      _ = try Activity.request(
+        attributes: attributes,
+        content: ActivityContent(
+          state: state,
+          staleDate: Date().addingTimeInterval(staleInterval)
+        ),
+        pushType: nil
+      )
+    } else {
+      _ = try Activity.request(
+        attributes: attributes,
+        contentState: state,
+        pushType: nil
+      )
+    }
     #endif
   }
 
@@ -46,7 +61,16 @@ final class RunningLapsLiveActivityManager {
     guard let activity = currentActivity else { return }
 
     let state = try contentState(from: arguments)
-    await activity.update(using: state)
+    if #available(iOS 16.2, *) {
+      await activity.update(
+        ActivityContent(
+          state: state,
+          staleDate: Date().addingTimeInterval(staleInterval)
+        )
+      )
+    } else {
+      await activity.update(using: state)
+    }
     #endif
   }
 
@@ -57,6 +81,25 @@ final class RunningLapsLiveActivityManager {
     for activity in Activity<RunningLapsActivityAttributes>.activities {
       await activity.end(using: nil, dismissalPolicy: .immediate)
     }
+    #endif
+  }
+
+  /// Versión bloqueante de stop() para applicationWillTerminate, donde el
+  /// proceso muere en cuanto retorna el método y un Task normal no llegaría
+  /// a ejecutarse. Espera como máximo 2 s.
+  func endAllImmediately() {
+    #if canImport(ActivityKit)
+    guard #available(iOS 16.1, *) else { return }
+    guard !Activity<RunningLapsActivityAttributes>.activities.isEmpty else { return }
+
+    let semaphore = DispatchSemaphore(value: 0)
+    Task.detached(priority: .high) {
+      for activity in Activity<RunningLapsActivityAttributes>.activities {
+        await activity.end(using: nil, dismissalPolicy: .immediate)
+      }
+      semaphore.signal()
+    }
+    _ = semaphore.wait(timeout: .now() + 2)
     #endif
   }
 
