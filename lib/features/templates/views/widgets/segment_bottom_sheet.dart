@@ -150,6 +150,32 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
   double _nearestAlertTimeSecOption(num v) => _alertTimeSecOptions
       .reduce((a, b) => (a - v).abs() < (b - v).abs() ? a : b);
 
+  // ── Ritmo objetivo → metrónomo ────────────────────────────────────────────
+  // Si el segmento tiene ritmo objetivo, el aviso por ritmo lo usa
+  // directamente (punto medio si es un rango) y solo pregunta la distancia.
+
+  /// Ritmo objetivo efectivo en seg/km, o null si no hay pace configurado.
+  int? get _targetPaceSecPerKm {
+    final min =
+        _paceMinMin != null ? _paceMinMin! * 60 + (_paceMinSec ?? 0) : null;
+    final max =
+        _paceMaxMin != null ? _paceMaxMin! * 60 + (_paceMaxSec ?? 0) : null;
+    if (min != null && max != null) return ((min + max) / 2).round();
+    return min ?? max;
+  }
+
+  int get _effectiveAlertPaceMin =>
+      _targetPaceSecPerKm != null ? _targetPaceSecPerKm! ~/ 60 : _alertPaceMin;
+
+  int get _effectiveAlertPaceSec =>
+      _targetPaceSecPerKm != null ? _targetPaceSecPerKm! % 60 : _alertPaceSec;
+
+  String? get _targetPaceLabel {
+    final pace = _targetPaceSecPerKm;
+    if (pace == null) return null;
+    return '${pace ~/ 60}:${(pace % 60).toString().padLeft(2, '0')} /km';
+  }
+
   bool get _saveDisabled {
     if (_type == SegmentType.interval) {
       if (_byDistance) return _distanceM == 0;
@@ -192,8 +218,8 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
       enabled: _alertEnabled,
       mode: _alertByTime ? 'time' : 'pace',
       timeSec: _alertTimeSec,
-      paceMin: _alertPaceMin,
-      paceSec: _alertPaceSec,
+      paceMin: _effectiveAlertPaceMin,
+      paceSec: _effectiveAlertPaceSec,
       segmentDistanceM: _alertDistanceM,
     );
 
@@ -215,8 +241,8 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
       enabled: true,
       mode: _alertByTime ? 'time' : 'pace',
       timeSec: _alertTimeSec,
-      paceMin: _alertPaceMin,
-      paceSec: _alertPaceSec,
+      paceMin: _effectiveAlertPaceMin,
+      paceSec: _effectiveAlertPaceSec,
       segmentDistanceM: _alertDistanceM,
     ).toAlarmIntervalMs();
     final totalSec = ms / 1000.0;
@@ -535,11 +561,20 @@ class _SegmentBottomSheetState extends State<_SegmentBottomSheet> {
                       paceMin: _alertPaceMin,
                       paceSec: _alertPaceSec,
                       distanceM: _alertDistanceM,
+                      targetPaceLabel: _targetPaceLabel,
                       previewText: _alertPreviewText(),
                       alertDistances: _alertDistances,
                       alertTimeSecOptions: _alertTimeSecOptions,
-                      onToggleEnabled: (v) =>
-                          setState(() => _alertEnabled = v),
+                      onToggleEnabled: (v) => setState(() {
+                        _alertEnabled = v;
+                        // Al activar con ritmo objetivo configurado, arranca
+                        // directamente en modo ritmo (solo pide la distancia).
+                        if (v &&
+                            _targetPaceSecPerKm != null &&
+                            widget.initialSegment?.alerts?.enabled != true) {
+                          _alertByTime = false;
+                        }
+                      }),
                       onToggleMode: (byTime) =>
                           setState(() => _alertByTime = byTime),
                       onTimeSecChanged: (v) =>
@@ -977,6 +1012,7 @@ class _AlertSection extends StatelessWidget {
     required this.paceMin,
     required this.paceSec,
     required this.distanceM,
+    this.targetPaceLabel,
     required this.previewText,
     required this.alertDistances,
     required this.alertTimeSecOptions,
@@ -995,6 +1031,10 @@ class _AlertSection extends StatelessWidget {
   final int paceMin;
   final int paceSec;
   final int distanceM;
+
+  /// Si el segmento tiene ritmo objetivo, su label (ej. "4:30 /km").
+  /// En modo ritmo sustituye las ruedas de pace por una fila informativa.
+  final String? targetPaceLabel;
   final String previewText;
   final List<int> alertDistances;
   final List<double> alertTimeSecOptions;
@@ -1075,45 +1115,81 @@ class _AlertSection extends StatelessWidget {
               ),
             ),
           ] else ...[
-            // Modo ritmo: pace + distancia
-            _sectionLabel(outerContext, 'Pace objetivo', small: true),
-            const SizedBox(height: AppSpacing.s),
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.surface2Of(outerContext),
-                borderRadius: BorderRadius.circular(12),
-                border:
-                    Border.all(color: AppColors.borderOf(outerContext)),
+            // Modo ritmo: si el segmento ya tiene ritmo objetivo se hereda
+            // (solo se pregunta la distancia); si no, se pide el pace aquí.
+            if (targetPaceLabel != null) ...[
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: AppColors.brand.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.brand.withValues(alpha: 0.25),
+                  ),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.speed_rounded,
+                      size: 16,
+                      color: AppColors.brandOf(outerContext),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Al ritmo objetivo del segmento · $targetPaceLabel',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textPrimary(outerContext),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _MiniWheelPicker(
-                    values: _paceMinOptions,
-                    selected: paceMin,
-                    onChanged: onPaceMinChanged,
-                    context: outerContext,
-                  ),
-                  Text(
-                    ' : ',
-                    style: TextStyle(fontSize: 16, color: AppColors.textPrimary(outerContext)),
-                  ),
-                  _MiniWheelPicker(
-                    values: _paceSecOptions,
-                    selected: paceSec,
-                    onChanged: onPaceSecChanged,
-                    context: outerContext,
-                    pad: true,
-                  ),
-                  Text(
-                    '  /km',
-                    style: TextStyle(fontSize: 13, color: AppColors.textSecondary(outerContext)),
-                  ),
-                ],
+            ] else ...[
+              _sectionLabel(outerContext, 'Pace objetivo', small: true),
+              const SizedBox(height: AppSpacing.s),
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surface2Of(outerContext),
+                  borderRadius: BorderRadius.circular(12),
+                  border:
+                      Border.all(color: AppColors.borderOf(outerContext)),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _MiniWheelPicker(
+                      values: _paceMinOptions,
+                      selected: paceMin,
+                      onChanged: onPaceMinChanged,
+                      context: outerContext,
+                    ),
+                    Text(
+                      ' : ',
+                      style: TextStyle(fontSize: 16, color: AppColors.textPrimary(outerContext)),
+                    ),
+                    _MiniWheelPicker(
+                      values: _paceSecOptions,
+                      selected: paceSec,
+                      onChanged: onPaceSecChanged,
+                      context: outerContext,
+                      pad: true,
+                    ),
+                    Text(
+                      '  /km',
+                      style: TextStyle(fontSize: 13, color: AppColors.textSecondary(outerContext)),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ],
             const SizedBox(height: AppSpacing.m),
             _sectionLabel(outerContext, 'Cada', small: true),
             const SizedBox(height: AppSpacing.s),
