@@ -189,3 +189,66 @@ verde/rojo/ámbar/azul), no arbitrarios, y ya están documentados en
 - [ ] **PDF:** ninguna.
 
 ---
+
+### 7. Bold 700 — prohibido en el manual, pero empaquetado y usado en producción
+
+**Estado:** No coincide
+
+**Manual (pág. 28, 55):** "Bold (w700) está prohibido en todo el sistema."
+
+**Código:** `GeneralSans-Bold.otf` registrado con weight 700 en
+`pubspec.yaml`; decenas de `FontWeight.bold`/`.w700`/`.w900` activos fuera
+de `AppTypography` (que ya tenía como máximo w600).
+
+**Decisión:** manda el PDF — corregido en código, con dos exclusiones de
+alcance:
+
+- **Vistas huérfanas** (deuda técnica #5 de CLAUDE.md, cero referencias,
+  pendientes de borrar): `home_view_legacy.dart`, `session_planner_view.dart`,
+  `athlete_session_editor_view.dart`, `session_editor_view.dart`,
+  `analytics_hub_screen_legacy.dart`, `analytics_hub_view.dart`,
+  `profile_menu_screen.dart` (el huérfano es el que NO lleva `_legacy`),
+  `global_challenge_card.dart` (solo referenciado desde
+  `home_view_legacy.dart`) — no se tocó bold ahí, no vale la pena arreglar
+  código que se va a eliminar.
+- **`pdf_generator_service.dart`:** los PDFs exportables usan la fuente
+  por defecto del paquete `pdf` (no GeneralSans) — es un contexto de
+  render distinto a la UI de la app. Se deja fuera de alcance (decisión
+  explícita del usuario) en vez de embeber una fuente custom para esto.
+
+**Acciones:**
+- [x] **Código:** `FontWeight.bold`/`.w700`/`.w900` → `FontWeight.w600`
+  en los dos archivos activos que los usaban:
+  `profile_menu_screen_legacy.dart` (2 usos) y `group_rewards_screen.dart`
+  (11 usos, incluida la distinción `isMe` que ya se diferenciaba por color
+  y ahora también solo por color, sin peso extra). Eliminado
+  `GeneralSans-Bold.otf` de `pubspec.yaml` y borrado el asset del repo —
+  nada en código activo puede ya pedir weight 700.
+- [ ] **PDF:** ninguna.
+
+---
+
+### 8. Falta el WOFF2 que el manual exige para uso web self-hosted
+
+**Estado:** Parcial
+
+**Manual (pág. 14, 26):** GeneralSans en WOFF2 (web) y OTF (diseño/Figma)
+como assets separados.
+
+**Código:** solo existían los 4 pesos en `.otf`; no había WOFF2 en el
+repo. (Relacionado con el punto 4d, que aclaraba que WOFF2 es solo para
+web — este punto es la ejecución de esa aclaración.)
+
+**Decisión:** manda el PDF — generado el WOFF2 para web.
+
+**Acciones:**
+- [x] **Código:** generados `web/assets/fonts/GeneralSans-{Regular,
+  Medium,Semibold}.woff2` a partir de los `.otf` (fontTools). **No** se
+  generó Bold — ya no existe el `.otf` fuente tras el punto 7 (Bold
+  prohibido) y no tendría sentido añadirlo solo para web. No se tocó
+  `web/index.html`/`landing/index.html` (se rehacen desde cero) — los
+  WOFF2 quedan listos como asset para cuando se referencien con
+  `@font-face`.
+- [ ] **PDF:** ninguna.
+
+---

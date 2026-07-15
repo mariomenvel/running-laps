@@ -200,7 +200,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
         style: TextStyle(
           color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
           fontSize: 12,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
           letterSpacing: 1.2,
         ),
       ),
@@ -329,7 +329,7 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.onSurface,
                               fontSize: 24,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                             ),
                            ),
                            const SizedBox(height: 4),
