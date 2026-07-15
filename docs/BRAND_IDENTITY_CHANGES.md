@@ -410,3 +410,26 @@ y segmented control siempre pill.
   sin reconstruir el widget.
 
 ---
+
+### 14. Curvas de easing — "snap" es exacta, entrada/salida son aproximaciones de Flutter
+
+**Estado:** Parcial
+
+**Manual (pág. 36):** Directo `cubic-bezier(.2,0,0,1)` · Entrada
+`(.33,1,.68,1)` · Salida `(.32,0,.67,0)`.
+
+**Código:** `snap` coincidía bit a bit (ya usaba `Cubic(0.2,0,0,1)`
+directo). `easeEnter`/`easeExit` usaban `Curves.easeOutCubic`/
+`easeInCubic` de Flutter — misma intención ("sin rebote"), curva
+distinta. `lib/core/theme/app_theme.dart:99-101`.
+
+**Decisión:** manda el PDF — trivial de corregir en código, Flutter
+soporta bezier custom vía `Cubic()` (el mismo mecanismo que ya usaba
+`snap`), no hacía falta aproximar con las curvas predefinidas.
+
+**Acciones:**
+- [x] **Código:** `easeEnter` → `Cubic(0.33, 1, 0.68, 1)`, `easeExit` →
+  `Cubic(0.32, 0, 0.67, 0)` — bit a bit con el manual, igual que `snap`.
+- [ ] **PDF:** ninguna.
+
+---

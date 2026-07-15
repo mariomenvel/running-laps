@@ -96,9 +96,9 @@ class AppMotion {
   static const enter = Duration(milliseconds: 400);
 
   // Curvas
-  static const snap = Cubic(0.2, 0, 0, 1);      // press, toggles, feedback táctil
-  static const easeEnter = Curves.easeOutCubic;  // entradas de pantalla, cards, modales
-  static const easeExit = Curves.easeInCubic;    // salidas, fades out
+  static const snap = Cubic(0.2, 0, 0, 1);         // press, toggles, feedback táctil
+  static const easeEnter = Cubic(0.33, 1, 0.68, 1); // entradas de pantalla, cards, modales
+  static const easeExit = Cubic(0.32, 0, 0.67, 0);  // salidas, fades out
 }
 
 /// Espaciado semántico — usar en padding, gap, margin.
