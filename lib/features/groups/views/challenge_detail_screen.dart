@@ -549,11 +549,11 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
   }) {
     Widget rankWidget;
     if (rank == 1) {
-      rankWidget = const Text("🥇", style: TextStyle(fontSize: 24));
+      rankWidget = const Icon(Icons.emoji_events_rounded, size: 24, color: Color(0xFFFFD700));
     } else if (rank == 2) {
-      rankWidget = const Text("🥈", style: TextStyle(fontSize: 24));
+      rankWidget = const Icon(Icons.emoji_events_rounded, size: 24, color: Color(0xFFC0C0C0));
     } else if (rank == 3) {
-      rankWidget = const Text("🥉", style: TextStyle(fontSize: 24));
+      rankWidget = const Icon(Icons.emoji_events_rounded, size: 24, color: Color(0xFFCD7F32));
     } else {
       rankWidget = Text(
         '$rank',

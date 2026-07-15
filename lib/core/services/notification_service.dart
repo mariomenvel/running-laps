@@ -138,7 +138,7 @@ class NotificationService {
     await init();
     await _plugin.show(
       _personalRecordId,
-      '🏆 ¡Nuevo récord personal!',
+      'Nuevo récord personal',
       '$distance en $pace /km',
       NotificationDetails(
         android: AndroidNotificationDetails(
@@ -174,7 +174,7 @@ class NotificationService {
 
     await _plugin.zonedSchedule(
       _weeklySummaryId,
-      'Resumen semanal 📊',
+      'Resumen semanal',
       'Revisa cómo ha ido tu semana de entrenamiento',
       tzTime,
       NotificationDetails(
@@ -216,7 +216,7 @@ class NotificationService {
 
     await _plugin.zonedSchedule(
       _weeklyFeedbackReminderId,
-      '📋 ¿Cómo fue tu semana?',
+      '¿Cómo fue tu semana?',
       'Cuéntale a tu coach cómo te sientes para ajustar tu próximo plan',
       tzTime,
       NotificationDetails(
@@ -280,7 +280,7 @@ class NotificationService {
 
       await _plugin.zonedSchedule(
         _trainingReminderBaseId + date.weekday,
-        '🏃 Hoy toca: $categoryLabel',
+        'Hoy toca: $categoryLabel',
         '¡A por ello! Tu coach lo tiene preparado.',
         tzTime,
         NotificationDetails(

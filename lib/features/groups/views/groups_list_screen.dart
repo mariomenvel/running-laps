@@ -120,7 +120,7 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
 
                             // SECTION: INVITATIONS
                             if (pending.isNotEmpty) ...[
-                              _buildSectionTitle("Invitaciones Pendientes 📩"),
+                              _buildSectionTitle("Invitaciones Pendientes"),
                               const SizedBox(height: 12),
                               ...pending.map((m) => _InvitationCard(
                                     membership: m,

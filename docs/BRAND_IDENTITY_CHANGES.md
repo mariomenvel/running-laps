@@ -277,3 +277,75 @@ Lucide.
   línea única 2px sin relleno).
 
 ---
+
+### 10. Emoji en UI — prohibición "sin excepciones" incumplida de forma extendida
+
+**Estado:** No coincide
+
+**Manual (págs. 30, 47):** "Los emoji están prohibidos en toda la UI del
+producto: mensajes del sistema, toasts, coaching copy y estados."
+
+**Código:** emoji en notificaciones push, snackbars de récord, onboarding,
+errores de GPS, medallas del ranking, chips de sueño del coach IA,
+invitaciones de grupo, y un caso en Wear OS.
+
+**Decisión:** manda el PDF — 0 emoji por ahora. Corregido en código.
+
+**Acciones:**
+- [x] **Código:** eliminados todos los emoji en superficies de UI activas:
+  - `notification_service.dart` (4 títulos de notificación push)
+  - `challenge_detail_screen.dart` — medallas 🥇🥈🥉 reemplazadas por
+    `Icon(Icons.emoji_events_rounded)` en oro/plata/bronce (no se podía
+    solo borrar: son el indicador visual del podio)
+  - `create_challenge_modal.dart`, `groups_list_screen.dart`,
+    `group_screen.dart` (2 snackbars), `training_no_gps_detail_view.dart`,
+    `training_start_view.dart`, `training_session_view.dart` (3 mensajes
+    de error GPS) — texto plano sin emoji
+  - `athlete_tutorial_view.dart` — el campo `emoji: String` de cada slide
+    del tutorial de onboarding pasó a `icon: IconData` (Material Icons:
+    `track_changes`, `calendar_month`, `chat_bubble`, `bar_chart`)
+  - `home_layout_config.dart` — el getter `WidgetType.icon` (emoji) no
+    tenía ningún caller real (código muerto, superado por
+    `_iconForWidget` en `edit_home_view.dart`); eliminado en vez de
+    convertido
+  - `ai_coach_weekly_feedback_view.dart` — chips de sueño, solo texto
+  - `wear_os/.../SeriesPageScreen.kt` — un emoji en la etiqueta de
+    plantilla
+  - **No tocados:** comentarios internos de código (`⚠️ HUÉRFANO`,
+    `✅ ACTIVO`, ❌/✅ en `app_colors.dart`) y dos `debugPrint()` — no son
+    UI visible para el usuario. `web/`/`landing/` tampoco (se rehacen
+    desde cero).
+- [ ] **PDF:** ninguna — el manual ya estaba bien, era el código el que
+  no coincidía.
+
+---
+
+### 11. Tamaños de icono 20/24px tokenizados pero no siempre respetados
+
+**Estado:** Parcial
+
+**Manual (pág. 30):** "20 px y 24 px únicamente. Nunca tamaños
+intermedios."
+
+**Código:** `AppDimens.iconSize`/`iconSizeSmall` existen (24/20) pero
+conviven con más de 20 tamaños distintos hardcodeados en uso real (13,
+14, 16, 18, 22, 28, 32, 34, 40, 48, 56, 64... — cientos de sitios).
+
+**Decisión (a petición explícita):** manda el código. Los dos ejemplos
+citados no son descuido: `rpe_badge.dart:54` usa 13px porque es un icono
+inline dentro de un badge compacto de texto 12px (20px no cabría sin
+romper el layout); `app_footer.dart:142` usa 40px porque es el icono del
+FAB central "Entrenar", con jerarquía visual deliberadamente mayor que
+los 4 iconos de tab normales. Con cientos de sitios y tamaños ligados a
+contexto (badge inline vs. FAB hero vs. nav bar), forzar todo a 20/24
+sería un cambio mecánico de alto riesgo visual sin beneficio real, no
+algo para hacer como corrección puntual — igual que el punto 9 (Lucide).
+
+**Acciones:**
+- [ ] **Código:** ninguna.
+- [ ] **PDF:** relajar pág. 30 — documentar 20/24px como los tamaños
+  estándar de icono de UI (nav, botones, list items), pero permitir
+  tamaños contextuales fuera de esos dos casos (badges compactos, iconos
+  hero/FAB, tablas densas) en vez de una prohibición absoluta.
+
+---

@@ -1439,7 +1439,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
       final label = PbDetector.labelFor(pb.field);
       ModernSnackBar.showSuccess(
         context,
-        '🎉 ¡Nuevo récord en $label! ${PbDetector.format(pb.seconds)}',
+        'Nuevo récord en $label: ${PbDetector.format(pb.seconds)}',
       );
     } catch (e) {
       debugPrint('[PbDetector] error: $e');

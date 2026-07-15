@@ -398,7 +398,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                             await _controller.joinChallenge(challenge.id);
                             // context.mounted: es el context del builder, no el del State
                             if (context.mounted) {
-                              ModernSnackBar.showSuccess(context, '¡Te has unido al reto! 🚀');
+                              ModernSnackBar.showSuccess(context, 'Te has unido al reto');
                               _confettiController.play();
                             }
                           },
@@ -988,7 +988,7 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> {
                         Padding(
                           padding: const EdgeInsets.only(top: 10),
                           child: Text(
-                            "¡Reto completado! 🎉",
+                            "Reto completado",
                             style: TextStyle(
                               color: AppColors.rpeLow,
                               fontSize: 13,
