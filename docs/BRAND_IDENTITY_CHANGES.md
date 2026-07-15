@@ -46,3 +46,28 @@ como el card de Analytics. Reducir la intensidad en general.
   emojis/exclamaciones múltiples tipo el ejemplo prohibido pág. 5).
 
 ---
+
+### 2. Tagline oficial no implementado — convivían 4 taglines distintos
+
+**Estado:** No coincide
+
+**Manual (pág. 7):** tagline oficial «Para los que van en serio.» ·
+tagline de store «Entrena con datos. Corre con propósito.»
+
+**Código:** ninguno de los dos aparecía. Tres textos distintos entre sí en
+`README.md:2`, `web/index.html:7,21` y `landing/index.html:560-570`.
+
+**Decisión:** manda el PDF. Se corrige `README.md` para usar el tagline
+oficial. `web/index.html` y `landing/index.html` **no se tocan** — ambos se
+van a rehacer desde cero, así que no tiene sentido parchear textos que se
+van a descartar.
+
+**Acciones:**
+- [x] **Código:** `README.md:2` actualizado a «Para los que van en serio.»
+- [ ] **PDF:** ninguna — el manual ya estaba bien, era el código el que no
+  coincidía.
+- [ ] **Pendiente (fuera de este repo por ahora):** cuando se rehagan
+  `web/` y `landing/` desde cero, usar el tagline oficial (home/principal)
+  y el de store (meta description / listing) según corresponda.
+
+---
