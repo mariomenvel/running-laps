@@ -433,3 +433,59 @@ soporta bezier custom vía `Cubic()` (el mismo mecanismo que ya usaba
 - [ ] **PDF:** ninguna.
 
 ---
+
+### 15. El bottom sheet del selector numérico no usa los 320ms del sistema
+
+**Estado:** No coincide
+
+**Manual (pág. 42):** WheelPicker "entra como sheet (320ms)".
+
+**Código:** `showModalBottomSheet` sin `transitionDuration`/animation
+style explícito — usaba el default de Flutter (300ms), ignorando
+`AppMotion.slow`. `lib/core/widgets/number_picker_field.dart:31`.
+
+**Decisión:** manda el PDF — corregido en código.
+
+**Acciones:**
+- [x] **Código:** añadido `sheetAnimationStyle: AnimationStyle(duration:
+  AppMotion.slow, reverseDuration: AppMotion.slow)` a la llamada de
+  `showModalBottomSheet`. No se pudo verificar con `flutter analyze`
+  (no hay toolchain de Flutter en este entorno) — revisar al compilar.
+- [ ] **PDF:** ninguna.
+
+---
+
+### 16. Botón START — ni el tamaño, ni el color, ni la ausencia de sombra coinciden
+
+**Estado:** No coincide
+
+**Manual (pág. 39):** círculo sólido 56×56px mínimo, relleno púrpura
+`#8E24AA`, glifo play centrado, sin sombra.
+
+**Código:** `lib/core/widgets/app_footer.dart:112-142` — diámetro ~70px
+(`padding: 15` + icono 40px, escala animada 0.9–1.08x con pulso), relleno
+`Theme.of(context).colorScheme.surface` (blanco/negro según tema, no
+púrpura — el púrpura solo tiñe el icono), dos `BoxShadow` explícitas (una
+con el color de marca).
+
+**Decisión:** el usuario indicó que el diseño actual no le disgusta y
+pidió el cambio mínimo, sin arriesgar el control más usado de toda la
+app (FAB "Entrenar", visible en cada pantalla) con un rediseño completo.
+De los tres deltas: el **tamaño** ya cumple igualmente el "mínimo 56px"
+del manual (70 > 56, "mínimo" no significa "exacto") — no requiere
+cambio. **Color de relleno** y **sombra** sí divergen del manual de
+forma real e intencional (es un botón tipo "ghost" con icono teñido +
+sombra suave + pulso, no un círculo sólido plano). Se mantiene el
+código tal cual — no se cambia nada en el control por decisión
+explícita — y se documenta el diseño real en el PDF en vez de forzar una
+versión peor de un componente ya bueno.
+
+**Acciones:**
+- [ ] **Código:** ninguna (decisión explícita de no tocar este control).
+- [ ] **PDF:** reemplazar la especificación pág. 39 — de "círculo sólido
+  púrpura sin sombra" a la descripción real: círculo con relleno de
+  superficie (blanco/negro según tema), icono púrpura de marca centrado,
+  sombra suave de dos capas (una tintada de marca), tamaño ≥56px con
+  pulso de idle animado (0.9–1.08x).
+
+---

@@ -31,6 +31,10 @@ class NumberPickerField extends StatelessWidget {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
+      sheetAnimationStyle: AnimationStyle(
+        duration: AppMotion.slow,
+        reverseDuration: AppMotion.slow,
+      ),
       builder: (ctx) {
         return Container(
           height: 300,
