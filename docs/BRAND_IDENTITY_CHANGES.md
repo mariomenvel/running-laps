@@ -252,3 +252,28 @@ web — este punto es la ejecución de esa aclaración.)
 - [ ] **PDF:** ninguna.
 
 ---
+
+### 9. Librería de iconos — Material Icons, no Lucide
+
+**Estado:** No coincide
+
+**Manual (pág. 30):** Lucide · línea única 2px · sin relleno · sin
+filled/solid.
+
+**Código:** ningún paquete Lucide en `pubspec.yaml` (solo
+`cupertino_icons`). 784 usos de `Icons.*` de Material (filled/rounded) +
+Cupertino sueltos. `pubspec.yaml` · `lib/core/widgets/rpe_badge.dart:54`.
+
+**Decisión:** manda el código — 784 usos es una migración de icon set
+completa, no algo a hacer como corrección puntual. Se actualiza el PDF
+para reflejar Material Icons (rounded) como librería oficial en vez de
+Lucide.
+
+**Acciones:**
+- [ ] **Código:** ninguna.
+- [ ] **PDF:** reemplazar la especificación de librería de iconos (pág.
+  30) — de Lucide a Material Icons variante *rounded*, documentando el
+  estilo real usado (grosor/relleno según el icono, no estrictamente
+  línea única 2px sin relleno).
+
+---
