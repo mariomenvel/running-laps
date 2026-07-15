@@ -32,12 +32,14 @@ puntuales (push/momento de logro), no en superficies persistentes de la UI
 como el card de Analytics. Reducir la intensidad en general.
 
 **Acciones:**
-- [ ] **Código:** revisar dónde vive `CoachInsightService` — actualmente
-  se usa en un widget persistente de Analytics (`overview_tab.dart`). Bajar
-  el tono de los mensajes de récord/racha ahí (menos exclamaciones,
-  lenguaje más "coach"), y si se quiere mantener el tono celebratorio
-  fuerte, moverlo a una notificación puntual en el momento del logro en
-  lugar de un card fijo en Analytics.
+- [x] **Código:** bajado el tono en `coach_insight_service.dart` (las 6
+  ramas de `generateInsight`) — sin exclamaciones dobles ni metáforas hype
+  ("máquina", "vuelas", "espectacular", "imparable"). El único uso activo
+  de este servicio es el card persistente de Analytics
+  (`overview_tab.dart:51`); `home_view_legacy.dart` es huérfano (deuda #5)
+  y no cuenta. No se creó ningún sistema de notificaciones nuevo para el
+  tono celebratorio — si se quiere esa función en el futuro, es una feature
+  aparte, no algo a construir especulativamente ahora.
 - [ ] **PDF:** aclarar en el manual que la excepción de tono celebratorio
   aplica a notificaciones puntuales de logro (PB, récord), no a texto
   persistente en pantalla — y que incluso ahí debe moderarse (evitar
