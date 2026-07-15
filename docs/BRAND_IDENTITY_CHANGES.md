@@ -71,3 +71,30 @@ van a descartar.
   y el de store (meta description / listing) según corresponda.
 
 ---
+
+### 3. "Nunca fotografía en la interfaz" no contempla la foto de perfil real
+
+**Estado:** Omisión del manual
+
+**Manual (pág. 8):** "Dentro de la app nunca aparece una fotografía" — sin
+excepción para avatares.
+
+**Código:** `lib/config/app_theme.dart:75-83` — `AvatarHelper.construirAvatar`
+tiene dos ramas distintas: `type == 'avatar'` (avatar generado con el
+avatar maker integrado, nunca es una foto real) y `type == 'photo'`
+(muestra `NetworkImage` con la foto real de Google o subida por el
+usuario). El manual solo contemplaba la primera rama.
+
+**Decisión:** manda el código — la foto de perfil real (Google/subida) es
+intencional y se mantiene. El avatar maker ya cumplía la regla del manual
+sin necesidad de cambios; lo que estaba mal era la regla en sí, que no
+preveía esta excepción.
+
+**Acciones:**
+- [ ] **Código:** ninguna.
+- [ ] **PDF:** quitar/matizar la regla "nunca fotografía en la interfaz"
+  en pág. 8 para reflejar que la foto de perfil real (Google/subida) es
+  una excepción intencional; el avatar generado (avatar maker) sigue
+  siendo la opción "sin foto" por defecto.
+
+---
