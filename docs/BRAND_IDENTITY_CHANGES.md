@@ -146,3 +146,29 @@ Este punto mezclaba 4 sub-decisiones distintas, resueltas por separado:
     app Flutter.
 
 ---
+
+### 5. Colores de feedback de toasts no aparecen en ninguna tabla del manual
+
+**Estado:** Omisión del manual
+
+**Manual:** no documenta success/error/warning/info ni los menciona como
+excepción a la paleta de marca.
+
+**Código:** `feedbackSuccess #10B981` · `feedbackError #EF4444` ·
+`feedbackWarning #F59E0B` · `feedbackInfo #3B82F6`
+(`lib/core/theme/app_colors.dart:50-53`), usados por `ModernSnackBar`
+(`modern_snackbar.dart`). Ya documentados y justificados como excepción
+semántica en `COLOR_SYSTEM.md:160-168` (tabla `showSuccess/showError/
+showWarning/showInfo` → color hex).
+
+**Decisión:** manda el código — son colores semánticos estándar (semáforo
+verde/rojo/ámbar/azul), no arbitrarios, y ya están documentados en
+`COLOR_SYSTEM.md`. Solo falta que el manual de marca los incorpore.
+
+**Acciones:**
+- [ ] **Código:** ninguna.
+- [ ] **PDF:** añadir tabla de colores de feedback (success/error/
+  warning/info con sus hex) como excepción documentada a la paleta de
+  marca, replicando la tabla ya existente en `COLOR_SYSTEM.md`.
+
+---
