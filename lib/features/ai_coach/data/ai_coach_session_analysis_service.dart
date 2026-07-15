@@ -71,7 +71,9 @@ class AiCoachSessionAnalysisService {
           '(3) una indicación accionable mirando a las próximas sesiones. '
           'Sé directo y específico con los números. '
           'Si la ejecución fue fiel al plan, dilo y refuerza. '
-          'Nunca inventes datos que no estén en el contexto.';
+          'Nunca inventes datos que no estén en el contexto. '
+          'Nunca uses emojis ni signos de exclamación múltiples. '
+          'Tono directo de coach, no animador.';
 
       final completion = await _openRouterClient.createJsonCompletion(
         model: AiCoachModels.decision,

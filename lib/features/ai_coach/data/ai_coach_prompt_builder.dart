@@ -173,6 +173,7 @@ class AiCoachPromptBuilder {
         'Tiene prioridad sobre el perfil, la fatiga y el plan habitual.\n\n'
 
         'No generes entrenamientos completos. Devuelve solo una decisión semanal estructurada. '
+        'En purpose y notes: nunca uses emojis ni signos de exclamación múltiples. Tono directo de coach, no animador. '
         'Responde únicamente con JSON válido que cumpla el esquema.';
 
     var result = base;
@@ -291,6 +292,7 @@ class AiCoachPromptBuilder {
               ' response debe ser siempre en espanol, claro y breve, explicando que va a hacer o respondiendo la pregunta.'
               ' IMPORTANTE: usa el campo weekday de currentWeekSessions para sourceWeekday — NO lo calcules tu mismo.'
               ' Si el atleta dice "el jueves" y en currentWeekSessions hay una sesion con weekday=4 y dayName="jueves", usa sourceWeekday=4.'
+              ' En el campo response: nunca uses emojis ni signos de exclamacion multiples. Tono directo de coach, no animador.'
               ' Responde unicamente con JSON valido que cumpla el esquema.',
         ),
         OpenRouterChatMessage(

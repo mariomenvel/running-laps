@@ -582,3 +582,82 @@ este punto.)
 - [ ] **PDF:** ninguna.
 
 ---
+
+### 21. Mayúsculas en frase completa — la regla "solo en metadata" se rompe en un título de pantalla
+
+**Estado:** No coincide
+
+**Manual (pág. 47):** "UPPERCASE solo en metadata... Nunca frases
+completas en mayúsculas."
+
+**Código:** `lib/features/training/views/training_summary_screen.dart:94`
+— `'¡SERIES COMPLETADAS!'`, mayúscula de frase completa con exclamación.
+Las 6 ramas del switch (`_completionMessage()`) seguían el mismo patrón,
+no solo la citada.
+
+**Decisión:** manda el PDF — corregido en código, las 6 ramas por
+consistencia (son una sola decisión de diseño, no casos independientes).
+
+**Acciones:**
+- [x] **Código:** las 6 ramas de `_completionMessage()` → sentence case
+  sin exclamación ("Series completadas", "Rodaje completado", etc.). De
+  paso, en el mismo archivo, dos `FontWeight.w900` en el título de
+  finalización (líneas 528, 632) — mismo hallazgo que el punto 7 (Bold
+  prohibido) que no había cubierto por buscar solo `.bold`/`.w700` sin
+  incluir `.w900` suelto — corregidos a `w600`.
+- [ ] **PDF:** ninguna.
+
+---
+
+### 22. RPE en español, no en inglés — al contrario de lo que exige el manual
+
+**Estado:** No coincide
+
+**Manual (pág. 47):** "easy / moderate / hard / max — siempre en inglés
+en la UI."
+
+**Código:** `'Suave'`, `'Moderado'`, `'Intenso'`, `'Máximo'` —
+`rpe_slider.dart:93,102` · `training_session_view.dart:1419-1420`.
+
+**Decisión:** manda el PDF. Toda la app está en español (títulos,
+botones, mensajes de sistema — cada punto anterior de esta revisión lo
+confirma); cambiar solo estas 4 palabras a inglés sería una
+inconsistencia de idioma visible para el usuario final, no una mejora.
+
+**Acciones:**
+- [ ] **Código:** ninguna.
+- [ ] **PDF:** corregir pág. 47 — las etiquetas de intensidad van en
+  español (Suave/Moderado/Intenso/Máximo), no en inglés.
+
+---
+
+### 23. Prompts del coach IA — tono sobrio en espíritu, sin guardrail explícito anti-emoji
+
+**Estado:** Parcial
+
+**Manual (pág. 47):** "Sin emojis en mensajes del sistema... Siempre" —
+regla dura, sin excepción.
+
+**Código:** los system prompts pedían ser "directos y específicos con
+los números" pero ninguno instruía explícitamente evitar emoji o
+exclamaciones — el texto generado por el LLM podía colarlos sin que
+nada en el prompt lo prohibiera. `ai_coach_session_analysis_service.dart:66-74`.
+
+**Decisión:** manda el PDF — corregido en código. Consistente con la
+política de 0 emoji ya fijada en el punto 10.
+
+**Acciones:**
+- [x] **Código:** añadida la instrucción explícita ("nunca uses emojis
+  ni signos de exclamación múltiples, tono directo de coach, no
+  animador") a los 3 system prompts que generan texto visible al
+  usuario:
+  - `ai_coach_session_analysis_service.dart` (análisis post-sesión, el
+    citado en el hallazgo)
+  - `ai_coach_prompt_builder.dart` — `buildChatAdjustmentPrompt` (campo
+    `response`, la respuesta del chat) y `_buildDecisionSystemPrompt`
+    (campos `purpose`/`notes` del plan semanal)
+  - `ai_coach_prompt_session_generator.dart` (campos `title`/
+    `description` de la sesión generada)
+- [ ] **PDF:** ninguna.
+
+---

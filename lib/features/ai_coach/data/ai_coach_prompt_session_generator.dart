@@ -94,6 +94,8 @@ class AiCoachPromptSessionGenerator {
             ' RANGOS NUMÉRICOS: repetitions entre 1 y 30; rpe entre 1 y 10;'
             ' fcMaxPercent entre 1 y 100; paces en segundos por km (mínimo 120);'
             ' durationSec y distanceM siempre positivos.\n'
+            ' En title y description: nunca uses emojis ni signos de'
+            ' exclamación múltiples. Tono directo de coach, no animador.\n'
             ' Responde únicamente con JSON válido que cumpla el esquema.',
       ),
       OpenRouterChatMessage(
