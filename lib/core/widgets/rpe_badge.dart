@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/theme/app_theme.dart';
 
 /// Tamaño visual del badge de RPE.
 enum RpeBadgeSize { text, chip, stat }
@@ -42,10 +43,10 @@ class RpeBadge extends StatelessWidget {
       case RpeBadgeSize.chip:
         return Container(
           padding: const EdgeInsets.symmetric(
-              horizontal: 8, vertical: 4),
+              horizontal: 14, vertical: 6),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(AppDimens.radiusPill),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -58,7 +59,7 @@ class RpeBadge extends StatelessWidget {
                 text,
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   color: _darken(color),
                 ),
               ),

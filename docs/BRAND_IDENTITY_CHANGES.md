@@ -489,3 +489,96 @@ versión peor de un componente ya bueno.
   pulso de idle animado (0.9–1.08x).
 
 ---
+
+### 17. RpeBadge (tag) — radio, padding y peso de texto no siguen la spec del manual
+
+**Estado:** No coincide
+
+**Manual (pág. 40):** pill (radius 999) · padding 6px vertical / 14px
+horizontal · texto 12px w600.
+
+**Código:** `lib/core/widgets/rpe_badge.dart:44-61` (variante `chip`) —
+`BorderRadius.circular(6)` (no pill), padding 8h/4v (invertido y menor),
+texto 12px w500 (no w600).
+
+**Decisión:** manda el PDF — corregido en código. Es un único widget
+reutilizable (`RpeBadge`), igual que los tags del punto 13: cambio
+contenido, no una migración dispersa.
+
+**Acciones:**
+- [x] **Código:** `rpe_badge.dart` variante `chip` → padding
+  `horizontal: 14, vertical: 6`, `borderRadius:
+  BorderRadius.circular(AppDimens.radiusPill)`, texto `FontWeight.w600`.
+  No se tocaron las variantes `text`/`stat` (no son la "tag" que describe
+  el manual).
+- [ ] **PDF:** ninguna.
+
+---
+
+### 18. El componente EffortBadge (EASY/MODERATE/HARD/MAX) que especifica el manual no existe
+
+**Estado:** No coincide
+
+**Manual (pág. 40):** punto de color + label en mayúsculas ("EASY · RPE
+≤4"...), siempre junto al número.
+
+**Código:** no existe ningún widget `EffortBadge`. `RpeBadge` solo
+muestra el número, sin etiqueta de intensidad.
+
+**Decisión:** es un componente de UI nuevo, no un fix — no se construye
+dentro de esta revisión punto por punto. Se quita del PDF por ahora y
+queda como deuda de producto/diseño para cuando se decida priorizarlo.
+
+**Acciones:**
+- [ ] **Código:** ninguna.
+- [ ] **PDF:** quitar/marcar como no implementado el componente
+  `EffortBadge` en pág. 40 (deuda de producto, no bug).
+
+---
+
+### 19. AppDimens.cardShadow — token muerto que contradice la letra del sistema
+
+**Estado:** Omisión del manual
+
+**Manual (pág. 33):** "Cards — la única sombra es la que no existe."
+Sombras solo en overlays transitorios.
+
+**Código:** `cardShadow` estaba definido (blur 12, negro 30%) en
+`lib/core/theme/app_theme.dart:123-127` pero con **0 consumidores** en
+todo `lib/` — no se aplicaba a ninguna card, pero su sola existencia
+invitaba a usarlo y contradecía la regla "cards nunca tienen sombra".
+
+**Decisión:** manda el código — token muerto, se elimina.
+
+**Acciones:**
+- [x] **Código:** eliminado `AppDimens.cardShadow` de `app_theme.dart`.
+- [ ] **PDF:** ninguna.
+
+---
+
+### 20. Switch — el ON coincide en todos los usos; el OFF no tiene un token único
+
+**Estado:** Parcial
+
+**Manual (pág. 42):** ON = púrpura `#8E24AA` · OFF = superficie anidada,
+un único estilo.
+
+**Código:** ON = `AppColors.brand` en 15+ usos, coincide. Los 3 `Switch`
+reales de la app (`training_start_view.dart:3752,4083,4195` — alarma,
+GPS, pulsómetro) ya usaban exactamente la misma fórmula entre sí (`dark
+? onSurface@0.15 : AppColors.surface2`), pero **duplicada inline 3
+veces** en vez de como un token único — cualquier `Switch` nuevo podía
+divergir sin que nadie lo notara. (Los demás resultados de
+`inactiveTrackColor` en el repo son `Slider`, no `Switch` — no aplican a
+este punto.)
+
+**Decisión:** manda el PDF — extraído a token único en código.
+
+**Acciones:**
+- [x] **Código:** añadido `AppColors.switchTrackOff(BuildContext)` en
+  `app_colors.dart`, mismo patrón que `surfaceOf`/`surface2Of`. Los 3
+  `Switch` de `training_start_view.dart` ahora usan
+  `AppColors.switchTrackOff(context)` en vez de la fórmula duplicada.
+- [ ] **PDF:** ninguna.
+
+---

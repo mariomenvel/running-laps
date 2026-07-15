@@ -126,11 +126,6 @@ class AppDimens {
   static const double radiusLg        = 20;
   static const double radiusPill      = 999;
   static const double cardPadding     = 16;
-  static final BoxShadow cardShadow   = BoxShadow(
-    color: Colors.black.withValues(alpha: 0.3),
-    blurRadius: 12,
-    offset: const Offset(0, 4),
-  );
 
   static const double buttonRadius    = 12;
   static const double buttonPadding   = 16;
