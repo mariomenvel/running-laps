@@ -120,8 +120,11 @@ class AppSpacing {
 class AppDimens {
   AppDimens._();
 
+  static const double radiusSm        = 8;
   static const double cardRadius      = 12;
   static const double cardRadiusLarge = 16;
+  static const double radiusLg        = 20;
+  static const double radiusPill      = 999;
   static const double cardPadding     = 16;
   static final BoxShadow cardShadow   = BoxShadow(
     color: Colors.black.withValues(alpha: 0.3),

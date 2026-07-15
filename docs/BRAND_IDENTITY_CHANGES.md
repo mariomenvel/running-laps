@@ -373,3 +373,40 @@ existente", así que no se tocó ningún spacing hardcodeado ya en uso.
 - [ ] **PDF:** ninguna.
 
 ---
+
+### 13. Radios de esquina — el radio pill (999) no existe en ningún sitio del código
+
+**Estado:** No coincide
+
+**Manual (pág. 33):** escala 8(sm)/12(md)/16(card)/20(lg)/999(pill). Tags
+y segmented control siempre pill.
+
+**Código:** `AppDimens` solo tokenizaba 12 y 16. Cero `StadiumBorder` o
+`BorderRadius.circular(999)` en todo `lib/`. Radios sueltos (2,6,8,10,20,
+24,28) repetidos a mano sin token. `lib/core/theme/app_theme.dart:120-121,129`
+· `rpe_badge.dart:48` (6px, no pill).
+
+**Decisión:** manda el código, con dos alcances distintos:
+- **Tags:** a diferencia de los tamaños de icono (punto 11), los tags
+  están centralizados en dos widgets reutilizables (`TagChip` y el
+  `_TagToggleChip` privado de `tag_selector_sheet.dart`) — cambiarlos a
+  pill es un cambio contenido, no una migración de cientos de sitios.
+  Corregido.
+- **Segmented control:** solo 2 usos, ambos `CupertinoSlidingSegmentedControl`
+  (widget nativo de Flutter). Su radio de esquina no es parametrizable vía
+  API pública — forzar pill requeriría reconstruir el widget desde cero.
+  Fuera de alcance; se deja el radio nativo de Cupertino y se anota para
+  el PDF.
+
+**Acciones:**
+- [x] **Código:** añadidos `AppDimens.radiusSm = 8`, `AppDimens.radiusLg
+  = 20` y `AppDimens.radiusPill = 999`. `TagChip.build()` y
+  `_TagToggleChip.build()` ahora usan `AppDimens.radiusPill` en vez de
+  8/12 hardcodeado — todos los tags (vista, selector, historial) son pill
+  ahora. No se tocó `rpe_badge.dart:48` (6px) — es el radio del badge
+  completo (RPE), no un tag, fuera del alcance de esta regla.
+- [ ] **PDF:** anotar que el segmented control usa el radio nativo de
+  `CupertinoSlidingSegmentedControl` (no pill custom) — no parametrizable
+  sin reconstruir el widget.
+
+---
