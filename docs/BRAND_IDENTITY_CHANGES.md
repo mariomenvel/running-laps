@@ -172,3 +172,20 @@ verde/rojo/ámbar/azul), no arbitrarios, y ya están documentados en
   marca, replicando la tabla ya existente en `COLOR_SYSTEM.md`.
 
 ---
+
+### 6. Opacidad de fondo del tag/badge — 13% en código vs. 15% del manual
+
+**Estado:** Parcial
+
+**Manual (pág. 40):** "El fondo es el color RPE al 15%."
+
+**Código:** `lib/core/widgets/rpe_badge.dart:47` —
+`color.withValues(alpha: 0.13)`, cercano pero no coincide.
+
+**Decisión:** manda el PDF — corregido en código.
+
+**Acciones:**
+- [x] **Código:** `rpe_badge.dart:47` → `alpha: 0.15`.
+- [ ] **PDF:** ninguna.
+
+---
