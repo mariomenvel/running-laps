@@ -349,3 +349,27 @@ algo para hacer como corrección puntual — igual que el punto 9 (Lucide).
   hero/FAB, tablas densas) en vez de una prohibición absoluta.
 
 ---
+
+### 12. Escala de espaciado — faltan 3 de 9 pasos, incluido el gutter móvil "regla principal"
+
+**Estado:** Parcial
+
+**Manual (pág. 32):** 4/8/12/16/20/24/32/48/64px — 20px es "gutter móvil,
+regla principal".
+
+**Código:** `AppSpacing` solo definía xs/s/m/l/xl/xxl = 4/8/12/16/24/32.
+Sin token para 20, 48 ni 64. `lib/core/theme/app_theme.dart:108-113`.
+
+**Decisión:** manda el PDF — corregido en código. A diferencia de los
+puntos 9 y 11, esto no es migrar cientos de sitios: es solo añadir los
+tokens que faltaban en la definición de la escala. CLAUDE.md ya deja
+explícito que `AppSpacing` es "usar en código nuevo, no migrar el
+existente", así que no se tocó ningún spacing hardcodeado ya en uso.
+
+**Acciones:**
+- [x] **Código:** añadidos `AppSpacing.gutter = 20` (nombre semántico,
+  siguiendo la designación del manual como "regla principal"),
+  `AppSpacing.xxxl = 48` y `AppSpacing.xxxxl = 64`.
+- [ ] **PDF:** ninguna.
+
+---
