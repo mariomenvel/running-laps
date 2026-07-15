@@ -661,3 +661,64 @@ política de 0 emoji ya fijada en el punto 10.
 - [ ] **PDF:** ninguna.
 
 ---
+
+### 24. "Sin sombras, sin neón, sin colored shadows" — el botón central de la app las tiene
+
+**Estado:** No coincide
+
+**Manual (pág. 55):** card con sombra "purple glow" listada
+explícitamente como prohibición del sistema visual.
+
+**Código:** el botón START tiene un `BoxShadow` con
+`AppColors.brand.withValues(alpha: 0.2)` — `lib/core/widgets/app_footer.dart:117-123`.
+
+**Decisión:** mismo componente y misma decisión que el **punto 16**
+(no se toca el botón START, PDF documenta el diseño real) — esto es la
+misma sombra vista desde la lista de prohibiciones explícitas de pág.
+55 en vez de la spec del botón en pág. 39. No es un punto nuevo, es el
+mismo hallazgo dos veces.
+
+**Acciones:**
+- [ ] **Código:** ninguna — ver punto 16.
+- [ ] **PDF:** al corregir pág. 39 (punto 16), quitar también el botón
+  START de la lista de prohibiciones de pág. 55, o añadirlo como
+  excepción explícita ahí también.
+
+---
+
+### 25. "Bold 700 en lista de datos: prohibido" — corrección del alcance real del punto 7
+
+**Estado:** No coincide
+
+**Manual (pág. 55):** listado como prohibición explícita del sistema
+visual, con mockup dedicado.
+
+**Código:** el punto 7 original solo buscó `FontWeight.bold`/`.w700` y
+corrigió 2 archivos. Una búsqueda más amplia (incluyendo `.w800`/`.w900`,
+que también violan "bold prohibido" al ser pesos iguales o más pesados)
+da **86 usos activos en 36 archivos** (fuera de las vistas huérfanas de
+la deuda #5 y de `pdf_generator_service.dart`, ya excluidos en el punto
+7). Gran parte sigue un patrón deliberado y repetido entre widgets
+hermanos: `fontWeight: hero ? FontWeight.w800 : FontWeight.w600` en
+`distance_widget.dart`, `time_widget.dart`, `free_stats_card.dart`,
+`continuous_stats_card.dart`, `hills_stats_card.dart` — jerarquía visual
+para el número principal (ritmo/distancia/tiempo) durante una sesión,
+más los KPIs grandes de Analytics y las cifras de grupos/retos.
+
+**Decisión:** igual que el punto 9 (Lucide) y el punto 11 (tamaños de
+icono) — 86 sitios con un patrón de jerarquía visual deliberado y
+repetido es una migración de sistema tipográfico completa, no una
+corrección puntual. Manda el PDF: se relaja la prohibición de pág. 55
+para permitir pesos >600 específicamente en números "hero" (la cifra
+principal de una métrica: ritmo, distancia, tiempo, KPI destacado),
+manteniendo la prohibición para texto normal/listas de datos (que es lo
+que sí corrigió el punto 7 originalmente en
+`profile_menu_screen_legacy.dart` y `group_rewards_screen.dart`).
+
+**Acciones:**
+- [ ] **Código:** ninguno de los 86 usos adicionales — permanecen.
+- [ ] **PDF:** corregir pág. 55 — permitir `w700`+ en números hero de
+  métrica (con mockup de qué cuenta como "hero"), mantener la
+  prohibición para el resto (listas, texto de cuerpo, etiquetas).
+
+---
