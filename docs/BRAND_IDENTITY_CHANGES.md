@@ -98,3 +98,51 @@ preveía esta excepción.
   siendo la opción "sin foto" por defecto.
 
 ---
+
+### 4. Naming y formatos de assets no siguen la convención del manual
+
+**Estado:** No coincide
+
+**Manual (pág. 14):** `rl-lockup-color.svg/.png`, `rl-badge-*.svg`,
+`favicon.ico`, GeneralSans en WOFF2.
+
+**Código:** `assets/images/logo.png`, `Icon.png`, `web/favicon.png` (no
+`.ico`), sin SVG de marca, sin WOFF2 (solo `.otf`).
+
+Este punto mezclaba 4 sub-decisiones distintas, resueltas por separado:
+
+**4a. Naming (`rl-lockup-color.*`, `rl-badge-*`)**
+- **Decisión:** no renombrar ahora. Se aplica cuando haya un rediseño real
+  del sistema de logo — renombrar hoy sin SVGs reales solo genera riesgo
+  de romper referencias (`pubspec.yaml`, código) sin beneficio.
+- **Acciones:** ninguna por ahora (ni código ni PDF).
+
+**4b. SVG de marca — no existe ningún SVG vectorial del logo, solo PNG**
+- **Decisión:** no se puede generar un SVG real a partir del PNG rasterizado
+  sin rehacer el arte — es un encargo de diseño, no una tarea de código.
+- **Acciones:**
+  - [ ] **Diseño (fuera de este repo):** encargar/crear el SVG vectorial
+    oficial del logo (lockup + badge).
+  - [ ] **PDF:** ninguna por ahora — el requisito SVG se mantiene, queda
+    como deuda pendiente hasta tener el vectorial.
+
+**4c. `favicon.ico`**
+- **Decisión:** generarlo ya, es trivial y no depende del rediseño web.
+- **Acciones:**
+  - [x] **Código:** generado `web/favicon.ico` (16/32/48 px) a partir de
+    `web/icons/Icon-192.png`. No se tocó `web/index.html` (la web se rehace
+    desde cero) — el archivo queda listo para cuando se referencie.
+  - [ ] **PDF:** ninguna.
+
+**4d. WOFF2 vs OTF en fuentes**
+- **Manual pedía WOFF2**, pero eso es un formato de fuente **web**; la app
+  Flutter necesita OTF/TTF vía `pubspec.yaml` — WOFF2 no serviría ahí.
+- **Decisión:** aclarar en el PDF que WOFF2 aplica solo a la web (cuando
+  se rehaga); la app móvil usa OTF/TTF por requisito técnico de Flutter.
+- **Acciones:**
+  - [ ] **Código:** ninguna — `assets/fonts/*.otf` está correcto para la
+    app.
+  - [ ] **PDF:** matizar pág. 14 — WOFF2 solo para web, OTF/TTF para la
+    app Flutter.
+
+---
