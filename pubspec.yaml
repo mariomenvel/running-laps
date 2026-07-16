@@ -38,7 +38,19 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  firebase_core: ^4.2.0
+  # Fijada (no ^): versiones >4.10.x arrastran cloud_firestore a 6.7.x, cuyo
+  # WriteBatch.update<T> genérico rompe fake_cloud_firestore 4.1.1 (ver nota
+  # junto a firebase_crashlytics/firebase_analytics más abajo).
+  firebase_core: 4.10.0
+  # BUG REAL (encontrado jul 2026, no relacionado con lo anterior): sin este
+  # pin, pub resuelve firebase_core_platform_interface a 7.1.0 aunque
+  # firebase_core 4.10.0 solo declara ^7.0.1. La 7.1.0 añadió el campo
+  # recaptchaSiteKey a CoreFirebaseOptions (15 campos) pero el código Java
+  # nativo de firebase_core 4.10.0 (GeneratedAndroidFirebaseCore.java) sigue
+  # serializando solo 14 — Firebase.initializeApp() crashea en Android con
+  # "RangeError: Not in inclusive range 0..13: 14" nada más arrancar. Pin
+  # exacto a la versión que SÍ coincide con el esquema de 14 campos.
+  firebase_core_platform_interface: 7.0.1
   firebase_auth: ^6.1.1
   firebase_app_check: ^0.4.1+1
   google_sign_in: ^6.2.2
@@ -76,6 +88,12 @@ dependencies:
   timezone: ^0.9.4
   http: ^1.2.2
   cloud_functions: ^6.3.2
+  # Requieren firebase_core ^4.10.0 exacto (ver nota arriba) — versiones más
+  # nuevas (5.2.4+ / 12.4.3+) exigen firebase_core ^4.11+ y no resuelven.
+  # Revisar si sube una versión nueva de fake_cloud_firestore para poder
+  # liberar el pin de firebase_core.
+  firebase_crashlytics: ^5.2.3
+  firebase_analytics: ^12.4.2
 
 dev_dependencies:
   flutter_test:

@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:running_laps/config/app_theme.dart';
+import 'package:running_laps/core/services/analytics_service.dart';
 import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/features/avatar/models/avatar_config.dart';
 import 'package:running_laps/features/avatar/services/avatar_generator.dart';
@@ -169,6 +170,14 @@ class _MainShellState extends State<MainShell> {
     super.dispose();
   }
 
+  static const _screenNames = {
+    0: 'home', 1: 'calendar', 2: 'analytics_hub', 3: 'profile',
+    4: 'history', 5: 'training_detail', 6: 'groups_list', 7: 'group_detail',
+    8: 'account_settings', 9: 'zones_config', 10: 'heart_rate_monitor',
+    11: 'templates_list', 12: 'template_editor', 13: 'workout_editor',
+    14: 'avatar_customizer', 15: 'training_session', 16: 'ai_coach_settings',
+  };
+
   void _onTabTapped(int navIndex) {
     if (navIndex == _tabIndex) return;
     setState(() {
@@ -176,6 +185,7 @@ class _MainShellState extends State<MainShell> {
       _tabIndex = navIndex;
     });
     tabIndexNotifier.value = navIndex;
+    AnalyticsService.logScreenView(_screenNames[navIndex] ?? 'tab_$navIndex');
   }
 
   void navigateTo(int index, {dynamic params}) {
@@ -203,6 +213,7 @@ class _MainShellState extends State<MainShell> {
       _previousTabIndex = _tabIndex;
       _tabIndex = index;
     });
+    AnalyticsService.logScreenView(_screenNames[index] ?? 'tab_$index');
   }
 
   void navigateBack() {
