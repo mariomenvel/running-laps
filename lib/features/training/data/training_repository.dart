@@ -165,9 +165,31 @@ class TrainingRepository {
       });
     }
   }
+  /// ⚠️ Trae hasta 500 docs de golpe (con sus gpsPoints dentro). No usar en
+  /// pantallas nuevas: preferir [getTrainings] (paginado) o
+  /// [getTrainingsSince] (acotado por fecha). Queda solo para vistas legacy.
   Future<List<Entrenamiento>> getAllEntrenamientos(String uid) async {
     final page = await getTrainings(uid: uid, pageSize: 500);
     return page.trainings;
+  }
+
+  /// Entrenamientos con `fecha >= since`, ordenados descendente.
+  /// El bound se construye en UTC (convención `fecha` string ISO UTC).
+  Future<List<Entrenamiento>> getTrainingsSince(
+    DateTime since, {
+    String? uid,
+  }) async {
+    final resolvedUid = uid ?? _requireUid();
+    final bound = since.toUtc().toIso8601String();
+
+    final snapshot = await _userTrainings(resolvedUid)
+        .where('fecha', isGreaterThanOrEqualTo: bound)
+        .orderBy('fecha', descending: true)
+        .get();
+
+    return snapshot.docs
+        .map((doc) => Entrenamiento.fromMap(doc.data(), id: doc.id))
+        .toList();
   }
 
   /// Devuelve un entrenamiento por id, o null si no existe.

@@ -58,20 +58,32 @@ class HomeViewModel {
 
   // ── API pública ──────────────────────────────────────────────────────────
 
+  /// Lunes de la semana actual a medianoche local — límite inferior de las
+  /// stats semanales. La query lo convierte a UTC, así que el bound es exacto.
+  DateTime get _mondayOfThisWeek {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day)
+        .subtract(Duration(days: now.weekday - 1));
+  }
+
   Future<void> loadAll() async {
     isLoading.value = true;
     try {
+      // Solo lo que la home necesita: 5 recientes + la semana en curso.
+      // (Antes: getAllEntrenamientos → hasta 500 docs con gpsPoints dentro.)
       final results = await Future.wait([
-        _trainingRepo.getAllEntrenamientos(userId),
+        _trainingRepo.getTrainings(uid: userId, pageSize: 5),
+        _trainingRepo.getTrainingsSince(_mondayOfThisWeek, uid: userId),
         FirebaseFirestore.instance.collection('users').doc(userId).get(),
         _userService.getIsAthleteMode(userId),
         _recovery.loadSession(),
       ]);
 
-      final allWorkouts  = results[0] as List<Entrenamiento>;
-      final userDoc      = results[1] as DocumentSnapshot;
-      final athleteMode  = results[2] as bool;
-      final recovered    = results[3] as RecoveredSession?;
+      final recentPage   = results[0] as TrainingsPage;
+      final weekWorkouts = results[1] as List<Entrenamiento>;
+      final userDoc      = results[2] as DocumentSnapshot;
+      final athleteMode  = results[3] as bool;
+      final recovered    = results[4] as RecoveredSession?;
 
       if (_disposed) return;
       final data = userDoc.data() as Map<String, dynamic>? ?? {};
@@ -81,11 +93,10 @@ class HomeViewModel {
       isAthleteMode.value = athleteMode;
       recoveredSession.value = recovered;
 
-      allWorkouts.sort((a, b) => b.fecha.compareTo(a.fecha));
-      recentWorkouts.value = allWorkouts.take(5).toList();
+      recentWorkouts.value = recentPage.trainings;
 
       final fcMax = (data['fcMax'] as num?)?.toInt() ?? 0;
-      _computeWeeklyStats(allWorkouts, fcMax);
+      _computeWeeklyStats(weekWorkouts, fcMax);
 
       if (athleteMode) {
         await _loadAthleteData();
@@ -108,18 +119,19 @@ class HomeViewModel {
     isLoading.value = true;
     try {
       final results = await Future.wait([
-        _trainingRepo.getAllEntrenamientos(userId),
+        _trainingRepo.getTrainings(uid: userId, pageSize: 5),
+        _trainingRepo.getTrainingsSince(_mondayOfThisWeek, uid: userId),
         FirebaseFirestore.instance.collection('users').doc(userId).get(),
       ]);
       if (_disposed) return;
-      final allWorkouts = results[0] as List<Entrenamiento>;
-      final userDoc     = results[1] as DocumentSnapshot;
-      final data        = userDoc.data() as Map<String, dynamic>? ?? {};
-      final fcMax       = (data['fcMax'] as num?)?.toInt() ?? 0;
+      final recentPage   = results[0] as TrainingsPage;
+      final weekWorkouts = results[1] as List<Entrenamiento>;
+      final userDoc      = results[2] as DocumentSnapshot;
+      final data         = userDoc.data() as Map<String, dynamic>? ?? {};
+      final fcMax        = (data['fcMax'] as num?)?.toInt() ?? 0;
 
-      allWorkouts.sort((a, b) => b.fecha.compareTo(a.fecha));
-      recentWorkouts.value = allWorkouts.take(5).toList();
-      _computeWeeklyStats(allWorkouts, fcMax);
+      recentWorkouts.value = recentPage.trainings;
+      _computeWeeklyStats(weekWorkouts, fcMax);
 
       if (newValue) {
         await _loadAthleteData();

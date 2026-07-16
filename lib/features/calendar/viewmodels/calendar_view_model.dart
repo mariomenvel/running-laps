@@ -354,9 +354,11 @@ class CalendarViewModel {
   // ── Privado — entrenamientos ──────────────────────────────────────────────
 
   Future<void> _loadTrainingDates() async {
-    final workouts = await _trainingRepo.getAllEntrenamientos(userId);
+    // Últimos 12 meses: cubre la navegación realista del calendario sin
+    // descargar el historial completo (cada doc lleva sus gpsPoints dentro).
+    final since = DateTime.now().subtract(const Duration(days: 365));
+    final workouts = await _trainingRepo.getTrainingsSince(since, uid: userId);
     if (_disposed) return;
-    workouts.sort((a, b) => b.fecha.compareTo(a.fecha));
     allWorkouts.value  = workouts;
     trainingDates.value = { for (final w in workouts) _dateKey(w.fecha) };
   }

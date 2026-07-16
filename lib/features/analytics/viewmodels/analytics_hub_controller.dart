@@ -25,8 +25,11 @@ class AnalyticsHubController {
 
   bool _disposed = false;
 
-  // Cache de todos los datos para no recargar constantemente
+  // Cache de los datos cargados para no recargar constantemente.
+  // Acotado por fecha: por defecto los últimos 12 meses (el rango máximo del
+  // selector); un rango custom más antiguo dispara una recarga desde su inicio.
   List<Entrenamiento> _allData = [];
+  DateTime? _loadedSince;
 
   List<Entrenamiento> get allData => List.unmodifiable(_allData);
 
@@ -34,6 +37,9 @@ class AnalyticsHubController {
     required this.userId,
     TrainingRepository? repository,
   }) : _repository = repository ?? TrainingRepository();
+
+  static DateTime get _defaultSince =>
+      DateTime.now().subtract(const Duration(days: 365));
 
   Future<void> initialize({List<Entrenamiento>? initialData}) async {
     if (_disposed) return;
@@ -46,16 +52,16 @@ class AnalyticsHubController {
       return;
     }
 
-    await _loadAllData();
+    await _loadData(_defaultSince);
     _applyFilters();
   }
 
-  Future<void> _loadAllData() async {
+  Future<void> _loadData(DateTime since) async {
     if (_disposed) return;
     isLoading.value = true;
     try {
-      // Cargar todo el historial (o un límite razonable, ej: 1 año)
-      _allData = await _repository.getAllEntrenamientos(userId);
+      _allData = await _repository.getTrainingsSince(since, uid: userId);
+      _loadedSince = since;
       if (_disposed) return;
       _allData.sort((a, b) => b.fecha.compareTo(a.fecha));
     } on RateLimitExceededException catch (e) {
@@ -74,6 +80,18 @@ class AnalyticsHubController {
     } else {
       customDateRange.value = null;
     }
+
+    // Rango custom anterior a lo cargado → ampliar la ventana y re-filtrar.
+    final customStart = customDateRange.value?.start;
+    if (customStart != null &&
+        _loadedSince != null &&
+        customStart.isBefore(_loadedSince!)) {
+      _loadData(customStart).then((_) {
+        if (!_disposed) _applyFilters();
+      });
+      return;
+    }
+
     _applyFilters();
   }
 

@@ -225,6 +225,47 @@ void main() {
     });
   });
 
+  group('TrainingRepository.getTrainingsSince — acotado por fecha', () {
+    Future<void> seedOn(DateTime fecha, String titulo) async {
+      final data = makeTraining(titulo: titulo, fecha: fecha).toMap();
+      await db
+          .collection('users')
+          .doc(_uid)
+          .collection('trainings')
+          .add(data);
+    }
+
+    test('devuelve solo entrenos con fecha >= since, orden descendente',
+        () async {
+      await seedOn(DateTime(2026, 5, 1, 10), 'viejo');
+      await seedOn(DateTime(2026, 6, 15, 10), 'medio');
+      await seedOn(DateTime(2026, 7, 10, 10), 'reciente');
+
+      final result =
+          await repo.getTrainingsSince(DateTime(2026, 6, 1), uid: _uid);
+
+      expect(result.map((e) => e.titulo), ['reciente', 'medio']);
+    });
+
+    test('el bound es inclusivo y se construye en UTC', () async {
+      // Entreno exactamente en el instante del bound (hora local).
+      final boundLocal = DateTime(2026, 6, 1, 0, 0);
+      await seedOn(boundLocal, 'en el límite');
+      await seedOn(boundLocal.subtract(const Duration(minutes: 1)), 'fuera');
+
+      final result = await repo.getTrainingsSince(boundLocal, uid: _uid);
+
+      expect(result.map((e) => e.titulo), ['en el límite']);
+    });
+
+    test('sin entrenos en la ventana devuelve lista vacía', () async {
+      await seedOn(DateTime(2026, 1, 1), 'antiguo');
+      final result =
+          await repo.getTrainingsSince(DateTime(2026, 6, 1), uid: _uid);
+      expect(result, isEmpty);
+    });
+  });
+
   group('TrainingRepository — otros', () {
     test('updateTrainingTags reemplaza las etiquetas', () async {
       final id = await repo.createTraining(makeTraining());
