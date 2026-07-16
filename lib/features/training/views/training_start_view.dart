@@ -41,16 +41,12 @@ import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 import 'package:running_laps/core/services/heart_rate_service.dart';
 import 'package:running_laps/features/profile/views/heart_rate_monitor_view.dart';
-import 'package:running_laps/core/services/notification_service.dart';
 import 'package:running_laps/core/services/session_recovery_service.dart';
 import 'package:running_laps/core/services/training_load_service.dart';
-import 'package:running_laps/features/athlete/data/progress_repository.dart';
 import 'package:running_laps/features/profile/data/zones_repository.dart';
 import '../../templates/data/athlete_session_mapper.dart';
 import 'pre_execution_screen.dart';
-import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/home/viewmodels/home_view_model.dart';
-import 'package:running_laps/features/ai_coach/data/pb_detector.dart';
 
 
 // ===============================================================
@@ -1179,7 +1175,9 @@ class _TrainingStartViewState extends State<TrainingStartView>
         recordedPoints: gpsSnapshot,
       );
 
-      _checkPersonalRecords(seriesSnapshot);
+      // Los récords se detectan y celebran en TrainingSummaryScreen tras
+      // confirmar el guardado (PbCelebrationService) — así no se celebra
+      // un entreno que luego se descarta.
 
       // ── Vincular con sesión planificada ───────────────────────────────
       try {
@@ -1309,11 +1307,6 @@ class _TrainingStartViewState extends State<TrainingStartView>
 
       if (!mounted) return;
 
-      // Detectar nueva marca personal si el entreno tiene GPS
-      await _checkForNewPb(savedEntrenamiento);
-
-      if (!mounted) return;
-
       Navigator.pushAndRemoveUntil(
         context,
         AppModalRoute(
@@ -1354,95 +1347,6 @@ class _TrainingStartViewState extends State<TrainingStartView>
           _isSaving = false;
         });
       }
-    }
-  }
-
-
-  Future<void> _checkPersonalRecords(List<Serie> series) async {
-    try {
-      final uid = FirebaseAuth.instance.currentUser?.uid;
-      if (uid == null) return;
-
-      const standards = {
-        400:   [320,  480],
-        1000:  [900,  1100],
-        1500:  [1275, 1725],
-        5000:  [4250, 5750],
-        10000: [8500, 11500],
-      };
-
-      final existing = await ProgressRepository().getPersonalRecords(uid);
-
-      for (final serie in series) {
-        if (serie.distanciaM <= 0 || serie.tiempoSec <= 0) continue;
-        final pace = serie.tiempoSec / (serie.distanciaM / 1000);
-
-        for (final entry in standards.entries) {
-          final dist  = entry.key;
-          final range = entry.value;
-          if (serie.distanciaM >= range[0] && serie.distanciaM <= range[1]) {
-            final existingRecord = existing[dist];
-            if (existingRecord == null || pace < existingRecord.paceSecPerKm) {
-              final distLabel = dist < 1000
-                  ? '${dist}m'
-                  : dist == 1500
-                      ? '1.5km'
-                      : '${dist ~/ 1000}km';
-              final paceMin = pace ~/ 60;
-              final paceSec = (pace % 60).round();
-              final paceStr =
-                  '$paceMin:${paceSec.toString().padLeft(2, '0')}';
-              if (mounted) {
-                NotificationService().showPersonalRecord(
-                  distance: distLabel,
-                  pace: paceStr,
-                ).catchError((e) => debugPrint('PR notification: $e'));
-              }
-            }
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint('checkPersonalRecords error: $e');
-    }
-  }
-
-  Future<void> _checkForNewPb(Entrenamiento training) async {
-    // Solo tiene sentido con GPS activo (distancia fiable)
-    if (!training.gps) return;
-    try {
-      final uid = FirebaseAuth.instance.currentUser?.uid;
-      if (uid == null) return;
-
-      final distanceM = training.distanciaTotalM();
-      final timeSeconds = training.tiempoTotalSec().round();
-      if (distanceM < 1000) return;
-
-      final profile = await AiCoachRepository().getProfile(uid: uid);
-      if (profile == null) return;
-
-      final pb = PbDetector.detect(
-        distanceM: distanceM,
-        timeSeconds: timeSeconds,
-        profile: profile,
-      );
-      if (pb == null) return;
-
-      final updated = PbDetector.applyPb(
-        profile: profile,
-        field: pb.field,
-        seconds: pb.seconds,
-      );
-      await AiCoachRepository().saveProfile(updated);
-
-      if (!mounted) return;
-      final label = PbDetector.labelFor(pb.field);
-      ModernSnackBar.showSuccess(
-        context,
-        'Nuevo récord en $label: ${PbDetector.format(pb.seconds)}',
-      );
-    } catch (e) {
-      debugPrint('[PbDetector] error: $e');
     }
   }
 

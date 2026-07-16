@@ -131,6 +131,34 @@ class NotificationService {
     await _plugin.cancel(_sessionReminderId);
   }
 
+  /// Marca de sesión (5K/10K/media/maratón): el cuerpo es tiempo total,
+  /// no ritmo — por eso no lleva el sufijo "/km" de [showPersonalRecord].
+  Future<void> showSessionPb({
+    required String label,
+    required String time,
+  }) async {
+    await init();
+    await _plugin.show(
+      _personalRecordId,
+      'Nueva marca personal',
+      '$label en $time',
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          _recordChannel.id,
+          _recordChannel.name,
+          channelDescription: _recordChannel.description,
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentSound: true,
+        ),
+      ),
+    );
+  }
+
   Future<void> showPersonalRecord({
     required String distance,
     required String pace,

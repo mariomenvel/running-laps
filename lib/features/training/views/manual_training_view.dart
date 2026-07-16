@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/services/pb_celebration_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/back_pill.dart';
@@ -220,7 +222,17 @@ class _ManualTrainingViewState extends State<ManualTrainingView> {
         notas:    notas.isEmpty ? null : notas,
       );
 
-      await _repo.createTraining(entrenamiento);
+      final newTrainingId = await _repo.createTraining(entrenamiento);
+
+      // Fire-and-forget: detecta récords y los celebra con notificación.
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        PbCelebrationService().checkAfterSave(
+          uid: uid,
+          training: entrenamiento.copyWith(id: newTrainingId),
+        );
+      }
+
       if (!mounted) return;
       ModernSnackBar.showSuccess(context, 'Entrenamiento guardado');
       Navigator.pop(context, true);

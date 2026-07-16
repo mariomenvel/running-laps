@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:running_laps/core/services/pb_celebration_service.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/widgets/rpe_slider.dart';
 import 'package:running_laps/core/theme/app_theme.dart' show AppMotion;
@@ -336,6 +337,14 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
       }
 
       await docRef.set(fullData);
+
+      // Fire-and-forget: detecta récords (por serie y marcas 5K/10K/HM/M)
+      // y los celebra con notificación local. Punto único post-guardado —
+      // cubre el flujo libre y el estructurado.
+      PbCelebrationService().checkAfterSave(
+        uid: uid,
+        training: widget.entrenamiento.copyWith(id: id),
+      );
 
       if (!mounted) return;
 

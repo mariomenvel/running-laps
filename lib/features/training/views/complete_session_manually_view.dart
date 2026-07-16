@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/services/pb_celebration_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_bottom_sheet.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
@@ -264,6 +265,10 @@ class _CompleteSessionManuallyViewState
         uid: uid,
         entrenamiento: savedEntrenamiento,
         plannedSession: widget.session,
+      );
+      PbCelebrationService().checkAfterSave(
+        uid: uid,
+        training: savedEntrenamiento,
       );
 
       if (!mounted) return;
