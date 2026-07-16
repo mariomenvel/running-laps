@@ -186,7 +186,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
               ),
               const SizedBox(height: 4),
               Text(
-                "Desafía a tu grupo 🔥",
+                "Desafía a tu grupo",
                 style: TextStyle(
                   fontSize: 13,
                   color: cs.onSurface.withValues(alpha: 0.5),
@@ -230,7 +230,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
       controller: _titleController,
       style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: cs.onSurface),
       decoration: InputDecoration(
-        hintText: "Ej: Semana de Runner 🏃",
+        hintText: "Ej: Semana de Runner",
         hintStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.4), fontWeight: FontWeight.normal),
         filled: true,
         fillColor: cs.onSurface.withValues(alpha: 0.05),

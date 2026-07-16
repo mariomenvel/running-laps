@@ -23,28 +23,28 @@ class _AthleteTutorialViewState extends State<AthleteTutorialView> {
 
   static const _slides = [
     _TutorialSlide(
-      emoji: '🎯',
+      icon: Icons.track_changes_rounded,
       title: 'Para los que\nvan en serio',
       subtitle:
           'Running Laps es tu entrenador personal con IA. No un simple '
           'registro de carreras — un plan adaptado a ti cada semana.',
     ),
     _TutorialSlide(
-      emoji: '📅',
+      icon: Icons.calendar_month_rounded,
       title: 'Tu plan,\ncada semana',
       subtitle:
           'En el Calendario encontrarás tus sesiones planificadas. Tu '
           'coach las genera cada lunes según tu progreso, fatiga y objetivo.',
     ),
     _TutorialSlide(
-      emoji: '💬',
+      icon: Icons.chat_bubble_rounded,
       title: 'Habla con\ntu coach',
       subtitle:
           'Tienes mensajes semanales para pedir cambios, ajustes o '
           'contar cómo te sientes. El coach adapta el plan en tiempo real.',
     ),
     _TutorialSlide(
-      emoji: '📊',
+      icon: Icons.bar_chart_rounded,
       title: 'Entiende\ntu progreso',
       subtitle:
           'En Analytics verás tu carga, fatiga y forma física. Saber '
@@ -160,12 +160,12 @@ class _AthleteTutorialViewState extends State<AthleteTutorialView> {
 }
 
 class _TutorialSlide {
-  final String emoji;
+  final IconData icon;
   final String title;
   final String subtitle;
 
   const _TutorialSlide({
-    required this.emoji,
+    required this.icon,
     required this.title,
     required this.subtitle,
   });
@@ -183,7 +183,7 @@ class _SlideWidget extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(slide.emoji, style: const TextStyle(fontSize: 72)),
+          Icon(slide.icon, size: 72, color: AppColors.brand),
           const SizedBox(height: 32),
           Text(
             slide.title,

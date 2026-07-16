@@ -145,6 +145,13 @@ class AppColors {
   static Color surface2Of(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark ? surface2 : lightSurface2;
 
+  /// Track OFF único para todos los Switch (manual pág. 42: "superficie
+  /// anidada, un único estilo").
+  static Color switchTrackOff(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15)
+          : surface2;
+
   static Color borderOf(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark ? border : lightBorder;
 

@@ -611,7 +611,7 @@ class _TrainingNoGpsDetailViewLegacyState extends State<TrainingNoGpsDetailViewL
     IconData icon;
     Color color;
     if (avgDelta < -15) {
-      text = 'Fuiste más rápido de lo planeado 🔥';
+      text = 'Fuiste más rápido de lo planeado';
       icon = Icons.bolt_rounded;
       color = AppColors.rpeLow;
     } else if (avgDelta < 15) {

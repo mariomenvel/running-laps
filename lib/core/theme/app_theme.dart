@@ -96,35 +96,36 @@ class AppMotion {
   static const enter = Duration(milliseconds: 400);
 
   // Curvas
-  static const snap = Cubic(0.2, 0, 0, 1);      // press, toggles, feedback táctil
-  static const easeEnter = Curves.easeOutCubic;  // entradas de pantalla, cards, modales
-  static const easeExit = Curves.easeInCubic;    // salidas, fades out
+  static const snap = Cubic(0.2, 0, 0, 1);         // press, toggles, feedback táctil
+  static const easeEnter = Cubic(0.33, 1, 0.68, 1); // entradas de pantalla, cards, modales
+  static const easeExit = Cubic(0.32, 0, 0.67, 0);  // salidas, fades out
 }
 
 /// Espaciado semántico — usar en padding, gap, margin.
 class AppSpacing {
   AppSpacing._();
 
-  static const double xs  = 4;
-  static const double s   = 8;
-  static const double m   = 12;
-  static const double l   = 16;
-  static const double xl  = 24;
-  static const double xxl = 32;
+  static const double xs     = 4;
+  static const double s      = 8;
+  static const double m      = 12;
+  static const double l      = 16;
+  static const double gutter = 20; // gutter móvil — regla principal (manual pág. 32)
+  static const double xl     = 24;
+  static const double xxl    = 32;
+  static const double xxxl   = 48;
+  static const double xxxxl  = 64;
 }
 
 /// Dimensiones de componentes reutilizables.
 class AppDimens {
   AppDimens._();
 
+  static const double radiusSm        = 8;
   static const double cardRadius      = 12;
   static const double cardRadiusLarge = 16;
+  static const double radiusLg        = 20;
+  static const double radiusPill      = 999;
   static const double cardPadding     = 16;
-  static final BoxShadow cardShadow   = BoxShadow(
-    color: Colors.black.withValues(alpha: 0.3),
-    blurRadius: 12,
-    offset: const Offset(0, 4),
-  );
 
   static const double buttonRadius    = 12;
   static const double buttonPadding   = 16;

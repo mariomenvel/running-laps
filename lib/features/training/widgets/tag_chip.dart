@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/constants/training_tags.dart';
+import 'package:running_laps/core/theme/app_theme.dart';
 
 class TagChip extends StatelessWidget {
   final String tagName;
@@ -28,7 +29,7 @@ class TagChip extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: style.background,
-          borderRadius: BorderRadius.circular(small ? 8 : 12),
+          borderRadius: BorderRadius.circular(AppDimens.radiusPill),
           border: style.border,
         ),
         child: Row(

@@ -31,8 +31,8 @@ class CoachInsightService {
   CoachInsight generateInsight(List<Entrenamiento> data) {
     if (data.isEmpty) {
       return CoachInsight(
-        title: "¡Bienvenido!",
-        message: "¡Qué alegría verte por aquí! Es un gran día para registrar tu primer entrenamiento.",
+        title: "Bienvenido",
+        message: "Cuando quieras, registra tu primer entrenamiento.",
         icon: Icons.celebration_rounded,
         colors: [const Color(0xFF6A11CB), const Color(0xFF2575FC)],
         typeLabel: "COMIENZO",
@@ -48,8 +48,8 @@ class CoachInsightService {
     // 1. INACTIVITY LOGIC
     if (daysSinceLast >= 5) {
       return CoachInsight(
-        title: "¡Te echamos de menos!",
-        message: "Llevas $daysSinceLast días sin entrenar. No dejes que la pereza gane hoy, ¡solo 15 minutos marcan la diferencia!",
+        title: "Te echamos de menos",
+        message: "Llevas $daysSinceLast días sin entrenar. Aunque sean 15 minutos, retomar hoy marca la diferencia.",
         icon: Icons.timer_off_rounded,
         colors: [const Color(0xFFFF512F), const Color(0xFFDD2476)],
         typeLabel: "RETORNO",
@@ -67,8 +67,8 @@ class CoachInsightService {
       
       if (lastDist > maxPrevDist && lastDist > 0) {
         return CoachInsight(
-          title: "¡RÉCORD DE DISTANCIA!",
-          message: "¡Increíble! Tus ${(lastDist / 1000).toStringAsFixed(2)} km son tu mayor distancia hasta la fecha. ¡Eres una máquina!",
+          title: "Récord de distancia",
+          message: "Nuevo máximo: ${(lastDist / 1000).toStringAsFixed(2)} km, tu mayor distancia hasta la fecha.",
           icon: Icons.workspace_premium_rounded,
           colors: [const Color(0xFFFFD700), const Color(0xFFFFA000)], // Golden
           typeLabel: "RÉCORD",
@@ -90,8 +90,8 @@ class CoachInsightService {
            final m = lastPace ~/ 60;
            final s = (lastPace % 60).toInt().toString().padLeft(2, '0');
            return CoachInsight(
-            title: "¡RÉCORD DE RITMO!",
-            message: "¡Vuelas! Has logrado tu mejor ritmo medio histórico: $m:$s min/km. ¡Espectacular!",
+            title: "Récord de ritmo",
+            message: "Nuevo mejor ritmo medio: $m:$s min/km, tu marca más rápida hasta la fecha.",
             icon: Icons.speed_rounded,
             colors: [const Color(0xFF00F2FE), const Color(0xFF4FACFE)], // Cyan/Blue
             typeLabel: "VELOCIDAD",
@@ -105,8 +105,8 @@ class CoachInsightService {
     final last7Days = data.where((e) => now.difference(e.fecha).inDays <= 7).length;
     if (last7Days >= 3) {
       return CoachInsight(
-        title: "¡Imparable!",
-        message: "Llevas $last7Days entrenamientos esta semana. Tu constancia es inspiradora, ¡sigue así!",
+        title: "Constancia",
+        message: "Llevas $last7Days entrenamientos esta semana. Buen ritmo de constancia.",
         icon: Icons.auto_awesome_rounded,
         colors: [const Color(0xFF11998e), const Color(0xFF38ef7d)],
         typeLabel: "CONSTANCIA",
@@ -128,8 +128,8 @@ class CoachInsightService {
     if (thisWeekKm > lastWeekKm && lastWeekKm > 0) {
       final diff = ((thisWeekKm - lastWeekKm) / lastWeekKm * 100).toStringAsFixed(0);
       return CoachInsight(
-        title: "¡Progresando!",
-        message: "Esta semana has corrido un $diff% más que la anterior. ¡Tus piernas lo notan!",
+        title: "Progreso",
+        message: "Esta semana has corrido un $diff% más que la semana anterior.",
         icon: Icons.trending_up_rounded,
         colors: [const Color(0xFF2196F3), const Color(0xFF00BCD4)],
         typeLabel: "PROGRESO",

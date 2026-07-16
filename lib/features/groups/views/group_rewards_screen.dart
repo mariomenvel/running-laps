@@ -121,7 +121,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
             unselectedLabelColor:
                 Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             labelStyle:
-                const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
             unselectedLabelStyle:
                 const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
             dividerColor: Colors.transparent,
@@ -343,7 +343,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
                 Text(
                   isMe ? 'Tú' : (item.displayName ?? 'Usuario'),
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     fontSize: 13,
                     color: isMe
                         ? AppColors.brand
@@ -383,7 +383,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
               item.isMedal ? '#${item.medal!.rank}' : 'Objetivo',
               style: TextStyle(
                 fontSize: 11,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: accentColor,
               ),
             ),
@@ -411,7 +411,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
           title,
           style: TextStyle(
             fontSize: 13,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             letterSpacing: 1.0,
           ),
@@ -522,7 +522,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
                 Text(
                   title,
                   style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 14),
+                      fontWeight: FontWeight.w600, fontSize: 14),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -549,7 +549,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
               trailing,
               style: TextStyle(
                 fontSize: 11,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: accentColor,
               ),
             ),
@@ -628,7 +628,7 @@ class _PremiumMedalCard extends StatelessWidget {
                           .colorScheme
                           .onSurface
                           .withValues(alpha: 0.6),
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w600,
                   fontSize: 15,
                 ),
               ),
@@ -657,8 +657,7 @@ class _PremiumMedalCard extends StatelessWidget {
                             : (item.displayName ??
                                 "Usuario ${item.uid.substring(0, 4)}"),
                         style: TextStyle(
-                          fontWeight:
-                              isMe ? FontWeight.w900 : FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           fontSize: 16,
                           color: isMe
                               ? AppColors.brand
@@ -714,7 +713,7 @@ class _PremiumMedalCard extends StatelessWidget {
                   "${item.total}",
                   style: const TextStyle(
                     fontSize: 18,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),
                 ),
@@ -811,8 +810,7 @@ class _PremiumBadgeCard extends StatelessWidget {
                             : (item.displayName ??
                                 "Usuario ${item.uid.substring(0, 4)}"),
                         style: TextStyle(
-                          fontWeight:
-                              isMe ? FontWeight.w900 : FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           fontSize: 16,
                           color: isMe
                               ? AppColors.brand
@@ -855,7 +853,7 @@ class _PremiumBadgeCard extends StatelessWidget {
               "${item.completedCount}",
               style: const TextStyle(
                 color: Colors.white,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 fontSize: 18,
               ),
             ),
@@ -877,7 +875,7 @@ class _PremiumBadgeCard extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: Theme.of(context).brightness == Brightness.dark ? AppColors.brandLight : AppColors.brand,
               fontSize: 13,
             ),
@@ -931,7 +929,7 @@ class _MedalCounter extends StatelessWidget {
             "$count",
             style: TextStyle(
               fontSize: 12,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: color,
             ),
           ),

@@ -91,12 +91,12 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
 
   String _completionMessage() {
     switch (_getSessionType()) {
-      case WorkoutType.intervals:   return '¡SERIES COMPLETADAS!';
-      case WorkoutType.continuous:  return '¡RODAJE COMPLETADO!';
-      case WorkoutType.fartlek:     return '¡FARTLEK COMPLETADO!';
-      case WorkoutType.hills:       return '¡CUESTAS CONQUISTADAS!';
-      case WorkoutType.competition: return '¡META!';
-      case WorkoutType.free:        return '¡COMPLETADO!';
+      case WorkoutType.intervals:   return 'Series completadas';
+      case WorkoutType.continuous:  return 'Rodaje completado';
+      case WorkoutType.fartlek:     return 'Fartlek completado';
+      case WorkoutType.hills:       return 'Cuestas completadas';
+      case WorkoutType.competition: return 'Meta';
+      case WorkoutType.free:        return 'Completado';
     }
   }
 
@@ -525,7 +525,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
           style: TextStyle(
             color: AppColors.textPrimary(context),
             fontSize: 28,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w600,
             letterSpacing: -0.5,
           ),
         ),
@@ -629,7 +629,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
               style: TextStyle(
                 color: textColor,
                 fontSize: 22,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w600,
                 letterSpacing: -0.5,
               ),
             ),

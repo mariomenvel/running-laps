@@ -29,7 +29,9 @@
       "Bash(find test *)",
       "Bash(ls test/)",
       "Bash(ls test/unit)",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "mcp__Claude_Code_Remote__subscribe_pr_activity",
+      "mcp__Claude_Code_Remote__send_later"
     ],
     "additionalDirectories": [
       "\\tmp"

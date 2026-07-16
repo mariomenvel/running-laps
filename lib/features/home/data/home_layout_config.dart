@@ -252,16 +252,4 @@ extension WidgetTypeExtension on WidgetType {
       case WidgetType.progressTracker:  return 'Progreso';
     }
   }
-
-  String get icon {
-    switch (this) {
-      case WidgetType.kpiCard:          return '📊';
-      case WidgetType.lineChart:        return '📈';
-      case WidgetType.barChart:         return '📊';
-      case WidgetType.donutChart:       return '🍩';
-      case WidgetType.heatmap:          return '🔥';
-      case WidgetType.carousel:         return '🎠';
-      case WidgetType.progressTracker:  return '🎯';
-    }
-  }
 }

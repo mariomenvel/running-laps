@@ -154,7 +154,7 @@ fun SeriesPage(
             // ── Template label ─────────────────────────────────────────────────
             if (initialTemplate != null) {
                 Text(
-                    text = "📋 ${initialTemplate.name}",
+                    text = initialTemplate.name,
                     color = colors.brandPurpleLight,
                     fontSize = 9.sp,
                     fontWeight = FontWeight.Medium,

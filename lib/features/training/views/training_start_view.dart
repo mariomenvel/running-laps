@@ -1439,7 +1439,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
       final label = PbDetector.labelFor(pb.field);
       ModernSnackBar.showSuccess(
         context,
-        '🎉 ¡Nuevo récord en $label! ${PbDetector.format(pb.seconds)}',
+        'Nuevo récord en $label: ${PbDetector.format(pb.seconds)}',
       );
     } catch (e) {
       debugPrint('[PbDetector] error: $e');
@@ -3749,9 +3749,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                   },
                   activeThumbColor: AppColors.brand,
                   inactiveThumbColor: Colors.white,
-                  inactiveTrackColor: Theme.of(context).brightness == Brightness.dark
-                      ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15)
-                      : AppColors.surface2,
+                  inactiveTrackColor: AppColors.switchTrackOff(context),
                 ),
               ),
             ],
@@ -4080,9 +4078,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
               },
               activeThumbColor: AppColors.brand,
               inactiveThumbColor: Colors.white,
-              inactiveTrackColor: Theme.of(context).brightness == Brightness.dark
-                  ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15)
-                  : AppColors.surface2,
+              inactiveTrackColor: AppColors.switchTrackOff(context),
             ),
           ),
         ],
@@ -4192,9 +4188,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                   },
                   activeThumbColor: AppColors.rpeMax,
                   inactiveThumbColor: Colors.white,
-                  inactiveTrackColor: Theme.of(context).brightness == Brightness.dark
-                      ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15)
-                      : AppColors.surface2,
+                  inactiveTrackColor: AppColors.switchTrackOff(context),
                 ),
               ),
             ],

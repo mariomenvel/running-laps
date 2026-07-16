@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/constants/training_tags.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/theme/app_theme.dart';
 import '../data/tag_model.dart';
 import '../data/tag_manager.dart';
 import '../data/training_repository.dart';
@@ -434,7 +435,7 @@ class _TagToggleChip extends StatelessWidget {
             const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? activeBg : inactiveBg,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDimens.radiusPill),
           border: Border.all(
             color: isSelected
                 ? AppColors.brand

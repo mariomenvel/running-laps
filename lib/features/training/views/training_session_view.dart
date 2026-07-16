@@ -229,13 +229,13 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
         String actionMessage = '';
 
         if (_gpsService!.status.value == GpsStatus.disabled) {
-          errorMessage = '📍 GPS desactivado';
+          errorMessage = 'GPS desactivado';
           actionMessage = 'Activa la ubicación en los ajustes de tu móvil';
         } else if (_gpsService!.status.value == GpsStatus.permissionDenied) {
-          errorMessage = '🔒 Permisos de ubicación denegados';
+          errorMessage = 'Permisos de ubicación denegados';
           actionMessage = 'Ve a Ajustes → Apps → Running Laps → Permisos → Ubicación';
         } else {
-          errorMessage = '❌ Error al iniciar GPS';
+          errorMessage = 'Error al iniciar GPS';
           actionMessage = 'Verifica que el GPS esté activo y los permisos estén dados';
         }
 
