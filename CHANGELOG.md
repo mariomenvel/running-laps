@@ -1,5 +1,39 @@
 # CHANGELOG — Running Laps
 
+## [Feature] — Récords detectados y celebrados en todos los flujos de guardado — 2026-07-16
+La detección de récords solo existía en el flujo de entreno libre
+(`training_start_view`): el flujo estructurado con GPS, el registro manual y
+el completar manualmente no comprobaban nada. Nuevo
+`core/services/pb_celebration_service.dart` como punto único:
+- **Récords por serie** (400/1000/1500/5000/10000 m): tras guardar se
+  recalculan los récords (`ProgressRepository`) — los que apunten al entreno
+  recién guardado son nuevos → notificación local 🏆 con distancia y ritmo.
+- **Marcas de sesión** 5K/10K/media/maratón (`PbDetector`, ±3%): actualizan
+  el perfil del coach (alimentan el VDOT) → notificación local 🎉 con el
+  tiempo. Ahora también en entrenos manuales (tiempos de pista/cinta), antes
+  solo GPS.
+- Cableado en: `training_summary_screen._saveTraining` (cubre flujo libre y
+  estructurado — se celebran solo entrenos confirmados, no descartados),
+  `complete_session_manually_view` y `manual_training_view`. Los dos checks
+  privados duplicados de `training_start_view` eliminados.
+- `NotificationService.showSessionPb()` nuevo (el body es tiempo total, sin
+  el sufijo "/km" de `showPersonalRecord`).
+
+## [Perf] — Queries de trainings acotadas por fecha (deuda #3) — 2026-07-16
+`getAllEntrenamientos()` traía hasta 500 docs de golpe — cada uno con sus
+gpsPoints dentro — en cada apertura de home, calendario y analytics. Nuevo
+`TrainingRepository.getTrainingsSince(since)` (bound UTC inclusivo sobre
+`fecha`, orden desc) y cada consumidor pide solo su ventana:
+- **Home** (`home_view_model`): 5 recientes (`getTrainings` pageSize 5) +
+  semana actual desde el lunes local para las stats semanales.
+- **Calendario** (`calendar_view_model`): últimos 12 meses.
+- **Analytics** (`analytics_hub_controller`): 12 meses (máximo del selector);
+  un rango custom más antiguo que lo cargado amplía la ventana y re-filtra.
+- `getAllEntrenamientos()` queda marcado como legacy (solo lo usa la huérfana
+  `home_view_legacy`). Pendiente aparte: rollup cacheado para los PBs de
+  `ProgressRepository` (necesitan historial completo). +3 tests
+  (`getTrainingsSince`: bound inclusivo UTC, orden, ventana vacía).
+
 ## [UX] — Ritmo objetivo en s/100m para atletas de pista — 2026-07-13
 Toggle `min/km` / `s/100m` en la tarjeta PACE del sheet de segmento: quien
 mide "el 100 en 28" introduce el objetivo directamente en segundos por 100 m
