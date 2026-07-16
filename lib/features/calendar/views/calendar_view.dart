@@ -161,6 +161,11 @@ class _CalendarViewState extends State<CalendarView>
     final uid = FirebaseAuth.instance.currentUser?.uid;
     final text = _adjustController.text.trim();
     if (uid == null || text.isEmpty) return;
+    // Enviar corta el dictado si sigue abierto — el micro no debe seguir
+    // escuchando (y sobrescribiendo el campo) mientras se procesa.
+    if (_vm?.adjustListening.value == true) {
+      await _vm!.toggleAdjustListening();
+    }
     _adjustProcessing.value = true;
     try {
       final preview = await AiCoachChatService().previewAdjustment(
