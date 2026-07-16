@@ -7,9 +7,9 @@ el completar manualmente no comprobaban nada. Nuevo
 `core/services/pb_celebration_service.dart` como punto único:
 - **Récords por serie** (400/1000/1500/5000/10000 m): tras guardar se
   recalculan los récords (`ProgressRepository`) — los que apunten al entreno
-  recién guardado son nuevos → notificación local 🏆 con distancia y ritmo.
+  recién guardado son nuevos → notificación local con distancia y ritmo.
 - **Marcas de sesión** 5K/10K/media/maratón (`PbDetector`, ±3%): actualizan
-  el perfil del coach (alimentan el VDOT) → notificación local 🎉 con el
+  el perfil del coach (alimentan el VDOT) → notificación local con el
   tiempo. Ahora también en entrenos manuales (tiempos de pista/cinta), antes
   solo GPS.
 - Cableado en: `training_summary_screen._saveTraining` (cubre flujo libre y
