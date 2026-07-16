@@ -69,6 +69,10 @@ class SpeechToTextService {
         recognizedText.value = result.recognizedWords;
         if (result.finalResult) isListening.value = false;
       },
+      // Auto-stop tras un silencio prolongado (como el dictado de iOS/Claude)
+      // y tope global de sesión para no dejar el micro abierto indefinidamente.
+      pauseFor: const Duration(seconds: 3),
+      listenFor: const Duration(seconds: 60),
       listenOptions: SpeechListenOptions(
         cancelOnError: true,
         localeId: localeId,

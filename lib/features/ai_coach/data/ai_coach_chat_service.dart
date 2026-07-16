@@ -77,7 +77,16 @@ class AiCoachChatService {
       );
 
       final intent = llmResult.intent;
-      final localAction = llmResult.localAction;
+      var localAction = llmResult.localAction;
+
+      // El modelo a veces clasifica bien el intent pero omite localAction —
+      // sin ella el ajuste no es ejecutable (el botón Aplicar no haría nada).
+      // Intentar reconstruirla desde el propio mensaje del atleta.
+      if (intent != AiCoachAdjustIntent.unsupported && localAction == null) {
+        localAction = _synthesizeLocalAction(intent, athleteMessage);
+      }
+      final executable =
+          intent != AiCoachAdjustIntent.unsupported && localAction != null;
 
       // Siempre suma al contador anti-abuso, sea info o no
       debugPrint('[Cuota] preview: previewsGenerated ${usageBeforeLlm.previewsGenerated} → ${usageBeforeLlm.previewsGenerated + 1}');
@@ -89,7 +98,7 @@ class AiCoachChatService {
       );
 
       // Para ajustes reales, comprobar cuota de mensajes DESPUÉS de conocer intent
-      if (intent != AiCoachAdjustIntent.unsupported) {
+      if (executable) {
         final usageNow = await _prepareAndGetCurrentWeekUsage(uid);
         final limit = usageNow.messagesLimit ?? _weeklyChatLimit;
         if (usageNow.messagesUsed >= limit) {
@@ -107,7 +116,7 @@ class AiCoachChatService {
 
       return AiCoachAdjustmentPreview(
         response: llmResult.response,
-        willModifyPlan: intent != AiCoachAdjustIntent.unsupported,
+        willModifyPlan: executable,
         intent: intent,
         localAction: localAction,
       );
@@ -473,12 +482,18 @@ class AiCoachChatService {
             .trim()
             .isEmpty;
 
-    final intent = AiCoachAdjustIntentX.fromValue(map['intent'] as String? ?? '');
+    var intent = AiCoachAdjustIntentX.fromValue(map['intent'] as String? ?? '');
 
     final localActionMap = map['localAction'];
     final localAction = localActionMap is Map<String, dynamic>
         ? AiCoachLocalAction.fromMap(localActionMap)
         : null;
+
+    // El modelo a veces rellena localAction pero clasifica intent como
+    // "unsupported" — si hay acción ejecutable, su tipo manda sobre el intent.
+    if (localAction != null && intent == AiCoachAdjustIntent.unsupported) {
+      intent = AiCoachAdjustIntentX.fromValue(localAction.type);
+    }
 
     final overrideMap = map['decisionOverride'];
 
@@ -611,6 +626,64 @@ class AiCoachChatService {
       return normalized;
     }
     return current;
+  }
+
+  /// Reconstruye una localAction desde el texto del atleta cuando el LLM
+  /// devolvió un intent soportado pero omitió la acción ejecutable.
+  AiCoachLocalAction? _synthesizeLocalAction(
+    AiCoachAdjustIntent intent,
+    String athleteMessage,
+  ) {
+    final normalized = athleteMessage.toLowerCase();
+    final source = _extractWeekdayFromText(
+      normalized,
+      preferFromTokens: const ['de ', 'del ', 'mover ', 'cambiar ', 'el '],
+    );
+    if (source == null) return null;
+
+    switch (intent) {
+      case AiCoachAdjustIntent.move:
+        final target = _extractWeekdayFromText(
+          normalized,
+          preferFromTokens: const [' a ', ' al ', ' para '],
+          pickLast: true,
+        );
+        if (target == null || target == source) return null;
+        return AiCoachLocalAction(
+          type: 'move',
+          sourceWeekday: source,
+          targetWeekday: target,
+        );
+      case AiCoachAdjustIntent.cancel:
+        return AiCoachLocalAction(type: 'cancel', sourceWeekday: source);
+      case AiCoachAdjustIntent.complete:
+        return AiCoachLocalAction(type: 'complete', sourceWeekday: source);
+      case AiCoachAdjustIntent.adjustSession:
+        final lower = normalized.contains('baja') ||
+            normalized.contains('suave') ||
+            normalized.contains('facil') ||
+            normalized.contains('fácil') ||
+            normalized.contains('menos');
+        return AiCoachLocalAction(
+          type: 'adjust_session',
+          sourceWeekday: source,
+          intensityDelta: lower ? -1 : 1,
+        );
+      case AiCoachAdjustIntent.addSeries:
+        return AiCoachLocalAction(
+          type: 'add_series',
+          sourceWeekday: source,
+          seriesCount: 1,
+        );
+      case AiCoachAdjustIntent.removeSeries:
+        return AiCoachLocalAction(
+          type: 'remove_series',
+          sourceWeekday: source,
+          seriesCount: 1,
+        );
+      case AiCoachAdjustIntent.unsupported:
+        return null;
+    }
   }
 
   Future<bool> _tryLocalWeekdayMoveFallback({

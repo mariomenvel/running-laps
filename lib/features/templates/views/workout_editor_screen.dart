@@ -256,6 +256,12 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
+    // Enviar corta el dictado si sigue abierto — el micro no debe seguir
+    // escuchando (y sobrescribiendo el campo) mientras se genera.
+    if (_aiPanelViewModel.isListening.value) {
+      await _aiPanelViewModel.toggleListening();
+    }
+
     _aiGenerating.value = true;
 
     try {
