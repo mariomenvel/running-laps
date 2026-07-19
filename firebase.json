@@ -1,17 +1,32 @@
 {
   "hosting": {
-    "public": "web",
+    "public": "hosting",
+    "cleanUrls": true,
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
+    "redirects": [
+      { "source": "/landing.html", "destination": "/", "type": 301 },
+      { "source": "/landing", "destination": "/", "type": 301 }
+    ],
     "rewrites": [
-      { "source": "/api/waitlist", "function": "joinWaitlist" },
-      { "source": "/privacy", "destination": "/privacy.html" },
-      { "source": "/terms", "destination": "/terms.html" },
-      { "source": "/support", "destination": "/support.html" },
-      { "source": "/delete-account", "destination": "/delete-account.html" }
+      { "source": "/api/waitlist", "function": "joinWaitlist" }
+    ],
+    "headers": [
+      {
+        "source": "/assets/**",
+        "headers": [
+          { "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=86400" }
+        ]
+      },
+      {
+        "source": "**/*.@(webp|png|ico|woff2)",
+        "headers": [
+          { "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=86400" }
+        ]
+      }
     ]
   },
   "firestore": {

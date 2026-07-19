@@ -141,6 +141,7 @@ Cuando implementes algo que afecte a los specs de producto, actualiza el .md cor
 | Tokens de color, escala RPE | `COLOR_SYSTEM.md` |
 | UX del editor de entrenamientos | `WORKOUT_EDITOR_UX.md` |
 | Colecciones Firestore o reglas de acceso | `firestore_access_patterns.md` |
+| Servicios Firebase en general (Auth, Functions, Storage, App Check, Crashlytics, Analytics) | `FIREBASE_OVERVIEW.md` |
 | Tests (suites nuevas, patrón de repos simulados, ci.yml) | `TESTING.md` |
 | Publicación en stores, permisos del manifest/Info.plist, legal/RGPD | `PUBLISHING.md` |
 | Visión del producto / freemium | `DESIGN.md` |
