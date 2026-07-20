@@ -3,6 +3,7 @@
 // Ver auditoría del 2026-06-19 en CHANGELOG.md antes
 // de asumir que es seguro modificar/eliminar.
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
@@ -132,6 +133,17 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
       context,
       AppModalRoute(page: const AvatarEditorWrapperView()),
     );
+  }
+
+  /// Abre una página legal/soporte en el navegador del sistema. Enlace
+  /// exigido dentro de la app (no solo en la ficha de la tienda) por la
+  /// política de Google Play y buena práctica de Apple — ver PUBLISHING.md.
+  Future<void> _openLegalUrl(String path) async {
+    final uri = Uri.parse('https://runninglaps.com$path');
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && mounted) {
+      ModernSnackBar.showError(context, 'No se pudo abrir el enlace');
+    }
   }
 
   Future<void> _logout() async {
@@ -515,6 +527,24 @@ class _ProfileMenuViewState extends State<ProfileMenuView> with SingleTickerProv
                               ),
                             );
                           },
+                        ),
+                        _buildMenuTile(
+                          title: "Ayuda y contacto",
+                          icon: Icons.help_outline_rounded,
+                          color: AppColors.brand,
+                          onTap: () => _openLegalUrl('/support'),
+                        ),
+                        _buildMenuTile(
+                          title: "Política de privacidad",
+                          icon: Icons.privacy_tip_outlined,
+                          color: AppColors.brand,
+                          onTap: () => _openLegalUrl('/privacy'),
+                        ),
+                        _buildMenuTile(
+                          title: "Términos de uso",
+                          icon: Icons.description_outlined,
+                          color: AppColors.brand,
+                          onTap: () => _openLegalUrl('/terms'),
                         ),
                       ],
                     )),

@@ -88,6 +88,7 @@ dependencies:
   timezone: ^0.9.4
   http: ^1.2.2
   cloud_functions: ^6.3.2
+  url_launcher: ^6.3.1
   # Requieren firebase_core ^4.10.0 exacto (ver nota arriba) — versiones más
   # nuevas (5.2.4+ / 12.4.3+) exigen firebase_core ^4.11+ y no resuelven.
   # Revisar si sube una versión nueva de fake_cloud_firestore para poder

@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:running_laps/features/auth/viewmodels/auth_controller.dart';
 import 'package:running_laps/features/auth/views/auth_wrapper.dart';
 import 'package:running_laps/features/auth/views/email_verification_pending_view.dart';
@@ -612,6 +614,7 @@ class _AuthPageState extends State<AuthPage> {
   Widget _buildLoginButtons() {
     return Column(
       children: [
+        _buildTermsNotice(),
         _buildGoogleButton(),
         _buildAppleButton(),
         _buildGoogleDivider(),
@@ -704,9 +707,61 @@ class _AuthPageState extends State<AuthPage> {
     );
   }
 
+  Future<void> _openLegalUrl(String path) async {
+    await launchUrl(
+      Uri.parse('https://runninglaps.com$path'),
+      mode: LaunchMode.externalApplication,
+    );
+  }
+
+  /// Aviso de aceptación previo al registro (art. 6.1.a RGPD / guideline 5.1.1
+  /// Apple / política de Play): el usuario debe poder consultar Términos y
+  /// Privacidad antes de crear la cuenta, no solo encontrarlos después.
+  Widget _buildTermsNotice() {
+    final linkColor = AppColors.brandOf(context);
+    final baseStyle = TextStyle(
+      fontSize: 12,
+      color: AppColors.textSecondary(context),
+      height: 1.4,
+    );
+    final linkStyle = baseStyle.copyWith(
+      color: linkColor,
+      fontWeight: FontWeight.w600,
+      decoration: TextDecoration.underline,
+      decorationColor: linkColor,
+    );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: RichText(
+        textAlign: TextAlign.center,
+        text: TextSpan(
+          style: baseStyle,
+          children: [
+            const TextSpan(text: 'Al continuar, aceptas los '),
+            TextSpan(
+              text: 'Términos de uso',
+              style: linkStyle,
+              recognizer: TapGestureRecognizer()
+                ..onTap = () => _openLegalUrl('/terms'),
+            ),
+            const TextSpan(text: ' y la '),
+            TextSpan(
+              text: 'Política de privacidad',
+              style: linkStyle,
+              recognizer: TapGestureRecognizer()
+                ..onTap = () => _openLegalUrl('/privacy'),
+            ),
+            const TextSpan(text: '.'),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildRegisterButtons() {
     return Column(
       children: [
+        _buildTermsNotice(),
         _buildGoogleButton(),
         _buildGoogleDivider(),
         _buildButton(

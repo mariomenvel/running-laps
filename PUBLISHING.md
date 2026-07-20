@@ -40,8 +40,10 @@
   Perfil → Cuenta → Eliminar, con reautenticación, y borrado server-side completo
   (Cloud Function `deleteUserData` con Admin SDK, desplegada).
 - ✅ **Página web de solicitud de borrado** (`/delete-account`) — la exige Play
-  además del flujo in-app. ⚠️ Pendiente `firebase deploy --only hosting`.
-- ✅ Política de privacidad y términos con URL pública (`/privacy`, `/terms`).
+  además del flujo in-app. Desplegada en `runninglaps.com/delete-account`.
+- ✅ Política de privacidad y términos con URL pública en dominio propio con
+  SSL: `runninglaps.com/privacy`, `runninglaps.com/terms` — y ahora también
+  enlazadas dentro de la app (ver sección Legal).
 - ✅ App Check Android (Play Integrity en release, debug provider en debug).
 - ✅ **Permisos just-in-time** (jul 2026): ningún diálogo de permisos en el primer
   arranque. Bluetooth se pide al emparejar el pulsómetro, micrófono +
@@ -87,7 +89,7 @@
 - [ ] Feature graphic 1024×500.
 - [ ] Mínimo 2 capturas de teléfono (recomendado 4-8, con marcos y textos).
 - [ ] Título (30 chars), descripción corta (80), descripción larga (4000).
-- [ ] URL de privacidad: `https://<dominio>/privacy`.
+- [x] URL de privacidad: `https://runninglaps.com/privacy` ✅
 
 ---
 
@@ -170,11 +172,26 @@ Apple obliga a ofrecer Sign in with Apple si ofreces login de terceros
   del primer escaneo de pulsómetro en `heart_rate_monitor_view` + opción
   "Retirar consentimiento" en la misma pantalla (revoca + olvida el dispositivo
   para cortar la reconexión automática). Con tests (`health_consent_service_test`).
+- ✅ **Enlace a Privacidad/Términos dentro de la app** (jul 2026) — Google Play
+  exige explícitamente que el enlace esté accesible *dentro* de la app, no solo
+  en la ficha de la tienda ("must be linked directly within the app itself").
+  Antes no existía ningún punto de la app (registro, perfil, ajustes) que
+  enlazara a `/privacy` o `/terms` — solo la landing web. Añadido:
+  - `url_launcher` como dependencia nueva (`pubspec.yaml`), con el `<queries>`
+    de `android/app/src/main/AndroidManifest.xml` para `ACTION_VIEW` + `https`
+    (Android 11+ package visibility).
+  - Aviso "Al continuar, aceptas los Términos de uso y la Política de
+    privacidad" con enlaces tocables, visible en login **y** registro de
+    `auth_page.dart` — cubre también el alta implícita vía Google/Apple Sign-In
+    (que puede crear cuenta nueva desde la pantalla de login).
+  - Sección "Ayuda" del menú de perfil (`profile_menu_screen_legacy.dart`):
+    tiles "Ayuda y contacto", "Política de privacidad" y "Términos de uso" que
+    abren `runninglaps.com/{support,privacy,terms}` en el navegador.
 
 > Datos publicados en las páginas: responsable "Mario Mendoza", contacto
-> `mariomenvel@gmail.com`, edad mínima 16, ley española. Si prefieres un email
-> dedicado de soporte o una sociedad como responsable, es un buscar-y-reemplazar
-> en las 4 páginas + re-deploy.
+> `legal@runninglaps.com` (privacidad/términos) y `soporte@runninglaps.com`
+> (soporte/borrado de cuenta) vía Cloudflare Email Routing sobre el dominio
+> propio, edad mínima 16, ley española.
 
 ### Pendiente legal (futuro)
 - **Derecho de desistimiento** en los términos cuando haya pagos (Stripe —
