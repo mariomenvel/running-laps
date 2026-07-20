@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/back_pill.dart';
+import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 
 class CoachPhilosophyView extends StatelessWidget {
   const CoachPhilosophyView({super.key});
@@ -57,12 +58,14 @@ class CoachPhilosophyView extends StatelessWidget {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            BackPill(onTap: () => Navigator.of(context).pop()),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
+                        if (!ShellEmbeddingScope.isEmbedded(context)) ...[
+                          Row(
+                            children: [
+                              BackPill(onTap: () => Navigator.of(context).pop()),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                        ],
                         Text(
                           'Cómo entrena tu coach',
                           style: TextStyle(

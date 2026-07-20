@@ -22,7 +22,6 @@ import 'package:running_laps/features/ai_coach/data/ai_coach_automation_service.
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
-import 'package:running_laps/features/ai_coach/views/ai_coach_weekly_feedback_view.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 // Zone color helpers — Z1..Z5 matching ZonesService thresholds
@@ -381,9 +380,10 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           color: Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
-            onTap: () async {
-              await Navigator.of(context).push(AppRoute(
-                page: AiCoachWeeklyFeedbackView(
+            onTap: () {
+              MainShell.shellKey.currentState?.navigateTo(
+                18,
+                params: WeeklyFeedbackShellParams(
                   weekStart: _feedbackWeekToEvaluate(),
                   generatePlanAfter: true,
                   daysSinceLastTraining:
@@ -395,7 +395,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                     setState(() => _showFeedbackBanner = false);
                   },
                 ),
-              ));
+              );
             },
             child: Padding(
               padding: const EdgeInsets.all(16),

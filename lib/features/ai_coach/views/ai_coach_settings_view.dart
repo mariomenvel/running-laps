@@ -8,11 +8,9 @@ import 'package:running_laps/core/widgets/app_date_picker.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/back_pill.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
-import 'package:running_laps/core/utils/app_transitions.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
-import 'package:running_laps/features/ai_coach/views/ai_coach_weekly_feedback_view.dart';
-import 'package:running_laps/features/ai_coach/views/coach_philosophy_view.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'package:running_laps/core/theme/app_theme.dart' show AppMotion;
@@ -249,15 +247,16 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
         '${monday.month.toString().padLeft(2, '0')}-'
         '${monday.day.toString().padLeft(2, '0')}';
 
-    Navigator.of(context).push(AppRoute(
-      page: AiCoachWeeklyFeedbackView(
+    MainShell.shellKey.currentState?.navigateTo(
+      18,
+      params: WeeklyFeedbackShellParams(
         weekStart: weekStart,
         generatePlanAfter: false,
         daysSinceLastTraining: _weeklyState?.daysSinceLastTraining ?? 0,
         consecutiveMissedWeeks: _weeklyState?.consecutiveMissedWeeks ?? 0,
-        onCompleted: () => Navigator.of(context).pop(),
+        onCompleted: () => MainShell.shellKey.currentState?.navigateBack(),
       ),
-    ));
+    );
   }
 
   List<AiCoachRecurringConstraint> _buildRecurringConstraints() {
@@ -446,9 +445,8 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
                           leading: const Icon(Icons.menu_book_outlined, color: AppColors.brand),
                           title: const Text('Cómo entrena tu coach'),
                           trailing: const Icon(Icons.chevron_right_rounded),
-                          onTap: () => Navigator.of(context).push(
-                            AppRoute(page: const CoachPhilosophyView()),
-                          ),
+                          onTap: () => MainShell.shellKey.currentState
+                              ?.navigateTo(17),
                         ),
                         Divider(height: 1, color: AppColors.borderOf(context)),
                         _sectionHeader(

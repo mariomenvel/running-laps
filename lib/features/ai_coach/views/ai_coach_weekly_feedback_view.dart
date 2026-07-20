@@ -9,6 +9,8 @@ import '../../../core/theme/app_theme.dart' show AppMotion;
 import '../../../core/widgets/app_header.dart';
 import '../../../core/widgets/back_pill.dart';
 import '../../../core/widgets/modern_snackbar.dart';
+import '../../../core/widgets/main_shell.dart';
+import '../../../core/widgets/shell_embedding_scope.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class AiCoachWeeklyFeedbackView extends StatefulWidget {
@@ -149,7 +151,13 @@ class _AiCoachWeeklyFeedbackViewState
       }
 
       widget.onCompleted?.call();
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        if (ShellEmbeddingScope.isEmbedded(context)) {
+          MainShell.shellKey.currentState?.navigateBack();
+        } else {
+          Navigator.of(context).pop();
+        }
+      }
     } catch (e, st) {
       debugPrint('[Feedback] ERROR EXTERIOR: $e');
       debugPrint('[Feedback] tipo: ${e.runtimeType}');
@@ -176,12 +184,14 @@ class _AiCoachWeeklyFeedbackViewState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        BackPill(onTap: () => Navigator.of(context).pop()),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
+                    if (!ShellEmbeddingScope.isEmbedded(context)) ...[
+                      Row(
+                        children: [
+                          BackPill(onTap: () => Navigator.of(context).pop()),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                    ],
                     Text(
                       '¿Cómo fue la semana?',
                       style: TextStyle(

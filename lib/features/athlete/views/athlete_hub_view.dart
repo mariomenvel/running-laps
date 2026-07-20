@@ -6,6 +6,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
@@ -15,7 +16,6 @@ import 'package:running_laps/features/ai_coach/data/ai_coach_automation_service.
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_weekly_planner_service.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
-import 'package:running_laps/features/ai_coach/views/ai_coach_weekly_feedback_view.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/features/templates/data/templates_repository.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
@@ -1290,14 +1290,13 @@ class _PlanningTabState extends State<_PlanningTab> {
                               color: Colors.transparent,
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(16),
-                                onTap: () async {
-                                  await Navigator.of(context).push(
-                                    AppRoute(
-                                      page: AiCoachWeeklyFeedbackView(
-                                        weekStart: _currentWeekStart(),
-                                        onCompleted: () => setState(
-                                            () => _showFeedbackBanner = false),
-                                      ),
+                                onTap: () {
+                                  MainShell.shellKey.currentState?.navigateTo(
+                                    18,
+                                    params: WeeklyFeedbackShellParams(
+                                      weekStart: _currentWeekStart(),
+                                      onCompleted: () => setState(
+                                          () => _showFeedbackBanner = false),
                                     ),
                                   );
                                 },
