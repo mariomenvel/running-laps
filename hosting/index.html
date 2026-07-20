@@ -274,6 +274,11 @@ section{padding:80px 0}
   margin-top:7px;flex-shrink:0;
 }
 
+/* ---- Filosofía del coach (dentro de la sección Coach IA) ---- */
+.philosophy{margin-top:72px}
+.philosophy > .label{text-align:center;margin-bottom:20px}
+@media(min-width:900px){.philosophy{margin-top:88px}}
+
 /* ---- Chips de tipo de sesión ---- */
 .type-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
 .chip{
@@ -317,22 +322,12 @@ section{padding:80px 0}
   border:.5px solid var(--border);border-radius:6px;padding:2px 8px;
 }
 
-/* ---- Galería de capturas ---- */
+/* ---- Más de la app (4 capturas curadas) ---- */
 .gallery{background:var(--surface)}
-.gallery-track{
-  display:grid;grid-auto-flow:column;grid-auto-columns:236px;gap:20px;
-  overflow-x:auto;padding:8px 4px 24px;
-  scroll-snap-type:x mandatory;
-}
-.gallery-track::-webkit-scrollbar{height:6px}
-.gallery-track::-webkit-scrollbar-thumb{background:var(--border);border-radius:999px}
-.gallery-item{scroll-snap-align:start}
-.gallery-item .phone{max-width:236px;border-radius:36px;padding:8px}
+.gallery-track{display:grid;grid-template-columns:repeat(2,1fr);gap:24px 20px}
+@media(min-width:768px){.gallery-track{grid-template-columns:repeat(4,1fr);gap:24px}}
+.gallery-item .phone{max-width:100%;border-radius:36px;padding:8px}
 .gallery-item .phone img{border-radius:29px}
-@media(min-width:1100px){
-  .gallery-track{grid-auto-flow:row;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));overflow:visible;grid-auto-columns:unset}
-  .gallery-item .phone{max-width:100%}
-}
 
 /* ---- Cómo funciona ---- */
 .steps{display:grid;gap:40px}
@@ -544,6 +539,32 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
         <p class="phone-caption">Captura real — plan del coach, vista mensual</p>
       </div>
     </div>
+
+    <div class="philosophy reveal">
+      <span class="label">Así entrena tu coach</span>
+      <div class="bento">
+        <div class="bento-card">
+          <span class="bi" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 21V9l8-5 8 5v12M4 21h16M9 21v-6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
+          <h3>Base aeróbica primero</h3>
+          <p>El 70–80% de tu volumen es rodaje suave. Es lo que construye el motor que sostiene todo lo demás.</p>
+        </div>
+        <div class="bento-card">
+          <span class="bi" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 18a8 8 0 0 1 16 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 18l4.5-6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="18" r="1.3" fill="currentColor"/></svg></span>
+          <h3>Intensidad con criterio</h3>
+          <p>Tus ritmos de series salen de tus marcas reales (VDOT), no de tablas genéricas. Cada zona tiene un propósito.</p>
+        </div>
+        <div class="bento-card">
+          <span class="bi" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="8" width="16" height="9" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M19 11h2v3h-2M11.5 10l-2.3 3.6h2.6L9.5 17" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg></span>
+          <h3>Tu fatiga manda</h3>
+          <p>El plan se ajusta a tu carga acumulada (TSB). Si necesitas descargar, el coach lo detecta antes de que te rompas.</p>
+        </div>
+        <div class="bento-card">
+          <span class="bi" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 17l6-6 4 4 8-8M15 7h6v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <h3>Progresión sostenible</h3>
+          <p>Mejorar es acumular semanas consistentes, no reventarse en una. El volumen y la intensidad progresan de forma gradual.</p>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -675,50 +696,30 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
   </div>
 </section>
 
-<!-- ============ GALERÍA ============ -->
+<!-- ============ MÁS DE LA APP ============ -->
 <section class="gallery" id="app">
   <div class="container">
     <div class="section-head reveal">
-      <span class="label">La app</span>
-      <h2>Tal cual la vas a usar</h2>
-      <p class="lead">Sin renders, sin maquetas: capturas reales de la beta.</p>
+      <span class="label">Más de la app</span>
+      <h2>Cuatro pantallas más, sin maquetas</h2>
+      <p class="lead">Tus récords, tu temporada completa, tus zonas de pulso y tu avatar — capturas reales, sin renders.</p>
     </div>
     <div class="gallery-track reveal">
       <div class="gallery-item">
-        <div class="phone"><img src="/assets/screens/forma.webp" alt="Estado de forma con gráfico CTL, ATL y TSB" width="739" height="1600" loading="lazy"></div>
+        <div class="phone"><img src="/assets/screens/records.webp" alt="Récords personales de 400 m a 10 km, con marcas nuevas señaladas" width="739" height="1600" loading="lazy"></div>
+        <p class="phone-caption">Récords, actualizados solos al guardar</p>
       </div>
       <div class="gallery-item">
         <div class="phone"><img src="/assets/screens/temporada.webp" alt="Calendario de temporada con la carga de cada semana coloreada, de suave a pico" width="739" height="1600" loading="lazy"></div>
-      </div>
-      <div class="gallery-item">
-        <div class="phone"><img src="/assets/screens/historial.webp" alt="Historial de sesiones con RPE y etiquetas" width="739" height="1600" loading="lazy"></div>
-      </div>
-      <div class="gallery-item">
-        <div class="phone"><img src="/assets/screens/carga.webp" alt="Volumen semanal y distribución de intensidad 80/20" width="739" height="1600" loading="lazy"></div>
-      </div>
-      <div class="gallery-item">
-        <div class="phone"><img src="/assets/screens/consistencia.webp" alt="Consistencia de entrenamiento: semanas activas, racha actual y sesiones por tipo" width="739" height="1600" loading="lazy"></div>
+        <p class="phone-caption">Tu temporada entera, de un vistazo</p>
       </div>
       <div class="gallery-item">
         <div class="phone"><img src="/assets/screens/zonas.webp" alt="Cinco zonas de frecuencia cardíaca personalizadas según FC máxima" width="739" height="1600" loading="lazy"></div>
-      </div>
-      <div class="gallery-item">
-        <div class="phone"><img src="/assets/screens/records.webp" alt="Récords personales de 400 m a 10 km, con marcas nuevas señaladas" width="739" height="1600" loading="lazy"></div>
-      </div>
-      <div class="gallery-item">
-        <div class="phone"><img src="/assets/screens/cuestionario.webp" alt="Cuestionario semanal del coach: cómo te has sentido entrenando y calidad del sueño" width="739" height="1600" loading="lazy"></div>
-      </div>
-      <div class="gallery-item">
-        <div class="phone"><img src="/assets/screens/calendario-mensual.webp" alt="Calendario mensual con el volumen de cada semana y la leyenda de carga" width="739" height="1600" loading="lazy"></div>
-      </div>
-      <div class="gallery-item">
-        <div class="phone"><img src="/assets/screens/filosofia-coach.webp" alt="Pantalla «Cómo entrena tu coach»: base aeróbica primero, intensidad con criterio, fatiga y progresión sostenible" width="739" height="1600" loading="lazy"></div>
-      </div>
-      <div class="gallery-item">
-        <div class="phone"><img src="/assets/screens/pre-run.webp" alt="Pantalla antes de correr: correr libre, sensores de GPS y pulsómetro, alertas de ritmo" width="739" height="1600" loading="lazy"></div>
+        <p class="phone-caption">Tus zonas, calculadas desde tu FC máxima</p>
       </div>
       <div class="gallery-item">
         <div class="phone"><img src="/assets/screens/avatar.webp" alt="Personalizador de avatar de Running Laps: pestañas de cara, ojos, cejas, nariz, boca, pelo y barba, con opciones de expresión" width="828" height="1792" loading="lazy"></div>
+        <p class="phone-caption">Tu avatar, sin subir una foto</p>
       </div>
     </div>
   </div>
