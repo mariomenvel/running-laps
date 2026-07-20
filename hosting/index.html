@@ -330,7 +330,7 @@ section{padding:80px 0}
 .gallery-item .phone{max-width:236px;border-radius:36px;padding:8px}
 .gallery-item .phone img{border-radius:29px}
 @media(min-width:1100px){
-  .gallery-track{grid-auto-flow:row;grid-template-columns:repeat(6,1fr);overflow:visible;grid-auto-columns:unset}
+  .gallery-track{grid-auto-flow:row;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));overflow:visible;grid-auto-columns:unset}
   .gallery-item .phone{max-width:100%}
 }
 
@@ -562,17 +562,10 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
         </ul>
       </div>
       <div class="feature-shot reveal">
-        <div class="prompt-mock">
-          <div class="pm-row pm-you">
-            <span class="pm-avatar">TÚ</span>
-            <span class="pm-bubble">Cámbiame el jueves, tengo trabajo hasta tarde</span>
-          </div>
-          <div class="pm-row pm-ai">
-            <span class="pm-avatar">RL</span>
-            <span class="pm-bubble">Hecho. Muevo tus series en cuesta a viernes y adelanto el descanso del sábado.</span>
-          </div>
+        <div class="phone">
+          <img src="/assets/screens/ajuste-coach.webp" alt="Panel «Ajustar plan con el coach» en el calendario de Running Laps, con campo de texto y micrófono para pedir un ajuste en lenguaje natural" width="739" height="1600" loading="lazy">
         </div>
-        <p class="phone-caption">Así se ve un ajuste real — sin capturas de por medio</p>
+        <p class="phone-caption">Captura real — ajustar el plan por texto o por voz</p>
       </div>
     </div>
   </div>
@@ -593,20 +586,10 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
         </ul>
       </div>
       <div class="feature-shot reveal">
-        <div class="type-chips">
-          <span class="chip">Continuo</span><span class="chip">Series</span><span class="chip">Fartlek</span><span class="chip">Cuestas</span><span class="chip">Competición</span>
+        <div class="phone">
+          <img src="/assets/screens/creador-ia.webp" alt="Editor de sesiones de Running Laps con el panel «Crear con IA» abierto — campo de texto y micrófono para dictar el entreno, y selector de tipo: Continuo, Series, Cuestas, Competición, Fartlek" width="739" height="1600" loading="lazy">
         </div>
-        <div class="prompt-mock">
-          <div class="pm-row pm-you">
-            <span class="pm-avatar">TÚ</span>
-            <span class="pm-bubble">5×1000 a ritmo de 10K, recuperación trote 90s</span>
-          </div>
-          <div class="pm-row pm-ai">
-            <span class="pm-avatar">RL</span>
-            <span class="pm-bubble">Sesión creada: calentamiento 15 min + 5×1000 en Z4 + vuelta a la calma.</span>
-          </div>
-        </div>
-        <p class="phone-caption">Así se ve un prompt real — sin capturas de por medio</p>
+        <p class="phone-caption">Captura real — editor de sesiones y generación por IA</p>
       </div>
     </div>
   </div>
@@ -717,7 +700,19 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
         <div class="phone"><img src="/assets/screens/zonas.webp" alt="Cinco zonas de frecuencia cardíaca personalizadas según FC máxima" width="828" height="1792" loading="lazy"></div>
       </div>
       <div class="gallery-item">
-        <div class="phone"><img src="/assets/screens/records.webp" alt="Récords personales de 400 m a 10 km con mejora de marca" width="828" height="1792" loading="lazy"></div>
+        <div class="phone"><img src="/assets/screens/records.webp" alt="Récords personales de 400 m a 10 km, con marcas nuevas señaladas" width="739" height="1600" loading="lazy"></div>
+      </div>
+      <div class="gallery-item">
+        <div class="phone"><img src="/assets/screens/cuestionario.webp" alt="Cuestionario semanal del coach: cómo te has sentido entrenando y calidad del sueño" width="739" height="1600" loading="lazy"></div>
+      </div>
+      <div class="gallery-item">
+        <div class="phone"><img src="/assets/screens/calendario-mensual.webp" alt="Calendario mensual con el volumen de cada semana y la leyenda de carga" width="739" height="1600" loading="lazy"></div>
+      </div>
+      <div class="gallery-item">
+        <div class="phone"><img src="/assets/screens/filosofia-coach.webp" alt="Pantalla «Cómo entrena tu coach»: base aeróbica primero, intensidad con criterio, fatiga y progresión sostenible" width="739" height="1600" loading="lazy"></div>
+      </div>
+      <div class="gallery-item">
+        <div class="phone"><img src="/assets/screens/pre-run.webp" alt="Pantalla antes de correr: correr libre, sensores de GPS y pulsómetro, alertas de ritmo" width="739" height="1600" loading="lazy"></div>
       </div>
     </div>
   </div>
