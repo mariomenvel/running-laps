@@ -197,7 +197,15 @@ header{
 .hero-grid{display:grid;gap:48px;align-items:center}
 @media(min-width:900px){.hero-grid{grid-template-columns:1.05fr .95fr;gap:64px}}
 .hero h1{margin-bottom:20px}
-.hero .lead{margin-bottom:32px}
+.hero .lead{margin-bottom:20px}
+.hero-perks{
+  list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px;
+}
+.hero-perks li{
+  font-size:13px;font-weight:500;color:var(--text-2);
+  border:.5px solid var(--border);border-radius:999px;
+  padding:6px 14px;background:var(--surface);
+}
 
 /* Formulario de captura */
 .signup{display:flex;gap:8px;max-width:440px;flex-wrap:wrap}
@@ -431,6 +439,19 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
   font-size:13px;color:var(--text-3);
 }
 
+/* ---- Volver arriba ---- */
+.back-to-top{
+  position:fixed;right:20px;bottom:20px;z-index:60;
+  width:44px;height:44px;border-radius:50%;
+  background:var(--brand);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transform:translateY(8px);pointer-events:none;
+  transition:opacity .25s var(--ease),transform .25s var(--ease),background .2s var(--ease);
+}
+.back-to-top.visible{opacity:1;transform:none;pointer-events:auto}
+.back-to-top:hover{background:var(--brand-dark)}
+@media(prefers-reduced-motion:reduce){.back-to-top{transition:opacity .01s linear}}
+
 /* ---- Reveal — entrada 400 ms, curva de marca, sin rebote ---- */
 .reveal{opacity:0;transform:translateY(12px);transition:opacity .4s var(--ease),transform .4s var(--ease)}
 .reveal.is-visible{opacity:1;transform:none}
@@ -440,7 +461,7 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
 }
 </style>
 </head>
-<body>
+<body id="top">
 
 <header>
   <div class="container nav">
@@ -467,6 +488,11 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
       <span class="label">App de entrenamiento para runners</span>
       <h1>Para los que<br>van en serio.</h1>
       <p class="lead">Running Laps es el entrenador para quien corre por su cuenta: plan semanal con coach IA, series con GPS, esfuerzo percibido y carga real. Entrena con datos. Corre con propósito.</p>
+      <ul class="hero-perks">
+        <li>Acceso anticipado a la beta</li>
+        <li>Tu feedback moldea la app</li>
+        <li>Precio de fundador de por vida</li>
+      </ul>
       <form class="waitlist-form" action="/api/waitlist" method="POST" data-waitlist>
         <div class="platform-pick" role="radiogroup" aria-label="¿Dónde usarás la app?">
           <label class="plat"><input type="radio" name="platform" value="android" checked><span>Android</span></label>
@@ -868,7 +894,19 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
   </div>
 </footer>
 
+<a href="#top" id="backToTop" class="back-to-top" aria-label="Volver arriba">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 15l6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</a>
+
 <script>
+// Volver arriba — visible tras pasar el hero
+const backToTop = document.getElementById('backToTop');
+if (backToTop) {
+  window.addEventListener('scroll', () => {
+    backToTop.classList.toggle('visible', window.scrollY > 700);
+  }, { passive: true });
+}
+
 // Reveal al hacer scroll — entrada 400 ms, sin rebote
 const revealEls = document.querySelectorAll('.reveal');
 if ('IntersectionObserver' in window) {

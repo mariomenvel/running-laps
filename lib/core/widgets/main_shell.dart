@@ -27,6 +27,8 @@ import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/templates/views/workout_editor_screen.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_settings_view.dart';
+import 'package:running_laps/features/ai_coach/views/ai_coach_weekly_feedback_view.dart';
+import 'package:running_laps/features/ai_coach/views/coach_philosophy_view.dart';
 
 // ─── Params para tabs con parámetros ─────────────────────────────────────────
 
@@ -44,6 +46,21 @@ class AthleteSessionShellParams {
     required this.date,
     this.session,
     this.onSaved,
+  });
+}
+
+class WeeklyFeedbackShellParams {
+  final String weekStart;
+  final bool generatePlanAfter;
+  final int daysSinceLastTraining;
+  final int consecutiveMissedWeeks;
+  final VoidCallback? onCompleted;
+  const WeeklyFeedbackShellParams({
+    required this.weekStart,
+    this.generatePlanAfter = true,
+    this.daysSinceLastTraining = 0,
+    this.consecutiveMissedWeeks = 0,
+    this.onCompleted,
   });
 }
 
@@ -72,6 +89,7 @@ class _MainShellState extends State<MainShell> {
   final _templateEditorNotifier  = ValueNotifier<TemplateEditorShellParams?>(null);
   final _athleteSessionNotifier  = ValueNotifier<AthleteSessionShellParams?>(null);
   final _avatarConfigNotifier    = ValueNotifier<AvatarConfig?>(null);
+  final _weeklyFeedbackNotifier  = ValueNotifier<WeeklyFeedbackShellParams?>(null);
 
   late final List<Widget> _screens = [
     // ── Tabs visibles en NavBar ──────────────────────────────────────────────
@@ -156,6 +174,23 @@ class _MainShellState extends State<MainShell> {
     const TrainingStartView(), // 15 → Iniciar entrenamiento (FAB)
 
     const AiCoachSettingsView(), // 16 → Entrenador IA settings
+
+    const CoachPhilosophyView(), // 17 → Cómo entrena el coach
+
+    // 18 → Feedback semanal del coach
+    ValueListenableBuilder<WeeklyFeedbackShellParams?>(
+      valueListenable: _weeklyFeedbackNotifier,
+      builder: (_, p, __) => p != null
+          ? AiCoachWeeklyFeedbackView(
+              key: ValueKey('${p.weekStart}-${p.hashCode}'),
+              weekStart: p.weekStart,
+              generatePlanAfter: p.generatePlanAfter,
+              daysSinceLastTraining: p.daysSinceLastTraining,
+              consecutiveMissedWeeks: p.consecutiveMissedWeeks,
+              onCompleted: p.onCompleted,
+            )
+          : const SizedBox.shrink(),
+    ),
   ];
 
   @override
@@ -167,6 +202,7 @@ class _MainShellState extends State<MainShell> {
     _templateEditorNotifier.dispose();
     _athleteSessionNotifier.dispose();
     _avatarConfigNotifier.dispose();
+    _weeklyFeedbackNotifier.dispose();
     super.dispose();
   }
 
@@ -176,6 +212,7 @@ class _MainShellState extends State<MainShell> {
     8: 'account_settings', 9: 'zones_config', 10: 'heart_rate_monitor',
     11: 'templates_list', 12: 'template_editor', 13: 'workout_editor',
     14: 'avatar_customizer', 15: 'training_session', 16: 'ai_coach_settings',
+    17: 'coach_philosophy', 18: 'weekly_feedback',
   };
 
   void _onTabTapped(int navIndex) {
@@ -208,6 +245,10 @@ class _MainShellState extends State<MainShell> {
         }
       case 14:
         _avatarConfigNotifier.value = params is AvatarConfig ? params : null;
+      case 18:
+        if (params is WeeklyFeedbackShellParams) {
+          _weeklyFeedbackNotifier.value = params;
+        }
     }
     setState(() {
       _previousTabIndex = _tabIndex;
