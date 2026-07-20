@@ -1370,7 +1370,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.surface2Of(context),
+      backgroundColor: AppColors.background(context),
       body: Stack(
         children: [
           SafeArea(
@@ -1680,7 +1680,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
 
           _buildAlerts(),
           const SizedBox(height: AppSpacing.xl),
-          if (_todaySession == null || _ignoreSession)
+          if ((_todaySession == null || _ignoreSession) && _vm.source != null)
             _buildStartButtonNew(),
           const SizedBox(height: AppSpacing.xl),
         ],
