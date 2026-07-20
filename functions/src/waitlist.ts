@@ -18,10 +18,17 @@ export const joinWaitlist = onRequest(
       return;
     }
 
+    // Plataforma declarada en la landing (para priorizar testers Android en la
+    // prueba cerrada de Google Play). Solo se aceptan valores conocidos.
+    const rawPlatform = String(req.body?.platform ?? "").trim().toLowerCase();
+    const platform =
+      rawPlatform === "android" || rawPlatform === "ios" ? rawPlatform : null;
+
     const db = getFirestore();
     await db.collection("waitlist").doc(email).set(
       {
         email,
+        platform,
         createdAt: FieldValue.serverTimestamp(),
         source: "landing",
       },

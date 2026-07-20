@@ -6,9 +6,12 @@
 <title>Privacidad — Running Laps</title>
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-<link rel="preconnect" href="https://api.fontshare.com">
-<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap" rel="stylesheet">
+<link rel="preload" href="/assets/fonts/GeneralSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/GeneralSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+  @font-face{font-family:'General Sans';src:url('/assets/fonts/GeneralSans-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+  @font-face{font-family:'General Sans';src:url('/assets/fonts/GeneralSans-Medium.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap}
+  @font-face{font-family:'General Sans';src:url('/assets/fonts/GeneralSans-Semibold.woff2') format('woff2');font-weight:600;font-style:normal;font-display:swap}
   :root{
     --bg:#FFFFFF;--surface:#FAFAF8;--border:#E5E3DB;
     --text:#1A1A1A;--text-secondary:#5F5E5A;--text-tertiary:#A6A49C;
@@ -43,7 +46,7 @@
 
 <main class="container">
   <h1>Política de privacidad</h1>
-  <p class="updated">Última actualización: 11 de julio de 2026</p>
+  <p class="updated">Última actualización: 19 de julio de 2026</p>
 
   <p>Esta política explica qué información recopila Running Laps, con qué
   finalidad, con qué base legal y qué control tienes sobre ella.</p>
@@ -69,6 +72,10 @@
     crear entrenamientos, el reconocimiento de voz lo realiza el servicio del
     sistema de tu dispositivo (Apple o Google). Nosotros solo recibimos el
     texto resultante, nunca el audio.</li>
+    <li><strong>Lista de espera (web):</strong> si te apuntas desde
+    runninglaps.com, guardamos tu email y la plataforma (Android o iOS) que
+    indicas, con el único fin de avisarte cuando la beta esté disponible.
+    Puedes darte de baja escribiéndonos.</li>
   </ul>
   <p>No usamos publicidad ni rastreadores publicitarios, y no vendemos tus
   datos a nadie.</p>
@@ -87,6 +94,8 @@
     del sistema.</li>
     <li><strong>Proteger el servicio</strong> (autenticación, verificación de
     integridad de la app) — <em>interés legítimo</em> (art. 6.1.f RGPD).</li>
+    <li><strong>Avisarte del lanzamiento de la beta</strong> si te apuntas a la
+    lista de espera — <em>consentimiento</em> (art. 6.1.a RGPD).</li>
   </ul>
 
   <h2>4. Datos de salud: consentimiento explícito</h2>

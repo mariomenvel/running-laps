@@ -199,6 +199,7 @@ header{
 .signup input::placeholder{color:var(--text-3)}
 .signup input:focus{outline:none;border-color:var(--brand)}
 .fineprint{margin-top:12px;font-size:13px;color:var(--text-3)}
+.fineprint a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 .form-msg{margin-top:12px;font-size:14px;color:var(--text-2);min-height:20px}
 .form-msg.ok{color:var(--rpe-low)}
 .form-msg.err{color:var(--rpe-max)}
@@ -317,6 +318,55 @@ section{padding:80px 0}
 .cta .form-msg{color:#fff}
 .cta .form-msg.err{color:#fff;font-weight:500}
 
+/* ---- Selector de plataforma + formulario waitlist ---- */
+.waitlist-form{max-width:440px}
+.platform-pick{
+  display:inline-flex;gap:4px;margin-bottom:10px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-btn);padding:4px;
+}
+.plat{position:relative;display:inline-flex}
+.plat input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.plat span{
+  display:inline-flex;align-items:center;height:34px;padding:0 18px;
+  border-radius:9px;font-size:14px;font-weight:500;color:var(--text-2);
+  transition:background .15s var(--ease),color .15s var(--ease);
+}
+.plat input:checked + span{background:var(--brand);color:#fff}
+.plat input:focus-visible + span{outline:2px solid var(--brand);outline-offset:2px}
+
+/* ---- Bloque de fundador ---- */
+.founder{display:grid;gap:32px;align-items:center;max-width:940px;margin:0 auto}
+@media(min-width:768px){.founder{grid-template-columns:200px 1fr;gap:56px}}
+.founder-photo{
+  width:160px;height:160px;border-radius:50%;margin:0 auto;
+  background:var(--brand);display:flex;align-items:center;justify-content:center;
+  overflow:hidden;border:.5px solid var(--border);
+}
+.founder-photo img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.founder-monogram{font-size:64px;font-weight:600;color:#fff;line-height:1}
+.founder-copy h2{margin:12px 0 20px}
+.founder-copy p{font-size:17px;line-height:1.6;max-width:560px}
+.founder-copy p + p{margin-top:16px}
+.founder-sign{margin-top:24px;color:var(--text);font-weight:500}
+.founder-sign a{color:var(--brand);text-decoration:underline;text-underline-offset:3px}
+.founder-sign a:hover{color:var(--brand-dark)}
+
+/* ---- Perks de fundador (CTA) ---- */
+.cta-perks{
+  list-style:none;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;
+  margin:24px auto 0;max-width:600px;
+}
+.cta-perks li{
+  font-size:14px;font-weight:500;color:#fff;
+  border:.5px solid rgba(255,255,255,.4);border-radius:999px;padding:8px 16px;
+}
+.cta .waitlist-form{max-width:440px;margin:28px auto 0;text-align:center}
+.cta .waitlist-form .signup{margin:0 auto;justify-content:center}
+.cta .platform-pick{background:rgba(255,255,255,.14);border-color:var(--brand-dark)}
+.cta .plat span{color:#fff}
+.cta .plat input:checked + span{background:#fff;color:var(--brand)}
+
 /* ---- Footer ---- */
 footer{background:var(--ink);color:#fff;padding:64px 0 40px}
 .footer-grid{display:grid;gap:40px;margin-bottom:48px}
@@ -368,12 +418,20 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
       <span class="label">App de entrenamiento para runners</span>
       <h1>Para los que<br>van en serio.</h1>
       <p class="lead">Running Laps es el entrenador para quien corre por su cuenta: plan semanal con coach IA, series con GPS, esfuerzo percibido y carga real. Entrena con datos. Corre con propósito.</p>
-      <form class="signup" action="/api/waitlist" method="POST" data-waitlist>
-        <input type="email" name="email" placeholder="tu@email.com" required autocomplete="email" inputmode="email" aria-label="Tu email">
-        <button class="btn btn-primary" type="submit">Unirme a la beta</button>
+      <form class="waitlist-form" action="/api/waitlist" method="POST" data-waitlist>
+        <div class="platform-pick" role="radiogroup" aria-label="¿Dónde usarás la app?">
+          <label class="plat"><input type="radio" name="platform" value="android" checked><span>Android</span></label>
+          <label class="plat"><input type="radio" name="platform" value="ios"><span>iPhone</span></label>
+        </div>
+        <div class="signup">
+          <input type="email" name="email" placeholder="tu@email.com" required autocomplete="email" inputmode="email" aria-label="Tu email">
+          <button class="btn btn-primary" type="submit">Unirme como fundador</button>
+        </div>
       </form>
       <p class="form-msg" aria-live="polite"></p>
-      <p class="fineprint">Beta gratuita · iOS y Android · Sin tarjeta</p>
+      <!-- Prueba social: descoméntalo cuando tengas el número real de la lista
+      <p class="fineprint">Ya en la lista de fundadores: +120 corredores</p> -->
+      <p class="fineprint">Acceso de fundador · Gratis durante la beta · Sin tarjeta. Al apuntarte aceptas la <a href="/privacy">política de privacidad</a>.</p>
     </div>
     <div>
       <div class="phone">
@@ -541,17 +599,46 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
   </div>
 </section>
 
+<!-- ============ FUNDADOR ============ -->
+<section id="fundador" style="background:var(--surface)">
+  <div class="container">
+    <div class="founder reveal">
+      <div class="founder-photo">
+        <img src="/assets/yo.png" alt="Mario, fundador de Running Laps" width="320" height="320" loading="lazy">
+      </div>
+      <div class="founder-copy">
+        <span class="label">Quién construye esto</span>
+        <h2>Entrenador de fuerza. Y el que escribe el código.</h2>
+        <p>Soy Mario. Llevo años programando entrenamientos de fuerza y, de profesión, software. En el gimnasio nadie entrena a lo loco: tienes un plan y sabes por qué lo haces. Empecé a correr y no encontré nada parecido — solo apps que cuentan kilómetros.</p>
+        <p>Así que me puse a construir la que faltaba. Yo mismo, línea a línea, juntando las dos cosas que sé hacer: entrenar y programar. Y la estoy terminando en público — enseñando lo que funciona y lo que se rompe.</p>
+        <p class="founder-sign">— Mario · <a href="https://instagram.com/runninglapsapp" target="_blank" rel="noopener">Sígueme construyéndola</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ============ CTA ============ -->
 <section class="cta" id="unirse">
   <div class="container reveal">
-    <h2>Entra en la beta</h2>
-    <p>Plazas limitadas. Te avisamos cuando esté disponible para tu plataforma.</p>
-    <form class="signup" action="/api/waitlist" method="POST" data-waitlist>
-      <input type="email" name="email" placeholder="tu@email.com" required autocomplete="email" inputmode="email" aria-label="Tu email">
-      <button class="btn btn-on-brand" type="submit">Unirme a la beta</button>
+    <h2>Entra como fundador</h2>
+    <p>Los primeros de la lista no solo entran antes. Ayudan a decidir qué se construye — y conservan precio de fundador para siempre.</p>
+    <ul class="cta-perks">
+      <li>Acceso anticipado a la beta</li>
+      <li>Tu feedback moldea la app</li>
+      <li>Precio de fundador de por vida</li>
+    </ul>
+    <form class="waitlist-form" action="/api/waitlist" method="POST" data-waitlist>
+      <div class="platform-pick" role="radiogroup" aria-label="¿Dónde usarás la app?">
+        <label class="plat"><input type="radio" name="platform" value="android" checked><span>Android</span></label>
+        <label class="plat"><input type="radio" name="platform" value="ios"><span>iPhone</span></label>
+      </div>
+      <div class="signup">
+        <input type="email" name="email" placeholder="tu@email.com" required autocomplete="email" inputmode="email" aria-label="Tu email">
+        <button class="btn btn-on-brand" type="submit">Entrar como fundador</button>
+      </div>
     </form>
     <p class="form-msg" aria-live="polite"></p>
-    <p class="fineprint">Gratis durante la beta · Sin tarjeta · Puedes darte de baja cuando quieras</p>
+    <p class="fineprint">Gratis durante la beta · Sin tarjeta · Puedes darte de baja cuando quieras. Al apuntarte aceptas la <a href="/privacy">política de privacidad</a>.</p>
   </div>
 </section>
 
@@ -659,8 +746,10 @@ document.querySelectorAll('form[data-waitlist]').forEach(form => {
   const msg = form.parentElement.querySelector('.form-msg');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const input = form.querySelector('input');
+    const input = form.querySelector('input[type="email"]');
     const btn = form.querySelector('button');
+    const platformEl = form.querySelector('input[name="platform"]:checked');
+    const platform = platformEl ? platformEl.value : '';
     const email = input.value.trim();
     if (!email) return;
     btn.disabled = true;
@@ -672,7 +761,7 @@ document.querySelectorAll('form[data-waitlist]').forEach(form => {
       const res = await fetch('/api/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, platform }),
       });
       if (!res.ok) throw new Error('bad response');
       form.style.display = 'none';
