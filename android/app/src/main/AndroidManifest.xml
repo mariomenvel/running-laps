@@ -1,5 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:tools="http://schemas.android.com/tools">
+    <!-- No usamos publicidad ni personalización de anuncios (ver privacy.html
+         §2): firebase_analytics declara este permiso en su propio manifest y
+         se fusionaría automáticamente si no se excluye aquí. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
+
     <!-- GPS Permissions -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 

@@ -47,7 +47,7 @@
   "@type": "MobileApplication",
   "name": "Running Laps",
   "slogan": "Para los que van en serio.",
-  "description": "App de entrenamiento de running con coach IA: plan semanal adaptado, entrenamiento por series con GPS, esfuerzo percibido (RPE), zonas de frecuencia cardíaca y análisis de carga (CTL, ATL, TSB).",
+  "description": "App de entrenamiento de running con coach IA: plan semanal adaptado, ajustes por voz o texto, editor de sesiones (continuo, series, fartlek, cuestas, competición) con generación por IA, entrenamiento con GPS, esfuerzo percibido (RPE), zonas de frecuencia cardíaca, calendario y análisis de carga (CTL, ATL, TSB).",
   "operatingSystem": "Android, iOS",
   "applicationCategory": "HealthApplication",
   "inLanguage": "es",
@@ -80,6 +80,16 @@
       "@type": "Question",
       "name": "¿Sirve si soy principiante?",
       "acceptedAnswer": { "@type": "Answer", "text": "Sí, siempre que quieras entrenar con estructura. El plan se adapta a tu nivel real: desde preparar tu primer 10K o medio maratón hasta el amateur avanzado." }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Puedo crear mis propias sesiones o todo lo hace la IA?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Los dos. Tienes un editor manual completo para construir sesiones continuas, de series, fartlek, cuestas o competición, y también puedes pedirle la sesión a la IA por texto o por voz. Tú decides." }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Necesito llevar el móvil en la mano durante el entreno?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No. Puedes registrar entrenos pasados sin GPS con selectores tipo rueda, sin escribir nada, y en iPhone ves el ritmo y la distancia con la pantalla bloqueada." }
     },
     {
       "@type": "Question",
@@ -264,6 +274,49 @@ section{padding:80px 0}
   margin-top:7px;flex-shrink:0;
 }
 
+/* ---- Chips de tipo de sesión ---- */
+.type-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.chip{
+  font-size:13px;font-weight:500;color:var(--text-2);
+  border:.5px solid var(--border);border-radius:999px;
+  padding:6px 14px;background:#fff;
+}
+
+/* ---- Mockup de conversación (sin captura de pantalla) ---- */
+.prompt-mock{
+  border:.5px solid var(--border);border-radius:var(--r-card);
+  padding:24px;background:var(--surface);
+}
+.pm-row{display:flex;gap:10px;align-items:flex-start}
+.pm-row + .pm-row{margin-top:14px}
+.pm-avatar{
+  width:26px;height:26px;border-radius:50%;flex-shrink:0;margin-top:2px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:600;color:#fff;letter-spacing:.02em;
+}
+.pm-you .pm-avatar{background:var(--text-3)}
+.pm-ai .pm-avatar{background:var(--brand)}
+.pm-bubble{
+  border-radius:12px;padding:11px 14px;font-size:14px;line-height:1.45;
+  background:#fff;border:.5px solid var(--border);color:var(--text);
+}
+.pm-ai .pm-bubble{background:var(--brand);color:#fff;border-color:var(--brand)}
+
+/* ---- Bento de extras ---- */
+.bento{display:grid;gap:16px}
+@media(min-width:640px){.bento{grid-template-columns:repeat(2,1fr)}}
+.bento-card{border:.5px solid var(--border);border-radius:var(--r-card);padding:28px;background:var(--bg)}
+.bento-card .bi{
+  width:40px;height:40px;border-radius:10px;background:var(--surface);
+  display:flex;align-items:center;justify-content:center;margin-bottom:16px;color:var(--brand);
+}
+.bento-card h3{margin-bottom:8px;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.bento-card p{font-size:14px}
+.tag-platform{
+  font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--text-3);
+  border:.5px solid var(--border);border-radius:6px;padding:2px 8px;
+}
+
 /* ---- Galería de capturas ---- */
 .gallery{background:var(--surface)}
 .gallery-track{
@@ -401,6 +454,7 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
     </a>
     <nav class="nav-links" aria-label="Secciones">
       <a href="#coach">Coach IA</a>
+      <a href="#creador">Sesiones</a>
       <a href="#analisis">Análisis</a>
       <a href="#como-funciona">Cómo funciona</a>
       <a href="#faq">FAQ</a>
@@ -479,7 +533,7 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
         <p class="lead">Cada semana el coach analiza tu historial, tu carga acumulada y tu RPE, y genera un plan adaptado a tu disponibilidad y a tu objetivo — de tu primer 10K al maratón.</p>
         <ul class="checks">
           <li><span class="dot"></span><span><strong>Plan semanal automático.</strong> Series, tempos, rodajes y descanso, distribuidos según tus días disponibles.</span></li>
-          <li><span class="dot"></span><span><strong>Ajustes en lenguaje natural.</strong> «Cámbiame la sesión del martes» — y el coach modifica el plan directamente.</span></li>
+          <li><span class="dot"></span><span><strong>Cuestionario de 2 minutos, no un formulario.</strong> Cuéntale tu nivel, objetivo, disponibilidad y lesiones con tus palabras.</span></li>
           <li><span class="dot"></span><span><strong>Análisis post-sesión.</strong> Planificado vs ejecutado, con lectura de tu carga y sugerencias concretas.</span></li>
         </ul>
       </div>
@@ -488,6 +542,71 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
           <img src="/assets/screens/plan.webp" alt="Calendario semanal de Running Laps con el plan del coach IA: sesiones de rodaje base en Z2, día de descanso marcado como hoy y opción de ajustar el plan con el coach" width="828" height="1792" loading="lazy">
         </div>
         <p class="phone-caption">Captura real — plan semanal con el coach</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HABLA CON TU COACH ============ -->
+<section id="ajustes" style="padding-top:0">
+  <div class="container">
+    <div class="feature flip">
+      <div class="feature-copy reveal">
+        <span class="label">Habla con tu coach</span>
+        <h2>Ajusta tu semana hablando, como con un entrenador de verdad</h2>
+        <p class="lead">¿Se complica el jueves? Dile a tu coach y reorganiza la semana por ti. Mover una sesión, subir o bajar la intensidad, o replanificarlo todo — en una frase.</p>
+        <ul class="checks">
+          <li><span class="dot"></span><span><strong>Entiende la intención.</strong> Mover, cancelar, completar, subir o bajar intensidad, añadir series — en tus palabras, por texto o por voz.</span></li>
+          <li><span class="dot"></span><span><strong>Vista previa antes de aplicar.</strong> Nada cambia en tu plan hasta que lo confirmas.</span></li>
+          <li><span class="dot"></span><span><strong>Para ajustar, no para rehacer.</strong> Cambios puntuales sobre el plan que ya te generó el coach.</span></li>
+        </ul>
+      </div>
+      <div class="feature-shot reveal">
+        <div class="prompt-mock">
+          <div class="pm-row pm-you">
+            <span class="pm-avatar">TÚ</span>
+            <span class="pm-bubble">Cámbiame el jueves, tengo trabajo hasta tarde</span>
+          </div>
+          <div class="pm-row pm-ai">
+            <span class="pm-avatar">RL</span>
+            <span class="pm-bubble">Hecho. Muevo tus series en cuesta a viernes y adelanto el descanso del sábado.</span>
+          </div>
+        </div>
+        <p class="phone-caption">Así se ve un ajuste real — sin capturas de por medio</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CREADOR DE SESIONES ============ -->
+<section id="creador" style="padding-top:0">
+  <div class="container">
+    <div class="feature">
+      <div class="feature-copy reveal">
+        <span class="label">Creador de sesiones</span>
+        <h2>Crea tu sesión a mano, o pídesela a la IA</h2>
+        <p class="lead">Continuo, series, fartlek, cuestas o competición: monta cada bloque —calentamiento, tramo principal, vuelta a la calma— con el objetivo que quieras: ritmo, zona de FC o RPE. O dicta lo que quieres entrenar y deja que la IA construya la sesión completa.</p>
+        <ul class="checks">
+          <li><span class="dot"></span><span><strong>Editor por bloques.</strong> Repeticiones, series y objetivo de cada tramo, con avisos por tiempo o por distancia.</span></li>
+          <li><span class="dot"></span><span><strong>Generación por voz o texto.</strong> Escribe o dicta lo que quieres entrenar y la IA arma la sesión con tu perfil.</span></li>
+          <li><span class="dot"></span><span><strong>5 tipos de sesión.</strong> De un rodaje continuo a una serie de cuestas, con la misma herramienta.</span></li>
+        </ul>
+      </div>
+      <div class="feature-shot reveal">
+        <div class="type-chips">
+          <span class="chip">Continuo</span><span class="chip">Series</span><span class="chip">Fartlek</span><span class="chip">Cuestas</span><span class="chip">Competición</span>
+        </div>
+        <div class="prompt-mock">
+          <div class="pm-row pm-you">
+            <span class="pm-avatar">TÚ</span>
+            <span class="pm-bubble">5×1000 a ritmo de 10K, recuperación trote 90s</span>
+          </div>
+          <div class="pm-row pm-ai">
+            <span class="pm-avatar">RL</span>
+            <span class="pm-bubble">Sesión creada: calentamiento 15 min + 5×1000 en Z4 + vuelta a la calma.</span>
+          </div>
+        </div>
+        <p class="phone-caption">Así se ve un prompt real — sin capturas de por medio</p>
       </div>
     </div>
   </div>
@@ -536,6 +655,38 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
           <img src="/assets/screens/historial.webp" alt="Historial de entrenamientos en Running Laps: sesiones con distancia, tiempo, ritmo y badge de RPE por sesión, con etiquetas como rodaje o largo" width="828" height="1792" loading="lazy">
         </div>
         <p class="phone-caption">Captura real — historial de sesiones</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EXTRAS ============ -->
+<section id="extras" style="padding-top:0">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="label">Y además</span>
+      <h2>El resto de lo que necesitas, ya incluido</h2>
+    </div>
+    <div class="bento reveal">
+      <div class="bento-card">
+        <span class="bi" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18.5 9.5a2.12 2.12 0 0 0-3-3L5 17v3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
+        <h3>Registra sin sacar el móvil</h3>
+        <p>Entrenos pasados o sin GPS, con selectores tipo rueda — distancia, tiempo y RPE. Nunca con el teclado numérico.</p>
+      </div>
+      <div class="bento-card">
+        <span class="bi" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+        <h3>Calendario semanal, mensual y de temporada</h3>
+        <p>Toda tu planificación de un vistazo, con la carga de cada semana marcada por color.</p>
+      </div>
+      <div class="bento-card">
+        <span class="bi" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M8.5 10h.01M15.5 10h.01M8 15c1 1.2 2.4 2 4 2s3-.8 4-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+        <h3>Tu avatar, a tu manera</h3>
+        <p>Decenas de combinaciones —cara, pelo, ropa, accesorios— para tu perfil. Sin subir una foto.</p>
+      </div>
+      <div class="bento-card">
+        <span class="bi" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+        <h3>Ritmo en la pantalla de bloqueo <span class="tag-platform">iPhone</span></h3>
+        <p>Bloquea el móvil y sigue viendo ritmo, distancia y tiempo mientras corres.</p>
       </div>
     </div>
   </div>
@@ -687,6 +838,7 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
         <h4>Producto</h4>
         <ul>
           <li><a href="#coach">Coach IA</a></li>
+          <li><a href="#creador">Sesiones</a></li>
           <li><a href="#analisis">Análisis</a></li>
           <li><a href="#como-funciona">Cómo funciona</a></li>
           <li><a href="#faq">FAQ</a></li>
