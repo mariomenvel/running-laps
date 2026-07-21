@@ -23,18 +23,9 @@ class AppHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (ShellEmbeddingScope.isEmbedded(context)) return const SizedBox.shrink();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final topPadding = MediaQuery.of(context).padding.top;
     return Container(
-      decoration: isDark
-          ? BoxDecoration(color: Theme.of(context).colorScheme.surface)
-          : const BoxDecoration(
-              color: Colors.white,
-              image: DecorationImage(
-                image: AssetImage('assets/images/fondo.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
+      color: Theme.of(context).colorScheme.surface,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
@@ -42,7 +33,7 @@ class AppHeader extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 20.0,
-              vertical: 16.0,
+              vertical: 8.0,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -51,7 +42,7 @@ class AppHeader extends StatelessWidget {
                 leading ?? GestureDetector(
                   onTap: onTapLeft,
                   child: const CircleAvatar(
-                    radius: 24.0,
+                    radius: 22.0,
                     backgroundColor: AppColors.brand,
                     backgroundImage: AssetImage('assets/images/logo.png'),
                   ),
@@ -68,14 +59,14 @@ class AppHeader extends StatelessWidget {
                 // --- AVATAR / TRAILING ---
                 trailing ?? GestureDetector(
                   onTap: onTapRight,
-                  child: AvatarHelper.construirImagenPerfil(radius: 24.0),
+                  child: AvatarHelper.construirImagenPerfil(radius: 20.0),
                 ),
               ],
             ),
           ),
 
           if (showBottomDivider)
-            Container(height: 1.0, color: Theme.of(context).colorScheme.outline),
+            Container(height: 0.5, color: AppColors.borderOf(context)),
         ],
       ),
     );
