@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/services/analytics_service.dart';
+import 'package:running_laps/core/widgets/app_confirm_dialog.dart';
 import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/features/avatar/models/avatar_config.dart';
 import 'package:running_laps/features/avatar/services/avatar_generator.dart';
@@ -215,8 +216,28 @@ class _MainShellState extends State<MainShell> {
     17: 'coach_philosophy', 18: 'weekly_feedback',
   };
 
-  void _onTabTapped(int navIndex) {
+  /// Si la pestaña activa es la de entreno (15) y hay series sin terminar,
+  /// pide confirmación antes de dejar cambiar de pestaña — evita que un tap
+  /// en la barra inferior tire el entreno en curso sin avisar.
+  Future<bool> _confirmLeaveActiveTraining() async {
+    if (_tabIndex != 15 || !TrainingStartView.hasPendingProgress.value) {
+      return true;
+    }
+    final leave = await showAppConfirmDialog(
+      context: context,
+      title: '¿Abandonar entrenamiento?',
+      message: 'Se perderán las series registradas en esta sesión.',
+      confirmLabel: 'Abandonar',
+      cancelLabel: 'Seguir entrenando',
+      isDestructive: true,
+    );
+    return leave ?? false;
+  }
+
+  void _onTabTapped(int navIndex) async {
     if (navIndex == _tabIndex) return;
+    if (!await _confirmLeaveActiveTraining()) return;
+    if (!mounted) return;
     setState(() {
       _previousTabIndex = _tabIndex;
       _tabIndex = navIndex;
@@ -225,7 +246,9 @@ class _MainShellState extends State<MainShell> {
     AnalyticsService.logScreenView(_screenNames[navIndex] ?? 'tab_$navIndex');
   }
 
-  void navigateTo(int index, {dynamic params}) {
+  void navigateTo(int index, {dynamic params}) async {
+    if (index != _tabIndex && !await _confirmLeaveActiveTraining()) return;
+    if (!mounted) return;
     switch (index) {
       case 5:
         if (params is Entrenamiento) _detailNotifier.value = params;

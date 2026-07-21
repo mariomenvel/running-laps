@@ -70,6 +70,15 @@ class TrainingStartView extends StatefulWidget {
     this.recoveredStartTime,
   }) : super(key: key);
 
+  /// Refleja si hay series grabadas sin terminar en la instancia embebida
+  /// en MainShell (pestaña 15). MainShell lo consulta antes de dejar
+  /// cambiar de pestaña por la barra inferior, ya que esa pestaña vive en
+  /// un IndexedStack sin ruta que hacer pop — el gesto/botón atrás ya está
+  /// cubierto por el PopScope del propio build(), pero un tap directo en
+  /// la barra inferior lo esquivaría sin este aviso.
+  static final ValueNotifier<bool> hasPendingProgress =
+      ValueNotifier<bool>(false);
+
   @override
   _TrainingStartViewState createState() => _TrainingStartViewState();
 }
@@ -1378,6 +1387,9 @@ class _TrainingStartViewState extends State<TrainingStartView>
   @override
   Widget build(BuildContext context) {
     final hasProgress = _vm.series.isNotEmpty;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      TrainingStartView.hasPendingProgress.value = hasProgress;
+    });
     return PopScope(
       canPop: !hasProgress,
       onPopInvokedWithResult: (didPop, result) {
