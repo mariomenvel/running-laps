@@ -68,6 +68,7 @@ class _AvatarCustomizerViewState extends State<AvatarCustomizerView> {
     return Scaffold(
       backgroundColor: AppColors.background(context),
       body: SafeArea(
+        top: !ShellEmbeddingScope.isEmbedded(context),
         child: Column(
           children: [
             _AvatarHeader(
