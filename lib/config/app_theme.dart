@@ -6,6 +6,8 @@ import 'package:running_laps/core/theme/app_colors.dart';
 export 'package:running_laps/core/theme/app_colors.dart';
 // Asegúrate de que la ruta de este import sea correcta en tu proyecto
 import 'package:running_laps/features/avatar/data/assets.dart';
+import 'package:running_laps/features/avatar/models/avatar_config.dart';
+import 'package:running_laps/features/avatar/services/avatar_generator.dart';
 
 /// @deprecated Usar AppColors directamente desde core/theme/app_colors.dart.
 class Tema {
@@ -47,7 +49,24 @@ class AvatarHelper {
     Map<String, dynamic>? config,
     String? url,
   }) {
-    // 1. SI ES AVATAR
+    // 1. SI ES AVATAR GENERATIVO (sistema actual, avatar_customizer_view)
+    if (type == 'generative_avatar') {
+      final avatarConfig = AvatarConfig.fromMap(config ?? {});
+      return CircleAvatar(
+        radius: radius,
+        backgroundColor: Colors.transparent,
+        child: ClipOval(
+          child: SvgPicture.string(
+            AvatarGenerator.generateSVG(avatarConfig),
+            width: radius * 2,
+            height: radius * 2,
+            fit: BoxFit.cover,
+          ),
+        ),
+      );
+    }
+
+    // 2. SI ES AVATAR (sistema legado, avatar_maker_screen)
     if (type == 'avatar') {
       final safeConfig = config ?? {};
       return CircleAvatar(
@@ -71,7 +90,7 @@ class AvatarHelper {
       );
     }
     
-    // 2. SI ES FOTO DE GOOGLE/SUBIDA
+    // 3. SI ES FOTO DE GOOGLE/SUBIDA
     else if (type == 'photo') {
       final String finalUrl = url ?? '';
       return CircleAvatar(
@@ -82,7 +101,7 @@ class AvatarHelper {
       );
     }
 
-    // 3. DEFECTO
+    // 4. DEFECTO
     return _buildPlaceholder(radius);
   }
 
