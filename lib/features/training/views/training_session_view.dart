@@ -7,6 +7,7 @@ import 'dart:ui' show FontFeature;
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import '../../../core/widgets/modern_snackbar.dart';
 import '../../../core/widgets/rpe_slider.dart';
+import '../../../core/widgets/app_confirm_dialog.dart';
 
 import '../data/serie.dart';
 import '../data/fc_reading.dart';
@@ -611,10 +612,28 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
 
   @override
   Widget build(BuildContext context) {
-    if (_useNewScreens && widget.session != null) {
-      return _buildNewScreen();
-    }
-    return _buildLegacyContent();
+    final content = _useNewScreens && widget.session != null
+        ? _buildNewScreen()
+        : _buildLegacyContent();
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _confirmAbandonSerie();
+      },
+      child: content,
+    );
+  }
+
+  Future<void> _confirmAbandonSerie() async {
+    final leave = await showAppConfirmDialog(
+      context: context,
+      title: '¿Abandonar esta serie?',
+      message: 'Se perderá el progreso de este tramo.',
+      confirmLabel: 'Abandonar',
+      cancelLabel: 'Seguir corriendo',
+      isDestructive: true,
+    );
+    if ((leave ?? false) && mounted) Navigator.of(context).pop();
   }
 
   Widget _buildLegacyContent() {

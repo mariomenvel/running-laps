@@ -21,6 +21,7 @@ import '../../../core/services/settings_service.dart';
 import '../../../core/utils/app_transitions.dart';
 
 import 'package:running_laps/core/widgets/main_shell.dart';
+import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/core/widgets/number_picker_field.dart';
 import 'training_summary_screen.dart';
 import 'complete_session_manually_view.dart';
@@ -1350,14 +1351,21 @@ class _TrainingStartViewState extends State<TrainingStartView>
     }
   }
 
-  void _onLogoTapped() {
-    if (_vm.series.isEmpty) {
-      Navigator.pop(context);
-    } else {
-      ModernSnackBar.showWarning(
-        context,
-        'Por favor, termina el entrenamiento actual antes de salir.',
-      );
+  Future<void> _confirmAbandonWorkout() async {
+    final leave = await showAppConfirmDialog(
+      context: context,
+      title: '¿Abandonar entrenamiento?',
+      message: 'Se perderán las series registradas en esta sesión.',
+      confirmLabel: 'Abandonar',
+      cancelLabel: 'Seguir entrenando',
+      isDestructive: true,
+    );
+    if ((leave ?? false) && mounted) {
+      if (ShellEmbeddingScope.isEmbedded(context)) {
+        MainShell.shellKey.currentState?.navigateBack();
+      } else {
+        Navigator.of(context).pop();
+      }
     }
   }
 
@@ -1369,17 +1377,24 @@ class _TrainingStartViewState extends State<TrainingStartView>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background(context),
-      body: Stack(
-        children: [
-          SafeArea(
-            top: false,
-            bottom: false,
-            child: _buildBody(),
-          ),
-          if (_isResting) _buildRestScreen(),
-        ],
+    final hasProgress = _vm.series.isNotEmpty;
+    return PopScope(
+      canPop: !hasProgress,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _confirmAbandonWorkout();
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background(context),
+        body: Stack(
+          children: [
+            SafeArea(
+              top: false,
+              bottom: false,
+              child: _buildBody(),
+            ),
+            if (_isResting) _buildRestScreen(),
+          ],
+        ),
       ),
     );
   }

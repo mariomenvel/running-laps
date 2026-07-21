@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/services/heart_rate_service.dart';
 import '../../../core/services/ios_live_activity_service.dart';
 import '../../../core/utils/app_transitions.dart';
+import '../../../core/widgets/app_confirm_dialog.dart';
 import '../../athlete/data/athlete_session_model.dart';
 import '../../templates/data/workout_block.dart';
 import '../../templates/data/workout_segment.dart';
@@ -311,37 +312,60 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     );
   }
 
+  Widget _buildForPhase(BuildContext context, WorkoutExecutionState state) {
+    switch (state.phase) {
+      case ExecutionPhase.warmup:
+      case ExecutionPhase.main:
+      case ExecutionPhase.cooldown:
+        return _buildExecutingPhase(context, state);
+
+      case ExecutionPhase.transition:
+        return BlockTransitionScreen(
+          completedBlock: state.currentBlock,
+          nextBlock: state.nextBlock!,
+          onContinue: () {
+            _controller.advanceToNextBlock();
+          },
+          onFinishEarly: () => _controller.finishEarly(),
+          sessionType: widget.session.type,
+        );
+
+      case ExecutionPhase.done:
+        return _DoneLoader(
+          state: state,
+          session: widget.session,
+          originalSession: widget.originalSession,
+          athleteSession: widget.athleteSession,
+          onCompleted: widget.onCompleted,
+        );
+    }
+  }
+
+  Future<void> _confirmAbandonWorkout() async {
+    final leave = await showAppConfirmDialog(
+      context: context,
+      title: '¿Abandonar entrenamiento?',
+      message: 'Se perderá todo el progreso de esta sesión.',
+      confirmLabel: 'Abandonar',
+      cancelLabel: 'Seguir entrenando',
+      isDestructive: true,
+    );
+    if ((leave ?? false) && mounted) Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<WorkoutExecutionState>(
       valueListenable: _controller,
       builder: (context, state, _) {
-        switch (state.phase) {
-          case ExecutionPhase.warmup:
-          case ExecutionPhase.main:
-          case ExecutionPhase.cooldown:
-            return _buildExecutingPhase(context, state);
-
-          case ExecutionPhase.transition:
-            return BlockTransitionScreen(
-              completedBlock: state.currentBlock,
-              nextBlock: state.nextBlock!,
-              onContinue: () {
-                _controller.advanceToNextBlock();
-              },
-              onFinishEarly: () => _controller.finishEarly(),
-              sessionType: widget.session.type,
-            );
-
-          case ExecutionPhase.done:
-            return _DoneLoader(
-              state: state,
-              session: widget.session,
-              originalSession: widget.originalSession,
-              athleteSession: widget.athleteSession,
-              onCompleted: widget.onCompleted,
-            );
-        }
+        final guardExit = state.phase != ExecutionPhase.done;
+        return PopScope(
+          canPop: !guardExit,
+          onPopInvokedWithResult: (didPop, result) {
+            if (!didPop) _confirmAbandonWorkout();
+          },
+          child: _buildForPhase(context, state),
+        );
       },
     );
   }
