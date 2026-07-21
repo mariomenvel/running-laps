@@ -6,10 +6,8 @@ import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_bottom_sheet.dart';
 import 'package:running_laps/core/widgets/app_date_picker.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
-import 'package:running_laps/core/widgets/back_pill.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
-import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/core/services/user_service.dart';
@@ -432,15 +430,6 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (!ShellEmbeddingScope.isEmbedded(context))
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-                            child: Row(
-                              children: [
-                                BackPill(onTap: () => Navigator.of(context).pop()),
-                              ],
-                            ),
-                          ),
                         ListTile(
                           leading: const Icon(Icons.menu_book_outlined, color: AppColors.brand),
                           title: const Text('Cómo entrena tu coach'),

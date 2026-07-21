@@ -7,7 +7,6 @@ import '../data/ai_coach_repository.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart' show AppMotion;
 import '../../../core/widgets/app_header.dart';
-import '../../../core/widgets/back_pill.dart';
 import '../../../core/widgets/modern_snackbar.dart';
 import '../../../core/widgets/main_shell.dart';
 import '../../../core/widgets/shell_embedding_scope.dart';
@@ -184,14 +183,6 @@ class _AiCoachWeeklyFeedbackViewState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (!ShellEmbeddingScope.isEmbedded(context)) ...[
-                      Row(
-                        children: [
-                          BackPill(onTap: () => Navigator.of(context).pop()),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                    ],
                     Text(
                       '¿Cómo fue la semana?',
                       style: TextStyle(

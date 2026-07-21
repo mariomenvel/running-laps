@@ -302,31 +302,47 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
+  // Pestañas del IndexedStack que NO deben delegar el back del sistema en
+  // navigateBack(): las 4 visibles del NavBar, y las que ya gestionan su
+  // propia salida (12: template_editor_view tiene su propio guard de
+  // cambios sin guardar en el BackPill; 13: workout_editor_screen trae su
+  // propio PopScope+confirmación; 15: entreno activo, deliberadamente sin
+  // tocar hasta decidir cómo proteger una sesión en curso).
+  static const _selfManagedOrVisibleTabs = {0, 1, 2, 3, 12, 13, 15};
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: [
-          SizedBox(height: MediaQuery.of(context).padding.top),
-          _buildGlobalHeader(context),
-          Expanded(
-            child: ShellEmbeddingScope(
-              child: IndexedStack(
-                index: _tabIndex,
-                children: _screens,
+    final interceptSystemBack =
+        !_selfManagedOrVisibleTabs.contains(_tabIndex);
+    return PopScope(
+      canPop: !interceptSystemBack,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) navigateBack();
+      },
+      child: Scaffold(
+        body: Column(
+          children: [
+            SizedBox(height: MediaQuery.of(context).padding.top),
+            _buildGlobalHeader(context),
+            Expanded(
+              child: ShellEmbeddingScope(
+                child: IndexedStack(
+                  index: _tabIndex,
+                  children: _screens,
+                ),
               ),
             ),
-          ),
-        ],
-      ),
-      // La barra se mantiene visible también en la pestaña de entrenar (15):
-      // es una pestaña del IndexedStack (sin ruta que hacer pop ni gesto de
-      // volver), así que sin barra el usuario quedaba atrapado.
-      bottomNavigationBar: _NavBar(
-        currentIndex: _tabIndex,
-        onTabTapped: _onTabTapped,
-        onFabTapped: _launchTraining,
-        fabActive: _tabIndex == 15,
+          ],
+        ),
+        // La barra se mantiene visible también en la pestaña de entrenar (15):
+        // es una pestaña del IndexedStack (sin ruta que hacer pop ni gesto de
+        // volver), así que sin barra el usuario quedaba atrapado.
+        bottomNavigationBar: _NavBar(
+          currentIndex: _tabIndex,
+          onTabTapped: _onTabTapped,
+          onFabTapped: _launchTraining,
+          fabActive: _tabIndex == 15,
+        ),
       ),
     );
   }

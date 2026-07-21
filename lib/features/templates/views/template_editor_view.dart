@@ -522,6 +522,8 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
                     onTap: () {
                       if (_hasChanges) {
                         _showDiscardDialog();
+                      } else if (ShellEmbeddingScope.isEmbedded(context)) {
+                        MainShell.shellKey.currentState?.navigateBack();
                       } else {
                         Navigator.pop(context);
                       }

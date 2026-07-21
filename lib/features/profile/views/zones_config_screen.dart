@@ -3,9 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_date_picker.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
-import 'package:running_laps/core/widgets/back_pill.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
-import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/features/profile/viewmodels/zones_viewmodel.dart';
 
 class ZonesConfigScreen extends StatefulWidget {
@@ -109,23 +107,6 @@ class _ZonesConfigScreenState extends State<ZonesConfigScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (!ShellEmbeddingScope.isEmbedded(context)) ...[
-                    Row(
-                      children: [
-                        BackPill(onTap: () => Navigator.pop(context)),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Zonas de entrenamiento',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary(context),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
                   // ── Campos de FC ──────────────────────────────────
                   _SectionTitle('Frecuencia cardíaca'),
                   const SizedBox(height: 12),
