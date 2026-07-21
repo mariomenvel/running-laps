@@ -8,7 +8,6 @@ import '../data/models/enums.dart';
 
 import 'package:intl/intl.dart';
 import 'package:running_laps/config/app_theme.dart';
-import 'package:running_laps/core/widgets/back_pill.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_page_scaffold.dart';
 import '../../profile/views/profile_menu_screen_legacy.dart';
@@ -74,14 +73,6 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            child: Row(
-              children: [
-                BackPill(onTap: () => Navigator.pop(context)),
-              ],
-            ),
-          ),
           Expanded(
             child: ValueListenableBuilder<bool>(
               valueListenable: _controller.isLoading,

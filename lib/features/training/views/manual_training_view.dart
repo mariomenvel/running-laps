@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/core/services/pb_celebration_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
-import 'package:running_laps/core/widgets/back_pill.dart';
 import 'package:running_laps/core/widgets/ios_picker.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
@@ -271,9 +270,8 @@ class _ManualTrainingViewState extends State<ManualTrainingView> {
         padding: const EdgeInsets.all(16),
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              BackPill(onTap: () => Navigator.pop(context)),
-              const Spacer(),
               if (_saving)
                 const Padding(
                   padding: EdgeInsets.only(right: 8),

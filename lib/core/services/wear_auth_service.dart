@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:running_laps/core/widgets/back_pill.dart';
 
 /// Handles phone-side QR scanning to authenticate the Wear OS watch.
 ///
@@ -120,16 +119,6 @@ class _WearQRScannerPageState extends State<_WearQRScannerPage> {
           MobileScanner(
             controller: _controller,
             onDetect: _onDetect,
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  BackPill(onTap: () => Navigator.pop(context)),
-                ],
-              ),
-            ),
           ),
           Align(
             alignment: Alignment.bottomCenter,

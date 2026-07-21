@@ -5,7 +5,6 @@ import 'package:running_laps/features/analytics/widgets/pattern_carousel.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
-import 'package:running_laps/core/widgets/back_pill.dart';
 
 class SeriesPatternCarouselView extends StatelessWidget {
   final List<SeriesPattern> patterns;
@@ -23,14 +22,6 @@ class SeriesPatternCarouselView extends StatelessWidget {
       body: Column(
         children: [
           const AppHeader(showBottomDivider: false),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-            child: Row(
-              children: [
-                BackPill(onTap: () => Navigator.pop(context)),
-              ],
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
             child: Align(

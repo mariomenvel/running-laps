@@ -7,7 +7,6 @@ import 'package:running_laps/features/analytics/views/pattern_comparison_view.da
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
-import 'package:running_laps/core/widgets/back_pill.dart';
 
 class WorkoutPatternCarouselView extends StatefulWidget {
   final List<WorkoutPattern> patterns;
@@ -43,9 +42,8 @@ class _WorkoutPatternCarouselViewState
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                BackPill(onTap: () => Navigator.pop(context)),
-                const Spacer(),
                 if (widget.patterns[_currentPatternIndex].instances.length >= 2)
                   IconButton(
                     icon: Icon(Icons.compare_arrows,
