@@ -65,6 +65,25 @@ enum AiCoachGoalType {
 
 ---
 
+## Competiciones objetivo (`raceGoals`) ✅ implementado (backend)
+
+Las competiciones son una **entidad propia** (`RaceGoal`, `features/ai_coach/data/race_goal.dart`), no un tipo de sesión. Fuente única de verdad de la fecha objetivo del atleta.
+
+- **Colección:** `users/{uid}/raceGoals` (privada al propietario). CRUD en `RaceGoalRepository`.
+- **Campos:** `date` ('yyyy-MM-dd', igual que `AthleteSession.date`), `distance` (`RaceDistance`: 5K/10K/media/maratón/otra — metros idénticos a `raceDistanceM` del editor), `customDistanceM`, `name`, `targetTimeSeconds`, `priority` (`RaceGoalPriority`: `high`/`medium`/`low`).
+- **Prioridad = periodización** (clásico A/B/C): `high` → taper completo; `medium` → mini-taper de 2-3 días; `low` → sin taper, se corre como entreno.
+
+**Conexión con el Coach** (`ai_coach_context_builder.dart`):
+- La **próxima carrera de prioridad alta** (`nextPrimaryFrom`) deriva el `targetDate` efectivo del perfil (vía `copyWith`), que alimenta `planContext.weeksRemaining`/`phase`/taper en el prompt. **Manda sobre** el `targetDate` heredado del perfil (el selector suelto de Ajustes queda obsoleto).
+- Todas las carreras próximas se pasan al LLM en `coachSignals.upcomingRace` (la principal, con distancia) y `coachSignals.upcomingRaces` (lista, para el mini-taper de las secundarias). El system prompt tiene una instrucción explícita para respetarlas.
+- `raceInNext14Days` (weeklyState) ahora considera también los `raceGoals`, no solo sesiones categoría `competicion`.
+
+**UI** ✅: lista "Tus objetivos" + sheet crear/editar/eliminar en el hub del Coach (`race_goals_section.dart`, embebida en la pestaña Planificación de `athlete_hub_view`), marcador rojo en el calendario del hub, entrada "Marcar competición" al tocar un día, y cuenta atrás en Home (`home_race_countdown.dart`, solo si hay carrera de prioridad alta).
+
+**Categoría `competicion` retirada**: (1) del prompt del Coach — ya no genera "sesiones de competición"; (2) del editor activo — se quitó la opción "Competición" de `WorkoutTypeSelector` (`WorkoutType.competition`), que se mapeaba a categoría `competicion` en `athlete_session_mapper`. Los valores de enum (`WorkoutType.competition`, `SessionCategory.competicion`) se conservan por compatibilidad con sesiones antiguas y sus `switch`. Los editores huérfanos (`session_editor_view.dart`, `athlete_session_editor_view.dart`, deuda técnica #5) también la exponían pero son código muerto. Migración de sesiones `competicion` antiguas → `RaceGoal`: tarea de datos pendiente (one-off), no bloqueante.
+
+---
+
 ## Onboarding del Coach ✅ implementado
 
 Archivos: `ai_coach_onboarding_view.dart` + `ai_coach_onboarding_launcher.dart`

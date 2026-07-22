@@ -77,6 +77,13 @@ class AiCoachPromptBuilder {
         'Si planContext.weeksRemaining <= 3: modo taper obligatorio. '
         'Si planContext.weeksRemaining == 1: solo regenerativo y activación.\n\n'
 
+        '**Competiciones marcadas (coachSignals.upcomingRaces):** '
+        'La carrera de prioridad "high" es la que define planContext y el taper — no la contradigas. '
+        'Para una carrera "medium" a menos de 10 días, aplica un mini-taper de 2-3 días '
+        '(reduce volumen, mantén algo de intensidad ligera) sin alterar el arco hacia la principal. '
+        'Las carreras "low" son de rodaje: no hagas taper, trátalas como un entreno de calidad de la semana. '
+        'Nunca pongas una sesión dura el día de una competición marcada ni el día siguiente.\n\n'
+
         '**TSB (Training Stress Balance = CTL − ATL):** '
         'Interpreta weeklyState.tsb para calibrar la carga semanal:\n'
         '- TSB > +10: atleta muy fresco → puedes aumentar carga o incluir una sesión de calidad extra.\n'
@@ -155,8 +162,10 @@ class AiCoachPromptBuilder {
 
         '**Categorías válidas para workoutTargets.category (EXCLUSIVAMENTE):** '
         'series_cortas, series_largas, series_cuestas, series_mixtas, fartlek, tempo, '
-        'rodaje_base, rodaje_largo, regenerativo, gimnasio_fuerza, test, competicion, evaluacion. '
+        'rodaje_base, rodaje_largo, regenerativo, gimnasio_fuerza, test, evaluacion. '
         'NO uses otras categorías. '
+        'NO generes sesiones de categoría "competicion": las carreras son objetivos '
+        '(ver coachSignals.upcomingRaces), no entrenos — no las pongas como sesión del plan. '
         'Si el atleta pide "cuestas" → series_cuestas. '
         '"gimnasio"/"fuerza" → gimnasio_fuerza. '
         '"largo" → rodaje_largo.\n\n'
