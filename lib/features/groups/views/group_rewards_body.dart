@@ -1,64 +1,13 @@
-// ⚠️ HUÉRFANO — sin referencias activas detectadas
-// por auditoría del 2026-06-19. NO USAR como base para
-// nuevo desarrollo. Pendiente de confirmar con testing
-// manual antes de eliminar. Ver CHANGELOG.md.
+// Cuerpo embebible del medallero/logros de un grupo (GroupRewardsBody).
+// Extraído de group_rewards_screen.dart (el wrapper GroupRewardsScreen, huérfano,
+// se eliminó). Lo usa group_screen.dart dentro de su TabBarView.
 import 'package:flutter/material.dart';
-import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/config/app_theme.dart';
-import 'package:running_laps/core/widgets/back_pill.dart';
-import 'package:running_laps/core/widgets/app_header.dart';
-import 'package:running_laps/core/widgets/app_page_scaffold.dart';
-import 'package:running_laps/core/widgets/gradient_banner.dart';
-import '../../profile/views/profile_menu_screen_legacy.dart';
 import '../viewmodels/group_rewards_controller.dart';
 import '../data/models/rewards_models.dart';
 import '../data/models/enums.dart';
-
-/// Standalone screen wrapper — kept for backward compatibility.
-/// Embeds [GroupRewardsBody] with its own Scaffold + AppHeader + GradientBanner.
-class GroupRewardsScreen extends StatelessWidget {
-  final String groupId;
-
-  const GroupRewardsScreen({super.key, required this.groupId});
-
-  @override
-  Widget build(BuildContext context) {
-    return AppPageScaffold(
-      header: AppHeader(
-        onTapLeft: null,
-        onTapRight: () {
-          Navigator.push(
-            context,
-            AppRoute(page: const ProfileMenuView()),
-          );
-        },
-        showBottomDivider: false,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            child: Row(
-              children: [
-                BackPill(onTap: () => Navigator.pop(context)),
-              ],
-            ),
-          ),
-          GradientBanner(
-            title: "Recompensas",
-            subtitle: "Medallero y logros del grupo",
-            icon: Icons.emoji_events_rounded,
-            height: 85,
-            accentColor: AppColors.brandSurface,
-          ),
-          Expanded(child: GroupRewardsBody(groupId: groupId)),
-        ],
-      ),
-    );
-  }
-}
 
 /// Embeddable rewards body — sub-tabs: Medallero / Logros / Historial.
 /// Use this directly inside a parent TabBarView to avoid nested Scaffolds.
@@ -1057,5 +1006,3 @@ class _StaggeredItemState extends State<_StaggeredItem>
     );
   }
 }
-
-/// Botón de volver animado
