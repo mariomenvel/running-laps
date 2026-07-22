@@ -80,7 +80,7 @@ Las competiciones son una **entidad propia** (`RaceGoal`, `features/ai_coach/dat
 
 **UI** ✅: lista "Tus objetivos" + sheet crear/editar/eliminar en el hub del Coach (`race_goals_section.dart`, embebida en la pestaña Planificación de `athlete_hub_view`), marcador rojo en el calendario del hub, entrada "Marcar competición" al tocar un día, y cuenta atrás en Home (`home_race_countdown.dart`, solo si hay carrera de prioridad alta).
 
-**Categoría `competicion` retirada del Coach**: se eliminó de las categorías válidas del prompt — el Coach ya no genera "sesiones de competición" (una carrera es un `RaceGoal`, no un entreno). El valor del enum `SessionCategory.competicion` se mantiene por compatibilidad con datos antiguos. Nota: los editores que exponían esa categoría (`session_editor_view.dart`, `athlete_session_editor_view.dart`) ya eran **huérfanos** (cero referencias, deuda técnica #5); el editor activo (`WorkoutEditorScreen`) nunca la ofreció. Migración de sesiones `competicion` antiguas → `RaceGoal`: tarea de datos pendiente (one-off), no bloqueante.
+**Categoría `competicion` retirada**: (1) del prompt del Coach — ya no genera "sesiones de competición"; (2) del editor activo — se quitó la opción "Competición" de `WorkoutTypeSelector` (`WorkoutType.competition`), que se mapeaba a categoría `competicion` en `athlete_session_mapper`. Los valores de enum (`WorkoutType.competition`, `SessionCategory.competicion`) se conservan por compatibilidad con sesiones antiguas y sus `switch`. Los editores huérfanos (`session_editor_view.dart`, `athlete_session_editor_view.dart`, deuda técnica #5) también la exponían pero son código muerto. Migración de sesiones `competicion` antiguas → `RaceGoal`: tarea de datos pendiente (one-off), no bloqueante.
 
 ---
 

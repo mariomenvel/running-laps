@@ -12,11 +12,13 @@ class WorkoutTypeSelector extends StatelessWidget {
     required this.onSelected,
   });
 
+  // "Competición" se retiró del selector: una carrera es un objetivo (RaceGoal),
+  // no un tipo de entreno. El valor WorkoutType.competition se conserva por
+  // compatibilidad con sesiones antiguas ya guardadas.
   static const _types = [
     (WorkoutType.continuous,  'Continuo',    Icons.directions_run_outlined),
     (WorkoutType.intervals,   'Series',      Icons.repeat_outlined),
     (WorkoutType.hills,       'Cuestas',     Icons.landscape_outlined),
-    (WorkoutType.competition, 'Competición', Icons.emoji_events_outlined),
     (WorkoutType.fartlek,     'Fartlek',     Icons.shuffle_outlined),
   ];
 
