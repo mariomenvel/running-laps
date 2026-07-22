@@ -18,7 +18,7 @@ import '../../../../core/widgets/gradient_banner.dart';
 
 // Screens
 import 'challenge_detail_screen.dart';
-import 'group_rewards_screen.dart';
+import 'group_rewards_body.dart';
 import 'participant_profile_screen.dart';
 import '../data/models/group_stats_model.dart';
 
