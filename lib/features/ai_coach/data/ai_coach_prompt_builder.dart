@@ -162,8 +162,10 @@ class AiCoachPromptBuilder {
 
         '**Categorías válidas para workoutTargets.category (EXCLUSIVAMENTE):** '
         'series_cortas, series_largas, series_cuestas, series_mixtas, fartlek, tempo, '
-        'rodaje_base, rodaje_largo, regenerativo, gimnasio_fuerza, test, competicion, evaluacion. '
+        'rodaje_base, rodaje_largo, regenerativo, gimnasio_fuerza, test, evaluacion. '
         'NO uses otras categorías. '
+        'NO generes sesiones de categoría "competicion": las carreras son objetivos '
+        '(ver coachSignals.upcomingRaces), no entrenos — no las pongas como sesión del plan. '
         'Si el atleta pide "cuestas" → series_cuestas. '
         '"gimnasio"/"fuerza" → gimnasio_fuerza. '
         '"largo" → rodaje_largo.\n\n'

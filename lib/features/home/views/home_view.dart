@@ -22,6 +22,7 @@ import 'package:running_laps/features/ai_coach/data/ai_coach_automation_service.
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
+import 'package:running_laps/features/home/widgets/home_race_countdown.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 // Zone color helpers — Z1..Z5 matching ZonesService thresholds
@@ -264,6 +265,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                     const SizedBox(height: AppSpacing.m),
                     _buildDateHeader(isAthlete),
                     const SizedBox(height: AppSpacing.xl),
+                    const HomeRaceCountdown(),
                     // eliminado — sustituido por tutorial de bienvenida post-onboarding
                     if (isAthlete) ..._buildAthleteContent(),
                     if (!isAthlete) ..._buildRecreativoContent(),

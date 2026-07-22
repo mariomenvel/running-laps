@@ -78,7 +78,9 @@ Las competiciones son una **entidad propia** (`RaceGoal`, `features/ai_coach/dat
 - Todas las carreras próximas se pasan al LLM en `coachSignals.upcomingRace` (la principal, con distancia) y `coachSignals.upcomingRaces` (lista, para el mini-taper de las secundarias). El system prompt tiene una instrucción explícita para respetarlas.
 - `raceInNext14Days` (weeklyState) ahora considera también los `raceGoals`, no solo sesiones categoría `competicion`.
 
-> Pendiente (UI, siguientes fases): sheet de crear/listar en el hub del Coach, marcador en el calendario, cuenta atrás en Home, y retirar la categoría `competicion` del editor de sesiones migrando sus datos a `RaceGoal`.
+**UI** ✅: lista "Tus objetivos" + sheet crear/editar/eliminar en el hub del Coach (`race_goals_section.dart`, embebida en la pestaña Planificación de `athlete_hub_view`), marcador rojo en el calendario del hub, entrada "Marcar competición" al tocar un día, y cuenta atrás en Home (`home_race_countdown.dart`, solo si hay carrera de prioridad alta).
+
+**Categoría `competicion` retirada del Coach**: se eliminó de las categorías válidas del prompt — el Coach ya no genera "sesiones de competición" (una carrera es un `RaceGoal`, no un entreno). El valor del enum `SessionCategory.competicion` se mantiene por compatibilidad con datos antiguos. Nota: los editores que exponían esa categoría (`session_editor_view.dart`, `athlete_session_editor_view.dart`) ya eran **huérfanos** (cero referencias, deuda técnica #5); el editor activo (`WorkoutEditorScreen`) nunca la ofreció. Migración de sesiones `competicion` antiguas → `RaceGoal`: tarea de datos pendiente (one-off), no bloqueante.
 
 ---
 
