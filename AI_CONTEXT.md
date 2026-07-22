@@ -191,6 +191,7 @@ users/{uid}                         ← doc con campos: uid, nombre, email, phot
   ├── trainings/{id}              ← sesiones guardadas
   ├── tags/{id}                   ← etiquetas del usuario
   ├── athleteSessions/{id}        ← sesiones planificadas por el Coach IA
+  ├── raceGoals/{id}              ← competiciones objetivo (fecha+distancia+prioridad); fuente del targetDate/taper
   ├── aiCoachEvents/{id}          ← sugerencias, feedback semanal, cambios de fase
   ├── result_notifications/{id}   ← notificaciones de retos completados
   ├── savedBlocks/{id}            ← bloques guardados por el usuario (máx 30)
@@ -290,6 +291,7 @@ waitlist/{email}                  ← emails recogidos en la landing web (joinWa
 | `pb_detector.dart` | Detecta PBs en 5K/10K/HM/Maratón. Interpola si distancia dentro ±3% de estándar. Auto-guarda desde entrenamientos con GPS. |
 | `vdot_calculator.dart` | Calcula VDOT (potencial aeróbico) desde PBs y edad |
 | `ai_coach_repository.dart` | CRUD Firestore: `aiCoachProfile`, `aiCoachUsage`, `athleteSessions`, `aiCoachEvents`, `aiCoachAthleteMemory`, `aiCoachKpiLatest`, `aiCoachAutomation` |
+| `race_goal.dart` + `race_goal_repository.dart` | Competiciones objetivo (`RaceGoal`) en `users/{uid}/raceGoals`: fecha+distancia+prioridad `high`/`medium`/`low`. El context builder deriva `targetDate`/taper de la próxima carrera de prioridad alta y pasa todas al LLM (`coachSignals.upcomingRace(s)`). Sustituye a la categoría `competicion` del editor. |
 
 ### Vistas (`lib/features/ai_coach/views/`)
 

@@ -172,6 +172,13 @@ service cloud.firestore {
         allow read, write: if isOwner(uid);
       }
 
+      // ── users/{uid}/raceGoals/{goalId} ────────────────────────────────────
+      match /raceGoals/{goalId} {
+        // Competiciones objetivo (fecha, distancia, prioridad). Privadas al
+        // propietario: RaceGoalRepository siempre opera sobre el usuario actual.
+        allow read, write: if isOwner(uid);
+      }
+
       // ── users/{uid}/result_notifications/{id} ──────────────────────────────
       match /aiCoachEvents/{eventId} {
         allow read, write: if isOwner(uid);

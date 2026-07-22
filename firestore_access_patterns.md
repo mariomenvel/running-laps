@@ -15,6 +15,7 @@
 | `users/{uid}/groups/{groupId}` | Solo el propietario | Solo el propietario | `read/write: isOwner` |
 | `users/{uid}/result_notifications/{id}` | Solo el propietario | Propietario (update/delete) · Cualquier autenticado (create) ⚠️ | `read/delete: isOwner` · `create: isSignedIn()` |
 | `users/{uid}/athleteSessions/{id}` | Solo el propietario | Propietario + Cloud Functions | `read/write: isOwner` |
+| `users/{uid}/raceGoals/{id}` | Solo el propietario | Solo el propietario | `read/write: isOwner` |
 | `users/{uid}/aiCoachEvents/{id}` | Solo el propietario | Solo el propietario | `read/write: isOwner` |
 | `users/{uid}/settings/aiCoachProfile` | Solo el propietario | Solo el propietario | `read/write: isOwner` |
 | `users/{uid}/settings/aiCoachUsage` | Solo el propietario | Propietario + Cloud Functions (reset semanal) | `read/write: isOwner` |

@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
+import 'package:running_laps/features/ai_coach/data/race_goal.dart';
+import 'package:running_laps/features/ai_coach/data/race_goal_repository.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 import 'package:running_laps/features/profile/data/user_profile_model.dart';
@@ -15,15 +17,18 @@ class AiCoachContextBuilder {
     TrainingRepository? trainingRepository,
     AthleteSessionRepository? sessionRepository,
     AiCoachRepository? aiCoachRepository,
+    RaceGoalRepository? raceGoalRepository,
     FirebaseFirestore? firestore,
   })  : _trainingRepository = trainingRepository ?? TrainingRepository(),
         _sessionRepository = sessionRepository ?? AthleteSessionRepository(),
         _aiCoachRepository = aiCoachRepository ?? AiCoachRepository(),
+        _raceGoalRepository = raceGoalRepository ?? RaceGoalRepository(),
         _db = firestore ?? FirebaseFirestore.instance;
 
   final TrainingRepository _trainingRepository;
   final AthleteSessionRepository _sessionRepository;
   final AiCoachRepository _aiCoachRepository;
+  final RaceGoalRepository _raceGoalRepository;
   final FirebaseFirestore _db;
 
   Future<AiCoachWeeklyContext> buildWeeklyContext(String uid) async {
@@ -45,6 +50,10 @@ class AiCoachContextBuilder {
     final athleteMemory = await _aiCoachRepository.getAthleteMemory(uid: uid) ??
         await _aiCoachRepository.rebuildAthleteMemory(uid: uid);
     final userProfile = await _loadUserProfile(uid);
+    final raceGoals = await _raceGoalRepository.getGoals(uid: uid);
+    // La próxima carrera de prioridad alta es la que marca la periodización
+    // (taper). Es la fuente de verdad del targetDate del Coach.
+    final primaryRace = raceGoals.nextPrimaryFrom(now);
 
     final weeklyState = _buildWeeklyState(
       now: now,
@@ -52,6 +61,7 @@ class AiCoachContextBuilder {
       weekEnd: weekEnd,
       trainings: trainings,
       sessions: sessions,
+      raceGoals: raceGoals,
     );
 
     final linkedSessionByTrainingId = <String, AthleteSession>{};
@@ -142,7 +152,14 @@ class AiCoachContextBuilder {
       );
     }).toList();
 
-    final effectiveProfile = _mergeProfileWithUserProfile(profile, userProfile);
+    final mergedProfile = _mergeProfileWithUserProfile(profile, userProfile);
+    // Los objetivos son la fuente de verdad de la fecha objetivo: si hay una
+    // carrera de prioridad alta próxima, su fecha manda sobre el targetDate
+    // heredado del perfil (que dejará de editarse a mano en Ajustes).
+    final effectiveProfile = (primaryRace?.parsedDate != null &&
+            mergedProfile != null)
+        ? mergedProfile.copyWith(targetDate: primaryRace!.parsedDate)
+        : mergedProfile;
 
     final recentWeekHistory = _buildRecentWeekHistory(
       now: now,
@@ -198,6 +215,7 @@ class AiCoachContextBuilder {
         },
       ),
       ..._buildAthleteStyleSignals(trainings.take(20).toList()),
+      ..._buildRaceGoalSignals(raceGoals, now),
     };
 
     final recentFeedbacks = await _aiCoachRepository
@@ -262,6 +280,7 @@ class AiCoachContextBuilder {
     required DateTime weekEnd,
     required List<Entrenamiento> trainings,
     required List<AthleteSession> sessions,
+    List<RaceGoal> raceGoals = const [],
   }) {
     final weekTrainings = trainings.where((training) {
       final day = DateTime(
@@ -335,13 +354,20 @@ class AiCoachContextBuilder {
       now: now,
       trainings: trainings,
     );
-    final raceInNext14Days = sessions.any((session) {
-      if (session.category != 'competicion') return false;
-      final parsed = DateTime.tryParse(session.date);
-      if (parsed == null) return false;
-      final diff = parsed.difference(DateTime(now.year, now.month, now.day)).inDays;
+    final today = DateTime(now.year, now.month, now.day);
+    bool within14Days(DateTime? date) {
+      if (date == null) return false;
+      final diff = DateTime(date.year, date.month, date.day)
+          .difference(today)
+          .inDays;
       return diff >= 0 && diff <= 14;
-    });
+    }
+
+    final raceInNext14Days = raceGoals.any((goal) => within14Days(goal.parsedDate)) ||
+        sessions.any((session) {
+          if (session.category != 'competicion') return false;
+          return within14Days(DateTime.tryParse(session.date));
+        });
     final adherenceRatio = plannedSessions == 0
         ? 1.0
         : completedSessions / plannedSessions;
@@ -681,6 +707,44 @@ class AiCoachContextBuilder {
       };
     }
     return result;
+  }
+
+  /// Señales de las competiciones objetivo para el LLM. La carrera de
+  /// prioridad alta ya ancla el `targetDate`/taper vía planContext; aquí se
+  /// exponen todas (incluidas media/baja) para que el Coach pueda meter un
+  /// mini-taper en las secundarias sin romper el arco hacia la principal.
+  Map<String, dynamic> _buildRaceGoalSignals(
+    List<RaceGoal> raceGoals,
+    DateTime now,
+  ) {
+    final upcoming = raceGoals.upcomingFrom(now);
+    if (upcoming.isEmpty) return const {};
+    final today = DateTime(now.year, now.month, now.day);
+
+    Map<String, dynamic> signal(RaceGoal goal) {
+      final date = goal.parsedDate;
+      final daysRemaining = date == null
+          ? null
+          : DateTime(date.year, date.month, date.day).difference(today).inDays;
+      return <String, dynamic>{
+        'date': goal.date,
+        'distance': goal.distance.label,
+        if (goal.distanceMeters != null) 'distanceMeters': goal.distanceMeters,
+        'priority': goal.priority.toValue,
+        if (goal.name != null && goal.name!.trim().isNotEmpty)
+          'name': goal.name!.trim(),
+        if (daysRemaining != null) 'daysRemaining': daysRemaining,
+        if (daysRemaining != null) 'weeksRemaining': daysRemaining ~/ 7,
+        if (goal.targetTimeSeconds != null)
+          'targetTimeSeconds': goal.targetTimeSeconds,
+      };
+    }
+
+    final primary = upcoming.nextPrimaryFrom(now);
+    return <String, dynamic>{
+      if (primary != null) 'upcomingRace': signal(primary),
+      'upcomingRaces': upcoming.take(5).map(signal).toList(),
+    };
   }
 
   String _inferCategory(Entrenamiento training) {
