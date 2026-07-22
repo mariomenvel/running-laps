@@ -12,14 +12,16 @@ class RaceGoalRepository {
   RaceGoalRepository({
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
-  })  : _auth = auth ?? FirebaseAuth.instance,
+  })  : _auth = auth,
         _db = firestore ?? FirebaseFirestore.instance;
 
-  final FirebaseAuth _auth;
+  // Perezoso: se resuelve solo si se llama a un método sin `uid` explícito.
+  // Evita tocar FirebaseAuth.instance en el constructor (tests sin Firebase).
+  final FirebaseAuth? _auth;
   final FirebaseFirestore _db;
 
   String _requireUid() {
-    final user = _auth.currentUser;
+    final user = (_auth ?? FirebaseAuth.instance).currentUser;
     if (user == null) {
       throw Exception('No hay usuario autenticado');
     }
