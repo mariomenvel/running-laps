@@ -34,7 +34,8 @@
       "Bash(python \"C:\\\\Users\\\\mario\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-mario-Desktop-rl\\\\7df74359-c862-4373-8d8a-84a4da1f9032\\\\scratchpad\\\\delete_dead_members.py\")",
       "Bash(git checkout *)",
       "mcp__Claude_Code_Remote__subscribe_pr_activity",
-      "mcp__Claude_Code_Remote__send_later"
+      "mcp__Claude_Code_Remote__send_later",
+      "mcp__Claude_Code_Remote__unsubscribe_pr_activity"
     ],
     "additionalDirectories": [
       "\\tmp"
