@@ -59,6 +59,7 @@ Generated: 2026-06-15 (actualizar con `find lib -name "*.dart" | sort`)
 - `modern_snackbar.dart` — ModernSnackBar.showSuccess/showError/showWarning
 - `app_header.dart` — AppHeader reutilizable con gradiente
 - `app_page_scaffold.dart` — scaffold estándar de la app
+- `chart_style.dart` — AppChartStyle: tooltips e interacción táctil unificados para todas las gráficas fl_chart
 - `main_shell.dart` — MainShell: shell con tabs de navegación
 - `shell_embedding_scope.dart` — scope para embeber en shell
 - `empty_state_widget.dart` — empty state genérico

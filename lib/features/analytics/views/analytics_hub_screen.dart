@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/widgets/app_bottom_sheet.dart';
+import 'package:running_laps/core/widgets/chart_style.dart';
 import 'package:running_laps/features/analytics/viewmodels/analytics_hub_controller.dart';
 import 'package:running_laps/features/analytics/viewmodels/analytics_view_model.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
@@ -441,47 +442,23 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                           color: AppColors.borderOf(context), strokeWidth: 0.5),
                     ),
                     borderData: FlBorderData(show: false),
-                    lineTouchData: LineTouchData(
-                      handleBuiltInTouches: true,
-                      getTouchedSpotIndicator: (barData, spotIndexes) =>
-                          spotIndexes.map((i) => TouchedSpotIndicatorData(
-                                FlLine(
-                                    color: AppColors.brand,
-                                    strokeWidth: 1,
-                                    dashArray: [4, 4]),
-                                FlDotData(show: true),
-                              )).toList(),
-                      touchTooltipData: LineTouchTooltipData(
-                        getTooltipColor: (_) => AppColors.surfaceOf(context),
-                        tooltipBorder: BorderSide(
-                            color: AppColors.borderOf(context), width: 0.5),
-                        tooltipBorderRadius: BorderRadius.circular(8),
-                        tooltipPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        getTooltipItems: (spots) => spots.map((s) {
-                          final dataPoint = allData.isNotEmpty &&
-                                  s.barIndex < allData.length &&
-                                  s.x.toInt() < allData[s.barIndex].length
-                              ? allData[s.barIndex][s.x.toInt()]
-                              : null;
-                          final date = dataPoint != null
-                              ? '${dataPoint.weekStart.day}/${dataPoint.weekStart.month}'
-                              : '';
-                          return LineTooltipItem(
-                            '${_fmtPace(s.y.toInt())}/km\n',
-                            AppTypography.small.copyWith(
-                                color: AppColors.textPrimary(context),
-                                fontWeight: FontWeight.w600),
-                            children: [
-                              TextSpan(
-                                text: date,
-                                style: AppTypography.small.copyWith(
-                                    color: AppColors.iconMutedOf(context)),
-                              ),
-                            ],
-                          );
-                        }).toList(),
-                      ),
+                    lineTouchData: AppChartStyle.lineTouch(
+                      context,
+                      getTooltipItems: (spots) => spots.map((s) {
+                        final dataPoint = allData.isNotEmpty &&
+                                s.barIndex < allData.length &&
+                                s.x.toInt() < allData[s.barIndex].length
+                            ? allData[s.barIndex][s.x.toInt()]
+                            : null;
+                        final date = dataPoint != null
+                            ? '${dataPoint.weekStart.day}/${dataPoint.weekStart.month}'
+                            : null;
+                        return AppChartStyle.lineItem(
+                          context,
+                          '${_fmtPace(s.y.toInt())}/km',
+                          secondary: date,
+                        );
+                      }).toList(),
                     ),
                   )),
                 ),
@@ -671,16 +648,21 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                     ),
                     gridData: const FlGridData(show: false),
                     borderData: FlBorderData(show: false),
-                    barTouchData: BarTouchData(
-                      touchTooltipData: BarTouchTooltipData(
-                        getTooltipColor: (_) => AppColors.surfaceOf(context),
-                        getTooltipItem: (g, gi, rod, ri) => BarTooltipItem(
+                    barTouchData: AppChartStyle.barTouch(
+                      context,
+                      getTooltipItem: (g, gi, rod, ri) {
+                        final i = g.x;
+                        final label = i >= 0 && i < vols.length
+                            ? (isYear
+                                ? monthAbbr[vols[i].weekStart.month - 1]
+                                : '${vols[i].weekStart.day}/${vols[i].weekStart.month}')
+                            : null;
+                        return AppChartStyle.barItem(
+                          context,
                           '${rod.toY.toStringAsFixed(0)} km',
-                          TextStyle(
-                              color: AppColors.textPrimary(context),
-                              fontSize: 11),
-                        ),
-                      ),
+                          secondary: label,
+                        );
+                      },
                     ),
                   )),
                 ),
@@ -1041,18 +1023,19 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                           color: AppColors.borderOf(context), strokeWidth: 0.5),
                     ),
                     borderData: FlBorderData(show: false),
-                    lineTouchData: LineTouchData(
-                      touchTooltipData: LineTouchTooltipData(
-                        getTooltipColor: (_) => AppColors.surfaceOf(context),
-                        getTooltipItems: (spots) => spots
-                            .map((s) => LineTooltipItem(
-                                  s.y.toStringAsFixed(0),
-                                  TextStyle(
-                                      color: AppColors.textPrimary(context),
-                                      fontSize: 11),
-                                ))
-                            .toList(),
-                      ),
+                    lineTouchData: AppChartStyle.lineTouch(
+                      context,
+                      getTooltipItems: (spots) => spots.map((s) {
+                        const names = ['CTL', 'ATL', 'TSB'];
+                        final name = s.barIndex >= 0 && s.barIndex < names.length
+                            ? names[s.barIndex]
+                            : null;
+                        return AppChartStyle.lineItem(
+                          context,
+                          s.y.toStringAsFixed(0),
+                          secondary: name,
+                        );
+                      }).toList(),
                     ),
                   )),
                 ),
@@ -1321,33 +1304,12 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                           color: AppColors.borderOf(context), strokeWidth: 0.5),
                     ),
                     borderData: FlBorderData(show: false),
-                    lineTouchData: LineTouchData(
-                      handleBuiltInTouches: true,
-                      getTouchedSpotIndicator: (barData, spotIndexes) =>
-                          spotIndexes.map((i) => TouchedSpotIndicatorData(
-                                FlLine(
-                                    color: AppColors.brand,
-                                    strokeWidth: 1,
-                                    dashArray: [4, 4]),
-                                FlDotData(show: true),
-                              )).toList(),
-                      touchTooltipData: LineTouchTooltipData(
-                        getTooltipColor: (_) => AppColors.surfaceOf(context),
-                        tooltipBorder: BorderSide(
-                            color: AppColors.borderOf(context), width: 0.5),
-                        tooltipBorderRadius: BorderRadius.circular(8),
-                        fitInsideHorizontally: true,
-                        fitInsideVertically: true,
-                        getTooltipItems: (spots) => spots
-                            .map((s) => LineTooltipItem(
-                                  'RPE ${s.y.toStringAsFixed(1)}',
-                                  TextStyle(
-                                      color: AppColors.textPrimary(context),
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600),
-                                ))
-                            .toList(),
-                      ),
+                    lineTouchData: AppChartStyle.lineTouch(
+                      context,
+                      getTooltipItems: (spots) => spots
+                          .map((s) => AppChartStyle.lineItem(
+                              context, 'RPE ${s.y.toStringAsFixed(1)}'))
+                          .toList(),
                     ),
                   )),
                 ),
@@ -1437,22 +1399,10 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                     ),
                     gridData: const FlGridData(show: false),
                     borderData: FlBorderData(show: false),
-                    barTouchData: BarTouchData(
-                      touchTooltipData: BarTouchTooltipData(
-                        getTooltipColor: (_) => AppColors.surfaceOf(context),
-                        tooltipBorder: BorderSide(
-                            color: AppColors.borderOf(context), width: 0.5),
-                        tooltipBorderRadius: BorderRadius.circular(8),
-                        fitInsideHorizontally: true,
-                        fitInsideVertically: true,
-                        getTooltipItem: (g, gi, rod, ri) => BarTooltipItem(
-                          'Carga ${rod.toY.toStringAsFixed(0)}',
-                          TextStyle(
-                              color: AppColors.textPrimary(context),
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600),
-                        ),
-                      ),
+                    barTouchData: AppChartStyle.barTouch(
+                      context,
+                      getTooltipItem: (g, gi, rod, ri) => AppChartStyle.barItem(
+                          context, 'Carga ${rod.toY.toStringAsFixed(0)}'),
                     ),
                   )),
                 ),
@@ -1524,21 +1474,13 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                     ),
                     gridData: const FlGridData(show: false),
                     borderData: FlBorderData(show: false),
-                    lineTouchData: LineTouchData(
-                      touchTooltipData: LineTouchTooltipData(
-                        getTooltipColor: (_) => AppColors.surfaceOf(context),
-                        tooltipBorder: BorderSide(
-                            color: AppColors.borderOf(context), width: 0.5),
-                        tooltipBorderRadius: BorderRadius.circular(8),
-                        getTooltipItems: (spots) => spots
-                            .map((s) => LineTooltipItem(
-                                  s.y.toStringAsFixed(1),
-                                  TextStyle(
-                                      color: AppColors.textPrimary(context),
-                                      fontSize: 11),
-                                ))
-                            .toList(),
-                      ),
+                    lineTouchData: AppChartStyle.lineTouch(
+                      context,
+                      getTooltipItems: (spots) => spots
+                          .map((s) => AppChartStyle.lineItem(
+                              context, s.y.toStringAsFixed(1),
+                              secondary: 'Eficiencia'))
+                          .toList(),
                     ),
                   )),
                 ),
