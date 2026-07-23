@@ -68,6 +68,7 @@ Widgets reutilizables — usar siempre estos, no reinventar:
 | `showAppDatePicker` | `app_date_picker.dart` | Selector de fecha estilo iOS (CupertinoDatePicker en BottomSheet). Usar siempre en lugar de `showDatePicker()` de Material. Parámetros: `initialDate`, `minimumDate`, `maximumDate`, `title`. |
 | `showAppConfirmDialog` | `app_confirm_dialog.dart` | Diálogo de confirmación estilo iOS (CupertinoAlertDialog). Usar siempre en lugar de `showDialog()` + `AlertDialog`. `isDestructive: true` → botón rojo; `false` → morado brand. |
 | `AppBottomSheetContainer` / `showAppBottomSheet` | `app_bottom_sheet.dart` | Contenedor estándar para BottomSheets (handle + radius 20 + color surface correcto dark/light). Usar para nuevos sheets. Los existentes con `backgroundColor: transparent` + decoración propia están bien. |
+| `AppChartStyle` | `chart_style.dart` | Tooltips e interacción táctil unificados para gráficas `fl_chart`: `lineTouch()`/`barTouch()` (fondo surface, borde, radio 8, `fitInside`, indicador de punto tocado) + `lineItem()`/`barItem()` (dato en negrita + contexto en gris). **Nunca** construir `LineTouchData`/`BarTouchData` a mano — el fondo negro por defecto es ilegible en claro. |
 
 ---
 

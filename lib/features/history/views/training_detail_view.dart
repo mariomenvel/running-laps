@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/chart_style.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/widgets/rpe_badge.dart';
@@ -1209,24 +1210,19 @@ class _SerieExpansionTileState extends State<_SerieExpansionTile> {
                 bottomTitles: const AxisTitles(
                     sideTitles: SideTitles(showTitles: false)),
               ),
-              lineTouchData: LineTouchData(
-                touchTooltipData: LineTouchTooltipData(
-                  getTooltipItems: (spots) => spots.map((s) {
-                    final val = _showFc && fcPoints.isNotEmpty
-                        ? '${s.y.round()} bpm'
-                        : () {
-                            final totalSec = (s.y * 60).round();
-                            final m = totalSec ~/ 60;
-                            final sec = totalSec % 60;
-                            return '$m:${sec.toString().padLeft(2, '0')} /km';
-                          }();
-                    return LineTooltipItem(
-                      val,
-                      TextStyle(
-                          color: AppColors.textPrimary(context), fontSize: 11),
-                    );
-                  }).toList(),
-                ),
+              lineTouchData: AppChartStyle.lineTouch(
+                context,
+                getTooltipItems: (spots) => spots.map((s) {
+                  final val = _showFc && fcPoints.isNotEmpty
+                      ? '${s.y.round()} bpm'
+                      : () {
+                          final totalSec = (s.y * 60).round();
+                          final m = totalSec ~/ 60;
+                          final sec = totalSec % 60;
+                          return '$m:${sec.toString().padLeft(2, '0')} /km';
+                        }();
+                  return AppChartStyle.lineItem(context, val);
+                }).toList(),
               ),
               lineBarsData: [
                 if (!_showFc && pacePoints.length >= 3)

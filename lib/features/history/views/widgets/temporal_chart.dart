@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/widgets/chart_style.dart';
 import 'package:running_laps/features/training/data/temporal_series.dart';
 
 // Re-export para los consumidores del widget que usan los tipos de datos.
@@ -116,6 +117,17 @@ class TemporalChart extends StatelessWidget {
             topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           ),
           borderData: FlBorderData(show: false),
+          lineTouchData: AppChartStyle.lineTouch(
+            context,
+            getTooltipItems: (spots) => spots.map((s) {
+              final actual = invertYAxis ? -s.y : s.y;
+              return AppChartStyle.lineItem(
+                context,
+                '${(formatY ?? _defaultFormatY)(actual)} $unitLabel',
+                secondary: _formatTime(s.x),
+              );
+            }).toList(),
+          ),
           extraLinesData: ExtraLinesData(
             verticalLines: markers.map((m) => VerticalLine(
               x: m.tSec,
