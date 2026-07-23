@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math' show max, min;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -16,10 +15,7 @@ import 'package:running_laps/features/athlete/viewmodels/athlete_calendar_viewmo
 import 'package:running_laps/features/ai_coach/data/ai_coach_automation_service.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_weekly_planner_service.dart';
-import 'package:running_laps/features/ai_coach/data/race_goal.dart';
-import 'package:running_laps/features/ai_coach/data/race_goal_repository.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
-import 'package:running_laps/features/ai_coach/views/race_goals_section.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/features/templates/data/templates_repository.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
@@ -44,23 +40,12 @@ class _AthleteHubViewState extends State<AthleteHubView> {
   int _selectedTab = 0;
   bool _calendarExpanded = true;
 
-  StreamSubscription<List<RaceGoal>>? _raceGoalsSub;
-  Set<String> _raceGoalDates = {};
-
   @override
   void initState() {
     super.initState();
     _viewModel = AthleteCalendarViewModel();
     _viewModel.init(widget.uid);
     _requestNotificationPermissions();
-    _raceGoalsSub = RaceGoalRepository()
-        .streamGoals(uid: widget.uid)
-        .listen((goals) {
-      if (!mounted) return;
-      setState(() {
-        _raceGoalDates = goals.map((g) => g.date).toSet();
-      });
-    });
   }
 
   Future<void> _requestNotificationPermissions() async {
@@ -74,7 +59,6 @@ class _AthleteHubViewState extends State<AthleteHubView> {
 
   @override
   void dispose() {
-    _raceGoalsSub?.cancel();
     _viewModel.dispose();
     super.dispose();
   }
@@ -290,14 +274,12 @@ class _AthleteHubViewState extends State<AthleteHubView> {
           },
           defaultBuilder: (context, day, focusedDay) {
             final sessions = _viewModel.sessionsForDay(day);
-            final hasRaceGoal = _raceGoalDates.contains(raceGoalDateKey(day));
-            if (sessions.isEmpty && !hasRaceGoal) return null;
+            if (sessions.isEmpty) return null;
             return _DayCircle(
               day: day.day,
               isToday: false,
               isSelected: false,
               sessions: sessions,
-              hasRaceGoal: hasRaceGoal,
             );
           },
           todayBuilder: (context, day, focusedDay) {
@@ -307,7 +289,6 @@ class _AthleteHubViewState extends State<AthleteHubView> {
               isToday: true,
               isSelected: false,
               sessions: sessions,
-              hasRaceGoal: _raceGoalDates.contains(raceGoalDateKey(day)),
             );
           },
           selectedBuilder: (context, day, focusedDay) {
@@ -317,7 +298,6 @@ class _AthleteHubViewState extends State<AthleteHubView> {
               isToday: false,
               isSelected: true,
               sessions: sessions,
-              hasRaceGoal: _raceGoalDates.contains(raceGoalDateKey(day)),
             );
           },
         ),
@@ -905,6 +885,7 @@ class _PlanningTab extends StatefulWidget {
 class _PlanningTabState extends State<_PlanningTab> {
   late Future<({int completed, int planned, double km})> _weekStatsFuture;
   late Future<List<WeeklyVolume>> _volumeFuture;
+  late Future<AthleteSession?> _nextRaceFuture;
   late Future<List<AthleteSession>> _upcomingFuture;
   late Future<List<AthleteSession>> _nextWeekSuggestionsFuture;
   late Future<bool> _aiEnabledFuture;
@@ -1063,6 +1044,7 @@ class _PlanningTabState extends State<_PlanningTab> {
     _weekStatsFuture = _loadWeekStats();
     _volumeFuture =
         ProgressRepository().getWeeklyVolume(widget.uid, weeks: 8);
+    _nextRaceFuture = _loadNextRace();
     _upcomingFuture = _loadUpcoming();
     _nextWeekSuggestionsFuture = _loadNextWeekSuggestions();
     _aiEnabledFuture = _loadAiEnabled();
@@ -1102,6 +1084,29 @@ class _PlanningTabState extends State<_PlanningTab> {
     } catch (e) {
       debugPrint('Error cargando estadísticas semanales: $e');
       return (completed: 0, planned: 0, km: 0.0);
+    }
+  }
+
+  Future<AthleteSession?> _loadNextRace() async {
+    try {
+      final now = DateTime.now();
+      final sessions = await AthleteSessionRepository()
+          .streamSessionsInRange(
+            uid: widget.uid,
+            startDate: _fmt(now),
+            endDate: _fmt(now.add(const Duration(days: 365))),
+          )
+          .first;
+      final races = sessions
+          .where((s) =>
+              s.category == 'competicion' &&
+              s.status == AthleteSessionStatus.planned)
+          .toList()
+        ..sort((a, b) => a.date.compareTo(b.date));
+      return races.isNotEmpty ? races.first : null;
+    } catch (e) {
+      debugPrint('Error cargando próxima competición: $e');
+      return null;
     }
   }
 
@@ -1413,8 +1418,109 @@ class _PlanningTabState extends State<_PlanningTab> {
           ),
           const SizedBox(height: 24),
 
-          RaceGoalsSection(uid: widget.uid),
-          const SizedBox(height: 24),
+          FutureBuilder<AthleteSession?>(
+            future: _nextRaceFuture,
+            builder: (context, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                return const SizedBox(
+                  height: 20,
+                  child: Center(
+                    child: SizedBox(
+                      width: 20, height: 20,
+                      child: CircularProgressIndicator(
+                          color: AppColors.brand, strokeWidth: 2),
+                    ),
+                  ),
+                );
+              }
+              final race = snap.data;
+              if (race == null) return const SizedBox.shrink();
+
+              final raceDate = DateTime.tryParse(race.date);
+              final days = raceDate?.difference(DateTime.now()).inDays;
+              final badgeBg = days != null
+                  ? (days <= 7
+                      ? AppColors.rpeMax.withValues(alpha: 0.2)
+                      : days <= 21
+                          ? AppColors.effort.withValues(alpha: 0.2)
+                          : const Color(0xFF2C2C2E))
+                  : const Color(0xFF2C2C2E);
+              final badgeText = days != null
+                  ? (days <= 7
+                      ? AppColors.rpeMax
+                      : days <= 21
+                          ? AppColors.effort
+                          : const Color(0xFF8E8E93))
+                  : const Color(0xFF8E8E93);
+
+              final distLabel = race.raceDistanceM != null
+                  ? (race.raceDistanceM! >= 1000
+                      ? ' · ${(race.raceDistanceM! / 1000).toStringAsFixed(0)} km'
+                      : ' · ${race.raceDistanceM}m')
+                  : '';
+              final dateLabel = raceDate != null
+                  ? DateFormat('d MMM yyyy', 'es_ES').format(raceDate)
+                  : race.date;
+              final titleColor =
+                  isDark ? Colors.white : const Color(0xFF1C1C1E);
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const _SectionTitle('PRÓXIMA COMPETICIÓN'),
+                  const SizedBox(height: 10),
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 0),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.effortSurfaceConst,
+                      border: Border.all(
+                          color: AppColors.effort.withValues(alpha: 0.4)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.flag_rounded,
+                            color: AppColors.effort, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(race.raceName ?? 'Competición',
+                                  style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: titleColor)),
+                              Text('$dateLabel$distLabel',
+                                  style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Color(0xFF8E8E93))),
+                            ],
+                          ),
+                        ),
+                        if (days != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: badgeBg,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text('${days}d',
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: badgeText)),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              );
+            },
+          ),
 
           // ── Próximos 7 días ─────────────────────────────────────────
           const _SectionTitle('PRÓXIMOS 7 DÍAS'),
@@ -2402,27 +2508,6 @@ class _DayActionSheet extends StatelessWidget {
           const SizedBox(height: 8),
           SizedBox(
             width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                final nav = Navigator.of(context);
-                final navContext = nav.context;
-                nav.pop();
-                showRaceGoalSheet(navContext, uid: uid, initialDate: day);
-              },
-              icon: const Icon(Icons.flag_rounded, size: 18),
-              label: const Text('Marcar competición'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.effort,
-                side: const BorderSide(color: AppColors.effort),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
             child: TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text(
@@ -2571,9 +2656,8 @@ String _sessionTitleForCard(AthleteSession session) {
 
 List<Color> _dotsForDay(
   List<AthleteSession> sessions,
-  bool isSelected, {
-  bool hasRaceGoal = false,
-}) {
+  bool isSelected,
+) {
   final colors = <Color>[];
   final hasCompleted =
       sessions.any((s) => s.status == AthleteSessionStatus.completed);
@@ -2585,7 +2669,7 @@ List<Color> _dotsForDay(
       s.status == AthleteSessionStatus.planned &&
       _isAiPendingSuggestion(s));
   final hasRace =
-      hasRaceGoal || sessions.any((s) => s.category == 'competicion');
+      sessions.any((s) => s.category == 'competicion');
 
   if (hasCompleted) {
     colors.add(isSelected ? Colors.white : AppColors.rpeLow);
@@ -2612,14 +2696,11 @@ class _DayCircle extends StatelessWidget {
   final bool isSelected;
   final List<AthleteSession> sessions;
 
-  final bool hasRaceGoal;
-
   const _DayCircle({
     required this.day,
     required this.isToday,
     required this.isSelected,
     this.sessions = const [],
-    this.hasRaceGoal = false,
   });
 
   @override
@@ -2627,7 +2708,7 @@ class _DayCircle extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final defaultColor =
         isDark ? Colors.white : const Color(0xFF1C1C1E);
-    final dots = _dotsForDay(sessions, isSelected, hasRaceGoal: hasRaceGoal);
+    final dots = _dotsForDay(sessions, isSelected);
 
     final Color textColor;
     final FontWeight textWeight;
