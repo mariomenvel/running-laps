@@ -1,15 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_bottom_sheet.dart';
-import 'package:running_laps/core/widgets/app_date_picker.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
+import 'package:running_laps/features/ai_coach/views/race_goals_section.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'package:running_laps/core/theme/app_theme.dart' show AppMotion;
 
@@ -210,19 +209,6 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
         setState(() => _isSaving = false);
       }
     }
-  }
-
-  Future<void> _pickDate() async {
-    final now = DateTime.now();
-    final picked = await showAppDatePicker(
-      context: context,
-      title: 'Fecha del objetivo',
-      initialDate: _targetDate ?? now.add(const Duration(days: 90)),
-      minimumDate: now,
-      maximumDate: DateTime(now.year + 2),
-    );
-    if (picked == null) return;
-    setState(() => _targetDate = picked);
   }
 
   String _feedbackButtonLabel() {
@@ -468,7 +454,7 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
                         ),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-                          child: _buildDatePicker(context),
+                          child: RaceGoalsSection(uid: _uid),
                         ),
                         _sectionHeader(
                           'MARCAS PERSONALES',
@@ -801,82 +787,6 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
             }).toList(),
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildDatePicker(BuildContext context) {
-    final title = AppColors.textPrimary(context);
-    final subtitle = AppColors.textSecondary(context);
-
-    int? weeksLeft;
-    int? daysLeft;
-    if (_targetDate != null) {
-      final diff = _targetDate!.difference(DateTime.now());
-      daysLeft = diff.inDays;
-      weeksLeft = (daysLeft / 7).ceil();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildFormLabel(context, 'Fecha objetivo'),
-        InkWell(
-          onTap: _pickDate,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceOf(context),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _targetDate == null
-                        ? 'Sin fecha objetivo'
-                        : DateFormat('dd/MM/yyyy').format(_targetDate!),
-                    style: TextStyle(color: title, fontSize: 15, fontWeight: FontWeight.w500),
-                  ),
-                ),
-                Icon(Icons.calendar_month_rounded, color: subtitle),
-              ],
-            ),
-          ),
-        ),
-        if (_targetDate != null && daysLeft != null && daysLeft > 0) ...[
-          const SizedBox(height: 10),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.brand.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.brand.withValues(alpha: 0.15),
-                width: 0.5,
-              ),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.timer_outlined, color: AppColors.brand, size: 16),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Quedan $weeksLeft ${weeksLeft == 1 ? "semana" : "semanas"} ($daysLeft días) para tu objetivo.',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.brand,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ],
     );
   }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +13,10 @@ import 'package:running_laps/features/athlete/data/athlete_session_repository.da
 import 'package:running_laps/features/ai_coach/data/ai_coach_chat_service.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
+import 'package:running_laps/features/ai_coach/data/race_goal.dart';
+import 'package:running_laps/features/ai_coach/data/race_goal_repository.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
+import 'package:running_laps/features/ai_coach/views/race_goals_section.dart';
 import 'package:running_laps/features/calendar/viewmodels/calendar_view_model.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/widgets/block_preview_tile.dart';
@@ -44,6 +49,10 @@ class _CalendarViewState extends State<CalendarView>
   final ValueNotifier<Set<String>> _expandedSessions =
       ValueNotifier<Set<String>>({});
   AiCoachAdjustmentPreview? _pendingPreview;
+
+  // Competiciones objetivo — fuente única de verdad en users/{uid}/raceGoals.
+  StreamSubscription<List<RaceGoal>>? _raceGoalsSub;
+  List<RaceGoal> _raceGoals = [];
 
   @override
   void initState() {
@@ -86,6 +95,10 @@ class _CalendarViewState extends State<CalendarView>
     final profile = await AiCoachRepository().getProfile(uid: uid);
     if (mounted) setState(() => _hasAiCoachProfile = profile != null);
     _loadAdjustUsage(uid);
+    _raceGoalsSub = RaceGoalRepository().streamGoals(uid: uid).listen((goals) {
+      if (!mounted) return;
+      setState(() => _raceGoals = goals);
+    });
     _initialized = true;
   }
 
@@ -102,6 +115,7 @@ class _CalendarViewState extends State<CalendarView>
         .removeListener(_onTabChanged);
     _vm?.adjustRecognizedText.removeListener(_onAdjustRecognizedTextChanged);
     _vm?.dispose();
+    _raceGoalsSub?.cancel();
     _adjustController.dispose();
     _adjustPanelExpanded.dispose();
     _adjustProcessing.dispose();
@@ -241,6 +255,7 @@ class _CalendarViewState extends State<CalendarView>
             return Column(
               children: [
                 _buildViewSelector(isAthlete),
+                if (isAthlete) _buildRaceGoalsQuickEntry(),
                 if (isAthlete && !_hasAiCoachProfile) _buildAiCoachCta(),
                 if (isAthlete && _hasAiCoachProfile) _buildAdjustPanel(),
                 Expanded(
@@ -707,6 +722,69 @@ class _CalendarViewState extends State<CalendarView>
     );
   }
 
+  // ── Objetivos: competición marcada o CTA para marcar una ─────────────────
+
+  Widget _buildRaceGoalsQuickEntry() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return const SizedBox.shrink();
+
+    final next = _raceGoals.nextAnyFrom(DateTime.now());
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.l, 0, AppSpacing.l, AppSpacing.m),
+      child: GestureDetector(
+        onTap: () => showRaceGoalSheet(context, uid: uid, existing: next),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: next != null
+                ? AppColors.brand.withValues(alpha: 0.08)
+                : AppColors.surfaceOf(context),
+            borderRadius: BorderRadius.circular(AppDimens.cardRadius),
+            border: Border.all(
+              color: next != null
+                  ? AppColors.brand.withValues(alpha: 0.2)
+                  : AppColors.brand.withValues(alpha: 0.35),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.flag_rounded, color: AppColors.brand, size: 18),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  next != null
+                      ? '${next.displayTitle} · ${_raceGoalCountdownLabel(next)}'
+                      : '¿Tienes una carrera a la vista? Márcala',
+                  style: AppTypography.body.copyWith(
+                    color: AppColors.textPrimary(context),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: AppColors.iconMutedOf(context)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _raceGoalCountdownLabel(RaceGoal goal) {
+    final date = goal.parsedDate;
+    if (date == null) return goal.date;
+    final now = DateTime.now();
+    final days = DateTime(date.year, date.month, date.day)
+        .difference(DateTime(now.year, now.month, now.day))
+        .inDays;
+    if (days <= 0) return 'hoy';
+    if (days <= 14) return 'faltan $days ${days == 1 ? "día" : "días"}';
+    final weeks = days ~/ 7;
+    return 'faltan $weeks ${weeks == 1 ? "semana" : "semanas"}';
+  }
+
   // ── Vista mensual — grid de semanas ──────────────────────────────────────
 
   Widget _buildMonthlyView(bool isAthlete) {
@@ -846,6 +924,8 @@ class _CalendarViewState extends State<CalendarView>
                   final hasPendingAiSuggestion = isAthlete &&
                       (sessions[_normalize(day)] ?? const <AthleteSession>[])
                           .any(_isPendingAiSuggestion);
+                  final hasRaceGoal = isAthlete &&
+                      _raceGoals.any((g) => g.date == _normalize(day));
 
                   return Column(
                     children: [
@@ -889,19 +969,28 @@ class _CalendarViewState extends State<CalendarView>
                         ),
                       ),
                       const SizedBox(height: 3),
-                      // Punto indicador de actividad
-                      Container(
-                        width: 4,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: hasPendingAiSuggestion
-                              ? AppColors.brand
-                              : hasData
-                              ? (inMonth ? AppColors.brand : AppColors.brand.withValues(alpha: 0.3))
-                              : Colors.transparent,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
+                      // Bandera si hay competición marcada ese día;
+                      // si no, punto indicador de actividad normal.
+                      hasRaceGoal
+                          ? Icon(
+                              Icons.flag_rounded,
+                              size: 8,
+                              color: inMonth
+                                  ? AppColors.effort
+                                  : AppColors.effort.withValues(alpha: 0.4),
+                            )
+                          : Container(
+                              width: 4,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: hasPendingAiSuggestion
+                                    ? AppColors.brand
+                                    : hasData
+                                    ? (inMonth ? AppColors.brand : AppColors.brand.withValues(alpha: 0.3))
+                                    : Colors.transparent,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
                     ],
                   );
                 }).toList(),
@@ -1886,8 +1975,10 @@ class _CalendarViewState extends State<CalendarView>
     List<Entrenamiento> workouts,
     Map<String, List<AthleteSession>> sessions,
   ) {
+    final raceGoalDates = _raceGoals.map((g) => g.date).toSet();
     for (final day in week) {
       final key = _normalize(day);
+      if (raceGoalDates.contains(key)) return true;
       for (final w in workouts) {
         if (_normalize(w.fecha) == key &&
             w.tags != null && w.tags!.contains('competición')) {
