@@ -1282,6 +1282,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                       bottomTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
+                          interval: 1,
                           getTitlesWidget: (x, _) {
                             final i = x.toInt();
                             if (i < 0 || i >= rpes.length) return const SizedBox();
@@ -1320,6 +1321,34 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                           color: AppColors.borderOf(context), strokeWidth: 0.5),
                     ),
                     borderData: FlBorderData(show: false),
+                    lineTouchData: LineTouchData(
+                      handleBuiltInTouches: true,
+                      getTouchedSpotIndicator: (barData, spotIndexes) =>
+                          spotIndexes.map((i) => TouchedSpotIndicatorData(
+                                FlLine(
+                                    color: AppColors.brand,
+                                    strokeWidth: 1,
+                                    dashArray: [4, 4]),
+                                FlDotData(show: true),
+                              )).toList(),
+                      touchTooltipData: LineTouchTooltipData(
+                        getTooltipColor: (_) => AppColors.surfaceOf(context),
+                        tooltipBorder: BorderSide(
+                            color: AppColors.borderOf(context), width: 0.5),
+                        tooltipBorderRadius: BorderRadius.circular(8),
+                        fitInsideHorizontally: true,
+                        fitInsideVertically: true,
+                        getTooltipItems: (spots) => spots
+                            .map((s) => LineTooltipItem(
+                                  'RPE ${s.y.toStringAsFixed(1)}',
+                                  TextStyle(
+                                      color: AppColors.textPrimary(context),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600),
+                                ))
+                            .toList(),
+                      ),
+                    ),
                   )),
                 ),
                 if (rising) ...[
@@ -1408,6 +1437,23 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
                     ),
                     gridData: const FlGridData(show: false),
                     borderData: FlBorderData(show: false),
+                    barTouchData: BarTouchData(
+                      touchTooltipData: BarTouchTooltipData(
+                        getTooltipColor: (_) => AppColors.surfaceOf(context),
+                        tooltipBorder: BorderSide(
+                            color: AppColors.borderOf(context), width: 0.5),
+                        tooltipBorderRadius: BorderRadius.circular(8),
+                        fitInsideHorizontally: true,
+                        fitInsideVertically: true,
+                        getTooltipItem: (g, gi, rod, ri) => BarTooltipItem(
+                          'Carga ${rod.toY.toStringAsFixed(0)}',
+                          TextStyle(
+                              color: AppColors.textPrimary(context),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
                   )),
                 ),
                 if (hasHighStreak) ...[
