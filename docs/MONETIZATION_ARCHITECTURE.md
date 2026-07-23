@@ -98,7 +98,6 @@ Deben migrar a AiCoachAccessService:
 | ai_coach_weekly_planner_service.dart:50 | isAthleteMode | canUseCoach |
 | ai_coach_automation_service.dart:155,174 | isAthleteMode + weeklyPlanningEnabled | canUseCoach |
 | ai_coach_settings_view.dart:72 | isAthleteMode | canUseCoach |
-| athlete_hub_view.dart:933 | weeklyPlanningEnabled + provider + apiKey | canUseCoach |
 | ai_coach_onboarding_launcher.dart:25 | weeklyPlanningEnabled | canUseCoach |
 | ai_coach_decision_service.dart:29 | weeklyPlanningEnabled + provider | canUseCoach |
 

@@ -120,8 +120,7 @@ lib/features/training/views/
     │       ├── fc_widget.dart            ✅
     │       ├── distance_widget.dart      ✅
     │       ├── time_widget.dart          ✅
-    │       ├── progress_bar.dart         ✅
-    │       └── target_comparison.dart    ✅
+    │       └── progress_bar.dart         ✅
     │
     ├── intra/                            ← pantallas INTRA por tipo
     │   ├── interval_screen.dart          ✅
