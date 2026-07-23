@@ -26,8 +26,8 @@ void main() {
       final item = AppChartStyle.lineItem(context, '5:30/km');
       expect(item.text, '5:30/km');
       expect(item.children, isNull);
-      expect(item.textStyle?.fontWeight, FontWeight.w600);
-      expect(item.textStyle?.color, AppColors.textPrimary(context));
+      expect(item.textStyle.fontWeight, FontWeight.w600);
+      expect(item.textStyle.color, AppColors.textPrimary(context));
     });
 
     testWidgets('con secundario: primary con salto + span gris', (tester) async {
@@ -37,7 +37,7 @@ void main() {
       expect(item.text, '5:30/km\n');
       expect(item.children, isNotNull);
       expect(item.children!.length, 1);
-      final span = item.children!.first as TextSpan;
+      final span = item.children!.first;
       expect(span.text, '12/7');
       expect(span.style?.color, AppColors.iconMutedOf(context));
     });
@@ -49,14 +49,14 @@ void main() {
       final item = AppChartStyle.barItem(context, '12 km');
       expect(item.text, '12 km');
       expect(item.children, isNull);
-      expect(item.textStyle?.fontWeight, FontWeight.w600);
+      expect(item.textStyle.fontWeight, FontWeight.w600);
     });
 
     testWidgets('con secundario: primary con salto + span gris', (tester) async {
       final context = await pumpContext(tester);
       final item = AppChartStyle.barItem(context, '12 km', secondary: 'Ene');
       expect(item.text, '12 km\n');
-      final span = item.children!.first as TextSpan;
+      final span = item.children!.first;
       expect(span.text, 'Ene');
     });
   });
@@ -73,26 +73,15 @@ void main() {
       expect(tip.fitInsideVertically, isTrue);
     });
 
-    testWidgets('showIndicator true dibuja indicador de punto tocado',
+    testWidgets('dibuja indicador de punto tocado en color brand',
         (tester) async {
       final context = await pumpContext(tester);
       final touch =
           AppChartStyle.lineTouch(context, getTooltipItems: (spots) => const []);
-      expect(touch.getTouchedSpotIndicator, isNotNull);
       final indicators =
-          touch.getTouchedSpotIndicator!(LineChartBarData(), [0]);
+          touch.getTouchedSpotIndicator(LineChartBarData(), [0]);
       expect(indicators.length, 1);
       expect(indicators.first?.indicatorBelowLine.color, AppColors.brand);
-    });
-
-    testWidgets('showIndicator false no dibuja indicador', (tester) async {
-      final context = await pumpContext(tester);
-      final touch = AppChartStyle.lineTouch(
-        context,
-        getTooltipItems: (spots) => const [],
-        showIndicator: false,
-      );
-      expect(touch.getTouchedSpotIndicator, isNull);
     });
   });
 }

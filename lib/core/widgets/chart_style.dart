@@ -26,27 +26,24 @@ class AppChartStyle {
       EdgeInsets.symmetric(horizontal: 12, vertical: 8);
 
   /// `LineTouchData` estándar. Pasar el builder de items via [getTooltipItems]
-  /// (habitualmente construidos con [lineItem]). [showIndicator] dibuja la línea
-  /// discontinua + punto sobre el spot tocado (por defecto activo).
+  /// (habitualmente construidos con [lineItem]). Dibuja siempre la línea
+  /// discontinua + punto sobre el spot tocado para que sea obvio dónde se pulsa.
   static LineTouchData lineTouch(
     BuildContext context, {
     required List<LineTooltipItem?> Function(List<LineBarSpot>) getTooltipItems,
-    bool showIndicator = true,
   }) {
     return LineTouchData(
       handleBuiltInTouches: true,
-      getTouchedSpotIndicator: showIndicator
-          ? (barData, spotIndexes) => spotIndexes
-              .map((_) => TouchedSpotIndicatorData(
-                    const FlLine(
-                      color: AppColors.brand,
-                      strokeWidth: 1,
-                      dashArray: [4, 4],
-                    ),
-                    const FlDotData(show: true),
-                  ))
-              .toList()
-          : null,
+      getTouchedSpotIndicator: (barData, spotIndexes) => spotIndexes
+          .map((_) => TouchedSpotIndicatorData(
+                const FlLine(
+                  color: AppColors.brand,
+                  strokeWidth: 1,
+                  dashArray: [4, 4],
+                ),
+                const FlDotData(show: true),
+              ))
+          .toList(),
       touchTooltipData: LineTouchTooltipData(
         getTooltipColor: (_) => AppColors.surfaceOf(context),
         tooltipBorder:
