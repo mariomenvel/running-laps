@@ -201,7 +201,7 @@ Para calibrar la confianza — un CI verde **no** valida:
   `callOpenRouter`), App Check.
 - Las llamadas reales al LLM (OpenRouter) — los tests del coach validan la construcción
   de prompts y el parseo, no las respuestas del modelo.
-- Las pantallas grandes (`training_start_view`, `athlete_hub_view`...) — solo
+- Las pantallas grandes (`training_start_view`, `analytics_hub_screen`...) — solo
   indirectamente a través de la lógica extraída que sí está testeada.
 
 ---

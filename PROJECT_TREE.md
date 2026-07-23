@@ -58,15 +58,12 @@ Generated: 2026-06-15 (actualizar con `find lib -name "*.dart" | sort`)
 ### core/widgets/
 - `modern_snackbar.dart` — ModernSnackBar.showSuccess/showError/showWarning
 - `app_header.dart` — AppHeader reutilizable con gradiente
-- `app_footer.dart` — AppFooter con navegación principal
 - `app_page_scaffold.dart` — scaffold estándar de la app
 - `main_shell.dart` — MainShell: shell con tabs de navegación
 - `shell_embedding_scope.dart` — scope para embeber en shell
 - `empty_state_widget.dart` — empty state genérico
 - `gradient_banner.dart` — banner con gradiente
-- `group_skeleton_card.dart` — skeleton loader de grupos
 - `info_tooltip.dart` — tooltip de información
-- `kpi_card_with_delta.dart` — card KPI con delta vs período anterior
 - `number_picker_field.dart` — campo selector numérico
 - `premium_date_range_picker.dart` — selector de rango de fechas
 - `skeleton_shimmer.dart` — shimmer loader genérico
@@ -108,7 +105,7 @@ Generated: 2026-06-15 (actualizar con `find lib -name "*.dart" | sort`)
 - `views/block_transition_screen.dart` — transición entre bloques
 - `views/workout_execution_screen.dart` — ejecución de workout por bloques
 - `views/session_screens/` — pantallas por tipo: interval, continuous, fartlek, free, hills, competition + rest
-- `views/session_screens/shared/` — métricas compartidas: distance, fc, pace, time, progress_bar, target_comparison
+- `views/session_screens/shared/` — métricas compartidas: distance, fc, pace, time, progress_bar
 - `views/session_screens/summary_cards/` — cards de resumen por tipo de sesión
 - `widgets/` — create_tag_dialog, tag_chip, tag_selector_sheet
 
@@ -117,34 +114,19 @@ Generated: 2026-06-15 (actualizar con `find lib -name "*.dart" | sort`)
 - `viewmodels/history_analytics_view_model.dart` — analíticas del historial
 - `views/history_screen.dart` — HistoryScreen: lista + filtros + calendario
 - `views/training_detail_view.dart` — detalle de entrenamiento con GPS
-- `views/training_no_gps_detail_view.dart` — detalle sin GPS
 - `views/widgets/temporal_chart.dart` — gráfica temporal
-- `widgets/` — filter_badge_button, history_bottom_bar, history_calendar_widget, history_filter_sheet, history_search_bar, premium_training_card, training_map_view
+- `widgets/` — history_calendar_widget, history_filter_sheet, premium_training_card, training_map_view
 
 ### features/home/
 - `data/home_estadistica_repository.dart` — HomeEstadisticaRepository (singleton + caché 5min)
-- `data/home_config_repository.dart` — configuración del layout de home
-- `data/global_challenges_repository.dart` — desafíos globales
-- `data/home_layout_config.dart` — HomeLayoutConfig: widgets configurables
-- `viewmodels/home_estadistica_controller.dart` — HomeEstadisticaController
-- `viewmodels/home_config_controller.dart` — HomeConfigController
 - `viewmodels/home_view_model.dart` — HomeViewModel
 - `views/home_view.dart` — HomeView: dashboard principal
-- `views/edit_home_view.dart` — editor de widgets del home
-- `widgets/` — configurable_widget_renderer, global_challenge_card, history_carousel, home_flagship_chart, legacy_bar_chart, stats_carousel
+- `widgets/home_race_countdown.dart` — cuenta atrás a la próxima competición de prioridad alta
 
 ### features/analytics/
-- `data/pattern_detector.dart` — PatternDetector: detecta patrones de series y entrenamientos
-- `data/pattern_cache.dart` — PatternCache (singleton, caché 5min)
-- `data/coach_insight_service.dart` — CoachInsightService: insights del coach
-- `data/series_pattern.dart` — SeriesPattern modelo
-- `data/workout_pattern.dart` — WorkoutPattern modelo
 - `viewmodels/analytics_hub_controller.dart` — AnalyticsHubController
 - `viewmodels/analytics_view_model.dart` — AnalyticsViewModel
 - `views/analytics_hub_screen.dart` — AnalyticsHubScreen (versión actual)
-- `views/tabs/` — overview_tab, trends_tab, patterns_tab, distribution_tab
-- `views/` — pattern_comparison_view, series_pattern_carousel_view, series_pattern_detail_view, workout_pattern_carousel_view, workout_pattern_detail_view
-- `widgets/` — analytics_range_selector, coach_insight_widget, pattern_carousel
 
 ### features/groups/
 - `data/models/` — challenge_models, group_models, group_stats_model, rewards_models, result_notification_model, enums
@@ -153,7 +135,7 @@ Generated: 2026-06-15 (actualizar con `find lib -name "*.dart" | sort`)
 - `data/helpers/` — challenge_color_helper, challenge_helpers, challenge_ranking_helper, invite_token_helper, period_helper
 - `viewmodels/` — challenge_detail_controller, group_challenges_controller, group_rewards_controller
 - `views/` — group_screen, groups_list_screen, challenge_detail_screen, group_rewards_screen, participant_profile_screen
-- `views/widgets/` — challenge_result_dialog, create_challenge_modal
+- `views/widgets/` — create_challenge_modal
 
 ### features/templates/
 - `data/template_models.dart` — TemplateBlock, TemplateAlerts
@@ -179,7 +161,6 @@ Generated: 2026-06-15 (actualizar con `find lib -name "*.dart" | sort`)
 - `viewmodels/avatar_maker_controller.dart` — AvatarMakerController
 - `views/avatar_maker_screen.dart` — pantalla de creación de avatar
 - `views/avatar_customizer_view.dart` — vista de personalización
-- `widgets/` — avatar_color_picker, avatar_text_styles
 
 ### features/profile/
 - `data/user_profile_model.dart` — UserProfileModel
@@ -214,29 +195,18 @@ Generated: 2026-06-15 (actualizar con `find lib -name "*.dart" | sort`)
 - `data/ai_coach_defaults.dart` — configuración por defecto del coach
 - `data/ai_coach_models_config.dart` — configuración de modelos LLM
 - `data/openrouter_client.dart` — cliente HTTP para OpenRouter (LLM gateway)
+- `data/race_goal.dart` — RaceGoal: competición objetivo (fecha + distancia + prioridad alta/media/baja)
+- `data/race_goal_repository.dart` — RaceGoalRepository: CRUD en `users/{uid}/raceGoals`
 - `views/ai_coach_onboarding_view.dart` — onboarding del coach
 - `views/ai_coach_onboarding_launcher.dart` — launcher del onboarding
 - `views/ai_coach_settings_view.dart` — configuración del coach
 - `views/ai_coach_weekly_feedback_view.dart` — feedback semanal del coach
+- `views/race_goals_section.dart` — sección "Tus objetivos" embebida en AiCoachSettingsView
 
 ### features/athlete/
 - `data/athlete_session_model.dart` — AthleteSession: sesión planificada del atleta
 - `data/athlete_session_repository.dart` — AthleteSessionRepository
-- `data/progress_repository.dart` — ProgressRepository: progreso del atleta
-- `viewmodels/athlete_hub_viewmodel.dart` — AthleteHubViewModel
-- `viewmodels/athlete_calendar_viewmodel.dart` — calendario de sesiones
-- `viewmodels/athlete_session_editor_viewmodel.dart` — editor de sesión
-- `viewmodels/progress_viewmodel.dart` — ProgressViewModel
-- `viewmodels/season_viewmodel.dart` — SeasonViewModel
-- `viewmodels/session_editor_viewmodel.dart` — SessionEditorViewModel
-- `views/athlete_hub_view.dart` — hub principal del atleta
-- `views/athlete_session_editor_view.dart` — editor de sesión atleta
-- `views/progress_view.dart` — vista de progreso
-- `views/season_view.dart` — vista de temporada
-- `views/session_editor_view.dart` — editor de sesión
-- `views/session_planner_view.dart` — planificador de sesiones
-- `widgets/save_as_template_sheet.dart` — guardar sesión como plantilla
-- `widgets/session_block_editor.dart` — editor de bloque de sesión
+- `data/progress_repository.dart` — ProgressRepository: progreso del atleta (récords personales)
 
 ### features/calendar/
 - `viewmodels/calendar_view_model.dart` — CalendarViewModel: entrenamientos por fecha
