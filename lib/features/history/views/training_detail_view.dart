@@ -372,6 +372,16 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
 
   // ── Sección 3 — Mapa ──────────────────────────────────────────────
 
+  void _openFullscreenMap(BuildContext context, Entrenamiento training) {
+    if (training.trackPoints.isEmpty) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => _FullscreenMapView(training: training),
+      ),
+    );
+  }
+
   Widget _buildMap() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
@@ -409,9 +419,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
                           bottom: 8,
                           right: 8,
                           child: GestureDetector(
-                            onTap: () {
-                              // TODO: expand map
-                            },
+                            onTap: () => _openFullscreenMap(context, training),
                             child: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
@@ -1392,4 +1400,50 @@ class _FcChartPainter extends CustomPainter {
   @override
   bool shouldRepaint(_FcChartPainter old) =>
       old.readings != readings || old.maxBpm != maxBpm || old.minBpm != minBpm;
+}
+
+// ── Mapa a pantalla completa ─────────────────────────────────────────────────
+
+class _FullscreenMapView extends StatelessWidget {
+  const _FullscreenMapView({required this.training});
+
+  final Entrenamiento training;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: TrainingMapView(points: training.trackPoints),
+          ),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            right: 12,
+            child: GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceOf(context).withValues(alpha: 0.9),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.close_rounded,
+                  color: AppColors.textPrimary(context),
+                  size: 24,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

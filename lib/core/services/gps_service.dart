@@ -681,12 +681,6 @@ class GPSService with WidgetsBindingObserver {
             timestamp: now,
           ),
         );
-        // TODO(diagnóstico GPS): eliminar tras validar calidad de traza en device
-        if (points.length % 20 == 0) {
-          debugPrint('[GPS] points: ${points.length}, '
-              'accuracy: ${frame.gpsAccuracy?.toStringAsFixed(1)}m, '
-              'userState: ${newState.userState}');
-        }
       }
     }
 
