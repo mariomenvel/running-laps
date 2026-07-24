@@ -357,7 +357,8 @@ class _CalendarViewState extends State<CalendarView>
                       ValueListenableBuilder<AiCoachUsage?>(
                         valueListenable: _adjustUsage,
                         builder: (_, usage, __) {
-                          final used = usage?.messagesUsed ?? 0;
+                          final used =
+                              usage?.effectiveMessagesUsed(DateTime.now()) ?? 0;
                           final limit = usage?.messagesLimit ?? 3;
                           final remaining = (limit - used).clamp(0, limit);
                           final color = remaining == 0
@@ -474,11 +475,13 @@ class _CalendarViewState extends State<CalendarView>
                       return ValueListenableBuilder<AiCoachUsage?>(
                         valueListenable: _adjustUsage,
                         builder: (_, usage, __) {
-                          final used = usage?.messagesUsed ?? 0;
+                          final now = DateTime.now();
+                          final used =
+                              usage?.effectiveMessagesUsed(now) ?? 0;
                           final limit = usage?.messagesLimit ?? 3;
                           final noQuotaLeft = used >= limit;
                           final noPreviewsLeft =
-                              (usage?.previewsGenerated ?? 0) >= 10;
+                              (usage?.effectivePreviewsGenerated(now) ?? 0) >= 10;
                           final blocked = noQuotaLeft || noPreviewsLeft;
 
                           if (blocked) {

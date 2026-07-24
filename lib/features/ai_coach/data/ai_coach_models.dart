@@ -552,6 +552,22 @@ class AiCoachUsage {
       previewsGenerated: previewsGenerated ?? this.previewsGenerated,
     );
   }
+
+  /// True cuando [now] cae dentro del periodo semanal vigente.
+  bool isPeriodCurrent(DateTime now) =>
+      !now.isBefore(periodStart) && !now.isAfter(periodEnd);
+
+  /// `messagesUsed` efectivo: si el periodo ya venció, la cuota vuelve a estar
+  /// disponible aunque el doc de Firestore todavía no se haya reseteado. El
+  /// reset persistido lo hace la Cloud Function `resetWeeklyChatUsage` cada
+  /// lunes; esto solo evita que la UI muestre un contador caducado y bloquee
+  /// al usuario entre el vencimiento y ese reset.
+  int effectiveMessagesUsed(DateTime now) =>
+      isPeriodCurrent(now) ? messagesUsed : 0;
+
+  /// `previewsGenerated` efectivo (mismo criterio de vencimiento).
+  int effectivePreviewsGenerated(DateTime now) =>
+      isPeriodCurrent(now) ? previewsGenerated : 0;
 }
 
 class AiCoachProviderConfig {

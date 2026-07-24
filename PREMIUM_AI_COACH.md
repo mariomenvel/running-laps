@@ -221,13 +221,18 @@ El `ai_coach_prompt_builder.dart` usa el feedback para ajustar instrucciones al 
 ## Chat con el Coach ✅ implementado
 
 `ai_coach_chat_service.dart`:
-- Límite: **3 consultas por semana** (ventana lunes-domingo)
-- Contador en `settings/aiCoachUsage` con ventana semanal; al cambiar semana reinicia
+- Límite: **3 ajustes aplicados por semana** (`messagesUsed`) + **10 previews/semana** (`previewsGenerated`, anti-abuso). Ventana lunes-domingo.
+- Contador en `settings/aiCoachUsage` (`plan == "athlete_chat_weekly"`), campos `messagesUsed`/`previewsGenerated`/`periodStart`/`periodEnd`.
 - Historial en memoria durante la sesión
-- Reset semanal automático (`resetWeeklyChatUsage` Cloud Function)
 - Solo disponible si `isAthleteMode == true` y `chatAdjustmentsEnabled == true`
 - Si se supera el límite → error controlado, mensaje al usuario
-- `AiCoachSettingsView` muestra "Consultas restantes esta semana: X/3"
+- `AiCoachSettingsView` y el badge del calendario muestran "X/3" restantes
+
+**Reset semanal — autoridad en Firebase (Cloud Function), no en el cliente:**
+- `resetWeeklyChatUsage` (`functions/src/resetChatUsage.ts`, cron lunes 00:05 Europe/Madrid) es la fuente de verdad: pone `messagesUsed:0`, `previewsGenerated:0` y renueva `periodStart`/`periodEnd` en todos los docs del plan. Requiere deploy (`firebase deploy --only functions`).
+- El cliente **no** manda el reset: `AiCoachUsage.effectiveMessagesUsed(now)` / `effectivePreviewsGenerated(now)` tratan un periodo vencido como cuota disponible (0 usado) al **mostrar**, para que la UI nunca se quede bloqueada mostrando un contador caducado si el cron aún no ha corrido. `_prepareAndGetCurrentWeekUsage` sigue haciendo un reset perezoso al interactuar (mismo límite de semana), como red de seguridad que concuerda con el cron.
+- `applyAdjustment` re-comprueba el límite antes de tocar el plan (tope duro) — `messagesUsed` no puede superar el límite bajo ninguna secuencia de llamadas.
+- Botón admin "Reset cuotas IA" (Perfil, solo admin) zerea ambos contadores a mano para pruebas.
 
 ---
 

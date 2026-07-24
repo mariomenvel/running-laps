@@ -136,6 +136,18 @@ class AiCoachChatService {
   }) async {
     debugPrint('[Cuota] applyAdjustment llamado, intent=${preview.intent}, localAction=${preview.localAction?.type}');
     try {
+      // Tope duro: aunque el preview ya gatea la cuota, re-comprobamos aquí
+      // antes de tocar el plan para que `messagesUsed` no pueda superar el
+      // límite bajo ninguna secuencia de llamadas (defensa en profundidad).
+      final usage = await _prepareAndGetCurrentWeekUsage(uid);
+      final limit = usage.messagesLimit ?? _weeklyChatLimit;
+      if (usage.messagesUsed >= limit) {
+        throw Exception(
+          'Has alcanzado el limite de $limit ajustes esta semana. '
+          'Vuelve a intentarlo la proxima semana.',
+        );
+      }
+
       var didModify = false;
 
       if (preview.localAction != null) {
@@ -144,7 +156,6 @@ class AiCoachChatService {
       }
 
       if (didModify) {
-        final usage = await _prepareAndGetCurrentWeekUsage(uid);
         debugPrint('[Cuota] apply: didModify=$didModify, messagesUsed ${usage.messagesUsed} → ${usage.messagesUsed + 1}');
         await _repository.incrementUsageField(
           uid: uid,

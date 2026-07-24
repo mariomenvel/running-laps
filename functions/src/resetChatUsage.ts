@@ -2,11 +2,11 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getFirestore } from "firebase-admin/firestore";
 
 /**
- * Resetea el contador de mensajes del chat del AI Coach
+ * Resetea los contadores de cuota del chat del AI Coach
  * cada lunes a las 00:05 (hora de Madrid, Europe/Madrid).
- * Actualiza periodStart, periodEnd y messagesUsed en
- * users/{uid}/settings/aiCoachUsage para todos los
- * usuarios con plan activo.
+ * Actualiza periodStart, periodEnd, messagesUsed y
+ * previewsGenerated en users/{uid}/settings/aiCoachUsage
+ * para todos los usuarios con plan activo.
  */
 export const resetWeeklyChatUsage = onSchedule(
   {
@@ -31,12 +31,14 @@ export const resetWeeklyChatUsage = onSchedule(
     sunday.setDate(monday.getDate() + 6);
     sunday.setHours(23, 59, 59, 999);
 
-    // Buscar todos los docs aiCoachUsage con
-    // messagesUsed > 0 (solo los que necesitan reset)
+    // Buscar todos los docs aiCoachUsage del plan semanal. No filtramos por
+    // messagesUsed > 0: un usuario puede tener messagesUsed == 0 pero
+    // previewsGenerated acumulado (contador anti-abuso, límite 10), y también
+    // necesita reset. La query por igualdad sobre `plan` la cubre el índice
+    // compuesto (plan, messagesUsed) existente por prefijo.
     const usageDocs = await db
       .collectionGroup("settings")
       .where("plan", "==", "athlete_chat_weekly")
-      .where("messagesUsed", ">", 0)
       .get();
 
     if (usageDocs.empty) {
@@ -53,6 +55,7 @@ export const resetWeeklyChatUsage = onSchedule(
     for (const doc of usageDocs.docs) {
       batch.update(doc.ref, {
         messagesUsed: 0,
+        previewsGenerated: 0,
         periodStart: monday,
         periodEnd: sunday,
       });
