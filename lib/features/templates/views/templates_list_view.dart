@@ -10,7 +10,7 @@ import '../data/template_models.dart';
 import '../data/templates_repository.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
 import 'template_editor_view.dart';
-import 'package:running_laps/features/profile/views/profile_menu_screen_legacy.dart';
+import 'package:running_laps/features/profile/views/profile_view.dart';
 
 class TemplatesListView extends StatefulWidget {
   final bool isSelectionMode;
@@ -205,7 +205,7 @@ class _TemplatesListViewState extends State<TemplatesListView> {
               onTapRight: () {
                 Navigator.push(
                   context,
-                  AppRoute(page: const ProfileMenuView()),
+                  AppRoute(page: const ProfileView()),
                 );
               },
             ),

@@ -7,7 +7,7 @@ import '../../../core/widgets/gradient_banner.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import '../data/repositories/group_detail_repository.dart';
 import '../data/services/gamification_service.dart';
-import '../../profile/views/profile_menu_screen_legacy.dart';
+import '../../profile/views/profile_view.dart';
 
 class ParticipantProfileScreen extends StatefulWidget {
   final String uid;
@@ -94,7 +94,7 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
               onTapRight: () {
                  Navigator.push(
                    context,
-                   AppRoute(page: const ProfileMenuView()),
+                   AppRoute(page: const ProfileView()),
                  );
               },
               showBottomDivider: false,

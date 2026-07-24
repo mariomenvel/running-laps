@@ -8,7 +8,7 @@ import '../../../../config/app_theme.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/app_page_scaffold.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
-import 'package:running_laps/features/profile/views/profile_menu_screen_legacy.dart';
+import 'package:running_laps/features/profile/views/profile_view.dart';
 
 class AdminPanelScreen extends StatefulWidget {
   const AdminPanelScreen({super.key});
@@ -42,7 +42,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
         showBottomDivider: false,
         onTapRight: () => Navigator.push(
           context,
-          AppRoute(page: const ProfileMenuView()),
+          AppRoute(page: const ProfileView()),
         ),
       ),
       body: Column(

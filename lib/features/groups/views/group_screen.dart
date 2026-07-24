@@ -25,7 +25,7 @@ import '../data/models/group_stats_model.dart';
 // Widgets
 import 'widgets/create_challenge_modal.dart';
 import '../../../../features/groups/data/helpers/challenge_helpers.dart';
-import '../../profile/views/profile_menu_screen_legacy.dart';
+import '../../profile/views/profile_view.dart';
 import '../data/repositories/invites_repository.dart';
 import '../data/helpers/invite_token_helper.dart';
 import '../../../../core/widgets/modern_snackbar.dart';
@@ -153,7 +153,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
                   onTapRight: () {
                     Navigator.push(
                       context,
-                      AppRoute(page: const ProfileMenuView()),
+                      AppRoute(page: const ProfileView()),
                     );
                   },
                 ),

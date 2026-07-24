@@ -1,5 +1,27 @@
 # CHANGELOG — Running Laps
 
+## [Fix] — Unificado el menú de perfil, eliminado profile_menu_screen_legacy.dart — 2026-07-24
+Cierra el pendiente de la auditoría del 2026-06-19 (ver más abajo). El menú
+"legacy" solo seguía vivo porque era el único de los dos que funcionaba
+correctamente cuando se abría empujado por encima de Admin/Templates/Grupos:
+`ProfileView` (el tab real, slot 3 de `MainShell`) navegaba a sus
+sub-pantallas con `MainShell.shellKey.currentState?.navigateTo(index)`, que
+solo tiene efecto visible si `ProfileView` es el tab activo del
+`IndexedStack` — si se pushea encima de otra pantalla, cambiar el tab por
+debajo no se ve. `ProfileMenuView` (legacy) en cambio siempre usaba
+`Navigator.push()` directo, por eso sobrevivía en esos 6 sitios.
+
+Fix real: `ProfileView` ahora usa `ShellEmbeddingScope.isEmbedded(context)`
+(el mismo patrón ya usado en `templates_list_view.dart` y
+`avatar_customizer_view.dart`) para decidir — embebida en el shell:
+`navigateTo()`; pusheada standalone: `Navigator.push()` a la pantalla
+correspondiente directamente. Los 6 call sites (`admin_panel_screen.dart`,
+`templates_list_view.dart`, `group_screen.dart`, `groups_list_screen.dart`,
+`challenge_detail_screen.dart`, `participant_profile_screen.dart`) ahora
+abren `ProfileView` en vez del duplicado. `profile_menu_screen_legacy.dart`
+eliminado — un solo menú de perfil en toda la app, sin contenido
+desincronizado entre los dos.
+
 ## [Feature] — Récords detectados y celebrados en todos los flujos de guardado — 2026-07-16
 La detección de récords solo existía en el flujo de entreno libre
 (`training_start_view`): el flujo estructurado con GPS, el registro manual y
@@ -738,9 +760,8 @@ sin sufijo "_legacy" es la huérfana — el nombre del archivo no refleja su est
 
 **PENDIENTE:** testing manual exhaustivo de cada flujo antes de eliminar ningún huérfano.
 
-**PENDIENTE:** una vez confirmado por testing, eliminar huérfanos y renombrar
-`profile_menu_screen_legacy.dart` → `profile_menu_screen.dart` (quitando el
-sufijo del archivo que es realmente el activo).
+**Resuelto (2026-07-24):** en vez de renombrar, se unificó con `ProfileView`
+y se eliminó `profile_menu_screen_legacy.dart` — ver entrada más arriba.
 
 ## [Templates] — 2026-06-18 — Switch "Guardar como plantilla" eliminado
 - Eliminado del `WorkoutEditorScreen` hasta que exista UI de carga de plantillas

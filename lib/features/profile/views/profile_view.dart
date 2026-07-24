@@ -7,6 +7,7 @@ import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
+import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/core/services/heart_rate_service.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/auth/viewmodels/auth_controller.dart';
@@ -16,6 +17,12 @@ import 'package:running_laps/features/training/views/manual_training_view.dart';
 import 'package:running_laps/features/admin/views/admin_panel_screen.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
+import 'package:running_laps/features/ai_coach/views/ai_coach_settings_view.dart';
+import 'package:running_laps/features/history/views/history_screen.dart';
+import 'package:running_laps/features/profile/views/zones_config_screen.dart';
+import 'package:running_laps/features/profile/views/heart_rate_monitor_view.dart';
+import 'package:running_laps/features/profile/views/account_settings_view.dart';
+import 'package:running_laps/features/avatar/views/avatar_customizer_view.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:running_laps/features/avatar/models/avatar_config.dart';
 import 'package:running_laps/features/avatar/services/avatar_generator.dart';
@@ -290,8 +297,32 @@ class _ProfileViewState extends State<ProfileView> {
     }
   }
 
+  /// Navega a una sub-pantalla del perfil. Cuando `ProfileView` es el tab
+  /// activo del shell (uso normal, slot 3) cambia de tab con `navigateTo`;
+  /// cuando se abre pusheada por encima de otra pantalla (Admin, Grupos,
+  /// Plantillas — fuera del `IndexedStack` del shell) hace un `Navigator.push`
+  /// directo a la misma pantalla, porque cambiar de tab por debajo de una
+  /// ruta empujada no sería visible para el usuario.
+  void _navigate(
+    BuildContext context, {
+    required int shellIndex,
+    dynamic shellParams,
+    required Widget Function() standalone,
+  }) {
+    if (ShellEmbeddingScope.isEmbedded(context)) {
+      MainShell.shellKey.currentState?.navigateTo(shellIndex, params: shellParams);
+    } else {
+      Navigator.push(context, AppRoute(page: standalone()));
+    }
+  }
+
   void _openAvatarCustomizer() {
-    MainShell.shellKey.currentState?.navigateTo(14, params: _avatarConfig);
+    _navigate(
+      context,
+      shellIndex: 14,
+      shellParams: _avatarConfig,
+      standalone: () => AvatarCustomizerView(initialConfig: _avatarConfig),
+    );
   }
 
   Future<void> _logout() async {
@@ -373,20 +404,33 @@ class _ProfileViewState extends State<ProfileView> {
               icon: Icons.favorite_outline,
               label: 'Zonas de entrenamiento',
               subtitle: 'FC máx, zonas personalizadas',
-              onTap: () => MainShell.shellKey.currentState?.navigateTo(9),
+              onTap: () => _navigate(
+                context,
+                shellIndex: 9,
+                standalone: () => ZonesConfigScreen(
+                    uid: FirebaseAuth.instance.currentUser?.uid ?? ''),
+              ),
             ),
             const _MenuDivider(),
             _MenuItem(
               icon: Icons.history_outlined,
               label: 'Historial completo',
-              onTap: () => MainShell.shellKey.currentState?.navigateTo(4),
+              onTap: () => _navigate(
+                context,
+                shellIndex: 4,
+                standalone: () => const HistoryScreen(),
+              ),
             ),
             const _MenuDivider(),
             _MenuItem(
               icon: Icons.auto_awesome_outlined,
               label: 'Entrenador IA',
               subtitle: 'Sugerencias semanales',
-              onTap: () => MainShell.shellKey.currentState?.navigateTo(16),
+              onTap: () => _navigate(
+                context,
+                shellIndex: 16,
+                standalone: () => const AiCoachSettingsView(),
+              ),
             ),
             const _MenuDivider(),
             _MenuItem(
@@ -419,7 +463,11 @@ class _ProfileViewState extends State<ProfileView> {
                       ? 'Conectado${name != null ? ' · $name' : ''}'
                       : 'Sin conectar',
                   subtitleColor: isConnected ? AppColors.rpeLow : null,
-                  onTap: () => MainShell.shellKey.currentState?.navigateTo(10),
+                  onTap: () => _navigate(
+                    context,
+                    shellIndex: 10,
+                    standalone: () => const HeartRateMonitorView(),
+                  ),
                 );
               },
             ),
@@ -427,15 +475,21 @@ class _ProfileViewState extends State<ProfileView> {
             _MenuItem(
               icon: Icons.settings_outlined,
               label: 'Cuenta y ajustes',
-              onTap: () => MainShell.shellKey.currentState?.navigateTo(8,
-                  params: {'name': _userName, 'onUpdated': _loadUserData}),
+              onTap: () => _navigate(
+                context,
+                shellIndex: 8,
+                shellParams: {'name': _userName, 'onUpdated': _loadUserData},
+                standalone: () => AccountSettingsView(
+                  currentName: _userName,
+                  onNameUpdated: _loadUserData,
+                ),
+              ),
             ),
             const _MenuDivider(),
             _MenuItem(
               icon: Icons.brush_outlined,
               label: 'Editar avatar',
-              onTap: () => MainShell.shellKey.currentState?.navigateTo(14,
-                  params: _avatarConfig),
+              onTap: _openAvatarCustomizer,
             ),
           ]),
 

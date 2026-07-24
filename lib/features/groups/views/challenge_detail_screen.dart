@@ -10,7 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:running_laps/config/app_theme.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_page_scaffold.dart';
-import '../../profile/views/profile_menu_screen_legacy.dart';
+import '../../profile/views/profile_view.dart';
 
 class ChallengeDetailScreen extends StatefulWidget {
   final String groupId;
@@ -66,7 +66,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
         onTapRight: () {
           Navigator.push(
             context,
-            AppRoute(page: const ProfileMenuView()),
+            AppRoute(page: const ProfileView()),
           );
         },
         showBottomDivider: false,

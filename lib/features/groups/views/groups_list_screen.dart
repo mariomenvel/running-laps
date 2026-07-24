@@ -24,7 +24,7 @@ import '../../../core/widgets/skeleton_shimmer.dart';
 
 // Navigation
 import 'package:running_laps/core/widgets/main_shell.dart';
-import '../../profile/views/profile_menu_screen_legacy.dart';
+import '../../profile/views/profile_view.dart';
 
 /// Pantalla profesional y moderna que lista todos los grupos del usuario
 /// Diseño premium con gradientes vibrantes y animaciones fluidas
@@ -66,7 +66,7 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
               onTapRight: () {
                 Navigator.push(
                   context,
-                  AppRoute(page: const ProfileMenuView()),
+                  AppRoute(page: const ProfileView()),
                 );
               },
               showBottomDivider: false,
