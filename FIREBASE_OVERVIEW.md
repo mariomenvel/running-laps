@@ -32,7 +32,6 @@ esta tabla es una foto fija, no un dashboard en vivo.
 - **Email/contraseña**: requiere verificación de email antes de dejar entrar a `MainShell` (gate en `AuthWrapper`). El claim `email_verified` se sincroniza server-side vía la función `syncEmailVerified` (§4) porque el token de Firebase Auth no lo refresca solo.
 - **Google Sign-In**: funcionando en dispositivo (el "crash" antiguo era un `assertionFailure` solo-debug, ver CLAUDE.md).
 - **Sign in with Apple**: código completo (login, doc inicial, reauth, botón solo-iOS), pendiente de 3 pasos manuales en Apple Developer + Firebase Console + TestFlight (deuda #1).
-- **Wear OS**: el reloj NO tiene sesión de Firebase Auth real — usa un bypass temporal (QR + código, `wear_sessions/{code}`) y escribe `trainings` autoidentificándose con `source: "wear_os"` + `wear_uid`. Reemplazo pendiente con Cloud Function + custom token (deuda #2).
 
 ## 3. Firestore
 

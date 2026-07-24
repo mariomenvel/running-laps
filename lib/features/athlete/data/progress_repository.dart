@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
@@ -18,6 +19,21 @@ class PersonalRecord {
     required this.date,
     required this.trainingId,
   });
+
+  Map<String, dynamic> toMap() => {
+        'paceSecPerKm': paceSecPerKm,
+        'date': date.toUtc().toIso8601String(),
+        'trainingId': trainingId,
+      };
+
+  factory PersonalRecord.fromMap(int distanceM, Map<String, dynamic> map) {
+    return PersonalRecord(
+      distanceM: distanceM,
+      paceSecPerKm: (map['paceSecPerKm'] as num).toDouble(),
+      date: DateTime.parse(map['date'] as String).toLocal(),
+      trainingId: map['trainingId'] as String,
+    );
+  }
 }
 
 class SeriesDataPoint {
@@ -74,11 +90,14 @@ class ProgressRepository {
   ProgressRepository({
     TrainingRepository? trainingRepository,
     AthleteSessionRepository? sessionRepository,
+    FirebaseFirestore? firestore,
   })  : _trainingRepo = trainingRepository ?? TrainingRepository(),
-        _sessionRepo  = sessionRepository  ?? AthleteSessionRepository();
+        _sessionRepo  = sessionRepository  ?? AthleteSessionRepository(),
+        _firestore    = firestore ?? FirebaseFirestore.instance;
 
   final TrainingRepository       _trainingRepo;
   final AthleteSessionRepository _sessionRepo;
+  final FirebaseFirestore        _firestore;
 
   // ── Standard distances with tolerance ranges ───────────────────────────────
 
@@ -90,9 +109,73 @@ class ProgressRepository {
     10000: (8500,  11500), // ±15 %
   };
 
+  DocumentReference<Map<String, dynamic>> _rollupDoc(String uid) => _firestore
+      .collection('users')
+      .doc(uid)
+      .collection('settings')
+      .doc('personalRecordsRollup');
+
   // ── getPersonalRecords ─────────────────────────────────────────────────────
 
+  /// Devuelve el récord por distancia estándar, leyendo el rollup cacheado en
+  /// `users/{uid}/settings/personalRecordsRollup`. Si el rollup no existe aún
+  /// (primera vez para este usuario), hace el escaneo completo una única vez
+  /// y lo persiste — las llamadas siguientes son lecturas de un solo doc.
   Future<Map<int, PersonalRecord>> getPersonalRecords(String uid) async {
+    final cached = await _readRollup(uid);
+    if (cached != null) return cached;
+
+    final records = await _scanAllTrainings(uid);
+    await _writeRollup(uid, records);
+    return records;
+  }
+
+  /// Actualiza el rollup con los récords que mejora [training] tras guardarlo,
+  /// sin volver a escanear todo el historial. Devuelve solo los récords
+  /// nuevos/mejorados por este entreno (vacío si no bate ninguno). Llamar
+  /// desde `PbCelebrationService` justo después de persistir el entreno.
+  Future<Map<int, PersonalRecord>> updateRollupAfterSave(
+    String uid,
+    Entrenamiento training,
+  ) async {
+    final id = training.id;
+    if (id == null) return {};
+
+    var current = await _readRollup(uid);
+    current ??= await _scanAllTrainings(uid);
+
+    final improved = <int, PersonalRecord>{};
+    for (final serie in training.series) {
+      if (serie.distanciaM <= 0 || serie.tiempoSec <= 0) continue;
+      final pace = serie.tiempoSec / (serie.distanciaM / 1000.0);
+
+      for (final entry in _stdDistances.entries) {
+        final stdDist = entry.key;
+        final range   = entry.value;
+        if (serie.distanciaM < range.$1 || serie.distanciaM > range.$2) {
+          continue;
+        }
+        final existing = current[stdDist];
+        if (existing == null || pace < existing.paceSecPerKm) {
+          final record = PersonalRecord(
+            distanceM:    stdDist,
+            paceSecPerKm: pace,
+            date:         training.fecha,
+            trainingId:   id,
+          );
+          current[stdDist]  = record;
+          improved[stdDist] = record;
+        }
+      }
+    }
+
+    if (improved.isNotEmpty) {
+      await _writeRollup(uid, current);
+    }
+    return improved;
+  }
+
+  Future<Map<int, PersonalRecord>> _scanAllTrainings(String uid) async {
     final trainings = (await _trainingRepo.getTrainings(pageSize: 500)).trainings;
     final records   = <int, PersonalRecord>{};
 
@@ -124,6 +207,35 @@ class ProgressRepository {
     }
 
     return records;
+  }
+
+  Future<Map<int, PersonalRecord>?> _readRollup(String uid) async {
+    try {
+      final snap = await _rollupDoc(uid).get();
+      final rawRecords = snap.data()?['records'] as Map<String, dynamic>?;
+      if (rawRecords == null) return null;
+      return {
+        for (final entry in rawRecords.entries)
+          int.parse(entry.key):
+              PersonalRecord.fromMap(int.parse(entry.key), entry.value as Map<String, dynamic>),
+      };
+    } catch (e) {
+      debugPrint('[ProgressRepository] rollup read error: $e');
+      return null;
+    }
+  }
+
+  Future<void> _writeRollup(String uid, Map<int, PersonalRecord> records) async {
+    try {
+      await _rollupDoc(uid).set({
+        'records': {
+          for (final r in records.values) r.distanceM.toString(): r.toMap(),
+        },
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint('[ProgressRepository] rollup write error: $e');
+    }
   }
 
   // ── getSeriesProgress ──────────────────────────────────────────────────────

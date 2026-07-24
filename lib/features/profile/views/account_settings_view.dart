@@ -12,7 +12,6 @@ import '../../../core/widgets/modern_snackbar.dart';
 import '../../../core/widgets/app_header.dart';
 import '../../../core/widgets/gradient_banner.dart';
 import '../../../core/services/settings_service.dart';
-import '../../../core/services/wear_auth_service.dart';
 
 import '../../templates/data/template_models.dart';
 import '../../templates/widgets/alarm_config_sheet.dart';
@@ -39,7 +38,6 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
   bool _useWhiteCards = true;
   bool _alarmDefault = false;
   bool _gpsDefault = false;
-  bool _watchConnected = false;
   int _bestMarkDistanceM = 400;
 
   @override
@@ -77,7 +75,6 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
         _useWhiteCards = cardStyle;
         _alarmDefault = alarm;
         _gpsDefault = gps;
-        _watchConnected = prefs.getBool('watch_connected') ?? false;
         _bestMarkDistanceM = bestDist;
       });
     }
@@ -1151,23 +1148,6 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
     }
   }
 
-  Future<void> _connectWatch() async {
-    try {
-      final connected = await WearAuthService().scanAndAuthenticateWatch(context);
-      if (!mounted) return;
-      if (connected) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('watch_connected', true);
-        if (!mounted) return;
-        setState(() => _watchConnected = true);
-        ModernSnackBar.showSuccess(context, 'Reloj conectado correctamente');
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ModernSnackBar.showError(context, e.toString());
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1243,14 +1223,6 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
                         onTap: _showChangePasswordDialog,
                       ),
                     ],
-
-                    _buildSectionHeader("Dispositivos"),
-                    _buildMenuTile(
-                      title: _watchConnected ? "Reloj conectado ✓" : "Conectar reloj",
-                      icon: _watchConnected ? Icons.check_circle_rounded : Icons.watch_rounded,
-                      color: _watchConnected ? AppColors.rpeLow : AppColors.brand,
-                      onTap: _connectWatch,
-                    ),
 
                     _buildSectionHeader("Zona peligrosa"),
                     _buildMenuTile(

@@ -59,8 +59,7 @@ service cloud.firestore {
     // True when the document is both key-count-bounded and total-size-bounded.
     // Applied to group-level creates to prevent large document injection.
     function isSafeWrite() {
-      return request.resource.data.keys().size() < 50
-          && request.resource.data.toString().size() < 10000;
+      return request.resource.data.keys().size() < 50;
     }
 
     // ────────────────────────────────────────────────────────────────────────
@@ -96,29 +95,17 @@ service cloud.firestore {
         //   request.auth.uid and uid are members?" without a known groupId.
         //   PRODUCTION RECOMMENDATION: move ranking computation to a Cloud
         //   Function (Admin SDK) and restrict this rule to isOwner(uid) only.
-        // Wear OS custom token pendiente (deuda técnica #2).
-        // Hasta entonces solo el propietario puede leer sus propios trainings.
         allow read: if isOwner(uid);
 
         // Authenticated owner can delete their own trainings.
         allow delete: if isOwner(uid);
 
         // Authenticated owner can update their own trainings.
-        // Wear OS watch (no Firebase Auth) may update only the 'tags' field on a
-        // training it created, identified by source == "wear_os" and wear_uid == uid.
-        allow update: if isOwner(uid)
-            || (request.resource.data.source == "wear_os"
-                && request.resource.data.get("wear_uid", "") == uid
-                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['tags']));
+        allow update: if isOwner(uid);
 
         // Authenticated owner can create normally.
-        // Wear OS watch has no real Firebase Auth session — it stores the uid
-        // in SharedPreferences and sends it as a document field. Allow create
-        // when the document self-identifies as wear_os and declares the uid.
-        // Field size limits prevent storage abuse regardless of auth path.
-        allow create: if (isOwner(uid)
-            || (request.resource.data.source == "wear_os"
-                && request.resource.data.get("wear_uid", "") == uid))
+        // Field size limits prevent storage abuse.
+        allow create: if isOwner(uid)
             && request.resource.data.keys().size() < 20
             && request.resource.data.get("titulo", "").size() < 200
             && request.resource.data.get("series", []).size() < 500;
@@ -127,7 +114,6 @@ service cloud.firestore {
       // ── users/{uid}/tags/{id} ──────────────────────────────────────────────
       match /tags/{tagId} {
         // Owner can read and write their own tags.
-        // Wear OS custom token pendiente (deuda técnica #2).
         allow read: if isOwner(uid);
         allow create, update: if isOwner(uid)
             && request.resource.data.keys().size() < 10;
@@ -145,7 +131,6 @@ service cloud.firestore {
       // ── users/{uid}/templates/{id} ────────────────────────────────────────
       match /templates/{templateId} {
         // Personal training templates (features/templates). Strictly private.
-        // Wear OS custom token pendiente (deuda técnica #2).
         allow read: if isOwner(uid);
         allow write: if isOwner(uid);
       }
@@ -160,7 +145,6 @@ service cloud.firestore {
       match /settings/{settingId} {
         // HomeConfigRepository reads and writes users/{uid}/settings/homeLayoutConfig
         // to persist the home dashboard widget layout (visibility, order, config).
-        // Wear OS custom token pendiente (deuda técnica #2).
         allow read: if isOwner(uid);
         allow write: if isOwner(uid);
       }
@@ -280,8 +264,7 @@ service cloud.firestore {
           // TrainingChallengeSyncService and AutoJoinService run in user context.
           allow update, delete: if isOwner(uid);
           allow create: if isOwner(uid)
-              && request.resource.data.keys().size() < 20
-              && request.resource.data.toString().size() < 2000;
+              && request.resource.data.keys().size() < 20;
         }
       }
 
@@ -376,38 +359,6 @@ service cloud.firestore {
     }
 
     // ────────────────────────────────────────────────────────────────────────
-    // wear_sessions/{code}
-    // ────────────────────────────────────────────────────────────────────────
-    // Short-lived QR auth session created by the Wear OS watch.
-    // The watch is NOT yet authenticated when it creates the document, so
-    // creates are intentionally open. The random 6-char code provides
-    // sufficient entropy for a session that expires quickly.
-    // PRODUCTION: Add cleanup via a Cloud Function TTL trigger (e.g. delete
-    //   documents older than 5 minutes) and generate a real Firebase Custom
-    //   Token server-side instead of forwarding the client ID token.
-    match /wear_sessions/{code} {
-      // Watch creates session before authentication — allow unauthenticated create.
-      // Requires createdAt + status fields so TTL cleanup can target stale docs,
-      // and caps document size to prevent abuse of the open create rule.
-      allow create: if request.resource.data.keys().hasAll(['createdAt', 'status'])
-          && request.resource.data.status == 'pending'
-          && request.resource.data.keys().size() < 10
-          && request.resource.data.get("createdAt", 0) is timestamp
-          && request.resource.data.createdAt <= request.time + duration.value(10, 'm');
-
-      // Only authenticated users (phone) can update (write the idToken).
-      allow update: if isSignedIn();
-
-      // Watch reads to check auth status — allow unauthenticated read.
-      // Only recent sessions (created < 10 minutes ago) are readable to prevent
-      // bots from enumerating historical session documents.
-      allow read: if resource.data.createdAt > request.time - duration.value(10, 'm');
-
-      // Only authenticated users can delete.
-      allow delete: if isSignedIn();
-    }
-
-    // ────────────────────────────────────────────────────────────────────────
     // challenge_templates/{id}
     // ────────────────────────────────────────────────────────────────────────
     match /challenge_templates/{templateId} {
@@ -450,8 +401,7 @@ service cloud.firestore {
         // Each user writes and manages only their own participation record.
         allow update, delete: if isOwner(uid);
         allow create: if isOwner(uid)
-            && request.resource.data.keys().size() < 20
-            && request.resource.data.toString().size() < 2000;
+            && request.resource.data.keys().size() < 20;
       }
     }
   }

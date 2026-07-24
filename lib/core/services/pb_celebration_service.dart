@@ -11,8 +11,9 @@ import 'package:running_laps/features/training/data/entrenamiento.dart';
 ///
 /// Dos niveles:
 /// 1. **Récords por serie** en distancias estándar (400/1000/1500/5000/10000 m,
-///    `ProgressRepository`): tras persistir el entreno se recalculan los
-///    récords — los que apunten a este entreno son récords nuevos.
+///    `ProgressRepository`): tras persistir el entreno se compara contra el
+///    rollup cacheado (`users/{uid}/settings/personalRecordsRollup`) sin
+///    reescanear todo el historial.
 /// 2. **Marcas de sesión** 5K/10K/media/maratón (`PbDetector`, ±3%):
 ///    actualizan el perfil del coach (alimentan el VDOT).
 ///
@@ -40,9 +41,8 @@ class PbCelebrationService {
 
     // ── 1. Récords por serie ──────────────────────────────────────────────
     try {
-      final records = await _progressRepo.getPersonalRecords(uid);
+      final records = await _progressRepo.updateRollupAfterSave(uid, training);
       for (final record in records.values) {
-        if (record.trainingId != trainingId) continue;
         final distLabel = record.distanceM < 1000
             ? '${record.distanceM}m'
             : record.distanceM == 1500

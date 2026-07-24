@@ -5,7 +5,6 @@
 ![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
-![Wear OS](https://img.shields.io/badge/Wear%20OS-4285F4?style=for-the-badge&logo=wearos&logoColor=white)
 
 **Running Laps** es una aplicación multiplataforma para corredores que practican entrenamiento fraccionado (series/intervalos). A diferencia de las apps convencionales, el foco está en el **RPE (Rate of Perceived Exertion)** por serie individual y en la **precisión del tracking GPS** en cada intervalo.
 
@@ -18,7 +17,6 @@
 | Android | ✅ Funciona | App Check Play Integrity |
 | iOS | ⚠️ Parcial | Google Sign-In pendiente de diagnóstico |
 | Web | ✅ Funciona | App Check reCAPTCHA v3 |
-| Wear OS | ⚠️ En desarrollo | Auth temporal vía código de 6 dígitos |
 
 ---
 
@@ -35,12 +33,6 @@
 - **Filtro Kalman + Haversine**: Suavizado de coordenadas y cálculo de distancia preciso
 - **Pace en tiempo real**: Ventana deslizante de 5 puntos para evitar lecturas erráticas
 - **Historial completo**: Mapa GPS, desglose por serie, exportación a PDF
-
-### ⌚ Wear OS
-- **Entrenamiento independiente**: Sin necesidad del móvil
-- **Soporte de plantillas**: Carga y ejecuta tus plantillas directamente desde el reloj
-- **Alarmas de ritmo**: Feedback en tiempo real durante cada serie
-- **Overlay de completado**: Animación al finalizar una plantilla completa
 
 ### 🔴 iOS — Live Activity
 - **Lock Screen + Dynamic Island**: Información en tiempo real sin abrir la app
@@ -65,7 +57,6 @@
 | Capa | Tecnología |
 |---|---|
 | App móvil | Flutter / Dart (Android, iOS, Web) |
-| App reloj | Kotlin / Jetpack Compose (Wear OS) |
 | Base de datos | Firebase Firestore |
 | Autenticación | Firebase Auth |
 | Almacenamiento | Firebase Storage |
@@ -83,7 +74,7 @@ lib/
 ├── config/app_theme.dart           ← Tema global, AvatarHelper (alias legado)
 ├── core/
 │   ├── theme/                      ← AppColors (tokens), AppTheme, ThemeService
-│   ├── services/                   ← GPS, Live Activity iOS, WearAuth, Settings, User,
+│   ├── services/                   ← GPS, Live Activity iOS, Settings, User,
 │   │                                  HeartRate, Notifications, ZonesService
 │   ├── tracking/                   ← TrackingState, tipos, SensorFrame
 │   └── utils/                      ← KalmanFilter, EKF2D, RDP, TagUtils
@@ -101,12 +92,6 @@ lib/
     ├── ai_coach/                   ← Coach IA: sugerencias semanales, memoria atleta
     ├── athlete/                    ← Perfil atleta avanzado, planificación
     └── calendar/                   ← Calendario de entrenamientos
-
-wear_os/app/src/main/kotlin/com/runninglaps/wear/
-├── MainActivity.kt
-├── SeriesTrainingService.kt        ← Foreground service: timer, GPS, alarmas
-├── TemplatePickerScreen.kt
-└── TemplateModels.kt
 ```
 
 Cada feature sigue la estructura:
@@ -134,7 +119,6 @@ El módulo atleta se construye en fases incrementales. Cada fase entrega algo co
 | 5 | Métricas de progreso (RPs, pace Z2, ratio pace/FC) | Free | ⏳ Pendiente |
 | 6 | Notificaciones | Free | ⏳ Pendiente |
 | 7 | Grupos atleta (ranking por rendimiento real) | Free | ⏳ Pendiente |
-| 8 | Wear OS mejorado (guía serie a serie) | Free | ⏳ Pendiente |
 | 9 | Test de umbral y zonas individualizadas | Premium | ⏳ Pendiente |
 | 10 | ATL / CTL / TSB — modelo de fatiga | Premium | ⏳ Pendiente |
 | 11 | Apple Watch | Free / Premium | ⏳ Pendiente |
@@ -168,15 +152,6 @@ flutterfire configure
 # 4. Ejecutar
 flutter run
 ```
-
-### Wear OS
-
-```bash
-cd wear_os
-./gradlew assembleDebug
-```
-
-> **Nota:** El build de Wear OS requiere `google-services.json` en `wear_os/app/`.
 
 ---
 
