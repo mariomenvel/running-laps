@@ -56,6 +56,9 @@ export const resetWeeklyChatUsage = onSchedule(
       batch.update(doc.ref, {
         messagesUsed: 0,
         previewsGenerated: 0,
+        // Renormaliza el límite: docs antiguos pueden tener un valor obsoleto
+        // (p. ej. 40 de una versión anterior). El límite canónico es 3.
+        messagesLimit: 3,
         periodStart: monday,
         periodEnd: sunday,
       });

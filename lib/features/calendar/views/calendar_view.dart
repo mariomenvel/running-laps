@@ -359,7 +359,7 @@ class _CalendarViewState extends State<CalendarView>
                         builder: (_, usage, __) {
                           final used =
                               usage?.effectiveMessagesUsed(DateTime.now()) ?? 0;
-                          final limit = usage?.messagesLimit ?? 3;
+                          final limit = AiCoachUsage.weeklyChatLimit;
                           final remaining = (limit - used).clamp(0, limit);
                           final color = remaining == 0
                               ? AppColors.rpeMax
@@ -478,7 +478,7 @@ class _CalendarViewState extends State<CalendarView>
                           final now = DateTime.now();
                           final used =
                               usage?.effectiveMessagesUsed(now) ?? 0;
-                          final limit = usage?.messagesLimit ?? 3;
+                          final limit = AiCoachUsage.weeklyChatLimit;
                           final noQuotaLeft = used >= limit;
                           final noPreviewsLeft =
                               (usage?.effectivePreviewsGenerated(now) ?? 0) >= 10;

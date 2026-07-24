@@ -496,6 +496,14 @@ class AiCoachProfile {
 }
 
 class AiCoachUsage {
+  /// Límite canónico de ajustes aplicados por semana. Fuente única para la
+  /// UI y la lógica de cuota — no confiar en `messagesLimit` guardado en
+  /// Firestore, que puede quedar obsoleto (docs viejos con otro valor). El
+  /// campo persistido es informativo; el reset semanal (cron + reset perezoso
+  /// del cliente) lo renormaliza a este valor. Cuando existan planes de pago,
+  /// este límite pasará a derivarse de la config del plan.
+  static const int weeklyChatLimit = 3;
+
   final String plan;
   final int messagesUsed;
   final int? messagesLimit;

@@ -37,7 +37,7 @@ class AiCoachChatService {
   final AthleteSessionRepository _sessionRepository;
   final AiCoachWeeklyPlannerService _weeklyPlannerService;
   final UserService _userService;
-  static const int _weeklyChatLimit = 3;
+  static const int _weeklyChatLimit = AiCoachUsage.weeklyChatLimit;
 
   /// Genera un preview del ajuste SIN aplicarlo.
   /// No gasta cuota de ajustes, pero suma al contador de previews (anti-abuso).
