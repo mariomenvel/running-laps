@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
 import 'entrenamiento.dart';
 import 'serie.dart';
@@ -10,9 +11,14 @@ class SummaryStatsCalculator {
   final Entrenamiento entrenamiento;
   final WorkoutType type;
 
+  /// FCmáx del atleta — necesaria para mapear las lecturas de pulso a zonas
+  /// en `_calculatePercentInTargetZone`. Si es null, ese stat queda oculto.
+  final int? fcMax;
+
   const SummaryStatsCalculator({
     required this.entrenamiento,
     required this.type,
+    this.fcMax,
   });
 
   List<Serie> get _mainSeries {
@@ -202,7 +208,9 @@ class SummaryStatsCalculator {
       finishTime: c.totalDuration,
       avgPaceSecPerKm: c.avgPaceSecPerKm,
       kmSplits: splits,
-      // TODO: comparar con plannedComparison para detectar marca personal
+      // Vestigial: la categoría "competición" se retiró del editor y del coach
+      // (enum conservado por compat, solo renderiza datos históricos). La
+      // detección de marcas personales vive ahora en PbCelebrationService.
       isNewPersonalBest: null,
     );
   }
@@ -258,13 +266,53 @@ class SummaryStatsCalculator {
     return total > 0 ? (inTarget / total) * 100 : null;
   }
 
+  /// % de lecturas de pulso que cayeron en la zona FC objetivo del plan.
+  /// Requiere FCmáx (para mapear bpm→zona) y una zona objetivo en el plan.
+  /// Devuelve null si falta cualquiera de los dos, o si no hay lecturas de FC
+  /// (el card oculta el stat cuando es null).
   double? _calculatePercentInTargetZone() {
-    // TODO: requiere lecturas FC tiempo a tiempo + zona objetivo
+    final fcMaxValue = fcMax;
+    if (fcMaxValue == null || fcMaxValue <= 0) return null;
+
+    final targetZone = _targetZoneFromPlan();
+    if (targetZone == null) return null;
+
+    final zones = ZonesService();
+    int total = 0;
+    int inZone = 0;
+    for (final serie in _mainSeries) {
+      final readings = serie.fcReadings;
+      if (readings == null) continue;
+      for (final r in readings) {
+        if (r.bpm <= 0) continue;
+        total++;
+        if (zones.zoneFor(r.bpm, fcMaxValue) == targetZone) inZone++;
+      }
+    }
+
+    if (total == 0) return null;
+    return (inZone / total) * 100;
+  }
+
+  /// Zona objetivo (1-5) declarada en el plan, tomada del primer segmento del
+  /// bloque principal que la especifique. Null si el plan no fija zona.
+  int? _targetZoneFromPlan() {
+    final pc = entrenamiento.plannedComparison;
+    if (pc == null) return null;
+    final blocks = pc['blocks'] as List? ?? [];
+    for (final block in blocks) {
+      final segments = block['segments'] as List? ?? [];
+      for (final seg in segments) {
+        final zone = (seg['target'] as Map?)?['zone'];
+        if (zone is num) return zone.toInt();
+      }
+    }
     return null;
   }
 
   List<KmSplit> _calculateKmSplits(Serie serie) {
-    // TODO: parsear gpsPoints y agrupar por kilómetro
+    // Vestigial: solo lo consume CompetitionStats, una ruta que ya no se
+    // genera (categoría "competición" retirada). Sin implementar a propósito.
     return [];
   }
 }

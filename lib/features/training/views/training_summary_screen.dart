@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/core/services/pb_celebration_service.dart';
+import 'package:running_laps/core/services/zones_service.dart';
+import 'package:running_laps/features/profile/data/zones_repository.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/widgets/rpe_slider.dart';
 import 'package:running_laps/core/theme/app_theme.dart' show AppMotion;
@@ -65,6 +67,10 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
   late final int? _ritmoSecKm;
   late final double? _fcMedia;
 
+  // FCmáx del atleta — se carga async; alimenta el % en zona objetivo del card
+  // de rodaje continuo (null hasta que llega → el stat queda oculto mientras).
+  int? _fcMax;
+
   bool get _showRpe {
     // Solo mostrar si el entreno no tiene series con RPE
     // ya capturado individualmente (en ese caso el RPE
@@ -127,6 +133,22 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
 
     _similarFuture = _fetchSimilar();
     _loadCustomTags();
+    _loadFcMax();
+  }
+
+  Future<void> _loadFcMax() async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
+      final profile = await ZonesRepository().getUserProfile(uid);
+      if (!mounted || profile == null) return;
+      final effective =
+          ZonesService().fcMaxEffective(profile.fcMax, profile.birthDate);
+      if (effective == null) return;
+      setState(() => _fcMax = effective);
+    } catch (_) {
+      // FCmáx no disponible → el % en zona objetivo simplemente no se muestra
+    }
   }
 
   @override
@@ -556,9 +578,9 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
             fontSize: 13,
           ),
         ),
-        // TODO: detectar marca personal en competition
-        // Buscar entrenos previos del mismo tipo y distancia
-        // Si el tiempo actual es menor → mostrar "¡NUEVA MARCA PERSONAL!"
+        // Marca personal: ya se detecta y celebra de forma centralizada en
+        // PbCelebrationService tras guardar (récords por serie + marcas de
+        // sesión 5K/10K/HM/M). No se duplica aquí.
       ],
     ),
     );
@@ -570,6 +592,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
     final calculator = SummaryStatsCalculator(
       entrenamiento: widget.entrenamiento,
       type: _getSessionType(),
+      fcMax: _fcMax,
     );
     final color = theme.primary(context);
 

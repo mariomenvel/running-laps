@@ -111,8 +111,10 @@ class ChallengeRankingHelper {
         return dateA.compareTo(dateB);
 
       case TieBreakerType.consistency:
-         // TODO: Implement proper consistency check. For now, treat as equal or fallback.
-         return 0;
+         // Proxy de consistencia: a igualdad de score, gana quien completó más
+         // sesiones (DESC). El modelo no guarda desglose por día/semana, así que
+         // el nº de sesiones es la mejor aproximación disponible a "regularidad".
+         return b.sessions.compareTo(a.sessions);
     }
   }
 }
