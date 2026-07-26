@@ -1,5 +1,25 @@
 # CHANGELOG — Running Laps
 
+## [Test] — Cubierto lo que el Coach IA ve de tu semana — 2026-07-26
+`buildWeeklyState` es el resumen que se le manda al LLM: adherencia, volumen,
+carga aguda (ATL), crónica (CTL) y frescura (TSB = CTL − ATL). Si eso miente, el
+plan que genera está mal razonado por muy bueno que sea el prompt — y **no hay
+forma de darse cuenta mirando la app**.
+
+Es función pura de sus argumentos, así que 8 tests la fijan entera: el filtrado
+por semana con límites inclusivos (lunes y domingo cuentan), la adherencia
+—incluido el 1.0 cuando no hay sesiones planificadas, en vez de una división por
+cero—, el volumen, el RPE medio ignorando entrenos sin series, y el bloque de
+carga: una semana dura deja el TSB negativo, y sin entrenos el "días desde el
+último" es el centinela 999 y no 0 (que significaría "hoy").
+
+Tercer servicio al que se le hacen perezosas las dependencias por el mismo
+motivo que ayer: `AiCoachContextBuilder` construía cuatro repositorios en su
+constructor, así que instanciarlo exigía Firebase real aunque solo fueras a usar
+la parte pura.
+
+Suite 272 → 280.
+
 ## [Test] — Cubierta la cuota semanal del chat del coach — 2026-07-26
 Esta lógica ha roto **dos veces**, y las dos en silencio: una el contador se
 quedaba pillado y el chat no dejaba escribir aunque hubiera empezado semana

@@ -19,16 +19,29 @@ class AiCoachContextBuilder {
     AiCoachRepository? aiCoachRepository,
     RaceGoalRepository? raceGoalRepository,
     FirebaseFirestore? firestore,
-  })  : _trainingRepository = trainingRepository ?? TrainingRepository(),
-        _sessionRepository = sessionRepository ?? AthleteSessionRepository(),
-        _aiCoachRepository = aiCoachRepository ?? AiCoachRepository(),
-        _raceGoalRepository = raceGoalRepository ?? RaceGoalRepository(),
+  })  : _trainingRepositoryOverride = trainingRepository,
+        _sessionRepositoryOverride = sessionRepository,
+        _aiCoachRepositoryOverride = aiCoachRepository,
+        _raceGoalRepositoryOverride = raceGoalRepository,
         _db = firestore ?? FirebaseFirestore.instance;
 
-  final TrainingRepository _trainingRepository;
-  final AthleteSessionRepository _sessionRepository;
-  final AiCoachRepository _aiCoachRepository;
-  final RaceGoalRepository _raceGoalRepository;
+  // Repositorios perezosos: construir el builder no debe exigir Firebase
+  // inicializado (mismo criterio que AiCoachChatService y
+  // HomeEstadisticaRepository). buildWeeklyState() es pura y no los toca.
+  final TrainingRepository? _trainingRepositoryOverride;
+  final AthleteSessionRepository? _sessionRepositoryOverride;
+  final AiCoachRepository? _aiCoachRepositoryOverride;
+  final RaceGoalRepository? _raceGoalRepositoryOverride;
+
+  late final TrainingRepository _trainingRepository =
+      _trainingRepositoryOverride ?? TrainingRepository();
+  late final AthleteSessionRepository _sessionRepository =
+      _sessionRepositoryOverride ?? AthleteSessionRepository();
+  late final AiCoachRepository _aiCoachRepository =
+      _aiCoachRepositoryOverride ?? AiCoachRepository();
+  late final RaceGoalRepository _raceGoalRepository =
+      _raceGoalRepositoryOverride ?? RaceGoalRepository();
+
   final FirebaseFirestore _db;
 
   Future<AiCoachWeeklyContext> buildWeeklyContext(String uid) async {
@@ -55,7 +68,7 @@ class AiCoachContextBuilder {
     // (taper). Es la fuente de verdad del targetDate del Coach.
     final primaryRace = raceGoals.nextPrimaryFrom(now);
 
-    final weeklyState = _buildWeeklyState(
+    final weeklyState = buildWeeklyState(
       now: now,
       weekStart: weekStart,
       weekEnd: weekEnd,
@@ -274,7 +287,11 @@ class AiCoachContextBuilder {
     );
   }
 
-  AiCoachWeeklyState _buildWeeklyState({
+  /// Estado de la semana que se le manda al LLM: adherencia, volumen, carga
+  /// aguda/crónica y frescura (TSB). Es función pura de sus argumentos —
+  /// ninguna consulta— y por eso se puede probar directamente.
+  @visibleForTesting
+  AiCoachWeeklyState buildWeeklyState({
     required DateTime now,
     required DateTime weekStart,
     required DateTime weekEnd,
