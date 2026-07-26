@@ -1,6 +1,6 @@
 # TESTING.md — Tests de Running Laps
 
-> Estado: **280 tests en 36 archivos** (26 jul 2026). Suite completa: ~20 segundos.
+> Estado: **289 tests en 37 archivos** (26 jul 2026). Suite completa: ~20 segundos.
 
 ---
 
@@ -107,6 +107,7 @@ test/
 | `templates/workout_editor_view_model_test` | 19 | Lógica del editor tras el refactor MVVM: bloques por defecto por tipo, nombre automático (5×1km, 8×400m, 6×1'30", Rodaje 10km) vs. nombre escrito a mano, `buildSession` (id/plantilla conservados, notas en blanco → null, sin tipo → sesión libre), `hasChanges` y el guardado bloqueado sin tipo ni bloques. Solo cubre lo que no toca Firebase — la persistencia de `save()` queda fuera |
 | `training/training_repository_test` | 16 | **Ver sección Firestore simulado**. Incluye 5 tests del reparto de trazas GPS: el documento del entrenamiento no las lleva, `track/data` sí (con `seriesGps` indexado), `withTrack()` las recupera, y compatibilidad con el formato antiguo (traza embebida) tanto al leer como al guardar con `overwriteTraining` |
 | `avatar/avatar_field_consistency_test` | 3 | Config del avatar consistente entre escrituras |
+| `history/history_filters_test` | 9 | Filtros del historial: últimos 7 días, tiradas largas (>10 km, los 10 km exactos NO cuentan), alta intensidad (RPE>7), rango personalizado con extremos completos y con prioridad sobre el predefinido, búsqueda sin distinguir mayúsculas, etiquetas que suman, y combinación de varios filtros |
 | `athlete/progress_rollup_test` | 7 | Récords personales: `updateRollupAfterSave` mejora el récord solo si el ritmo es mejor, no toca el rollup si es peor, respeta las ventanas de distancia estándar (950 m cuenta como 1000, 700 m no cuenta), ignora series sin distancia o sin tiempo, no hace nada con un entreno sin id, y crea el rollup escaneando el historial la primera vez |
 | `architecture_test` | 9 | **Reglas de CLAUDE.md, no comportamiento**: ninguna vista instancia `FirebaseFirestore` ni `FirebaseAuth`, nadie importa `dart:html`, los snackbars son siempre `ModernSnackBar`, nadie usa `AppBar`, `showDatePicker` ni colores de Material sueltos, y no queda ningún `print()` en `lib/`. Escanea los ficheros de `lib/features/**/views/` y falla diciendo qué fichero y a qué servicio llevar el acceso. Incluye un test de cordura (que la lista de vistas no esté vacía) para que un cambio de carpetas no lo deje pasando en falso |
 

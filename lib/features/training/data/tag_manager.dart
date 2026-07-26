@@ -4,8 +4,11 @@ import 'tag_model.dart';
 
 /// Repositorio para gestionar las etiquetas personalizadas del usuario
 class TagManager {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  // Getters perezosos: construir el manager no debe exigir Firebase
+  // inicializado (mismo criterio que HomeEstadisticaRepository). Quien lo
+  // tiene como campo — HistoryController — se instancia también en tests.
+  FirebaseAuth get _auth => FirebaseAuth.instance;
+  FirebaseFirestore get _db => FirebaseFirestore.instance;
 
   static const int maxTagsPerUser = 20;
   static const int maxTagNameLength = 20;

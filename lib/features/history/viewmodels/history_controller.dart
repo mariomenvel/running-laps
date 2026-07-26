@@ -24,7 +24,8 @@ class HistoryController {
 
   bool _disposed = false;
 
-  TrainingRepository _trainingRepo;
+  late final TrainingRepository _trainingRepo =
+      _trainingRepoOverride ?? TrainingRepository();
 
   final ValueNotifier<List<Entrenamiento>> _allTrainings =
       ValueNotifier<List<Entrenamiento>>(<Entrenamiento>[]);
@@ -60,15 +61,16 @@ class HistoryController {
   bool get hasMore => _hasMore;
   bool get isLoadingMore => _isLoadingMore;
 
-  final TagManager _tagManager = TagManager();
+  late final TagManager _tagManager = TagManager();
   Map<String, Color> _tagColors = {};
 
   HistoryController({TrainingRepository? trainingRepo})
-      : _trainingRepo = TrainingRepository() {
-    if (trainingRepo != null) {
-      _trainingRepo = trainingRepo;
-    }
-  }
+      : _trainingRepoOverride = trainingRepo;
+
+  // Ojo: antes el constructor creaba SIEMPRE un TrainingRepository y solo
+  // después lo sustituía por el inyectado, así que inyectar no evitaba tocar
+  // `FirebaseFirestore.instance`. Perezoso: solo se crea si de verdad se usa.
+  final TrainingRepository? _trainingRepoOverride;
 
   String? _resolveUid() => FirebaseAuth.instance.currentUser?.uid;
 
@@ -179,6 +181,14 @@ class HistoryController {
     currentFilter.value = filter;
     // Al seleccionar un filtro rápido, limpiamos los personalizados para evitar confusión
     // O podríamos mantenerlos, pero simplifiquemos por ahora.
+    applyFilters();
+  }
+
+  /// Carga una lista de entrenamientos sin pasar por Firestore, para poder
+  /// probar los filtros. `loadTrainings()` necesita usuario autenticado.
+  @visibleForTesting
+  void debugSeedTrainings(List<Entrenamiento> trainings) {
+    _allTrainings.value = trainings;
     applyFilters();
   }
 

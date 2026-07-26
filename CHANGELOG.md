@@ -1,5 +1,22 @@
 # CHANGELOG — Running Laps
 
+## [Test] — Cubiertos los filtros del historial — 2026-07-26
+Son la única forma de encontrar un entreno concreto entre cientos, y fallan en
+silencio: si un filtro se come un entrenamiento, para el usuario simplemente no
+existe. 9 tests fijan los criterios exactos, incluidos los bordes que no son
+obvios leyendo la pantalla — "tiradas largas" es **más** de 10 km (10 km
+clavados no entran), "alta intensidad" es RPE medio **por encima** de 7, el
+rango de fechas personalizado cubre los días de los extremos enteros (de las
+00:00 a las 23:59) y **manda sobre** el filtro predefinido.
+
+Por el camino, un bug de verdad en `HistoryController`: el constructor creaba
+**siempre** un `TrainingRepository` y solo después lo sustituía por el
+inyectado, así que inyectar no evitaba tocar `FirebaseFirestore.instance` —
+justo lo que la inyección existía para evitar. Ahora es perezoso. Lo mismo con
+`TagManager`, que instanciaba Auth y Firestore como campos.
+
+Suite 280 → 289.
+
 ## [Test] — Cubierto lo que el Coach IA ve de tu semana — 2026-07-26
 `buildWeeklyState` es el resumen que se le manda al LLM: adherencia, volumen,
 carga aguda (ATL), crónica (CTL) y frescura (TSB = CTL − ATL). Si eso miente, el
