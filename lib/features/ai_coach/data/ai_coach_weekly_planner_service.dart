@@ -26,19 +26,33 @@ class AiCoachWeeklyPlannerService {
     AthleteSessionRepository? sessionRepository,
     AiCoachSessionGenerator? sessionGenerator,
     UserService? userService,
-  })  : _decisionService = decisionService ?? AiCoachDecisionService(),
-        _contextBuilder = contextBuilder ?? AiCoachContextBuilder(),
-        _aiCoachRepository = aiCoachRepository ?? AiCoachRepository(),
-        _sessionRepository = sessionRepository ?? AthleteSessionRepository(),
+  })  : _decisionServiceOverride = decisionService,
+        _contextBuilderOverride = contextBuilder,
+        _aiCoachRepositoryOverride = aiCoachRepository,
+        _sessionRepositoryOverride = sessionRepository,
         _sessionGenerator = sessionGenerator ?? const AiCoachSessionGenerator(),
-        _userService = userService ?? UserService();
+        _userServiceOverride = userService;
 
-  final AiCoachDecisionService _decisionService;
-  final AiCoachContextBuilder _contextBuilder;
-  final AiCoachRepository _aiCoachRepository;
-  final AthleteSessionRepository _sessionRepository;
+  // Colaboradores perezosos: construir el planificador no debe exigir Firebase
+  // inicializado (mismo criterio que AiCoachChatService). El reparto de días
+  // es lógica pura y no los toca.
+  final AiCoachDecisionService? _decisionServiceOverride;
+  final AiCoachContextBuilder? _contextBuilderOverride;
+  final AiCoachRepository? _aiCoachRepositoryOverride;
+  final AthleteSessionRepository? _sessionRepositoryOverride;
+  final UserService? _userServiceOverride;
+
+  late final AiCoachDecisionService _decisionService =
+      _decisionServiceOverride ?? AiCoachDecisionService();
+  late final AiCoachContextBuilder _contextBuilder =
+      _contextBuilderOverride ?? AiCoachContextBuilder();
+  late final AiCoachRepository _aiCoachRepository =
+      _aiCoachRepositoryOverride ?? AiCoachRepository();
+  late final AthleteSessionRepository _sessionRepository =
+      _sessionRepositoryOverride ?? AthleteSessionRepository();
+  late final UserService _userService = _userServiceOverride ?? UserService();
+
   final AiCoachSessionGenerator _sessionGenerator;
-  final UserService _userService;
 
   Future<AiCoachWeeklyPlannerResult> planNextWeek(
     String uid, {
@@ -127,7 +141,7 @@ class AiCoachWeeklyPlannerService {
         .map((session) => DateTime.tryParse(session.date)?.weekday)
         .whereType<int>()
         .toSet();
-    var feasibleWeekdays = _resolveFeasibleWeekdays(
+    var feasibleWeekdays = resolveFeasibleWeekdays(
       profile: profile,
       weekStart: nextWeekStart,
       minDate: minDate,
@@ -143,7 +157,7 @@ class AiCoachWeeklyPlannerService {
       nextWeekStart = nextWeekStart.add(const Duration(days: 7));
       nextWeekEnd = nextWeekStart.add(const Duration(days: 6));
       final today = DateTime.now();
-      feasibleWeekdays = _resolveFeasibleWeekdays(
+      feasibleWeekdays = resolveFeasibleWeekdays(
         profile: profile,
         weekStart: nextWeekStart,
         minDate: DateTime(today.year, today.month, today.day),
@@ -165,7 +179,7 @@ class AiCoachWeeklyPlannerService {
       occupiedWeekdays: occupiedWeekdays,
       maxSessions: remainingSlots,
     );
-    sessions = _enforceAvailableWeekdays(
+    sessions = enforceAvailableWeekdays(
       sessions: sessions,
       profile: profile,
       weekStart: nextWeekStart,
@@ -280,14 +294,18 @@ class AiCoachWeeklyPlannerService {
     );
   }
 
-  List<AthleteSession> _enforceAvailableWeekdays({
+  /// Reubica las sesiones del plan en los días que el atleta dijo tener
+  /// disponibles, sin poner dos el mismo día. Es lo que impide que el Coach te
+  /// planifique un martes cuando dijiste que los martes no puedes.
+  @visibleForTesting
+  List<AthleteSession> enforceAvailableWeekdays({
     required List<AthleteSession> sessions,
     required AiCoachProfile? profile,
     required DateTime weekStart,
     required DateTime minDate,
     required Set<int> occupiedWeekdays,
   }) {
-    final allowed = _resolveFeasibleWeekdays(
+    final allowed = resolveFeasibleWeekdays(
       profile: profile,
       weekStart: weekStart,
       minDate: minDate,
@@ -325,7 +343,11 @@ class AiCoachWeeklyPlannerService {
     return result;
   }
 
-  List<int> _normalizeAvailableWeekdays(List<int> rawDays) {
+  /// Normaliza los días disponibles del perfil al criterio de Dart
+  /// (1 = lunes … 7 = domingo). Los perfiles antiguos los guardaban en 0..6 con
+  /// 0 = domingo: si esto se equivoca, todo el plan se corre de día.
+  @visibleForTesting
+  List<int> normalizeAvailableWeekdays(List<int> rawDays) {
     final normalized = <int>{};
     for (final raw in rawDays) {
       if (raw >= 1 && raw <= 7) {
@@ -351,7 +373,7 @@ class AiCoachWeeklyPlannerService {
     if (sessions.isEmpty) {
       issues.add('no_sessions_generated');
     }
-    final available = _normalizeAvailableWeekdays(profile?.availableWeekdays ?? const []);
+    final available = normalizeAvailableWeekdays(profile?.availableWeekdays ?? const []);
     if (available.isNotEmpty) {
       final outOfRange = sessions.where((s) {
         final parsed = DateTime.tryParse(s.date);
@@ -409,7 +431,7 @@ class AiCoachWeeklyPlannerService {
             '${session.planningNotes ?? ''} · ajustado por quality gate',
       );
     }
-    patched = _enforceAvailableWeekdays(
+    patched = enforceAvailableWeekdays(
       sessions: patched,
       profile: profile,
       weekStart: patched.isNotEmpty && DateTime.tryParse(patched.first.date) != null
@@ -433,7 +455,7 @@ class AiCoachWeeklyPlannerService {
   ) {
     if (profile == null) return decision;
 
-    final availableDays = _resolveFeasibleWeekdays(
+    final availableDays = resolveFeasibleWeekdays(
       profile: profile,
       weekStart: weekStart,
       minDate: minDate,
@@ -484,7 +506,7 @@ class AiCoachWeeklyPlannerService {
     }
   ) {
     if (profile == null) return decision;
-    final availableCount = _resolveFeasibleWeekdays(
+    final availableCount = resolveFeasibleWeekdays(
       profile: profile,
       weekStart: weekStart,
       minDate: minDate,
@@ -718,13 +740,17 @@ class AiCoachWeeklyPlannerService {
     );
   }
 
-  List<int> _resolveFeasibleWeekdays({
+  /// Días en los que de verdad se puede planificar esta semana: los del perfil
+  /// (o un reparto por defecto si no los ha dicho), descartando los que ya
+  /// pasaron.
+  @visibleForTesting
+  List<int> resolveFeasibleWeekdays({
     required AiCoachProfile? profile,
     required DateTime weekStart,
     required DateTime minDate,
     required int fallbackTargetSessions,
   }) {
-    var allowed = _normalizeAvailableWeekdays(profile?.availableWeekdays ?? const []);
+    var allowed = normalizeAvailableWeekdays(profile?.availableWeekdays ?? const []);
     if (allowed.isEmpty) {
       allowed = _defaultWeekdaysForTargetSessions(fallbackTargetSessions);
     }
@@ -776,7 +802,7 @@ class AiCoachWeeklyPlannerService {
       'series_cuestas',
       'test',
     };
-    final availableWeekdays = _normalizeAvailableWeekdays(
+    final availableWeekdays = normalizeAvailableWeekdays(
       decision.workoutTargets
           .map((target) => _weekdayFromLabel(target.preferredDay))
           .whereType<int>()

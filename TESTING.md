@@ -1,6 +1,6 @@
 # TESTING.md — Tests de Running Laps
 
-> Estado: **289 tests en 37 archivos** (26 jul 2026). Suite completa: ~20 segundos.
+> Estado: **301 tests en 38 archivos** (26 jul 2026). Suite completa: ~20 segundos.
 
 ---
 
@@ -60,6 +60,7 @@ test/
 | `pb_detector_test` | 8 | Detección de marcas personales con interpolación ±3% |
 | `session_generator_test` | 5 | Sesiones generadas con reps/distancias sensatas por nivel, tope de 12 reps |
 | `ai_coach_prompt_builder_test` | 4 | El prompt del plan semanal incluye el contexto del atleta |
+| `ai_coach/weekly_planner_days_test` (en `test/features/`) | 12 | El reparto del plan por días, que es la promesa concreta del Coach ("solo te planifico los días que dijiste"): normalización 0..6 → 1..7 (perfiles antiguos con 0 = domingo), días factibles descartando los ya pasados, reparto por defecto si el perfil no dice días, reubicación de sesiones a días permitidos sin duplicar día, respeto de los días ya ocupados, y descarte de la sesión sobrante cuando no quedan días |
 | `ai_coach/weekly_state_test` (en `test/features/`) | 8 | Lo que el Coach ve de tu semana: filtrado por semana con límites inclusivos, adherencia (y 1.0 sin sesiones planificadas, no división por cero), volumen, RPE medio ignorando entrenos sin series, ATL/CTL/TSB (una semana dura deja TSB negativo) y el centinela 999 de "nunca ha entrenado" |
 | `ai_coach/chat_quota_test` (en `test/features/`) | 5 | Cuota semanal del chat: la crea si no existe, resetea el contador al cambiar de semana, respeta la de la semana en curso, normaliza un límite antiguo **sin perder** `messagesUsed` ni `previewsGenerated`, y resetea si el periodo guardado está en el futuro (reloj mal puesto) |
 

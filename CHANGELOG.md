@@ -1,5 +1,27 @@
 # CHANGELOG — Running Laps
 
+## [Test] — Cubierto el reparto del plan semanal por días — 2026-07-26
+Es la promesa más concreta que le hace el Coach al atleta: *"solo te planifico
+los días que me has dicho"*. Y no la puede garantizar el LLM — la garantiza este
+código, reubicando lo que venga del modelo. Si falla, el usuario abre el
+calendario y ve entrenos en días en los que dijo que no puede.
+
+12 tests sobre las tres funciones que lo deciden:
+- **Normalización de días**: los perfiles antiguos guardaban 0..6 con 0 =
+  domingo, los nuevos 1..7 como Dart. Si esa traducción se equivoca, el plan
+  entero se corre de día.
+- **Días factibles**: los del perfil (o un reparto por defecto según el número
+  de sesiones si no los ha dicho), descartando los que ya pasaron.
+- **Reubicación**: una sesión en día no disponible se mueve al primero libre,
+  nunca se ponen dos el mismo día, se respetan los días ya ocupados por sesiones
+  existentes, y si no quedan días **se descarta la sesión sobrante** en vez de
+  doblarla.
+
+Quinto y sexto servicio con dependencias perezosas (`AiCoachWeeklyPlannerService`
+y, antes, `AiCoachContextBuilder`): construirlos ya no exige Firebase.
+
+Suite 289 → 301.
+
 ## [Test] — Cubiertos los filtros del historial — 2026-07-26
 Son la única forma de encontrar un entreno concreto entre cientos, y fallan en
 silencio: si un filtro se come un entrenamiento, para el usuario simplemente no
