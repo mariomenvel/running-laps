@@ -1,5 +1,34 @@
 # CHANGELOG — Running Laps
 
+## [Refactor] — Ninguna vista instancia Firebase, y un test lo vigila — 2026-07-26
+Cierra la regla de CLAUDE.md que estaba a medias: las vistas ya no tocaban
+Firestore, pero `FirebaseAuth.instance` seguía en **24 ficheros (61 usos)**.
+
+- `UserService.currentUid` sustituye a `FirebaseAuth.instance.currentUser?.uid`.
+- `UserService.awaitCurrentUid()` recoge un patrón que estaba **copiado en tres
+  vistas** (home, calendario, analytics): `currentUser` síncrono y, si aún no
+  hay sesión restaurada, esperar el stream con timeout de 5 s.
+- `AuthWrapper` y la pantalla de verificación de email pasan por
+  `AuthRepository` (stream de sesión y `signOut`), que ya los tenía.
+
+**El test es la parte que importa**: `test/features/architecture_test.dart`
+comprueba las reglas, no el comportamiento. Escanea `lib/features/**/views/` y
+falla si alguien reintroduce `FirebaseFirestore.instance`, `FirebaseAuth.instance`,
+`dart:html` o un `ScaffoldMessenger.showSnackBar` a pelo — diciendo el fichero y
+a qué servicio llevarlo. Es el tipo de test que protege una decisión de
+arquitectura de la erosión, que es exactamente cómo se había perdido esta.
+
+De hecho ya encontró dos infracciones vivas al escribirlo: `create_challenge_modal`
+y `blocks_list_section` mostraban snackbars crudos en vez de `ModernSnackBar`
+(migrados). Y lleva un test de cordura que verifica que la lista de vistas no
+está vacía: sin él, mover carpetas dejaría los demás pasando sin comprobar nada.
+
+Suite 242 → 247. `flutter analyze` 58 → 57 avisos.
+
+⚠️ Sin humo en dispositivo: el móvil se bloqueó (batería al 13%) antes de poder
+recorrer las pantallas. La app **compila e instala** con los 24 ficheros
+cambiados y el analizador está limpio, pero el paseo visual queda pendiente.
+
 ## [Fix] — "Completar manualmente": el botón guardaba en silencio o no guardaba — 2026-07-26
 Encontrado usando la app: rellenas los tiempos, pulsas GUARDAR SESIÓN y **no
 pasa nada**. Parece la app rota. Lo que faltaba era el RPE global, y había tres

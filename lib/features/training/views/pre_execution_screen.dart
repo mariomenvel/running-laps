@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:running_laps/core/services/user_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -58,7 +58,7 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
   }
 
   Future<void> _loadFcMax() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = UserService().currentUid;
     if (uid == null) return;
     final profile = await ZonesRepository().getUserProfile(uid);
     if (mounted && profile?.fcMax != null) {

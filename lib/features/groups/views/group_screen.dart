@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/services/user_service.dart';
 import 'package:flutter/services.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:confetti/confetti.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
@@ -93,7 +93,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
   }
 
   void _checkOwnership() {
-    final currentUser = FirebaseAuth.instance.currentUser;
+    final currentUser = UserService().currentUser;
     final group = _controller.group.value;
     if (mounted && group != null && currentUser != null) {
       setState(() {
@@ -469,7 +469,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
   }
 
   void _showInviteDialog() {
-    final currentUser = FirebaseAuth.instance.currentUser;
+    final currentUser = UserService().currentUser;
     if (currentUser == null) return;
 
     showModalBottomSheet(
@@ -698,7 +698,7 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
       backgroundColor: Colors.transparent,
       builder: (_) => CreateChallengeModal(
         onCreate: (title, kind, value, start, end) async {
-          final currentUser = FirebaseAuth.instance.currentUser;
+          final currentUser = UserService().currentUser;
           if (currentUser == null) return;
 
           ChallengeMetric metric;

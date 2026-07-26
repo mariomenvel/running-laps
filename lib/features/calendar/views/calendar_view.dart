@@ -1,7 +1,7 @@
 import 'dart:async';
+import 'package:running_laps/core/services/user_service.dart';
 import 'package:running_laps/features/training/data/training_repository.dart';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
@@ -74,18 +74,9 @@ class _CalendarViewState extends State<CalendarView>
   }
 
   Future<void> _initWithAuth() async {
-    // currentUser primero (síncrono, disponible si ya autenticado)
-    // authStateChanges como fallback con timeout de 5s
-    User? user = FirebaseAuth.instance.currentUser;
-    user ??= await FirebaseAuth.instance.authStateChanges()
-          .firstWhere((u) => u != null)
-          .timeout(
-            const Duration(seconds: 5),
-            onTimeout: () => FirebaseAuth.instance.currentUser,
-          );
-    if (user == null) return;
-    if (!mounted) return;
-    final uid = user.uid;
+    // Espera a que Firebase restaure la sesión (arranque en frío).
+    final uid = await UserService().awaitCurrentUid();
+    if (uid == null || !mounted) return;
     setState(() {
       _vm = CalendarViewModel(userId: uid);
       _vmReady = true;
@@ -138,7 +129,7 @@ class _CalendarViewState extends State<CalendarView>
     final currentTab =
         MainShell.shellKey.currentState?.tabIndexNotifier.value;
     if (currentTab == 1 && _initialized) {
-      final uid = FirebaseAuth.instance.currentUser?.uid;
+      final uid = UserService().currentUid;
       if (uid != null) {
         _loadAdjustUsage(uid);
         _vm?.loadAll();
@@ -149,7 +140,7 @@ class _CalendarViewState extends State<CalendarView>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      final uid = FirebaseAuth.instance.currentUser?.uid;
+      final uid = UserService().currentUid;
       if (uid != null) {
         _loadAdjustUsage(uid);
         _vm?.loadAll();
@@ -172,7 +163,7 @@ class _CalendarViewState extends State<CalendarView>
   }
 
   Future<void> _requestAdjustPreview() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = UserService().currentUid;
     final text = _adjustController.text.trim();
     if (uid == null || text.isEmpty) return;
     // Enviar corta el dictado si sigue abierto — el micro no debe seguir
@@ -204,7 +195,7 @@ class _CalendarViewState extends State<CalendarView>
   }
 
   Future<void> _applyPreview() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = UserService().currentUid;
     final preview = _pendingPreview;
     if (uid == null || preview == null) return;
     _adjustProcessing.value = true;
@@ -656,7 +647,7 @@ class _CalendarViewState extends State<CalendarView>
           onPressed: () => launchAiCoachOnboarding(
             context,
             onCompleted: () async {
-              final uid = FirebaseAuth.instance.currentUser?.uid;
+              final uid = UserService().currentUid;
               if (uid == null) return;
               final profile = await AiCoachRepository().getProfile(uid: uid);
               if (mounted) setState(() => _hasAiCoachProfile = profile != null);
@@ -728,7 +719,7 @@ class _CalendarViewState extends State<CalendarView>
   // ── Objetivos: competición marcada o CTA para marcar una ─────────────────
 
   Widget _buildRaceGoalsQuickEntry() {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = UserService().currentUid;
     if (uid == null) return const SizedBox.shrink();
 
     final next = _raceGoals.nextAnyFrom(DateTime.now());
@@ -1616,7 +1607,7 @@ class _CalendarViewState extends State<CalendarView>
                                                 isDestructive: true,
                                               );
                                               if (confirm != true || !mounted) return;
-                                              final uid = FirebaseAuth.instance.currentUser?.uid;
+                                              final uid = UserService().currentUid;
                                               if (uid == null) return;
                                               await AthleteSessionRepository().deleteSession(uid: uid, id: s.id);
                                               if (!mounted) return;

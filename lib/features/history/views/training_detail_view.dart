@@ -1,7 +1,7 @@
 import 'dart:async';
+import 'package:running_laps/core/services/user_service.dart';
 import 'dart:math' show max, min;
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
 import 'package:flutter/material.dart';
@@ -149,7 +149,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
 
   Future<int?> _loadFcMax() async {
     try {
-      final uid = FirebaseAuth.instance.currentUser?.uid;
+      final uid = UserService().currentUid;
       if (uid == null) return null;
       final profile = await ZonesRepository().getUserProfile(uid);
       return profile?.fcMax;

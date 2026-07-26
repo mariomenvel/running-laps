@@ -2,7 +2,7 @@
 // Extraído de group_rewards_screen.dart (el wrapper GroupRewardsScreen, huérfano,
 // se eliminó). Lo usa group_screen.dart dentro de su TabBarView.
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:running_laps/core/services/user_service.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/config/app_theme.dart';
 import '../viewmodels/group_rewards_controller.dart';
@@ -249,7 +249,7 @@ class _GroupRewardsBodyState extends State<GroupRewardsBody>
   }
 
   Widget _buildGroupHistoryItem(GroupHistoryItem item) {
-    final String? myUid = FirebaseAuth.instance.currentUser?.uid;
+    final String? myUid = UserService().currentUid;
     final bool isMe = item.uid == myUid;
     final Color accentColor =
         item.isMedal ? _getMedalColor(item.medal!.medal) : AppColors.brand;
@@ -520,7 +520,7 @@ class _PremiumMedalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String? myUid = FirebaseAuth.instance.currentUser?.uid;
+    final String? myUid = UserService().currentUid;
     final bool isMe = item.uid == myUid;
     final bool isTop3 = rank <= 3;
     final rankColor = _getRankColor(rank);
@@ -700,7 +700,7 @@ class _PremiumBadgeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String? myUid = FirebaseAuth.instance.currentUser?.uid;
+    final String? myUid = UserService().currentUid;
     final bool isMe = item.uid == myUid;
 
     return Container(

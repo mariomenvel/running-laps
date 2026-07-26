@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
@@ -20,7 +19,7 @@ class AiCoachSettingsView extends StatefulWidget {
 }
 
 class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
-  String get _uid => FirebaseAuth.instance.currentUser?.uid ?? '';
+  String get _uid => UserService().currentUid ?? '';
 
   final _goalDescriptionCtrl = TextEditingController();
   final _coachNotesCtrl = TextEditingController();

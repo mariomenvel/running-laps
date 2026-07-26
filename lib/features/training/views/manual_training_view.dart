@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:running_laps/core/services/user_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/services/pb_celebration_service.dart';
@@ -224,7 +224,7 @@ class _ManualTrainingViewState extends State<ManualTrainingView> {
       final newTrainingId = await _repo.createTraining(entrenamiento);
 
       // Fire-and-forget: detecta récords y los celebra con notificación.
-      final uid = FirebaseAuth.instance.currentUser?.uid;
+      final uid = UserService().currentUid;
       if (uid != null) {
         PbCelebrationService().checkAfterSave(
           uid: uid,

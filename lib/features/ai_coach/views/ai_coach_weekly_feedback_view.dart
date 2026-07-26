@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
+import 'package:running_laps/core/services/user_service.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../data/ai_coach_automation_service.dart';
 import '../data/ai_coach_models.dart';
 import '../data/ai_coach_repository.dart';
@@ -95,7 +95,7 @@ class _AiCoachWeeklyFeedbackViewState
   }
 
   Future<void> _save() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = UserService().currentUid;
     if (uid == null) return;
 
     final molestiaError = _validateCoachText(_molestiaController.text);

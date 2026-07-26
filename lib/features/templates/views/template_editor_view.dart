@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/services/user_service.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/back_pill.dart';
@@ -8,7 +9,6 @@ import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/core/widgets/gradient_banner.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../data/template_models.dart';
 import '../data/templates_repository.dart';
 import '../widgets/block_editor_sheet.dart';
@@ -86,7 +86,7 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
   }
 
   Future<void> _loadAsync() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = UserService().currentUid;
     if (uid == null) return;
 
     // Cargar si el usuario tiene FCmáx configurada

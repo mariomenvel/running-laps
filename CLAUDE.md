@@ -35,7 +35,9 @@ Feature-First + MVVM. Cada feature en `lib/features/<name>/` con subcarpetas `vi
   - `users/{uid}/aiCoachFeedback` y demás docs del coach → `AiCoachRepository`
   - Generación de datos de prueba del panel admin → `TestDataService` (`core/services/test_data_service.dart`)
 
-  ⚠️ Pendiente: `FirebaseAuth.instance.currentUser?.uid` **sí** sigue apareciendo en 23 vistas (61 usos). Es la mitad de la regla que falta por cumplir; migrarlo es un cambio aparte y más ancho.
+  - Uid del usuario → `UserService().currentUid`, o `await UserService().awaitCurrentUid()` cuando haya que esperar a que Firebase restaure la sesión en un arranque en frío (home, calendario y analytics lo necesitan). Resto de auth (stream de sesión, signOut, verificación de email) → `AuthRepository`.
+
+  ✅ **La regla se cumple entera** (26 jul 2026): cero vistas instancian `FirebaseFirestore.instance` o `FirebaseAuth.instance`, y hay un test que lo vigila — `test/features/architecture_test.dart`. Si alguien lo reintroduce, la suite falla y dice a qué servicio llevarlo.
 - **No** importar `dart:html` directamente — usar `kIsWeb` de `foundation.dart`.
 
 Paths clave:

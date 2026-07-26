@@ -1,5 +1,4 @@
 import 'package:running_laps/core/services/user_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_launcher.dart';
@@ -9,7 +8,7 @@ class WelcomeView extends StatelessWidget {
   const WelcomeView({super.key});
 
   Future<void> _completeOnboarding() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = UserService().currentUid;
     if (uid == null) return;
     await UserService().completeOnboarding(uid);
     // AuthWrapper reacciona automáticamente al stream de Firestore
@@ -76,7 +75,7 @@ class WelcomeView extends StatelessWidget {
                         onCompleted: () async {
                           try {
                             final uid =
-                                FirebaseAuth.instance.currentUser?.uid;
+                                UserService().currentUid;
                             if (uid == null) return;
                             await UserService().updateProfileFields(uid, {
                               'onboardingCompleted': true,

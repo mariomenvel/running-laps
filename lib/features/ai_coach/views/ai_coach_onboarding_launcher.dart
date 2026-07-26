@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:running_laps/core/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
@@ -13,7 +13,7 @@ Future<void> launchAiCoachOnboarding(
   BuildContext context, {
   Future<void> Function()? onCompleted,
 }) async {
-  final uid = FirebaseAuth.instance.currentUser?.uid;
+  final uid = UserService().currentUid;
   if (uid == null) return;
 
   final repo = AiCoachRepository();

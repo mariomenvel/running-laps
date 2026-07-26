@@ -1,7 +1,7 @@
 import 'dart:math' show min;
+import 'package:running_laps/core/services/user_service.dart';
 import 'package:running_laps/features/training/data/training_repository.dart';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
@@ -123,7 +123,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   }
 
   Future<void> _generateCurrentWeekPlan() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = UserService().currentUid;
     if (uid == null) return;
     final generated =
         await AiCoachAutomationService().forceGenerateCurrentWeekPlan(uid);
@@ -169,23 +169,15 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   }
 
   Future<void> _initWithAuth() async {
-    // currentUser primero (síncrono, disponible si ya autenticado)
-    // authStateChanges como fallback con timeout de 5s
-    User? user = FirebaseAuth.instance.currentUser;
-    user ??= await FirebaseAuth.instance.authStateChanges()
-          .firstWhere((u) => u != null)
-          .timeout(
-            const Duration(seconds: 5),
-            onTimeout: () => FirebaseAuth.instance.currentUser,
-          );
-    if (user == null) return;
-    if (!mounted) return;
+    // Espera a que Firebase restaure la sesión (arranque en frío).
+    final uid = await UserService().awaitCurrentUid();
+    if (uid == null || !mounted) return;
     setState(() {
-      _vm = HomeViewModel(userId: user!.uid);
+      _vm = HomeViewModel(userId: uid);
       _vmReady = true;
     });
     _vm!.loadAll();
-    _checkAiCoachProfile(user.uid);
+    _checkAiCoachProfile(uid);
   }
 
   Future<void> _checkAiCoachProfile(String uid) async {
@@ -220,7 +212,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     final currentTab =
         MainShell.shellKey.currentState?.tabIndexNotifier.value;
     if (currentTab == 0 && _initialized) {
-      final uid = FirebaseAuth.instance.currentUser?.uid;
+      final uid = UserService().currentUid;
       if (uid != null) {
         _checkWeeklyFeedback(uid);
         _checkMissingPlan(uid);
@@ -231,7 +223,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      final uid = FirebaseAuth.instance.currentUser?.uid;
+      final uid = UserService().currentUid;
       if (uid != null) {
         _checkWeeklyFeedback(uid);
         _checkMissingPlan(uid);

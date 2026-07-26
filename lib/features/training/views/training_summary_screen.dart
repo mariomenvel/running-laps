@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:running_laps/core/services/user_service.dart';
 import 'package:running_laps/core/services/pb_celebration_service.dart';
 import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/features/profile/data/zones_repository.dart';
@@ -135,7 +135,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
 
   Future<void> _loadFcMax() async {
     try {
-      final uid = FirebaseAuth.instance.currentUser?.uid;
+      final uid = UserService().currentUid;
       if (uid == null) return;
       final profile = await ZonesRepository().getUserProfile(uid);
       if (!mounted || profile == null) return;
@@ -322,7 +322,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
       final id = widget.entrenamiento.id;
       if (id == null) throw Exception('Training ID missing');
 
-      final uid = FirebaseAuth.instance.currentUser?.uid;
+      final uid = UserService().currentUid;
       if (uid == null) throw Exception('No user');
 
       final updates = <String, dynamic>{

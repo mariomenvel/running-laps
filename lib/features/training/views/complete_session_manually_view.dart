@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:running_laps/core/services/user_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/services/pb_celebration_service.dart';
@@ -206,7 +206,7 @@ class _CompleteSessionManuallyViewState
     setState(() => _saving = true);
 
     try {
-      final uid = FirebaseAuth.instance.currentUser?.uid;
+      final uid = UserService().currentUid;
       if (uid == null) throw Exception('No hay usuario autenticado');
 
       final series = <Serie>[];

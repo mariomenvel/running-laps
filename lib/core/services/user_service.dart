@@ -11,6 +11,26 @@ class UserService {
 
   User? get currentUser => _auth.currentUser;
 
+  /// Uid del usuario autenticado, o null. Punto único para las vistas: no
+  /// deben instanciar `FirebaseAuth.instance` (ver CLAUDE.md § Arquitectura).
+  String? get currentUid => _auth.currentUser?.uid;
+
+  /// Uid esperando a que Firebase restaure la sesión al arrancar.
+  ///
+  /// `currentUser` es síncrono y está disponible si ya había sesión, pero en
+  /// un arranque en frío puede tardar: por eso el fallback al stream con
+  /// timeout. Este patrón estaba copiado en home, calendario y analytics.
+  Future<String?> awaitCurrentUid({
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    final user = _auth.currentUser ??
+        await _auth
+            .authStateChanges()
+            .firstWhere((u) => u != null)
+            .timeout(timeout, onTimeout: () => _auth.currentUser);
+    return user?.uid;
+  }
+
   /// Checks if the user is signed in with Google
   bool isGoogleUser() => _hasProvider('google.com');
 

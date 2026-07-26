@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:running_laps/core/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart'; // Para SystemSound
@@ -16,7 +17,6 @@ import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart' show AppMotion;
 import 'package:running_laps/core/constants/app_help_content.dart';
 import 'package:running_laps/core/widgets/info_tooltip.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/services/gps_service.dart';
 import '../../../core/services/zones_service.dart';
 import '../../../core/services/heart_rate_service.dart';
@@ -204,7 +204,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
 
       // Load persisted stride length before starting so the first ticks
       // benefit from the previously calibrated value.
-      final uid = FirebaseAuth.instance.currentUser?.uid;
+      final uid = UserService().currentUid;
       if (uid != null) {
         await _gpsService!.loadStrideLength(uid);
       }

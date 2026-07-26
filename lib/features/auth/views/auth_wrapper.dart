@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/services/notification_service.dart';
+import 'package:running_laps/features/auth/data/auth_repository.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/features/auth/views/auth_page.dart';
@@ -29,7 +30,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
+      stream: AuthRepository().authStateChanges(),
       builder: (context, authSnap) {
         if (authSnap.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -44,9 +45,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
           _verificationTimer ??= Timer.periodic(
             const Duration(seconds: 3),
             (_) async {
-              await FirebaseAuth.instance.currentUser?.reload();
+              await UserService().currentUser?.reload();
               final verified =
-                  FirebaseAuth.instance.currentUser?.emailVerified ?? false;
+                  UserService().currentUser?.emailVerified ?? false;
               if (verified && mounted) setState(() {});
             },
           );

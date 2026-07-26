@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/widgets/rpe_badge.dart';
@@ -241,10 +242,10 @@ class _BlocksListSectionState extends State<BlocksListSection> {
       final count = await SavedBlocksRepository().getCount();
       if (count >= SavedBlocksRepository.freeLimit) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(
-              'Límite de ${SavedBlocksRepository.freeLimit} bloques guardados alcanzado',
-            )),
+          ModernSnackBar.showWarning(
+            context,
+            'Límite de ${SavedBlocksRepository.freeLimit} bloques guardados '
+            'alcanzado',
           );
         }
         return;
@@ -260,16 +261,12 @@ class _BlocksListSectionState extends State<BlocksListSection> {
       await SavedBlocksRepository().saveBlock(saved);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Bloque guardado')),
-        );
+        ModernSnackBar.showSuccess(context, 'Bloque guardado');
       }
     } catch (e) {
       debugPrint('[BlocksList] saveBlock error: $e');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al guardar: $e')),
-        );
+        ModernSnackBar.showError(context, 'Error al guardar: $e');
       }
     }
   }

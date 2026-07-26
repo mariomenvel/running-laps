@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
@@ -56,7 +55,7 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   Future<void> _loadUserData() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = UserService().currentUid;
     if (uid == null) return;
     final data = await UserService().getUserData(uid);
     if (!mounted) return;
@@ -103,7 +102,7 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   Future<void> _generateTestData() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = UserService().currentUid;
     if (uid == null) return;
 
     ModernSnackBar.showWarning(context, 'Generando datos de prueba...');
@@ -247,7 +246,7 @@ class _ProfileViewState extends State<ProfileView> {
                 context,
                 shellIndex: 9,
                 standalone: () => ZonesConfigScreen(
-                    uid: FirebaseAuth.instance.currentUser?.uid ?? ''),
+                    uid: UserService().currentUid ?? ''),
               ),
             ),
             const _MenuDivider(),
@@ -356,7 +355,7 @@ class _ProfileViewState extends State<ProfileView> {
                 label: 'Reset cuotas IA',
                 subtitle: 'Reinicia messagesUsed y previewsGenerated a 0',
                 onTap: () async {
-                  final uid = FirebaseAuth.instance.currentUser?.uid;
+                  final uid = UserService().currentUid;
                   if (uid == null) return;
                   final now = DateTime.now();
                   final monday = now.subtract(Duration(days: now.weekday - 1));
@@ -384,7 +383,7 @@ class _ProfileViewState extends State<ProfileView> {
                 label: 'Reset feedback semanal',
                 subtitle: 'Elimina el feedback de la semana actual',
                 onTap: () async {
-                  final uid = FirebaseAuth.instance.currentUser?.uid;
+                  final uid = UserService().currentUid;
                   if (uid == null) return;
 
                   final now = DateTime.now();

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:intl/intl.dart';
 import '../../data/models/enums.dart';
 import 'package:running_laps/config/app_theme.dart';
@@ -524,22 +525,7 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
     widget.onCreate(title, _selectedKind, value, _startDate, _endDate);
   }
 
-  void _showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline, color: Colors.white),
-            const SizedBox(width: 12),
-            Text(msg),
-          ],
-        ),
-        backgroundColor: AppColors.rpeMax,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
+  void _showError(String msg) => ModernSnackBar.showError(context, msg);
 
   String _getKindLabel(GoalKind kind) {
     switch (kind) {

@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
@@ -43,7 +42,7 @@ class _AvatarCustomizerViewState extends State<AvatarCustomizerView> {
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      final uid = FirebaseAuth.instance.currentUser!.uid;
+      final uid = UserService().currentUid!;
       await UserService().saveGenerativeAvatar(uid, _config.toMap());
       if (mounted) {
         ModernSnackBar.showSuccess(context, 'Avatar guardado');

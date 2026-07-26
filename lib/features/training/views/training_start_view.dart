@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:running_laps/core/services/user_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -31,7 +32,6 @@ import '../widgets/create_tag_dialog.dart';
 import 'training_session_view.dart';
 import '../../templates/data/template_models.dart';
 import '../../templates/views/template_editor_view.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 import 'package:running_laps/core/services/heart_rate_service.dart';
@@ -165,7 +165,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
 
 
   Future<void> _loadFcMax() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = UserService().currentUid;
     if (uid == null) return;
     try {
       final profile = await ZonesRepository().getUserProfile(uid);
@@ -177,7 +177,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
 
   Future<void> _loadPlannedSession() async {
     if (widget.athleteSessionId == null) return;
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = UserService().currentUid;
     if (uid == null) return;
     try {
       final session = await AthleteSessionRepository()
@@ -195,7 +195,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
       return;
     }
     try {
-      final uid = FirebaseAuth.instance.currentUser?.uid;
+      final uid = UserService().currentUid;
       if (uid == null) {
         if (mounted) setState(() => _loadingTodaySession = false);
         return;
@@ -1104,7 +1104,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
 
       // ── Vincular con sesión planificada ───────────────────────────────
       try {
-        final uid = FirebaseAuth.instance.currentUser?.uid;
+        final uid = UserService().currentUid;
         if (uid != null) {
           if (widget.athleteSessionId != null) {
             // Vinculación automática — viene de "Ejecutar sesión"
@@ -1176,7 +1176,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
       // CAMBIO 5 — actualizar Firestore con fcMediaSesion + loadScore TRIMP
       if (fcMediaSesion != null && _fcMax != null) {
         try {
-          final uid = FirebaseAuth.instance.currentUser?.uid;
+          final uid = UserService().currentUid;
           if (uid != null) {
             final profile = await ZonesRepository().getUserProfile(uid);
             final double distKm = seriesSnapshot.fold<int>(0, (acc, s) => acc + s.distanciaM) / 1000.0;

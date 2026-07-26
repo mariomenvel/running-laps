@@ -1,7 +1,8 @@
 import 'dart:async';
+import 'package:running_laps/features/auth/data/auth_repository.dart';
+import 'package:running_laps/core/services/user_service.dart';
 
 import 'package:cloud_functions/cloud_functions.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
@@ -31,9 +32,9 @@ class _EmailVerificationPendingViewState
 
   Future<void> _checkVerified() async {
     setState(() => _checking = true);
-    final user = FirebaseAuth.instance.currentUser;
+    final user = UserService().currentUser;
     await user?.reload();
-    final refreshedUser = FirebaseAuth.instance.currentUser;
+    final refreshedUser = UserService().currentUser;
 
     if (refreshedUser?.emailVerified == true) {
       try {
@@ -60,7 +61,7 @@ class _EmailVerificationPendingViewState
   }
 
   Future<void> _resendEmail() async {
-    await FirebaseAuth.instance.currentUser?.sendEmailVerification();
+    await UserService().currentUser?.sendEmailVerification();
     if (!mounted) return;
     ModernSnackBar.showSuccess(context, 'Email reenviado');
     setState(() {
@@ -84,7 +85,7 @@ class _EmailVerificationPendingViewState
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final email =
-        FirebaseAuth.instance.currentUser?.email ?? '';
+        UserService().currentUser?.email ?? '';
 
     return Scaffold(
       body: Container(
@@ -208,7 +209,7 @@ class _EmailVerificationPendingViewState
                 ),
                 const SizedBox(height: 24),
                 TextButton(
-                  onPressed: () => FirebaseAuth.instance.signOut(),
+                  onPressed: () => AuthRepository().signOut(),
                   child: Text(
                     'Cerrar sesión',
                     style: TextStyle(

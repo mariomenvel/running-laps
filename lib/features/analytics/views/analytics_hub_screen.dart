@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:running_laps/core/services/user_service.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -35,18 +35,10 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
   }
 
   Future<void> _initWithAuth() async {
-    // currentUser primero (síncrono, disponible si ya autenticado)
-    // authStateChanges como fallback con timeout de 5s
-    User? user = FirebaseAuth.instance.currentUser;
-    user ??= await FirebaseAuth.instance.authStateChanges()
-          .firstWhere((u) => u != null)
-          .timeout(
-            const Duration(seconds: 5),
-            onTimeout: () => FirebaseAuth.instance.currentUser,
-          );
-    if (user == null) return;
-    if (!mounted) return;
-    final ctrl = AnalyticsHubController(userId: user.uid);
+    // Espera a que Firebase restaure la sesión (arranque en frío).
+    final uid = await UserService().awaitCurrentUid();
+    if (uid == null || !mounted) return;
+    final ctrl = AnalyticsHubController(userId: uid);
     setState(() {
       _ctrl = ctrl;
       _ctrlReady = true;

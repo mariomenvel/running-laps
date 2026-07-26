@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/services/user_service.dart';
 import 'package:flutter/services.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 import 'dart:ui';
 
@@ -44,7 +44,7 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
   @override
   void initState() {
     super.initState();
-    _currentUserId = FirebaseAuth.instance.currentUser?.uid;
+    _currentUserId = UserService().currentUid;
   }
 
   @override
@@ -904,7 +904,7 @@ class _JoinByCodeSheetState extends State<_JoinByCodeSheet> {
     }
     setState(() { _isJoining = true; _error = null; });
     try {
-      final currentUser = FirebaseAuth.instance.currentUser;
+      final currentUser = UserService().currentUser;
       await _invitesRepo.joinByShortCode(
         code,
         widget.currentUserId,
