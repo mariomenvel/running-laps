@@ -1,6 +1,6 @@
 # TESTING.md — Tests de Running Laps
 
-> Estado: **186 tests en 27 archivos** (julio 2026). Suite completa: ~5 segundos.
+> Estado: **242 tests en 31 archivos** (26 jul 2026). Suite completa: ~20 segundos.
 
 ---
 
@@ -43,9 +43,9 @@ añadir su paso correspondiente al ci.yml — si no, solo correrá en local.
 
 ```
 test/
-├── unit/          # Lógica pura: cálculos, parsers, máquinas de estado (112 tests)
-├── features/      # Modelos + repositorios contra Firestore simulado (52 tests)
-└── widget/        # Pantallas/widgets montados en entorno simulado (22 tests)
+├── unit/          # Lógica pura: cálculos, parsers, máquinas de estado (128 tests)
+├── features/      # Modelos + repositorios contra Firestore simulado (86 tests)
+└── widget/        # Pantallas/widgets montados en entorno simulado (28 tests)
 ```
 
 ---
