@@ -1,24 +1,16 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
-import 'package:running_laps/core/services/notification_service.dart';
-import 'package:running_laps/core/widgets/main_shell.dart';
-import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
-import 'package:running_laps/features/ai_coach/data/ai_coach_prompt_session_generator.dart';
-import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
-import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
-import 'package:running_laps/features/templates/data/athlete_session_mapper.dart';
 import 'package:running_laps/core/widgets/app_confirm_dialog.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/features/templates/data/workout_block.dart';
-import 'package:running_laps/features/templates/data/workout_segment.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
 import 'package:running_laps/features/templates/viewmodels/workout_ai_panel_view_model.dart';
+import 'package:running_laps/features/templates/viewmodels/workout_editor_view_model.dart';
 import 'package:running_laps/features/templates/views/widgets/blocks_list_section.dart';
 import 'package:running_laps/features/templates/views/widgets/workout_type_selector.dart';
-import 'package:uuid/uuid.dart';
 
 class WorkoutEditorScreen extends StatefulWidget {
   const WorkoutEditorScreen({
@@ -41,78 +33,50 @@ class WorkoutEditorScreen extends StatefulWidget {
 }
 
 class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
-  late final ValueNotifier<WorkoutType?> _selectedType;
-  late final ValueNotifier<String> _title;
-  late final ValueNotifier<List<WorkoutBlock>> _blocks;
-  late final ValueNotifier<TimeOfDay?> _scheduledTime;
-  late final ValueNotifier<String> _notes;
+  late final WorkoutEditorViewModel _vm;
 
   late final TextEditingController _titleController;
   late final TextEditingController _notesController;
 
+  // Panel de IA: estado propio de la UI (desplegado/plegado, dictado). La
+  // generación en sí la hace el viewmodel.
   final _aiPromptController = TextEditingController();
   final _aiPanelViewModel = WorkoutAiPanelViewModel();
   final _aiPanelExpanded = ValueNotifier<bool>(false);
-  final _aiGenerating = ValueNotifier<bool>(false);
-
-  // Effective scheduled date resolved from explicit param > shellParams > initialSession
-  DateTime? _effectiveScheduledDate;
-
-  bool _titleEdited = false;
-  bool _titleIsAuto = true;
 
   @override
   void initState() {
     super.initState();
-    try {
-      final mapped = mapAthleteSessionToWorkout(widget.shellParams?.session);
-      final s = widget.initialSession ?? mapped;
+    _vm = WorkoutEditorViewModel(
+      initialSession: widget.initialSession,
+      scheduledDate:  widget.scheduledDate,
+      shellParams:    widget.shellParams,
+      isQuickStart:   widget.isQuickStart,
+    );
 
-      _effectiveScheduledDate = widget.scheduledDate
-          ?? _parseShellDate(widget.shellParams?.date)
-          ?? s?.scheduledDate;
+    _titleController = TextEditingController(text: _vm.title.value);
+    _vm.title.addListener(_syncTitleController);
 
-      _selectedType    = ValueNotifier(s?.type);
-      _title           = ValueNotifier(s?.title ?? '');
-      _blocks          = ValueNotifier(List.of(s?.blocks ?? []));
-      _scheduledTime   = ValueNotifier(s?.scheduledTime);
-      _notes           = ValueNotifier(s?.notes ?? '');
+    _notesController = TextEditingController(text: _vm.notes.value);
+    _notesController.addListener(
+        () => _vm.onNotesChanged(_notesController.text));
 
-      _titleController = TextEditingController(text: _title.value);
-      _titleController.addListener(() => _title.value = _titleController.text);
-
-      _notesController = TextEditingController(text: _notes.value);
-      _notesController.addListener(() => _notes.value = _notesController.text);
-
-      _aiPanelViewModel.recognizedText.addListener(_onRecognizedTextChanged);
-
-      if (s != null && s.title.isNotEmpty) {
-        _titleEdited = true;
-        final autoTitle = generateTitle(s);
-        _titleIsAuto = s.title == autoTitle || s.title == titleFromType(s.type);
-      } else {
-        _titleIsAuto = true;
-      }
-    } catch (e, st) {
-      debugPrint('[WorkoutEditor] initState ERROR: $e');
-      debugPrint('[WorkoutEditor] stack: $st');
-    }
+    _aiPanelViewModel.recognizedText.addListener(_onRecognizedTextChanged);
+    // Ojo: nada de initSpeech() aquí — el reconocimiento de voz se inicializa
+    // (y pide permisos) al pulsar el micro por primera vez. Ver CLAUDE.md,
+    // "Permisos runtime".
   }
 
   @override
   void dispose() {
-    _selectedType.dispose();
-    _title.dispose();
-    _blocks.dispose();
-    _scheduledTime.dispose();
-    _notes.dispose();
+    _vm.title.removeListener(_syncTitleController);
+    _vm.dispose();
     _titleController.dispose();
     _notesController.dispose();
     _aiPanelViewModel.recognizedText.removeListener(_onRecognizedTextChanged);
     _aiPanelViewModel.dispose();
     _aiPromptController.dispose();
     _aiPanelExpanded.dispose();
-    _aiGenerating.dispose();
     super.dispose();
   }
 
@@ -126,120 +90,20 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
     }
   }
 
-  static DateTime? _parseShellDate(String? date) {
-    if (date == null) return null;
-    return DateTime.tryParse(date);
-  }
-
-  bool _hasChanges() {
-    final s = widget.initialSession;
-    if (s == null) {
-      return _selectedType.value != null ||
-          _title.value.isNotEmpty ||
-          _blocks.value.isNotEmpty ||
-          _scheduledTime.value != null ||
-          _notes.value.isNotEmpty;
-    }
-    return _selectedType.value != s.type ||
-        _title.value != s.title ||
-        _blocks.value.length != s.blocks.length ||
-        _scheduledTime.value != s.scheduledTime ||
-        _notes.value != (s.notes ?? '');
-  }
-
-  // ── Actions ───────────────────────────────────────────────────────────────
-
-  List<WorkoutBlock> _defaultBlocksForType(WorkoutType type) {
-    switch (type) {
-      case WorkoutType.continuous:
-        return [
-          WorkoutBlock(role: BlockRole.warmup, repetitions: 1,
-            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 600)]),
-          WorkoutBlock(role: BlockRole.main, repetitions: 1,
-            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 2700)]),
-          WorkoutBlock(role: BlockRole.cooldown, repetitions: 1,
-            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 600)]),
-        ];
-
-      case WorkoutType.intervals:
-        return [
-          WorkoutBlock(role: BlockRole.warmup, repetitions: 1,
-            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 600)]),
-          WorkoutBlock(role: BlockRole.main, repetitions: 5,
-            segments: [
-              WorkoutSegment(type: SegmentType.interval, distanceM: 1000),
-              WorkoutSegment(type: SegmentType.recovery, durationSec: 90),
-            ]),
-          WorkoutBlock(role: BlockRole.cooldown, repetitions: 1,
-            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 600)]),
-        ];
-
-      case WorkoutType.fartlek:
-        return [
-          WorkoutBlock(role: BlockRole.warmup, repetitions: 1,
-            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 600)]),
-          WorkoutBlock(role: BlockRole.main, repetitions: 4,
-            segments: [
-              WorkoutSegment(type: SegmentType.interval, durationSec: 180),
-              WorkoutSegment(type: SegmentType.recovery, durationSec: 120),
-            ]),
-          WorkoutBlock(role: BlockRole.cooldown, repetitions: 1,
-            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 600)]),
-        ];
-
-      case WorkoutType.hills:
-        return [
-          WorkoutBlock(role: BlockRole.warmup, repetitions: 1,
-            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 600)]),
-          WorkoutBlock(role: BlockRole.main, repetitions: 8,
-            segments: [
-              WorkoutSegment(type: SegmentType.interval, durationSec: 60),
-              WorkoutSegment(type: SegmentType.recovery, durationSec: 90),
-            ]),
-          WorkoutBlock(role: BlockRole.cooldown, repetitions: 1,
-            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 600)]),
-        ];
-
-      case WorkoutType.competition:
-        return [
-          WorkoutBlock(role: BlockRole.warmup, repetitions: 1,
-            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 900)]),
-          WorkoutBlock(role: BlockRole.main, repetitions: 1,
-            segments: [WorkoutSegment(type: SegmentType.interval, distanceM: 5000)]),
-          WorkoutBlock(role: BlockRole.cooldown, repetitions: 1,
-            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 600)]),
-        ];
-
-      case WorkoutType.free:
-        return [
-          WorkoutBlock(role: BlockRole.main, repetitions: 1,
-            segments: [WorkoutSegment(type: SegmentType.interval, durationSec: 3600)]),
-        ];
-    }
-  }
-
-  void _onTypeSelected(WorkoutType type) {
-    _selectedType.value = type;
-    if (!_titleEdited) {
-      _title.value = titleFromType(type);
-      _titleController.text = _title.value;
-      _titleIsAuto = true;
-    }
-
-    final blocks = _blocks.value;
-    final isEmpty = blocks.isEmpty ||
-        (blocks.length == 1 &&
-         blocks.first.role == BlockRole.main &&
-         blocks.first.segments.isEmpty);
-
-    if (isEmpty) {
-      _blocks.value = _defaultBlocksForType(type);
+  /// El viewmodel cambia el nombre por su cuenta al elegir tipo o generar con
+  /// IA; el TextField necesita reflejarlo. La comparación evita reescribir el
+  /// controlador cuando el cambio vino del propio teclado (movería el cursor).
+  void _syncTitleController() {
+    if (_titleController.text != _vm.title.value) {
+      _titleController.text = _vm.title.value;
     }
   }
 
   void _onRecognizedTextChanged() {
     _aiPromptController.text = _aiPanelViewModel.recognizedText.value;
   }
+
+  // ── Actions ───────────────────────────────────────────────────────────────
 
   Future<void> _toggleAiListening() async {
     await _aiPanelViewModel.toggleListening();
@@ -250,52 +114,26 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
   }
 
   Future<void> _generateFromAi() async {
-    final text = _aiPromptController.text.trim();
-    if (text.isEmpty) return;
-
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-
-    // Enviar corta el dictado si sigue abierto — el micro no debe seguir
+    // Enviar corta el dictado si sigue abierto: el micro no debe seguir
     // escuchando (y sobrescribiendo el campo) mientras se genera.
     if (_aiPanelViewModel.isListening.value) {
       await _aiPanelViewModel.toggleListening();
     }
 
-    _aiGenerating.value = true;
+    final result = await _vm.generateFromAi(_aiPromptController.text);
+    if (!mounted) return;
 
-    try {
-      final profile = await AiCoachRepository().getProfile(uid: uid);
-      if (!mounted) return;
-
-      const generator = AiCoachPromptSessionGenerator();
-      final session = await generator.generate(
-        prompt: text,
-        profile: profile,
-      );
-
-      if (!mounted) return;
-
-      _blocks.value = List.of(session.blocks);
-      _titleEdited = true;
-      _titleIsAuto = false;
-      _onTypeSelected(session.type);
-      _titleController.text = session.title;
-      _title.value = session.title;
-
+    if (result.success) {
       _aiPanelExpanded.value = false;
       _aiPromptController.clear();
       ModernSnackBar.showSuccess(context, 'Entrenamiento generado');
-    } catch (e) {
-      if (!mounted) return;
-      ModernSnackBar.showError(context, 'Error al generar');
-    } finally {
-      if (mounted) _aiGenerating.value = false;
+    } else if (result.errorMessage != null) {
+      ModernSnackBar.showError(context, result.errorMessage!);
     }
   }
 
   Future<void> _onClose() async {
-    if (!_hasChanges()) {
+    if (!_vm.hasChanges()) {
       if (mounted) _navigateBack();
       return;
     }
@@ -311,133 +149,14 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
   }
 
   Future<void> _onSave() async {
-    final type = _selectedType.value;
-    if (type == null && _blocks.value.isEmpty && !widget.isQuickStart) return;
-
-    final resolvedType = type ?? WorkoutType.free;
-
-    final blocks = _blocks.value.isNotEmpty
-        ? _blocks.value
-        : [
-            WorkoutBlock(
-              role: BlockRole.main,
-              repetitions: 1,
-              segments: [],
-            ),
-          ];
-
-    final userTitle = _title.value.trim();
-    final shouldRegenerate = userTitle.isEmpty || _titleIsAuto;
-
-    String resolvedTitle;
-    if (!shouldRegenerate) {
-      resolvedTitle = userTitle;
-    } else {
-      final mainBlock = blocks
-          .where((b) => b.role == BlockRole.main)
-          .firstOrNull;
-      final firstSeg = mainBlock?.segments
-          .where((s) => s.type == SegmentType.interval)
-          .firstOrNull;
-      final reps = mainBlock?.repetitions ?? 1;
-      final distM = firstSeg?.distanceM;
-      final durSec = firstSeg?.durationSec;
-
-      if ((resolvedType == WorkoutType.intervals ||
-           resolvedType == WorkoutType.hills) &&
-          distM != null && distM > 0) {
-        final distLabel = distM >= 1000
-            ? '${(distM / 1000).toStringAsFixed(distM % 1000 == 0 ? 0 : 1)}km'
-            : '${distM}m';
-        resolvedTitle = reps > 1 ? '$reps×$distLabel' : distLabel;
-      } else if ((resolvedType == WorkoutType.intervals ||
-                  resolvedType == WorkoutType.hills) &&
-                 durSec != null && durSec > 0) {
-        final min = durSec ~/ 60;
-        final sec = durSec % 60;
-        final timeLabel = sec == 0 ? '$min min' : "$min'$sec\"";
-        resolvedTitle = reps > 1 ? '$reps×$timeLabel' : timeLabel;
-      } else if (resolvedType == WorkoutType.continuous && distM != null) {
-        final km = distM / 1000;
-        resolvedTitle = 'Rodaje ${km.toStringAsFixed(km % 1 == 0 ? 0 : 1)}km';
-      } else if (resolvedType == WorkoutType.continuous && durSec != null) {
-        resolvedTitle = 'Rodaje ${durSec ~/ 60} min';
-      } else {
-        resolvedTitle = titleFromType(resolvedType);
-      }
-    }
-
-    final notesValue = _notes.value.trim().isEmpty ? null : _notes.value.trim();
-
-    final session = WorkoutSession(
-      id:             widget.initialSession?.id ?? const Uuid().v4(),
-      title:          resolvedTitle,
-      type:           resolvedType,
-      blocks:         blocks,
-      scheduledDate:  _effectiveScheduledDate,
-      scheduledTime:  _scheduledTime.value,
-      notes:          notesValue,
-      isTemplate:     widget.initialSession?.isTemplate ?? false,
-      templateId:     widget.initialSession?.templateId,
-    );
-
-    // Persiste como sesión planificada en Firestore si viene del calendario.
-    if (widget.shellParams != null || widget.scheduledDate != null) {
-      try {
-        final uid = FirebaseAuth.instance.currentUser?.uid;
-        if (uid != null) {
-          final athleteSession =
-              mapWorkoutSessionToAthlete(session, uid: uid);
-          final repo = AthleteSessionRepository();
-          if (widget.shellParams?.session != null) {
-            final originalId = widget.shellParams!.session!.id;
-            final sessionWithId = WorkoutSession(
-              id:            originalId,
-              title:         session.title,
-              description:   session.description,
-              type:          session.type,
-              blocks:        session.blocks,
-              scheduledDate: session.scheduledDate,
-              scheduledTime: session.scheduledTime,
-              notes:         session.notes,
-              isTemplate:    session.isTemplate,
-              templateId:    session.templateId,
-            );
-            await repo.updateSession(
-              mapWorkoutSessionToAthlete(sessionWithId, uid: uid),
-            );
-          } else {
-            await repo.createSession(athleteSession);
-            widget.shellParams?.onSaved?.call(athleteSession);
-          }
-
-          // Recordatorio "¡Entreno en 1 hora!" si la sesión tiene fecha y
-          // hora concretas (antes solo lo programaba una vista huérfana).
-          final schedDate = session.scheduledDate;
-          final schedTime = session.scheduledTime;
-          if (schedDate != null && schedTime != null) {
-            final sessionDateTime = DateTime(
-              schedDate.year, schedDate.month, schedDate.day,
-              schedTime.hour, schedTime.minute,
-            );
-            NotificationService()
-                .scheduleSessionReminder(
-                  sessionId: session.id,
-                  sessionDateTime: sessionDateTime,
-                  sessionTitle: session.title,
-                )
-                .catchError((Object e) =>
-                    debugPrint('[WorkoutEditor] session reminder: $e'));
-          }
-        }
-      } catch (e) {
-        debugPrint('[WorkoutEditor] persistAthleteSession error: $e');
-      }
-    }
+    final result = await _vm.save();
+    final session = result.session;
+    if (session == null) return; // blocked: falta tipo y bloques
 
     widget.onSave?.call(session);
     if (mounted) _navigateBack();
   }
+
 
   // ── Build ─────────────────────────────────────────────────────────────────
 
@@ -465,11 +184,11 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
             _SectionLabel('TIPO'),
             const SizedBox(height: AppSpacing.s),
             ValueListenableBuilder<WorkoutType?>(
-              valueListenable: _selectedType,
+              valueListenable: _vm.selectedType,
               builder: (_, type, __) {
                 return WorkoutTypeSelector(
                   selected: type,
-                  onSelected: _onTypeSelected,
+                  onSelected: _vm.onTypeSelected,
                 );
               },
             ),
@@ -481,11 +200,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
             const SizedBox(height: AppSpacing.s),
             TextField(
               controller: _titleController,
-              onChanged: (v) {
-              _title.value = v;
-              _titleEdited = true;
-              _titleIsAuto = false;
-            },
+              onChanged: _vm.onTitleEdited,
               maxLength: 60,
               style: TextStyle(
                 fontSize: 16,
@@ -504,7 +219,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
 
             // ── Sección 3: Bloques ───────────────────────────────────
             ValueListenableBuilder<WorkoutType?>(
-              valueListenable: _selectedType,
+              valueListenable: _vm.selectedType,
               builder: (_, type, __) => AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
                 child: type == null
@@ -516,12 +231,11 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                           _SectionLabel('BLOQUES'),
                           const SizedBox(height: AppSpacing.s),
                           ValueListenableBuilder<List<WorkoutBlock>>(
-                            valueListenable: _blocks,
+                            valueListenable: _vm.blocks,
                             builder: (_, blocks, __) => BlocksListSection(
                               blocks: blocks,
                               workoutType: type,
-                              onBlocksChanged: (updated) =>
-                                  _blocks.value = updated,
+                              onBlocksChanged: _vm.onBlocksChanged,
                             ),
                           ),
                           _divider(context),
@@ -566,13 +280,11 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
             // vivo si hay algo que guardar o no — evita el "guardar" que no
             // hace nada visible cuando el usuario no tocó nada.
             AnimatedBuilder(
-              animation: Listenable.merge(
-                [_selectedType, _title, _blocks, _scheduledTime, _notes],
-              ),
+              animation: _vm.formFields,
               builder: (_, __) {
-                final blocks = _blocks.value;
+                final blocks = _vm.blocks.value;
                 final isEditingExisting = widget.initialSession != null;
-                final hasChanges = _hasChanges();
+                final hasChanges = _vm.hasChanges();
                 final blocksInvalid = !widget.isQuickStart && blocks.isEmpty;
                 // En quick-start initialSession es el preset mínimo: aunque el
                 // usuario no cambie nada, "Empezar entrenamiento" debe ejecutar
@@ -751,7 +463,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: ValueListenableBuilder<bool>(
-                              valueListenable: _aiGenerating,
+                              valueListenable: _vm.aiGenerating,
                               builder: (_, generating, __) => FilledButton(
                                 onPressed: generating ? null : _generateFromAi,
                                 style: FilledButton.styleFrom(
@@ -813,30 +525,4 @@ class _SectionLabel extends StatelessWidget {
           color: AppColors.textSecondary(context),
         ),
       );
-}
-
-// ── ValueListenableBuilder2 ───────────────────────────────────────────────────
-
-class ValueListenableBuilder2<A, B> extends StatelessWidget {
-  const ValueListenableBuilder2({
-    super.key,
-    required this.first,
-    required this.second,
-    required this.builder,
-  });
-
-  final ValueListenable<A> first;
-  final ValueListenable<B> second;
-  final Widget Function(BuildContext, A, B, Widget?) builder;
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<A>(
-      valueListenable: first,
-      builder: (ctx, a, _) => ValueListenableBuilder<B>(
-        valueListenable: second,
-        builder: (ctx2, b, child) => builder(ctx2, a, b, child),
-      ),
-    );
-  }
 }

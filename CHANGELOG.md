@@ -1,5 +1,38 @@
 # CHANGELOG — Running Laps
 
+## [Refactor] — WorkoutEditorScreen pasa a MVVM (deuda #3) — 2026-07-26
+La lógica de negocio del editor sale de la `State` a
+`templates/viewmodels/workout_editor_view_model.dart`: composición de la
+`WorkoutSession`, nombre automático, bloques por defecto por tipo, generación
+por IA y persistencia como sesión planificada (con el recordatorio de 1 h). La
+vista se queda con lo suyo — renderizar, navegar y avisar. El viewmodel **no
+conoce `BuildContext`**: devuelve `SaveResult` / `AiGenerationResult` y es la
+vista quien decide el snackbar o el `pop`. 842 → 528 líneas de vista + 406 de
+viewmodel.
+
+**No se mergeó la rama `refactor/workout-editor-mvvm`** (parada desde el 21 jun).
+Main tocó ese fichero en 11 commits desde entonces, y la rama reintroducía
+`initSpeech()` en el `initState` — exactamente lo que se quitó al migrar a
+permisos just-in-time, que en iOS dispara el diálogo de micrófono al abrir la
+pantalla. Se rehízo desde main usando la rama solo como referencia de diseño
+(de ahí vienen `SaveResult`/`AiGenerationResult`). La colisión
+`WorkoutType.free` ↔ `continuous` que documentaba esa rama ya está arreglada en
+main: `free` mapea a `gimnasio_fuerza` y el round-trip funciona.
+
+Detalles del refactor que no son mecánicos:
+- El `TextEditingController` del nombre se sincroniza escuchando `vm.title`, con
+  comparación previa: sin ella, reescribir el controlador mientras el usuario
+  teclea le movería el cursor al final.
+- `resolveTitle` y `buildSession` son puras y están marcadas
+  `@visibleForTesting` — son lo que sostiene los 19 tests nuevos
+  (`test/features/templates/workout_editor_view_model_test.dart`, suite total
+  217 → 236).
+- Se eliminó `ValueListenableBuilder2`, un helper público definido en la vista
+  que no usaba nadie (por público, `flutter analyze` no lo marcaba).
+- Se retira el `try/catch` que envolvía el `initState`: solo tragaba el error y
+  dejaba los campos `late final` sin inicializar, así que el fallo reaparecía
+  después como `LateInitializationError`. Mejor que falle donde falla.
+
 ## [Chore] — Cerrada la deuda de cargas masivas: fuera `getAllEntrenamientos()` — 2026-07-26
 Última consulta del repo que traía hasta 500 entrenamientos de golpe **con sus
 `gpsPoints` dentro**. Sobrevivía solo por `home_view_legacy`, eliminada en la
