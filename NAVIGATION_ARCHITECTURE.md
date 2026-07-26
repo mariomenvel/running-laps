@@ -9,6 +9,20 @@
  
 Implementado mediante tabs ocultos en MainShell — todas las pantallas secundarias están en el IndexedStack pero sin botón en el BottomNav.
  
+## Orientación — solo vertical (jul 2026)
+ 
+La app está bloqueada en **portrait** en las tres capas (ninguna pantalla debe asumir landscape ni forzarlo):
+ 
+| Capa | Dónde |
+|---|---|
+| Dart | `main.dart` → `SystemChrome.setPreferredOrientations([portraitUp])`, dentro de `if (!kIsWeb)` |
+| Android | `AndroidManifest.xml` → `android:screenOrientation="portrait"` en `.MainActivity` (cubre también el splash nativo, antes de que arranque el engine) |
+| iOS | `Info.plist` → `UISupportedInterfaceOrientations` y `~ipad` solo con `UIInterfaceOrientationPortrait`, más `UIRequiresFullScreen: true` |
+ 
+`UIRequiresFullScreen` en iOS es la renuncia explícita al multitasking de iPad (sin Split View / Slide Over). Es lo que permite declarar solo portrait en iPad sin que App Store lo marque en revisión — Apple solo exige las 4 orientaciones a las apps que sí soportan multitasking. Nota: la clave está deprecada en iPadOS 26, así que si en el futuro se apunta a iPad de verdad habrá que rediseñar para landscape en vez de confiar en ella.
+ 
+No usar `SystemChrome.setPreferredOrientations` en vistas concretas para "permitir landscape" (p. ej. el mapa a pantalla completa del historial): rompería la garantía global y en Android el manifest lo ignoraría de todas formas.
+ 
 ---
  
 ## Tabs visibles (con botón en BottomNav)

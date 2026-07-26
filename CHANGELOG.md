@@ -1,5 +1,33 @@
 # CHANGELOG — Running Laps
 
+## [Fix] — La app queda bloqueada en vertical (portrait) — 2026-07-26
+No estaba contemplado en ninguna capa: girar el móvil rotaba toda la app, que
+no tiene ni un layout pensado para landscape. Bloqueado en los tres sitios que
+hacen falta para que la garantía sea real:
+
+- **Dart** (`main.dart`): `SystemChrome.setPreferredOrientations([portraitUp])`
+  como primera cosa del `main()`, dentro de `if (!kIsWeb)` — en Web no aplica y
+  el lock de orientación del navegador puede rechazar la promesa.
+- **Android** (`AndroidManifest.xml`): `android:screenOrientation="portrait"` en
+  `.MainActivity`. Necesario *además* del lock de Dart porque cubre el splash
+  nativo (`LaunchTheme`), que se dibuja antes de que el engine ejecute `main()`.
+- **iOS** (`Info.plist`): `UISupportedInterfaceOrientations` y su variante
+  `~ipad` reducidas a `UIInterfaceOrientationPortrait` (el plist manda sobre
+  `SystemChrome` en iOS, así que sin esto el lock de Dart se quedaba a medias),
+  más `UIRequiresFullScreen: true` — la renuncia explícita al multitasking de
+  iPad, que es lo que permite declarar solo portrait ahí sin que App Store lo
+  marque en revisión. Efecto secundario aceptado: sin Split View / Slide Over
+  en iPad. La clave está deprecada en iPadOS 26; si algún día se apunta a iPad
+  en serio habrá que rediseñar para landscape en vez de depender de ella.
+
+Regla derivada (documentada en `NAVIGATION_ARCHITECTURE.md`): no reactivar
+landscape desde vistas concretas — el candidato obvio es el mapa a pantalla
+completa del historial, y en Android el manifest lo ignoraría igualmente.
+
+De paso, `pubspec.lock` se pone al día eliminando `mobile_scanner`, que ya se
+había quitado de `pubspec.yaml` con la retirada de Wear OS pero seguía en el
+lock.
+
 ## [Fix] — Unificado el menú de perfil, eliminado profile_menu_screen_legacy.dart — 2026-07-24
 Cierra el pendiente de la auditoría del 2026-06-19 (ver más abajo). El menú
 "legacy" solo seguía vivo porque era el único de los dos que funcionaba
