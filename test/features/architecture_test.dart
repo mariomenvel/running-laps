@@ -84,4 +84,55 @@ void main() {
         reason: 'Usa ModernSnackBar.showSuccess/showError/showWarning:\n'
             '${offenders.join('\n')}');
   });
+
+  group('convenciones de UI (CLAUDE.md § Componentes compartidos)', () {
+    // Cada una de estas reglas existe porque el componente compartido resuelve
+    // algo que a mano se hace mal: contraste, estilo iOS, coherencia entre
+    // pantallas. Se comprueban las que hoy se cumplen al 100%; las que aún
+    // tienen infracciones vivas están en la deuda técnica de CLAUDE.md, sin
+    // test, porque un test que falla desde el primer día se acaba ignorando.
+
+    String? offender(bool Function(String src) violates) {
+      final bad = viewFiles
+          .where((f) => violates(f.readAsStringSync()))
+          .map((f) => f.path)
+          .toList();
+      return bad.isEmpty ? null : bad.join('\n');
+    }
+
+    test('ninguna vista usa AppBar de Material', () {
+      // La cabecera global es AppHeader; para volver, BackPill o el gesto del
+      // sistema.
+      expect(offender((src) => src.contains('AppBar(')), isNull);
+    });
+
+    test('ninguna vista usa showDatePicker de Material', () {
+      // showAppDatePicker: rueda estilo iOS en un sheet, con el rango clampeado.
+      expect(offender((src) => src.contains('showDatePicker(')), isNull);
+    });
+
+    test('ninguna vista usa colores de Material sueltos', () {
+      // COLOR_SYSTEM.md: el color comunica estado, y sale de AppColors.
+      expect(
+        offender((src) =>
+            src.contains('Colors.orange') ||
+            src.contains('Colors.green') ||
+            src.contains('Colors.blue')),
+        isNull,
+      );
+    });
+  });
+
+  test('nadie usa print() en lib/', () {
+    // Convención: debugPrint(), que el framework recorta y silencia en release.
+    final offenders = <String>[];
+    for (final entity in Directory('lib').listSync(recursive: true)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      final src = entity.readAsStringSync();
+      if (RegExp(r'(?<![.\w])print\(').hasMatch(src)) {
+        offenders.add(entity.path);
+      }
+    }
+    expect(offenders, isEmpty, reason: offenders.join('\n'));
+  });
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/widgets/app_date_picker.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:intl/intl.dart';
 import '../../data/models/enums.dart';
@@ -381,24 +382,12 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
     final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: () async {
-        final picked = await showDatePicker(
+        final picked = await showAppDatePicker(
           context: context,
           initialDate: date,
-          firstDate: DateTime.now(),
-          lastDate: DateTime.now().add(const Duration(days: 365)),
-          builder: (context, child) {
-            return Theme(
-              data: Theme.of(context).copyWith(
-                colorScheme: ColorScheme.light(
-                  primary: AppColors.brand,
-                  onPrimary: Colors.white,
-                  surface: Colors.white,
-                  onSurface: Colors.black87,
-                ),
-              ),
-              child: child!,
-            );
-          },
+          minimumDate: DateTime.now(),
+          maximumDate: DateTime.now().add(const Duration(days: 365)),
+          title: label,
         );
         if (picked != null) {
           setState(() {

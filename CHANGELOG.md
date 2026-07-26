@@ -1,5 +1,25 @@
 # CHANGELOG — Running Laps
 
+## [Chore] — Más reglas del proyecto convertidas en test — 2026-07-26
+`architecture_test` pasa de 5 a 9 comprobaciones: además de que ninguna vista
+toque Firebase, ahora vigila que no se use `AppBar` de Material (la cabecera es
+`AppHeader` + `BackPill`), ni `showDatePicker` (hay `showAppDatePicker`, rueda
+iOS con el rango clampeado), ni colores sueltos de Material
+(`Colors.orange/green/blue` — el color sale de `AppColors` y comunica estado),
+ni `print()` en `lib/` (va `debugPrint`, que el framework silencia en release).
+
+Solo se han fijado las reglas que **hoy se cumplen al 100%**. Hizo falta migrar
+un `showDatePicker` que quedaba en `create_challenge_modal`, con 19 líneas de
+Material y tema a mano que ahora son cuatro parámetros.
+
+Las dos que **no** se han fijado, con lista de ficheros en CLAUDE.md (deuda #8):
+números con teclado en vez de `NumberPickerField` (6 ficheros) y `AlertDialog`
+en vez de `showAppConfirmDialog` (7). Son trabajo de UI que hay que ver en
+dispositivo, no un cambio mecánico — y un test en rojo desde el primer día se
+acaba ignorando, que es peor que no tenerlo.
+
+Suite 247 → 251.
+
 ## [Refactor] — Ninguna vista instancia Firebase, y un test lo vigila — 2026-07-26
 Cierra la regla de CLAUDE.md que estaba a medias: las vistas ya no tocaban
 Firestore, pero `FirebaseAuth.instance` seguía en **24 ficheros (61 usos)**.
