@@ -1,5 +1,20 @@
 # CHANGELOG — Running Laps
 
+## [Test] — Cubiertos los récords personales — 2026-07-26
+`ProgressRepository.updateRollupAfterSave` no tenía ni un test, y es el sitio
+donde un fallo da marcas personales falsas **sin que nada parezca roto**: es una
+optimización (compara solo las series del entreno recién guardado contra el
+rollup cacheado, en vez de reescanear el historial), así que si se equivoca,
+simplemente enseña un récord que no es.
+
+7 tests: mejora el récord solo si el ritmo es mejor; **no** toca el rollup si es
+peor (y conserva el `trainingId` anterior); respeta las ventanas de distancia
+estándar — 950 m cuenta para el récord de 1000 y 700 m no cuenta para ninguno;
+ignora series sin distancia o sin tiempo; no hace nada con un entreno que aún no
+tiene id; y crea el rollup escaneando el historial la primera vez.
+
+Suite 251 → 258.
+
 ## [Chore] — Más reglas del proyecto convertidas en test — 2026-07-26
 `architecture_test` pasa de 5 a 9 comprobaciones: además de que ninguna vista
 toque Firebase, ahora vigila que no se use `AppBar` de Material (la cabecera es
