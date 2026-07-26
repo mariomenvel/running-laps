@@ -1,5 +1,22 @@
 # CHANGELOG — Running Laps
 
+## [Test] — Cubierto el mapeo que transporta el contenido del entrenamiento — 2026-07-26
+`athlete_session_mapper` traduce entre la sesión planificada que vive en
+Firestore (y pinta el calendario) y la sesión del editor. Por ahí viaja **el
+contenido**: repeticiones, distancias, descansos, calentamiento y vuelta a la
+calma. Si pierde algo, planificas 6×1000 y la app te ofrece ejecutar otra cosa
+— sin error, sin aviso. Tenía **un** test, y solo del tipo de sesión.
+
+9 tests nuevos en `athlete_session_blocks_test`, en las dos direcciones e ida y
+vuelta completa (editor → Firestore → editor de un 6×1km, que es justo el caso
+que se verificó a mano en dispositivo esta tarde). Incluyen los casos de borde
+que hoy resuelve el mapper en silencio: sin descanso no se inventa un segmento
+de recuperación, un bloque sin distancia ni tiempo no genera segmentos vacíos, y
+una sesión sin bloques sigue cumpliendo el invariante de "al menos un bloque
+principal" que exige `WorkoutSession`.
+
+Suite 258 → 267.
+
 ## [Test] — Cubiertos los récords personales — 2026-07-26
 `ProgressRepository.updateRollupAfterSave` no tenía ni un test, y es el sitio
 donde un fallo da marcas personales falsas **sin que nada parezca roto**: es una

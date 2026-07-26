@@ -1,6 +1,6 @@
 # TESTING.md — Tests de Running Laps
 
-> Estado: **258 tests en 33 archivos** (26 jul 2026). Suite completa: ~20 segundos.
+> Estado: **267 tests en 34 archivos** (26 jul 2026). Suite completa: ~20 segundos.
 
 ---
 
@@ -100,7 +100,8 @@ test/
 |---|---|---|
 | `templates/workout_models_test` | 27 | Serialización toMap/fromMap de WorkoutSession/Block/Segment sin perder campos, asserts de integridad |
 | `templates/workout_repository_test` | 10 | CRUD de plantillas contra Firestore simulado |
-| `templates/athlete_session_mapper_test` | 1 | Mapeo WorkoutSession ↔ AthleteSession |
+| `templates/athlete_session_mapper_test` | 1 | Round-trip del **tipo** de sesión (WorkoutType ↔ category) |
+| `templates/athlete_session_blocks_test` | 9 | Round-trip del **contenido**: repeticiones, distancia y descanso de un bloque de series; minutos → segundos en bloques por tiempo; calentamiento y vuelta a la calma como bloques propios con `repetitions: 1`; sin descanso no se inventa recuperación; una sesión sin bloques sigue cumpliendo el invariante de "al menos un main"; y el viaje completo editor → Firestore → editor de un 6×1km |
 | `templates/workout_editor_view_model_test` | 19 | Lógica del editor tras el refactor MVVM: bloques por defecto por tipo, nombre automático (5×1km, 8×400m, 6×1'30", Rodaje 10km) vs. nombre escrito a mano, `buildSession` (id/plantilla conservados, notas en blanco → null, sin tipo → sesión libre), `hasChanges` y el guardado bloqueado sin tipo ni bloques. Solo cubre lo que no toca Firebase — la persistencia de `save()` queda fuera |
 | `training/training_repository_test` | 16 | **Ver sección Firestore simulado**. Incluye 5 tests del reparto de trazas GPS: el documento del entrenamiento no las lleva, `track/data` sí (con `seriesGps` indexado), `withTrack()` las recupera, y compatibilidad con el formato antiguo (traza embebida) tanto al leer como al guardar con `overwriteTraining` |
 | `avatar/avatar_field_consistency_test` | 3 | Config del avatar consistente entre escrituras |
