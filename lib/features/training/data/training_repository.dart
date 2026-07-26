@@ -165,13 +165,6 @@ class TrainingRepository {
       });
     }
   }
-  /// ⚠️ Trae hasta 500 docs de golpe (con sus gpsPoints dentro). No usar en
-  /// pantallas nuevas: preferir [getTrainings] (paginado) o
-  /// [getTrainingsSince] (acotado por fecha). Queda solo para vistas legacy.
-  Future<List<Entrenamiento>> getAllEntrenamientos(String uid) async {
-    final page = await getTrainings(uid: uid, pageSize: 500);
-    return page.trainings;
-  }
 
   /// Entrenamientos con `fecha >= since`, ordenados descendente.
   /// El bound se construye en UTC (convención `fecha` string ISO UTC).

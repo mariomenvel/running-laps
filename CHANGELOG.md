@@ -1,5 +1,23 @@
 # CHANGELOG — Running Laps
 
+## [Chore] — Cerrada la deuda de cargas masivas: fuera `getAllEntrenamientos()` — 2026-07-26
+Última consulta del repo que traía hasta 500 entrenamientos de golpe **con sus
+`gpsPoints` dentro**. Sobrevivía solo por `home_view_legacy`, eliminada en la
+purga de julio; desde entonces no tenía un solo call site (la única mención que
+quedaba era un comentario histórico en `home_view_model.dart`). Home, calendario
+y analytics ya consultan acotado con `getTrainingsSince()`.
+
+Para listados nuevos: `getTrainings()` (paginado por cursor) o
+`getTrainingsSince()` (acotado por fecha, con el bound en UTC según la
+convención de `fecha`). No reintroducir una carga sin límite.
+
+De paso, limpieza de ramas locales: 20 ramas cuyo contenido ya estaba
+íntegramente en `main` (verificado por contenido, no por nombre: `--merged` y
+`rev-list --count main..origin/<rama>` = 0). Quedan las dos que sí tienen
+trabajo propio — `feature/workout-execution` (PreExecutionScreen, mayo 2026,
+también en origin) y `refactor/workout-editor-mvvm` (**solo local, no está en
+origin**: es la única copia de ese trabajo).
+
 ## [Chore] — Cuarta purga de código muerto: 3 ficheros, ~1.400 líneas y 6 dependencias — 2026-07-26
 Barrido igual que el de julio (alcanzabilidad transitiva desde `main.dart`, no
 greps), pero esta vez también **dentro** de ficheros vivos: miembros privados
