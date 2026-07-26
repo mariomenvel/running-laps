@@ -1,6 +1,6 @@
 # TESTING.md — Tests de Running Laps
 
-> Estado: **310 tests en 39 archivos** (26 jul 2026). Suite completa: ~20 segundos.
+> Estado: **318 tests en 40 archivos** (26 jul 2026). Suite completa: ~20 segundos.
 
 ---
 
@@ -87,6 +87,7 @@ test/
 | Archivo | Tests | Qué protege |
 |---|---|---|
 | `workout_execution_controller_test` | 6 | Máquina de estados warmup→main→cooldown→done, reps por bloque, finishEarly, params de la rep actual |
+| `notification_schedule_test` | 8 | Cuándo se programa cada aviso: próxima ocurrencia de un día de la semana a una hora (hoy si aún no ha llegado, semana siguiente si ya pasó — programar en el pasado hace que Android la dispare al instante), y el aviso "entreno en 1 hora", que devuelve null si esa hora ya pasó y cruza bien la medianoche en sesiones de madrugada |
 | `session_recovery_service_test` | 5 | Recuperar sesión interrumpida, descartar >24 h, JSON corrupto limpia la clave |
 
 ### Retos de grupos (`test/unit/`)

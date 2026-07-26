@@ -1,5 +1,21 @@
 # CHANGELOG — Running Laps
 
+## [Test] — Cubierto cuándo se programan las notificaciones — 2026-07-26
+Equivocarse aquí no da un error: da un aviso a la hora que no toca o, peor,
+programado **en el pasado** — que en Android hace que la notificación salte
+inmediatamente. Es de las pocas cosas que el usuario percibe directamente como
+"esta app me molesta".
+
+El cálculo estaba escrito tres veces (recordatorio de sesión, resumen del
+domingo, feedback del sábado), dos de ellas con el mismo bucle `while` copiado.
+Ahora hay dos funciones puras —`nextWeekdayAt` y `sessionReminderTime`— usadas
+por los tres sitios, con 8 tests: hoy si aún no ha llegado la hora, semana
+siguiente si ya pasó, la hora exacta cuenta como hoy, y el aviso de "entreno en
+1 hora" devuelve null si esa hora ya pasó y cruza bien la medianoche en una
+sesión de madrugada (avisa el día anterior a las 23:30).
+
+Suite 310 → 318.
+
 ## [Test] — Cubiertos los números de Analytics — 2026-07-26
 Récords, ritmo medio, reparto de intensidad, racha, ACWR: cifras que el usuario
 lee y se cree. Un error ahí no rompe nada — simplemente le cuenta otra historia

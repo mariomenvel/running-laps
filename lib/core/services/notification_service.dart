@@ -88,15 +88,47 @@ class NotificationService {
     return false;
   }
 
+  /// Próxima ocurrencia de [weekday] a [hour]:[minute], contando desde [now].
+  ///
+  /// Si hoy ya es ese día pero la hora pasó, salta a la semana siguiente: sin
+  /// eso se programaría una notificación en el pasado, que en Android salta
+  /// **inmediatamente** en vez de no salir.
+  @visibleForTesting
+  static DateTime nextWeekdayAt(
+    DateTime now,
+    int weekday, {
+    required int hour,
+    int minute = 0,
+  }) {
+    var day = now;
+    while (day.weekday != weekday) {
+      day = day.add(const Duration(days: 1));
+    }
+    var scheduled = DateTime(day.year, day.month, day.day, hour, minute);
+    if (scheduled.isBefore(now)) {
+      scheduled = scheduled.add(const Duration(days: 7));
+    }
+    return scheduled;
+  }
+
+  /// Momento del aviso "entreno en 1 hora", o null si esa hora ya pasó.
+  @visibleForTesting
+  static DateTime? sessionReminderTime(
+    DateTime sessionDateTime, {
+    DateTime? now,
+  }) {
+    final reminder = sessionDateTime.subtract(const Duration(hours: 1));
+    return reminder.isBefore(now ?? DateTime.now()) ? null : reminder;
+  }
+
   Future<void> scheduleSessionReminder({
     required String sessionId,
     required DateTime sessionDateTime,
     required String sessionTitle,
   }) async {
     await init();
-    final reminderTime =
-        sessionDateTime.subtract(const Duration(hours: 1));
-    if (reminderTime.isBefore(DateTime.now())) return;
+    final reminderTime = sessionReminderTime(sessionDateTime);
+    if (reminderTime == null) return;
 
     final tzTime = tz.TZDateTime.from(reminderTime, tz.local);
 
@@ -187,16 +219,8 @@ class NotificationService {
 
   Future<void> scheduleWeeklySummary() async {
     await init();
-    final now = DateTime.now();
-    var nextSunday = now;
-    while (nextSunday.weekday != DateTime.sunday) {
-      nextSunday = nextSunday.add(const Duration(days: 1));
-    }
-    nextSunday = DateTime(
-      nextSunday.year, nextSunday.month, nextSunday.day, 20, 0);
-    if (nextSunday.isBefore(now)) {
-      nextSunday = nextSunday.add(const Duration(days: 7));
-    }
+    final nextSunday =
+        nextWeekdayAt(DateTime.now(), DateTime.sunday, hour: 20);
 
     final tzTime = tz.TZDateTime.from(nextSunday, tz.local);
 
@@ -229,16 +253,8 @@ class NotificationService {
 
   Future<void> scheduleWeeklyFeedbackReminder() async {
     await init();
-    final now = DateTime.now();
-    var nextSaturday = now;
-    while (nextSaturday.weekday != DateTime.saturday) {
-      nextSaturday = nextSaturday.add(const Duration(days: 1));
-    }
-    nextSaturday = DateTime(
-        nextSaturday.year, nextSaturday.month, nextSaturday.day, 9, 0);
-    if (nextSaturday.isBefore(now)) {
-      nextSaturday = nextSaturday.add(const Duration(days: 7));
-    }
+    final nextSaturday =
+        nextWeekdayAt(DateTime.now(), DateTime.saturday, hour: 9);
 
     final tzTime = tz.TZDateTime.from(nextSaturday, tz.local);
 
