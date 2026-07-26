@@ -21,22 +21,37 @@ class AiCoachChatService {
     AthleteSessionRepository? sessionRepository,
     AiCoachWeeklyPlannerService? weeklyPlannerService,
     UserService? userService,
-  })  : _repository = repository ?? AiCoachRepository(),
-        _contextBuilder = contextBuilder ?? AiCoachContextBuilder(),
+  })  : _repositoryOverride = repository,
+        _contextBuilderOverride = contextBuilder,
         _promptBuilder = promptBuilder ?? const AiCoachPromptBuilder(),
-        _openRouterClient = openRouterClient ?? OpenRouterClient(),
-        _sessionRepository = sessionRepository ?? AthleteSessionRepository(),
-        _weeklyPlannerService =
-            weeklyPlannerService ?? AiCoachWeeklyPlannerService(),
-        _userService = userService ?? UserService();
+        _openRouterClientOverride = openRouterClient,
+        _sessionRepositoryOverride = sessionRepository,
+        _weeklyPlannerServiceOverride = weeklyPlannerService,
+        _userServiceOverride = userService;
 
-  final AiCoachRepository _repository;
-  final AiCoachContextBuilder _contextBuilder;
+  // Colaboradores perezosos: instanciar el servicio no debe construir media
+  // app (y con ella `FirebaseFirestore.instance`). Cada uno se crea la primera
+  // vez que se usa, así que un test puede inyectar solo el que necesita.
+  final AiCoachRepository? _repositoryOverride;
+  final AiCoachContextBuilder? _contextBuilderOverride;
+  final OpenRouterClient? _openRouterClientOverride;
+  final AthleteSessionRepository? _sessionRepositoryOverride;
+  final AiCoachWeeklyPlannerService? _weeklyPlannerServiceOverride;
+  final UserService? _userServiceOverride;
+
+  late final AiCoachRepository _repository =
+      _repositoryOverride ?? AiCoachRepository();
+  late final AiCoachContextBuilder _contextBuilder =
+      _contextBuilderOverride ?? AiCoachContextBuilder();
+  late final OpenRouterClient _openRouterClient =
+      _openRouterClientOverride ?? OpenRouterClient();
+  late final AthleteSessionRepository _sessionRepository =
+      _sessionRepositoryOverride ?? AthleteSessionRepository();
+  late final AiCoachWeeklyPlannerService _weeklyPlannerService =
+      _weeklyPlannerServiceOverride ?? AiCoachWeeklyPlannerService();
+  late final UserService _userService = _userServiceOverride ?? UserService();
+
   final AiCoachPromptBuilder _promptBuilder;
-  final OpenRouterClient _openRouterClient;
-  final AthleteSessionRepository _sessionRepository;
-  final AiCoachWeeklyPlannerService _weeklyPlannerService;
-  final UserService _userService;
   static const int _weeklyChatLimit = AiCoachUsage.weeklyChatLimit;
 
   /// Genera un preview del ajuste SIN aplicarlo.
@@ -60,7 +75,7 @@ class AiCoachChatService {
       );
     }
 
-    final usageBeforeLlm = await _prepareAndGetCurrentWeekUsage(uid);
+    final usageBeforeLlm = await prepareCurrentWeekUsage(uid);
 
     if (usageBeforeLlm.previewsGenerated >= 10) {
       return AiCoachAdjustmentPreview.limitReached(
@@ -99,7 +114,7 @@ class AiCoachChatService {
 
       // Para ajustes reales, comprobar cuota de mensajes DESPUÉS de conocer intent
       if (executable) {
-        final usageNow = await _prepareAndGetCurrentWeekUsage(uid);
+        final usageNow = await prepareCurrentWeekUsage(uid);
         final limit = usageNow.messagesLimit ?? _weeklyChatLimit;
         if (usageNow.messagesUsed >= limit) {
           return AiCoachAdjustmentPreview(
@@ -139,7 +154,7 @@ class AiCoachChatService {
       // Tope duro: aunque el preview ya gatea la cuota, re-comprobamos aquí
       // antes de tocar el plan para que `messagesUsed` no pueda superar el
       // límite bajo ninguna secuencia de llamadas (defensa en profundidad).
-      final usage = await _prepareAndGetCurrentWeekUsage(uid);
+      final usage = await prepareCurrentWeekUsage(uid);
       final limit = usage.messagesLimit ?? _weeklyChatLimit;
       if (usage.messagesUsed >= limit) {
         throw Exception(
@@ -352,7 +367,7 @@ class AiCoachChatService {
       );
     }
 
-    final usage = await _prepareAndGetCurrentWeekUsage(uid);
+    final usage = await prepareCurrentWeekUsage(uid);
     if (usage.messagesUsed >= _weeklyChatLimit) {
       throw Exception(
         'Has alcanzado el limite de 3 consultas esta semana. '
@@ -594,7 +609,15 @@ class AiCoachChatService {
     return '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
   }
 
-  Future<AiCoachUsage> _prepareAndGetCurrentWeekUsage(String uid) async {
+  /// Devuelve la cuota de chat de la semana en curso, creándola o
+  /// normalizándola si hace falta.
+  ///
+  /// Tres casos, y los tres han dado problemas antes: no existe (usuario
+  /// nuevo), el periodo guardado ya pasó (hay que resetear el contador), o el
+  /// periodo es el correcto pero el límite guardado es antiguo (hay que
+  /// normalizarlo sin perder los contadores).
+  @visibleForTesting
+  Future<AiCoachUsage> prepareCurrentWeekUsage(String uid) async {
     final now = DateTime.now();
     final weekStart = _mondayOf(now);
     final sundayStart = weekStart.add(const Duration(days: 6));
@@ -605,12 +628,6 @@ class AiCoachChatService {
       23, 59, 59,
     );
     final current = await _repository.getUsage(uid: uid);
-    debugPrint('[Prep] usage leído: used=${current?.messagesUsed}, prev=${current?.previewsGenerated}');
-    debugPrint('[Prep] periodStart=${current?.periodStart}, periodEnd=${current?.periodEnd}');
-    debugPrint('[Prep] now=${DateTime.now()}');
-    debugPrint('[Prep] ¿resetear? current==null: ${current == null}, '
-        'periodStart.isAfter(now): ${current?.periodStart.isAfter(DateTime.now())}, '
-        'periodEnd.isBefore(now): ${current?.periodEnd.isBefore(DateTime.now())}');
     if (current == null ||
         current.periodStart.isAfter(now) ||
         current.periodEnd.isBefore(now)) {

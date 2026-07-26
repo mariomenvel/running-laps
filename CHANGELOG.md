@@ -1,5 +1,31 @@
 # CHANGELOG — Running Laps
 
+## [Test] — Cubierta la cuota semanal del chat del coach — 2026-07-26
+Esta lógica ha roto **dos veces**, y las dos en silencio: una el contador se
+quedaba pillado y el chat no dejaba escribir aunque hubiera empezado semana
+nueva, y otra el badge enseñaba el límite guardado (40) en vez del canónico (3).
+No tenía tests.
+
+5 tests sobre los tres caminos: crear la cuota si no existe, resetear el
+contador cuando el periodo guardado ya pasó, y **normalizar un límite antiguo
+sin perder `messagesUsed` ni `previewsGenerated`** — que es exactamente el
+error que hubo que corregir en julio. Más el caso del reloj mal puesto (periodo
+en el futuro), que si no se resetea deja la cuota bloqueada hasta esa fecha.
+
+Para poder testearlo hicieron falta dos cambios de fontanería, ninguno de
+comportamiento:
+- `AiCoachChatService` construía **toda** su cadena de dependencias en el
+  constructor, así que instanciarlo pedía Firebase real. Ahora los
+  colaboradores son perezosos: se crean al usarse y un test inyecta solo el que
+  necesita.
+- `AiCoachRepository` evaluaba `FirebaseAuth.instance` al construirse; ahora es
+  un getter perezoso, igual que ya hacía `HomeEstadisticaRepository`.
+
+De paso se eliminaron 4 `debugPrint('[Prep] ...')` que quedaron de cazar aquel
+bug y seguían escupiendo el estado de la cuota en cada interacción del chat.
+
+Suite 267 → 272.
+
 ## [Test] — Cubierto el mapeo que transporta el contenido del entrenamiento — 2026-07-26
 `athlete_session_mapper` traduce entre la sesión planificada que vive en
 Firestore (y pinta el calendario) y la sesión del editor. Por ahí viaja **el

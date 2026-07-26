@@ -1,6 +1,6 @@
 # TESTING.md — Tests de Running Laps
 
-> Estado: **267 tests en 34 archivos** (26 jul 2026). Suite completa: ~20 segundos.
+> Estado: **272 tests en 35 archivos** (26 jul 2026). Suite completa: ~20 segundos.
 
 ---
 
@@ -60,6 +60,7 @@ test/
 | `pb_detector_test` | 8 | Detección de marcas personales con interpolación ±3% |
 | `session_generator_test` | 5 | Sesiones generadas con reps/distancias sensatas por nivel, tope de 12 reps |
 | `ai_coach_prompt_builder_test` | 4 | El prompt del plan semanal incluye el contexto del atleta |
+| `ai_coach/chat_quota_test` (en `test/features/`) | 5 | Cuota semanal del chat: la crea si no existe, resetea el contador al cambiar de semana, respeta la de la semana en curso, normaliza un límite antiguo **sin perder** `messagesUsed` ni `previewsGenerated`, y resetea si el periodo guardado está en el futuro (reloj mal puesto) |
 
 ### Cálculos de entrenamiento (`test/unit/`)
 
@@ -148,6 +149,12 @@ class _TestableRepo extends TrainingRepository {
   String? get currentUserId => 'test-uid-123';
 }
 ```
+
+Colaboradores perezosos: `AiCoachChatService` y `AiCoachRepository` construyen
+sus dependencias la primera vez que se usan, no en el constructor. Sin eso,
+instanciar el servicio en un test levantaba media app y pedía Firebase real.
+Mismo criterio que `HomeEstadisticaRepository`. **Al añadir un servicio nuevo,
+seguirlo**: un constructor no debería exigir Firebase inicializado.
 
 Repos ya adaptados: `TrainingTemplatesRepository`, `TrainingRepository`,
 `ChallengesRepository`, `TrainingChallengeSyncService`, `ChallengeFinalizeService`,

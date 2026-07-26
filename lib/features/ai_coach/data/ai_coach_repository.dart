@@ -8,11 +8,16 @@ class AiCoachRepository {
   AiCoachRepository({
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
-  })  : _auth = auth ?? FirebaseAuth.instance,
+  })  : _authOverride = auth,
         _db = firestore ?? FirebaseFirestore.instance;
 
-  final FirebaseAuth _auth;
+  final FirebaseAuth? _authOverride;
   final FirebaseFirestore _db;
+
+  // Getter perezoso (mismo criterio que HomeEstadisticaRepository): construir
+  // el repositorio no debe exigir Firebase inicializado. Solo hace falta si
+  // alguien llama a un método sin pasar `uid`, y en tests siempre se pasa.
+  FirebaseAuth get _auth => _authOverride ?? FirebaseAuth.instance;
 
   String _requireUid() {
     final user = _auth.currentUser;
