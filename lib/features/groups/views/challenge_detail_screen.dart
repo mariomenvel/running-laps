@@ -3,6 +3,7 @@ import 'package:running_laps/core/utils/app_transitions.dart';
 import '../viewmodels/challenge_detail_controller.dart';
 import '../data/models/challenge_models.dart';
 import '../data/helpers/challenge_helpers.dart';
+import '../data/helpers/challenge_ranking_helper.dart';
 import '../data/helpers/challenge_color_helper.dart';
 import '../data/models/enums.dart';
 
@@ -667,20 +668,5 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen>
 
   String _formatGoal(ChallengeGoal goal) {
     return _formatScore(goal.value, goal.kind.toMetric());
-  }
-}
-
-extension GoalKindToMetric on GoalKind {
-  ChallengeMetric toMetric() {
-    switch (this) {
-      case GoalKind.distance:
-        return ChallengeMetric.distance;
-      case GoalKind.time:
-        return ChallengeMetric.time;
-      case GoalKind.sessions:
-        return ChallengeMetric.sessions;
-      default:
-        return ChallengeMetric.distance;
-    }
   }
 }
