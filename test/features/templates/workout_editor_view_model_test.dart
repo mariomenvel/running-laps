@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart' show TimeOfDay;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:running_laps/core/widgets/main_shell.dart';
+import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/templates/data/workout_block.dart';
 import 'package:running_laps/features/templates/data/workout_segment.dart';
 import 'package:running_laps/features/templates/data/workout_session.dart';
@@ -238,6 +240,46 @@ void main() {
       addTearDown(vm.dispose);
 
       expect(vm.hasChanges(), isFalse);
+    });
+
+    test('sesión abierta desde el calendario sin tocar nada: no hay cambios',
+        () {
+      // Regresión (vista en dispositivo, 26 jul 2026): al abrir una sesión
+      // planificada el editor la recibe por `shellParams.session`, no por
+      // `initialSession`. Comparando solo contra `initialSession`, hasChanges()
+      // caía en la rama de "sesión nueva" y devolvía true siempre, así que al
+      // salir preguntaba "¿Salir sin guardar?" sin haber tocado nada.
+      final planned = AthleteSession(
+        id: 'planned-1',
+        uid: 'u1',
+        date: '2026-07-20',
+        category: 'series_largas',
+        status: AthleteSessionStatus.planned,
+        blocks: const [
+          SessionBlock(
+            id: 'b1',
+            order: 0,
+            type: SessionBlockType.series,
+            reps: 5,
+            distanceM: 1000,
+            restSeconds: 90,
+          ),
+        ],
+        createdAt: DateTime(2026, 7, 19),
+        updatedAt: DateTime(2026, 7, 19),
+      );
+      final vm = WorkoutEditorViewModel(
+        shellParams: AthleteSessionShellParams(
+          date: '2026-07-20',
+          session: planned,
+        ),
+      );
+      addTearDown(vm.dispose);
+
+      expect(vm.hasChanges(), isFalse);
+
+      vm.onNotesChanged('cambio de verdad');
+      expect(vm.hasChanges(), isTrue);
     });
 
     test('detecta cambios en notas y en hora', () {

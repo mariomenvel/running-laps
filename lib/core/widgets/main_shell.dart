@@ -339,8 +339,14 @@ class _MainShellState extends State<MainShell> {
         !_selfManagedOrVisibleTabs.contains(_tabIndex);
     return PopScope(
       canPop: !interceptSystemBack,
+      // `interceptSystemBack` también aquí: cuando una pestaña self-managed
+      // (editor, entreno activo) bloquea el pop, Flutter llama a los callbacks
+      // de TODOS los PopScope de la ruta con didPop == false. Sin esta
+      // condición el shell hacía su navigateBack() ADEMÁS del de la pestaña, y
+      // como navigateBack() intercambia pestaña actual y anterior, la segunda
+      // llamada deshacía la primera y el atrás se quedaba sin efecto.
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) navigateBack();
+        if (!didPop && interceptSystemBack) navigateBack();
       },
       child: Scaffold(
         body: Column(
@@ -351,7 +357,16 @@ class _MainShellState extends State<MainShell> {
               child: ShellEmbeddingScope(
                 child: IndexedStack(
                   index: _tabIndex,
-                  children: _screens,
+                  // Cada pestaña sabe si es la visible: el IndexedStack las
+                  // mantiene todas montadas y un PopScope de una pestaña
+                  // oculta secuestraría el botón atrás (ver ShellSlotScope).
+                  children: [
+                    for (int i = 0; i < _screens.length; i++)
+                      ShellSlotScope(
+                        isActive: i == _tabIndex,
+                        child: _screens[i],
+                      ),
+                  ],
                 ),
               ),
             ),

@@ -1303,10 +1303,17 @@ class _TrainingStartViewState extends State<TrainingStartView>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       TrainingStartView.hasPendingProgress.value = hasProgress;
     });
+    // El guard de "¿Abandonar entrenamiento?" solo aplica si esta pestaña es
+    // la visible: montada pero oculta en el IndexedStack, secuestraba el
+    // atrás del sistema desde cualquier pantalla del shell.
+    final isVisible = ShellSlotScope.isVisible(context);
     return PopScope(
-      canPop: !hasProgress,
+      canPop: !(hasProgress && isVisible),
+      // `isVisible` también en el callback: si otra pestaña bloquea el pop,
+      // Flutter avisa a todos los PopScope de la ruta con didPop == false y
+      // este diálogo aparecía encima de la pantalla equivocada.
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) _confirmAbandonWorkout();
+        if (!didPop && isVisible) _confirmAbandonWorkout();
       },
       child: Scaffold(
         backgroundColor: AppColors.background(context),

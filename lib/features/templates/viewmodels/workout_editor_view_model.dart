@@ -47,7 +47,13 @@ class WorkoutEditorViewModel {
     this.isQuickStart = false,
   }) {
     final mapped = mapAthleteSessionToWorkout(shellParams?.session);
+    // Punto de partida contra el que se comparan los cambios. Ojo: cuando la
+    // pantalla se abre desde el calendario la sesión llega por
+    // `shellParams.session`, no por `initialSession`; comparando solo contra
+    // `initialSession` el editor creía que TODO era nuevo y preguntaba
+    // "¿Salir sin guardar?" aunque no hubieras tocado nada.
     final s = initialSession ?? mapped;
+    _baseline = s;
 
     effectiveScheduledDate = scheduledDate ??
         _parseShellDate(shellParams?.date) ??
@@ -74,6 +80,10 @@ class WorkoutEditorViewModel {
   final bool isQuickStart;
 
   late final DateTime? effectiveScheduledDate;
+
+  /// Sesión de partida (la editada, venga por `initialSession` o por
+  /// `shellParams`). `null` = sesión nueva desde cero.
+  late final WorkoutSession? _baseline;
 
   late final ValueNotifier<WorkoutType?> selectedType;
   late final ValueNotifier<String> title;
@@ -201,7 +211,7 @@ class WorkoutEditorViewModel {
   // ── Cambios sin guardar ─────────────────────────────────────────────────
 
   bool hasChanges() {
-    final s = initialSession;
+    final s = _baseline;
     if (s == null) {
       return selectedType.value != null ||
           title.value.isNotEmpty ||

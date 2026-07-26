@@ -163,10 +163,17 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
   @override
   Widget build(BuildContext context) {
 
+    // Solo intercepta el atrás del sistema cuando esta pantalla es la visible:
+    // en el shell el IndexedStack la mantiene montada aunque esté oculta.
+    // Ojo con la condición del callback: cuando CUALQUIER PopScope de la ruta
+    // bloquea el pop, Flutter llama a los callbacks de TODOS con
+    // didPop == false — así que sin `isVisible` aquí, este diálogo saltaría
+    // porque lo bloqueó otra pestaña.
+    final isVisible = ShellSlotScope.isVisible(context);
     return PopScope(
-      canPop: false,
+      canPop: !isVisible,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _onClose();
+        if (!didPop && isVisible) _onClose();
       },
       child: Scaffold(
         backgroundColor: AppColors.background(context),

@@ -1,5 +1,45 @@
 # CHANGELOG — Running Laps
 
+## [Fix] — Tres bugs del botón atrás encontrados probando en dispositivo — 2026-07-26
+Salieron al verificar el refactor MVVM del editor en un móvil real (Poco X3
+Pro, Android 12). Ninguno los ve `flutter analyze` ni la suite: son de
+interacción entre `PopScope` y el `IndexedStack` del shell.
+
+**1. Diálogos de pestañas ocultas secuestrando el atrás.** El `IndexedStack`
+mantiene montadas *todas* las pestañas, así que el `PopScope` de una pestaña
+invisible sigue registrado en la ruta. Con un entreno a medias en la pestaña
+15, cualquier "atrás" — en Perfil, en el calendario, donde fuera — sacaba
+"¿Abandonar entrenamiento?" encima de la pantalla equivocada; lo mismo con
+"¿Salir sin guardar?" del editor (pestaña 13). Nuevo `ShellSlotScope`
+(`core/widgets/shell_embedding_scope.dart`): el shell envuelve cada hijo del
+`IndexedStack` marcando si es el visible, y ambas pantallas condicionan su
+`PopScope` a eso. Fuera del shell (pantalla pusheada) no hay scope y devuelve
+`true`, que es el comportamiento correcto ahí.
+
+**2. El callback también hay que condicionarlo, no solo `canPop`.** Cuando
+*cualquier* `PopScope` de la ruta bloquea el pop, Flutter llama a
+`onPopInvokedWithResult` de **todos** ellos con `didPop == false`. Con solo
+arreglar `canPop`, el diálogo de la pestaña oculta seguía saliendo porque lo
+disparaba el bloqueo de otra. De ahí el `&& isVisible` en los callbacks.
+
+**3. El atrás del editor no hacía nada.** Consecuencia de lo mismo una capa
+más arriba: el `PopScope` del propio `MainShell` llamaba a `navigateBack()`
+aunque el pop lo hubiera bloqueado una pestaña self-managed. Como
+`navigateBack()` **intercambia** pestaña actual y anterior, las dos llamadas
+(la del shell y la del editor) se anulaban y te quedabas en el editor. Ahora
+el shell solo actúa si es él quien intercepta (`&& interceptSystemBack`).
+
+**Y un cuarto, del propio refactor:** `hasChanges()` comparaba contra
+`initialSession`, pero al abrir una sesión planificada desde el calendario la
+sesión llega por `shellParams.session`. Resultado: el editor creía que todo
+era nuevo y preguntaba "¿Salir sin guardar?" sin haber tocado nada. Ahora
+compara contra la sesión de partida real, venga por donde venga. Con test de
+regresión (suite 236 → 237).
+
+Verificado en el dispositivo tras cada arreglo: abrir sesión planificada y
+salir sin tocar nada vuelve al calendario limpio; tocar el tipo y salir sí
+avisa; guardar crea y editar actualiza sin duplicar.
+
 ## [Refactor] — Ninguna vista habla ya directamente con Firestore — 2026-07-26
 La regla estaba escrita en CLAUDE.md desde siempre ("nunca instanciar
 `FirebaseFirestore.instance` en vistas") y la incumplían **9 pantallas**, que
