@@ -102,7 +102,7 @@ test/
 | `templates/workout_repository_test` | 10 | CRUD de plantillas contra Firestore simulado |
 | `templates/athlete_session_mapper_test` | 1 | Mapeo WorkoutSession ↔ AthleteSession |
 | `templates/workout_editor_view_model_test` | 19 | Lógica del editor tras el refactor MVVM: bloques por defecto por tipo, nombre automático (5×1km, 8×400m, 6×1'30", Rodaje 10km) vs. nombre escrito a mano, `buildSession` (id/plantilla conservados, notas en blanco → null, sin tipo → sesión libre), `hasChanges` y el guardado bloqueado sin tipo ni bloques. Solo cubre lo que no toca Firebase — la persistencia de `save()` queda fuera |
-| `training/training_repository_test` | 11 | **Ver sección Firestore simulado** |
+| `training/training_repository_test` | 16 | **Ver sección Firestore simulado**. Incluye 5 tests del reparto de trazas GPS: el documento del entrenamiento no las lleva, `track/data` sí (con `seriesGps` indexado), `withTrack()` las recupera, y compatibilidad con el formato antiguo (traza embebida) tanto al leer como al guardar con `overwriteTraining` |
 | `avatar/avatar_field_consistency_test` | 3 | Config del avatar consistente entre escrituras |
 
 ### Pantallas (`test/widget/`)

@@ -59,7 +59,10 @@ class Serie {
   }
 
 
-  Map<String, dynamic> toMap() {
+  /// [includeGps] a false omite la traza de la serie: es lo que se guarda en
+  /// el documento del entrenamiento, que debe quedar ligero (la traza va a
+  /// `trainings/{id}/track/data`).
+  Map<String, dynamic> toMap({bool includeGps = true}) {
     // Por defecto NO guardo el ritmo; es derivado.
     // Si quieres guardarlo también para consultas rápidas:
     // 'ritmoSecKm': ritmoSecPorKm(),
@@ -70,7 +73,7 @@ class Serie {
       'rpe': rpe,
       if (usedGps != null) 'usedGps': usedGps,
       if (usedGpsDistance != null) 'usedGpsDistance': usedGpsDistance,
-      if (gpsPoints != null) 'gpsPoints': gpsPoints,
+      if (includeGps && gpsPoints != null) 'gpsPoints': gpsPoints,
       if (finishedAt != null) 'finishedAt': finishedAt!.toIso8601String(),
       if (fcMedia != null) 'fcMedia': fcMedia,
       if (fcReadings != null && fcReadings!.isNotEmpty)

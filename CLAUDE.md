@@ -30,7 +30,8 @@ Feature-First + MVVM. Cada feature en `lib/features/<name>/` con subcarpetas `vi
 - **Vistas:** sin lógica de negocio.
 - **Firebase:** nunca instanciar `FirebaseFirestore.instance` ni `FirebaseAuth.instance` en vistas — usar repositorios. Estado (26 jul 2026): **cero vistas instancian Firestore** (`grep -rc "FirebaseFirestore.instance" lib/features/*/views/` debe seguir dando 0). Puntos de entrada por si falta algo:
   - `users/{uid}` (leer, escuchar, onboarding, avatar generativo, campos sueltos) y `users/{uid}/settings/bestMarkDistance` → `UserService` (`core/services/user_service.dart`)
-  - `users/{uid}/trainings` → `TrainingRepository` (incluye `getTrainingById`, `overwriteTraining` — que sella `updatedAt` — y `deleteTraining`)
+  - `users/{uid}/trainings` → `TrainingRepository` (incluye `getTrainingById`, `overwriteTraining` — que sella `updatedAt` y usa `merge` — y `deleteTraining`)
+  - ⚠️ **Las trazas GPS NO van en el documento del entrenamiento** (jul 2026): viven en `users/{uid}/trainings/{id}/track/data` (`trackPoints` de la sesión + `seriesGps` por índice de serie). El listado de entrenamientos arrastraba megas de coordenadas que calendario, analytics e historial no pintan. Guardar: `Entrenamiento.toMap(includeTrack: false)` + `_saveTrack` (lo hace `createTraining`). Leer para pintar un mapa: `TrainingRepository.withTrack(training)`. Los entrenamientos anteriores a jul 2026 llevan la traza embebida y siguen funcionando: `withTrack` los devuelve tal cual y `overwriteTraining` usa `merge` para no borrársela.
   - `users/{uid}/aiCoachFeedback` y demás docs del coach → `AiCoachRepository`
   - Generación de datos de prueba del panel admin → `TestDataService` (`core/services/test_data_service.dart`)
 

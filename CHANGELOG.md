@@ -1,5 +1,38 @@
 # CHANGELOG — Running Laps
 
+## [Perf] — Las trazas GPS salen del documento del entrenamiento — 2026-07-26
+Cada entrenamiento guardaba dentro sus coordenadas: la traza de la sesión
+(`trackPoints`) y la de cada serie (`gpsPoints`). Como Firestore devuelve el
+documento entero, **listar entrenamientos descargaba todas las trazas** aunque
+la pantalla solo pintara distancia y fecha. El calendario y analytics piden 12
+meses: para un usuario con un año de entrenos reales eso son megas por visita,
+y en móvil se nota. También acercaba el documento al límite de 1 MiB.
+
+Ahora la traza vive en `users/{uid}/trainings/{id}/track/data`
+(`trackPoints` + `seriesGps` indexado por posición de serie) y el documento del
+entrenamiento queda ligero. Solo se lee cuando alguien va a pintar un mapa:
+`TrainingRepository.withTrack(training)`, que llama el detalle del
+entrenamiento al abrirse.
+
+Decisiones que no son mecánicas:
+- **La traza se escribe DESPUÉS del entrenamiento y tolerando el fallo.** En un
+  batch atómico, una traza que no cupiera tiraría la sesión entera; así, en el
+  peor caso te quedas sin mapa pero nunca sin el entrenamiento.
+- **`overwriteTraining` pasa a `merge: true`.** Los entrenamientos anteriores a
+  jul 2026 llevan la traza embebida; al guardar notas o RPE desde el resumen se
+  reenvía el entrenamiento ya sin trazas, y un `set` sin merge se las habría
+  llevado por delante. Con merge, se conservan.
+- **Compatibilidad hacia atrás sin migración ni backfill**: `withTrack()`
+  detecta que el entrenamiento ya trae la traza embebida y lo devuelve tal cual.
+
+Cubierto por 5 tests nuevos contra Firestore simulado (suite 237 → 242), uno de
+ellos justo sobre el caso de no borrar la traza antigua al guardar.
+
+⚠️ Lo que **no** arregla: los otros dos problemas de escala de grupos — el
+ranking de un reto lee los entrenamientos de todos los miembros
+(`group_detail_repository`) y guardar un entreno recalcula cada reto desde cero
+(`training_challenge_sync_service`). Están fuera del MVP; anotados como deuda.
+
 ## [Feature] — Pantalla de ajustes nueva, con solo lo que va a producto — 2026-07-26
 `AccountSettingsView` (1.231 líneas, UI antigua) se sustituye por
 `profile/views/settings_view.dart` (~450), con las **tres funciones que van a

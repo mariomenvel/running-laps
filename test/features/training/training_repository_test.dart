@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:running_laps/core/services/rate_limit_service.dart';
 import 'package:running_laps/features/groups/data/repositories/challenges_repository.dart';
 import 'package:running_laps/features/groups/data/services/training_challenge_sync_service.dart';
+import 'package:running_laps/core/services/gps_service.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/data/fc_reading.dart';
 import 'package:running_laps/features/training/data/serie.dart';
@@ -87,6 +88,137 @@ void main() {
     });
   });
 
+  group('trazas GPS fuera del documento', () {
+    // Desde jul 2026 el documento del entrenamiento se guarda SIN trazas y
+    // estas viven en `trainings/{id}/track/data`, para que listar
+    // entrenamientos (calendario, analytics, historial) no descargue
+    // coordenadas que esas pantallas no pintan.
+
+    test('el documento del entrenamiento no lleva trackPoints ni gpsPoints',
+        () async {
+      final id = await repo.createTraining(Entrenamiento(
+        titulo: 'Con traza',
+        fecha: DateTime(2026, 7, 10, 18, 30),
+        gps: true,
+        series: [makeSerie(gpsPoints: straightTrack(20))],
+        trackPoints: straightTrack(30)
+            .map((m) => GpsPoint.fromMap(m))
+            .toList(),
+      ));
+
+      final doc = await db
+          .collection('users').doc(_uid)
+          .collection('trainings').doc(id)
+          .get();
+      final data = doc.data()!;
+
+      expect(data.containsKey('trackPoints'), isFalse);
+      final series = data['series'] as List;
+      expect((series.first as Map).containsKey('gpsPoints'), isFalse,
+          reason: 'la serie tampoco debe llevar su traza embebida');
+      // Lo demás del entrenamiento sí sigue ahí
+      expect(data['titulo'], 'Con traza');
+      expect(data['distanciaTotalM'], isNotNull);
+    });
+
+    test('la traza se guarda en track/data, con la de sesión y la de cada serie',
+        () async {
+      final id = await repo.createTraining(Entrenamiento(
+        titulo: 'Con traza',
+        fecha: DateTime(2026, 7, 10, 18, 30),
+        gps: true,
+        series: [
+          makeSerie(gpsPoints: straightTrack(20)),
+          makeSerie(),                                  // sin traza
+          makeSerie(gpsPoints: straightTrack(15)),
+        ],
+        trackPoints:
+            straightTrack(30).map((m) => GpsPoint.fromMap(m)).toList(),
+      ));
+
+      final track = await db
+          .collection('users').doc(_uid)
+          .collection('trainings').doc(id)
+          .collection('track').doc('data')
+          .get();
+      final data = track.data()!;
+
+      expect(data['trackPoints'], isA<List>());
+      final seriesGps = data['seriesGps'] as Map<String, dynamic>;
+      expect(seriesGps.keys.toSet(), {'0', '2'},
+          reason: 'solo las series que tienen traza, indexadas por posición');
+    });
+
+    test('withTrack() devuelve el entrenamiento con sus trazas cargadas',
+        () async {
+      final id = await repo.createTraining(Entrenamiento(
+        titulo: 'Con traza',
+        fecha: DateTime(2026, 7, 10, 18, 30),
+        gps: true,
+        series: [makeSerie(gpsPoints: straightTrack(20)), makeSerie()],
+        trackPoints:
+            straightTrack(30).map((m) => GpsPoint.fromMap(m)).toList(),
+      ));
+
+      final listado = await repo.getTrainingById(id);
+      expect(listado!.trackPoints, isEmpty,
+          reason: 'tal y como llega en un listado, sin trazas');
+
+      final conTraza = await repo.withTrack(listado);
+      expect(conTraza.trackPoints, isNotEmpty);
+      expect(conTraza.series.first.gpsPoints, isNotNull);
+      expect(conTraza.series[1].gpsPoints, isNull,
+          reason: 'la serie que no tenía traza sigue sin ella');
+    });
+
+    test('withTrack() no toca un entrenamiento del formato antiguo', () async {
+      // Formato anterior: traza embebida en el propio documento.
+      final ref = await db
+          .collection('users').doc(_uid)
+          .collection('trainings')
+          .add({
+        'titulo': 'Antiguo',
+        'fecha': DateTime(2026, 5, 1).toUtc().toIso8601String(),
+        'gps': true,
+        'series': [makeSerie().toMap()],
+        'trackPoints': straightTrack(10),
+      });
+
+      final antiguo = await repo.getTrainingById(ref.id);
+      expect(antiguo!.trackPoints, isNotEmpty);
+
+      final resultado = await repo.withTrack(antiguo);
+      expect(identical(resultado, antiguo), isTrue,
+          reason: 'ya trae la traza: no debe releer nada');
+    });
+
+    test('overwriteTraining no borra la traza embebida de un doc antiguo',
+        () async {
+      final ref = await db
+          .collection('users').doc(_uid)
+          .collection('trainings')
+          .add({
+        'titulo': 'Antiguo',
+        'fecha': DateTime(2026, 5, 1).toUtc().toIso8601String(),
+        'gps': true,
+        'series': [makeSerie().toMap()],
+        'trackPoints': straightTrack(10),
+      });
+
+      // Lo que hace la pantalla de resumen al guardar notas/etiquetas.
+      final training = await repo.getTrainingById(ref.id);
+      await repo.overwriteTraining(ref.id, {
+        ...training!.toMap(includeTrack: false),
+        'notas': 'sensaciones raras',
+      });
+
+      final doc = await ref.get();
+      expect(doc.data()!['notas'], 'sensaciones raras');
+      expect(doc.data()!['trackPoints'], isNotNull,
+          reason: 'el merge debe conservar la traza embebida');
+    });
+  });
+
   group('TrainingRepository.createTraining', () {
     test('persiste el doc con los campos derivados y fecha en UTC', () async {
       final id = await repo.createTraining(makeTraining(
@@ -144,8 +276,12 @@ void main() {
       expect(serie.fcReadings, isNotNull);
       expect(serie.fcReadings!.length, 2);
       expect(serie.fcReadings!.first.bpm, 150);
-      // Y el suavizado realmente actuó (línea recta → colapsa puntos)
-      expect(serie.gpsPoints!.length, lessThan(16));
+
+      // El suavizado RDP se comprueba sobre la traza, que ya no vive en el
+      // documento del entrenamiento sino en `track/data` (línea recta →
+      // colapsa puntos).
+      final conTraza = await repo.withTrack(loaded);
+      expect(conTraza.series.single.gpsPoints!.length, lessThan(16));
     });
 
     test('el rate limit bloquea un segundo guardado inmediato', () async {

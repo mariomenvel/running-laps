@@ -51,6 +51,18 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
     _fcMaxFuture = _loadFcMax();
     _notasController = TextEditingController(text: training.notas ?? '');
     _setupCoachAnalysisWatch();
+    _loadTrack();
+  }
+
+  /// El listado de entrenamientos ya no trae las trazas GPS (viven aparte para
+  /// que listar no descargue coordenadas). Esta es la pantalla que sí las
+  /// pinta, así que las pide aquí; si el entrenamiento ya las trae embebido
+  /// (formato anterior a jul 2026) la llamada no hace nada.
+  Future<void> _loadTrack() async {
+    if (_training.trackPoints.isNotEmpty) return;
+    final withTrack = await TrainingRepository().withTrack(_training);
+    if (!mounted || identical(withTrack, _training)) return;
+    setState(() => _training = withTrack);
   }
 
   @override
@@ -60,6 +72,7 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
       _training = widget.training;
       _notasController.text = training.notas ?? '';
       _setupCoachAnalysisWatch();
+      _loadTrack();
     }
   }
 

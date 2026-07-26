@@ -142,10 +142,14 @@ class Entrenamiento {
     return '$mm:$ss2 /km';
   }
 
-  Map<String, dynamic> toMap() {
+  /// [includeTrack] a false omite las trazas GPS (las de sesión y las de cada
+  /// serie). El documento del entrenamiento se guarda así desde jul 2026: las
+  /// trazas viven en `trainings/{id}/track/data` para que listar entrenamientos
+  /// no arrastre megas de coordenadas. Ver `TrainingRepository.getTrack`.
+  Map<String, dynamic> toMap({bool includeTrack = true}) {
     final List<Map<String, dynamic>> listaSeries = <Map<String, dynamic>>[];
     for (int i = 0; i < series.length; i = i + 1) {
-      listaSeries.add(series[i].toMap());
+      listaSeries.add(series[i].toMap(includeGps: includeTrack));
     }
 
     final Map<String, dynamic> base = <String, dynamic>{
@@ -182,7 +186,7 @@ class Entrenamiento {
     }
 
     // Guardar trackPoints y analysis
-    if (trackPoints.isNotEmpty) {
+    if (includeTrack && trackPoints.isNotEmpty) {
       base['trackPoints'] = trackPoints.map((p) => p.toMap()).toList();
     }
     if (analysis != null) {

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'entrenamiento.dart';
+import 'serie.dart';
 import '../../../core/services/gps_service.dart';
 import '../../../core/services/rate_limit_service.dart';
 import '../../../core/utils/rdp_smoother.dart';
@@ -73,7 +74,10 @@ class TrainingRepository {
     }).toList();
     e = e.copyWith(series: smoothedSeries);
 
-    final Map<String, dynamic> data = e.toMap();
+    // El documento del entrenamiento va SIN trazas: listar entrenamientos
+    // (calendario, analytics, historial) traía megas de coordenadas que esas
+    // pantallas no usan. La traza se guarda aparte, en `track/data`.
+    final Map<String, dynamic> data = e.toMap(includeTrack: false);
 
     data['createdAt'] = FieldValue.serverTimestamp();
     data['updatedAt'] = FieldValue.serverTimestamp();
@@ -83,6 +87,11 @@ class TrainingRepository {
     ).add(data);
 
     final trainingId = doc.id;
+
+    // Deliberadamente DESPUÉS y tolerante a fallos: si la traza no cabe o la
+    // escritura falla, se pierde el mapa pero NO el entrenamiento. Al revés
+    // (batch atómico) un fallo de la traza tiraría la sesión entera.
+    await _saveTrack(uid: uid, trainingId: trainingId, training: e);
 
     // Actualizar contadores agregados en users/{uid} (atómico con FieldValue.increment)
     _db.collection('users').doc(uid).update({
@@ -203,15 +212,97 @@ class TrainingRepository {
     Map<String, dynamic> data,
   ) async {
     final String uid = _requireUid();
+    // `merge: true` a propósito: los entrenamientos anteriores a jul 2026
+    // llevan la traza embebida en el propio documento, y un `set` sin merge
+    // la borraría al reenviar el entrenamiento sin ella.
     await _userTrainings(uid).doc(trainingId).set({
       ...data,
       'updatedAt': FieldValue.serverTimestamp(),
-    });
+    }, SetOptions(merge: true));
   }
 
   Future<void> deleteTraining(String trainingId) async {
     final String uid = _requireUid();
     await _userTrainings(uid).doc(trainingId).delete();
+  }
+
+  // ── Trazas GPS ────────────────────────────────────────────────────────────
+  // Viven en `users/{uid}/trainings/{id}/track/data`, fuera del documento del
+  // entrenamiento, y solo se leen cuando alguien va a pintar un mapa.
+
+  DocumentReference<Map<String, dynamic>> _trackDoc(String uid, String id) =>
+      _userTrainings(uid).doc(id).collection('track').doc('data');
+
+  Future<void> _saveTrack({
+    required String uid,
+    required String trainingId,
+    required Entrenamiento training,
+  }) async {
+    final seriesGps = <String, dynamic>{};
+    for (int i = 0; i < training.series.length; i++) {
+      final points = training.series[i].gpsPoints;
+      if (points != null && points.isNotEmpty) {
+        seriesGps['$i'] = points;
+      }
+    }
+
+    final hasTrack = training.trackPoints.isNotEmpty;
+    if (!hasTrack && seriesGps.isEmpty) return;
+
+    try {
+      await _trackDoc(uid, trainingId).set({
+        if (hasTrack)
+          'trackPoints': training.trackPoints.map((p) => p.toMap()).toList(),
+        if (seriesGps.isNotEmpty) 'seriesGps': seriesGps,
+        'savedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint('[TrainingRepository] no se pudo guardar la traza: $e');
+    }
+  }
+
+  /// Devuelve [training] con sus trazas cargadas, o el mismo objeto si ya las
+  /// trae (entrenamientos anteriores a jul 2026, que las llevan embebidas) o
+  /// si no hay ninguna guardada.
+  ///
+  /// Solo debe llamarse cuando se va a pintar el recorrido: es la lectura
+  /// pesada que se sacó del listado.
+  Future<Entrenamiento> withTrack(Entrenamiento training) async {
+    final id = training.id;
+    if (id == null) return training;
+    if (training.trackPoints.isNotEmpty) return training; // formato antiguo
+
+    final String uid = _requireUid();
+    try {
+      final snap = await _trackDoc(uid, id).get();
+      final data = snap.data();
+      if (data == null) return training;
+
+      final rawTrack = data['trackPoints'] as List<dynamic>?;
+      final trackPoints = rawTrack == null
+          ? const <GpsPoint>[]
+          : rawTrack
+              .map((p) => GpsPoint.fromMap(Map<String, dynamic>.from(p as Map)))
+              .toList();
+
+      final seriesGps = data['seriesGps'] as Map<String, dynamic>?;
+      final series = <Serie>[];
+      for (int i = 0; i < training.series.length; i++) {
+        final points = seriesGps?['$i'] as List<dynamic>?;
+        series.add(points == null
+            ? training.series[i]
+            : training.series[i].copyWith(
+                gpsPoints: points
+                    .map((p) => Map<String, dynamic>.from(p as Map))
+                    .toList(),
+              ));
+      }
+
+      return training.copyWith(trackPoints: trackPoints, series: series);
+    } catch (e) {
+      debugPrint('[TrainingRepository] no se pudo leer la traza: $e');
+      return training;
+    }
   }
 
   Future<void> updateTrainingAnalysis({

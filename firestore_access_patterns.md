@@ -49,6 +49,11 @@
 | Borrar cuenta | Cloud Function `deleteUserData` (Admin SDK) | Borra recursivamente `users/{uid}` + artefactos en grupos (member/prefs/medals/badges/participants) + participaciones globales + usuario de Auth. Exige token con `auth_time` < 10 min (la UI reautentica justo antes). Fallback cliente (solo `users/{uid}` + Auth) si la función no está desplegada |
 
 ### Training (`features/training/`)
+
+> Desde jul 2026 existe `users/{uid}/trainings/{id}/track/data`: la traza GPS
+> de la sesión y de cada serie, fuera del documento del entrenamiento. Hereda
+> las reglas de `trainings` (subcolección). Solo se lee al pintar un mapa.
+
 | Operación | Colección | Regla |
 |-----------|-----------|-------|
 | Guardar entrenamiento | `users/{uid}/trainings` | `write: isOwner` |

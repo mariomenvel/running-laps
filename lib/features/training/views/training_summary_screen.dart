@@ -337,8 +337,10 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
         updates['rpePromedio'] = _rpe;
       }
 
+      // Sin trazas: el documento del entrenamiento ya no las lleva (viven en
+      // `track/data`) y reenviarlas aquí las volvería a embeber.
       final fullData = {
-        ...widget.entrenamiento.toMap(),
+        ...widget.entrenamiento.toMap(includeTrack: false),
         ...updates,
       };
 
