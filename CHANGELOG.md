@@ -1,5 +1,26 @@
 # CHANGELOG — Running Laps
 
+## [Fix] — "Completar manualmente": el botón guardaba en silencio o no guardaba — 2026-07-26
+Encontrado usando la app: rellenas los tiempos, pulsas GUARDAR SESIÓN y **no
+pasa nada**. Parece la app rota. Lo que faltaba era el RPE global, y había tres
+cosas conspirando:
+
+1. El campo **mentía**: `NumberPickerField` recibía `_globalRpe ?? 5`, así que
+   mostraba un "5" que nadie había elegido. Visualmente estaba relleno.
+2. El aviso salía en un **snackbar** que se va solo, fácil de perderse.
+3. El campo está **debajo del botón**, fuera de pantalla: aunque leyeras el
+   aviso, no veías qué te faltaba.
+
+Ahora: `NumberPickerField` acepta `displayOverride` para no fingir un valor
+(muestra "Elegir"), al intentar guardar la vista **se desplaza sola** hasta el
+campo (`Scrollable.ensureVisible`) y aparece un texto en rojo explicando *por
+qué* es obligatorio ("ninguna serie tiene RPE, así que hace falta el de la
+sesión"). El rojo solo aparece **después** de intentar guardar: avisar antes es
+regañar por adelantado.
+
+Verificado en dispositivo: guardar sin RPE lleva al campo y lo explica; con el
+RPE puesto, guarda y aparece en el historial.
+
 ## [Perf] — Las trazas GPS salen del documento del entrenamiento — 2026-07-26
 Cada entrenamiento guardaba dentro sus coordenadas: la traza de la sesión
 (`trackPoints`) y la de cada serie (`gpsPoints`). Como Firestore devuelve el

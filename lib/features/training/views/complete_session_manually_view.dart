@@ -67,6 +67,11 @@ class _CompleteSessionManuallyViewState
   bool _warmupOn = true;
   bool _cooldownOn = true;
   int? _globalRpe;
+  /// Se enciende cuando el usuario intenta guardar sin el RPE global. Hasta
+  /// entonces no se pinta nada en rojo: avisar antes de que lo intente es
+  /// regañar por adelantado.
+  bool _rpeMissing = false;
+  final _globalRpeKey = GlobalKey();
   bool _saving = false;
 
   @override
@@ -169,6 +174,18 @@ class _CompleteSessionManuallyViewState
     }
 
     if (_showGlobalRpeAsRequired && _globalRpe == null) {
+      // El campo está debajo del botón de guardar, fuera de pantalla: sin
+      // llevar la vista hasta él, el aviso parecía que el botón no hacía nada.
+      setState(() => _rpeMissing = true);
+      final ctx = _globalRpeKey.currentContext;
+      if (ctx != null) {
+        await Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 300),
+          alignment: 0.2,
+        );
+      }
+      if (!mounted) return;
       ModernSnackBar.showWarning(
         context,
         'Indica el RPE global de la sesión.',
@@ -588,7 +605,9 @@ class _CompleteSessionManuallyViewState
 
   Widget _buildGlobalRpeSection() {
     final required = _showGlobalRpeAsRequired;
+    final missing = required && _globalRpe == null;
     return Column(
+      key: _globalRpeKey,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -604,12 +623,26 @@ class _CompleteSessionManuallyViewState
         NumberPickerField(
           label: '¿Cómo te has sentido?',
           value: _globalRpe ?? 5,
+          // Sin esto el campo mostraba "5" sin que nadie lo hubiera elegido:
+          // parecía relleno y el guardado se bloqueaba sin motivo visible.
+          displayOverride: missing ? 'Elegir' : null,
           min: 1,
           max: 10,
           step: 1,
           unit: '',
-          onChanged: (v) => setState(() => _globalRpe = v),
+          onChanged: (v) => setState(() {
+            _globalRpe = v;
+            _rpeMissing = false;
+          }),
         ),
+        if (_rpeMissing) ...[
+          const SizedBox(height: 6),
+          Text(
+            'Obligatorio: ninguna serie tiene RPE, así que hace falta el de la '
+            'sesión.',
+            style: TextStyle(fontSize: 12, color: AppColors.rpeMax),
+          ),
+        ],
       ],
     );
   }

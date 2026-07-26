@@ -12,6 +12,11 @@ class NumberPickerField extends StatelessWidget {
   final String unit;
   final ValueChanged<int> onChanged;
 
+  /// Texto a mostrar en vez del número. Para campos que aún no tienen valor:
+  /// sin esto, un `value` de relleno (`_algo ?? 5`) se ve idéntico a un valor
+  /// elegido por el usuario, y el campo miente.
+  final String? displayOverride;
+
   const NumberPickerField({
     super.key,
     required this.label,
@@ -21,6 +26,7 @@ class NumberPickerField extends StatelessWidget {
     required this.step,
     required this.unit,
     required this.onChanged,
+    this.displayOverride,
   });
 
   void _showPicker(BuildContext context) {
@@ -149,7 +155,8 @@ class NumberPickerField extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  unit.isEmpty ? '$value' : '$value $unit',
+                  displayOverride ??
+                      (unit.isEmpty ? '$value' : '$value $unit'),
                   style: AppTypography.body.copyWith(
                     color: AppColors.textPrimary(context),
                   ),
