@@ -6,9 +6,6 @@ import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/app_bottom_sheet.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
-import 'package:running_laps/core/widgets/back_pill.dart';
-import 'package:running_laps/core/widgets/main_shell.dart';
-import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/auth/viewmodels/auth_controller.dart';
 import 'package:running_laps/features/auth/views/auth_page.dart';
@@ -287,16 +284,6 @@ class _SettingsViewState extends State<SettingsView> {
 
   // ── UI ────────────────────────────────────────────────────────────────────
 
-  /// Embebida en el shell se cambia de pestaña; pusheada como ruta propia se
-  /// hace pop (mismo criterio que ProfileView).
-  void _goBack() {
-    if (ShellEmbeddingScope.isEmbedded(context)) {
-      MainShell.shellKey.currentState?.navigateBack();
-    } else {
-      Navigator.of(context).pop();
-    }
-  }
-
   InputDecoration _fieldDecoration(BuildContext context, String hint) {
     OutlineInputBorder border(Color color, double width) => OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -330,8 +317,6 @@ class _SettingsViewState extends State<SettingsView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: AppSpacing.m),
-                  BackPill(onTap: _goBack),
                   const SizedBox(height: AppSpacing.l),
 
                   Text('Ajustes',

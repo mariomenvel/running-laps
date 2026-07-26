@@ -12,10 +12,13 @@ distancia de marca destacada y **cambiar contraseña**. ⚠️ Esto último tien
 consecuencia real: una cuenta de email/contraseña ya no puede cambiarla desde
 dentro de la app — queda el "olvidé mi contraseña" desde el login.
 
-La pantalla sigue el sistema actual: `AppHeader` + `BackPill`, tokens de
+La pantalla sigue el sistema actual: `AppHeader`, tokens de
 `AppColors`, `showAppBottomSheet` para los dos flujos sensibles, colores
 sólidos (los degradados están prohibidos salvo Live Activity), iconos en gris
-salvo estado activo. El sheet de nombre y el de borrado piden contraseña solo
+salvo estado activo. **Sin pill de "Volver"**: las pantallas hermanas abiertas
+desde el mismo menú de Perfil (Zonas, Pulsómetro) tampoco la llevan — dentro
+del shell se vuelve con el atrás del sistema o la barra inferior; `BackPill`
+es para vistas pusheadas como ruta propia. El sheet de nombre y el de borrado piden contraseña solo
 si la cuenta es de email: con Google/Apple la reautenticación la resuelve el
 proveedor. La reautenticación antes de borrar no es adorno — la Cloud Function
 `deleteUserData` exige sesión reciente (`auth_time` < 10 min).
