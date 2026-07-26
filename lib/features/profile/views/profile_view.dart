@@ -20,7 +20,7 @@ import 'package:running_laps/features/ai_coach/views/ai_coach_settings_view.dart
 import 'package:running_laps/features/history/views/history_screen.dart';
 import 'package:running_laps/features/profile/views/zones_config_screen.dart';
 import 'package:running_laps/features/profile/views/heart_rate_monitor_view.dart';
-import 'package:running_laps/features/profile/views/account_settings_view.dart';
+import 'package:running_laps/features/profile/views/settings_view.dart';
 import 'package:running_laps/features/avatar/views/avatar_customizer_view.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -313,12 +313,12 @@ class _ProfileViewState extends State<ProfileView> {
             const _MenuDivider(),
             _MenuItem(
               icon: Icons.settings_outlined,
-              label: 'Cuenta y ajustes',
+              label: 'Ajustes',
               onTap: () => _navigate(
                 context,
                 shellIndex: 8,
                 shellParams: {'name': _userName, 'onUpdated': _loadUserData},
-                standalone: () => AccountSettingsView(
+                standalone: () => SettingsView(
                   currentName: _userName,
                   onNameUpdated: _loadUserData,
                 ),

@@ -13,7 +13,7 @@ import 'package:running_laps/features/calendar/views/calendar_view.dart';
 import 'package:running_laps/features/home/views/home_view.dart';
 import 'package:running_laps/features/analytics/views/analytics_hub_screen.dart';
 import 'package:running_laps/features/profile/views/profile_view.dart';
-import 'package:running_laps/features/profile/views/account_settings_view.dart';
+import 'package:running_laps/features/profile/views/settings_view.dart';
 import 'package:running_laps/features/profile/views/zones_config_screen.dart';
 import 'package:running_laps/features/profile/views/heart_rate_monitor_view.dart';
 import 'package:running_laps/features/training/views/training_start_view.dart';
@@ -126,7 +126,7 @@ class _MainShellState extends State<MainShell> {
     // 8 → Cuenta y ajustes
     ValueListenableBuilder<Map<String, dynamic>?>(
       valueListenable: _accountParamsNotifier,
-      builder: (_, params, __) => AccountSettingsView(
+      builder: (_, params, __) => SettingsView(
         key: ValueKey(params?['name'] ?? ''),
         currentName: params?['name'] as String? ?? '',
         onNameUpdated: (params?['onUpdated'] as VoidCallback?) ?? () {},
@@ -210,7 +210,7 @@ class _MainShellState extends State<MainShell> {
   static const _screenNames = {
     0: 'home', 1: 'calendar', 2: 'analytics_hub', 3: 'profile',
     4: 'history', 5: 'training_detail', 6: 'groups_list', 7: 'group_detail',
-    8: 'account_settings', 9: 'zones_config', 10: 'heart_rate_monitor',
+    8: 'settings', 9: 'zones_config', 10: 'heart_rate_monitor',
     11: 'templates_list', 12: 'template_editor', 13: 'workout_editor',
     14: 'avatar_customizer', 15: 'training_session', 16: 'ai_coach_settings',
     17: 'coach_philosophy', 18: 'weekly_feedback',

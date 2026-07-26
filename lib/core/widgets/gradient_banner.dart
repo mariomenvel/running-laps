@@ -75,6 +75,14 @@ class _GradientBannerState extends State<GradientBanner>
   @override
   Widget build(BuildContext context) {
     final color = widget.accentColor ?? AppColors.brandSurface;
+    // El contenido se pintaba siempre en blanco, así que un accentColor claro
+    // (p. ej. AppColors.surfaceOf(context) en tema claro) dejaba el banner
+    // literalmente en blanco sobre blanco: título y subtítulo invisibles.
+    // Se elige según la luminancia real del fondo.
+    final onColor = ThemeData.estimateBrightnessForColor(color) ==
+            Brightness.dark
+        ? Colors.white
+        : AppColors.textPrimary(context);
 
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -97,12 +105,12 @@ class _GradientBannerState extends State<GradientBanner>
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: onColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(
                       widget.icon,
-                      color: Colors.white,
+                      color: onColor,
                       size: 28,
                     ),
                   ),
@@ -116,8 +124,8 @@ class _GradientBannerState extends State<GradientBanner>
                   children: [
                     widget.titleWidget ?? Text(
                       widget.title,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: onColor,
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.5,
@@ -128,7 +136,7 @@ class _GradientBannerState extends State<GradientBanner>
                       Text(
                         widget.subtitle!,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.85),
+                          color: onColor.withValues(alpha: 0.85),
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),

@@ -1,5 +1,35 @@
 # CHANGELOG — Running Laps
 
+## [Feature] — Pantalla de ajustes nueva, con solo lo que va a producto — 2026-07-26
+`AccountSettingsView` (1.231 líneas, UI antigua) se sustituye por
+`profile/views/settings_view.dart` (~450), con las **tres funciones que van a
+producto**: cambiar nombre, borrar cuenta y GPS por defecto. Es además el sitio
+donde vivirá la gestión de la suscripción, por eso sigue siendo una pantalla y
+no se disolvió dentro del menú de Perfil.
+
+Se retiran por decisión de producto: estilo de tarjetas, alarmas por defecto,
+distancia de marca destacada y **cambiar contraseña**. ⚠️ Esto último tiene
+consecuencia real: una cuenta de email/contraseña ya no puede cambiarla desde
+dentro de la app — queda el "olvidé mi contraseña" desde el login.
+
+La pantalla sigue el sistema actual: `AppHeader` + `BackPill`, tokens de
+`AppColors`, `showAppBottomSheet` para los dos flujos sensibles, colores
+sólidos (los degradados están prohibidos salvo Live Activity), iconos en gris
+salvo estado activo. El sheet de nombre y el de borrado piden contraseña solo
+si la cuenta es de email: con Google/Apple la reautenticación la resuelve el
+proveedor. La reautenticación antes de borrar no es adorno — la Cloud Function
+`deleteUserData` exige sesión reciente (`auth_time` < 10 min).
+
+También: `GradientBanner` pintaba su texto **siempre en blanco**, así que con
+un `accentColor` claro el contenido quedaba invisible (título y subtítulo del
+banner de ajustes y del panel de admin). Ahora elige blanco o texto primario
+según la luminancia real del fondo. El nombre del widget engaña: no pinta
+ningún degradado, es un color plano.
+
+Verificado en dispositivo: la pantalla carga con el nombre real, el sheet de
+cambio de nombre muestra el aviso correcto para cuenta de Google, y el toggle
+de GPS persiste. `flutter test` 237 OK, `flutter analyze` 58 avisos (0 errores).
+
 ## [Fix] — Tres bugs del botón atrás encontrados probando en dispositivo — 2026-07-26
 Salieron al verificar el refactor MVVM del editor en un móvil real (Poco X3
 Pro, Android 12). Ninguno los ve `flutter analyze` ni la suite: son de
