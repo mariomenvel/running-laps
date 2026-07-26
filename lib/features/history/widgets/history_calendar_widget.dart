@@ -127,7 +127,6 @@ class _HistoryCalendarWidgetState extends State<HistoryCalendarWidget> {
   /// Coloured dot markers (up to 3) positioned below the day number.
   Widget _buildTagMarkers(List<String> tags) {
     const int maxMarkers = 3;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final brandColor =
         AppColors.brandOf(context);
     final int displayCount =

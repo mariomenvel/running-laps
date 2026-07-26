@@ -101,7 +101,6 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
   // --- GPS ---
   GPSService? _gpsService;
   double _distanciaGpsMetros = 0.0;
-  String _ritmoActual = "--:-- /km";
   Timer? _gpsUpdateTimer;
 
   // --- Notifiers para pantallas nuevas ---
@@ -123,7 +122,6 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
   static const bool _demoMode = false;
 
   // --- Colores ---
-  static const Color _bgGradientColor = Color(0xFFF9F5FB);
 
   // --- Fade animation ---
   late final AnimationController _fadeController;
@@ -438,21 +436,6 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
   }
 
 
-  void _handleResume() {
-    // Reanudar crono
-    _stopwatch.start();
-    _startTimer();
-    _gpsService?.resume(); // Reanudar GPS
-
-    setState(() {
-      _isRunning = true;
-    });
-
-    // Reanudar alarma si procede
-    _startBeepTimerIfNeeded();
-  }
-
-
   void _handleSave() {
     // Detener todo
     _timer?.cancel();
@@ -572,36 +555,6 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
       return "${minutes}m${seconds.toString().padLeft(2, '0')}s";
     } else {
       return "${seconds}s";
-    }
-  }
-
-
-  // ===================================================================
-  // HELPERS COLOR
-  // ===================================================================
-
-  Color _getPaceColor(String paceString) {
-    if (paceString.contains("--")) return AppColors.iconMuted;
-
-    try {
-      // Formato esperado "mm:ss /km" o "mm:ss"
-      final parts = paceString.split(' ')[0].split(':');
-      if (parts.length != 2) return Colors.black87;
-
-      final int minutes = int.tryParse(parts[0]) ?? 0;
-      final int seconds = int.tryParse(parts[1]) ?? 0;
-      final int totalSeconds = (minutes * 60) + seconds;
-
-      // Lógica de colores simple
-      if (totalSeconds < 240) { // < 4:00 min/km
-        return AppColors.rpeLow;
-      } else if (totalSeconds < 300) { // 4:00 - 5:00 min/km
-        return AppColors.rpeMid;
-      } else { // > 5:00 min/km
-        return AppColors.rpeMax;
-      }
-    } catch (e) {
-      return Colors.black87;
     }
   }
 
@@ -1464,21 +1417,6 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     return 'En objetivo ✓';
   }
 
-  // Small gray timer — used at the top for libre and interval+GPS modes.
-  Widget _buildSmallTimer() {
-    return Text(
-      _tiempoMostrado,
-      style: TextStyle(
-        fontSize: 30,
-        fontWeight: FontWeight.w500,
-        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
-        letterSpacing: 0.5,
-        height: 1.0,
-        fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
-      ),
-    );
-  }
-
 
   // Large hero timer — used only for interval+noGPS mode (timer is protagonist).
   Widget _buildHeroTimer() {
@@ -1520,157 +1458,6 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
           ),
         ),
       ],
-    );
-  }
-
-
-  Widget _buildMetricsGrid() {
-    // ── Interval mode only (Libre is handled by _buildLibreBody) ────
-    final String serieValue = widget.currentSeries != null
-        ? (widget.totalSeries != null
-            ? "${widget.currentSeries}/${widget.totalSeries}"
-            : "${widget.currentSeries}")
-        : "--";
-
-    if (!widget.gpsActivo) {
-      // No GPS: only DESCANSO + SERIE (DISTANCIA and RITMO require GPS)
-      return Row(
-        children: [
-          Expanded(
-            child: _buildMetricCard(
-              label: "DESCANSO",
-              value: _formatDescanso(_descansoInt),
-              icon: Icons.timer_rounded,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: _buildMetricCard(
-              label: "SERIE",
-              value: serieValue,
-              icon: Icons.repeat_rounded,
-            ),
-          ),
-        ],
-      );
-    }
-
-    // Interval + GPS: symmetric 2×2 grid
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: ValueListenableBuilder<int>(
-                valueListenable:
-                    _gpsService?.totalDistanceMeters ?? ValueNotifier(0),
-                builder: (ctx, dist, _) => _buildMetricCard(
-                  label: "DISTANCIA",
-                  value: "${dist}m",
-                  icon: Icons.gps_fixed_rounded,
-                ),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: ValueListenableBuilder<String>(
-                valueListenable:
-                    _gpsService?.currentPace ?? ValueNotifier("--:--"),
-                builder: (ctx, pace, _) => _buildMetricCard(
-                  label: "RITMO",
-                  value: pace.split(' ')[0],
-                  icon: Icons.speed_rounded,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        Row(
-          children: [
-            Expanded(
-              child: _buildMetricCard(
-                label: "DESCANSO",
-                value: _formatDescanso(_descansoInt),
-                icon: Icons.timer_rounded,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: _buildMetricCard(
-                label: "SERIE",
-                value: serieValue,
-                icon: Icons.repeat_rounded,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-
-  Widget _buildMetricCard({
-    required String label,
-    required String value,
-    required IconData icon,
-    Color? color,
-    bool large = false,
-  }) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        vertical: large ? 28 : 18,
-        horizontal: 14,
-      ),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.transparent
-                : Colors.black.withValues(alpha: 0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: AppColors.brandOf(context),
-            size: large ? 24 : 18,
-          ),
-          SizedBox(height: large ? 14 : 8),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: large ? 52 : 24,
-                fontWeight: FontWeight.w600,
-                color: large ? AppColors.brand : Theme.of(context).colorScheme.onSurface,
-                letterSpacing: large ? -2.0 : -0.5,
-                height: 1.0,
-              ),
-            ),
-          ),
-          SizedBox(height: large ? 10 : 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: large
-                  ? AppColors.brand.withValues(alpha: 0.55)
-                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-              letterSpacing: 0.8,
-            ),
-          ),
-        ],
-      ),
     );
   }
 

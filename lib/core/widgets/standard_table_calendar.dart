@@ -98,7 +98,6 @@ class _StandardTableCalendarState<T extends Object>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final brandColor =
         AppColors.brandOf(context);
 

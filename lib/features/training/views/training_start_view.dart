@@ -22,7 +22,6 @@ import '../../../core/utils/app_transitions.dart';
 
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/widgets/shell_embedding_scope.dart';
-import 'package:running_laps/core/widgets/number_picker_field.dart';
 import 'training_summary_screen.dart';
 import 'complete_session_manually_view.dart';
 import '../viewmodels/training_viewmodel.dart';
@@ -30,18 +29,12 @@ import '../data/tag_model.dart';
 import '../data/tag_manager.dart';
 import '../widgets/create_tag_dialog.dart';
 import 'training_session_view.dart';
-import '../../templates/views/templates_list_view.dart';
 import '../../templates/data/template_models.dart';
 import '../../templates/views/template_editor_view.dart';
-import '../../templates/data/workout_block.dart';
-import '../../templates/data/workout_segment.dart';
-import '../../templates/data/workout_session.dart';
-import '../../templates/views/workout_editor_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 import 'package:running_laps/core/services/heart_rate_service.dart';
-import 'package:running_laps/features/profile/views/heart_rate_monitor_view.dart';
 import 'package:running_laps/core/services/session_recovery_service.dart';
 import 'package:running_laps/core/services/training_load_service.dart';
 import 'package:running_laps/features/profile/data/zones_repository.dart';
@@ -123,10 +116,6 @@ class _TrainingStartViewState extends State<TrainingStartView>
   // Momento de inicio de sesión (para recovery)
   DateTime? _sessionStartTime;
 
-  // --- Colores ---
-  static const Color _bgGradientColor = Color(0xFFF9F5FB);
-
-
   // ===============================================================
   // ESTADO DE LA ALARMA
   // ===============================================================
@@ -169,14 +158,10 @@ class _TrainingStartViewState extends State<TrainingStartView>
   // --- Configuración por tipo ---
   final _cfgDistKmCtrl   = TextEditingController(); // rodaje/largo: dist objetivo km
   final _cfgPaceCtrl     = TextEditingController(); // pace objetivo mm:ss
-  int    _cfgSeries      = 5;                       // series: número
   int    _cfgSeriesDist  = 400;                      // metros por serie
   int    _cfgDescanso    = 90;                      // series: descanso en segundos
   final _cfgSeriesPaceCtrl = TextEditingController(); // pace por serie
-  int    _cfgTempoDur    = 30;                      // tempo: minutos
   final _cfgTempoPaceCtrl = TextEditingController(); // tempo: pace
-  int    _cfgFartlekDur  = 40;                      // fartlek: minutos totales
-  int    _cfgFartlekBloques = 6;                    // fartlek: bloques rápidos/lentos
 
 
   Future<void> _loadFcMax() async {
@@ -505,78 +490,6 @@ class _TrainingStartViewState extends State<TrainingStartView>
     
     // Recalculate alarm interval
     _updateAlarmInterval();
-  }
-
-  void _selectType(String type) => setState(() => _selectedTrainingType = type);
-
-  /// Mapea el tipo al WorkoutType del editor.
-  WorkoutType _workoutTypeFor(String type) {
-    switch (type) {
-      case 'series':
-        return WorkoutType.intervals;
-      case 'fartlek':
-        return WorkoutType.fartlek;
-      case 'cuestas':
-        return WorkoutType.intervals;
-      default: // continuo, competicion
-        return WorkoutType.continuous;
-    }
-  }
-
-  /// Abre WorkoutEditorScreen en modo quick-start con el tipo preseleccionado.
-  void _openWorkoutEditor(String type) {
-    final workoutType = _workoutTypeFor(type);
-
-    // Sesión mínima con el tipo preseleccionado y un bloque principal vacío.
-    final initialSession = WorkoutSession(
-      title: _labelForType(type),
-      type: workoutType,
-      blocks: [
-        WorkoutBlock(
-          role: BlockRole.main,
-          repetitions: 1,
-          segments: [
-            WorkoutSegment(
-              type: SegmentType.interval,
-              distanceM: 1000,
-            ),
-          ],
-        ),
-      ],
-      isTemplate: false,
-    );
-
-    Navigator.push(
-      context,
-      AppRoute(
-        page: WorkoutEditorScreen(
-          isQuickStart: true,
-          initialSession: initialSession,
-          onSave: (session) {
-            // El editor hace pop justo después de este callback: empujar la
-            // pre-ejecución en el frame siguiente, sobre esta vista.
-            // Desde ahí: EMPEZAR → WorkoutExecutionScreen → summary (guarda).
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted) return;
-              Navigator.push(
-                context,
-                AppRoute(page: PreExecutionScreen(session: session)),
-              );
-            });
-          },
-        ),
-      ),
-    );
-  }
-
-  String _labelForType(String type) {
-    switch (type) {
-      case 'series':     return 'Series';
-      case 'fartlek':    return 'Fartlek';
-      case 'cuestas':    return 'Cuestas';
-      case 'competicion': return 'Competición';
-      default:           return 'Continuo';
-    }
   }
 
   /// Devuelve (min, sec) del pace de config según el tipo activo, o null.
@@ -1516,105 +1429,6 @@ class _TrainingStartViewState extends State<TrainingStartView>
     }
   }
 
-  Widget _buildQuickStartTab() {
-     return Padding(
-       padding: const EdgeInsets.all(24.0),
-       child: Column(
-         mainAxisAlignment: MainAxisAlignment.center,
-         children: [
-           Icon(Icons.directions_run_rounded, size: 80, color: AppColors.brandOf(context)),
-           const SizedBox(height: 24),
-           const Text(
-             "Carrera Continua",
-             style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
-           ),
-           const SizedBox(height: 12),
-           Text(
-             "Registra tu carrera libremente con GPS. \nSin series ni pausas programadas.",
-             textAlign: TextAlign.center,
-             style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
-           ),
-           const Spacer(),
-           SizedBox(
-             width: double.infinity,
-             height: 60,
-             child: ElevatedButton.icon(
-               style: ElevatedButton.styleFrom(
-                 backgroundColor: AppColors.brand,
-                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                 elevation: 8,
-                 shadowColor: AppColors.brand.withValues(alpha: 0.5),
-               ),
-               icon: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 32),
-               label: const Text("EMPEZAR AHORA", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 1)),
-               onPressed: _startContinuousRun,
-             ),
-           ),
-           const SizedBox(height: 40),
-         ]
-       ),
-     );
-  }
-
-  Widget _buildTemplatesTab() {
-    return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 20.0),
-                  
-                  if (_vm.source != null && _vm.series.isEmpty) ...[
-                     _buildTemplateCard(),
-                     const SizedBox(height: 16),
-                  ],
-                  
-                  _buildFormContainer(),
-                     
-                  const SizedBox(height: 24.0),
-                  
-                  if (_vm.source == null) ...[
-                    _buildAlarmSection(),
-                    const SizedBox(height: 20.0), 
-                  ],
-
-                  if (_vm.series.isEmpty) ...[
-                    _buildGpsToggle(),
-                    _buildHrToggle(),
-                    const SizedBox(height: 30.0),
-                  ],
-                  Text(
-                    'Series Guardadas',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                  Container(
-                    height: 1.0,
-                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-                    margin: const EdgeInsets.symmetric(vertical: 8.0),
-                  ),
-
-                  // Lista de series (no scrollable here, outer scroll handles it)
-                  _buildSeriesList(),
-                  const SizedBox(height: 20),
-                ],
-              ),
-            ),
-          ),
-        ),
-        _buildFooter(),
-      ],
-    );
-  }
-
   Widget _buildBody() {
     if (_vm.series.isEmpty && !_isResting) {
       return _buildPreTraining();
@@ -1711,17 +1525,6 @@ class _TrainingStartViewState extends State<TrainingStartView>
             _buildStartButtonNew(),
           const SizedBox(height: AppSpacing.xl),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSectionDivider() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.m),
-      child: Divider(
-        color: AppColors.borderOf(context),
-        thickness: 0.5,
-        height: 0.5,
       ),
     );
   }
@@ -2107,54 +1910,6 @@ class _TrainingStartViewState extends State<TrainingStartView>
     );
   }
 
-  Widget _buildTypeSelector() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
-          child: Text(
-            '¿Qué entrenamos hoy?',
-            style: AppTypography.h2.copyWith(color: AppColors.textPrimary(context)),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.l),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
-          child: GridView.count(
-            crossAxisCount: 2,
-            crossAxisSpacing: AppSpacing.m,
-            mainAxisSpacing: AppSpacing.m,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 1.6,
-            children: [
-              _buildTypeCard('Continuo', Icons.directions_run, 'continuo'),
-              _buildTypeCard('Series', Icons.repeat, 'series'),
-              _buildTypeCard('Cuestas', Icons.landscape, 'cuestas'),
-              _buildTypeCard('Competición', Icons.emoji_events, 'competicion'),
-              _buildTypeCard('Fartlek', Icons.shuffle, 'fartlek'),
-            ],
-          ),
-        ),
-        _buildTypeConfig(),
-        const SizedBox(height: AppSpacing.m),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
-          child: OutlinedButton.icon(
-            icon: const Icon(Icons.folder_outlined),
-            label: const Text('Cargar plantilla'),
-            onPressed: () => MainShell.shellKey.currentState?.navigateTo(11),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.textSecondary(context),
-              side: BorderSide(color: AppColors.borderOf(context)),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   // ---- Helpers de configuración por tipo ----
 
   /// Parsea "mm:ss" y devuelve (minutos, segundos). Retorna null si inválido.
@@ -2165,267 +1920,6 @@ class _TrainingStartViewState extends State<TrainingStartView>
     final s = int.tryParse(parts[1]);
     if (m == null || s == null || s >= 60) return null;
     return (m, s);
-  }
-
-  Widget _cfgTextField(TextEditingController ctrl, String hint, {TextInputType? keyboard}) {
-    return TextField(
-      controller: ctrl,
-      keyboardType: keyboard ?? TextInputType.number,
-      style: AppTypography.body.copyWith(color: AppColors.textPrimary(context)),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: AppTypography.body.copyWith(color: AppColors.textSecondary(context)),
-        filled: true,
-        fillColor: AppColors.surfaceOf(context),
-        contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.m, vertical: AppSpacing.s),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: AppColors.borderOf(context), width: 0.5),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: AppColors.borderOf(context), width: 0.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.brand, width: 1.5),
-        ),
-      ),
-    );
-  }
-
-  Widget _cfgLabel(String text) => Text(
-    text,
-    style: AppTypography.small.copyWith(
-      color: AppColors.textSecondary(context),
-      fontWeight: FontWeight.w600,
-    ),
-  );
-
-  Widget _cfgSliderRow({
-    required String label,
-    required double value,
-    required double min,
-    required double max,
-    required int divisions,
-    required String valueLabel,
-    required ValueChanged<double> onChanged,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _cfgLabel(label),
-            Text(valueLabel, style: AppTypography.body.copyWith(color: AppColors.brand, fontWeight: FontWeight.w600)),
-          ],
-        ),
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            activeTrackColor: AppColors.brand,
-            thumbColor: AppColors.brand,
-            inactiveTrackColor: AppColors.brand.withValues(alpha: 0.2),
-            overlayColor: AppColors.brand.withValues(alpha: 0.1),
-            trackHeight: 3,
-          ),
-          child: Slider(
-            value: value,
-            min: min,
-            max: max,
-            divisions: divisions,
-            onChanged: onChanged,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _cfgStepper({
-    required String label,
-    required int value,
-    required int min,
-    required int max,
-    required ValueChanged<int> onChanged,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _cfgLabel(label),
-        Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.remove_circle_outline),
-              color: value <= min ? AppColors.textSecondary(context) : AppColors.brand,
-              onPressed: value <= min ? null : () => onChanged(value - 1),
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.zero,
-            ),
-            SizedBox(
-              width: 36,
-              child: Text(
-                '$value',
-                textAlign: TextAlign.center,
-                style: AppTypography.body.copyWith(color: AppColors.textPrimary(context), fontWeight: FontWeight.w600),
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.add_circle_outline),
-              color: value >= max ? AppColors.textSecondary(context) : AppColors.brand,
-              onPressed: value >= max ? null : () => onChanged(value + 1),
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.zero,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTypeConfig() {
-    final type = _selectedTrainingType;
-    Widget content;
-
-    if (type == 'continuo') {
-      content = Column(
-        key: const ValueKey('continuo'),
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _cfgLabel('Distancia objetivo (km, opcional)'),
-          const SizedBox(height: AppSpacing.s),
-          _cfgTextField(_cfgDistKmCtrl, 'ej. 10'),
-          const SizedBox(height: AppSpacing.m),
-          _cfgLabel('Pace objetivo (mm:ss/km, opcional)'),
-          const SizedBox(height: AppSpacing.s),
-          _cfgTextField(_cfgPaceCtrl, 'ej. 5:30', keyboard: TextInputType.text),
-        ],
-      );
-    } else if (type == 'series') {
-      content = Column(
-        key: const ValueKey('series'),
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _cfgStepper(
-            label: 'Número de series',
-            value: _cfgSeries,
-            min: 1,
-            max: 20,
-            onChanged: (v) => setState(() => _cfgSeries = v),
-          ),
-          const SizedBox(height: AppSpacing.m),
-          _cfgLabel('Distancia por serie (metros)'),
-          const SizedBox(height: AppSpacing.s),
-          NumberPickerField(
-            label:     'Distancia por serie',
-            value:     _cfgSeriesDist,
-            min:       100,
-            max:       5000,
-            step:      100,
-            unit:      'm',
-            onChanged: (v) => setState(() => _cfgSeriesDist = v),
-          ),
-          const SizedBox(height: AppSpacing.m),
-          _cfgSliderRow(
-            label: 'Descanso entre series',
-            value: _cfgDescanso.toDouble(),
-            min: 30,
-            max: 300,
-            divisions: 9,
-            valueLabel: _cfgDescanso < 60
-                ? '${_cfgDescanso}s'
-                : '${_cfgDescanso ~/ 60}min${_cfgDescanso % 60 > 0 ? ' ${_cfgDescanso % 60}s' : ''}',
-            onChanged: (v) => setState(() => _cfgDescanso = v.round()),
-          ),
-          const SizedBox(height: AppSpacing.m),
-          _cfgLabel('Pace objetivo por serie (mm:ss/km, opcional)'),
-          const SizedBox(height: AppSpacing.s),
-          _cfgTextField(_cfgSeriesPaceCtrl, 'ej. 4:15', keyboard: TextInputType.text),
-        ],
-      );
-    } else if (type == 'fartlek') {
-      content = Column(
-        key: const ValueKey('fartlek'),
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _cfgSliderRow(
-            label: 'Duración total',
-            value: _cfgFartlekDur.toDouble(),
-            min: 20,
-            max: 90,
-            divisions: 14,
-            valueLabel: '${_cfgFartlekDur} min',
-            onChanged: (v) => setState(() => _cfgFartlekDur = v.round()),
-          ),
-          const SizedBox(height: AppSpacing.m),
-          _cfgStepper(
-            label: 'Bloques rápidos/lentos',
-            value: _cfgFartlekBloques,
-            min: 2,
-            max: 20,
-            onChanged: (v) => setState(() => _cfgFartlekBloques = v),
-          ),
-        ],
-      );
-    } else {
-      content = const SizedBox.shrink(key: ValueKey('none'));
-    }
-
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 250),
-      transitionBuilder: (child, animation) => FadeTransition(
-        opacity: animation,
-        child: SizeTransition(sizeFactor: animation, child: child),
-      ),
-      child: type == null
-          ? const SizedBox.shrink(key: ValueKey('null'))
-          : Padding(
-              key: ValueKey(type),
-              padding: const EdgeInsets.fromLTRB(AppSpacing.l, AppSpacing.m, AppSpacing.l, 0),
-              child: Container(
-                padding: const EdgeInsets.all(AppSpacing.l),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceOf(context),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.borderOf(context), width: 0.5),
-                ),
-                child: content,
-              ),
-            ),
-    );
-  }
-
-  Widget _buildTypeCard(String label, IconData icon, String type) {
-    final selected = _selectedTrainingType == type;
-    const brand = AppColors.brand;
-    return GestureDetector(
-      onTap: () => _openWorkoutEditor(type),
-      child: AnimatedContainer(
-        duration: AppMotion.base,
-        padding: const EdgeInsets.all(AppSpacing.l),
-        decoration: BoxDecoration(
-          color: selected ? brand.withValues(alpha: 0.08) : AppColors.surfaceOf(context),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: selected ? brand : AppColors.borderOf(context),
-            width: selected ? 1.5 : 0.5,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: brand, size: 28),
-            const SizedBox(height: AppSpacing.s),
-            Text(
-              label,
-              style: AppTypography.body.copyWith(
-                color: selected ? brand : AppColors.textSecondary(context),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _buildSensors() {
@@ -3065,28 +2559,6 @@ class _TrainingStartViewState extends State<TrainingStartView>
     );
   }
 
-  void _createMomentaryTemplate() async {
-    final TrainingTemplate? newTemplate = await Navigator.push(
-      context,
-      AppModalRoute(
-        page: TemplateEditorView(
-          isMomentary: true,
-        ),
-      ),
-    );
-
-    if (newTemplate != null) {
-      if (newTemplate.blocks.isEmpty || !mounted) return;
-      setState(() {
-        _vm.loadTemplate(newTemplate);
-        if (_vm.plannedBlocks.isNotEmpty) {
-          _applyTemplateBlock(_vm.plannedBlocks[0]);
-        }
-      });
-      ModernSnackBar.showSuccess(context, "Plantilla rápida cargada");
-    }
-  }
-
   void _editActiveTemplate() async {
     final template = _vm.source?.templateSnapshot;
     if (template == null) return;
@@ -3118,24 +2590,6 @@ class _TrainingStartViewState extends State<TrainingStartView>
          }
       });
       ModernSnackBar.showSuccess(context, "Plantilla actualizada");
-    }
-  }
-
-  void _openTemplateSelector() async {
-    final TrainingTemplate? selected = await Navigator.push(
-      context,
-      AppModalRoute(page: const TemplatesListView(isSelectionMode: true)),
-    );
-    
-    if (selected != null) {
-      if (!mounted) return;
-      setState(() {
-        _vm.loadTemplate(selected);
-        if (_vm.plannedBlocks.isNotEmpty) {
-          _applyTemplateBlock(_vm.plannedBlocks[0]);
-        }
-      });
-      ModernSnackBar.showSuccess(context, "Plantilla cargada");
     }
   }
 
@@ -3540,9 +2994,9 @@ class _TrainingStartViewState extends State<TrainingStartView>
                               : () {
                                   setState(() {
                                     if (isDistance) {
-                                      _distanciaSeleccionada = currentValue!;
+                                      _distanciaSeleccionada = currentValue;
                                     } else {
-                                      _descansoSeleccionado = currentValue!;
+                                      _descansoSeleccionado = currentValue;
                                     }
                                   });
                                   Navigator.pop(context);
@@ -3932,336 +3386,6 @@ class _TrainingStartViewState extends State<TrainingStartView>
     final int minutes = totalSeconds ~/ 60;
     final int seconds = totalSeconds % 60;
     return '${minutes}m ${seconds.toString().padLeft(2, '0')}s';
-  }
-
-
-  Widget _buildGpsToggle() {
-    return AnimatedContainer(
-      duration: AppMotion.slow,
-      margin: const EdgeInsets.only(top: 12.0),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16.0),
-        border: Border.all(
-          color: _vm.gpsOn ? _brandAccentColor.withValues(alpha: 0.5) : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-          width: _vm.gpsOn ? 2.0 : 1.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: _vm.gpsOn
-                ? _brandAccentColor.withValues(alpha: 0.1)
-                : Theme.of(context).brightness == Brightness.dark
-                    ? Colors.transparent
-                    : Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10.0,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(
-                _vm.gpsOn ? Icons.location_on : Icons.location_off_outlined,
-                color: _vm.gpsOn ? _brandAccentColor : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
-                size: 28,
-              ),
-              const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Registro GPS',
-                    style: TextStyle(
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.w600,
-                      color: _vm.gpsOn ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
-                   if (_vm.gpsOn)
-                    Padding(
-                      padding: EdgeInsets.only(top: 4.0),
-                      child: Text(
-                        "Ubicación activa",
-                        style: TextStyle(
-                          fontSize: 12.0,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.brandOf(context),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
-          Transform.scale(
-            scale: 0.9,
-            child: Switch(
-              value: _vm.gpsOn,
-              onChanged: (bool value) {
-                setState(() {
-                  _vm.setGpsOn(value);
-                });
-
-              },
-              activeThumbColor: AppColors.brand,
-              inactiveThumbColor: Colors.white,
-              inactiveTrackColor: AppColors.switchTrackOff(context),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-
-  Widget _buildHrToggle() {
-    return ListenableBuilder(
-      listenable: Listenable.merge([
-        HeartRateService().connectionState,
-        HeartRateService().connectedDeviceName,
-      ]),
-      builder: (context, _) {
-        final state       = HeartRateService().connectionState.value;
-        final isConnected = state == HrConnectionState.connected;
-        final deviceName  = HeartRateService().connectedDeviceName.value ?? 'Pulsómetro';
-
-        return AnimatedContainer(
-          duration: AppMotion.slow,
-          margin: const EdgeInsets.only(top: 8.0),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(16.0),
-            border: Border.all(
-              color: isConnected
-                  ? AppColors.rpeMax.withValues(alpha: 0.5)
-                  : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-              width: isConnected ? 2.0 : 1.0,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: isConnected
-                    ? AppColors.rpeMax.withValues(alpha: 0.08)
-                    : Theme.of(context).brightness == Brightness.dark
-                        ? Colors.transparent
-                        : Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10.0,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    isConnected ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
-                    color: isConnected
-                        ? AppColors.rpeMax
-                        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
-                    size: 28,
-                  ),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isConnected ? deviceName : 'Pulsómetro',
-                        style: TextStyle(
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.w600,
-                          color: isConnected
-                              ? Theme.of(context).colorScheme.onSurface
-                              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                        ),
-                      ),
-                      if (isConnected)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
-                          child: Text(
-                            'Conectado',
-                            style: TextStyle(
-                              fontSize: 12.0,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.rpeMax,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-              Transform.scale(
-                scale: 0.9,
-                child: Switch(
-                  value: isConnected,
-                  onChanged: (val) async {
-                    if (val) {
-                      final lastId = await HeartRateService().getLastDeviceId();
-                      if (lastId != null) {
-                        HeartRateService().connect(lastId);
-                      } else {
-                        // context.mounted: el context es del builder, no del State
-                        if (!context.mounted) return;
-                        await Navigator.push(
-                          context,
-                          AppRoute(page: const HeartRateMonitorView()),
-                        );
-                      }
-                    } else {
-                      HeartRateService().disconnect();
-                    }
-                  },
-                  activeThumbColor: AppColors.rpeMax,
-                  inactiveThumbColor: Colors.white,
-                  inactiveTrackColor: AppColors.switchTrackOff(context),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // ===================================================================
-  // Template Buttons Section
-  // ===================================================================
-
-  Widget _buildTemplateButtons() {
-    return Row(
-      children: [
-        // Load Template Card
-        Expanded(
-          child: _buildActionCard(
-            onTap: _openTemplateSelector,
-            icon: Icons.folder_open_rounded,
-            title: 'Cargar\nPlantilla',
-            color: AppColors.brandOf(context),
-          ),
-        ),
-        const SizedBox(width: 12),
-        // Quick Template Card
-        Expanded(
-          child: _buildActionCard(
-            onTap: _createMomentaryTemplate,
-            icon: Icons.bolt_rounded,
-            title: 'Plantilla\nRápida',
-            color: AppColors.rpeMid,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionCard({
-    required VoidCallback onTap,
-    required IconData icon,
-    required String title,
-    required Color color,
-  }) {
-    return StatefulBuilder(
-      builder: (context, setCardState) {
-        bool isPressed = false;
-        return GestureDetector(
-          onTapDown: (_) => setCardState(() => isPressed = true),
-          onTapUp: (_) {
-            setCardState(() => isPressed = false);
-            onTap();
-          },
-          onTapCancel: () => setCardState(() => isPressed = false),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            height: 110,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: color.withValues(alpha: isPressed ? 0.3 : 0.1), width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withValues(alpha: isPressed ? 0.05 : 0.08),
-                  blurRadius: isPressed ? 4 : 12,
-                  offset: Offset(0, isPressed ? 2 : 6),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(icon, color: color, size: 22),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13,
-                    height: 1.1,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }
-    );
-  }
-
-  Widget _buildContinuousRunButton() {
-    return Container(
-      width: double.infinity,
-      height: 60,
-      decoration: BoxDecoration(
-        color: _brandAccentColor,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: _brandAccentColor.withValues(alpha: 0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _startContinuousRun,
-          borderRadius: BorderRadius.circular(20),
-          child: const Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.directions_run_rounded, color: Colors.white, size: 22),
-                SizedBox(width: 10),
-                Text(
-                  'CARRERA CONTINUA',
-                  style: TextStyle(
-                    color: Colors.white, 
-                    fontSize: 15, 
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.1,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 
 
@@ -4704,48 +3828,6 @@ class _LinkSessionSheet extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-// ── _HrRecoveryLabel ──────────────────────────────────────────────────────────
-// Muestra la FC actual durante el descanso para monitorizar la recuperación.
-
-class _HrRecoveryLabel extends StatelessWidget {
-  final int? fcMax;
-
-  const _HrRecoveryLabel({this.fcMax});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: Listenable.merge([
-        HeartRateService().connectionState,
-        HeartRateService().heartRate,
-      ]),
-      builder: (context, _) {
-        final state = HeartRateService().connectionState.value;
-        final hr    = HeartRateService().heartRate.value;
-
-        if (state != HrConnectionState.connected || hr == null) {
-          return const SizedBox.shrink();
-        }
-
-        // Umbral de recuperación: 65 % de fcMax, o 120 ppm si no hay fcMax
-        final threshold = fcMax != null ? (fcMax! * 0.65).round() : 120;
-        final ready     = hr <= threshold;
-
-        return Text(
-          ready ? 'Listo para la siguiente' : 'Recuperando · $hr ppm',
-          style: TextStyle(
-            fontSize:   11,
-            fontWeight: FontWeight.w500,
-            color:      ready
-                ? AppColors.rpeLow
-                : AppColors.rpeMax,
-          ),
-        );
-      },
     );
   }
 }

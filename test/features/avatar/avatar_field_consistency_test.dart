@@ -15,7 +15,7 @@ void main() {
     final firestore = FakeFirebaseFirestore();
     final config = AvatarConfig.random();
 
-    // Simula avatar_editor_wraper_view.dart._saveAvatarToFirebase()
+    // Simula el guardado del editor de avatar (avatar_customizer_view.dart).
     await firestore.collection('users').doc(uid).set({
       'profilePicType': 'avatar',
       'generativeAvatarConfig': config.toMap(),

@@ -66,7 +66,10 @@ class AvatarHelper {
       );
     }
 
-    // 2. SI ES AVATAR (sistema legado, avatar_maker_screen)
+    // 2. SI ES AVATAR (sistema legado por capas: la pantalla que lo escribía —
+    // AvatarMakerScreen/AvatarEditorWrapperView — se eliminó en jul 2026, pero
+    // esta rama se conserva para renderizar los docs ya guardados en Firestore
+    // con profilePicType == 'avatar'. Nada nuevo escribe ese formato.)
     if (type == 'avatar') {
       final safeConfig = config ?? {};
       return CircleAvatar(

@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/config/app_theme.dart';
@@ -52,7 +51,6 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
     final cardStyle = await settings.getCardStyle();
     final alarm = await settings.getAlarmEnabled();
     final gps = await settings.getGpsDefault();
-    final prefs = await SharedPreferences.getInstance();
 
     int bestDist = 400;
     try {

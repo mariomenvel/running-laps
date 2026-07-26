@@ -4,7 +4,6 @@ import '../../../config/app_theme.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_header.dart';
 import '../../../core/widgets/gradient_banner.dart';
-import 'package:running_laps/features/training/data/entrenamiento.dart';
 import '../data/repositories/group_detail_repository.dart';
 import '../data/services/gamification_service.dart';
 import '../../profile/views/profile_view.dart';
@@ -32,7 +31,6 @@ class ParticipantProfileScreen extends StatefulWidget {
 class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
   final GroupDetailRepository _repository = GroupDetailRepository();
   bool _isLoading = true;
-  List<Entrenamiento> _history = [];
   List<Achievement> _achievements = [];
 
   // Stats calculate
@@ -71,7 +69,6 @@ class _ParticipantProfileScreenState extends State<ParticipantProfileScreen> {
 
     if (mounted) {
       setState(() {
-        _history = trainings;
         _achievements = calculated;
         _totalRuns = trainings.length;
         _totalKm = km;

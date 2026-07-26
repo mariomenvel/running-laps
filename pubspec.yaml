@@ -33,6 +33,13 @@ dependencies:
 
 
 
+  # Nota (jul 2026): se retiraron 6 dependencias directas sin un solo import en
+  # lib/ ni test/ — get (GetX: la app usa ValueNotifier para estado y Navigator
+  # para navegación; su último uso vivía en el editor de avatar legado ya
+  # borrado), firebase_storage, http (las llamadas al LLM van por Cloud
+  # Functions), image_picker, gal y path_provider. Antes de volver a añadir
+  # cualquiera de ellas, comprobar que hace falta de verdad: cada plugin nativo
+  # suma permisos y peso al APK.
   # Paquete para guardar datos
   shared_preferences: ^2.0.0 # <-- Usa la última versión
   # The following adds the Cupertino Icons font to your application.
@@ -55,18 +62,13 @@ dependencies:
   firebase_app_check: ^0.4.1+1
   google_sign_in: ^6.2.2
   cloud_firestore: ^6.0.3
-  firebase_storage: ^13.0.3
-  image_picker: ^1.2.0
   intl: ^0.18.1
   flutter_svg: ^2.0.7
   speech_to_text: ^7.0.0
-  get: ^4.6.5
   flutter_ringtone_player: ^4.0.0+4
   pdf: ^3.11.1
   printing: ^5.13.3
   universal_html: ^2.2.4
-  gal: ^2.3.0
-  path_provider: ^2.0.15
   geolocator: ^11.0.0
   table_calendar: ^3.0.9
   fl_chart: ^1.1.0
@@ -85,7 +87,6 @@ dependencies:
   device_info_plus: ^11.0.0
   flutter_local_notifications: ^18.0.0
   timezone: ^0.9.4
-  http: ^1.2.2
   cloud_functions: ^6.3.2
   url_launcher: ^6.3.1
   # Requieren firebase_core ^4.10.0 exacto (ver nota arriba) — versiones más

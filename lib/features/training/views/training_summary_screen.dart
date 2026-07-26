@@ -65,7 +65,6 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
   late final int _distanciaM;
   late final double _tiempoTotalSec;
   late final int? _ritmoSecKm;
-  late final double? _fcMedia;
 
   // FCmáx del atleta — se carga async; alimenta el % en zona objetivo del card
   // de rodaje continuo (null hasta que llega → el stat queda oculto mientras).
@@ -122,7 +121,6 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
     _ritmoSecKm = _distanciaM > 0
         ? (_tiempoTotalSec / (_distanciaM / 1000.0)).round()
         : null;
-    _fcMedia = e.fcMediaSesion;
 
     _checkCtrl = AnimationController(
       vsync: this,
@@ -306,7 +304,6 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
     return '${d.day} ${months[d.month - 1]}';
   }
 
-  Color _rpeColor(double rpe) => AppColors.effortColor(rpe);
 
   Widget _divider() => Padding(
         padding: const EdgeInsets.symmetric(vertical: 20),
@@ -610,84 +607,6 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
       case WorkoutType.free:
         return FreeStatsCard(stats: calculator.freeStats(), accentColor: color);
     }
-  }
-
-  // ── _buildStats ───────────────────────────────────────────────────────────
-
-  Widget _buildStats() {
-    final distText = _distanciaM >= 1000
-        ? (_distanciaM / 1000).toStringAsFixed(2)
-        : '$_distanciaM';
-    final distUnit = _distanciaM >= 1000 ? 'km' : 'm';
-    final timeH = _tiempoTotalSec.round() ~/ 3600;
-    final timeM = (_tiempoTotalSec.round() % 3600) ~/ 60;
-    final timeS = _tiempoTotalSec.round() % 60;
-    final timeText = timeH > 0
-        ? '$timeH:${timeM.toString().padLeft(2, '0')}'
-        : '$timeM:${timeS.toString().padLeft(2, '0')}';
-    final rpeAvg = widget.entrenamiento.rpePromedio();
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        _statItem(distText, distUnit, 'Distancia'),
-        _statItem(timeText, '', 'Tiempo'),
-        if (_ritmoSecKm != null)
-          _statItem(_formatPace(_ritmoSecKm), '/km', 'Pace'),
-        _statItem(
-          rpeAvg.toStringAsFixed(1),
-          '',
-          'RPE',
-          valueColor: _rpeColor(rpeAvg),
-        ),
-        if (_fcMedia != null)
-          _statItem(_fcMedia.round().toString(), 'bpm', 'FC media'),
-      ],
-    );
-  }
-
-  Widget _statItem(String value, String unit, String label,
-      {Color? valueColor}) {
-    final textColor = valueColor ?? AppColors.textPrimary(context);
-    return Column(
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text(
-              value,
-              style: TextStyle(
-                color: textColor,
-                fontSize: 22,
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.5,
-              ),
-            ),
-            if (unit.isNotEmpty) ...[
-              const SizedBox(width: 2),
-              Text(
-                unit,
-                style: TextStyle(
-                  color: textColor.withValues(alpha: 0.7),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: AppColors.textSecondary(context),
-            fontSize: 11,
-          ),
-        ),
-      ],
-    );
   }
 
   // ── _buildRpeSlider ───────────────────────────────────────────────────────
@@ -1004,7 +923,6 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
 
   Widget _buildTagChip(String name, {required bool isPredefined, StateSetter? setSheetState}) {
     final isSelected = _selectedTags.contains(name);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeText = AppColors.brandOf(context);
     return GestureDetector(
       onTap: () {
@@ -1058,7 +976,6 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
   }
 
   Widget _buildTagsContent(StateSetter setSheetState) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final createColor = AppColors.brandOf(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

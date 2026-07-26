@@ -1,5 +1,63 @@
 # CHANGELOG — Running Laps
 
+## [Chore] — Cuarta purga de código muerto: 3 ficheros, ~1.400 líneas y 6 dependencias — 2026-07-26
+Barrido igual que el de julio (alcanzabilidad transitiva desde `main.dart`, no
+greps), pero esta vez también **dentro** de ficheros vivos: miembros privados
+que el analizador demuestra no referenciados.
+
+**Trampa encontrada en el método de auditoría** — el script de alcanzabilidad
+daba un falso positivo (`premium_date_range_picker.dart`, que sí usa
+`admin_dashboard_tab.dart`). Causa: los imports relativos se resuelven en el
+espacio de URIs de `package:`, donde `lib/` es la raíz y los `..` que sobran se
+**descartan** (RFC 3986 clampea en la autoridad). Por eso
+`'../../../../config/app_theme.dart'` desde `lib/features/admin/views/` apunta a
+`lib/config/app_theme.dart` y no a `<repo>/config/...`. Hay 16 imports así en el
+repo. Cualquier futuro barrido debe resolver con ese clamp, o borrará ficheros
+vivos.
+
+**Ficheros eliminados** (clúster del editor de avatar legado, se referenciaban
+solo entre sí): `avatar_editor_wraper_view.dart`, `avatar_maker_screen.dart`,
+`avatar_maker_controller.dart`. La rama `profilePicType == 'avatar'` de
+`AvatarHelper` se conserva para renderizar los docs ya guardados con ese
+formato; el editor vivo es `avatar_customizer_view.dart`.
+
+**Código muerto dentro de ficheros vivos** (~1.180 líneas):
+- `training_start_view.dart`: −920 líneas. Dos subsistemas enteros sin punto de
+  entrada — el selector "¿Qué entrenamos hoy?" (`_buildTypeSelector`,
+  `_buildTypeCard`, `_buildTypeConfig` y sus `_cfg*` con `TextField` numéricos,
+  que además incumplían la convención de `NumberPickerField`) y las pestañas
+  antiguas (`_buildQuickStartTab`, `_buildTemplatesTab`) con sus toggles de
+  GPS/pulsómetro, superados por `_buildSensors()`, que es el que se pinta.
+  También `_openTemplateSelector`/`_createMomentaryTemplate`: **efecto
+  observado, no causado por esta purga — desde "Entrenar" ya no hay forma de
+  cargar una plantilla guardada** (las plantillas siguen accesibles desde su
+  propia pestaña). Si se quiere recuperar ese acceso, hay que volver a montarlo.
+- `training_session_view.dart`: `_handleResume` (reanudar crono/GPS tras pausa,
+  sin llamadas: la pantalla activa ya no ofrece esa acción), `_buildMetricsGrid`,
+  `_buildMetricCard`, `_buildSmallTimer`, `_getPaceColor`.
+- `training_summary_screen.dart`: `_buildStats`, `_statItem`, `_rpeColor`, campo
+  `_fcMedia` (se asignaba y nadie lo leía).
+- `training_start_view.dart` (jul 2026) tenía además un bug latente en el código
+  borrado: `_buildActionCard` declaraba `bool isPressed` *dentro* del builder del
+  `StatefulBuilder`, así que la animación de pulsado nunca se veía (el
+  analizador lo marcaba como `dead_code`).
+- Varios `final isDark = ...` sin usar, la animación inerte del header de
+  `group_screen.dart` (un `AnimationController` que hacía `forward()` sobre una
+  `Animation` que nadie pintaba), campos `_history`/`_photoUrl`/`_ritmoActual`
+  asignados y nunca leídos, y 9 imports huérfanos.
+
+**Dependencias retiradas de `pubspec.yaml`** (cero imports en lib/ y test/):
+`get`, `firebase_storage`, `http`, `image_picker`, `gal`, `path_provider` — 19
+paquetes menos contando transitivas. GetX desaparece del proyecto por completo:
+su último uso estaba en el editor de avatar legado, así que la regla "estado con
+`ValueNotifier`, nunca GetX" ya no depende de la disciplina, no está el paquete.
+
+Verificado con `flutter analyze` (122 → 59 avisos, 0 errores), `flutter test`
+(217 OK) y `flutter build apk --debug`. Los 59 restantes son de estilo
+(`curly_braces`, `use_super_parameters`…) más 9 `unused_element_parameter` que
+son parámetros con valor por defecto legítimos (p. ej. `_ManualSerieData`), no
+código muerto.
+
 ## [Fix] — Enlaces legales otra vez alcanzables dentro de la app — 2026-07-26
 Regresión de la unificación del menú de perfil (`0d615b3`, 24 jul): los tiles
 "Ayuda y contacto", "Política de privacidad" y "Términos de uso" solo existían

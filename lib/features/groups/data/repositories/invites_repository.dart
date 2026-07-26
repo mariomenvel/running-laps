@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../models/group_models.dart';
 import '../models/enums.dart';
-import '../repositories/user_groups_repository.dart';
 import '../services/user_lookup_service.dart';
 import '../helpers/invite_token_helper.dart';
 

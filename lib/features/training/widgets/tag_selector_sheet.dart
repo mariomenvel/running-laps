@@ -126,8 +126,6 @@ class _TagSelectorSheetState extends State<TagSelectorSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-    final isDark = brightness == Brightness.dark;
 
     return Container(
       decoration: BoxDecoration(
@@ -418,7 +416,6 @@ class _TagToggleChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext ctx) {
-    final isDark = Theme.of(ctx).brightness == Brightness.dark;
     final Color activeText =
         AppColors.brandOf(context);
     final Color inactiveText = AppColors.textSecondary(ctx);

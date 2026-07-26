@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../repositories/challenges_repository.dart';
-import '../repositories/rewards_repository.dart';
 import '../models/challenge_models.dart';
 import '../models/rewards_models.dart';
 import '../models/enums.dart';

@@ -22,7 +22,6 @@ Generated: 2026-06-15 (actualizar con `find lib -name "*.dart" | sort`)
 - `pdf_generator_service.dart` — PDFGeneratorService: exportar entrenamientos a PDF
 - `settings_service.dart` — SettingsService: SharedPreferences (alarmas, GPS defaults)
 - `user_service.dart` — UserService: nombre, contraseña, borrar cuenta, reauth, isGoogleUser
-- `wear_auth_service.dart` — WearAuthService: código de sesión 6 dígitos para Wear OS
 - `heart_rate_service.dart` — HeartRateService: frecuencia cardiaca BLE
 - `notification_service.dart` — NotificationService: push + resumen semanal programado
 - `ios_live_activity_service.dart` — IOSLiveActivityService: MethodChannel/EventChannel Swift↔Dart
@@ -43,13 +42,10 @@ Generated: 2026-06-15 (actualizar con `find lib -name "*.dart" | sort`)
 - `sensor_frame.dart` — SensorFrame: frame combinado GPS + pedómetro
 
 ### core/utils/
-- `kalman_filter.dart` — KalmanFilter para suavizado de coordenadas GPS
 - `tag_utils.dart` — utilidades para tags
 - `ekf2d.dart` — Extended Kalman Filter 2D
 - `rdp_smoother.dart` — Ramer-Douglas-Peucker para simplificar trazados GPS
 - `app_transitions.dart` — transiciones de navegación
-- `exponential_backoff.dart` — retry con backoff exponencial
-- `rate_limit_decorator.dart` — decorador de rate limiting
 
 ### core/constants/
 - `app_help_content.dart` — textos de ayuda en app
@@ -89,7 +85,6 @@ Generated: 2026-06-15 (actualizar con `find lib -name "*.dart" | sort`)
 - `data/tag_model.dart` — TagModel (id, name, color ARGB)
 - `data/tag_manager.dart` — TagManager: CRUD de tags en Firestore
 - `data/training_repository.dart` — TrainingRepository: CRUD trainings + contadores atómicos
-- `data/entrenamiento_utils.dart` — utilidades de cálculo
 - `data/fc_reading.dart` — FcReading: lectura de FC durante entrenamiento
 - `data/serie.dart` — modelo Serie
 - `data/summary_stats_calculator.dart` — cálculo de estadísticas de resumen
@@ -159,19 +154,14 @@ Generated: 2026-06-15 (actualizar con `find lib -name "*.dart" | sort`)
 - `data/background_shape.dart` — formas de fondo
 - `models/avatar_config.dart` — AvatarConfig: configuración de capas
 - `services/avatar_generator.dart` — AvatarGenerator: renderiza SVG
-- `viewmodels/avatar_maker_controller.dart` — AvatarMakerController
-- `views/avatar_maker_screen.dart` — pantalla de creación de avatar
 - `views/avatar_customizer_view.dart` — vista de personalización
 
 ### features/profile/
 - `data/user_profile_model.dart` — UserProfileModel
 - `data/zones_repository.dart` — ZonesRepository: zonas de FC en Firestore
 - `viewmodels/zones_viewmodel.dart` — ZonesViewModel
-- `views/profile_menu_screen.dart` — menú de perfil principal
 - `views/profile_view.dart` — vista de perfil
 - `views/account_settings_view.dart` — cambiar nombre, contraseña, borrar cuenta
-- `views/edit_profile_picture_view.dart` — editar foto/avatar de perfil
-- `views/avatar_editor_wraper_view.dart` — wrapper del editor de avatar
 - `views/heart_rate_monitor_view.dart` — monitor de FC en tiempo real
 - `views/zones_config_screen.dart` — configuración de zonas de FC
 
@@ -212,17 +202,6 @@ Generated: 2026-06-15 (actualizar con `find lib -name "*.dart" | sort`)
 ### features/calendar/
 - `viewmodels/calendar_view_model.dart` — CalendarViewModel: entrenamientos por fecha
 - `views/calendar_view.dart` — CalendarView: calendario de entrenamientos planificados
-
----
-
-## wear_os/ (Kotlin/Compose — app independiente)
-- `MainActivity.kt` — entry point, SwipeDismissableNavHost, App Check
-- `HomeScreen.kt` — dashboard con stats desde Firestore
-- `SeriesPageScreen.kt` — configuración de serie
-- `SeriesActiveScreen.kt` — pantalla activa durante la serie
-- `SeriesTrainingService.kt` — Foreground service: timer, GPS, alarmas (⚠️ DEBUG_SIMULATE debe ser false en release)
-- `TemplatePickerScreen.kt` — selector de plantilla
-- `TemplateModels.kt` — modelos de datos para plantillas
 
 ---
 

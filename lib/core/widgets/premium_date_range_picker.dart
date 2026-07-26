@@ -56,7 +56,6 @@ class _PremiumDateRangePickerState extends State<PremiumDateRangePicker> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final surfaceColor = AppColors.surfaceOf(context);
     final brandColor =
         AppColors.brandOf(context);

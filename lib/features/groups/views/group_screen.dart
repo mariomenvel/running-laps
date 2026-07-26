@@ -47,8 +47,6 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
   late GroupChallengesController _controller;
   late ConfettiController _confettiController;
   late TabController _tabController;
-  late AnimationController _headerAnimController;
-  late Animation<double> _headerFadeAnimation;
 
   // ── Entrance animation ──────────────────────────────────────────
   late final AnimationController _entranceCtrl;
@@ -76,16 +74,6 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
     _tabController.addListener(_onTabChanged);
     _controller = GroupChallengesController(groupId: widget.groupId);
     _controller.init();
-
-    _headerAnimController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _headerFadeAnimation = CurvedAnimation(
-      parent: _headerAnimController,
-      curve: Curves.easeOut,
-    );
-    _headerAnimController.forward();
 
     _entranceCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
     _aBanner  = CurvedAnimation(parent: _entranceCtrl, curve: const Interval(0.000, 0.517, curve: Curves.easeOutQuart));
@@ -129,7 +117,6 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _scrollController.dispose();
-    _headerAnimController.dispose();
     _controller.showAutoJoinPrompt.removeListener(_checkAutoJoinPrompt);
     _controller.group.removeListener(_checkOwnership);
     _controller.dispose();
