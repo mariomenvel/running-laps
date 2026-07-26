@@ -221,6 +221,12 @@ Apple obliga a ofrecer Sign in with Apple si ofreces login de terceros
 5. Apple Developer Program → firma en Codemagic → decisión del login → TestFlight.
 6. Nutrition labels + DSA trader + ficha → revisión de App Store.
 
+> 📄 **Las respuestas concretas de los formularios y los textos de la ficha
+> están en [docs/STORE_SUBMISSION.md](docs/STORE_SUBMISSION.md)**, derivadas del
+> código (permisos del manifest, campos escritos en Firestore, terceros reales).
+> Ahí está el mapeo completo de Data Safety y de las Nutrition Labels, el
+> título/descripciones y las notas para el revisor.
+
 ## Acciones manuales pendientes ahora mismo
 
 - [x] ~~Rellenar placeholders en privacy/terms/support/delete-account~~ ✅
