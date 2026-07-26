@@ -1,5 +1,20 @@
 # CHANGELOG — Running Laps
 
+## [Test] — Cubiertos los números de Analytics — 2026-07-26
+Récords, ritmo medio, reparto de intensidad, racha, ACWR: cifras que el usuario
+lee y se cree. Un error ahí no rompe nada — simplemente le cuenta otra historia
+sobre su propio entrenamiento, y no tiene con qué contrastarla.
+
+`AnalyticsViewModel.compute()` resultó ser función pura de sus argumentos, así
+que se fija sin tocar Firebase. 9 tests, incluidos los criterios que no se
+adivinan mirando la pantalla: el corte de intensidad está en RPE 7 (7,0 ya
+cuenta como fuerte), la consistencia cuenta **semanas activas** y no
+entrenamientos, la carga aguda solo mira los últimos 7 días, y el **ritmo medio
+se pondera por distancia** — 1 km a 6:00 y 9 km a 4:00 dan 4:12, no 5:00, que
+es el error clásico de promediar ritmos.
+
+Suite 301 → 310.
+
 ## [Test] — Cubierto el reparto del plan semanal por días — 2026-07-26
 Es la promesa más concreta que le hace el Coach al atleta: *"solo te planifico
 los días que me has dicho"*. Y no la puede garantizar el LLM — la garantiza este
