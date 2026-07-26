@@ -1,5 +1,28 @@
 # CHANGELOG — Running Laps
 
+## [Fix] — Enlaces legales otra vez alcanzables dentro de la app — 2026-07-26
+Regresión de la unificación del menú de perfil (`0d615b3`, 24 jul): los tiles
+"Ayuda y contacto", "Política de privacidad" y "Términos de uso" solo existían
+en `profile_menu_screen_legacy.dart` y desaparecieron al borrar el duplicado,
+sin reimplantarse en `ProfileView`. Resultado: el único punto de la app que
+abría `runninglaps.com/{privacy,terms}` era `auth_page.dart` (login/registro),
+al que un usuario ya logueado no vuelve nunca — es decir, se volvía a incumplir
+la política de Google Play que exige el enlace *dentro* de la app ("must be
+linked directly within the app itself"), lo mismo que se había arreglado el
+19 jul.
+
+Fix: sección AYUDA de [profile_view.dart](lib/features/profile/views/profile_view.dart)
+amplía sus tiles con soporte, privacidad y términos vía `_openWebPage()`
+(`url_launcher` + `LaunchMode.externalApplication`, ya era dependencia del
+proyecto y el `<queries>` de ACTION_VIEW/https ya estaba en el manifest). A
+diferencia del original, si `launchUrl` devuelve `false` se avisa con
+`ModernSnackBar.showError` en vez de fallar en silencio. Las rutas sin `.html`
+funcionan por `cleanUrls: true` de `firebase.json`.
+
+Nota de proceso: la doc daba el punto por ✅ mientras citaba un archivo ya
+borrado — al eliminar una vista "duplicada" hay que verificar que **todo** su
+contenido único está en la que sobrevive, no solo la navegación.
+
 ## [Fix] — La app queda bloqueada en vertical (portrait) — 2026-07-26
 No estaba contemplado en ninguna capa: girar el móvil rotaba toda la app, que
 no tiene ni un layout pensado para landscape. Bloqueado en los tres sitios que

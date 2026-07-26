@@ -23,6 +23,7 @@ import 'package:running_laps/features/profile/views/zones_config_screen.dart';
 import 'package:running_laps/features/profile/views/heart_rate_monitor_view.dart';
 import 'package:running_laps/features/profile/views/account_settings_view.dart';
 import 'package:running_laps/features/avatar/views/avatar_customizer_view.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:running_laps/features/avatar/models/avatar_config.dart';
 import 'package:running_laps/features/avatar/services/avatar_generator.dart';
@@ -38,7 +39,6 @@ class _ProfileViewState extends State<ProfileView> {
   late final AuthController _authCtrl;
 
   String _userName = '';
-  String? _photoUrl;
   bool _isAdmin = false;
   bool _isAthleteMode = false;
   AvatarConfig? _avatarConfig;
@@ -69,7 +69,6 @@ class _ProfileViewState extends State<ProfileView> {
     }
     setState(() {
       _userName      = data['nombre'] ?? 'Usuario';
-      _photoUrl      = data['profileImageUrl'];
       _isAdmin       = data['isAdmin'] ?? false;
       _isAthleteMode = data['isAthleteMode'] ?? false;
       _avatarConfig  = parsed ?? AvatarConfig.defaults;
@@ -323,6 +322,20 @@ class _ProfileViewState extends State<ProfileView> {
       shellParams: _avatarConfig,
       standalone: () => AvatarCustomizerView(initialConfig: _avatarConfig),
     );
+  }
+
+  /// Abre una página legal/soporte del dominio propio en el navegador.
+  /// Google Play exige que Privacidad y Términos sean alcanzables *dentro* de
+  /// la app, no solo desde la ficha de la tienda ni solo en el registro (donde
+  /// un usuario ya logueado nunca vuelve).
+  Future<void> _openWebPage(String path) async {
+    final ok = await launchUrl(
+      Uri.parse('https://runninglaps.com$path'),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!ok && mounted) {
+      ModernSnackBar.showError(context, 'No se pudo abrir el navegador');
+    }
   }
 
   Future<void> _logout() async {
@@ -594,6 +607,25 @@ class _ProfileViewState extends State<ProfileView> {
                   ),
                 ),
               ),
+            ),
+            const _MenuDivider(),
+            _MenuItem(
+              icon: Icons.support_agent_outlined,
+              label: 'Ayuda y contacto',
+              subtitle: 'soporte@runninglaps.com',
+              onTap: () => _openWebPage('/support'),
+            ),
+            const _MenuDivider(),
+            _MenuItem(
+              icon: Icons.privacy_tip_outlined,
+              label: 'Política de privacidad',
+              onTap: () => _openWebPage('/privacy'),
+            ),
+            const _MenuDivider(),
+            _MenuItem(
+              icon: Icons.description_outlined,
+              label: 'Términos de uso',
+              onTap: () => _openWebPage('/terms'),
             ),
           ]),
 

@@ -184,9 +184,17 @@ Apple obliga a ofrecer Sign in with Apple si ofreces login de terceros
     privacidad" con enlaces tocables, visible en login **y** registro de
     `auth_page.dart` — cubre también el alta implícita vía Google/Apple Sign-In
     (que puede crear cuenta nueva desde la pantalla de login).
-  - Sección "Ayuda" del menú de perfil (`profile_menu_screen_legacy.dart`):
-    tiles "Ayuda y contacto", "Política de privacidad" y "Términos de uso" que
-    abren `runninglaps.com/{support,privacy,terms}` en el navegador.
+  - Sección "Ayuda" del menú de perfil: tiles "Ayuda y contacto", "Política de
+    privacidad" y "Términos de uso" que abren
+    `runninglaps.com/{support,privacy,terms}` en el navegador (`cleanUrls: true`
+    en `firebase.json` sirve esas rutas sin `.html`).
+  > ⚠️ Regresión corregida (26 jul 2026): esos 3 tiles vivían en
+  > `profile_menu_screen_legacy.dart` y **se perdieron** al eliminar el
+  > duplicado el 24 jul (commit `0d615b3`) — durante dos días el único punto de
+  > la app que enlazaba a Privacidad/Términos fue `auth_page.dart`, inalcanzable
+  > para un usuario ya logueado, justo el incumplimiento que el fix del 19 jul
+  > venía a resolver. Reimplantados en `ProfileView` (`_openWebPage`). Al tocar
+  > el menú de perfil, comprobar que esta sección sigue ahí.
 
 > Datos publicados en las páginas: responsable "Mario Mendoza", contacto
 > `legal@runninglaps.com` (privacidad/términos) y `soporte@runninglaps.com`
