@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
+import 'package:running_laps/core/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
@@ -56,15 +56,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid != null) {
-        final doc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(uid)
-            .collection('settings')
-            .doc('bestMarkDistance')
-            .get();
-        if (doc.exists && doc.data()?['distanceM'] != null) {
-          bestDist = (doc.data()!['distanceM'] as num).toInt();
-        }
+        bestDist = await UserService().getBestMarkDistanceM(uid) ?? bestDist;
       }
     } catch (_) {}
 
@@ -1006,12 +998,7 @@ class _AccountSettingsViewState extends State<AccountSettingsView> {
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null) return;
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .collection('settings')
-          .doc('bestMarkDistance')
-          .set({'distanceM': distanceM}, SetOptions(merge: true));
+      await UserService().setBestMarkDistanceM(uid, distanceM);
       if (mounted) setState(() => _bestMarkDistanceM = distanceM);
     } catch (e) {
       if (mounted) ModernSnackBar.showError(context, 'No se pudo guardar');

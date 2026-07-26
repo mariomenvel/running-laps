@@ -28,7 +28,13 @@ Feature-First + MVVM. Cada feature en `lib/features/<name>/` con subcarpetas `vi
 - **Estado:** siempre `ValueNotifier` + `ValueListenableBuilder`.
 - **GetX:** el paquete `get` se eliminó del proyecto (jul 2026) — su último uso vivía en el editor de avatar legado ya borrado. Navegación con `Navigator` / `MainShell.navigateTo()`. No reintroducirlo.
 - **Vistas:** sin lógica de negocio.
-- **Firebase:** nunca instanciar `FirebaseFirestore.instance` ni `FirebaseAuth.instance` en vistas — usar repositorios.
+- **Firebase:** nunca instanciar `FirebaseFirestore.instance` ni `FirebaseAuth.instance` en vistas — usar repositorios. Estado (26 jul 2026): **cero vistas instancian Firestore** (`grep -rc "FirebaseFirestore.instance" lib/features/*/views/` debe seguir dando 0). Puntos de entrada por si falta algo:
+  - `users/{uid}` (leer, escuchar, onboarding, avatar generativo, campos sueltos) y `users/{uid}/settings/bestMarkDistance` → `UserService` (`core/services/user_service.dart`)
+  - `users/{uid}/trainings` → `TrainingRepository` (incluye `getTrainingById`, `overwriteTraining` — que sella `updatedAt` — y `deleteTraining`)
+  - `users/{uid}/aiCoachFeedback` y demás docs del coach → `AiCoachRepository`
+  - Generación de datos de prueba del panel admin → `TestDataService` (`core/services/test_data_service.dart`)
+
+  ⚠️ Pendiente: `FirebaseAuth.instance.currentUser?.uid` **sí** sigue apareciendo en 23 vistas (61 usos). Es la mitad de la regla que falta por cumplir; migrarlo es un cambio aparte y más ancho.
 - **No** importar `dart:html` directamente — usar `kIsWeb` de `foundation.dart`.
 
 Paths clave:

@@ -194,6 +194,26 @@ class TrainingRepository {
     return Entrenamiento.fromMap(data, id: doc.id);
   }
 
+  /// Reescribe el documento completo (`set` sin merge): los campos que no
+  /// vengan en [data] **se pierden**. Es lo que necesita la pantalla de
+  /// resumen, que reenvía el entrenamiento entero con sus correcciones.
+  /// Para cambios parciales, usar los métodos `update*`.
+  Future<void> overwriteTraining(
+    String trainingId,
+    Map<String, dynamic> data,
+  ) async {
+    final String uid = _requireUid();
+    await _userTrainings(uid).doc(trainingId).set({
+      ...data,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> deleteTraining(String trainingId) async {
+    final String uid = _requireUid();
+    await _userTrainings(uid).doc(trainingId).delete();
+  }
+
   Future<void> updateTrainingAnalysis({
     required String uid,
     required String trainingId,

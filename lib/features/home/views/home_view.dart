@@ -1,6 +1,6 @@
 import 'dart:math' show min;
+import 'package:running_laps/features/training/data/training_repository.dart';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
@@ -750,19 +750,11 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
   Future<void> _openCompletedTraining(AthleteSession completed) async {
     final trainingId = completed.completedTrainingId;
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (trainingId == null || uid == null) return;
+    if (trainingId == null) return;
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .collection('trainings')
-          .doc(trainingId)
-          .get();
-      final data = doc.data();
-      if (data == null) return;
-      final entrenamiento = Entrenamiento.fromMap(data, id: doc.id);
-      if (!mounted) return;
+      final entrenamiento =
+          await TrainingRepository().getTrainingById(trainingId);
+      if (entrenamiento == null || !mounted) return;
       MainShell.shellKey.currentState?.navigateTo(5, params: entrenamiento);
     } catch (e) {
       debugPrint('[HomeView] _openCompletedTraining error: $e');

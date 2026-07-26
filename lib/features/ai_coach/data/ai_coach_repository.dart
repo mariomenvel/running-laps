@@ -531,4 +531,15 @@ class AiCoachRepository {
       return [];
     }
   }
+
+  /// Borra el feedback semanal de las semanas indicadas (`weekStart` en
+  /// formato `YYYY-MM-DD`, que es el id del documento). Lo usa el reset del
+  /// panel de administración para poder regenerarlo.
+  Future<void> deleteWeeklyFeedback({
+    required String uid,
+    required List<String> weekStarts,
+  }) async {
+    final col = _db.collection('users').doc(uid).collection('aiCoachFeedback');
+    await Future.wait(weekStarts.map((week) => col.doc(week).delete()));
+  }
 }

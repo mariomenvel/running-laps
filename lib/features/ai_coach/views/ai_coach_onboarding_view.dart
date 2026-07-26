@@ -1,7 +1,7 @@
 import 'dart:async';
+import 'package:running_laps/core/services/user_service.dart';
 import 'dart:convert';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
@@ -213,10 +213,7 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
               '${_birthDate!.year}-${_birthDate!.month.toString().padLeft(2, '0')}-${_birthDate!.day.toString().padLeft(2, '0')}';
         }
         if (_biologicalSex != null) updates['sex'] = _biologicalSex;
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(widget.uid)
-            .update(updates);
+        await UserService().updateProfileFields(widget.uid, updates);
       }
 
       if (!mounted) return;

@@ -143,6 +143,81 @@ class UserService {
   }
 
   // ==========================================
+  // DOCUMENTO DE USUARIO
+  // ==========================================
+  // Punto único de acceso a users/{uid} desde la UI: las vistas no deben
+  // instanciar FirebaseFirestore (ver CLAUDE.md § Arquitectura).
+
+  /// Datos del perfil, o mapa vacío si el documento no existe todavía.
+  Future<Map<String, dynamic>> getUserData(String uid) async {
+    final doc = await _db.collection('users').doc(uid).get();
+    return doc.data() ?? {};
+  }
+
+  /// Emite los datos del perfil en cada cambio. `null` significa que el
+  /// documento **aún no existe** (usuario recién creado, Firestore todavía
+  /// escribiendo) — quien escucha debe distinguirlo de un perfil vacío.
+  Stream<Map<String, dynamic>?> watchUserData(String uid) {
+    return _db
+        .collection('users')
+        .doc(uid)
+        .snapshots()
+        .map((doc) => doc.exists ? (doc.data() ?? <String, dynamic>{}) : null);
+  }
+
+  /// Marca el onboarding como terminado. `AuthWrapper` escucha este campo.
+  Future<void> completeOnboarding(String uid) async {
+    await _db.collection('users').doc(uid).update({'onboardingCompleted': true});
+  }
+
+  /// Guarda el avatar generativo y deja el tipo de foto coherente con él.
+  Future<void> saveGenerativeAvatar(
+    String uid,
+    Map<String, dynamic> config,
+  ) async {
+    await _db.collection('users').doc(uid).set({
+      'profilePicType': 'generative_avatar',
+      'generativeAvatarConfig': config,
+    }, SetOptions(merge: true));
+  }
+
+  /// Actualiza campos sueltos del perfil (fecha de nacimiento, sexo…).
+  /// No hace nada si [fields] viene vacío.
+  Future<void> updateProfileFields(
+    String uid,
+    Map<String, dynamic> fields,
+  ) async {
+    if (fields.isEmpty) return;
+    await _db.collection('users').doc(uid).update(fields);
+  }
+
+  // ==========================================
+  // AJUSTES EN users/{uid}/settings
+  // ==========================================
+
+  /// Distancia sobre la que se calcula la marca personal destacada, o null si
+  /// el usuario nunca la ha configurado.
+  Future<int?> getBestMarkDistanceM(String uid) async {
+    final doc = await _db
+        .collection('users')
+        .doc(uid)
+        .collection('settings')
+        .doc('bestMarkDistance')
+        .get();
+    final value = doc.data()?['distanceM'];
+    return value is num ? value.toInt() : null;
+  }
+
+  Future<void> setBestMarkDistanceM(String uid, int distanceM) async {
+    await _db
+        .collection('users')
+        .doc(uid)
+        .collection('settings')
+        .doc('bestMarkDistance')
+        .set({'distanceM': distanceM}, SetOptions(merge: true));
+  }
+
+  // ==========================================
   // ACCOUNT DELETION
   // ==========================================
 

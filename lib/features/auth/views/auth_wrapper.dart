@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/services/notification_service.dart';
+import 'package:running_laps/core/services/user_service.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/features/auth/views/auth_page.dart';
 import 'package:running_laps/features/auth/views/email_verification_pending_view.dart';
@@ -58,11 +58,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
           _verificationTimer = null;
         }
 
-        return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-          stream: FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .snapshots(),
+        return StreamBuilder<Map<String, dynamic>?>(
+          stream: UserService().watchUserData(user.uid),
           builder: (context, userSnap) {
             if (userSnap.connectionState == ConnectionState.waiting) {
               return const Scaffold(
@@ -72,7 +69,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
             // Si el documento aún no existe (usuario recién creado, Firestore
             // aún escribiendo), esperar en lugar de asumir onboardingCompleted: true
-            if (userSnap.data == null || !userSnap.data!.exists) {
+            final userData = userSnap.data;
+            if (userData == null) {
               return const Scaffold(
                 body: Center(child: CircularProgressIndicator()),
               );
@@ -80,7 +78,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
             // Usuarios existentes sin el campo → true (ya hicieron onboarding)
             final onboardingCompleted =
-                userSnap.data?.data()?['onboardingCompleted'] as bool? ?? true;
+                userData['onboardingCompleted'] as bool? ?? true;
 
             if (!onboardingCompleted) {
               return const WelcomeView();
@@ -88,8 +86,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
             if (!_notificationsSynced) {
               _notificationsSynced = true;
-              final isAthlete =
-                  userSnap.data?.data()?['isAthleteMode'] as bool? ?? false;
+              final isAthlete = userData['isAthleteMode'] as bool? ?? false;
               // Sin el permiso del sistema (Android 13+ / iOS) ninguna
               // notificación se muestra. Se pide una vez tras el login —
               // el SO recuerda la respuesta y no vuelve a preguntar.

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:running_laps/core/services/pb_celebration_service.dart';
 import 'package:running_laps/core/services/zones_service.dart';
@@ -329,7 +328,6 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
       final updates = <String, dynamic>{
         'tags': _selectedTags.toList(),
         'notas': _notasController.text.trim(),
-        'updatedAt': FieldValue.serverTimestamp(),
       };
 
       if (_showRpe && widget.entrenamiento.series.length == 1) {
@@ -338,12 +336,6 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
         updates['series'] = [updatedSerie.toMap()];
         updates['rpePromedio'] = _rpe;
       }
-
-      final docRef = FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .collection('trainings')
-          .doc(id);
 
       final fullData = {
         ...widget.entrenamiento.toMap(),
@@ -355,7 +347,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
         debugPrint('  - distanciaM=${s['distanciaM']}, tiempoSec=${s['tiempoSec']}, rpe=${s['rpe']}');
       }
 
-      await docRef.set(fullData);
+      await TrainingRepository().overwriteTraining(id, fullData);
 
       // Fire-and-forget: detecta récords (por serie y marcas 5K/10K/HM/M)
       // y los celebra con notificación local. Punto único post-guardado —
@@ -447,15 +439,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
     final id = widget.entrenamiento.id;
     if (id != null) {
       try {
-        final uid = FirebaseAuth.instance.currentUser?.uid;
-        if (uid != null) {
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(uid)
-              .collection('trainings')
-              .doc(id)
-              .delete();
-        }
+        await TrainingRepository().deleteTraining(id);
       } catch (_) {}
     }
 

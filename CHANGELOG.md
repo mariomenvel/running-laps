@@ -1,5 +1,39 @@
 # CHANGELOG — Running Laps
 
+## [Refactor] — Ninguna vista habla ya directamente con Firestore — 2026-07-26
+La regla estaba escrita en CLAUDE.md desde siempre ("nunca instanciar
+`FirebaseFirestore.instance` en vistas") y la incumplían **9 pantallas**, que
+montaban sus propias queries dentro del widget. Ahora son cero.
+
+Dónde ha ido cada cosa:
+- `UserService` gana el acceso a `users/{uid}`: `getUserData`, `watchUserData`
+  (el stream que usa `AuthWrapper`; devuelve `null` cuando el documento aún no
+  existe, que es distinto de un perfil vacío — esa distinción es la que evita
+  mandar a un usuario recién creado al onboarding otra vez),
+  `completeOnboarding`, `saveGenerativeAvatar`, `updateProfileFields`, y la
+  distancia de marca destacada (`users/{uid}/settings/bestMarkDistance`).
+- `TrainingRepository` gana `overwriteTraining` (reescribe el doc completo —
+  documentado como tal, porque `set` sin merge borra lo que no venga) y
+  `deleteTraining`. La pantalla de resumen ya no construye `DocumentReference`
+  ni importa `cloud_firestore`: el sello `updatedAt` lo pone el repositorio,
+  como en el resto de escrituras.
+- `AiCoachRepository.deleteWeeklyFeedback()` para el reset del panel admin.
+- **`TestDataService`** (`core/services/test_data_service.dart`): los ~190
+  líneas de generación de datos de prueba que vivían dentro de
+  `profile_view.dart` escribiendo batches a Firestore desde el widget. La vista
+  quedó en 12 líneas que llaman al servicio y muestran el resumen que devuelve.
+
+Vistas tocadas: `profile_view`, `account_settings_view`, `training_summary_screen`,
+`welcome_view`, `auth_wrapper`, `calendar_view`, `home_view`,
+`avatar_customizer_view`, `ai_coach_onboarding_view`.
+
+⚠️ Queda la otra mitad de la regla: `FirebaseAuth.instance.currentUser?.uid`
+sigue en 23 vistas (61 usos). Es un cambio bastante más ancho y no se ha
+tocado aquí.
+
+Verificado: `flutter analyze` 58 avisos y 0 errores, `flutter test` 236 OK,
+`flutter build apk --debug` OK. Sin comprobación en dispositivo todavía.
+
 ## [Refactor] — WorkoutEditorScreen pasa a MVVM (deuda #3) — 2026-07-26
 La lógica de negocio del editor sale de la `State` a
 `templates/viewmodels/workout_editor_view_model.dart`: composición de la
