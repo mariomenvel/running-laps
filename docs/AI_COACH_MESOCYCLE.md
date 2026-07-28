@@ -183,6 +183,60 @@ Como el sistema es bidireccional y se ancla en lo ejecutado, **una mala racha
 arrastra el plan hacia abajo con el atleta y una buena racha lo vuelve a subir**,
 sin intervención manual y sin acumular fracaso.
 
+### 4.1.b.2 Cuestionario semanal individualizado
+
+La autorregulación lee **qué** pasó, pero es ciega al **porqué** — y el porqué
+cambia la decisión. Un `regress` por una semana de trabajo infernal y un `regress`
+por una rodilla que duele tienen los mismos números y respuestas opuestas.
+
+El cuestionario semanal era siempre el mismo, preguntara o no algo que importase.
+`ai_coach_question_planner.dart` lo individualiza:
+
+- **Núcleo fijo** (sensaciones + sueño): se mantiene siempre para conservar la
+  serie temporal comparable. Si cambian todas las preguntas cada semana, se
+  pierde la tendencia.
+- **Hasta 2 preguntas adaptativas** (`maxQuestions`): un cuestionario largo no se
+  rellena, y uno sin rellenar no vale nada.
+
+**Regla que gobierna el planificador: no preguntes lo que no va a cambiar el
+plan.** Una semana buena sin nada abierto no genera ninguna pregunta extra.
+
+Es **determinista a propósito**, no generado por el LLM: el caso de más valor
+—acordarse de la molestia que el atleta contó la semana pasada— no puede depender
+de que el proveedor responda ni de que acierte.
+
+| Disparador | Pregunta | Señal |
+|---|---|---|
+| Molestia reportada y no cerrada | ¿Cómo va esa molestia? | `injuryStatus` |
+| Veredicto `regress`/`reset` sin molestia | ¿A qué se debió la semana floja? | `fatigueCause` |
+| `easyDaysTooHard` | ¿Vas cómodo en los rodajes suaves? | `easyPaceControl` |
+| Adherencia < 0.6 sin molestia | ¿Han cambiado tus días disponibles? | `availability` |
+
+**Respuestas tipadas, nunca texto libre.** Cada opción lleva una `severity` (0–3)
+que la autorregulación consume directamente. Un párrafo no se puede meter en un
+cálculo de carga.
+
+Efectos sobre el veredicto (`_applyAnswers`):
+
+| Respuesta | Efecto |
+|---|---|
+| Molestia a peor (sev. 3) | `reset` ×0.60 — manda por encima de cualquier dato |
+| Molestia igual (sev. 2) | `regress` ×0.80 |
+| Molestia mejor (sev. 1) | bloquea `progress` → `hold` |
+| Estuve malo | `reset` ×0.70 |
+| **Trabajo o vida personal** | **`regress` → `hold`** si no hay fatiga real |
+
+Ese último es el que más cambia el comportamiento: **faltar por agenda no es
+fatiga**. El atleta llega fresco, solo tuvo menos tiempo; recortarle la carga
+sería castigarle por algo ajeno al entrenamiento. Si además hay fatiga objetiva
+(`fatigueFlag`, TSB hundido), no se indulta — la fatiga es real venga de donde
+venga.
+
+El seguimiento se encadena: la respuesta se guarda con su enunciado en
+`adaptiveAnswers` del feedback, así que la semana siguiente el planificador sabe
+qué preguntó y puede continuar la conversación hasta que el atleta diga que ya
+no le duele.
+
 ### 4.1.c `volumeCeilingKm` — el techo
 
 ```

@@ -1,8 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'package:flutter/material.dart';
+import '../data/ai_coach_adaptive_question.dart';
 import '../data/ai_coach_automation_service.dart';
 import '../data/ai_coach_models.dart';
+import '../data/ai_coach_question_planner.dart';
 import '../data/ai_coach_repository.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart' show AppMotion;
@@ -43,6 +45,59 @@ class _AiCoachWeeklyFeedbackViewState
   final _observacionesController = TextEditingController();
   bool _isSaving = false;
   bool _isGeneratingPlan = false;
+
+  /// Preguntas individualizadas de esta semana. El núcleo fijo (sensaciones y
+  /// sueño) se mantiene siempre para conservar la serie temporal comparable;
+  /// esto es lo que se añade encima según el contexto del atleta.
+  List<AiCoachAdaptiveQuestion> _adaptiveQuestions = const [];
+  final Map<String, AiCoachQuestionOption> _adaptiveAnswers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAdaptiveQuestions();
+  }
+
+  Future<void> _loadAdaptiveQuestions() async {
+    final uid = UserService().currentUid;
+    if (uid == null) return;
+    final previousWeek = _previousWeekKey(widget.weekStart);
+    if (previousWeek == null) return;
+    final lastFeedback = await AiCoachRepository().getWeeklyFeedback(
+      uid: uid,
+      weekStart: previousWeek,
+    );
+    if (!mounted) return;
+    final questions = const AiCoachQuestionPlanner().plan(
+      lastFeedback: lastFeedback,
+      lastAnswers: lastFeedback?.adaptiveAnswers ?? const [],
+    );
+    if (questions.isEmpty) return;
+    setState(() => _adaptiveQuestions = questions);
+  }
+
+  String? _previousWeekKey(String weekStart) {
+    final parsed = DateTime.tryParse(weekStart);
+    if (parsed == null) return null;
+    final previous = parsed.subtract(const Duration(days: 7));
+    return '${previous.year}-${previous.month.toString().padLeft(2, '0')}'
+        '-${previous.day.toString().padLeft(2, '0')}';
+  }
+
+  List<AiCoachAdaptiveAnswer> _collectAdaptiveAnswers() {
+    return [
+      for (final question in _adaptiveQuestions)
+        if (_adaptiveAnswers[question.id] != null)
+          AiCoachAdaptiveAnswer(
+            questionId: question.id,
+            questionText: question.question,
+            signal: question.signal,
+            value: _adaptiveAnswers[question.id]!.value,
+            label: _adaptiveAnswers[question.id]!.label,
+            severity: _adaptiveAnswers[question.id]!.severity,
+          ),
+    ];
+  }
 
   String get _sensacionesLabel {
     if (widget.consecutiveMissedWeeks >= 4) {
@@ -119,6 +174,7 @@ class _AiCoachWeeklyFeedbackViewState
           ? null
           : _observacionesController.text.trim(),
       motivoParon: _motivoParon,
+      adaptiveAnswers: _collectAdaptiveAnswers(),
       createdAt: DateTime.now(),
     );
 
@@ -274,6 +330,8 @@ class _AiCoachWeeklyFeedbackViewState
                     ),
                     const SizedBox(height: 32),
 
+                    ..._buildAdaptiveQuestions(),
+
                     _sectionLabel('¿Algún dolor o molestia? (opcional)'),
                     const SizedBox(height: 12),
                     _textField(
@@ -372,6 +430,77 @@ class _AiCoachWeeklyFeedbackViewState
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Preguntas que el coach hace solo esta semana, por algo concreto que pasó.
+  ///
+  /// Llevan su motivo debajo ("la semana pasada me contaste...") porque saber
+  /// que la pregunta viene de algo que tú contaste es lo que hace que esto se
+  /// lea como un entrenador y no como un formulario.
+  List<Widget> _buildAdaptiveQuestions() {
+    if (_adaptiveQuestions.isEmpty) return const [];
+    return [
+      for (final question in _adaptiveQuestions) ...[
+        _sectionLabel(question.question),
+        if (question.rationale != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            question.rationale!,
+            style: TextStyle(
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+              color: AppColors.textSecondary(context),
+            ),
+          ),
+        ],
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final option in question.options)
+              _adaptiveChip(question, option),
+          ],
+        ),
+        const SizedBox(height: 32),
+      ],
+    ];
+  }
+
+  Widget _adaptiveChip(
+    AiCoachAdaptiveQuestion question,
+    AiCoachQuestionOption option,
+  ) {
+    final selected = _adaptiveAnswers[question.id]?.value == option.value;
+    // Las respuestas que implican bajar carga se tiñen de esfuerzo: el atleta
+    // ve que ha marcado algo que el plan va a tener en cuenta.
+    final accent = option.severity >= 2 ? AppColors.effort : AppColors.brand;
+
+    return GestureDetector(
+      onTap: () => setState(() => _adaptiveAnswers[question.id] = option),
+      child: AnimatedContainer(
+        duration: AppMotion.base,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected
+              ? accent.withValues(alpha: 0.15)
+              : AppColors.surface2Of(context),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: selected ? accent : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Text(
+          option.label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            color: selected ? accent : AppColors.textSecondary(context),
+          ),
         ),
       ),
     );

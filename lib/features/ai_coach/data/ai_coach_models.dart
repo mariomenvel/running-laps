@@ -1,3 +1,4 @@
+import 'package:running_laps/features/ai_coach/data/ai_coach_adaptive_question.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_defaults.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -1271,6 +1272,11 @@ class AiCoachWeeklyFeedback {
   final String? motivoParon;
   final DateTime createdAt;
 
+  /// Respuestas a las preguntas individualizadas de esa semana. Se guardan con
+  /// su enunciado para que el coach pueda encadenar el seguimiento la semana
+  /// siguiente ("me dijiste que te dolia la rodilla, como va?").
+  final List<AiCoachAdaptiveAnswer> adaptiveAnswers;
+
   const AiCoachWeeklyFeedback({
     required this.uid,
     required this.weekStart,
@@ -1280,6 +1286,7 @@ class AiCoachWeeklyFeedback {
     this.observaciones,
     this.motivoParon,
     required this.createdAt,
+    this.adaptiveAnswers = const [],
   });
 
   Map<String, dynamic> toMap() => {
@@ -1291,6 +1298,8 @@ class AiCoachWeeklyFeedback {
         if (observaciones != null) 'observaciones': observaciones,
         if (motivoParon != null) 'motivoParon': motivoParon,
         'createdAt': Timestamp.fromDate(createdAt),
+        if (adaptiveAnswers.isNotEmpty)
+          'adaptiveAnswers': adaptiveAnswers.map((a) => a.toMap()).toList(),
       };
 
   factory AiCoachWeeklyFeedback.fromMap(Map<String, dynamic> map) =>
@@ -1303,6 +1312,10 @@ class AiCoachWeeklyFeedback {
         observaciones: map['observaciones'] as String?,
         motivoParon: map['motivoParon'] as String?,
         createdAt: (map['createdAt'] as Timestamp).toDate(),
+        adaptiveAnswers: (map['adaptiveAnswers'] as List? ?? const [])
+            .map((a) => AiCoachAdaptiveAnswer.fromMap(
+                Map<String, dynamic>.from(a as Map)))
+            .toList(),
       );
 }
 

@@ -94,9 +94,17 @@ class AiCoachWeeklyPlannerService {
       profile: profile,
       context: context,
     );
+    // Respuestas del cuestionario de la semana que se esta evaluando: explican
+    // el PORQUE que los datos de ejecucion no pueden dar (fatiga real vs
+    // agenda, molestia abierta, enfermedad).
+    final lastFeedback = await _aiCoachRepository.getWeeklyFeedback(
+      uid: uid,
+      weekStart: _dateKey(nextWeekStart.subtract(const Duration(days: 7))),
+    );
     final signal = _autoregulation.evaluate(
       lastWeekSessions: _lastWeekSessions(context, nextWeekStart),
       weeklyState: context.weeklyState,
+      answers: lastFeedback?.adaptiveAnswers ?? const [],
     );
 
     AiCoachWeeklyDecision rawDecision;

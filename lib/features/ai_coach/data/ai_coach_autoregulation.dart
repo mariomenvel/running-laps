@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:running_laps/features/ai_coach/data/ai_coach_adaptive_question.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 
 /// Veredicto de autorregulacion para la semana siguiente.
@@ -127,6 +128,96 @@ class AiCoachAutoregulation {
   static const double _easyTooFast = 110;
 
   AiCoachAutoregulationSignal evaluate({
+    required List<AiCoachTrainingSummary> lastWeekSessions,
+    AiCoachWeeklyState? weeklyState,
+    List<AiCoachAdaptiveAnswer> answers = const [],
+  }) {
+    final base = _evaluateFromExecution(
+      lastWeekSessions: lastWeekSessions,
+      weeklyState: weeklyState,
+    );
+    return _applyAnswers(base, answers);
+  }
+
+  /// Las respuestas del cuestionario explican el **porqué** que los datos no
+  /// pueden dar. Los mismos números significan cosas distintas segun la causa,
+  /// y la respuesta correcta tambien.
+  AiCoachAutoregulationSignal _applyAnswers(
+    AiCoachAutoregulationSignal base,
+    List<AiCoachAdaptiveAnswer> answers,
+  ) {
+    if (answers.isEmpty) return base;
+
+    for (final answer in answers) {
+      if (answer.signal == AiCoachQuestionSignal.injuryStatus) {
+        // Una molestia a peor manda por encima de cualquier dato: aunque los
+        // ritmos fueran buenos, seguir cargando encima de dolor es como
+        // acumular series sobre una técnica que ya se ha roto.
+        if (answer.severity >= 3) {
+          return _override(base,
+              verdict: AiCoachReadinessVerdict.reset,
+              factor: 0.60,
+              reason: 'La molestia va a peor: bajamos y priorizamos que se cierre.');
+        }
+        if (answer.severity == 2) {
+          return _override(base,
+              verdict: AiCoachReadinessVerdict.regress,
+              factor: 0.80,
+              reason: 'La molestia sigue igual: bajamos hasta que remita.');
+        }
+        if (answer.severity == 1 &&
+            base.verdict == AiCoachReadinessVerdict.progress) {
+          // Va mejor, pero no es momento de subir.
+          return _override(base,
+              verdict: AiCoachReadinessVerdict.hold,
+              factor: 1.0,
+              reason: 'La molestia mejora: mantenemos antes de volver a subir.');
+        }
+      }
+
+      if (answer.signal == AiCoachQuestionSignal.fatigueCause) {
+        if (answer.value == 'illness') {
+          return _override(base,
+              verdict: AiCoachReadinessVerdict.reset,
+              factor: 0.70,
+              reason: 'Vienes de estar malo: se reentra por debajo.');
+        }
+        // Faltar por trabajo o vida NO es fatiga. El atleta llega fresco, solo
+        // tuvo menos tiempo — recortarle la carga seria castigarle por algo
+        // que no tiene que ver con el entrenamiento.
+        if (answer.value == 'life' &&
+            base.verdict == AiCoachReadinessVerdict.regress &&
+            !base.fatigueFlag) {
+          return _override(base,
+              verdict: AiCoachReadinessVerdict.hold,
+              factor: 1.0,
+              reason: 'La semana se torció por agenda, no por fatiga: '
+                  'mantenemos la carga y reorganizamos los días.');
+        }
+      }
+    }
+    return base;
+  }
+
+  AiCoachAutoregulationSignal _override(
+    AiCoachAutoregulationSignal base, {
+    required AiCoachReadinessVerdict verdict,
+    required double factor,
+    required String reason,
+  }) {
+    return AiCoachAutoregulationSignal(
+      verdict: verdict,
+      volumeFactor: factor,
+      qualityPaceCompliance: base.qualityPaceCompliance,
+      sessionsAnalyzed: base.sessionsAnalyzed,
+      adherence: base.adherence,
+      fatigueFlag: base.fatigueFlag,
+      easyDaysTooHard: base.easyDaysTooHard,
+      reason: reason,
+    );
+  }
+
+  AiCoachAutoregulationSignal _evaluateFromExecution({
     required List<AiCoachTrainingSummary> lastWeekSessions,
     AiCoachWeeklyState? weeklyState,
   }) {
