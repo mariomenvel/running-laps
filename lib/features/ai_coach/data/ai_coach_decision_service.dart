@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_autoregulation.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_context_builder.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models_config.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
@@ -24,7 +25,12 @@ class AiCoachDecisionService {
   final AiCoachPromptBuilder _promptBuilder;
   final OpenRouterClient _openRouterClient;
 
-  Future<AiCoachWeeklyDecision> generateWeeklyDecision(String uid) async {
+  Future<AiCoachWeeklyDecision> generateWeeklyDecision(
+    String uid, {
+    AiCoachMesocycle? mesocycle,
+    AiCoachAutoregulationSignal? autoregulation,
+    DateTime? plannedWeekStart,
+  }) async {
     final provider = await _repository.getProviderConfig(uid: uid);
     if (!provider.weeklyPlanningEnabled || provider.provider != 'openrouter') {
       throw Exception('Generación de planes desactivada temporalmente');
@@ -32,7 +38,12 @@ class AiCoachDecisionService {
 
     try {
       final context = await _contextBuilder.buildWeeklyContext(uid);
-      final prompt = _promptBuilder.buildWeeklyDecisionPrompt(context);
+      final prompt = _promptBuilder.buildWeeklyDecisionPrompt(
+        context,
+        mesocycle: mesocycle,
+        autoregulation: autoregulation,
+        plannedWeekStart: plannedWeekStart,
+      );
       debugPrint('[Decision] system prompt: ${prompt.messages.first.content}');
       debugPrint('[Decision] payload: ${prompt.messages.last.content}');
       final completion = await _openRouterClient.createJsonCompletion(

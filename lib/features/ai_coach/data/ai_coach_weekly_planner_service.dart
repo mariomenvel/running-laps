@@ -1,5 +1,9 @@
+import 'dart:math' as math;
+
+import 'package:running_laps/features/ai_coach/data/ai_coach_autoregulation.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_decision_service.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_context_builder.dart';
+import 'package:running_laps/features/ai_coach/data/ai_coach_mesocycle_engine.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_session_generator.dart';
@@ -54,6 +58,9 @@ class AiCoachWeeklyPlannerService {
 
   final AiCoachSessionGenerator _sessionGenerator;
 
+  static const _mesocycleEngine = AiCoachMesocycleEngine();
+  static const _autoregulation = AiCoachAutoregulation();
+
   Future<AiCoachWeeklyPlannerResult> planNextWeek(
     String uid, {
     DateTime? referenceDate,
@@ -76,11 +83,32 @@ class AiCoachWeeklyPlannerService {
     final minDate = DateTime(today.year, today.month, today.day);
 
     final profile = await _aiCoachRepository.getProfile(uid: uid);
+    final context = await _contextBuilder.buildWeeklyContext(uid);
+
+    // El bloque y el veredicto de autorregulacion se resuelven ANTES de pedir
+    // la decision: el LLM tiene que verlos para que su narrativa no contradiga
+    // la carga que se le va a aplicar despues por codigo.
+    final block = await _resolveActiveMesocycle(
+      uid: uid,
+      weekStart: nextWeekStart,
+      profile: profile,
+      context: context,
+    );
+    final signal = _autoregulation.evaluate(
+      lastWeekSessions: _lastWeekSessions(context, nextWeekStart),
+      weeklyState: context.weeklyState,
+    );
+
     AiCoachWeeklyDecision rawDecision;
     bool fallbackUsed = false;
     try {
-      rawDecision =
-          decisionOverride ?? await _decisionService.generateWeeklyDecision(uid);
+      rawDecision = decisionOverride ??
+          await _decisionService.generateWeeklyDecision(
+            uid,
+            mesocycle: block,
+            autoregulation: signal,
+            plannedWeekStart: nextWeekStart,
+          );
     } catch (e) {
       fallbackUsed = true;
       rawDecision = _buildFallbackDecision(
@@ -96,11 +124,19 @@ class AiCoachWeeklyPlannerService {
         },
       );
     }
-    final context = await _contextBuilder.buildWeeklyContext(uid);
     final memory = _extractAthleteMemory(context.coachSignals);
     final adapted = _adaptDecisionWithAthleteMemory(rawDecision, memory);
-    final aligned = _alignDecisionToProfile(
+    // Periodizacion antes que diversidad: si el bloque manda descarga, las
+    // reglas conservadoras de _ensureTargetDiversity tienen que verlo.
+    final periodized = alignDecisionToMesocycle(
       adapted,
+      block: block,
+      signal: signal,
+      weekStart: nextWeekStart,
+      actualLastWeekKm: context.weeklyState.weeklyKm,
+    );
+    final aligned = _alignDecisionToProfile(
+      periodized,
       profile,
       weekStart: nextWeekStart,
       minDate: minDate,
@@ -196,6 +232,8 @@ class AiCoachWeeklyPlannerService {
       sessions: sessions,
       decision: decision,
       profile: profile,
+      block: block,
+      weekStart: nextWeekStart,
     );
     if (!gate.isValid) {
       sessions = _applyQualityGateFixes(
@@ -221,6 +259,13 @@ class AiCoachWeeklyPlannerService {
         'memoryStyle': memory?.preferredStyle,
         'qualityGateValid': gate.isValid,
         'qualityGateIssues': gate.issues,
+        'blockId': block.id,
+        'blockPhase': block.phase.toValue,
+        'blockWeek': block.weekIndexFor(nextWeekStart) + 1,
+        'blockLengthWeeks': block.lengthWeeks,
+        'autoregulationVerdict': signal.verdict.toValue,
+        'autoregulationReason': signal.reason,
+        'targetVolumeKm': decision.targetVolumeKm,
       },
     );
     final kpis = await _aiCoachRepository.rebuildKpis(uid: uid);
@@ -364,12 +409,185 @@ class AiCoachWeeklyPlannerService {
     return sorted;
   }
 
+  /// Devuelve el bloque activo, creandolo si no existe, si la semana pedida
+  /// cae fuera, o si el objetivo del atleta cambio de fase (p.ej. la carrera ya
+  /// entro en rango de taper).
+  Future<AiCoachMesocycle> _resolveActiveMesocycle({
+    required String uid,
+    required DateTime weekStart,
+    required AiCoachProfile? profile,
+    required AiCoachWeeklyContext context,
+  }) async {
+    final existing = await _aiCoachRepository.getMesocycle(uid: uid);
+    if (existing != null &&
+        existing.containsWeek(weekStart) &&
+        !_blockPhaseIsStale(existing, profile, weekStart)) {
+      return existing;
+    }
+
+    final block = _mesocycleEngine.buildBlock(
+      weekStart: weekStart,
+      profile: profile,
+      weeklyState: context.weeklyState,
+      previous: existing,
+    );
+    await _aiCoachRepository.saveMesocycle(block, uid: uid);
+    await _aiCoachRepository.logEvent(
+      uid: uid,
+      eventType: 'mesocycle_started',
+      payload: {
+        'blockId': block.id,
+        'weekStart': _dateKey(block.startWeek),
+        'phase': block.phase.toValue,
+        'lengthWeeks': block.lengthWeeks,
+        'weekPattern': block.weekPattern.map((t) => t.toValue).toList(),
+        'baselineVolumeKm': block.baselineVolumeKm,
+        'volumeCeilingKm': block.volumeCeilingKm,
+        'sequenceIndex': block.sequenceIndex,
+        'replacedBlockId': existing?.id,
+      },
+    );
+    return block;
+  }
+
+  /// El bloque se queda obsoleto si la carrera objetivo ya deberia haber
+  /// disparado el taper y el bloque sigue en fase de construccion.
+  bool _blockPhaseIsStale(
+    AiCoachMesocycle block,
+    AiCoachProfile? profile,
+    DateTime weekStart,
+  ) {
+    final target = profile?.targetDate;
+    if (target == null) return false;
+    final weeksToRace = target.difference(weekStart).inDays ~/ 7;
+    if (weeksToRace < 0) return false;
+    final shouldTaper = weeksToRace <= 3;
+    final isTapering = block.phase == AiCoachBlockPhase.taper ||
+        block.phase == AiCoachBlockPhase.race;
+    return shouldTaper && !isTapering;
+  }
+
+  /// Sesiones de la semana anterior a la que se planifica. Es la evidencia que
+  /// alimenta la autorregulacion.
+  List<AiCoachTrainingSummary> _lastWeekSessions(
+    AiCoachWeeklyContext context,
+    DateTime weekStart,
+  ) {
+    final from = weekStart.subtract(const Duration(days: 7));
+    return context.recentTrainings
+        .where((t) => !t.date.isBefore(from) && t.date.isBefore(weekStart))
+        .toList();
+  }
+
+  /// Aplica la periodizacion a la decision del LLM.
+  ///
+  /// El bloque manda el tipo de semana; la autorregulacion manda la carga. El
+  /// LLM solo puede pedir MENOS volumen del resultante, nunca mas: pedir menos
+  /// es la valvula de seguridad ante fatiga, pedir mas es justo lo que no debe
+  /// poder hacer.
+  @visibleForTesting
+  AiCoachWeeklyDecision alignDecisionToMesocycle(
+    AiCoachWeeklyDecision decision, {
+    required AiCoachMesocycle block,
+    required AiCoachAutoregulationSignal signal,
+    required DateTime weekStart,
+    required double actualLastWeekKm,
+  }) {
+    final weekIndex = block.weekIndexFor(weekStart).clamp(
+          0,
+          math.max(0, block.lengthWeeks - 1),
+        );
+    final ceiling = _mesocycleEngine.targetVolumeForWeek(block, weekIndex);
+    final autoregulated = _autoregulation.resolveTargetVolume(
+      signal: signal,
+      actualLastWeekKm: actualLastWeekKm,
+      blockCeilingKm: ceiling,
+      baselineFallbackKm: block.baselineVolumeKm,
+    );
+    final volume = decision.targetVolumeKm > 0
+        ? math.min(decision.targetVolumeKm, autoregulated)
+        : autoregulated;
+
+    // La carga escala con el volumen para que no queden descompensados.
+    final load = decision.targetVolumeKm > 0
+        ? decision.targetLoad * (volume / decision.targetVolumeKm)
+        : decision.targetLoad;
+
+    final weekType = block.weekTypeAt(weekIndex);
+
+    return AiCoachWeeklyDecision(
+      id: decision.id,
+      generatedAt: decision.generatedAt,
+      sourceModel: decision.sourceModel,
+      analysis: decision.analysis,
+      adjustment: _adjustmentForWeekType(weekType, signal, decision.adjustment),
+      weekType: weekType,
+      targetSessions: decision.targetSessions,
+      targetVolumeKm: volume,
+      targetLoad: load,
+      primaryFocus: decision.primaryFocus,
+      restrictions: decision.restrictions,
+      workoutTargets: decision.workoutTargets,
+    );
+  }
+
+  AiCoachAdjustmentType _adjustmentForWeekType(
+    AiCoachWeekType weekType,
+    AiCoachAutoregulationSignal signal,
+    AiCoachAdjustmentType fallback,
+  ) {
+    switch (weekType) {
+      case AiCoachWeekType.absorb:
+      case AiCoachWeekType.recovery:
+        return AiCoachAdjustmentType.deload;
+      case AiCoachWeekType.taper:
+      case AiCoachWeekType.race:
+        return AiCoachAdjustmentType.taper;
+      case AiCoachWeekType.restart:
+        return AiCoachAdjustmentType.restart;
+      case AiCoachWeekType.build:
+        switch (signal.verdict) {
+          case AiCoachReadinessVerdict.reset:
+            return AiCoachAdjustmentType.restart;
+          case AiCoachReadinessVerdict.regress:
+            return AiCoachAdjustmentType.reduce;
+          case AiCoachReadinessVerdict.hold:
+            return AiCoachAdjustmentType.maintain;
+          case AiCoachReadinessVerdict.progress:
+            return fallback == AiCoachAdjustmentType.deload
+                ? AiCoachAdjustmentType.progress
+                : fallback;
+        }
+    }
+  }
+
   _QualityGateResult _runQualityGate({
     required List<AthleteSession> sessions,
     required AiCoachWeeklyDecision decision,
     required AiCoachProfile? profile,
+    AiCoachMesocycle? block,
+    DateTime? weekStart,
   }) {
     final issues = <String>[];
+    if (block != null && weekStart != null && decision.targetVolumeKm > 0) {
+      final weekIndex = block.weekIndexFor(weekStart).clamp(
+            0,
+            math.max(0, block.lengthWeeks - 1),
+          );
+      final ceiling = _mesocycleEngine.targetVolumeForWeek(block, weekIndex);
+      // Defensa en profundidad: no deberia dispararse tras el align, pero si
+      // lo hace queda registrado en el evento del planificador.
+      if (ceiling > 0 && decision.targetVolumeKm > ceiling * 1.01) {
+        issues.add('volume_exceeds_block_ceiling');
+      }
+      if (!block.weekPattern.any((t) =>
+          t == AiCoachWeekType.absorb ||
+          t == AiCoachWeekType.recovery ||
+          t == AiCoachWeekType.taper ||
+          t == AiCoachWeekType.race)) {
+        issues.add('block_without_deload');
+      }
+    }
     if (sessions.isEmpty) {
       issues.add('no_sessions_generated');
     }
