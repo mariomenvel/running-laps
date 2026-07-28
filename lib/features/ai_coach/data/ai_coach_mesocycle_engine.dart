@@ -28,13 +28,13 @@ class AiCoachMesocycleEngine {
   /// carga de su primera semana.
   double targetVolumeForWeek(AiCoachMesocycle block, int weekIndex) {
     if (block.baselineVolumeKm <= 0) return 0;
-    final index = weekIndex.clamp(0, math.max(0, block.lengthWeeks - 1));
+    final index = block.clampWeekIndex(weekIndex);
     final type = block.weekTypeAt(index);
 
     if (type == AiCoachWeekType.absorb ||
         type == AiCoachWeekType.recovery) {
       // El pico es la ultima semana de carga anterior a esta.
-      final peak = _progressedVolume(block, math.max(0, index - 1));
+      final peak = _progressedVolume(block, index > 0 ? index - 1 : 0);
       return peak * block.deloadVolumePct;
     }
     if (type == AiCoachWeekType.taper) {

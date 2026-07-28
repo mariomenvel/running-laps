@@ -61,7 +61,7 @@ class AiCoachPromptBuilder {
     AiCoachMesocycle block, {
     required int weekIndex,
   }) {
-    final safeIndex = weekIndex.clamp(0, block.lengthWeeks - 1);
+    final safeIndex = block.clampWeekIndex(weekIndex);
     return {
       'blockPhase': block.phase.toValue,
       'blockWeek': safeIndex + 1,

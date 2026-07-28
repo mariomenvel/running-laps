@@ -493,10 +493,7 @@ class AiCoachWeeklyPlannerService {
     required DateTime weekStart,
     required double actualLastWeekKm,
   }) {
-    final weekIndex = block.weekIndexFor(weekStart).clamp(
-          0,
-          math.max(0, block.lengthWeeks - 1),
-        );
+    final weekIndex = block.clampWeekIndex(block.weekIndexFor(weekStart));
     final ceiling = _mesocycleEngine.targetVolumeForWeek(block, weekIndex);
     final autoregulated = _autoregulation.resolveTargetVolume(
       signal: signal,
@@ -570,10 +567,7 @@ class AiCoachWeeklyPlannerService {
   }) {
     final issues = <String>[];
     if (block != null && weekStart != null && decision.targetVolumeKm > 0) {
-      final weekIndex = block.weekIndexFor(weekStart).clamp(
-            0,
-            math.max(0, block.lengthWeeks - 1),
-          );
+      final weekIndex = block.clampWeekIndex(block.weekIndexFor(weekStart));
       final ceiling = _mesocycleEngine.targetVolumeForWeek(block, weekIndex);
       // Defensa en profundidad: no deberia dispararse tras el align, pero si
       // lo hace queda registrado en el evento del planificador.

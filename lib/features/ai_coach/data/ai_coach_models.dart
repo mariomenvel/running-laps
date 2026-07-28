@@ -1394,9 +1394,20 @@ class AiCoachMesocycle {
     return index >= 0 && index < lengthWeeks;
   }
 
+  /// Acota un indice de semana al bloque devolviendo `int`.
+  ///
+  /// No usar `.clamp()` para esto: combinado con `math.max` la inferencia lo
+  /// resuelve como `num` y no vale como indice ni como parametro `int`.
+  int clampWeekIndex(int weekIndex) {
+    final last = lengthWeeks - 1;
+    if (last <= 0 || weekIndex < 0) return 0;
+    return weekIndex > last ? last : weekIndex;
+  }
+
   AiCoachWeekType weekTypeAt(int weekIndex) {
     if (weekPattern.isEmpty) return AiCoachWeekType.build;
-    final clamped = weekIndex.clamp(0, weekPattern.length - 1);
+    final last = weekPattern.length - 1;
+    final clamped = weekIndex < 0 ? 0 : (weekIndex > last ? last : weekIndex);
     return weekPattern[clamped];
   }
 
