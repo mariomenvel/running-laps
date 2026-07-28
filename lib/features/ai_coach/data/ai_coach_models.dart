@@ -1,3 +1,4 @@
+import 'package:running_laps/features/ai_coach/data/ai_coach_adaptive_question.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_defaults.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -1271,6 +1272,11 @@ class AiCoachWeeklyFeedback {
   final String? motivoParon;
   final DateTime createdAt;
 
+  /// Respuestas a las preguntas individualizadas de esa semana. Se guardan con
+  /// su enunciado para que el coach pueda encadenar el seguimiento la semana
+  /// siguiente ("me dijiste que te dolia la rodilla, como va?").
+  final List<AiCoachAdaptiveAnswer> adaptiveAnswers;
+
   const AiCoachWeeklyFeedback({
     required this.uid,
     required this.weekStart,
@@ -1280,6 +1286,7 @@ class AiCoachWeeklyFeedback {
     this.observaciones,
     this.motivoParon,
     required this.createdAt,
+    this.adaptiveAnswers = const [],
   });
 
   Map<String, dynamic> toMap() => {
@@ -1291,6 +1298,8 @@ class AiCoachWeeklyFeedback {
         if (observaciones != null) 'observaciones': observaciones,
         if (motivoParon != null) 'motivoParon': motivoParon,
         'createdAt': Timestamp.fromDate(createdAt),
+        if (adaptiveAnswers.isNotEmpty)
+          'adaptiveAnswers': adaptiveAnswers.map((a) => a.toMap()).toList(),
       };
 
   factory AiCoachWeeklyFeedback.fromMap(Map<String, dynamic> map) =>
@@ -1303,5 +1312,155 @@ class AiCoachWeeklyFeedback {
         observaciones: map['observaciones'] as String?,
         motivoParon: map['motivoParon'] as String?,
         createdAt: (map['createdAt'] as Timestamp).toDate(),
+        adaptiveAnswers: (map['adaptiveAnswers'] as List? ?? const [])
+            .map((a) => AiCoachAdaptiveAnswer.fromMap(
+                Map<String, dynamic>.from(a as Map)))
+            .toList(),
       );
+}
+
+/// Fase del mesociclo. Cuando hay carrera objetivo se deriva de las semanas que
+/// faltan; sin carrera, los bloques rotan el enfasis para que siga habiendo
+/// progresion y narrativa (ver docs/AI_COACH_MESOCYCLE.md).
+enum AiCoachBlockPhase { base, specific, taper, race }
+
+extension AiCoachBlockPhaseX on AiCoachBlockPhase {
+  String get toValue {
+    switch (this) {
+      case AiCoachBlockPhase.base:
+        return 'base';
+      case AiCoachBlockPhase.specific:
+        return 'specific';
+      case AiCoachBlockPhase.taper:
+        return 'taper';
+      case AiCoachBlockPhase.race:
+        return 'race';
+    }
+  }
+
+  static AiCoachBlockPhase fromValue(String value) {
+    switch (value) {
+      case 'specific':
+        return AiCoachBlockPhase.specific;
+      case 'taper':
+        return AiCoachBlockPhase.taper;
+      case 'race':
+        return AiCoachBlockPhase.race;
+      default:
+        return AiCoachBlockPhase.base;
+    }
+  }
+}
+
+/// Bloque de entrenamiento persistido: la unidad de periodizacion del Coach.
+///
+/// El bloque fija un **techo** de carga por semana. La fatiga real (TSB, lesion,
+/// adherencia) solo puede recortar por debajo, nunca superarlo — asi la
+/// periodizacion no pelea con las guardas de recuperacion del generador de
+/// sesiones.
+class AiCoachMesocycle {
+  final String id;
+  final DateTime startWeek;
+  final int lengthWeeks;
+  final AiCoachBlockPhase phase;
+  final List<AiCoachWeekType> weekPattern;
+  final double baselineVolumeKm;
+  final double volumeCeilingKm;
+  final double volumeStepPct;
+  final double deloadVolumePct;
+  final String focus;
+  final String? raceGoalId;
+  final DateTime createdAt;
+  final String sourceModel;
+
+  /// Posicion del bloque en la secuencia del atleta (0-based). Sin carrera
+  /// objetivo es lo unico que da rotacion de enfasis entre bloques.
+  final int sequenceIndex;
+
+  const AiCoachMesocycle({
+    required this.id,
+    required this.startWeek,
+    required this.lengthWeeks,
+    required this.phase,
+    required this.weekPattern,
+    required this.baselineVolumeKm,
+    required this.volumeCeilingKm,
+    required this.volumeStepPct,
+    required this.deloadVolumePct,
+    required this.focus,
+    required this.createdAt,
+    this.raceGoalId,
+    this.sourceModel = '',
+    this.sequenceIndex = 0,
+  });
+
+  /// Indice 0-based de [weekStart] dentro del bloque. Negativo o >= lengthWeeks
+  /// significa que la semana cae fuera y toca abrir bloque nuevo.
+  int weekIndexFor(DateTime weekStart) {
+    final a = DateTime(startWeek.year, startWeek.month, startWeek.day);
+    final b = DateTime(weekStart.year, weekStart.month, weekStart.day);
+    return b.difference(a).inDays ~/ 7;
+  }
+
+  bool containsWeek(DateTime weekStart) {
+    final index = weekIndexFor(weekStart);
+    return index >= 0 && index < lengthWeeks;
+  }
+
+  /// Acota un indice de semana al bloque devolviendo `int`.
+  ///
+  /// No usar `.clamp()` para esto: combinado con `math.max` la inferencia lo
+  /// resuelve como `num` y no vale como indice ni como parametro `int`.
+  int clampWeekIndex(int weekIndex) {
+    final last = lengthWeeks - 1;
+    if (last <= 0 || weekIndex < 0) return 0;
+    return weekIndex > last ? last : weekIndex;
+  }
+
+  AiCoachWeekType weekTypeAt(int weekIndex) {
+    if (weekPattern.isEmpty) return AiCoachWeekType.build;
+    final last = weekPattern.length - 1;
+    final clamped = weekIndex < 0 ? 0 : (weekIndex > last ? last : weekIndex);
+    return weekPattern[clamped];
+  }
+
+  factory AiCoachMesocycle.fromMap(Map<String, dynamic> map) {
+    return AiCoachMesocycle(
+      id: map['id'] as String? ?? '',
+      startWeek: _toDateTime(map['startWeek']),
+      lengthWeeks: (map['lengthWeeks'] as num?)?.toInt() ?? 4,
+      phase: AiCoachBlockPhaseX.fromValue(map['phase'] as String? ?? ''),
+      weekPattern: (map['weekPattern'] as List? ?? const [])
+          .map((item) => AiCoachWeekTypeX.fromValue(item as String? ?? ''))
+          .toList(),
+      baselineVolumeKm: (map['baselineVolumeKm'] as num?)?.toDouble() ?? 0,
+      volumeCeilingKm: (map['volumeCeilingKm'] as num?)?.toDouble() ?? 0,
+      volumeStepPct: (map['volumeStepPct'] as num?)?.toDouble() ?? 0.08,
+      deloadVolumePct: (map['deloadVolumePct'] as num?)?.toDouble() ?? 0.60,
+      focus: map['focus'] as String? ?? '',
+      raceGoalId: map['raceGoalId'] as String?,
+      createdAt: _toDateTime(map['createdAt']),
+      sourceModel: map['sourceModel'] as String? ?? '',
+      sequenceIndex: (map['sequenceIndex'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'startWeek': Timestamp.fromDate(startWeek),
+      'lengthWeeks': lengthWeeks,
+      'phase': phase.toValue,
+      'weekPattern': weekPattern.map((type) => type.toValue).toList(),
+      'baselineVolumeKm': baselineVolumeKm,
+      'volumeCeilingKm': volumeCeilingKm,
+      'volumeStepPct': volumeStepPct,
+      'deloadVolumePct': deloadVolumePct,
+      'focus': focus,
+      if (raceGoalId != null) 'raceGoalId': raceGoalId,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'sourceModel': sourceModel,
+      'sequenceIndex': sequenceIndex,
+    };
+  }
 }
