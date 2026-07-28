@@ -152,6 +152,8 @@ Guías de trabajo (`CLAUDE.md`, `AI_CONTEXT.md`) — actualizar siempre que camb
 
 Arquitectura de monetización (3 niveles, Stripe, gates del coach) — diseño pendiente de implementar → `docs/MONETIZATION_ARCHITECTURE.md`
 
+Mesociclo del Coach IA (periodización persistida, progresión por aritmética, método visible) — diseño pendiente de implementar → `docs/AI_COACH_MESOCYCLE.md`
+
 ---
 
 ## Convenciones
