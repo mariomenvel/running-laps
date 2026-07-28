@@ -130,6 +130,23 @@ class AiCoachRepository {
     await _settingsDoc(resolvedUid, 'aiCoachState').set(state.toMap());
   }
 
+  Future<AiCoachMesocycle?> getMesocycle({String? uid}) async {
+    final resolvedUid = uid ?? _requireUid();
+    try {
+      final doc = await _settingsDoc(resolvedUid, 'aiCoachMesocycle').get();
+      if (!doc.exists || doc.data() == null) return null;
+      return AiCoachMesocycle.fromMap(doc.data()!);
+    } catch (e) {
+      debugPrint('[AiCoachRepository] getMesocycle error: $e');
+      return null;
+    }
+  }
+
+  Future<void> saveMesocycle(AiCoachMesocycle block, {String? uid}) async {
+    final resolvedUid = uid ?? _requireUid();
+    await _settingsDoc(resolvedUid, 'aiCoachMesocycle').set(block.toMap());
+  }
+
   Future<AiCoachWeeklyDecision?> getLastDecision({String? uid}) async {
     final resolvedUid = uid ?? _requireUid();
     try {

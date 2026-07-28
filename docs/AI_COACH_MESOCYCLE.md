@@ -93,35 +93,90 @@ Firestore → testeable directo.
 
 ### 4.1 Volumen objetivo de la semana N
 
+⚠️ **Progresión con techo, no compuesta.** Un `baseline × (1+step)^n` encadenado entre
+bloques da ~19× de volumen en un año — absurdo. El volumen real asintota hacia un
+límite que marcan nivel, objetivo y disponibilidad. La progresión desacelera al
+acercarse a ese techo:
+
 ```dart
 double targetVolumeForWeek(AiCoachMesocycle b, int weekIndex) {
   final type = b.weekPattern[weekIndex];
   if (type == AiCoachWeekType.absorb || type == AiCoachWeekType.recovery) {
     // La descarga se calcula sobre el pico alcanzado, no sobre el baseline
-    final peakIndex = weekIndex - 1;
-    return _progressed(b, peakIndex) * b.deloadVolumePct;
+    return _progressed(b, weekIndex - 1) * b.deloadVolumePct;
   }
   return _progressed(b, weekIndex);
 }
 
-double _progressed(AiCoachMesocycle b, int i) =>
-    b.baselineVolumeKm * math.pow(1 + b.volumeStepPct, i);
+double _progressed(AiCoachMesocycle b, int i) {
+  var v = b.baselineVolumeKm;
+  for (var w = 0; w < i; w++) {
+    // Paso proporcional al margen que queda hasta el techo → curva logística
+    final headroom = ((b.volumeCeilingKm - v) / b.volumeCeilingKm).clamp(0.0, 1.0);
+    v += v * b.volumeStepPct * headroom;
+  }
+  return math.min(v, b.volumeCeilingKm);
+}
 ```
 
-Con `volumeStepPct` clampado a 0.10, **la regla del 10% deja de ser una frase en un
-prompt y pasa a ser una propiedad aritmética del bloque**. Es imposible violarla.
+Propiedades garantizadas por construcción: monótona no decreciente en semanas `build`,
+acotada por `volumeCeilingKm`, y **nunca supera +10% semana a semana** (con
+`volumeStepPct` clampado a 0.10). La regla del 10% deja de ser una frase en un prompt
+y pasa a ser aritméticamente imposible de violar.
+
+Cuando el volumen se aplana contra el techo, la progresión se traslada a la calidad
+(más específica, no más larga) — que es lo que hace un entrenador real cuando el
+atleta llega a su volumen sostenible.
+
+### 4.1.b `volumeCeilingKm` — el techo
+
+```
+ceiling = min(techoPorObjetivo × factorNivel, sesiones × kmMediosPorSesion)
+```
+
+| Objetivo | Techo base (km/sem) |
+|---|---|
+| `returnToRunning` | 30 |
+| `race5k` / `improvePace` | 50 |
+| `race10k` / `improveEndurance` | 60 |
+| `raceHalfMarathon` | 70 |
+| `raceMarathon` | 85 |
+
+Factor por nivel: `beginner` 0.5 · `intermediate` 0.75 · `advanced` 1.0.
+Km medios por sesión: `beginner` 9 · `intermediate` 15 · `advanced` 22.
+
+El segundo término hace que la disponibilidad real mande: un intermedio con 3 días
+queda en 45 km/sem aunque su objetivo (media) permita 52. **Son defaults de práctica
+de entrenamiento, no constantes derivadas** — por eso son candidatos a config remota
+(§10.3).
 
 ### 4.2 Composición del `weekPattern`
 
-| Situación | Patrón | Longitud |
-|---|---|---|
-| Bloque normal | `[build, build, build, absorb]` | 4 |
-| Atleta novato (`level == beginner`) | `[build, build, absorb]` | 3 (descarga más frecuente) |
-| Vuelta tras parón (`consecutiveMissedWeeks >= 2`) | `[restart, build, build, absorb]` | 4 |
-| Taper (carrera en ≤3 semanas) | `[taper, taper, race]` | según `weeksRemaining` |
+| Situación | Patrón | Longitud | `step` | `deloadPct` |
+|---|---|---|---|---|
+| Bloque normal | `[build, build, build, absorb]` | 4 | 0.08 | 0.60 |
+| Atleta novato (`level == beginner`) | `[build, build, absorb]` | 3 | 0.05 | 0.70 |
+| Vuelta tras parón (`consecutiveMissedWeeks >= 2`) | `[restart, build, build, absorb]` | 4 | 0.05 | 0.60 |
+| Taper (carrera en ≤3 semanas) | `[taper, taper, race]` | según `weeksRemaining` | — | — |
 
 La detección de "vuelta tras parón" ya tiene datos: `AiCoachWeeklyState`
 (`ai_coach_models.dart:634`) expone `consecutiveMissedWeeks`.
+
+**Por qué el novato lleva bloque corto *y* paso reducido** (decisión jul 2026): el
+mecanismo de lesión del corredor novato no es fatiga aguda sino adaptación desacoplada
+de tejidos — el sistema cardiovascular mejora en semanas, tendón/fascia/hueso tardan
+meses. El daño acumulado depende de dos variables distintas: la **velocidad** de
+incremento y el **tiempo sostenido** en carga elevada sin descarga. El bloque corto
+ataca la segunda, el paso reducido la primera. Tocar solo la longitud deja media causa
+sin cubrir.
+
+**La descarga del novato recorta volumen, nunca frecuencia.** Para un principiante el
+predictor nº1 de éxito a largo plazo es el hábito, y el hábito es frágil justo en las
+primeras semanas: bajarle de 3 sesiones a 2 en la semana de descarga rompe la rutina en
+el peor momento. Tres sesiones más cortas, todas suaves. `targetSessions` lo sigue
+fijando `_ensureMinimumTargetsFromProfile` (línea 499) a partir del perfil — el bloque
+no lo toca. Su `deloadVolumePct` es 0.70 (no 0.60) porque a volúmenes bajos una descarga
+profunda no aporta recuperación relevante y sí rompe el ritmo.
 
 ### 4.3 `baselineVolumeKm` — de dónde sale
 
@@ -297,12 +352,21 @@ la 3 (mejora real que nadie nota).
 1. **Rigidez vs adaptación.** Resuelto por el principio "solo hacia abajo": el bloque
    es techo, no suelo. Si el TSB se hunde en la semana 3, el Coach recorta y el bloque
    no protesta.
-2. **¿Se le enseña el bloque al LLM o se le oculta?** Propuesta: enseñárselo en
-   `planContext` para que su narrativa sea coherente, pero **ignorar su volumen** vía
-   el clamp. Si se le oculta, escribe análisis que contradicen el plan.
-3. **Bloques de 3 vs 4 semanas.** Se elige por nivel. Pendiente de validar con usuarios
-   reales — es el parámetro que más conviene poder tocar sin desplegar (candidato a
-   `appConfig/aiCoachProvider`, que ya existe como config remota).
+2. ~~**¿Se le enseña el bloque al LLM o se le oculta?**~~ ✅ **Decidido: se le enseña.**
+   El modo de fallo lo decide. Oculto: el LLM propone 45 km, el código clampa a 32, y su
+   `analysis` — que el usuario **lee** — dice "esta semana subimos a 45 km". Una
+   contradicción visible entre lo que el coach dice y lo que el plan hace destruye la
+   confianza más rápido que cualquier defecto metodológico sutil, porque el usuario la
+   detecta sin ser experto. Visible: el riesgo es que repita el bloque sin aportar, pero
+   ese fallo es aceptable — los números ya son deterministas, repetirlos es correcto; su
+   valor está en la composición cualitativa y la narrativa. El prompt debe decir
+   explícitamente que `targetVolumeKm` y `weekType` vienen dados y no se negocian.
+   **No hace falta un campo para que discrepe**: el `min(LLM, techo)` ya es la válvula
+   — pedir menos siempre funciona, pedir más nunca.
+3. ~~**Bloques de 3 vs 4 semanas.**~~ ✅ **Decidido: 3 para `beginner`, 4 para el resto**,
+   con paso y profundidad de descarga distintos (ver §4.2). Los valores concretos siguen
+   siendo defaults de práctica, no constantes derivadas — candidatos a config remota vía
+   `appConfig/aiCoachProvider`, que ya existe.
 4. **Qué pasa si el usuario edita sus sesiones a mano.** El bloque mide intención, no
    ejecución; el volumen real ya lo recoge `weeklyState.weeklyKm` y alimenta el
    baseline del bloque siguiente. No se intenta "corregir" al usuario dentro del bloque.
