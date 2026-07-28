@@ -42,6 +42,24 @@ puede reducir por debajo de ese techo en cualquier momento, nunca superarlo. As�
 la periodización no pelea con las guardas de recuperación que ya existen
 (`ai_coach_session_generator.dart:350-377`).
 
+Y el principio que gobierna el resto (revisión jul 2026, aportado por la
+experiencia como entrenador de fuerza — la autorregulación funciona igual con
+kilos que con ritmos):
+
+> **La progresión se gana, no se calendariza.**
+
+El bloque aporta la **estructura** (ritmo de carga/descarga, narrativa, techo de
+seguridad). La **magnitud** real la decide la evidencia de ejecución de la semana
+anterior. No se puede planificar una progresión indefinida, ni siquiera
+ralentizada, porque el contexto del atleta es desconocido e inestable: rachas
+malas, ánimo, alimentación, trabajo, lesiones, mesetas. El rendimiento es cíclico
+y bajar tiene que ser un **estado normal del sistema**, no una excepción.
+
+Consecuencia directa: **el ancla del volumen es lo que el atleta corrió, nunca lo
+que el plan decía**. Si planificó 40 km y corrió 25, la semana siguiente parte de
+25. El cuerpo se adapta a lo que hizo, no a lo que estaba escrito; anclarse al
+plan solo acumula fracaso y aleja el plan del atleta.
+
 ---
 
 ## 3. Modelo de datos
@@ -128,7 +146,44 @@ Cuando el volumen se aplana contra el techo, la progresión se traslada a la cal
 (más específica, no más larga) — que es lo que hace un entrenador real cuando el
 atleta llega a su volumen sostenible.
 
-### 4.1.b `volumeCeilingKm` — el techo
+### 4.1.b Autorregulación — quién decide la magnitud
+
+La curva del bloque es el **techo**; la posición bajo ese techo la decide
+`ai_coach_autoregulation.dart` leyendo cómo fue la semana. Es la traducción
+directa de la progresión por RPE/RIR de la sala de fuerza: *¿sacó el trabajo
+dentro del esfuerzo previsto?*
+
+La evidencia ya se calcula en `ai_coach_context_builder.dart` (líneas 122-144) y
+hasta ahora **solo se le pasaba al LLM como texto** para que la interpretara:
+
+| Señal | Campo | Lectura |
+|---|---|---|
+| ¿Da los ritmos? | `paceCompliancePercent` | ≥92 bien · 85-92 justo · <85 corto |
+| ¿Le costó más de lo previsto? | `wasHarderThanExpected` | ≥2 sesiones → fatiga |
+| ¿Le sobró margen? | `wasEasierThanExpected` | permite paso completo |
+| ¿Apareció? | `adherenceRatio` | <0.5 recorta · <0.35 reinicia |
+
+Veredicto y factor sobre el volumen **realmente corrido**:
+
+| Veredicto | Cuándo | Factor |
+|---|---|---|
+| `progress` | dio los ritmos, sin sesiones más duras de lo previsto, apareció | ×1.05 (×1.08 si le sobró margen) |
+| `hold` | lo sacó justo, o adherencia parcial | ×1.00 |
+| `regress` | corto en ritmos, fatiga acumulada, o TSB < −20 | ×0.85 |
+| `reset` | ≥2 semanas perdidas | ×0.70 |
+
+**Los rodajes suaves demasiado rápidos bloquean la subida.** `compliance` es
+`objetivo/real`, así que >110 en un `rodaje_base` significa correr el fácil muy
+por encima de lo prescrito — el error más común del amateur, y el que roba la
+recuperación que sostiene la calidad. Es el equivalente a hacer las series de
+back-off a RPE 9: no es progreso extra, es recuperación robada. Detectado →
+`hold` con aviso, nunca `progress`.
+
+Como el sistema es bidireccional y se ancla en lo ejecutado, **una mala racha
+arrastra el plan hacia abajo con el atleta y una buena racha lo vuelve a subir**,
+sin intervención manual y sin acumular fracaso.
+
+### 4.1.c `volumeCeilingKm` — el techo
 
 ```
 ceiling = min(techoPorObjetivo × factorNivel, sesiones × kmMediosPorSesion)
@@ -378,6 +433,8 @@ la 3 (mejora real que nadie nota).
 - **VDOT auto-actualizado desde entrenos** — mejora grande e independiente
   (hoy `bestVdotFromProfile` promedia VDOTs de distintas distancias, cuando Daniels
   dice usar el mejor/más reciente). Merece su propio diseño.
-- **Bucle de feedback post-sesión** — `ai_coach_session_analysis_service.dart` sigue
-  siendo texto informativo. Con el mesociclo ya hay una estructura a la que engancharlo,
-  que es justo lo que hoy falta; se aborda después.
+- **Análisis post-sesión como texto** — `ai_coach_session_analysis_service.dart` sigue
+  generando su comentario libre para el usuario. La señal estructurada que mueve el plan
+  ya no depende de él: la produce `ai_coach_autoregulation.dart` a partir de la evidencia
+  del context builder. Queda pendiente unificar ambos para que el texto que lee el atleta
+  y el veredicto que mueve la carga salgan de la misma lectura.

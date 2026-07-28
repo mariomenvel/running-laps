@@ -325,28 +325,49 @@ void main() {
   });
 
   group('encadenado de bloques', () {
-    test('el baseline sale del pico anterior, no de su semana de descarga', () {
+    test('el baseline sale de lo corrido, no de lo que decia el plan', () {
       final first = engine.buildBlock(
         weekStart: monday,
         profile: profileWith(),
         weeklyState: stateWith(weeklyKm: 30),
         now: DateTime(2026, 7, 28),
       );
+      // El bloque anterior llego a pedir ~31.6 km, pero el atleta corrio 22.
       final second = engine.buildBlock(
         weekStart: monday.add(const Duration(days: 28)),
         profile: profileWith(),
-        weeklyState: stateWith(weeklyKm: 30),
+        weeklyState: stateWith(weeklyKm: 22),
         previous: first,
         now: DateTime(2026, 8, 25),
       );
-      final firstPeak = engine.targetVolumeForWeek(first, 2);
-      expect(second.baselineVolumeKm, closeTo(firstPeak, 0.01));
+      final plannedPeak = engine.targetVolumeForWeek(first, 2);
+      expect(second.baselineVolumeKm, 22);
+      expect(second.baselineVolumeKm, lessThan(plannedPeak));
       expect(second.sequenceIndex, first.sequenceIndex + 1);
     });
 
-    test('un ano encadenado no dispara el volumen — asintota en el techo', () {
-      // El fallo que motivo la curva logistica: baseline * 1.08^n encadenado
-      // daba ~19x de volumen en un ano.
+    test('el plan anterior solo acota hacia arriba', () {
+      final first = engine.buildBlock(
+        weekStart: monday,
+        profile: profileWith(),
+        weeklyState: stateWith(weeklyKm: 30),
+        now: DateTime(2026, 7, 28),
+      );
+      // Semana anomala muy por encima de lo que el bloque llego a pedir.
+      final second = engine.buildBlock(
+        weekStart: monday.add(const Duration(days: 28)),
+        profile: profileWith(),
+        weeklyState: stateWith(weeklyKm: 80),
+        previous: first,
+        now: DateTime(2026, 8, 25),
+      );
+      final plannedPeak = engine.targetVolumeForWeek(first, 2);
+      expect(second.baselineVolumeKm, closeTo(plannedPeak, 0.01));
+    });
+
+    test('el plan no se escapa de un atleta estancado', () {
+      // Un ano entrenando lo mismo: el plan debe quedarse con el, no seguir
+      // subiendo por calendario. El rendimiento es ciclico y hay rachas malas.
       AiCoachMesocycle? block;
       for (var i = 0; i < 13; i++) {
         block = engine.buildBlock(
@@ -357,9 +378,25 @@ void main() {
           now: DateTime(2026, 7, 28),
         );
       }
-      expect(block!.baselineVolumeKm, lessThanOrEqualTo(block.volumeCeilingKm));
-      // 30 km/sem de partida no pueden convertirse en cientos.
-      expect(block.baselineVolumeKm, lessThan(70));
+      expect(block!.baselineVolumeKm, 30);
+    });
+
+    test('un atleta que progresa de verdad si sube de bloque a bloque', () {
+      AiCoachMesocycle? block;
+      var actual = 30.0;
+      for (var i = 0; i < 6; i++) {
+        block = engine.buildBlock(
+          weekStart: monday.add(Duration(days: 28 * i)),
+          profile: profileWith(),
+          weeklyState: stateWith(weeklyKm: actual),
+          previous: block,
+          now: DateTime(2026, 7, 28),
+        );
+        // El atleta absorbe y consolida el pico del bloque.
+        actual = engine.targetVolumeForWeek(block, 2);
+      }
+      expect(block!.baselineVolumeKm, greaterThan(30));
+      expect(block.baselineVolumeKm, lessThanOrEqualTo(block.volumeCeilingKm));
     });
 
     test('el baseline nunca supera el techo del atleta', () {
@@ -394,11 +431,12 @@ void main() {
       expect(beginner.baselineVolumeKm, greaterThan(0));
     });
 
-    test('cae a CTL*7 cuando no hay km de la semana pasada', () {
+    test('prefiere CTL*7 — media movil de carga real, no una semana suelta', () {
       final block = engine.buildBlock(
         weekStart: monday,
         profile: profileWith(),
-        weeklyState: stateWith(weeklyKm: 0, ctl: 5),
+        // Semana puntualmente floja sobre una base de 35 km/sem sostenidos.
+        weeklyState: stateWith(weeklyKm: 8, ctl: 5),
         now: DateTime(2026, 7, 28),
       );
       expect(block.baselineVolumeKm, closeTo(35, 0.01));

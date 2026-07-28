@@ -170,10 +170,14 @@ class AiCoachMesocycleEngine {
   }
 
   /// Baseline del bloque nuevo, por orden de preferencia:
-  /// 1. pico del bloque anterior (encadena sin escalon),
-  /// 2. volumen real de la ultima semana,
-  /// 3. CTL * 7 como proxy,
-  /// 4. default conservador por nivel para atletas sin historial.
+  /// 1. volumen REALMENTE corrido (CTL*7, media movil de 6 semanas),
+  /// 2. km de la ultima semana si no hay CTL,
+  /// 3. default conservador por nivel para atletas sin historial.
+  ///
+  /// ⚠️ El plan anterior NO es fuente de baseline, solo tope de cordura. Si el
+  /// atleta planifico 40 km y corrio 25 — mala racha, trabajo, animo, lesion —
+  /// arrancar el bloque siguiente en 40 le acumula fracaso y le aleja el plan.
+  /// El cuerpo se adapta a lo que hizo, no a lo que estaba escrito.
   double resolveBaseline({
     required AiCoachProfile? profile,
     required AiCoachWeeklyState? weeklyState,
@@ -182,14 +186,19 @@ class AiCoachMesocycleEngine {
   }) {
     double? candidate;
 
-    if (previous != null && previous.baselineVolumeKm > 0) {
-      // Pico del bloque anterior: su ultima semana de carga.
-      final peakIndex = _lastBuildIndex(previous);
-      candidate = _progressedVolume(previous, peakIndex);
+    if (weeklyState != null && weeklyState.ctl > 0) {
+      // CTL es una media movil de ~6 semanas de carga real: absorbe una semana
+      // rara sin castigar ni premiar de mas.
+      candidate = weeklyState.ctl * 7;
     } else if (weeklyState != null && weeklyState.weeklyKm > 0) {
       candidate = weeklyState.weeklyKm;
-    } else if (weeklyState != null && weeklyState.ctl > 0) {
-      candidate = weeklyState.ctl * 7;
+    }
+
+    if (candidate != null && previous != null && previous.baselineVolumeKm > 0) {
+      // El plan anterior solo acota hacia arriba: nunca deja que el baseline
+      // salte por encima de lo que el bloque previo llego a pedir.
+      final plannedPeak = _progressedVolume(previous, _lastBuildIndex(previous));
+      candidate = math.min(candidate, plannedPeak);
     }
 
     final double resolved = candidate ??
