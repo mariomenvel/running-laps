@@ -1464,3 +1464,86 @@ class AiCoachMesocycle {
     };
   }
 }
+
+/// Estimacion de VDOT vigente del atleta.
+///
+/// Se persiste aparte del perfil porque cambia sola con el entrenamiento: el
+/// perfil guarda lo que el atleta declaro, esto guarda lo que el sistema
+/// observa. Ver `vdot_auto_updater.dart`.
+class AiCoachVdotEstimate {
+  final double vdot;
+  final String source;
+  final DateTime updatedAt;
+
+  /// Sesiones que sostuvieron el ultimo ajuste.
+  final int evidenceCount;
+
+  /// Ultimos valores con su fecha, para poder pintar la progresion. Acotado
+  /// para que el documento no crezca sin limite.
+  final List<AiCoachVdotPoint> history;
+
+  static const int maxHistory = 12;
+
+  const AiCoachVdotEstimate({
+    required this.vdot,
+    required this.source,
+    required this.updatedAt,
+    this.evidenceCount = 0,
+    this.history = const [],
+  });
+
+  /// Devuelve la estimacion con el punto nuevo añadido al historial, recortado
+  /// a [maxHistory].
+  AiCoachVdotEstimate withPoint(double value, DateTime at, String newSource) {
+    final points = [...history, AiCoachVdotPoint(vdot: value, date: at)];
+    final trimmed = points.length > maxHistory
+        ? points.sublist(points.length - maxHistory)
+        : points;
+    return AiCoachVdotEstimate(
+      vdot: value,
+      source: newSource,
+      updatedAt: at,
+      evidenceCount: evidenceCount,
+      history: trimmed,
+    );
+  }
+
+  factory AiCoachVdotEstimate.fromMap(Map<String, dynamic> map) {
+    return AiCoachVdotEstimate(
+      vdot: (map['vdot'] as num?)?.toDouble() ?? 0,
+      source: map['source'] as String? ?? 'profile_pb',
+      updatedAt: _toDateTime(map['updatedAt']),
+      evidenceCount: (map['evidenceCount'] as num?)?.toInt() ?? 0,
+      history: (map['history'] as List? ?? const [])
+          .map((p) =>
+              AiCoachVdotPoint.fromMap(Map<String, dynamic>.from(p as Map)))
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+        'vdot': vdot,
+        'source': source,
+        'updatedAt': Timestamp.fromDate(updatedAt),
+        'evidenceCount': evidenceCount,
+        'history': history.map((p) => p.toMap()).toList(),
+      };
+}
+
+class AiCoachVdotPoint {
+  final double vdot;
+  final DateTime date;
+
+  const AiCoachVdotPoint({required this.vdot, required this.date});
+
+  factory AiCoachVdotPoint.fromMap(Map<String, dynamic> map) =>
+      AiCoachVdotPoint(
+        vdot: (map['vdot'] as num?)?.toDouble() ?? 0,
+        date: _toDateTime(map['date']),
+      );
+
+  Map<String, dynamic> toMap() => {
+        'vdot': vdot,
+        'date': Timestamp.fromDate(date),
+      };
+}

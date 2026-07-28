@@ -36,8 +36,18 @@ class VdotCalculator {
     return vdot.clamp(30.0, 85.0);
   }
 
-  /// Estima el VDOT más fiable a partir de las marcas disponibles en el perfil.
-  /// Usa la media aritmética de los VDOT de cada distancia disponible.
+  /// Estima el VDOT a partir de las marcas del perfil.
+  ///
+  /// Usa el **mejor** VDOT, no la media. Daniels calcula el VDOT desde una
+  /// marca representativa, no promediando distancias: casi todo el mundo tiene
+  /// un VDOT de maratón bastante por debajo del de 5K simplemente porque está
+  /// menos entrenado para esa distancia, y la media arrastraba los ritmos hacia
+  /// abajo hasta dejar las sesiones sin estímulo.
+  ///
+  /// El riesgo del máximo es el contrario — una marca vieja infla el VDOT y
+  /// deja ritmos demasiado duros. Por eso esto es solo la **semilla**:
+  /// `VdotAutoUpdater` lo corrige a la baja en cuanto el atleta se queda corto
+  /// en sus sesiones reales.
   static double? bestVdotFromProfile(AiCoachProfile profile) {
     final candidates = <double>[];
 
@@ -53,7 +63,7 @@ class VdotCalculator {
     tryAdd(profile.pbMarathonSeconds, 42195);
 
     if (candidates.isEmpty) return null;
-    return candidates.reduce((a, b) => a + b) / candidates.length;
+    return candidates.reduce((a, b) => a > b ? a : b);
   }
 
   /// Paces objetivo en seg/km para cada zona de entrenamiento, basados en VDOT.
