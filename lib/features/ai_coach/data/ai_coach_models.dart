@@ -1478,6 +1478,10 @@ class AiCoachVdotEstimate {
   /// Sesiones que sostuvieron el ultimo ajuste.
   final int evidenceCount;
 
+  /// Motivo legible del ultimo cambio. Se le ensena al atleta: ver que sus
+  /// ritmos cambian es la mitad; saber por que es lo que genera confianza.
+  final String lastReason;
+
   /// Ultimos valores con su fecha, para poder pintar la progresion. Acotado
   /// para que el documento no crezca sin limite.
   final List<AiCoachVdotPoint> history;
@@ -1489,12 +1493,19 @@ class AiCoachVdotEstimate {
     required this.source,
     required this.updatedAt,
     this.evidenceCount = 0,
+    this.lastReason = '',
     this.history = const [],
   });
 
   /// Devuelve la estimacion con el punto nuevo añadido al historial, recortado
   /// a [maxHistory].
-  AiCoachVdotEstimate withPoint(double value, DateTime at, String newSource) {
+  AiCoachVdotEstimate withPoint(
+    double value,
+    DateTime at,
+    String newSource, {
+    String reason = '',
+    int evidence = 0,
+  }) {
     final points = [...history, AiCoachVdotPoint(vdot: value, date: at)];
     final trimmed = points.length > maxHistory
         ? points.sublist(points.length - maxHistory)
@@ -1503,10 +1514,15 @@ class AiCoachVdotEstimate {
       vdot: value,
       source: newSource,
       updatedAt: at,
-      evidenceCount: evidenceCount,
+      evidenceCount: evidence,
+      lastReason: reason.isEmpty ? lastReason : reason,
       history: trimmed,
     );
   }
+
+  /// Valor anterior, para poder mostrar la variacion.
+  double? get previousVdot =>
+      history.length < 2 ? null : history[history.length - 2].vdot;
 
   factory AiCoachVdotEstimate.fromMap(Map<String, dynamic> map) {
     return AiCoachVdotEstimate(
@@ -1514,6 +1530,7 @@ class AiCoachVdotEstimate {
       source: map['source'] as String? ?? 'profile_pb',
       updatedAt: _toDateTime(map['updatedAt']),
       evidenceCount: (map['evidenceCount'] as num?)?.toInt() ?? 0,
+      lastReason: map['lastReason'] as String? ?? '',
       history: (map['history'] as List? ?? const [])
           .map((p) =>
               AiCoachVdotPoint.fromMap(Map<String, dynamic>.from(p as Map)))
@@ -1526,6 +1543,7 @@ class AiCoachVdotEstimate {
         'source': source,
         'updatedAt': Timestamp.fromDate(updatedAt),
         'evidenceCount': evidenceCount,
+        'lastReason': lastReason,
         'history': history.map((p) => p.toMap()).toList(),
       };
 }

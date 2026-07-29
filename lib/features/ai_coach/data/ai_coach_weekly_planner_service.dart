@@ -472,7 +472,13 @@ class AiCoachWeeklyPlannerService {
             updatedAt: DateTime.now(),
           );
       await _aiCoachRepository.saveVdotEstimate(
-        base.withPoint(update.vdot, DateTime.now(), update.source.toValue),
+        base.withPoint(
+          update.vdot,
+          DateTime.now(),
+          update.source.toValue,
+          reason: update.reason,
+          evidence: update.evidenceCount,
+        ),
         uid: uid,
       );
       await _aiCoachRepository.logEvent(

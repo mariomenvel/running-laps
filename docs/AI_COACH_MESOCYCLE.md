@@ -484,9 +484,13 @@ la 3 (mejora real que nadie nota).
 
 ## 11. Fuera de alcance (deliberadamente)
 
-- **VDOT auto-actualizado desde entrenos** — mejora grande e independiente
-  (hoy `bestVdotFromProfile` promedia VDOTs de distintas distancias, cuando Daniels
-  dice usar el mejor/más reciente). Merece su propio diseño.
+- ~~**VDOT auto-actualizado desde entrenos**~~ — ✅ hecho (jul 2026) en
+  `vdot_auto_updater.dart`. Aplica el mismo principio a la intensidad: la evidencia
+  de ejecución sube o baja el VDOT, y las marcas del perfil pasan a ser solo la
+  semilla. De paso corrigió que `bestVdotFromProfile` promediara VDOTs de distintas
+  distancias — un 5K de 20:00 junto a un maratón de 4:30 daba 54 s/km de más en
+  rodaje. Los ritmos y su motivo se muestran en `views/vdot_paces_card.dart`,
+  dentro de "Cómo entrena tu coach", junto a la curva del bloque.
 - **Análisis post-sesión como texto** — `ai_coach_session_analysis_service.dart` sigue
   generando su comentario libre para el usuario. La señal estructurada que mueve el plan
   ya no depende de él: la produce `ai_coach_autoregulation.dart` a partir de la evidencia
