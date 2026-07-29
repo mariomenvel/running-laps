@@ -1,6 +1,11 @@
 # Mesociclo del Coach IA — diseño
 
-**Estado:** diseño pendiente de implementar (jul 2026).
+**Estado:** ✅ implementado en 3 fases (jul 2026) — motor + autorregulación
+(`ai_coach_mesocycle_engine.dart`, `ai_coach_autoregulation.dart`), integración
+en `planNextWeek()`, y visibilidad para el atleta (tira de bloque en Home,
+curva de volumen en `CoachPhilosophyView`). Este documento describe el diseño
+tal y como quedó construido; las §10 "decisiones abiertas" originales ya están
+resueltas en el propio texto.
 **Objetivo:** convertir el Coach IA de un generador de semanas sueltas en un
 entrenador con método explícito y progresión verificable.
 

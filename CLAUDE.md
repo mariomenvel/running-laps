@@ -94,7 +94,10 @@ Arquitectura de servicios en `lib/features/ai_coach/data/`:
 - `ai_coach_automation_service.dart` — automatización: genera plan cada domingo
 - `ai_coach_decision_service.dart` — decide qué acción tomar (generar / sugerir / custom)
 - `pb_detector.dart` — detecta marcas personales (PB) en 5K/10K/HM/Maratón con interpolación ±3%
-- `vdot_calculator.dart` — calcula VDOT desde PBs y edad
+- `vdot_calculator.dart` — calcula VDOT desde PBs y edad (semilla del perfil)
+- `vdot_auto_updater.dart` — mantiene el VDOT al día solo (jul 2026), sin esperar a que el atleta meta una marca nueva: sube/baja por evidencia de ejecución (ritmos prescritos batidos o no sin pasarse del RPE — asimetría 3 sesiones para subir, 2 para bajar) o por test encubierto (esfuerzo continuo RPE≥9 y ≥3km, Daniels directo; excluye series porque su tiempo incluye descansos). Persiste `AiCoachVdotEstimate` (con `lastReason`/`previousVdot`) en `users/{uid}/settings/aiCoachVdot`, historial acotado a 12 puntos. `planNextWeek` lo revisa antes de generar. Visible en `CoachPhilosophyView` vía `VdotPacesCard` (rangos de ritmo + motivo del último cambio).
+- `ai_coach_mesocycle_engine.dart` + `ai_coach_autoregulation.dart` — **mesociclo con autorregulación** (jul 2026, diseño completo en `docs/AI_COACH_MESOCYCLE.md`, implementado en 3 fases). Principio: el bloque (`AiCoachMesocycle`, en `users/{uid}/settings/aiCoachMesocycle`) fija estructura y **techo** de carga por semana (progresión con desaceleración logística, regla del 10% aritméticamente imposible de violar, no solo texto de prompt); la **autorregulación** decide la magnitud real bajo ese techo según lo que el atleta corrió de verdad, nunca lo planificado (veredictos `progress`/`hold`/`regress`/`reset` sobre el volumen ejecutado — "la progresión se gana, no se calendariza"). `planNextWeek()` resuelve bloque + autorregulación antes de pedir la decisión al LLM, que ya no puede pedir más volumen que el techo, solo menos. Visible para el atleta: tira de bloque en Home (`home_block_strip.dart`, "BLOQUE BASE · Semana 2 de 4") y curva de volumen del bloque en `CoachPhilosophyView` (`BlockVolumeCurve`).
+- `ai_coach_question_planner.dart` + `ai_coach_adaptive_question.dart` — **cuestionario semanal individualizado** (jul 2026): al núcleo fijo (sensaciones + sueño, para conservar la serie temporal) se le añaden hasta 2 preguntas adaptativas deterministas (no generadas por LLM) según molestia abierta, veredicto regress/reset, rodajes demasiado rápidos o adherencia baja. Las respuestas (severity 0-3) mueven la autorregulación (p.ej. molestia a peor → reset ×0.60) y quedan en `AiCoachWeeklyFeedback.adaptiveAnswers` para que la semana siguiente sepa qué preguntó y siga el hilo hasta que el atleta diga que ya no le duele.
 - `ai_coach_session_generator.dart` — genera sesión individual desde prompt
 - `ai_coach_session_analysis_service.dart` — análisis post-sesión (planificado vs ejecutado), fire-and-forget al guardar; persiste `coachAnalysis` en el training
 - `ai_coach_repository.dart` — CRUD Firestore: `users/{uid}/settings/aiCoachProfile` + `aiCoachUsage`
@@ -152,7 +155,7 @@ Guías de trabajo (`CLAUDE.md`, `AI_CONTEXT.md`) — actualizar siempre que camb
 
 Arquitectura de monetización (3 niveles, Stripe, gates del coach) — diseño pendiente de implementar → `docs/MONETIZATION_ARCHITECTURE.md`
 
-Mesociclo del Coach IA (periodización persistida, progresión por aritmética, método visible) — diseño pendiente de implementar → `docs/AI_COACH_MESOCYCLE.md`
+Mesociclo del Coach IA (periodización persistida, progresión por aritmética, método visible) — ✅ implementado en 3 fases (jul 2026): motor (`ai_coach_mesocycle_engine.dart`) + autorregulación (`ai_coach_autoregulation.dart`), integración en `planNextWeek()`, y visibilidad para el atleta (tira de bloque en Home + curva de volumen en `CoachPhilosophyView`). Detalle en `docs/AI_COACH_MESOCYCLE.md` y en la lista de servicios del Coach IA arriba.
 
 ---
 

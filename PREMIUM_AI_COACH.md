@@ -190,21 +190,37 @@ El LLM recibe un JSON schema con constraint `enum` estricto para el campo `goal`
 
 ---
 
-## Cuestionario semanal ✅ implementado
+## Cuestionario semanal ✅ implementado (individualizado desde jul 2026)
 
 Vista: `ai_coach_weekly_feedback_view.dart`. Modelo: `AiCoachWeeklyFeedback`.
 
-Cada domingo, opcional (saltable):
+Núcleo fijo, cada domingo, opcional (saltable) — se conserva siempre para
+mantener la serie temporal comparable:
 1. **¿Cómo te has sentido esta semana?** — escala 1-5 (`sensaciones`)
 2. **¿Has dormido bien?** — `bien / regular / mal / no_medido` (`sueno`)
 3. **¿Algún dolor o molestia?** — texto libre opcional (`molestias`)
 4. **¿Alguna observación para el coach?** — texto libre opcional (`observaciones`)
 5. **Motivo de parada** (si aplica) — `lesion / viaje / trabajo / otro` (`motivoParon`)
 
+**Preguntas adaptativas (`ai_coach_question_planner.dart` + `ai_coach_adaptive_question.dart`, jul 2026):**
+hasta 2 preguntas más, deterministas (no generadas por LLM — no puede depender
+de que el proveedor acierte ni responda), que solo aparecen si van a cambiar el
+plan: molestia abierta la semana anterior, veredicto de autorregulación
+`regress`/`reset`, rodajes suaves corridos muy por encima del ritmo prescrito,
+o adherencia baja. Cada opción lleva `severity` 0-3 que la autorregulación
+consume directamente (p.ej. molestia a peor → `reset ×0.60`; trabajo/vida
+personal convierte un `regress` en `hold` salvo que además haya fatiga
+objetiva). Las respuestas quedan en `AiCoachWeeklyFeedback.adaptiveAnswers`
+con su enunciado, así la semana siguiente sabe qué preguntó y sigue el hilo
+hasta que el atleta diga que ya no le duele.
+
 El `ai_coach_prompt_builder.dart` usa el feedback para ajustar instrucciones al modelo:
 - `sensaciones ≤ 2` o `molestias != null` → reduce carga e intensidad
 - `sensaciones ≥ 4` y `sueno == 'bien'` → puede aumentar carga
 - Molestias recurrentes en historial → alerta explícita al modelo
+- Las respuestas adaptativas alimentan `ai_coach_autoregulation.dart`, que
+  decide el volumen real de la semana siguiente bajo el techo del mesociclo
+  (ver `docs/AI_COACH_MESOCYCLE.md`).
 
 ---
 
@@ -277,7 +293,7 @@ Configurados en `ai_coach_models_config.dart`:
 ## Filosofía y enfoque
 
 ### Vista "Cómo entrena tu coach" ✅ implementado
-`coach_philosophy_view.dart` — vista estática (sin ViewModel) accesible desde `AiCoachSettingsView` (tile inicial). Comunica 4 principios fijos: base aeróbica primero (70-80% volumen suave), intensidad con criterio (VDOT, no tablas genéricas), tu fatiga manda (TSB) y progresión sostenible. Sin CTA — puramente informativa.
+`coach_philosophy_view.dart` — tab oculto de `MainShell` (17), accesible desde `AiCoachSettingsView` (tile inicial) vía `navigateTo(17)`. Desde jul 2026 es `StatefulWidget`: carga mesociclo activo y estimación VDOT en un solo `Future.wait` y hace comprobables los 4 principios que antes eran solo texto — base aeróbica primero, intensidad con criterio (`VdotPacesCard`: rangos de ritmo derivados del VDOT, variación y motivo del último cambio), tu fatiga manda y progresión sostenible (`BlockVolumeCurve`: volumen planificado por semana del bloque activo, semana actual y descarga destacadas).
 
 ### `AiCoachProfile.trainingFocus` ✅ implementado
 Campo opcional `String? trainingFocus` — `'volume' | 'balanced' | 'quality'`, `null`/`'balanced'` = comportamiento actual sin cambios. Seleccionable en `AiCoachSettingsView`, sección "ENFOQUE DE ENTRENAMIENTO". No se pide en el onboarding (el wizard ya tiene 6 pasos); el atleta lo descubre en settings.
