@@ -24,6 +24,7 @@ class AiCoachSessionGenerator {
     AiCoachProfile? profile,
     Set<int> occupiedWeekdays = const <int>{},
     int? maxSessions,
+    double? vdotOverride,
   }) {
     final now = DateTime.now();
     final cycleId = '${weekStart.year}${weekStart.month.toString().padLeft(2, '0')}${weekStart.day.toString().padLeft(2, '0')}';
@@ -77,6 +78,7 @@ class AiCoachSessionGenerator {
           status: AthleteSessionStatus.planned,
           warmup: _buildWarmup(category),
           blocks: _buildBlocks(
+            vdotOverride: vdotOverride,
             category: category,
             target: target,
             decision: decision,
@@ -308,6 +310,7 @@ class AiCoachSessionGenerator {
     required AiCoachWeeklyDecision decision,
     required AiCoachProfile? profile,
     required int sessionIndex,
+    double? vdotOverride,
   }) {
     final complexityTier = _complexityTier(
       profile: profile,
@@ -322,10 +325,11 @@ class AiCoachSessionGenerator {
     final rpe = _defaultRpeFor(category, decision.adjustment);
     final zone = _defaultZoneFor(category);
 
-    // Paces personalizados si el perfil tiene marcas disponibles
-    final vdot = profile != null
-        ? VdotCalculator.bestVdotFromProfile(profile)
-        : null;
+    // Paces personalizados. Manda la estimacion viva (que el sistema ajusta
+    // segun como entrena el atleta); las marcas del perfil son solo la semilla
+    // inicial. Ver vdot_auto_updater.dart.
+    final vdot = vdotOverride ??
+        (profile != null ? VdotCalculator.bestVdotFromProfile(profile) : null);
     final paces = vdot != null ? VdotCalculator.pacesFromVdot(vdot) : null;
 
     int pMin(int secPerKm) => secPerKm ~/ 60;

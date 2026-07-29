@@ -7,6 +7,7 @@ import 'package:running_laps/features/ai_coach/data/ai_coach_mesocycle_engine.da
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_session_generator.dart';
+import 'package:running_laps/features/ai_coach/data/vdot_auto_updater.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
 import 'package:running_laps/core/services/user_service.dart';
@@ -60,6 +61,7 @@ class AiCoachWeeklyPlannerService {
 
   static const _mesocycleEngine = AiCoachMesocycleEngine();
   static const _autoregulation = AiCoachAutoregulation();
+  static const _vdotUpdater = VdotAutoUpdater();
 
   Future<AiCoachWeeklyPlannerResult> planNextWeek(
     String uid, {
@@ -215,6 +217,14 @@ class AiCoachWeeklyPlannerService {
     final remainingSlots =
         (decision.targetSessions - preservedSessions.length).clamp(0, freeFeasibleSlots);
 
+    // El VDOT se revisa ANTES de generar: si el atleta ha mejorado, las
+    // sesiones de esta semana ya salen con los ritmos nuevos.
+    final vdot = await _refreshVdot(
+      uid: uid,
+      profile: profile,
+      recentSessions: context.recentTrainings,
+    );
+
     var sessions = _sessionGenerator.generateWeekSessions(
       uid: uid,
       weekStart: nextWeekStart,
@@ -222,6 +232,7 @@ class AiCoachWeeklyPlannerService {
       profile: profile,
       occupiedWeekdays: occupiedWeekdays,
       maxSessions: remainingSlots,
+      vdotOverride: vdot,
     );
     sessions = enforceAvailableWeekdays(
       sessions: sessions,
@@ -415,6 +426,77 @@ class AiCoachWeeklyPlannerService {
     if (normalized.isEmpty) return const [];
     final sorted = normalized.toList()..sort();
     return sorted;
+  }
+
+  /// Revisa la estimacion de VDOT con la evidencia reciente y la persiste si
+  /// cambia. Devuelve el valor vigente para generar las sesiones.
+  ///
+  /// Nunca hace fallar la planificacion: si algo va mal, se sigue con los
+  /// paces que hubiera.
+  Future<double?> _refreshVdot({
+    required String uid,
+    required AiCoachProfile? profile,
+    required List<AiCoachTrainingSummary> recentSessions,
+  }) async {
+    try {
+      final stored = await _aiCoachRepository.getVdotEstimate(uid: uid);
+      final current = stored?.vdot;
+
+      final update = _vdotUpdater.review(
+        currentVdot: current,
+        profile: profile,
+        recentSessions: recentSessions,
+      );
+
+      if (update == null || !update.changed) {
+        if (current != null) return current;
+        // Primera vez: sembrar desde las marcas del perfil para no perder el
+        // valor entre semanas.
+        final seed = profile == null ? null : _vdotUpdater.seedFromProfile(profile);
+        if (seed == null) return null;
+        await _aiCoachRepository.saveVdotEstimate(
+          AiCoachVdotEstimate(
+            vdot: seed,
+            source: VdotSource.profilePb.toValue,
+            updatedAt: DateTime.now(),
+          ).withPoint(seed, DateTime.now(), VdotSource.profilePb.toValue),
+          uid: uid,
+        );
+        return seed;
+      }
+
+      final base = stored ??
+          AiCoachVdotEstimate(
+            vdot: update.previousVdot,
+            source: VdotSource.profilePb.toValue,
+            updatedAt: DateTime.now(),
+          );
+      await _aiCoachRepository.saveVdotEstimate(
+        base.withPoint(
+          update.vdot,
+          DateTime.now(),
+          update.source.toValue,
+          reason: update.reason,
+          evidence: update.evidenceCount,
+        ),
+        uid: uid,
+      );
+      await _aiCoachRepository.logEvent(
+        uid: uid,
+        eventType: 'vdot_updated',
+        payload: {
+          'from': update.previousVdot,
+          'to': update.vdot,
+          'source': update.source.toValue,
+          'evidenceCount': update.evidenceCount,
+          'reason': update.reason,
+        },
+      );
+      return update.vdot;
+    } catch (e) {
+      debugPrint('[AiCoachWeeklyPlanner] _refreshVdot error: $e');
+      return null;
+    }
   }
 
   /// Devuelve el bloque activo, creandolo si no existe, si la semana pedida

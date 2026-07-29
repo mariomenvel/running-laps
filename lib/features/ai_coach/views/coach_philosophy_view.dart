@@ -4,6 +4,7 @@ import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_mesocycle_engine.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
+import 'package:running_laps/features/ai_coach/views/vdot_paces_card.dart';
 
 class CoachPhilosophyView extends StatefulWidget {
   const CoachPhilosophyView({super.key});
@@ -13,12 +14,26 @@ class CoachPhilosophyView extends StatefulWidget {
 }
 
 class _CoachPhilosophyViewState extends State<CoachPhilosophyView> {
-  late final Future<AiCoachMesocycle?> _blockFuture;
+  late final Future<_CoachEvidence> _evidenceFuture;
 
   @override
   void initState() {
     super.initState();
-    _blockFuture = AiCoachRepository().getMesocycle();
+    _evidenceFuture = _loadEvidence();
+  }
+
+  /// Una sola carga para las dos tarjetas: el bloque activo y la estimación de
+  /// VDOT. Son dos lecturas de documento, no dos consultas.
+  Future<_CoachEvidence> _loadEvidence() async {
+    final repo = AiCoachRepository();
+    final results = await Future.wait([
+      repo.getMesocycle(),
+      repo.getVdotEstimate(),
+    ]);
+    return _CoachEvidence(
+      block: results[0] as AiCoachMesocycle?,
+      vdot: results[1] as AiCoachVdotEstimate?,
+    );
   }
 
   static const List<_PhilosophyBlock> _blocks = [
@@ -84,16 +99,29 @@ class _CoachPhilosophyViewState extends State<CoachPhilosophyView> {
                     );
                   }
                   if (index == 1) {
-                    // Evidencia viva: los 4 principios de abajo dejan de ser
-                    // promesas y pasan a tener su curva real debajo.
-                    return FutureBuilder<AiCoachMesocycle?>(
-                      future: _blockFuture,
+                    // Evidencia viva: los principios de abajo dejan de ser
+                    // promesas y pasan a tener sus datos reales encima.
+                    return FutureBuilder<_CoachEvidence>(
+                      future: _evidenceFuture,
                       builder: (context, snapshot) {
-                        final block = snapshot.data;
-                        if (block == null || block.weekPattern.isEmpty) {
+                        final data = snapshot.data;
+                        if (data == null) return const SizedBox.shrink();
+                        final block = data.block;
+                        final vdot = data.vdot;
+                        final hasBlock =
+                            block != null && block.weekPattern.isNotEmpty;
+                        final hasVdot = vdot != null && vdot.vdot > 0;
+                        if (!hasBlock && !hasVdot) {
                           return const SizedBox.shrink();
                         }
-                        return BlockVolumeCurve(block: block);
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (hasBlock) BlockVolumeCurve(block: block),
+                            if (hasBlock && hasVdot) const SizedBox(height: 12),
+                            if (hasVdot) VdotPacesCard(estimate: vdot),
+                          ],
+                        );
                       },
                     );
                   }
@@ -338,4 +366,12 @@ class _VolumeBar extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Datos reales que sostienen los principios de esta pantalla.
+class _CoachEvidence {
+  const _CoachEvidence({this.block, this.vdot});
+
+  final AiCoachMesocycle? block;
+  final AiCoachVdotEstimate? vdot;
 }

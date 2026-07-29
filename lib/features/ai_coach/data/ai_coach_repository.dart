@@ -147,6 +147,26 @@ class AiCoachRepository {
     await _settingsDoc(resolvedUid, 'aiCoachMesocycle').set(block.toMap());
   }
 
+  Future<AiCoachVdotEstimate?> getVdotEstimate({String? uid}) async {
+    final resolvedUid = uid ?? _requireUid();
+    try {
+      final doc = await _settingsDoc(resolvedUid, 'aiCoachVdot').get();
+      if (!doc.exists || doc.data() == null) return null;
+      return AiCoachVdotEstimate.fromMap(doc.data()!);
+    } catch (e) {
+      debugPrint('[AiCoachRepository] getVdotEstimate error: $e');
+      return null;
+    }
+  }
+
+  Future<void> saveVdotEstimate(
+    AiCoachVdotEstimate estimate, {
+    String? uid,
+  }) async {
+    final resolvedUid = uid ?? _requireUid();
+    await _settingsDoc(resolvedUid, 'aiCoachVdot').set(estimate.toMap());
+  }
+
   Future<AiCoachWeeklyDecision?> getLastDecision({String? uid}) async {
     final resolvedUid = uid ?? _requireUid();
     try {
