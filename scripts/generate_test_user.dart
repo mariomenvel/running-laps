@@ -87,7 +87,9 @@ Future<void> _generateTestUser() async {
   print('UID: $uid');
 
   // 2. Limpiar datos previos (idempotente: re-ejecutar no duplica)
-  for (final col in ['trainings', 'athleteSessions', 'templates', 'tags']) {
+  for (final col in [
+    'trainings', 'athleteSessions', 'templates', 'tags', 'aiCoachFeedback',
+  ]) {
     final deleted = await _clearCollection(firestore, 'users/$uid/$col');
     if (deleted > 0) print('  $col: $deleted docs previos eliminados');
   }
@@ -135,6 +137,12 @@ Future<void> _generateTestUser() async {
   // 8. Coach IA: perfil + uso
   await _generateAiCoach(firestore, uid, raceDate);
   print('Perfil del Coach IA generado');
+
+  // 8b. Mesociclo activo + VDOT + feedback semanal (para probar fases 1-3:
+  // tira de bloque en Home, curva de volumen y ritmos VDOT en "Cómo entrena
+  // tu coach", y la pregunta adaptativa de seguimiento de molestia).
+  await _generateMesocycleAndVdot(firestore, uid);
+  print('Mesociclo, VDOT y feedback semanal generados');
 
   // 9. Stats agregados
   final totalKm  = trainings.fold(0.0, (s, t) => s + (t['distanciaTotalM'] as int) / 1000.0);
@@ -710,6 +718,84 @@ Future<void> _generateAiCoach(
     'periodStart':       Timestamp.fromDate(periodStart),
     'periodEnd':         Timestamp.fromDate(DateTime(now.year, now.month + 1, 1)),
   });
+}
+
+// ─── Mesociclo + VDOT + feedback semanal ──────────────────────────────────────
+
+DateTime _mondayOf(DateTime d) =>
+    DateTime(d.year, d.month, d.day).subtract(Duration(days: d.weekday - 1));
+
+Future<void> _generateMesocycleAndVdot(
+    FirebaseFirestore firestore, String uid) async {
+  final settings = firestore.collection('users').doc(uid).collection('settings');
+  final now = DateTime.now();
+  final currentMonday = _mondayOf(now);
+
+  // Bloque activo: empezó hace una semana → "hoy" cae en semana 2 de 4.
+  final blockStart = currentMonday.subtract(const Duration(days: 7));
+  await settings.doc('aiCoachMesocycle').set({
+    'id':              'seed-block-1',
+    'startWeek':       Timestamp.fromDate(blockStart),
+    'lengthWeeks':     4,
+    'phase':           'base',
+    'weekPattern':     ['build', 'build', 'build', 'absorb'],
+    'baselineVolumeKm': 30.0,
+    'volumeCeilingKm':  55.0,
+    'volumeStepPct':    0.08,
+    'deloadVolumePct':  0.60,
+    'focus':           'Construir base aeróbica y consolidar el hábito de '
+        'series semanales antes de afinar hacia el 10K.',
+    'createdAt':       Timestamp.fromDate(blockStart),
+    'sourceModel':     'seed',
+    'sequenceIndex':   0,
+  });
+
+  // VDOT con historial ascendente (progresión real por evidencia de
+  // ejecución) y el motivo textual que se le enseña al atleta.
+  final vdotHistory = <Map<String, dynamic>>[];
+  final vdotValues = [44.0, 45.0, 46.0, 47.0, 48.0];
+  for (int i = 0; i < vdotValues.length; i++) {
+    final weeksAgo = (vdotValues.length - 1 - i) * 2;
+    vdotHistory.add({
+      'vdot': vdotValues[i],
+      'date': Timestamp.fromDate(now.subtract(Duration(days: weeksAgo * 7))),
+    });
+  }
+  await settings.doc('aiCoachVdot').set({
+    'vdot':          48.0,
+    'source':        'training_evidence',
+    'updatedAt':     Timestamp.fromDate(now.subtract(const Duration(days: 3))),
+    'evidenceCount': 3,
+    'lastReason':    'Vas por delante de tus ritmos objetivo: has mejorado, '
+        'así que los aprieto.',
+    'history':       vdotHistory,
+  });
+
+  // Feedback semanal con una molestia abierta en la semana más reciente, para
+  // que la próxima vez que se rellene el cuestionario aparezca la pregunta
+  // adaptativa de seguimiento ("¿Cómo va esa molestia?") sin importar qué día
+  // de la semana se pruebe la app.
+  final feedback = firestore.collection('users').doc(uid).collection('aiCoachFeedback');
+  Future<void> saveFeedback(DateTime weekStart, {String? molestias}) {
+    final weekStr = _yyyymmdd(weekStart);
+    return feedback.doc(weekStr).set({
+      'uid':        uid,
+      'weekStart':  weekStr,
+      'sensaciones': 4,
+      'sueno':      'bien',
+      if (molestias != null) 'molestias': molestias,
+      'createdAt':  Timestamp.fromDate(weekStart.add(const Duration(days: 6))),
+    });
+  }
+
+  await saveFeedback(
+    currentMonday.subtract(const Duration(days: 7)),
+    molestias: 'Molestia leve en el gemelo derecho tras las series.',
+  );
+  await saveFeedback(
+    currentMonday.subtract(const Duration(days: 14)),
+    molestias: 'Molestia leve en el gemelo derecho tras las series.',
+  );
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
