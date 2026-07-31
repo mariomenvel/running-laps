@@ -105,8 +105,19 @@ service cloud.firestore {
 
         // Authenticated owner can create normally.
         // Field size limits prevent storage abuse.
+        //
+        // ⚠️ El límite de claves iba con CERO margen: `Entrenamiento.toMap()`
+        // puede escribir hasta 20 campos en un create (8 fijos + createdAt y
+        // updatedAt que fuerza `createTraining`, + 10 opcionales: tags,
+        // loadScore, source, analysis, isManual, notas, fcMediaSesion,
+        // fcMaxSesion, plannedComparison, coachAnalysis). Con `< 20` un
+        // entreno completo se denegaba en silencio — el mismo tipo de fallo
+        // fail-closed que el bug de `.toString()` de abril 2026. Se sube a 30
+        // para dejar sitio a campos nuevos; quien limita el abuso de verdad son
+        // los dos topes de abajo (título y número de series), no el de claves.
+        // Hay un test que lo vigila: test/unit/entrenamiento_firestore_test.dart
         allow create: if isOwner(uid)
-            && request.resource.data.keys().size() < 20
+            && request.resource.data.keys().size() < 30
             && request.resource.data.get("titulo", "").size() < 200
             && request.resource.data.get("series", []).size() < 500;
       }

@@ -8,8 +8,11 @@ import 'package:running_laps/features/ai_coach/data/race_goal.dart';
 import 'package:running_laps/features/ai_coach/data/race_goal_repository.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
+import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/features/profile/data/user_profile_model.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
+import 'package:running_laps/features/training/data/fc_analytics.dart';
+import 'package:running_laps/features/training/data/fc_session_stats.dart';
 import 'package:running_laps/features/training/data/training_repository.dart';
 
 class AiCoachContextBuilder {
@@ -85,10 +88,16 @@ class AiCoachContextBuilder {
       }
     }
 
+    // FCmáx efectiva del atleta (manual o 220−edad): sin ella no hay zonas que
+    // repartir, así que la analítica de FC se degrada a media y pico.
+    final effectiveFcMax = ZonesService()
+        .fcMaxEffective(userProfile?.fcMax, userProfile?.birthDate);
+
     final recentTrainings = trainings.take(20).map((training) {
       final linkedSession = training.id != null
           ? linkedSessionByTrainingId[training.id!]
           : null;
+      final fcStats = FcSessionStats.from(training.series);
       var summary = AiCoachTrainingSummary(
         trainingId: training.id ?? '',
         date: training.fecha,
@@ -101,7 +110,18 @@ class AiCoachContextBuilder {
             : null,
         rpe: training.series.isEmpty ? null : training.rpePromedio(),
         load: training.loadScore,
-        fcAvg: training.fcMediaSesion,
+        fcAvg: training.fcMediaSesion ?? fcStats?.avgBpm,
+        // Los entrenos anteriores a jul 2026 no tienen `fcMaxSesion`
+        // persistido: se recalcula de las lecturas, que sí viajan en el doc.
+        fcPeak: training.fcMaxSesion ??
+            (fcStats?.isFromRawReadings == true ? fcStats!.maxBpm : null),
+        zonesPercent: FcAnalytics.zonePercentages(
+                training.series, effectiveFcMax)
+            ?.map((p) => p.round())
+            .toList(),
+        efficiencyIndex: FcAnalytics.efficiencyIndex(training.series),
+        decouplingPercent: FcAnalytics.decouplingPercent(training.series),
+        hrDriftBpm: FcAnalytics.hrDriftBpm(training.series),
         note: training.notas,
       );
       if (linkedSession != null) {
@@ -268,10 +288,17 @@ class AiCoachContextBuilder {
   ) {
     if (userProfile == null) return profile;
     if (profile != null) {
-      final merged = userProfile.fcMax != null && profile.fcMax == null
-          ? profile.copyWith(fcMax: userProfile.fcMax)
+      // FCmáx y FC en reposo viven en el perfil del usuario, no en el del
+      // Coach: se copian aquí para que el prompt las tenga sin duplicar el
+      // dato en Firestore.
+      final needsFcMax = userProfile.fcMax != null && profile.fcMax == null;
+      final needsFcRest = userProfile.fcReposo != null && profile.fcRest == null;
+      return needsFcMax || needsFcRest
+          ? profile.copyWith(
+              fcMax: needsFcMax ? userProfile.fcMax : null,
+              fcRest: needsFcRest ? userProfile.fcReposo : null,
+            )
           : profile;
-      return merged;
     }
     final now = DateTime.now();
     return AiCoachProfile(
@@ -282,6 +309,7 @@ class AiCoachContextBuilder {
       preferredWeeklySessions: 3,
       availableWeekdays: const [1, 3, 5],
       fcMax: userProfile.fcMax,
+      fcRest: userProfile.fcReposo,
       createdAt: now,
       updatedAt: now,
     );

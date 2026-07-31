@@ -26,8 +26,14 @@ class Entrenamiento {
   final bool isManual;
   final String? notas;
 
-  // FC media de toda la sesión (media de fcMedia de las series)
+  // FC media de toda la sesión, ponderada por lecturas reales (ver
+  // `FcSessionStats`). No es el promedio de las fcMedia de las series.
   final double? fcMediaSesion;
+
+  // Pico de FC de la sesión (bpm). El detalle del historial lo recalcula de
+  // las lecturas, pero el Coach IA solo recibe el resumen: sin este campo no
+  // tiene forma de saber cuánto se apretó de verdad.
+  final int? fcMaxSesion;
 
   // Comparativa planificado vs ejecutado (solo si viene de sesión planificada)
   final Map<String, dynamic>? plannedComparison;
@@ -51,6 +57,7 @@ class Entrenamiento {
     this.isManual = false,
     this.notas,
     this.fcMediaSesion,
+    this.fcMaxSesion,
     this.plannedComparison,
     this.coachAnalysis,
   });
@@ -71,6 +78,7 @@ class Entrenamiento {
     bool? isManual,
     String? notas,
     Object? fcMediaSesion = _entrSentinel,
+    Object? fcMaxSesion = _entrSentinel,
     Object? plannedComparison = _entrSentinel,
     Object? coachAnalysis = _entrSentinel,
   }) {
@@ -91,6 +99,8 @@ class Entrenamiento {
       notas: notas ?? this.notas,
       fcMediaSesion: identical(fcMediaSesion, _entrSentinel)
           ? this.fcMediaSesion : fcMediaSesion as double?,
+      fcMaxSesion: identical(fcMaxSesion, _entrSentinel)
+          ? this.fcMaxSesion : fcMaxSesion as int?,
       plannedComparison: identical(plannedComparison, _entrSentinel)
           ? this.plannedComparison : plannedComparison as Map<String, dynamic>?,
       coachAnalysis: identical(coachAnalysis, _entrSentinel)
@@ -201,6 +211,9 @@ class Entrenamiento {
     if (fcMediaSesion != null) {
       base['fcMediaSesion'] = fcMediaSesion;
     }
+    if (fcMaxSesion != null) {
+      base['fcMaxSesion'] = fcMaxSesion;
+    }
     if (plannedComparison != null) {
       base['plannedComparison'] = plannedComparison;
     }
@@ -271,6 +284,7 @@ class Entrenamiento {
       isManual: map['isManual'] as bool? ?? false,
       notas: map['notas'] as String?,
       fcMediaSesion: (map['fcMediaSesion'] as num?)?.toDouble(),
+      fcMaxSesion: (map['fcMaxSesion'] as num?)?.toInt(),
       plannedComparison: map['plannedComparison'] != null
           ? Map<String, dynamic>.from(map['plannedComparison'] as Map)
           : null,

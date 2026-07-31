@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:running_laps/core/services/user_service.dart';
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart'; // Para SystemSound
@@ -107,6 +108,11 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
   final ValueNotifier<Duration> _tiempoNotifier = ValueNotifier<Duration>(Duration.zero);
   final ValueNotifier<double> _distanciaMNotifier = ValueNotifier<double>(0.0);
   final ValueNotifier<int?> _fcZoneNotifier = ValueNotifier<int?>(null);
+
+  /// FC media acumulada de la serie en curso, para verla en vivo y no solo al
+  /// terminar. `_hrSum` evita recorrer `_hrReadings` en cada lectura.
+  final ValueNotifier<double?> _fcAvgNotifier = ValueNotifier<double?>(null);
+  int _hrSum = 0;
   final ValueNotifier<bool> _beepPulse = ValueNotifier<bool>(false);
 
   // NUEVO: Momento exacto en que se detuvo la serie
@@ -274,6 +280,10 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     final state = HeartRateService().connectionState.value;
     if (hr != null && hr > 0 && state == HrConnectionState.connected) {
       _hrReadings.add(FcReading(bpm: hr, timestamp: DateTime.now()));
+      // Media acumulada de la serie en curso: se recalcula incremental para no
+      // recorrer la lista entera en cada latido.
+      _hrSum += hr;
+      _fcAvgNotifier.value = _hrSum / _hrReadings.length;
     }
   }
 
@@ -318,6 +328,7 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     _tiempoNotifier.dispose();
     _distanciaMNotifier.dispose();
     _fcZoneNotifier.dispose();
+    _fcAvgNotifier.dispose();
     _beepPulse.dispose();
     super.dispose();
   }
@@ -1085,7 +1096,11 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
                         ),
                   const SizedBox(height: 10),
                 ],
-                _HeartRateIndicator(fcMax: widget.fcMax),
+                _HeartRateIndicator(
+                  fcMax: widget.fcMax,
+                  targetZone: widget.targetZone,
+                  avgNotifier: _fcAvgNotifier,
+                ),
                 const SizedBox(height: 4),
                 // TIEMPO — protagonista si no hay GPS; discreto si sí lo hay.
                 Text(
@@ -1955,7 +1970,12 @@ class _HeartRateIndicator extends StatefulWidget {
   final int? fcMax;
   final int? targetZone;
 
-  const _HeartRateIndicator({this.fcMax, this.targetZone});
+  /// FC media acumulada de la serie. Se muestra junto al valor instantáneo:
+  /// el pulso salta constantemente y sin la media no hay forma de saber a qué
+  /// intensidad se ha ido la serie hasta ahora.
+  final ValueListenable<double?>? avgNotifier;
+
+  const _HeartRateIndicator({this.fcMax, this.targetZone, this.avgNotifier});
 
   @override
   State<_HeartRateIndicator> createState() => _HeartRateIndicatorState();
@@ -1986,6 +2006,10 @@ class _HeartRateIndicatorState extends State<_HeartRateIndicator> {
         if (state == HrConnectionState.connected) {
           if (hr == null) return const SizedBox.shrink();
           final color = _hrZoneColor(hr, widget.fcMax);
+          final zone  = widget.fcMax != null
+              ? ZonesService().zoneFor(hr, widget.fcMax!)
+              : null;
+
           return Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1998,6 +2022,34 @@ class _HeartRateIndicatorState extends State<_HeartRateIndicator> {
                     fontWeight: FontWeight.w600,
                     color: color),
               ),
+              // Zona actual siempre visible. Antes solo se veía el color, y
+              // solo había etiqueta si la sesión traía zona objetivo: el
+              // atleta veía un número de colores sin saber qué zona era.
+              if (zone != null) ...[
+                const SizedBox(width: 4),
+                Text(
+                  'Z$zone',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: color),
+                ),
+              ],
+              if (widget.avgNotifier != null)
+                ValueListenableBuilder<double?>(
+                  valueListenable: widget.avgNotifier!,
+                  builder: (context, avg, _) {
+                    if (avg == null) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 6),
+                      child: Text(
+                        'med ${avg.round()}',
+                        style: const TextStyle(
+                            fontSize: 13, color: Color(0xFF8E8E93)),
+                      ),
+                    );
+                  },
+                ),
               if (widget.targetZone != null && widget.fcMax != null) ...[
                 const SizedBox(width: 4),
                 _ZoneStatusIndicator(

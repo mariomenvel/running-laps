@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/services/heart_rate_service.dart';
 import '../../../core/services/ios_live_activity_service.dart';
+import '../../../core/services/zones_service.dart';
 import '../../../core/utils/app_transitions.dart';
 import '../../../core/widgets/app_confirm_dialog.dart';
 import '../../athlete/data/athlete_session_model.dart';
@@ -15,6 +16,7 @@ import '../../templates/data/workout_session.dart';
 import '../../../core/services/gps_service.dart';
 import '../../../core/utils/rdp_smoother.dart';
 import '../data/entrenamiento.dart';
+import '../data/fc_session_stats.dart';
 import '../data/serie.dart';
 import '../data/workout_execution_controller.dart';
 import '../data/workout_execution_state.dart';
@@ -50,6 +52,12 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
   late WorkoutExecutionController _controller;
   bool _launchInFlight = false;
 
+  /// Zona de FC actual, para la pantalla de descanso. Antes se le pasaba un
+  /// `ValueNotifier<int?>(null)` creado en el sitio: nunca se actualizaba (la
+  /// zona salía vacía todo el descanso, justo cuando el atleta mira si ha
+  /// bajado) y encima se fugaba uno nuevo por cada serie.
+  final ValueNotifier<int?> _fcZoneNotifier = ValueNotifier<int?>(null);
+
   @override
   void initState() {
     super.initState();
@@ -60,13 +68,23 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
     });
     // Escucha cambios de fase para lanzar siguiente rep
     _controller.addListener(_onPhaseChanged);
+    HeartRateService().heartRate.addListener(_onHrChangedForZone);
   }
 
   @override
   void dispose() {
     _controller.removeListener(_onPhaseChanged);
+    HeartRateService().heartRate.removeListener(_onHrChangedForZone);
+    _fcZoneNotifier.dispose();
     _controller.dispose();
     super.dispose();
+  }
+
+  void _onHrChangedForZone() {
+    final hr    = HeartRateService().heartRate.value;
+    final fcMax = widget.fcMax?.round();
+    _fcZoneNotifier.value =
+        (hr != null && fcMax != null) ? ZonesService().zoneFor(hr, fcMax) : null;
   }
 
   void _onPhaseChanged() {
@@ -272,7 +290,7 @@ class _WorkoutExecutionScreenState extends State<WorkoutExecutionScreen> {
             },
             elapsedNotifier: elapsedNotifier,
             fcNotifier: HeartRateService().heartRate,
-            fcZoneNotifier: ValueNotifier<int?>(null),
+            fcZoneNotifier: _fcZoneNotifier,
             completedSerie: completedSerie,
             targetPaceMinSec: targetPaceMinSec,
             targetPaceMaxSec: targetPaceMaxSec,
@@ -458,11 +476,7 @@ class _DoneLoaderState extends State<_DoneLoader> {
     debugPrint('[Execution] state.allSeries.length=${state.allSeries.length}');
     final allSeries = state.allSeries;
     final gpsUsed = allSeries.any((s) => s.usedGps == true);
-    final fcMediaValues =
-        allSeries.where((s) => s.fcMedia != null).map((s) => s.fcMedia!).toList();
-    final fcMediaSesion = fcMediaValues.isEmpty
-        ? null
-        : fcMediaValues.reduce((a, b) => a + b) / fcMediaValues.length;
+    final fcStats = FcSessionStats.from(allSeries);
 
     // Componer trazado global desde los gpsPoints de cada serie
     var trackPoints = <GpsPoint>[
@@ -481,7 +495,8 @@ class _DoneLoaderState extends State<_DoneLoader> {
       gps: gpsUsed,
       series: allSeries,
       isManual: !gpsUsed,
-      fcMediaSesion: fcMediaSesion,
+      fcMediaSesion: fcStats?.avgBpm,
+      fcMaxSesion: fcStats?.isFromRawReadings == true ? fcStats!.maxBpm : null,
       notas: '',
       tags: _tagsFromSession(state.session),
       plannedComparison: _buildPlannedComparison(widget.originalSession ?? widget.session),

@@ -180,6 +180,34 @@ El LLM recibe un JSON schema con constraint `enum` estricto para el campo `goal`
 }
 ```
 
+### Frecuencia cardíaca en el contexto ✅ implementado (jul 2026)
+
+Cada entrada de `recentTrainings` lleva, **cuando el entreno se hizo con
+pulsómetro** (todos los campos son opcionales; sin banda no viaja ninguno):
+
+| Campo | Qué es |
+|---|---|
+| `fcAvg` / `fcPeak` | Media y pico de la sesión en bpm. La media se calcula sobre las lecturas reales (`FcSessionStats`), no promediando las medias por serie. |
+| `zonesPct` | Reparto del tiempo por zona `[Z1..Z5]` en %, sobre `athleteProfile.fcMax`. Ponderado por tiempo, no por número de lecturas. |
+| `efficiency` | Metros por minuto y por pulsación, sobre tiempo activo. Sube al mejorar la forma. Solo comparable entre sesiones del mismo tipo. |
+| `decouplingPct` | Caída de eficiencia entre la 1ª y la 2ª mitad. >5 % = base aeróbica corta para ese ritmo. Requiere 2+ series. |
+| `hrDriftBpm` | Subida de la FC media en la 2ª mitad. Es lo medible en rodajes de una sola serie, donde no hay ritmo por mitades sin la traza GPS. |
+
+En `athleteProfile` viajan además `fcMax` y `fcRest` (ambos del perfil del
+usuario, no se piden aparte), lo que permite razonar en reserva cardíaca
+(Karvonen) en vez de en % de FCmáx a secas.
+
+El cálculo vive en `features/training/data/fc_analytics.dart` (lógica pura,
+`test/unit/fc_analytics_test.dart`) y es **el mismo** que pinta el resumen
+post-entreno y el detalle del historial vía `core/widgets/fc_zone_bars.dart`:
+la app y el Coach no pueden dar porcentajes distintos.
+
+El system prompt (`ai_coach_prompt_builder.dart`, sección "Frecuencia
+cardíaca") le dice al modelo cómo usarlo: detectar rodajes corridos en Z3,
+priorizar Z2 si el desacople se repite, y progresar ritmos si la FC baja a
+igual ritmo. Regla explícita: **la FC no manda sobre el RPE ni sobre las
+molestias** — si se contradicen, gana lo que reporta el atleta.
+
 ### Análisis de fatiga automático
 - RPE alto en sesiones que deberían ser fáciles
 - Pace muy por debajo del objetivo en varias sesiones

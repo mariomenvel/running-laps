@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart'; // Para SystemSound
 import 'package:firebase_core/firebase_core.dart'; // Para FirebaseException
 
+import '../data/fc_session_stats.dart';
 import '../data/serie.dart';
 import '../data/entrenamiento.dart';
 import '../data/training_repository.dart';
@@ -1167,11 +1168,11 @@ class _TrainingStartViewState extends State<TrainingStartView>
       }
 
 
-      // CAMBIO 4 — fcMediaSesion
-      final seriesConFc = seriesSnapshot.where((s) => s.fcMedia != null).toList();
-      final double? fcMediaSesion = seriesConFc.isNotEmpty
-          ? seriesConFc.map((s) => s.fcMedia!).reduce((a, b) => a + b) / seriesConFc.length
-          : null;
+      // CAMBIO 4 — FC de la sesión (media ponderada por lecturas reales + pico)
+      final fcStats = FcSessionStats.from(seriesSnapshot);
+      final double? fcMediaSesion = fcStats?.avgBpm;
+      final int? fcMaxSesion =
+          fcStats?.isFromRawReadings == true ? fcStats!.maxBpm : null;
 
       // CAMBIO 5 — actualizar Firestore con fcMediaSesion + loadScore TRIMP
       if (fcMediaSesion != null && _fcMax != null) {
@@ -1193,6 +1194,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
               trainingId: newTrainingId,
               loadScore: load,
               fcMediaSesion: fcMediaSesion,
+              fcMaxSesion: fcMaxSesion,
             );
           }
         } catch (e) {
@@ -1211,6 +1213,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
         tags: tags.isNotEmpty ? tags : null,
         trackPoints: gpsSnapshot ?? [],
         fcMediaSesion: fcMediaSesion,
+        fcMaxSesion: fcMaxSesion,
       );
 
       SessionRecoveryService().clearSession();

@@ -356,6 +356,10 @@ class AiCoachProfile {
   final List<AiCoachTemporaryStatus> temporaryStatuses;
   final String? coachNotes;
   final int? fcMax;
+  // FC en reposo (bpm). Se lee del perfil del usuario, no se pide aparte.
+  // Con ella el Coach puede razonar en % de reserva cardíaca (Karvonen) en vez
+  // de en % de FCmáx a secas, que es mucho más burdo.
+  final int? fcRest;
   // Marcas personales en segundos totales (ej: 5K en 25:30 → pb5kSeconds = 1530)
   final int? pb5kSeconds;
   final int? pb10kSeconds;
@@ -379,6 +383,7 @@ class AiCoachProfile {
     this.temporaryStatuses = const [],
     this.coachNotes,
     this.fcMax,
+    this.fcRest,
     this.pb5kSeconds,
     this.pb10kSeconds,
     this.pbHalfMarathonSeconds,
@@ -412,6 +417,7 @@ class AiCoachProfile {
           .toList(),
       coachNotes: map['coachNotes'] as String?,
       fcMax: (map['fcMax'] as num?)?.toInt(),
+      fcRest: (map['fcRest'] as num?)?.toInt(),
       pb5kSeconds: (map['pb5kSeconds'] as num?)?.toInt(),
       pb10kSeconds: (map['pb10kSeconds'] as num?)?.toInt(),
       pbHalfMarathonSeconds: (map['pbHalfMarathonSeconds'] as num?)?.toInt(),
@@ -434,6 +440,7 @@ class AiCoachProfile {
     List<AiCoachTemporaryStatus>? temporaryStatuses,
     String? coachNotes,
     int? fcMax,
+    int? fcRest,
     Object? pb5kSeconds = _sentinel,
     Object? pb10kSeconds = _sentinel,
     Object? pbHalfMarathonSeconds = _sentinel,
@@ -457,6 +464,7 @@ class AiCoachProfile {
       temporaryStatuses: temporaryStatuses ?? this.temporaryStatuses,
       coachNotes: coachNotes ?? this.coachNotes,
       fcMax: fcMax ?? this.fcMax,
+      fcRest: fcRest ?? this.fcRest,
       pb5kSeconds: pb5kSeconds == _sentinel ? this.pb5kSeconds : pb5kSeconds as int?,
       pb10kSeconds: pb10kSeconds == _sentinel ? this.pb10kSeconds : pb10kSeconds as int?,
       pbHalfMarathonSeconds: pbHalfMarathonSeconds == _sentinel ? this.pbHalfMarathonSeconds : pbHalfMarathonSeconds as int?,
@@ -487,6 +495,7 @@ class AiCoachProfile {
         'preferredLongRunWeekday': preferredLongRunWeekday,
       if (coachNotes != null) 'coachNotes': coachNotes,
       if (fcMax != null) 'fcMax': fcMax,
+      if (fcRest != null) 'fcRest': fcRest,
       if (pb5kSeconds != null) 'pb5kSeconds': pb5kSeconds,
       if (pb10kSeconds != null) 'pb10kSeconds': pb10kSeconds,
       if (pbHalfMarathonSeconds != null) 'pbHalfMarathonSeconds': pbHalfMarathonSeconds,
@@ -711,6 +720,27 @@ class AiCoachTrainingSummary {
   final double? rpe;
   final double? load;
   final double? fcAvg;
+
+  /// Pico de FC de la sesión (bpm).
+  final int? fcPeak;
+
+  /// Reparto del tiempo por zona en % — 5 enteros, Z1…Z5. Es lo que permite
+  /// al Coach ver si el atleta vive en el "agujero negro" de Z3 en vez de
+  /// polarizar.
+  final List<int>? zonesPercent;
+
+  /// Índice de eficiencia (m/min por pulsación) sobre el tiempo **activo**.
+  /// Comparable solo entre sesiones del mismo tipo.
+  final double? efficiencyIndex;
+
+  /// Desacople cardíaco en % (eficiencia 1ª mitad vs 2ª). Solo en sesiones con
+  /// 2+ series; >5 % sugiere base aeróbica corta para ese ritmo.
+  final double? decouplingPercent;
+
+  /// Deriva de FC en bpm (2ª mitad menos 1ª). Es lo que se puede medir en un
+  /// rodaje continuo de una sola serie, donde no hay ritmo por mitades.
+  final double? hrDriftBpm;
+
   final String? note;
   final double? targetPaceSecPerKm;
   final double? paceCompliancePercent;
@@ -731,6 +761,11 @@ class AiCoachTrainingSummary {
     this.rpe,
     this.load,
     this.fcAvg,
+    this.fcPeak,
+    this.zonesPercent,
+    this.efficiencyIndex,
+    this.decouplingPercent,
+    this.hrDriftBpm,
     this.note,
     this.targetPaceSecPerKm,
     this.paceCompliancePercent,
@@ -761,6 +796,11 @@ class AiCoachTrainingSummary {
       rpe: rpe,
       load: load,
       fcAvg: fcAvg,
+      fcPeak: fcPeak,
+      zonesPercent: zonesPercent,
+      efficiencyIndex: efficiencyIndex,
+      decouplingPercent: decouplingPercent,
+      hrDriftBpm: hrDriftBpm,
       note: note,
       targetPaceSecPerKm: targetPaceSecPerKm ?? this.targetPaceSecPerKm,
       paceCompliancePercent: paceCompliancePercent ?? this.paceCompliancePercent,
@@ -783,7 +823,15 @@ class AiCoachTrainingSummary {
       if (paceSecPerKm != null) 'paceSecPerKm': paceSecPerKm,
       if (rpe != null) 'rpe': rpe,
       if (load != null) 'load': load,
-      if (fcAvg != null) 'fcAvg': fcAvg,
+      if (fcAvg != null) 'fcAvg': fcAvg!.round(),
+      if (fcPeak != null) 'fcPeak': fcPeak,
+      if (zonesPercent != null) 'zonesPct': zonesPercent,
+      if (efficiencyIndex != null)
+        'efficiency': double.parse(efficiencyIndex!.toStringAsFixed(3)),
+      if (decouplingPercent != null)
+        'decouplingPct': double.parse(decouplingPercent!.toStringAsFixed(1)),
+      if (hrDriftBpm != null)
+        'hrDriftBpm': double.parse(hrDriftBpm!.toStringAsFixed(1)),
       if (note != null) 'note': note,
       if (targetPaceSecPerKm != null) 'targetPace': targetPaceSecPerKm,
       if (paceCompliancePercent != null)

@@ -161,6 +161,38 @@ class AiCoachPromptBuilder {
         'interpreta esto como señal de sus preferencias reales — '
         'ajusta futuras asignaciones de días en consecuencia.\n\n'
 
+        '## Frecuencia cardíaca\n\n'
+
+        'Solo algunos entrenos traen datos de pulsómetro. Cuando falten, ignora '
+        'este bloque y decide con ritmo y RPE: NO pidas al atleta que se compre '
+        'nada ni supongas valores.\n\n'
+
+        'Campos en recentTrainings (todos opcionales):\n'
+        '- fcAvg / fcPeak: media y pico de la sesión en bpm.\n'
+        '- zonesPct: reparto del tiempo por zona [Z1,Z2,Z3,Z4,Z5] en %, '
+        'calculado sobre athleteProfile.fcMax.\n'
+        '- efficiency: metros por minuto y por pulsación, sobre tiempo activo. '
+        'Sube cuando el atleta mejora. Compara solo sesiones del MISMO tipo — '
+        'entre un rodaje y unas series no significa nada.\n'
+        '- decouplingPct: caída de eficiencia entre la 1ª y la 2ª mitad. '
+        '>5% = base aeróbica corta para ese ritmo.\n'
+        '- hrDriftBpm: cuánto subió la FC media en la 2ª mitad. Es lo que hay '
+        'en rodajes de una sola serie, donde no se puede calcular decouplingPct.\n\n'
+
+        'Cómo usarlo:\n'
+        '- Si zonesPct muestra que la mayoría del tiempo fácil cae en Z3, el '
+        'atleta corre los rodajes demasiado rápido: baja el ritmo prescrito de '
+        'los rodajes y dilo explícitamente en el razonamiento.\n'
+        '- Si decouplingPct > 5 o hrDriftBpm > 8 de forma repetida en rodajes: '
+        'prioriza volumen aeróbico en Z2 antes de añadir calidad.\n'
+        '- Si a igual ritmo la fcAvg baja o efficiency sube durante varias '
+        'semanas, el atleta está mejorando: puedes progresar ritmos aunque el '
+        'RPE no haya bajado.\n'
+        '- Con fcRest disponible, razona en reserva cardíaca '
+        '(Karvonen: FC = fcRest + %·(fcMax − fcRest)) en vez de en % de fcMax.\n'
+        '- La FC no manda sobre el RPE ni sobre las molestias: si se '
+        'contradicen, gana lo que reporta el atleta.\n\n'
+
         '## Progresión de sesiones de calidad\n\n'
 
         'Para sesiones de series (series_cortas, series_largas, series_cuestas, series_mixtas), '
@@ -427,6 +459,7 @@ class AiCoachPromptBuilder {
                   .toList(),
               'coachNotes': profile.coachNotes,
               if (profile.fcMax != null) 'fcMax': profile.fcMax,
+              if (profile.fcRest != null) 'fcRest': profile.fcRest,
               if (profile.pb5kSeconds != null)
                 'pb5k': _formatPbForLlm(profile.pb5kSeconds!),
               if (profile.pb10kSeconds != null)

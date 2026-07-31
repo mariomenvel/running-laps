@@ -311,11 +311,13 @@ class TrainingRepository {
     Map<String, dynamic>? plannedComparison,
     double? loadScore,
     double? fcMediaSesion,
+    int? fcMaxSesion,
   }) async {
     final data = <String, dynamic>{};
     if (plannedComparison != null) data['plannedComparison'] = plannedComparison;
     if (loadScore != null) data['loadScore'] = loadScore;
     if (fcMediaSesion != null) data['fcMediaSesion'] = fcMediaSesion;
+    if (fcMaxSesion != null) data['fcMaxSesion'] = fcMaxSesion;
     if (data.isEmpty) return;
     await _userTrainings(uid).doc(trainingId).update(data);
   }

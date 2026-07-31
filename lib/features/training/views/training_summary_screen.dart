@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'package:running_laps/core/services/pb_celebration_service.dart';
+import 'package:running_laps/core/services/training_load_service.dart';
 import 'package:running_laps/core/services/zones_service.dart';
+import 'package:running_laps/core/widgets/fc_zone_bars.dart';
+import 'package:running_laps/features/training/data/fc_session_stats.dart';
 import 'package:running_laps/features/profile/data/zones_repository.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/widgets/rpe_slider.dart';
@@ -337,6 +340,28 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
         updates['rpePromedio'] = _rpe;
       }
 
+      // FC de sesión + carga TRIMP. Hasta ahora solo lo calculaba el flujo de
+      // series (`training_start_view`), así que las sesiones planificadas —las
+      // del Coach IA, justo las que más importa medir— se guardaban sin
+      // `loadScore` y el contexto del coach caía al proxy por RPE.
+      final fcStats = FcSessionStats.from(widget.entrenamiento.series);
+      if (fcStats != null) {
+        updates['fcMediaSesion'] = fcStats.avgBpm;
+        if (fcStats.isFromRawReadings) {
+          updates['fcMaxSesion'] = fcStats.maxBpm;
+        }
+        if (_fcMax != null) {
+          final profile = await ZonesRepository().getUserProfile(uid);
+          updates['loadScore'] = TrainingLoadService.instance.calculateLoad(
+            distanceKm:      widget.entrenamiento.distanciaTotalM() / 1000.0,
+            durationMinutes: widget.entrenamiento.tiempoTotalSec() / 60.0,
+            fcAvgBpm:        fcStats.avgBpm,
+            fcMax:           _fcMax!.toDouble(),
+            fcRest:          profile?.fcReposo?.toDouble(),
+          );
+        }
+      }
+
       // Sin trazas: el documento del entrenamiento ya no las lleva (viven en
       // `track/data`) y reenviarlas aquí las volvería a embeber.
       final fullData = {
@@ -484,6 +509,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
                   _divider(),
                   _buildTypeSpecificStats(context, theme),
                   _divider(),
+                  ...?_buildFcSection(),
                   if (_showRpe) ...[
                     _buildRpeSlider(),
                     _divider(),
@@ -593,6 +619,101 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
       case WorkoutType.free:
         return FreeStatsCard(stats: calculator.freeStats(), accentColor: color);
     }
+  }
+
+  // ── _buildFcSection ───────────────────────────────────────────────────────
+
+  /// Bloque global de FC: media, pico, mínimo, reparto por zonas y FC por
+  /// serie. Existía solo en el detalle del historial — al terminar el entreno,
+  /// que es cuando de verdad lo miras, no había nada.
+  ///
+  /// Devuelve `null` si el entreno no lleva pulsómetro, para no dejar un
+  /// separador suelto en la pantalla.
+  List<Widget>? _buildFcSection() {
+    final series = widget.entrenamiento.series;
+    final stats  = FcSessionStats.from(series);
+    if (stats == null) return null;
+
+    final seriesConFc =
+        series.where((s) => s.fcMedia != null && s.fcMedia! > 0).toList();
+
+    return [
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'FRECUENCIA CARDÍACA',
+            style: TextStyle(
+              color: AppColors.textSecondary(context),
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _FcStat('Mín',   '${stats.minBpm}', AppColors.rpeLow),
+              _FcStat('Media', '${stats.avgBpm.round()}', AppColors.brand),
+              _FcStat('Pico',  '${stats.maxBpm}', AppColors.rpeMax),
+            ],
+          ),
+          if (_fcMax != null) ...[
+            const SizedBox(height: 20),
+            FcZoneBars(series: series, fcMax: _fcMax),
+          ],
+          // Por serie: solo si hay más de una, si no repite la media global.
+          if (seriesConFc.length > 1) ...[
+            const SizedBox(height: 20),
+            ...seriesConFc.asMap().entries.map((entry) {
+              final serie = entry.value;
+              final index = series.indexOf(serie) + 1;
+              final zone  = _fcMax != null
+                  ? ZonesService().zoneFor(serie.fcMedia!.round(), _fcMax!)
+                  : null;
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 68,
+                      child: Text(
+                        'Serie $index',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary(context),
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${serie.fcMedia!.round()} ppm',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary(context),
+                      ),
+                    ),
+                    if (zone != null) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        'Z$zone',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: ZonesService().zonesFor(_fcMax!)[zone - 1].color,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            }),
+          ],
+        ],
+      ),
+      _divider(),
+    ];
   }
 
   // ── _buildRpeSlider ───────────────────────────────────────────────────────
@@ -1356,6 +1477,40 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
           style: TextButton.styleFrom(
               foregroundColor: AppColors.rpeMax),
           child: const Text('Descartar entrenamiento'),
+        ),
+      ],
+    );
+  }
+}
+
+/// Cifra grande de FC (mín / media / pico) del bloque de frecuencia cardíaca.
+class _FcStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const _FcStat(this.label, this.value, this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize:      26,
+            fontWeight:    FontWeight.w600,
+            letterSpacing: -0.5,
+            color:         color,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color:    AppColors.textSecondary(context),
+          ),
         ),
       ],
     );

@@ -1,5 +1,107 @@
 # CHANGELOG — Running Laps
 
+## [Feat] — La frecuencia cardíaca llega hasta el Coach — 2026-07-29
+Con el pulsómetro ya conectando, se recorrió la cadena entera de la FC: en
+vivo → resumen → historial → Coach IA. Funcionaba la mitad, y la mitad que
+funcionaba mentía un poco.
+
+**Cuatro cosas rotas:**
+- **La FC media de sesión era la media de las medias por serie.** Una serie de
+  30 s pesaba igual que un rodaje de 20 min, y como las cortas son las
+  intensas, la media salía inflada. Ahora se calcula sobre las lecturas reales
+  (`FcSessionStats`, 7 tests); sin lecturas punto a punto cae a las medias por
+  serie **ponderadas por duración**.
+- **El pico no se guardaba.** Solo la media. El detalle del historial lo
+  recalculaba de las lecturas, pero el Coach solo recibe el resumen: no tenía
+  forma de saber cuánto se apretó. Campo nuevo `fcMaxSesion`.
+- **Las sesiones planificadas no calculaban TRIMP.** Solo lo hacía el flujo de
+  series; las sesiones que vienen del plan del Coach —justo las que más importa
+  medir— se guardaban sin `loadScore` y el propio Coach caía al proxy por RPE,
+  ignorando la FC. Ahora se calcula en el resumen, que es el punto común de
+  guardado de ambos flujos.
+- **La zona durante el descanso estaba siempre vacía**: se le pasaba un
+  `ValueNotifier<int?>(null)` creado en la línea, que nunca se actualizaba —
+  y se fugaba uno nuevo por serie. Justo el momento en que miras si has bajado.
+
+**Lo que el Coach recibe ahora** (`fc_analytics.dart`, lógica pura, 14 tests):
+reparto del tiempo por zona, índice de eficiencia (m/min por pulsación),
+desacople cardíaco y deriva de FC, más el pico y la FC en reposo. Con eso puede
+ver lo que antes no: que los rodajes se corren en Z3, que el desacople se
+repite (base aeróbica corta), o que a igual ritmo la FC está bajando —evidencia
+para progresar aunque el RPE no se mueva—. El prompt lleva sección propia
+explicando cada campo, con dos límites escritos: no comparar eficiencia entre
+tipos de sesión distintos, y **la FC no manda sobre el RPE ni sobre las
+molestias**.
+
+Detalle importante del reparto por zonas: se pondera **por tiempo**, no por
+número de lecturas. El historial contaba lecturas, así que una serie muestreada
+más densa se comía el porcentaje. Ahora resumen, historial y Coach comparten
+cálculo (`FcAnalytics`) y widget (`core/widgets/fc_zone_bars.dart`) — no pueden
+dar cifras distintas del mismo entreno.
+
+**Mina encontrada de paso en `firestore.rules`:** el `allow create` de
+`trainings` exigía `keys().size() < 20` y `Entrenamiento.toMap()` ya escribía
+**20** claves en el peor caso — es decir, un entreno con todos los campos
+opcionales rellenos se denegaba en silencio *antes* de este cambio (fail-closed,
+igual que el bug de `.toString()` de abril 2026). No estaba dando la cara porque
+un create real rara vez lleva `analysis`, `isManual` y `source` a la vez.
+`fcMaxSesion` lo dejaba en 21. Límite subido a 30 —quien frena el abuso de
+verdad son los topes de título y número de series, no el de claves— y añadido
+`test/unit/entrenamiento_firestore_test.dart`, que cuenta las claves del peor
+caso y se pone en rojo si un campo nuevo vuelve a acercarse al tope.
+⚠️ Las reglas hay que **desplegarlas** (`firebase deploy --only firestore:rules`).
+
+**Y en pantalla:** bloque de FC en el resumen post-entreno (mín/media/pico,
+reparto por zonas y FC por serie, que solo existía en el historial), FC media
+acumulada en vivo junto al instantáneo, y etiqueta de zona (Z1-Z5) siempre
+visible — antes solo se veía el color, y la etiqueta únicamente si la sesión
+traía zona objetivo.
+
+## [Fix] — El buscador de pulsómetros no encontraba nada — 2026-07-29
+Primera prueba del pulsómetro en dispositivo real: el escaneo se quedaba
+buscando los 10 segundos y terminaba con la lista vacía, sin decir nada.
+
+Causa principal: `scanForDevices(withServices: [0x180D])`. Ese filtro se traduce
+a un `ScanFilter` nativo en Android y a un filtro de CoreBluetooth en iOS, y
+**ambos miran solo el paquete de advertising**. Muchas bandas (Polar, Garmin,
+Coospo) no anuncian el Heart Rate Service ahí — lo exponen al hacer discovery,
+ya conectadas —, así que el filtro las descartaba antes de que la app pudiera
+verlas. Ahora se escanea abierto y se filtra en Dart: se listan los anuncios con
+nombre o con 0x180D, los confirmados como pulsómetro salen primero y etiquetados
+(corazón rojo), y dentro de cada grupo manda el RSSI, así que la banda que
+llevas puesta queda arriba. Como la lista ya no está filtrada por servicio, el
+`onError` de la suscripción sirve además para avisar de "ese dispositivo no
+envía frecuencia cardíaca" si alguien conecta con sus auriculares.
+
+Dos causas secundarias que también daban cero resultados:
+- **Escaneo antes de que el adaptador esté listo.** `getBleStatus()` hacía
+  `statusStream.first`, y el primer valor es siempre `unknown` mientras arranca
+  el cliente nativo. Ahora espera al primer estado definitivo (`firstWhere(s !=
+  unknown)`) y `startScan` no arranca hasta tener `ready` — era el fallo típico
+  del primer intento tras abrir la app.
+- **Android ≤ 11 con la ubicación del sistema apagada.** El escaneo BLE devuelve
+  cero resultados sin error. `minSdk` es 26, así que hay dispositivos afectados;
+  se comprueba y se avisa (en API 31+ no aplica: `BLUETOOTH_SCAN` va con
+  `neverForLocation`). De paso, en API ≤ 30 se dejó de pedir
+  `Permission.bluetooth` (permiso de instalación, no runtime): quien gatea el
+  escaneo ahí es la ubicación.
+
+Y lo que hacía el problema indepurable: **el escaneo vacío no explicaba nada**.
+`requestPermissions()` devolvía un `bool`, así que la vista mostraba un
+"Bluetooth no disponible" genérico (con el texto de iOS, "Centro de Control",
+también en Android). Ahora devuelve `HrPermissionResult` con el motivo concreto
+y la pantalla enseña una tarjeta de diagnóstico: Bluetooth apagado, permiso
+denegado, ubicación apagada, o —cuando no aparece nada— la lista de qué
+comprobar, empezando por la que más veces es: **si el pulsómetro está emparejado
+en los ajustes de Bluetooth del móvil, hay que quitarlo de ahí**. Una banda BLE
+admite una sola conexión; mientras el sistema la tiene cogida deja de anunciarse
+y ninguna app puede verla.
+
+Extra: `stopScan()` ahora invalida el escaneo pendiente (antes solo cancelaba la
+suscripción, y el `startScan` en vuelo seguía esperando su timeout), y los dos
+`AlertDialog` de Material de la pantalla pasaron a `showAppConfirmDialog`
+(deuda #8: quedan 6 ficheros).
+
 ## [Test] — Cubierto cuándo se programan las notificaciones — 2026-07-26
 Equivocarse aquí no da un error: da un aviso a la hora que no toca o, peor,
 programado **en el pasado** — que en Android hace que la notificación salte

@@ -65,69 +65,52 @@ class HeartRateMonitorView extends StatelessWidget {
     if (!await _ensureHealthConsent(context)) return;
     if (!context.mounted) return;
 
-    final granted = await HeartRateService().requestPermissions();
+    final svc    = HeartRateService();
+    final result = await svc.requestPermissions();
     if (!context.mounted) return;
 
-    if (!granted) {
-      final bleStatus = await HeartRateService().getBleStatus();
-      if (!context.mounted) return;
+    switch (result) {
+      case HrPermissionResult.granted:
+        svc.startScan();
 
-      final String title;
-      final String message;
-      final bool showSettings;
+      // Solo estos dos tienen una acción que ofrecer: el permiso ya no se
+      // puede volver a pedir desde la app, hay que ir a los ajustes.
+      case HrPermissionResult.deniedPermanently:
+      case HrPermissionResult.unauthorized:
+        final go = await showAppConfirmDialog(
+          context: context,
+          title: 'Permiso de Bluetooth necesario',
+          message: 'Running Laps necesita Bluetooth para buscar tu '
+              'pulsómetro. Actívalo en los ajustes de la app.',
+          confirmLabel: 'Abrir Ajustes',
+        );
+        if (go == true) await openAppSettings();
 
-      if (bleStatus == BleStatus.poweredOff) {
-        title = 'Bluetooth desactivado';
-        message = 'Activa el Bluetooth en el Centro de Control para conectar tu pulsómetro.';
-        showSettings = false;
-      } else if (bleStatus == BleStatus.unauthorized) {
-        title = 'Permiso de Bluetooth necesario';
-        message = 'Ve a Ajustes → Running Laps → Bluetooth y actívalo.';
-        showSettings = true;
-      } else {
-        title = 'Bluetooth no disponible';
-        message = 'Comprueba que el Bluetooth está activado e inténtalo de nuevo.';
-        showSettings = false;
-      }
+      // El resto se cuenta en la tarjeta de diagnóstico, sin diálogo: son
+      // cosas que el usuario arregla fuera y vuelve a pulsar "Buscar".
+      case HrPermissionResult.denied:
+        svc.scanDiagnostic.value =
+            'Sin permiso de Bluetooth no se puede buscar el pulsómetro. '
+            'Vuelve a pulsar "Buscar pulsómetros" y acepta el permiso.';
 
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: const Color(0xFF1C1C1E),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16)),
-          title: Text(title,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600)),
-          content: Text(message,
-              style: const TextStyle(
-                  color: Color(0xFFEBEBF5),
-                  fontSize: 15,
-                  height: 1.5)),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancelar',
-                    style: TextStyle(color: Color(0xFF8E8E93)))),
-            if (showSettings)
-              FilledButton(
-                style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brand),
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  openAppSettings();
-                },
-                child: const Text('Abrir Ajustes'),
-              ),
-          ],
-        ),
-      );
-      return;
+      case HrPermissionResult.bluetoothOff:
+        svc.scanDiagnostic.value =
+            Theme.of(context).platform == TargetPlatform.iOS
+                ? 'El Bluetooth está apagado. Actívalo en el Centro de '
+                    'Control y vuelve a buscar.'
+                : 'El Bluetooth está apagado. Actívalo y vuelve a buscar.';
+
+      case HrPermissionResult.locationServiceOff:
+        svc.scanDiagnostic.value =
+            'Activa la ubicación del sistema y vuelve a buscar. En este '
+            'Android el escaneo Bluetooth no devuelve nada si está apagada, '
+            'aunque el pulsómetro no tenga nada que ver con el GPS.';
+
+      case HrPermissionResult.unsupported:
+        svc.scanDiagnostic.value =
+            'Este dispositivo no soporta Bluetooth LE, así que no puede '
+            'conectarse a un pulsómetro.';
     }
-
-    HeartRateService().startScan();
   }
 
   void _connectTo(DiscoveredDevice device) {
@@ -136,25 +119,13 @@ class HeartRateMonitorView extends StatelessWidget {
   }
 
   Future<void> _forgetDevice(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Olvidar dispositivo'),
-        content: const Text(
-            '¿Seguro que quieres olvidar este pulsómetro? '
-            'Tendrás que buscarlo y conectarlo de nuevo.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.rpeMax),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Olvidar'),
-          ),
-        ],
-      ),
+      title: 'Olvidar dispositivo',
+      message: '¿Seguro que quieres olvidar este pulsómetro? '
+          'Tendrás que buscarlo y conectarlo de nuevo.',
+      confirmLabel: 'Olvidar',
+      isDestructive: true,
     );
     if (confirmed == true) {
       await HeartRateService().forgetDevice();
@@ -326,6 +297,37 @@ class HeartRateMonitorView extends StatelessWidget {
     );
   }
 
+  /// Por qué no aparece nada. Sin esto, un escaneo vacío volvía a "Sin
+  /// pulsómetro conectado" sin decir una palabra de qué comprobar.
+  Widget _buildDiagnosticCard(BuildContext context, String message) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color:        AppColors.rpeMid.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline_rounded,
+              color: AppColors.rpeMid, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                fontSize: 13,
+                height:   1.45,
+                color:    AppColors.textSecondary(context),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDeviceList(
       BuildContext context, List<DiscoveredDevice> devices, bool isDark) {
     if (devices.isEmpty) return const SizedBox.shrink();
@@ -354,6 +356,10 @@ class HeartRateMonitorView extends StatelessWidget {
               : device.rssi > -80
                   ? AppColors.rpeMid
                   : AppColors.rpeMax;
+          // El anuncio declara Heart Rate Service: es un pulsómetro seguro.
+          // Los demás se listan igual (hay bandas que no lo anuncian), pero
+          // sin la etiqueta.
+          final isHr = HeartRateService.advertisesHeartRate(device);
 
           return Container(
             margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -362,14 +368,18 @@ class HeartRateMonitorView extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: ListTile(
-              leading: const Icon(Icons.bluetooth_rounded,
-                  color: AppColors.brand),
+              leading: Icon(
+                isHr ? Icons.favorite_rounded : Icons.bluetooth_rounded,
+                color: isHr ? AppColors.rpeMax : AppColors.brand,
+              ),
               title: Text(
                 device.name.isNotEmpty ? device.name : 'Dispositivo desconocido',
                 style: TextStyle(color: txtColor, fontWeight: FontWeight.w500),
               ),
               subtitle: Text(
-                'RSSI: ${device.rssi} dBm',
+                isHr
+                    ? 'Pulsómetro · ${device.rssi} dBm'
+                    : 'RSSI: ${device.rssi} dBm',
                 style: TextStyle(color: signalColor, fontSize: 12),
               ),
               trailing: FilledButton(
@@ -415,11 +425,13 @@ class HeartRateMonitorView extends StatelessWidget {
                   svc.connectionState,
                   svc.heartRate,
                   svc.scannedDevices,
+                  svc.scanDiagnostic,
                 ]),
                 builder: (context, _) {
-                  final state   = svc.connectionState.value;
-                  final hr      = svc.heartRate.value;
-                  final devices = svc.scannedDevices.value;
+                  final state      = svc.connectionState.value;
+                  final hr         = svc.heartRate.value;
+                  final devices    = svc.scannedDevices.value;
+                  final diagnostic = svc.scanDiagnostic.value;
 
                   return SingleChildScrollView(
                     child: Column(
@@ -429,6 +441,10 @@ class HeartRateMonitorView extends StatelessWidget {
                             state: state, heartRate: hr, isDark: isDark),
                         const SizedBox(height: 8),
                         _buildScanButton(context, state),
+                        if (diagnostic != null) ...[
+                          const SizedBox(height: 12),
+                          _buildDiagnosticCard(context, diagnostic),
+                        ],
                         _buildDeviceList(context, devices, isDark),
                         const SizedBox(height: 8),
                         _buildConsentFooter(context),

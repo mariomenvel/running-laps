@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/chart_style.dart';
+import 'package:running_laps/core/widgets/fc_zone_bars.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 import 'package:running_laps/core/widgets/rpe_badge.dart';
@@ -668,81 +669,16 @@ class _TrainingDetailViewState extends State<TrainingDetailView> {
             builder: (context, snap) {
               final fcMax = snap.data;
               if (fcMax == null) return const SizedBox.shrink();
-              return _buildZoneDistribution(allReadings, fcMax);
+              // Reparto por tiempo, compartido con el resumen post-entreno y
+              // con el contexto del Coach. Antes se contaban lecturas aquí, y
+              // una serie muestreada más densa se comía el porcentaje.
+              return Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.l),
+                child: FcZoneBars(series: training.series, fcMax: fcMax),
+              );
             },
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildZoneDistribution(List<int> readings, int fcMax) {
-    final zones = ZonesService().zonesFor(fcMax);
-    final zoneCounts = List<int>.filled(5, 0);
-    for (final bpm in readings) {
-      final z = ZonesService().zoneFor(bpm, fcMax);
-      zoneCounts[(z ?? 1) - 1]++;
-    }
-    final total = readings.length;
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.l),
-      child: Column(
-        children: List.generate(5, (i) {
-          if (zoneCounts[i] == 0) return const SizedBox.shrink();
-          final color = zones[i].color;
-          final pct = zoneCounts[i] / total;
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 5),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 24,
-                  child: Text('Z${i + 1}',
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: color)),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Stack(
-                    children: [
-                      Container(
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: AppColors.borderOf(context),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      ),
-                      FractionallySizedBox(
-                        widthFactor: pct,
-                        child: Container(
-                          height: 6,
-                          decoration: BoxDecoration(
-                            color: color,
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                SizedBox(
-                  width: 36,
-                  child: Text(
-                    '${(pct * 100).round()}%',
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary(context),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
       ),
     );
   }
