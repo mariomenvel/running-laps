@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/core/widgets/app_prompt_dialog.dart';
 import 'package:running_laps/core/widgets/app_confirm_dialog.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
@@ -25,22 +26,11 @@ Color _blockRoleColor(BlockRole role) {
   }
 }
 
-Color _zoneChipColor(HeartRateZone zone) {
-  switch (zone) {
-    case HeartRateZone.z1: return const Color(0xFF639922);
-    case HeartRateZone.z2: return const Color(0xFF378ADD);
-    case HeartRateZone.z3: return const Color(0xFFEF9F27);
-    case HeartRateZone.z4: return const Color(0xFFD85A30);
-    case HeartRateZone.z5: return const Color(0xFFE24B4A);
-  }
-}
+Color _zoneChipColor(HeartRateZone zone) =>
+    ZonesService.colorForZone(zone.index + 1);
 
-Color _fcChipColor(int fcPercent) {
-  if (fcPercent < 70) return const Color(0xFF639922);
-  if (fcPercent < 80) return const Color(0xFF378ADD);
-  if (fcPercent < 90) return const Color(0xFFEF9F27);
-  return const Color(0xFFD85A30);
-}
+Color _fcChipColor(int fcPercent) =>
+    ZonesService.colorForPercent(fcPercent);
 
 Color _darken(Color c) {
   final h = HSLColor.fromColor(c);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/core/widgets/duration_picker_field.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
@@ -227,16 +228,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
   }
 
   /// Color de zona FC (1-5) usando los tokens de AppColors.
-  Color _zoneColor(int zone) {
-    switch (zone) {
-      case 1: return AppColors.rest;
-      case 2: return AppColors.rpeLow;
-      case 3: return AppColors.rpeMid;
-      case 4: return AppColors.effort;
-      case 5: return AppColors.rpeMax;
-      default: return AppColors.rest;
-    }
-  }
+  Color _zoneColor(int zone) => ZonesService.colorForZone(zone);
 
   // ── Sección de objetivos ────────────────────────────────────────────
 

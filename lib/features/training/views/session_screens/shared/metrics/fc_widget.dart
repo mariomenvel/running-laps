@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 
 class FcWidget extends StatelessWidget {
@@ -18,27 +19,25 @@ class FcWidget extends StatelessWidget {
   });
 
   Color _zoneColor() {
-    if (currentZone == null) return Colors.grey;
-    switch (currentZone) {
-      case 1: return AppColors.rest;  // azul Z1 (guía: recuperación)
-      case 2: return const Color(0xFF7FB069);  // verde Z2
-      case 3: return const Color(0xFFE9C46A);  // amarillo Z3
-      case 4: return const Color(0xFFE76F51);  // naranja Z4
-      case 5: return const Color(0xFFD62828);  // rojo Z5
-      default: return Colors.grey;
-    }
+    final z = currentZone;
+    if (z == null || z < 1 || z > 5) return AppColors.iconMuted;
+    return ZonesService.colorForZone(z);
   }
 
+  /// Cuánto te desvías de la zona objetivo. Usa la escala de esfuerzo y no los
+  /// tokens `feedback*`: COLOR_SYSTEM.md acota esos a los toasts del sistema,
+  /// cuya semántica es "resultado de una acción". Esto es esfuerzo físico.
   Widget? _statusIndicator() {
     if (targetZone == null || currentZone == null) return null;
     final diff = (currentZone! - targetZone!).abs();
     if (diff == 0) {
-      return const Icon(Icons.check_circle, color: Color(0xFF7FB069), size: 16);
+      return const Icon(Icons.check_circle, color: AppColors.rpeLow, size: 16);
     }
     if (diff == 1) {
-      return const Icon(Icons.warning_amber_rounded, color: Color(0xFFE9C46A), size: 16);
+      return const Icon(Icons.warning_amber_rounded,
+          color: AppColors.rpeMid, size: 16);
     }
-    return const Icon(Icons.error_outline, color: Color(0xFFD62828), size: 16);
+    return const Icon(Icons.error_outline, color: AppColors.rpeMax, size: 16);
   }
 
   @override

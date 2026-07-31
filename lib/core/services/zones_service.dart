@@ -102,4 +102,33 @@ class ZonesService {
     }
     return 1; // por debajo de Z1 mínimo → Z1
   }
+
+  // ── Color de zona · fuente única ──────────────────────────────────
+  //
+  // Antes cada pantalla se pintaba sus zonas por su cuenta: había seis
+  // implementaciones de "zona → color" y no coincidían. En el editor de
+  // bloques Z1 salía verde y Z2 azul, justo al revés que en el resto de la
+  // app, así que el atleta elegía "Z2" viendo azul y luego, corriendo, esa
+  // misma Z2 se pintaba verde. La pantalla de sesión activa tenía además su
+  // propia paleta entera, y `training_session_view` un teal que parecía un
+  // dedazo de rpeLow (dos dígitos cambiados en el hex).
+  //
+  // Cualquier sitio que pinte una zona tiene que salir de aquí.
+
+  /// Color canónico de la zona [zone] (1-5). Fuera de rango se clampea.
+  static Color colorForZone(int zone) => _colors[(zone - 1).clamp(0, 4)];
+
+  /// Zona (1-5) para un porcentaje de FCmáx (0-100), con los mismos límites
+  /// que [zonesFor].
+  static int zoneForPercent(num percent) {
+    final ratio = percent / 100;
+    for (var i = 4; i >= 0; i--) {
+      if (ratio >= _lowerBounds[i]) return i + 1;
+    }
+    return 1;
+  }
+
+  /// Color canónico para un porcentaje de FCmáx (0-100).
+  static Color colorForPercent(num percent) =>
+      colorForZone(zoneForPercent(percent));
 }

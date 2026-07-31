@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:running_laps/core/services/zones_service.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/services/settings_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
@@ -1430,15 +1431,8 @@ class _MiniWheelPickerDouble extends StatelessWidget {
 
 // ── _ZoneRow ──────────────────────────────────────────────────────────────────
 
-Color _zoneSelectedColor(HeartRateZone z) {
-  switch (z) {
-    case HeartRateZone.z1: return const Color(0xFF639922);
-    case HeartRateZone.z2: return const Color(0xFF378ADD);
-    case HeartRateZone.z3: return const Color(0xFFEF9F27);
-    case HeartRateZone.z4: return const Color(0xFFD85A30);
-    case HeartRateZone.z5: return const Color(0xFFE24B4A);
-  }
-}
+Color _zoneSelectedColor(HeartRateZone z) =>
+    ZonesService.colorForZone(z.index + 1);
 
 Color _darken(Color c) {
   final h = HSLColor.fromColor(c);

@@ -1,4 +1,5 @@
 import 'dart:math' show min;
+import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'package:running_laps/features/training/data/training_repository.dart';
 
@@ -27,16 +28,7 @@ import 'package:running_laps/features/home/widgets/home_race_countdown.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 // Zone color helpers — Z1..Z5 matching ZonesService thresholds
-Color _zoneColor(int zone) {
-  switch (zone) {
-    case 1: return AppColors.rest;
-    case 2: return AppColors.rpeLow;
-    case 3: return AppColors.rpeMid;
-    case 4: return AppColors.effort;
-    case 5: return AppColors.rpeMax;
-    default: return AppColors.border;
-  }
-}
+Color _zoneColor(int zone) => ZonesService.colorForZone(zone);
 
 Color _loadColor(double load) {
   if (load < 150) return AppColors.rpeLow;

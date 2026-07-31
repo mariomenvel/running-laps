@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
@@ -1859,17 +1860,8 @@ class _TrainingSessionViewState extends State<TrainingSessionView>
     return AppColors.rpeMax;
   }
 
-  static Color _zoneColorFor(int zone) {
-    final colors = [
-      const Color(0xFF5A9E9E), // Z1
-      AppColors.rpeLow,        // Z2
-      AppColors.rpeMid,        // Z3
-      AppColors.effort,        // Z4
-      AppColors.rpeMax,        // Z5
-    ];
-    if (zone >= 1 && zone <= 5) return colors[zone - 1];
-    return const Color(0xFF8E8E93);
-  }
+  static Color _zoneColorFor(int zone) =>
+      ZonesService.colorForZone(zone);
 
   Widget _buildObjectivesBar() {
     final hasObjectives = widget.targetPaceMinutes != null ||

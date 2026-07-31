@@ -47,7 +47,6 @@ class SessionLayout extends StatelessWidget {
 
     if (safeArea) content = SafeArea(child: content);
 
-    final deco = theme.backgroundDecoration(context);
     final gradient = theme.backgroundGradient(context);
 
     return Scaffold(
@@ -60,8 +59,6 @@ class SessionLayout extends StatelessWidget {
                 decoration: BoxDecoration(gradient: gradient),
               ),
             ),
-          if (deco != null)
-            Positioned.fill(child: IgnorePointer(child: deco)),
           if (backdrop != null)
             Positioned.fill(child: IgnorePointer(child: backdrop!)),
           content,

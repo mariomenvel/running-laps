@@ -202,26 +202,51 @@ brandLight]` (auditoría jul 2026 — antes usaban Material blue/green/pink/cyan
 
 ---
 
-## Paleta de sesión activa por tipo (`session_theme.dart`)
+## Sesión activa — acento único (`session_theme.dart`)
 
-Capa visual propia de las pantallas intra-sesión (post-guía de mayo, documentada
-en la auditoría de julio 2026). Cada tipo de entreno tiene su color primario —
-es identidad de pantalla, no semántica de esfuerzo:
+~~Paleta por tipo de sesión~~ — **retirada (31 jul 2026)**. `session_theme.dart`
+definía un color primario distinto por tipo de entreno (terracota series,
+azul-verde continuo, marrón cuestas, dorado competición…) como "identidad de
+pantalla". Contradecía § Serie activa, que pide `AppColors.brand` sólido, y
+metía el teal `#4A90A4` por la puerta de atrás.
 
-| Tipo | Color | Hex |
+Al medir el uso real, la mayor parte de esa paleta **no se renderizaba**:
+`accent()` y `heroMetricStyle()` no tenían un solo call site y
+`backgroundDecoration()` devolvía `null` en los seis tipos.
+
+**Regla actual:** el acento de las pantallas intra-sesión es
+`AppColors.brandOf(context)`, igual que el resto de la app.
+
+**Única excepción — modo intenso del fartlek.** El tramo fuerte se tiñe de
+`AppColors.effort` (más un degradado del mismo token al 20% → 0%). Se conserva
+porque no es decoración por tipo sino **color-como-estado**, la misma idea por
+la que el descanso vira a azul, y porque sale de un token y no de un hex suelto.
+Sigue siendo, con el Live Activity, una de las dos excepciones a la regla
+anti-degradados.
+
+---
+
+## Zonas de FC — fuente única (`ZonesService`)
+
+| Zona | Token | Hex |
 |---|---|---|
-| Series (intervals) | Terracota | `#B85C38` |
-| Continuo / warmup / cooldown | Azul-verde | `#4A90A4` |
-| Fartlek (tramo suave) | Azul tranquilo | `#4A90A4` |
-| Cuestas | Marrón tierra | `#8B5A3C` |
-| Competición | Dorado mate | `#C9A227` |
-| Libre | Gris medio | `#6B7280` |
+| Z1 (recuperación) | `AppColors.rest` | `#378ADD` |
+| Z2 (suave) | `AppColors.rpeLow` | `#5A9E5A` |
+| Z3 (moderado) | `AppColors.rpeMid` | `#EF9F27` |
+| Z4 (umbral) | `AppColors.effort` | `#D85A30` |
+| Z5 (máximo) | `AppColors.rpeMax` | `#E24B4A` |
 
-⚠️ El azul-verde `#4A90A4` de esta paleta NO es el azul de descanso
-(`AppColors.rest`). La pantalla de DESCANSO usa `rest` y su spec propia
-(§ Descanso). Los fondos con gradient sutil de estas pantallas son parte de
-esta capa y constituyen la segunda excepción a la regla anti-degradados
-(la primera es el Live Activity).
+**Cualquier sitio que pinte una zona sale de `ZonesService.colorForZone(zone)`**
+(o de `colorForPercent(pct)` si lo que se tiene es el % de FCmáx, que usa los
+mismos límites 60/70/80/90 que `zonesFor`). **Nunca** definir la tabla otra vez.
+
+⚠️ Esto no es teórico. Hasta el 31 jul 2026 convivían **8 copias** de la tabla
+y no coincidían: en el editor de bloques y de segmentos **Z1 y Z2 estaban
+intercambiadas** (elegías "Z2" viendo azul y corriendo se pintaba verde), la
+pantalla de sesión activa tenía otra paleta entera, `training_session_view`
+pintaba Z1 en teal `#5A9E9E` —un dedazo de `rpeLow` `#5A9E5A`— y el chip de
+FC% iba desplazado una zona (al 90%+ pintaba coral en vez de rojo).
+Lo vigila `test/unit/zones_color_test.dart`.
 
 ---
 

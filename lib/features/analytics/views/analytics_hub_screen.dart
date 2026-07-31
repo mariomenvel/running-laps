@@ -140,7 +140,7 @@ class _AnalyticsHubScreenState extends State<AnalyticsHubScreen>
             final Color dotColor;
             final String statusLabel;
             if (tsb >= 15) {
-              dotColor    = const Color(0xFF639922);
+              dotColor    = AppColors.rpeLow;
               statusLabel = 'Fresco';
             } else if (tsb >= -30) {
               dotColor    = AppColors.rpeMid;

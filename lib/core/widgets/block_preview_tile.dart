@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/rpe_badge.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
@@ -52,16 +53,9 @@ class BlockPreviewTile extends StatelessWidget {
   }
 
   Color get _accentColor {
-    if (block.targetZone != null) {
-      switch (block.targetZone!) {
-        case 1: return const Color(0xFF639922);
-        case 2: return const Color(0xFF378ADD);
-        case 3: return AppColors.rpeMid;
-        case 4: return AppColors.rpeHigh;
-        case 5: return AppColors.rpeMax;
-      }
-    }
-    return const Color(0xFF888780);
+    final z = block.targetZone;
+    if (z != null) return ZonesService.colorForZone(z);
+    return AppColors.iconMuted;
   }
 
   @override
@@ -165,16 +159,9 @@ class _ZoneChip extends StatelessWidget {
   final int zone;
   const _ZoneChip({required this.zone});
 
-  Color get _color {
-    switch (zone) {
-      case 1: return const Color(0xFF639922);
-      case 2: return const Color(0xFF378ADD);
-      case 3: return AppColors.rpeMid;
-      case 4: return AppColors.rpeHigh;
-      case 5: return AppColors.rpeMax;
-      default: return const Color(0xFF888780);
-    }
-  }
+  Color get _color => (zone >= 1 && zone <= 5)
+      ? ZonesService.colorForZone(zone)
+      : AppColors.iconMuted;
 
   @override
   Widget build(BuildContext context) {

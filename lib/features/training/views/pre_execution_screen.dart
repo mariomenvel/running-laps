@@ -143,7 +143,6 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
   Widget build(BuildContext context) {
     final theme = SessionTheme.forType(widget.session.type);
     final gradient = theme.backgroundGradient(context);
-    final decoration = theme.backgroundDecoration(context);
     final isCompetition = widget.session.type == WorkoutType.competition;
 
     final content = SafeArea(
@@ -254,7 +253,7 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
       ),
     );
 
-    if (gradient == null && decoration == null) {
+    if (gradient == null) {
       return Scaffold(
         backgroundColor: AppColors.surfaceOf(context),
         body: content,
@@ -265,9 +264,7 @@ class _PreExecutionScreenState extends State<PreExecutionScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          if (gradient != null)
-            Container(decoration: BoxDecoration(gradient: gradient)),
-          if (decoration != null) decoration,
+          Container(decoration: BoxDecoration(gradient: gradient)),
           content,
         ],
       ),
