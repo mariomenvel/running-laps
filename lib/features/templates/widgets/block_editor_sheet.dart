@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:running_laps/core/widgets/duration_picker_field.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/ios_picker.dart';
@@ -31,8 +31,9 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
 
   // Objectives
   bool _objectivesExpanded = false;
-  final _paceMinCtrl = TextEditingController();
-  final _paceSecCtrl = TextEditingController();
+  // Pace objetivo en segundos por km. null = sin objetivo de ritmo, que no es
+  // lo mismo que 0:00. Se elige en rueda, no por teclado.
+  int? _paceSeconds;
   double _rpeValue = 5.0;
   bool _rpeSet = false;
   int? _selectedZone;
@@ -48,8 +49,9 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
       _alertsEnabled = _alerts.enabled;
 
       // Objectives — auto-expand if any value is set
-      if (b.targetPaceMin != null) _paceMinCtrl.text = b.targetPaceMin.toString();
-      if (b.targetPaceSec != null) _paceSecCtrl.text = b.targetPaceSec.toString();
+      if (b.targetPaceMin != null) {
+        _paceSeconds = b.targetPaceMin! * 60 + (b.targetPaceSec ?? 0);
+      }
       if (b.targetRpe != null) {
         _rpeValue = b.targetRpe!;
         _rpeSet = true;
@@ -60,20 +62,9 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
     }
   }
 
-  @override
-  void dispose() {
-    _paceMinCtrl.dispose();
-    _paceSecCtrl.dispose();
-    super.dispose();
-  }
-
   void _save() {
-    final paceMin = _paceMinCtrl.text.trim().isEmpty
-        ? null
-        : int.tryParse(_paceMinCtrl.text.trim());
-    final paceSec = _paceSecCtrl.text.trim().isEmpty
-        ? null
-        : int.tryParse(_paceSecCtrl.text.trim());
+    final paceMin = _paceSeconds != null ? _paceSeconds! ~/ 60 : null;
+    final paceSec = _paceSeconds != null ? _paceSeconds! % 60 : null;
 
     final block = TemplateBlock(
       id: widget.initialBlock?.id ??
@@ -250,7 +241,7 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
   // ── Sección de objetivos ────────────────────────────────────────────
 
   Widget _buildObjectivesSection(ColorScheme cs) {
-    final hasObjective = _paceMinCtrl.text.isNotEmpty ||
+    final hasObjective = _paceSeconds != null ||
         _rpeSet ||
         _selectedZone != null;
 
@@ -364,38 +355,14 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
           ),
         ),
         const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _PaceTextField(
-                controller: _paceMinCtrl,
-                label: 'Min',
-                min: 0,
-                max: 59,
-                onChanged: (_) => setState(() {}),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Text(
-                ':',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                  color: cs.onSurface.withValues(alpha: 0.6),
-                ),
-              ),
-            ),
-            Expanded(
-              child: _PaceTextField(
-                controller: _paceSecCtrl,
-                label: 'Seg',
-                min: 0,
-                max: 59,
-                onChanged: (_) => setState(() {}),
-              ),
-            ),
-          ],
+        DurationPickerField(
+          label: 'Ritmo',
+          valueSeconds: _paceSeconds,
+          // Nadie corre a más de 20 min/km; por debajo de 2:00 tampoco.
+          maxMinutes: 20,
+          fallbackSeconds: 5 * 60,
+          labelWidth: 70,
+          onChanged: (v) => setState(() => _paceSeconds = v),
         ),
       ],
     );
@@ -829,48 +796,6 @@ class _BlockEditorSheetState extends State<BlockEditorSheet> {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// TextField compacto para minutos/segundos de pace.
-class _PaceTextField extends StatelessWidget {
-  final TextEditingController controller;
-  final String label;
-  final int min;
-  final int max;
-  final ValueChanged<String>? onChanged;
-
-  const _PaceTextField({
-    required this.controller,
-    required this.label,
-    required this.min,
-    required this.max,
-    this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return TextField(
-      controller: controller,
-      keyboardType: TextInputType.number,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      textAlign: TextAlign.center,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: '--',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        isDense: true,
-        labelStyle: TextStyle(
-          fontSize: 12,
-          color: cs.onSurface.withValues(alpha: 0.5),
-        ),
-      ),
-      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-      onChanged: onChanged,
     );
   }
 }

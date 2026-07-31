@@ -149,4 +149,41 @@ void main() {
     }
     expect(offenders, isEmpty, reason: offenders.join('\n'));
   });
+
+  test('ningún número se teclea en lib/', () {
+    // CLAUDE.md § "Inputs numéricos — sin teclado": tiempo, distancia,
+    // descanso, RPE y pulsaciones van por NumberPickerField / IosPicker /
+    // DurationPickerField / DistancePickerField. Un teclado numérico en
+    // pantalla, corriendo y con el móvil en la mano, no se acierta.
+    //
+    // El barrido es sobre lib/ entero, no solo /views/: los tres últimos
+    // infractores vivían en carpetas widgets/ (filtros de historial, editor de
+    // bloques, modal de retos) y un escaneo limitado a las vistas no los veía.
+    final offenders = <String>[];
+    for (final entity in Directory('lib').listSync(recursive: true)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      final src = entity.readAsStringSync();
+      if (RegExp(r'keyboardType:\s*(const\s+)?TextInputType\.'
+              r'(number|numberWithOptions|phone)')
+          .hasMatch(src)) {
+        offenders.add(entity.path);
+      }
+    }
+    expect(offenders, isEmpty, reason: offenders.join('\n'));
+  });
+
+  test('nadie usa AlertDialog de Material en lib/', () {
+    // Confirmaciones → showAppConfirmDialog; pedir un nombre →
+    // showAppPromptDialog. Se repite fuera del grupo de vistas por la misma
+    // razón que la regla de arriba: hay diálogos en carpetas widgets/.
+    final offenders = <String>[];
+    for (final entity in Directory('lib').listSync(recursive: true)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      final src = entity.readAsStringSync();
+      if (RegExp(r'(?<!Cupertino)AlertDialog\(').hasMatch(src)) {
+        offenders.add(entity.path);
+      }
+    }
+    expect(offenders, isEmpty, reason: offenders.join('\n'));
+  });
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/widgets/number_picker_field.dart';
 import 'package:running_laps/core/widgets/app_date_picker.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:intl/intl.dart';
@@ -27,7 +28,9 @@ class CreateChallengeModal extends StatefulWidget {
 class _CreateChallengeModalState extends State<CreateChallengeModal>
     with TickerProviderStateMixin {
   final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _valueController = TextEditingController();
+  // El objetivo se elige en rueda, no por teclado. Es un entero aunque la
+  // API del reto lo reciba como double: nadie se propone 50,3 km.
+  int? _goalValue;
 
   GoalKind _selectedKind = GoalKind.distance;
   DateTime _startDate = DateTime.now();
@@ -67,7 +70,6 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
   @override
   void dispose() {
     _titleController.dispose();
-    _valueController.dispose();
     _fadeController.dispose();
     super.dispose();
   }
@@ -268,7 +270,10 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
           child: Padding(
             padding: EdgeInsets.only(right: kind != GoalKind.sessions ? 10 : 0),
             child: GestureDetector(
-              onTap: () => setState(() => _selectedKind = kind),
+              onTap: () => setState(() {
+                if (kind != _selectedKind) _goalValue = null;
+                _selectedKind = kind;
+              }),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
                 curve: Curves.easeOutCubic,
@@ -315,46 +320,30 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
     );
   }
 
+  /// Rangos por tipo de reto. El paso importa tanto como el tope: una rueda
+  /// de minutos de 1 en 1 hasta 3000 es inusable.
+  ({int min, int max, int step}) get _goalRange {
+    switch (_selectedKind) {
+      case GoalKind.time:
+        return (min: 10, max: 3000, step: 10);
+      case GoalKind.sessions:
+        return (min: 1, max: 100, step: 1);
+      default:
+        return (min: 1, max: 500, step: 1);
+    }
+  }
+
   Widget _buildValueInput(List<Color> selectedGradient) {
-    final cs = Theme.of(context).colorScheme;
-    return TextField(
-      controller: _valueController,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      style: TextStyle(
-        fontSize: 22,
-        fontWeight: FontWeight.w800,
-        color: selectedGradient.first,
-      ),
-      textAlign: TextAlign.center,
-      decoration: InputDecoration(
-        hintText: _getValueHint(),
-        hintStyle: TextStyle(
-          color: cs.onSurface.withValues(alpha: 0.4),
-          fontWeight: FontWeight.normal,
-          fontSize: 18,
-        ),
-        filled: true,
-        fillColor: cs.onSurface.withValues(alpha: 0.05),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.2)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.2)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: selectedGradient.first, width: 2),
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-        suffixText: _getValueSuffix(),
-        suffixStyle: TextStyle(
-          color: selectedGradient.first,
-          fontWeight: FontWeight.w600,
-          fontSize: 16,
-        ),
-      ),
+    final r = _goalRange;
+    return NumberPickerField(
+      label: 'Objetivo',
+      value: _goalValue ?? r.min,
+      min: r.min,
+      max: r.max,
+      step: r.step,
+      unit: _getValueSuffix(),
+      displayOverride: _goalValue == null ? _getValueHint() : null,
+      onChanged: (v) => setState(() => _goalValue = v),
     );
   }
 
@@ -490,16 +479,14 @@ class _CreateChallengeModalState extends State<CreateChallengeModal>
 
   void _handleCreate() {
     final title = _titleController.text.trim();
-    final valueStr = _valueController.text.trim();
-
     if (title.isEmpty) {
       _showError("Por favor ingresa un nombre para el reto");
       return;
     }
 
-    final value = double.tryParse(valueStr);
+    final value = _goalValue?.toDouble();
     if (value == null || value <= 0) {
-      _showError("Por favor ingresa un valor válido");
+      _showError("Elige un objetivo para el reto");
       return;
     }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/widgets/duration_picker_field.dart';
 import 'package:intl/intl.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/features/history/viewmodels/history_controller.dart';
@@ -17,9 +18,11 @@ class HistoryFilterSheet extends StatefulWidget {
 class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
   late DateTime? _startDate;
   late DateTime? _endDate;
-  late TextEditingController _minDistController;
-  late TextEditingController _maxDistController;
-  late TextEditingController _seriesDistController;
+  // Metros, no texto: los tres se eligen en rueda. null = filtro sin poner,
+  // que es distinto de 0 (ver WheelValueField).
+  int? _minDistM;
+  int? _maxDistM;
+  int? _seriesDistM;
   late Set<String> _selectedTags;
   late Future<List<TrainingTag>> _tagsFuture;
 
@@ -29,52 +32,20 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
     _startDate = widget.controller.filterStartDate.value;
     _endDate = widget.controller.filterEndDate.value;
 
-    _minDistController = TextEditingController(
-      text: widget.controller.filterMinDist.value != null
-          ? (widget.controller.filterMinDist.value! / 1000).toStringAsFixed(1)
-          : '',
-    );
-    _maxDistController = TextEditingController(
-      text: widget.controller.filterMaxDist.value != null
-          ? (widget.controller.filterMaxDist.value! / 1000).toStringAsFixed(1)
-          : '',
-    );
-    _seriesDistController = TextEditingController(
-      text: widget.controller.filterSeriesDistance.value?.toString() ?? '',
-    );
+    _minDistM = widget.controller.filterMinDist.value?.round();
+    _maxDistM = widget.controller.filterMaxDist.value?.round();
+    _seriesDistM = widget.controller.filterSeriesDistance.value;
     _selectedTags = Set.from(widget.controller.selectedTags.value);
     _tagsFuture = TagManager().getUserTags();
   }
 
-  @override
-  void dispose() {
-    _minDistController.dispose();
-    _maxDistController.dispose();
-    _seriesDistController.dispose();
-    super.dispose();
-  }
-
   void _applyFilters() {
-    double? minM;
-    if (_minDistController.text.isNotEmpty) {
-      final val =
-          double.tryParse(_minDistController.text.replaceAll(',', '.'));
-      if (val != null) minM = val * 1000;
-    }
-    double? maxM;
-    if (_maxDistController.text.isNotEmpty) {
-      final val =
-          double.tryParse(_maxDistController.text.replaceAll(',', '.'));
-      if (val != null) maxM = val * 1000;
-    }
-    int? seriesM;
-    if (_seriesDistController.text.isNotEmpty) {
-      seriesM = int.tryParse(_seriesDistController.text);
-    }
-
     widget.controller.setDateRange(_startDate, _endDate);
-    widget.controller.setDistanceRange(minM, maxM);
-    widget.controller.setSeriesDistanceFilter(seriesM);
+    widget.controller.setDistanceRange(
+      _minDistM?.toDouble(),
+      _maxDistM?.toDouble(),
+    );
+    widget.controller.setSeriesDistanceFilter(_seriesDistM);
     widget.controller.selectedTags.value = _selectedTags;
     widget.controller.setFilter(TrainingFilter.all);
 
@@ -85,9 +56,9 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
     setState(() {
       _startDate = null;
       _endDate = null;
-      _minDistController.clear();
-      _maxDistController.clear();
-      _seriesDistController.clear();
+      _minDistM = null;
+      _maxDistM = null;
+      _seriesDistM = null;
       _selectedTags.clear();
     });
   }
@@ -277,37 +248,31 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
                   _sectionTitle('Detalles', isDark),
                   const SizedBox(height: 10),
 
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildTextField(
-                          controller: _minDistController,
-                          label: 'Min Km',
-                          icon: Icons.map_outlined,
-                          isDark: isDark,
-                          brandColor: brandColor,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildTextField(
-                          controller: _maxDistController,
-                          label: 'Max Km',
-                          icon: Icons.map_outlined,
-                          isDark: isDark,
-                          brandColor: brandColor,
-                        ),
-                      ),
-                    ],
+                  DistancePickerField(
+                    label: 'Desde',
+                    valueMeters: _minDistM,
+                    emptyLabel: 'Sin mín.',
+                    fallbackMeters: 5000,
+                    labelWidth: 150,
+                    onChanged: (v) => setState(() => _minDistM = v),
                   ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    controller: _seriesDistController,
-                    label: 'Series de (metros)',
-                    hint: 'Ej: 400',
-                    icon: Icons.repeat_rounded,
-                    isDark: isDark,
-                    brandColor: brandColor,
+                  const SizedBox(height: 4),
+                  DistancePickerField(
+                    label: 'Hasta',
+                    valueMeters: _maxDistM,
+                    emptyLabel: 'Sin máx.',
+                    fallbackMeters: 21000,
+                    labelWidth: 150,
+                    onChanged: (v) => setState(() => _maxDistM = v),
+                  ),
+                  const SizedBox(height: 4),
+                  DistancePickerField(
+                    label: 'Series de',
+                    valueMeters: _seriesDistM,
+                    emptyLabel: 'Cualquiera',
+                    fallbackMeters: 400,
+                    labelWidth: 150,
+                    onChanged: (v) => setState(() => _seriesDistM = v),
                   ),
                   const SizedBox(height: 6),
                   Text(
@@ -424,58 +389,4 @@ class _HistoryFilterSheetState extends State<HistoryFilterSheet> {
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    String? hint,
-    required IconData icon,
-    required bool isDark,
-    required Color brandColor,
-  }) {
-    final fillColor = AppColors.surface2Of(context);
-    final enabledBorderColor = AppColors.borderOf(context);
-
-    return TextField(
-      controller: controller,
-      keyboardType: TextInputType.number,
-      style: TextStyle(
-        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-      ),
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        labelStyle: TextStyle(
-          color: isDark
-              ? AppColors.textSecondaryDark
-              : AppColors.textSecondaryLight,
-        ),
-        hintStyle: TextStyle(
-          color: isDark
-              ? AppColors.textTertiaryDark
-              : AppColors.textTertiaryLight,
-        ),
-        prefixIcon: Icon(icon,
-            color: isDark
-                ? AppColors.textTertiaryDark
-                : AppColors.textTertiaryLight,
-            size: 20),
-        filled: true,
-        fillColor: fillColor,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: enabledBorderColor),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: brandColor, width: 1.5),
-        ),
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
-      ),
-    );
-  }
 }

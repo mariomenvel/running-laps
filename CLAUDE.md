@@ -215,10 +215,18 @@ Mesociclo del Coach IA (periodización persistida, progresión por aritmética, 
 
 6. **Templates de sesión completa** — `TrainingTemplatesRepository` implementado pero sin UI (pantalla "crear desde plantilla"). No es MVP — solo las plantillas de segmento son MVP actualmente. El switch "Guardar como plantilla" fue eliminado del editor hasta que exista la UI de carga.
 7. ~~`_getWeekNumber()` en `home_flagship_chart.dart`~~ — resuelto por borrado: `home_flagship_chart.dart` era parte del "dashboard configurable de Home" nunca enganchado, eliminado en la tercera ronda de purga (ver arriba).
-8. **Convenciones de UI incumplidas en pantallas concretas** (medido 26 jul 2026, sin test porque un test en rojo desde el día uno se acaba ignorando — al arreglar el último de cada lista, añadir la regla a `test/features/architecture_test.dart`, que ya vigila las otras):
-   - **Números con teclado** en vez de `NumberPickerField`/`IosPicker` (6 ficheros): `ai_coach_onboarding_view`, `ai_coach_settings_view`, `create_challenge_modal`, `zones_config_screen`, `manual_training_view`, `training_start_view`.
-   - **`AlertDialog` de Material** en vez de `showAppConfirmDialog` (6 ficheros): `admin_challenges_tab`, `group_screen`, `profile_view`, `blocks_list_section`, `manual_training_view`, `training_summary_screen`. (`heart_rate_monitor_view` migrado el 29 jul 2026 al arreglar el escaneo BLE.)
-   Ambas son trabajo de UI que hay que **verificar en dispositivo**, no cambios mecánicos.
+8. ~~**Convenciones de UI incumplidas en pantallas concretas**~~ — ✅ cerrada (31 jul 2026). Las dos listas están a cero y `test/features/architecture_test.dart` las vigila (reglas sobre `lib/` **entero**, no solo `/views/`: tres de los últimos infractores vivían en carpetas `widgets/` y un escaneo limitado a las vistas no los veía).
+
+   **Diálogos** — cero `AlertDialog` de Material en `lib/`. Las confirmaciones van a `showAppConfirmDialog`; para el único caso que pedía texto ("Guardar bloque") se añadió el componente que faltaba, `showAppPromptDialog` (`core/widgets/app_prompt_dialog.dart`), con el botón de confirmar deshabilitado mientras el campo esté en blanco. ⚠️ Los dos `showDialog()` que quedan (`pre_execution_screen`, `training_start_view`) son cuentas atrás con widget propio, no diálogos Material — son uso legítimo, por eso la regla mira `AlertDialog(` y no `showDialog`.
+
+   **Números sin teclado** — cero `keyboardType: TextInputType.number` en `lib/`. Componentes nuevos en `core/widgets/`:
+   - `wheel_sheets.dart` — `showDistanceWheelSheet` (km + hectómetros) y `showDurationWheelSheet` (min + seg). Son el escape para un valor que no está en la rueda de valores comunes, y sustituyen a tres copias casi idénticas que habían aparecido por separado.
+   - `wheel_value_field.dart` — `WheelValueField`, la fila "etiqueta / valor tocable / limpiar" que comparten los campos de rueda.
+   - `duration_picker_field.dart` — `DurationPickerField` (mm:ss) y `DistancePickerField` (metros), ambos envoltorios finos de los dos anteriores.
+
+   ⚠️ **Detalle de diseño que no hay que deshacer**: en estos campos el valor es nullable y el vacío *significa algo* distinto de cero — sin FCmáx las zonas se calculan por edad, una marca en blanco no es 00:00, un filtro sin poner no es 0 km. Como una rueda no puede devolver "nada", el botón de limpiar es la única vía de vuelta a ese estado: no es decoración.
+
+   De paso se fue un bug que traían duplicado el onboarding y los ajustes del Coach: creaban dos `TextEditingController` **dentro del `build`**, recreados en cada reconstrucción y sin liberar.
 
 9. **Convención `fecha` (string ISO UTC)** — el esquema se mantiene (migrar a `Timestamp` requeriría backfill). Regla: cualquier query sobre `fecha` debe construir sus bounds con `.toUtc().toIso8601String()`, y cualquier bucketing por día/mes debe hacer `.toLocal()` tras el parse (ver `home_estadistica_repository.dart`).
 

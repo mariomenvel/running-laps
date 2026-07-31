@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:running_laps/core/widgets/wheel_sheets.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -2683,7 +2684,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                 children: [
                   const Text("Distancia de la serie", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                   IconButton(
-                    icon: Icon(Icons.keyboard, color: AppColors.brandOf(context)),
+                    icon: Icon(Icons.tune, color: AppColors.brandOf(context)),
                     onPressed: () {
                       Navigator.pop(context);
                       _showManualInputDialog(isDistance: true);
@@ -2766,7 +2767,7 @@ class _TrainingStartViewState extends State<TrainingStartView>
                 children: [
                   const Text("Tiempo de descanso", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                   IconButton(
-                    icon: Icon(Icons.keyboard, color: AppColors.brandOf(context)),
+                    icon: Icon(Icons.tune, color: AppColors.brandOf(context)),
                     onPressed: () {
                       Navigator.pop(context);
                       _showManualInputDialog(isDistance: false);
@@ -2825,220 +2826,41 @@ class _TrainingStartViewState extends State<TrainingStartView>
   }
 
 
-  void _showManualInputDialog({required bool isDistance}) {
-    final TextEditingController manualController = TextEditingController();
-    
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (BuildContext context, StateSetter setModalState) {
-          final int? currentValue = int.tryParse(manualController.text);
-          final bool hasValue = currentValue != null;
-          final bool isValid = hasValue && (isDistance ? currentValue > 0 : currentValue >= 0);
-          
-          // Preview text
-          String preview = '';
-          if (hasValue) {
-            if (isDistance) {
-              if (currentValue >= 1000) {
-                preview = '${(currentValue / 1000).toStringAsFixed(2)} km';
-              } else {
-                preview = '$currentValue metros';
-              }
-            } else {
-              final int minutes = currentValue ~/ 60;
-              final int seconds = currentValue % 60;
-              if (minutes > 0) {
-                preview = '$minutes min ${seconds}s';
-              } else {
-                preview = '${seconds}s';
-              }
-            }
-          }
-          
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              padding: const EdgeInsets.all(28),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Handle
-                  Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 20),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
+  /// Escape para un valor que no está en la rueda de valores comunes
+  /// (distancias de 50 en 50, descansos de 5 en 5). Antes era un TextField con
+  /// teclado numérico; ahora es otra rueda, más fina, como manda la convención.
+  Future<void> _showManualInputDialog({required bool isDistance}) async {
+    // Un if en vez de un ternario con dos await: en el ternario el analizador
+    // no puede probar que `context` se lee antes del await y avisa.
+    final int? valor;
+    if (isDistance) {
+      valor = await showDistanceWheelSheet(
+        context: context,
+        initialMeters: _distanciaSeleccionada,
+        title: 'Distancia de la serie',
+      );
+    } else {
+      valor = await showDurationWheelSheet(
+        context: context,
+        initialSeconds: _descansoSeleccionado,
+        title: 'Tiempo de descanso',
+        maxMinutes: 30,
+        // Un descanso de 0 s es legítimo: series encadenadas sin pausa.
+        allowZero: true,
+      );
+    }
 
-                  // Título
-                  Text(
-                    isDistance ? 'Distancia Manual' : 'Descanso Manual',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    isDistance ? 'Introduce los metros' : 'Introduce los segundos',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-
-                  // Input grande
-                  TextField(
-                    controller: manualController,
-                    keyboardType: TextInputType.number,
-                    autofocus: true,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.w300,
-                      color: Theme.of(context).colorScheme.onSurface,
-                      letterSpacing: -1,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: isDistance ? '400' : '90',
-                      hintStyle: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
-                        fontSize: 48,
-                        fontWeight: FontWeight.w300,
-                      ),
-                      suffixText: isDistance ? 'm' : 's',
-                      suffixStyle: TextStyle(
-                        fontSize: 24,
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                        fontWeight: FontWeight.w500,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 20,
-                      ),
-                    ),
-                    onChanged: (value) => setModalState(() {}),
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Preview
-                  AnimatedContainer(
-                    duration: AppMotion.base,
-                    height: hasValue ? 32 : 0,
-                    child: hasValue
-                        ? Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                isValid ? Icons.check_circle : Icons.error,
-                                color: isValid ? AppColors.rpeLow : AppColors.rpeMax,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                preview,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: isValid ? AppColors.rpeLow : AppColors.rpeMax,
-                                ),
-                              ),
-                            ],
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                  
-                  const SizedBox(height: 28),
-                  
-                  // Botones
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            side: BorderSide(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2)),
-                          ),
-                          child: Text(
-                            'Cancelar',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        flex: 2,
-                        child: ElevatedButton(
-                          onPressed: !isValid
-                              ? null
-                              : () {
-                                  setState(() {
-                                    if (isDistance) {
-                                      _distanciaSeleccionada = currentValue;
-                                    } else {
-                                      _descansoSeleccionado = currentValue;
-                                    }
-                                  });
-                                  Navigator.pop(context);
-                                },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _brandAccentColor,
-                            foregroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).colorScheme.surface : Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: isValid ? 4 : 0,
-                            shadowColor: _brandAccentColor.withValues(alpha: 0.4),
-                          ),
-                          child: const Text(
-                            'Aceptar',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
+    if (valor == null || !mounted) return;
+    // Un `final` declarado sin inicializador no promociona a int, así que se
+    // desempaqueta aquí en vez de dentro del setState.
+    final elegido = valor;
+    setState(() {
+      if (isDistance) {
+        _distanciaSeleccionada = elegido;
+      } else {
+        _descansoSeleccionado = elegido;
+      }
+    });
   }
 
 
