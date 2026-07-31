@@ -629,38 +629,16 @@ class _DistancePickerSheetState extends State<_DistancePickerSheet> {
     }
   }
 
+  /// Distancia libre con dos ruedas (km + hectómetros) en vez de teclado:
+  /// la convención del proyecto es que ningún número se teclee. Devuelve los
+  /// metros al sheet padre, que a su vez los devuelve a la fila de la serie.
   Future<void> _openCustom() async {
-    Navigator.pop(context);
-    final ctrl = TextEditingController();
-    await showDialog<void>(
+    final metros = await showModalBottomSheet<int>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Distancia personalizada'),
-        content: TextField(
-          controller:   ctrl,
-          autofocus:    true,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(hintText: 'Metros (ej. 7500)'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.brand),
-            onPressed: () {
-              final v = int.tryParse(ctrl.text.trim());
-              Navigator.pop(ctx);
-              if (v != null && v > 0 && context.mounted) {
-                Navigator.pop(context, v);
-              }
-            },
-            child: const Text('Confirmar'),
-          ),
-        ],
-      ),
+      backgroundColor: Colors.transparent,
+      builder: (_) => _CustomDistanceSheet(initial: widget.initial ?? 7500),
     );
+    if (metros != null && mounted) Navigator.pop(context, metros);
   }
 
   @override
@@ -948,3 +926,86 @@ class _RestPickerSheetState extends State<_RestPickerSheet> {
   }
 }
 
+// ── _CustomDistanceSheet ──────────────────────────────────────────────────────
+
+/// Rueda doble para una distancia libre: kilómetros (0-99) + hectómetros
+/// (0-900 m en pasos de 100). Sustituye al antiguo AlertDialog con
+/// `keyboardType: number`, que incumplía dos convenciones a la vez.
+class _CustomDistanceSheet extends StatefulWidget {
+  final int initial;
+  const _CustomDistanceSheet({required this.initial});
+
+  @override
+  State<_CustomDistanceSheet> createState() => _CustomDistanceSheetState();
+}
+
+class _CustomDistanceSheetState extends State<_CustomDistanceSheet> {
+  late int _km;
+  late int _hm;
+
+  @override
+  void initState() {
+    super.initState();
+    final clamped = widget.initial.clamp(0, 99900);
+    _km = clamped ~/ 1000;
+    _hm = (clamped % 1000) ~/ 100;
+  }
+
+  int get _metros => _km * 1000 + _hm * 100;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark     = Theme.of(context).brightness == Brightness.dark;
+    final labelColor = isDark ? Colors.white : const Color(0xFF1C1C1E);
+
+    return _SheetContainer(
+      height: 300,
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          Text('Distancia personalizada',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: labelColor)),
+          Expanded(
+            child: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IosPicker(
+                    itemCount: 100,
+                    initialItem: _km,
+                    onChanged: (i) => setState(() => _km = i),
+                    textBuilder: (i) => '$i',
+                    label: 'km',
+                    itemExtent: 40,
+                    width: 70,
+                  ),
+                  const SizedBox(width: 8),
+                  IosPicker(
+                    itemCount: 10,
+                    initialItem: _hm,
+                    onChanged: (i) => setState(() => _hm = i),
+                    textBuilder: (i) => '${i}00',
+                    label: 'm',
+                    itemExtent: 40,
+                    width: 80,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: AppColors.brand),
+                onPressed: _metros > 0 ? () => Navigator.pop(context, _metros) : null,
+                child: const Text('Confirmar'),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

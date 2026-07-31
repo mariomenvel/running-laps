@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/widgets/app_confirm_dialog.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'package:running_laps/core/services/pb_celebration_service.dart';
 import 'package:running_laps/core/services/training_load_service.dart';
@@ -421,43 +422,12 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
   }
 
   Future<void> _confirmDiscard() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          '¿Descartar entrenamiento?',
-          style: TextStyle(
-            color: AppColors.textPrimary(ctx),
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        content: Text(
-          'Esta acción no se puede deshacer.',
-          style: TextStyle(
-            color: AppColors.textSecondary(ctx),
-            fontSize: 14,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              'Cancelar',
-              style: TextStyle(color: AppColors.textSecondary(ctx)),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(
-              'Descartar',
-              style: TextStyle(color: AppColors.rpeMax, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
+      title: '¿Descartar entrenamiento?',
+      message: 'Esta acción no se puede deshacer.',
+      confirmLabel: 'Descartar',
+      isDestructive: true,
     );
 
     if (confirmed != true || !mounted) return;

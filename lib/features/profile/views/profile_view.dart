@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/widgets/app_confirm_dialog.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
@@ -72,33 +73,16 @@ class _ProfileViewState extends State<ProfileView> {
     });
   }
 
-  void _showGenerateTestDataDialog() {
-    showDialog(
+  Future<void> _showGenerateTestDataDialog() async {
+    final confirmed = await showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        title: Text('Generar datos de prueba',
-            style: AppTypography.h3.copyWith(color: AppColors.textPrimary(context))),
-        content: Text(
-          'Esto borrará TODOS tus entrenamientos actuales y creará ~55 sesiones realistas distribuidas en los últimos 90 días.\n\n¿Continuar?',
-          style: AppTypography.body.copyWith(color: AppColors.iconMutedOf(context)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _generateTestData();
-            },
-            style: TextButton.styleFrom(foregroundColor: AppColors.rpeMax),
-            child: const Text('Borrar y generar'),
-          ),
-        ],
-      ),
+      title: 'Generar datos de prueba',
+      message: 'Esto borrará TODOS tus entrenamientos actuales y creará ~55 '
+          'sesiones realistas distribuidas en los últimos 90 días.',
+      confirmLabel: 'Borrar y generar',
+      isDestructive: true,
     );
+    if (confirmed == true) _generateTestData();
   }
 
   Future<void> _generateTestData() async {

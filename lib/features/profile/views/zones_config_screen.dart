@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_date_picker.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'package:running_laps/core/widgets/number_picker_field.dart';
 import 'package:running_laps/features/profile/viewmodels/zones_viewmodel.dart';
 
 class ZonesConfigScreen extends StatefulWidget {
@@ -17,9 +17,11 @@ class ZonesConfigScreen extends StatefulWidget {
 class _ZonesConfigScreenState extends State<ZonesConfigScreen> {
   late final ZonesViewModel _vm;
 
-  final _formKey = GlobalKey<FormState>();
-  final _fcMaxCtrl = TextEditingController();
-  final _fcReposoCtrl = TextEditingController();
+  // Enteros, no TextEditingController: los valores se eligen en una rueda
+  // (convención del proyecto — ningún número se teclea). null = sin definir,
+  // que para FCmáx significa "usa la estimación por edad" (220 − edad).
+  int? _fcMax;
+  int? _fcReposo;
 
   @override
   void initState() {
@@ -27,21 +29,21 @@ class _ZonesConfigScreenState extends State<ZonesConfigScreen> {
     _vm = ZonesViewModel();
     _vm.loadProfile(widget.uid).then((_) {
       if (!mounted) return;
-      _syncControllersFromProfile();
+      _syncFromProfile();
     });
   }
 
-  void _syncControllersFromProfile() {
+  void _syncFromProfile() {
     final p = _vm.state.value.profile;
     if (p == null) return;
-    if (p.fcMax != null) _fcMaxCtrl.text = p.fcMax.toString();
-    if (p.fcReposo != null) _fcReposoCtrl.text = p.fcReposo.toString();
+    setState(() {
+      _fcMax = p.fcMax;
+      _fcReposo = p.fcReposo;
+    });
   }
 
   @override
   void dispose() {
-    _fcMaxCtrl.dispose();
-    _fcReposoCtrl.dispose();
     _vm.dispose();
     super.dispose();
   }
@@ -51,19 +53,12 @@ class _ZonesConfigScreenState extends State<ZonesConfigScreen> {
   // ── Save ──────────────────────────────────────────────────────────
 
   Future<void> _save() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-
-    final fcMax = _fcMaxCtrl.text.trim().isEmpty
-        ? null
-        : int.tryParse(_fcMaxCtrl.text.trim());
-    final fcReposo = _fcReposoCtrl.text.trim().isEmpty
-        ? null
-        : int.tryParse(_fcReposoCtrl.text.trim());
-
+    // Sin validador: la rueda solo ofrece valores dentro de rango, así que un
+    // valor fuera de [min, max] ya no puede llegar hasta aquí.
     await _vm.saveFcConfig(
       uid: widget.uid,
-      fcMax: fcMax,
-      fcReposo: fcReposo,
+      fcMax: _fcMax,
+      fcReposo: _fcReposo,
     );
 
     if (!mounted) return;
@@ -102,9 +97,7 @@ class _ZonesConfigScreenState extends State<ZonesConfigScreen> {
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
-            child: Form(
-              key: _formKey,
-              child: Column(
+            child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // ── Campos de FC ──────────────────────────────────
@@ -112,24 +105,26 @@ class _ZonesConfigScreenState extends State<ZonesConfigScreen> {
                   const SizedBox(height: 12),
 
                   _FcField(
-                    controller: _fcMaxCtrl,
-                    label: 'FCmáx (lpm)',
-                    hint: hasBirthDate && estimated != null
-                        ? 'Estimada: $estimated bpm (220 − edad)'
-                        : 'Ej. 185',
+                    value: _fcMax,
+                    label: 'FCmáx',
+                    emptyLabel: hasBirthDate && estimated != null
+                        ? 'Estimada: $estimated (220 − edad)'
+                        : 'Sin definir',
                     min: 100,
                     max: 220,
-                    optional: true,
+                    fallback: estimated ?? 185,
+                    onChanged: (v) => setState(() => _fcMax = v),
                   ),
                   const SizedBox(height: 12),
 
                   _FcField(
-                    controller: _fcReposoCtrl,
-                    label: 'FC reposo (lpm)',
-                    hint: 'Ej. 55',
+                    value: _fcReposo,
+                    label: 'FC reposo',
+                    emptyLabel: 'Sin definir',
                     min: 30,
                     max: 100,
-                    optional: true,
+                    fallback: 55,
+                    onChanged: (v) => setState(() => _fcReposo = v),
                   ),
                   const SizedBox(height: 28),
 
@@ -189,7 +184,6 @@ class _ZonesConfigScreenState extends State<ZonesConfigScreen> {
                   ),
                   const SizedBox(height: 32),
                 ],
-              ),
             ),
           );
         },
@@ -222,48 +216,65 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
+/// Campo de pulsaciones: rueda (NumberPickerField) en vez de teclado.
+///
+/// Ambos campos son opcionales y el vacío significa algo: sin FCmáx, las zonas
+/// se calculan con la estimación por edad. Como una rueda no puede devolver
+/// "nada", el botón de limpiar es la única forma de volver a ese estado —
+/// no es decorativo.
 class _FcField extends StatelessWidget {
-  final TextEditingController controller;
+  final int? value;
   final String label;
-  final String hint;
+
+  /// Qué mostrar cuando no hay valor (ej. la FCmáx estimada por edad).
+  final String emptyLabel;
+
+  /// Dónde arranca la rueda la primera vez, sin valor previo.
+  final int fallback;
+
   final int min;
   final int max;
-  final bool optional;
+  final ValueChanged<int?> onChanged;
 
   const _FcField({
-    required this.controller,
+    required this.value,
     required this.label,
-    required this.hint,
+    required this.emptyLabel,
+    required this.fallback,
     required this.min,
     required this.max,
-    required this.optional,
+    required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: TextInputType.number,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        suffixText: 'bpm',
-      ),
-      validator: (v) {
-        if (v == null || v.trim().isEmpty) {
-          return optional ? null : 'Campo requerido';
-        }
-        final n = int.tryParse(v.trim());
-        if (n == null || n < min || n > max) {
-          return 'Debe estar entre $min y $max';
-        }
-        return null;
-      },
+    return Row(
+      children: [
+        Expanded(
+          child: NumberPickerField(
+            label: label,
+            value: (value ?? fallback).clamp(min, max),
+            min: min,
+            max: max,
+            step: 1,
+            unit: 'bpm',
+            displayOverride: value == null ? emptyLabel : null,
+            onChanged: onChanged,
+          ),
+        ),
+        if (value != null)
+          IconButton(
+            icon: const Icon(Icons.backspace_outlined, size: 18),
+            tooltip: 'Quitar $label',
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+            onPressed: () => onChanged(null),
+          ),
+      ],
     );
   }
 }
+
 
 class _ZoneRow extends StatelessWidget {
   final dynamic zone; // ZoneRange

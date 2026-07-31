@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:running_laps/core/widgets/duration_picker_field.dart';
 import 'package:flutter/material.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_bottom_sheet.dart';
@@ -1196,89 +1197,11 @@ class _AiCoachSettingsViewState extends State<AiCoachSettingsView> {
     required int? valueSeconds,
     required ValueChanged<int?> onChanged,
   }) {
-    final minutes = valueSeconds != null ? valueSeconds ~/ 60 : null;
-    final seconds = valueSeconds != null ? valueSeconds % 60 : null;
-
-    final minCtrl = TextEditingController(
-      text: minutes != null ? '$minutes' : '',
-    );
-    final secCtrl = TextEditingController(
-      text: seconds != null ? seconds.toString().padLeft(2, '0') : '',
-    );
-
-    return Row(
-      children: [
-        SizedBox(
-          width: 100,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textPrimary(context),
-            ),
-          ),
-        ),
-        const Spacer(),
-        SizedBox(
-          width: 52,
-          child: TextField(
-            controller: minCtrl,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            maxLength: 3,
-            decoration: _inputDecoration(context, hint: '--').copyWith(
-              counterText: '',
-              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-            ),
-            style: TextStyle(fontSize: 15, color: AppColors.textPrimary(context)),
-            onChanged: (v) {
-              final m = int.tryParse(v);
-              final s = int.tryParse(secCtrl.text) ?? 0;
-              onChanged(m != null ? m * 60 + s.clamp(0, 59) : null);
-            },
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: Text(
-            ':',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary(context),
-            ),
-          ),
-        ),
-        SizedBox(
-          width: 52,
-          child: TextField(
-            controller: secCtrl,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            maxLength: 2,
-            decoration: _inputDecoration(context, hint: '00').copyWith(
-              counterText: '',
-              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-            ),
-            style: TextStyle(fontSize: 15, color: AppColors.textPrimary(context)),
-            onChanged: (v) {
-              final s = int.tryParse(v);
-              final m = int.tryParse(minCtrl.text) ?? 0;
-              if (s == null) return;
-              onChanged(m * 60 + s.clamp(0, 59));
-            },
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          'min:seg',
-          style: TextStyle(
-            fontSize: 12,
-            color: AppColors.textSecondary(context),
-          ),
-        ),
-      ],
+    return DurationPickerField(
+      label: label,
+      valueSeconds: valueSeconds,
+      onChanged: onChanged,
+      labelWidth: 100,
     );
   }
 }

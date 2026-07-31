@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/widgets/app_confirm_dialog.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'package:flutter/services.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
@@ -647,48 +648,20 @@ class _GroupScreenState extends State<GroupScreen> with TickerProviderStateMixin
     );
   }
 
-  void _showAutoJoinDialog() {
-    showDialog(
+  Future<void> _showAutoJoinDialog() async {
+    // Antes era barrierDismissible: false. Con el diálogo estándar se puede
+    // cerrar tocando fuera; en ese caso (null) no se guarda ninguna elección y
+    // se volverá a preguntar, que es mejor que decidir por el usuario.
+    final choice = await showAppConfirmDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Row(
-          children: [
-            Icon(Icons.auto_awesome, color: AppColors.brandOf(context)),
-            const SizedBox(width: 12),
-            const Text('Unión Automática'),
-          ],
-        ),
-        content: const Text(
-          '¿Quieres unirte automáticamente a todos los retos semanales y mensuales de este grupo?',
-          style: TextStyle(height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              _controller.setAutoJoinChoice(false);
-              Navigator.of(context).pop();
-            },
-            child: Text(
-              'No, preguntar siempre',
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.brand,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: () {
-              _controller.setAutoJoinChoice(true);
-              Navigator.of(context).pop();
-            },
-            child: const Text('Sí, activar', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
+      title: 'Unión automática',
+      message: '¿Quieres unirte automáticamente a todos los retos semanales y '
+          'mensuales de este grupo?',
+      confirmLabel: 'Sí, activar',
+      cancelLabel: 'No, preguntar siempre',
     );
+    if (choice == null) return;
+    _controller.setAutoJoinChoice(choice);
   }
 
   void _showCreateChallengeModal() {

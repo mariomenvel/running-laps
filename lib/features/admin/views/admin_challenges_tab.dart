@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:running_laps/core/widgets/app_confirm_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../groups/data/models/challenge_models.dart';
@@ -53,23 +54,12 @@ class AdminChallengesTab extends StatelessWidget {
 
   // ── Delete confirmation ─────────────────────────────────────────
   Future<void> _confirmDelete(BuildContext context, Challenge challenge) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Eliminar reto'),
-        content: Text('¿Eliminar "${challenge.title}"? Esta acción no se puede deshacer.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.rpeMax),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
+      title: 'Eliminar reto',
+      message: '¿Eliminar "${challenge.title}"? Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar',
+      isDestructive: true,
     );
     if (confirmed == true) {
       await controller.deleteChallenge(challenge.id);

@@ -111,6 +111,20 @@ void main() {
       expect(offender((src) => src.contains('showDatePicker(')), isNull);
     });
 
+    test('ninguna vista usa AlertDialog de Material', () {
+      // Confirmaciones → showAppConfirmDialog; pedir un nombre →
+      // showAppPromptDialog. Ambos son CupertinoAlertDialog, coherentes con
+      // el resto de la app (fecha, números, sheets).
+      //
+      // showDialog() a secas SÍ es válido: lo usan las cuentas atrás
+      // (CountdownDialog), que son un overlay propio, no un diálogo Material.
+      expect(
+        offender((src) =>
+            RegExp(r'(?<!Cupertino)AlertDialog\(').hasMatch(src)),
+        isNull,
+      );
+    });
+
     test('ninguna vista usa colores de Material sueltos', () {
       // COLOR_SYSTEM.md: el color comunica estado, y sale de AppColors.
       expect(

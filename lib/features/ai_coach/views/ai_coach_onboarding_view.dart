@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:running_laps/core/widgets/duration_picker_field.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'dart:convert';
 
@@ -659,157 +660,31 @@ class _PbStepPage extends StatelessWidget {
             style: TextStyle(fontSize: 14, color: textSecondary),
           ),
           const SizedBox(height: 32),
-          _OnboardingPbField(
+          DurationPickerField(
             label: '5K',
             valueSeconds: pb5kSeconds,
-            isDark: isDark,
             onChanged: onChanged5k,
           ),
           const SizedBox(height: 16),
-          _OnboardingPbField(
+          DurationPickerField(
             label: '10K',
             valueSeconds: pb10kSeconds,
-            isDark: isDark,
             onChanged: onChanged10k,
           ),
           const SizedBox(height: 16),
-          _OnboardingPbField(
+          DurationPickerField(
             label: 'Media maratón',
             valueSeconds: pbHalfMarathonSeconds,
-            isDark: isDark,
             onChanged: onChangedHalf,
           ),
           const SizedBox(height: 16),
-          _OnboardingPbField(
+          DurationPickerField(
             label: 'Maratón',
             valueSeconds: pbMarathonSeconds,
-            isDark: isDark,
             onChanged: onChangedMarathon,
           ),
         ],
       ),
-    );
-  }
-}
-
-class _OnboardingPbField extends StatelessWidget {
-  final String label;
-  final int? valueSeconds;
-  final bool isDark;
-  final ValueChanged<int?> onChanged;
-
-  const _OnboardingPbField({
-    required this.label,
-    required this.valueSeconds,
-    required this.isDark,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final textPrimary = isDark ? Colors.white : const Color(0xFF1C1C1E);
-    final textSecondary =
-        isDark ? const Color(0xFF8E8E93) : const Color(0xFF6C6C70);
-    final fieldBg =
-        isDark ? const Color(0xFF1C1C1E) : const Color(0xFFF2F2F7);
-
-    final minutes = valueSeconds != null ? valueSeconds! ~/ 60 : null;
-    final seconds = valueSeconds != null ? valueSeconds! % 60 : null;
-
-    // Controllers se crean aquí — este widget es inmutable, se reconstruye en setState del padre
-    final minCtrl = TextEditingController(
-      text: minutes != null ? '$minutes' : '',
-    );
-    final secCtrl = TextEditingController(
-      text: seconds != null ? seconds.toString().padLeft(2, '0') : '',
-    );
-
-    return Row(
-      children: [
-        SizedBox(
-          width: 110,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: textPrimary,
-            ),
-          ),
-        ),
-        const Spacer(),
-        SizedBox(
-          width: 56,
-          child: TextField(
-            controller: minCtrl,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            maxLength: 3,
-            style: TextStyle(fontSize: 16, color: textPrimary),
-            decoration: InputDecoration(
-              hintText: '--',
-              hintStyle: TextStyle(color: textSecondary),
-              filled: true,
-              fillColor: fieldBg,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-              counterText: '',
-            ),
-            onChanged: (v) {
-              final m = int.tryParse(v);
-              final s = int.tryParse(secCtrl.text) ?? 0;
-              onChanged(m != null ? m * 60 + s.clamp(0, 59) : null);
-            },
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Text(
-            ':',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: textPrimary,
-            ),
-          ),
-        ),
-        SizedBox(
-          width: 56,
-          child: TextField(
-            controller: secCtrl,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            maxLength: 2,
-            style: TextStyle(fontSize: 16, color: textPrimary),
-            decoration: InputDecoration(
-              hintText: '00',
-              hintStyle: TextStyle(color: textSecondary),
-              filled: true,
-              fillColor: fieldBg,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-              counterText: '',
-            ),
-            onChanged: (v) {
-              final s = int.tryParse(v);
-              final m = int.tryParse(minCtrl.text) ?? 0;
-              if (s == null) return;
-              onChanged(m * 60 + s.clamp(0, 59));
-            },
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          'mm:ss',
-          style: TextStyle(fontSize: 12, color: textSecondary),
-        ),
-      ],
     );
   }
 }

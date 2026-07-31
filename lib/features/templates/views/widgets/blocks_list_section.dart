@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/widgets/app_prompt_dialog.dart';
+import 'package:running_laps/core/widgets/app_confirm_dialog.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
@@ -230,11 +232,12 @@ class _BlocksListSectionState extends State<BlocksListSection> {
     WorkoutBlock block,
     void Function(WorkoutBlock) onChanged,
   ) async {
-    final name = await showDialog<String>(
+    final name = await showAppPromptDialog(
       context: context,
-      builder: (_) => _SaveBlockDialog(
-        defaultName: _defaultBlockName(block),
-      ),
+      title: 'Guardar bloque',
+      hintText: 'Nombre del bloque',
+      initialValue: _defaultBlockName(block),
+      maxLength: 50,
     );
     if (name == null || name.trim().isEmpty) return;
 
@@ -725,58 +728,6 @@ class _WorkoutBlockCard extends StatelessWidget {
   }
 }
 
-// ── _SaveBlockDialog ──────────────────────────────────────────────────────────
-
-class _SaveBlockDialog extends StatefulWidget {
-  const _SaveBlockDialog({required this.defaultName});
-
-  final String defaultName;
-
-  @override
-  State<_SaveBlockDialog> createState() => _SaveBlockDialogState();
-}
-
-class _SaveBlockDialogState extends State<_SaveBlockDialog> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.defaultName);
-    _controller.addListener(() => setState(() {}));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final canSave = _controller.text.trim().isNotEmpty;
-    return AlertDialog(
-      title: const Text('Guardar bloque'),
-      content: TextField(
-        autofocus: true,
-        controller: _controller,
-        maxLength: 50,
-        decoration: const InputDecoration(hintText: 'Nombre del bloque'),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, null),
-          child: const Text('Cancelar'),
-        ),
-        FilledButton(
-          onPressed: canSave ? () => Navigator.pop(context, _controller.text) : null,
-          child: const Text('Guardar'),
-        ),
-      ],
-    );
-  }
-}
-
 // ── _SavedBlocksSheet ─────────────────────────────────────────────────────────
 
 class _SavedBlocksSheet extends StatefulWidget {
@@ -817,22 +768,12 @@ class _SavedBlocksSheetState extends State<_SavedBlocksSheet> {
   }
 
   Future<void> _delete(SavedBlock block) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppConfirmDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Eliminar bloque'),
-        content: Text('¿Eliminar "${block.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
+      title: 'Eliminar bloque',
+      message: '¿Eliminar "${block.name}"?',
+      confirmLabel: 'Eliminar',
+      isDestructive: true,
     );
     if (confirmed != true) return;
     await SavedBlocksRepository().deleteBlock(block.id);
