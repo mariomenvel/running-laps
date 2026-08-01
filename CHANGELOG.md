@@ -49,7 +49,11 @@ un create real rara vez lleva `analysis`, `isManual` y `source` a la vez.
 verdad son los topes de título y número de series, no el de claves— y añadido
 `test/unit/entrenamiento_firestore_test.dart`, que cuenta las claves del peor
 caso y se pone en rojo si un campo nuevo vuelve a acercarse al tope.
-⚠️ Las reglas hay que **desplegarlas** (`firebase deploy --only firestore:rules`).
+✅ Reglas **desplegadas** en producción el 31 jul 2026 (`firebase deploy --only
+firestore:rules` → `running-laps-mario-2025`). El mismo deploy publicó los otros
+dos cambios que llevaban desde el 22-24 jul sin subir: la retirada del bypass de
+Wear OS —que permitía `create` en `trainings` sin sesión de Auth— junto con la
+colección `wear_sessions` de `create` abierto, y el alta de `raceGoals`.
 
 **Y en pantalla:** bloque de FC en el resumen post-entreno (mín/media/pico,
 reparto por zonas y FC por serie, que solo existía en el historial), FC media
