@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -349,24 +350,8 @@ class NotificationService {
     }
   }
 
-  String _friendlyCategoryName(String category) {
-    const labels = {
-      'series_cortas':   'Series cortas',
-      'series_medias':   'Series medias',
-      'series_largas':   'Series largas',
-      'series_cuestas':  'Cuestas',
-      'series_mixtas':   'Series mixtas',
-      'fartlek':         'Fartlek',
-      'tempo':           'Tempo',
-      'rodaje_base':     'Rodaje',
-      'rodaje_largo':    'Rodaje largo',
-      'regenerativo':    'Regenerativo',
-      'gimnasio_fuerza': 'Gimnasio',
-      'test':            'Test',
-      'competicion':     'Competición',
-    };
-    return labels[category] ?? 'Entrenamiento';
-  }
+  String _friendlyCategoryName(String category) =>
+      SessionCategoryX.labelForValue(category);
 
   Future<void> cancelAll() async {
     await _plugin.cancelAll();

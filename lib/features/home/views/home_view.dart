@@ -1,4 +1,5 @@
 import 'dart:math' show min;
+import 'package:running_laps/features/templates/data/template_models.dart';
 import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'package:running_laps/features/training/data/training_repository.dart';
@@ -1314,22 +1315,10 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
   // ── Helpers de datos ─────────────────────────────────────────────────────────
 
-  String _categoryLabel(String? cat) {
-    if (cat == null || cat.isEmpty) return 'Entrenamiento';
-    const map = {
-      'series_cortas':   'Series cortas',
-      'series_largas':   'Series largas',
-      'series_cuestas':  'Series en cuesta',
-      'series_mixtas':   'Series mixtas',
-      'tempo':           'Tempo',
-      'fartlek':         'Fartlek',
-      'rodaje_base':     'Rodaje base',
-      'regenerativo':    'Regenerativo',
-      'competicion':     'Competición',
-      'test':            'Test',
-    };
-    return map[cat] ?? cat;
-  }
+  // Delegado en SessionCategoryX: este metodo tenia su propio mapa y le
+  // faltaban series_medias, rodaje_largo y gimnasio_fuerza, que el Coach si
+  // genera. Al caer al `?? cat` el atleta veia el identificador crudo.
+  String _categoryLabel(String? cat) => SessionCategoryX.labelForValue(cat);
 
   String _weekdayLabel(String dateStr) {
     final d = DateTime.tryParse(dateStr);

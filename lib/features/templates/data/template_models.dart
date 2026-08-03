@@ -11,9 +11,11 @@ enum TemplateBlockType {
 enum SessionCategory {
   regenerativo,
   rodajeBase,
+  rodajeLargo,
   tempo,
   fartlek,
   seriesLargas,
+  seriesMedias,
   seriesCortas,
   seriesCuestas,
   seriesMixtas,
@@ -27,9 +29,11 @@ extension SessionCategoryX on SessionCategory {
     switch (this) {
       case SessionCategory.regenerativo:    return 'Regenerativo';
       case SessionCategory.rodajeBase:      return 'Rodaje base (Z2)';
+      case SessionCategory.rodajeLargo:     return 'Rodaje largo';
       case SessionCategory.tempo:           return 'Tempo (Z3)';
       case SessionCategory.fartlek:         return 'Fartlek';
       case SessionCategory.seriesLargas:    return 'Series largas';
+      case SessionCategory.seriesMedias:    return 'Series medias';
       case SessionCategory.seriesCortas:    return 'Series cortas';
       case SessionCategory.seriesCuestas:   return 'Series en cuestas';
       case SessionCategory.seriesMixtas:    return 'Series mixtas';
@@ -43,9 +47,11 @@ extension SessionCategoryX on SessionCategory {
     switch (this) {
       case SessionCategory.regenerativo:    return 'regenerativo';
       case SessionCategory.rodajeBase:      return 'rodaje_base';
+      case SessionCategory.rodajeLargo:     return 'rodaje_largo';
       case SessionCategory.tempo:           return 'tempo';
       case SessionCategory.fartlek:         return 'fartlek';
       case SessionCategory.seriesLargas:    return 'series_largas';
+      case SessionCategory.seriesMedias:    return 'series_medias';
       case SessionCategory.seriesCortas:    return 'series_cortas';
       case SessionCategory.seriesCuestas:   return 'series_cuestas';
       case SessionCategory.seriesMixtas:    return 'series_mixtas';
@@ -55,13 +61,28 @@ extension SessionCategoryX on SessionCategory {
     }
   }
 
+  /// Nombre legible a partir del slug que viaja en Firestore.
+  ///
+  /// Fuente única: había dos mapas sueltos (`home_view._categoryLabel` y
+  /// `notification_service._friendlyCategoryName`) y no cubrían lo mismo. El de
+  /// Home no conocía `series_medias` ni `rodaje_largo` —dos categorías que el
+  /// Coach sí genera (`_normalizeCategory` las produce explícitamente)— y caía
+  /// a `?? cat`, así que el atleta veía "series_medias" tal cual en su pantalla
+  /// de inicio.
+  static String labelForValue(String? v) {
+    if (v == null || v.trim().isEmpty) return 'Entrenamiento';
+    return fromValue(v.trim()).label;
+  }
+
   static SessionCategory fromValue(String v) {
     switch (v) {
       case 'regenerativo':    return SessionCategory.regenerativo;
       case 'rodaje_base':     return SessionCategory.rodajeBase;
+      case 'rodaje_largo':    return SessionCategory.rodajeLargo;
       case 'tempo':           return SessionCategory.tempo;
       case 'fartlek':         return SessionCategory.fartlek;
       case 'series_largas':   return SessionCategory.seriesLargas;
+      case 'series_medias':   return SessionCategory.seriesMedias;
       case 'series_cortas':   return SessionCategory.seriesCortas;
       case 'series_cuestas':  return SessionCategory.seriesCuestas;
       case 'series_mixtas':   return SessionCategory.seriesMixtas;

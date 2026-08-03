@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 // Force reload
 import '../data/admin_repository.dart';
-import 'package:uuid/uuid.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/services/pdf_generator_service.dart';
 import 'package:printing/printing.dart';
 
