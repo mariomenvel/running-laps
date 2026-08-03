@@ -52,7 +52,31 @@ Paths clave:
 - `firebase_options.dart` — generado por flutterfire CLI, **no editar a mano**
 
 Features activas en `lib/features/`:
-`auth` · `training` · `history` · `home` · `analytics` · `groups` · `templates` · `avatar` · `profile` · `admin` · `ai_coach` · `athlete` · `calendar`
+`auth` · `training` · `history` · `home` · `analytics` · `templates` · `avatar` · `profile` · `admin` · `ai_coach` · `athlete` · `calendar`
+
+> **`groups` eliminada (3 ago 2026)** — grupos y retos quedan fuera de la v1. No
+> era una feature a medias esperando su turno: **no había forma de llegar a
+> ella**. Estaba montada en los slots 6 y 7 de `MainShell`, pero ni la barra
+> inferior ni el menú de perfil ni un solo `navigateTo(6)` apuntaban ahí. Y
+> costaba dinero igual, porque el `IndexedStack` construye todos sus hijos:
+> `GroupsListScreen.build` abría un listener de Firestore (`streamUserGroups`)
+> **en cada arranque**, y `TrainingRepository` llamaba a
+> `TrainingChallengeSyncService.onTrainingSaved` en **cada guardado** (una
+> query que siempre volvía vacía; en la ruta de update, además, un `.get()`
+> extra del documento solo para alimentarla).
+>
+> Se fueron 35 ficheros / 11.161 líneas, el tab de "Retos Globales" del panel
+> de admin (dependía de sus modelos) y 4 dependencias que se quedaron sin un
+> solo import: `confetti`, `qr_flutter`, `share_plus`, `crypto`.
+>
+> ⚠️ Los slots 6 y 7 de `MainShell` se dejaron **vacíos a propósito**: los
+> índices son la API de `navigateTo()` y están cableados por toda la app (el
+> perfil usa 8, 9, 10, 14, 16). Renumerar rompería la navegación en silencio.
+>
+> Las reglas de `firestore.rules` para `groups`/`global_challenges` se
+> conservan: son inertes sin cliente que escriba, y borrarlas complicaría
+> recuperar la feature. Para restaurarla: `git show 3ba951c` es el último
+> commit que la contiene entera.
 
 ---
 

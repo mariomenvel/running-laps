@@ -1,6 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../groups/data/models/challenge_models.dart';
-import '../../groups/data/models/enums.dart';
 
 class AdminRepository {
   final FirebaseFirestore _firestore;
@@ -364,40 +362,6 @@ class AdminRepository {
     } catch (e) {
       return {};
     }
-  }
-
-  /// Crea un reto global
-  Future<void> createGlobalChallenge(Challenge challenge) async {
-    await _firestore
-        .collection('global_challenges')
-        .doc(challenge.id)
-        .set(challenge.toMap());
-  }
-
-  /// Obtiene los retos globales
-  Stream<List<Challenge>> getGlobalChallenges() {
-    return _firestore
-        .collection('global_challenges')
-        .orderBy('startAt', descending: true)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        return Challenge.fromMap(doc.data(), id: doc.id);
-      }).toList();
-    });
-  }
-
-  /// Publica un reto global (cambia estado de draft a active)
-  Future<void> publishChallenge(String challengeId) async {
-    await _firestore
-        .collection('global_challenges')
-        .doc(challengeId)
-        .update({'status': ChallengeStatus.active.toFirestore()});
-  }
-
-  /// Elimina un reto global
-  Future<void> deleteGlobalChallenge(String challengeId) async {
-    await _firestore.collection('global_challenges').doc(challengeId).delete();
   }
 
   /// Parsea una fecha de forma robusta aceptando ISO String, int (ms) o Timestamp

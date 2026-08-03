@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
 import '../viewmodels/admin_controller.dart';
 import 'admin_dashboard_tab.dart';
-import 'admin_challenges_tab.dart';
 import '../../../../config/app_theme.dart';
 
 import 'package:running_laps/core/widgets/app_header.dart';
@@ -26,7 +25,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
   void initState() {
     super.initState();
     _controller = AdminController();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 1, vsync: this);
   }
 
   @override
@@ -87,7 +86,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                   splashBorderRadius: BorderRadius.circular(16),
                   tabs: const [
                     Tab(text: "Dashboard"),
-                    Tab(text: "Retos Globales"),
                   ],
                 ),
               );
@@ -98,7 +96,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
               controller: _tabController,
               children: [
                 AdminDashboardTab(controller: _controller),
-                AdminChallengesTab(controller: _controller),
               ],
             ),
           ),

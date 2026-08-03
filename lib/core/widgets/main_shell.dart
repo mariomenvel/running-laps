@@ -20,8 +20,6 @@ import 'package:running_laps/features/training/views/training_start_view.dart';
 import 'package:running_laps/features/history/views/history_screen.dart';
 import 'package:running_laps/features/history/views/training_detail_view.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
-import 'package:running_laps/features/groups/views/groups_list_screen.dart';
-import 'package:running_laps/features/groups/views/group_screen.dart';
 import 'package:running_laps/features/templates/views/templates_list_view.dart';
 import 'package:running_laps/features/templates/views/template_editor_view.dart';
 import 'package:running_laps/features/templates/data/template_models.dart';
@@ -85,7 +83,6 @@ class _MainShellState extends State<MainShell> {
 
   // Notifiers para tabs con parámetros
   final _detailNotifier          = ValueNotifier<Entrenamiento?>(null);
-  final _groupIdNotifier         = ValueNotifier<String?>(null);
   final _accountParamsNotifier   = ValueNotifier<Map<String, dynamic>?>(null);
   final _templateEditorNotifier  = ValueNotifier<TemplateEditorShellParams?>(null);
   final _athleteSessionNotifier  = ValueNotifier<AthleteSessionShellParams?>(null);
@@ -113,15 +110,17 @@ class _MainShellState extends State<MainShell> {
           : const SizedBox.shrink(),
     ),
 
-    const GroupsListScreen(),   // 6 → Lista de grupos
-
-    // 7 → Detalle de grupo
-    ValueListenableBuilder<String?>(
-      valueListenable: _groupIdNotifier,
-      builder: (_, gid, __) => gid != null
-          ? GroupScreen(key: ValueKey(gid), groupId: gid)
-          : const SizedBox.shrink(),
-    ),
+    // 6 y 7 → eran la lista y el detalle de grupos. Grupos y retos quedan
+    // fuera de la v1 y la feature se eliminó (ago 2026): no había forma de
+    // llegar a ella —ni pestaña, ni tile de perfil, ni un solo navigateTo(6)—
+    // pero al estar montada aquí el IndexedStack construía sus hijos igual y
+    // abría un listener de Firestore (streamUserGroups) en cada arranque.
+    //
+    // Los huecos se conservan a propósito: los índices de los slots son la API
+    // de navigateTo() y están cableados por toda la app (perfil usa 8, 9, 10,
+    // 14, 16). Renumerar aquí rompería la navegación en silencio.
+    const SizedBox.shrink(),   // 6 → libre
+    const SizedBox.shrink(),   // 7 → libre
 
     // 8 → Cuenta y ajustes
     ValueListenableBuilder<Map<String, dynamic>?>(
@@ -198,7 +197,6 @@ class _MainShellState extends State<MainShell> {
   void dispose() {
     tabIndexNotifier.dispose();
     _detailNotifier.dispose();
-    _groupIdNotifier.dispose();
     _accountParamsNotifier.dispose();
     _templateEditorNotifier.dispose();
     _athleteSessionNotifier.dispose();
@@ -252,8 +250,6 @@ class _MainShellState extends State<MainShell> {
     switch (index) {
       case 5:
         if (params is Entrenamiento) _detailNotifier.value = params;
-      case 7:
-        if (params is String) _groupIdNotifier.value = params;
       case 8:
         if (params is Map<String, dynamic>) _accountParamsNotifier.value = params;
       case 12:

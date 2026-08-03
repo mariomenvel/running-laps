@@ -6,7 +6,6 @@ import 'serie.dart';
 import '../../../core/services/gps_service.dart';
 import '../../../core/services/rate_limit_service.dart';
 import '../../../core/utils/rdp_smoother.dart';
-import '../../../features/groups/data/services/training_challenge_sync_service.dart';
 import '../../../features/home/data/home_estadistica_repository.dart';
 
 class TrainingsPage {
@@ -26,14 +25,11 @@ class TrainingRepository {
   // conservan el comportamiento de producción exacto.
   TrainingRepository({
     FirebaseFirestore? firestore,
-    TrainingChallengeSyncService? syncService,
-  })  : _db = firestore ?? FirebaseFirestore.instance,
-        _syncService = syncService ?? TrainingChallengeSyncService() {
+  }) : _db = firestore ?? FirebaseFirestore.instance {
     _rateLimitService.registerLimit('training:save', const Duration(seconds: 3));
   }
 
   final FirebaseFirestore _db;
-  final TrainingChallengeSyncService _syncService;
   final RateLimitService _rateLimitService = RateLimitService();
 
   /// Uid del usuario autenticado. Sobrescribible en tests
@@ -106,16 +102,6 @@ class TrainingRepository {
 
     HomeEstadisticaRepository().clearCache();
 
-    // Sync to challenges (async, don't await to avoid blocking)
-    _syncService.onTrainingSaved(
-      uid: uid,
-      entrenamiento: e.copyWith(id: trainingId),
-      trainingId: trainingId,
-      isUpdate: false,
-    ).catchError((Object error) {
-      debugPrint('[TrainingRepository] sync retos falló: $error');
-    });
-
     return trainingId;
   }
 
@@ -158,21 +144,6 @@ class TrainingRepository {
       'tags': tags,
       'updatedAt': FieldValue.serverTimestamp(),
     });
-
-    // Re-sync to challenges on update (async)
-    // Fetch the updated training document
-    final doc = await _userTrainings(uid).doc(trainingId).get();
-    if (doc.exists) {
-      final training = Entrenamiento.fromMap(doc.data()!, id: doc.id);
-      _syncService.onTrainingSaved(
-        uid: uid,
-        entrenamiento: training,
-        trainingId: trainingId,
-        isUpdate: true,
-      ).catchError((Object error) {
-        debugPrint('[TrainingRepository] re-sync retos falló: $error');
-      });
-    }
   }
 
   /// Entrenamientos con `fecha >= since`, ordenados descendente.

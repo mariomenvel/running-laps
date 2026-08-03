@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';

@@ -1,8 +1,6 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:running_laps/core/services/rate_limit_service.dart';
-import 'package:running_laps/features/groups/data/repositories/challenges_repository.dart';
-import 'package:running_laps/features/groups/data/services/training_challenge_sync_service.dart';
 import 'package:running_laps/core/services/gps_service.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/data/fc_reading.dart';
@@ -13,13 +11,7 @@ import 'package:running_laps/features/training/data/training_repository.dart';
 // sobrescribir el uid sin necesidad de Firebase Auth real.
 class _TestableRepo extends TrainingRepository {
   _TestableRepo({required FakeFirebaseFirestore firestore})
-      : super(
-          firestore: firestore,
-          syncService: TrainingChallengeSyncService(
-            firestore: firestore,
-            challengesRepo: ChallengesRepository(firestore: firestore),
-          ),
-        );
+      : super(firestore: firestore);
 
   @override
   String? get currentUserId => _uid;
@@ -442,13 +434,7 @@ void main() {
 
 class _NullUidRepo extends TrainingRepository {
   _NullUidRepo({required FakeFirebaseFirestore firestore})
-      : super(
-          firestore: firestore,
-          syncService: TrainingChallengeSyncService(
-            firestore: firestore,
-            challengesRepo: ChallengesRepository(firestore: firestore),
-          ),
-        );
+      : super(firestore: firestore);
 
   @override
   String? get currentUserId => null;

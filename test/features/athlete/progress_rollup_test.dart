@@ -1,8 +1,6 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:running_laps/features/athlete/data/progress_repository.dart';
-import 'package:running_laps/features/groups/data/repositories/challenges_repository.dart';
-import 'package:running_laps/features/groups/data/services/training_challenge_sync_service.dart';
 import 'package:running_laps/features/training/data/entrenamiento.dart';
 import 'package:running_laps/features/training/data/serie.dart';
 import 'package:running_laps/features/training/data/training_repository.dart';
@@ -18,13 +16,7 @@ class _TestableTrainingRepo extends TrainingRepository {
   // El sync de retos se inyecta también: su constructor por defecto toca
   // FirebaseFirestore.instance y en un test no hay Firebase inicializado.
   _TestableTrainingRepo({required FakeFirebaseFirestore firestore})
-      : super(
-          firestore: firestore,
-          syncService: TrainingChallengeSyncService(
-            firestore: firestore,
-            challengesRepo: ChallengesRepository(firestore: firestore),
-          ),
-        );
+      : super(firestore: firestore);
 
   @override
   String? get currentUserId => _uid;

@@ -114,9 +114,12 @@ en `terms.html`).
 
 **Clasificación IARC**: contenido deportivo, sin violencia, sin contenido
 sexual, sin lenguaje soez, sin juego, **sin anuncios**, sin compras.
-Interacción entre usuarios: **sí** si publicas grupos/retos (hay nombres y
-rankings visibles entre miembros); **no** si lanzas sin grupos — respóndelo
-según lo que salga en la v1.
+Interacción entre usuarios: **NO**. Resuelto el 3 ago 2026 — la feature de
+grupos y retos se **eliminó del código**, no solo se ocultó. En la v1 no hay
+ningún punto donde un usuario vea a otro, ni nombres, ni rankings, ni contenido
+compartido. Esto importa más allá del IARC: las apps con contenido generado por
+usuarios tienen que ofrecer denuncia de abusos y bloqueo de usuarios, y no
+tenerlo es motivo de rechazo. Al no haber UGC, ese requisito no aplica.
 
 **Público objetivo**: 16+ (coherente con la edad mínima de la política de
 privacidad y de los términos).
