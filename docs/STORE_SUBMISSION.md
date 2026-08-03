@@ -26,8 +26,12 @@ Sacado de: campos escritos en `users/{uid}` en todo `lib/`, permisos del
 | Fecha de nacimiento y sexo biológico | `.birthDate`, `.sex` | Calcular zonas de FC | Onboarding del Coach IA (opcionales) |
 | FC máxima y zonas | `.fcMax`, `users/{uid}/settings` | Zonas de entrenamiento | `zones_repository` |
 | Entrenamientos: distancia, tiempo, ritmo, RPE, etiquetas, notas | `users/{uid}/trainings` | Función principal | `training_repository` |
-| **Ruta GPS** (coordenadas de la sesión) | dentro del propio entrenamiento (`gpsPoints`, `trackPoints`) | Mapa y ritmo | `gps_service` |
-| **Frecuencia cardíaca** (pulsómetro BLE) | `fcMedia`, `fcReadings` en cada serie | Métricas de sesión | `heart_rate_service` |
+| **Ruta GPS** (coordenadas de la sesión) | `users/{uid}/trainings/{id}/track/data` — subcolección aparte, **no** dentro del documento del entreno | Mapa y ritmo | `gps_service`, `training_repository._saveTrack` |
+| **Frecuencia cardíaca** (pulsómetro BLE) | Por serie: `fcMedia`, `fcReadings`. Por sesión: `fcMediaSesion`, `fcMaxSesion` | Métricas de sesión y reparto por zonas | `heart_rate_service`, `fc_analytics` |
+| **Competiciones objetivo** (fecha, distancia, prioridad) | `users/{uid}/raceGoals` | Planificar el bloque y el taper | `race_goal_repository` |
+| **Cuestionario semanal**: sensaciones, sueño y **molestias/lesiones** (texto libre) | `users/{uid}/aiCoachFeedback` | Autorregular la carga del plan | `ai_coach_repository` |
+| **Mensajes del chat con el Coach** (texto libre del usuario) | No se persisten; se envían al proveedor de IA en la petición | Responder al atleta | `ai_coach_chat_service` |
+| Plantillas, bloques guardados y sesiones planificadas | `users/{uid}/{templates,savedBlocks,athleteSessions}` | Configuración de entrenamiento | Sin datos personales |
 | Agregados | `.totalKm`, `.totalSessions`, `.totalTimeMinutes`, `.lastTrainingDate` | Estadísticas de inicio | `training_repository.createTraining` |
 | Consentimiento de datos de salud | `users/{uid}/settings/healthConsent` (fecha + versión) | Prueba del consentimiento art. 9 RGPD | `health_consent_service` |
 | Uso de la app y diagnósticos | Firebase Analytics / Crashlytics | Analítica y errores | `analytics_service`, `main.dart` |
@@ -40,15 +44,34 @@ y en segundo plano, Bluetooth, movimiento, micrófono y reconocimiento de voz.
 **Terceros:**
 - **Firebase / Google** (Auth, Firestore, Storage-no, Functions, Analytics,
   Crashlytics, App Check): encargado del tratamiento.
-- **OpenRouter** (modelo de IA del coach): recibe **métricas de entrenamiento,
-  sin identificadores**, y la llamada sale **desde una Cloud Function**, no
-  desde el móvil (`openrouter_client.dart` usa `httpsCallable`). Ni la clave ni
-  la conexión están en el cliente.
+- **OpenRouter** (modelo de IA del coach): la llamada sale **desde una Cloud
+  Function**, no desde el móvil (`openrouter_client.dart` usa `httpsCallable`).
+  Ni la clave ni la conexión están en el cliente.
+  **Verificado en el payload** (`ai_coach_prompt_builder._contextPayload`, ago
+  2026): no viaja `uid`, ni email, ni nombre. Sí viajan datos de salud, y
+  algunos en **texto libre escrito por el usuario**:
+  - objetivo, nivel, disponibilidad semanal y marcas personales;
+  - `fcMax`/`fcRest` y, por entreno, FC media/pico, reparto por zonas,
+    eficiencia y desacoplamiento;
+  - `coachNotes`, `recurringConstraints` y `temporaryStatuses` — aquí es donde
+    el atleta describe lesiones y limitaciones;
+  - `sensaciones` y `molestias` del cuestionario semanal;
+  - el mensaje que el atleta escribe en el chat.
+
+  > Por eso "salud y forma física" se declara como **compartido** en Data
+  > Safety. La ausencia de identificadores reduce el riesgo, pero no convierte
+  > esto en anónimo: son datos de salud de una persona identificable en tu
+  > sistema.
 - **Reconocimiento de voz del sistema operativo** para el dictado: lo procesa
   el SO (Google/Apple). La app **no almacena audio** en ningún momento.
 
 **No hay**: anuncios, compras dentro de la app (todo gratis en beta),
-seguimiento entre apps ni identificadores publicitarios.
+seguimiento entre apps ni identificadores publicitarios. Esto último no es solo
+una promesa: el manifest **elimina explícitamente** el permiso de ID de
+publicidad que arrastran las librerías de Google —
+`<uses-permission android:name="com.google.android.gms.permission.AD_ID"
+tools:node="remove" />`— así que el AAB sale sin él y la respuesta "no se
+recogen identificadores publicitarios" es comprobable en el propio bundle.
 
 ---
 
@@ -67,8 +90,16 @@ solicitar su borrado** (borrado in-app + `runninglaps.com/delete-account`).
 | Otra info personal (fecha de nacimiento, sexo) | Sí, vinculado | No | Personalización (zonas de FC) | No |
 | Interacciones con la app | Sí, vinculado | No | Analítica | No |
 | Registros de fallos y diagnósticos | Sí, vinculado | No | Analítica y rendimiento | No |
+| **Mensajes en la app** (chat con el Coach) | Sí, vinculado | **Sí** → proveedor de IA | Función de la app | No |
 | Fotos | **No** | — | — | — |
 | Audio / grabaciones de voz | **No** (lo procesa el SO; la app no lo guarda) | — | — | — |
+
+**Por qué aparecen los mensajes.** El tipo "Mensajes → Otros mensajes en la
+app" de Play cubre *chat content*. Lo que el atleta escribe en el chat del
+Coach sale hacia OpenRouter, así que se declara aunque no se guarde en
+Firestore: Data Safety pregunta por lo que se **recoge y transmite**, no solo
+por lo que se persiste. Lo mismo vale para las molestias y sensaciones del
+cuestionario semanal, que van dentro de "salud y forma física".
 
 **El punto delicado — "compartido" con la IA.** Play distingue entre
 *encargado del tratamiento* (no cuenta como compartir) y *transferencia a un
@@ -106,7 +137,8 @@ identificadores compartidos con terceros con fines publicitarios).
 | Identifiers | ID de usuario (Firebase UID) | Funcionalidad de la app |
 | Usage Data | Interacciones con la app | Analítica |
 | Diagnostics | Fallos y rendimiento | Analítica |
-| Sensitive Info | Fecha de nacimiento, sexo biológico | Personalización |
+| Sensitive Info | Fecha de nacimiento, sexo biológico, **lesiones y molestias** (texto libre del cuestionario y del perfil del Coach) | Personalización |
+| User Content | **Mensajes del chat con el Coach**, notas de entrenamiento | Funcionalidad de la app |
 
 **Estatus de trader (DSA)** — obligatorio para distribuir en la UE: hay que
 publicar nombre, dirección, email y teléfono de contacto. Sin esto la app **no
@@ -193,11 +225,10 @@ Contraseña: <...>
 La cuenta tiene entrenamientos e historial para que se vean las pantallas de
 analytics y calendario sin tener que salir a correr.
 
-UBICACIÓN EN SEGUNDO PLANO
-La app usa ubicación en segundo plano únicamente durante un entrenamiento
-iniciado por el usuario, para seguir registrando la ruta cuando la pantalla se
-bloquea. Se muestra una notificación persistente mientras dura. No se recoge
-ubicación fuera de una sesión activa.
+UBICACION (redactar distinto en cada tienda - ver nota debajo del bloque)
+La app registra la ruta unicamente durante un entrenamiento iniciado por el
+usuario, con una notificacion persistente visible mientras dura. No se recoge
+ubicacion fuera de una sesion activa.
 
 PERMISOS BAJO DEMANDA
 Ningún permiso se solicita al abrir la app: ubicación y movimiento se piden en
@@ -211,6 +242,27 @@ Bluetooth, y requiere aceptar antes un consentimiento explícito.
 BORRADO DE CUENTA
 Perfil → Ajustes → Borrar cuenta. También en runninglaps.com/delete-account.
 ```
+
+> ⚠️ **No escribas "ubicación en segundo plano" en las notas de Google Play.**
+> Verificado en `AndroidManifest.xml` (ago 2026): la app **no declara**
+> `ACCESS_BACKGROUND_LOCATION`. Usa `FOREGROUND_SERVICE_LOCATION` con
+> `foregroundServiceType="location"`, que es el patrón que Play acepta **sin**
+> la declaración especial de ubicación en segundo plano — la revisión más dura,
+> con vídeo demostrativo obligatorio. Decir que usas background location invita
+> a esa revisión por un permiso que ni siquiera pides. Para Play, redáctalo así:
+>
+> ```
+> UBICACIÓN
+> El seguimiento se hace con un servicio en primer plano
+> (foregroundServiceType="location") con notificación persistente, solo
+> mientras dura un entrenamiento que el usuario ha iniciado. La app no
+> declara ACCESS_BACKGROUND_LOCATION.
+> ```
+>
+> En **App Store sí aplica** lo contrario: el `Info.plist` declara
+> `NSLocationAlwaysAndWhenInUseUsageDescription` y `UIBackgroundModes:
+> location`, así que ahí la redacción de "segundo plano" es correcta y hay que
+> justificarla — es exactamente lo que Apple espera leer.
 
 ---
 
