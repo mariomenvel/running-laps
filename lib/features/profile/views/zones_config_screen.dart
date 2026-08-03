@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_date_picker.dart';
 import 'package:running_laps/core/widgets/app_header.dart';
@@ -90,10 +91,20 @@ class _ZonesConfigScreenState extends State<ZonesConfigScreen> {
             );
           }
 
-          final zones = _vm.currentZones;
-          final estimated = _vm.effectiveFcMax;
           final profile = vmState.profile;
           final hasBirthDate = profile?.birthDate != null;
+
+          // La previsualización sigue al valor que hay **en pantalla**, no al
+          // guardado en el perfil: eligiendo 197 en la rueda, la tabla de abajo
+          // seguía diciendo "FCmáx 194 bpm" hasta pulsar Guardar, y la pantalla
+          // se contradecía a sí misma mientras la usabas.
+          //
+          // `fcMaxEffective` da justo esta semántica: el valor manual manda y,
+          // si se limpia, vuelve la estimación por edad. Así el botón de
+          // limpiar también se ve: las zonas saltan de vuelta a las estimadas.
+          final estimated =
+              ZonesService().fcMaxEffective(_fcMax, profile?.birthDate);
+          final zones = ZonesService().zonesFor(estimated ?? 180);
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),

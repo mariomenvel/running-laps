@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/features/profile/data/user_profile_model.dart';
 import 'package:running_laps/features/profile/data/zones_repository.dart';
 
@@ -39,7 +38,6 @@ class ZonesViewModel {
   bool _disposed = false;
 
   final ZonesRepository _repo;
-  final _zonesService = ZonesService();
 
   final state = ValueNotifier<ZonesViewModelState>(
     const ZonesViewModelState(),
@@ -51,11 +49,12 @@ class ZonesViewModel {
 
   bool get needsBirthDate => _profile?.birthDate == null;
 
-  int? get effectiveFcMax =>
-      _zonesService.fcMaxEffective(_profile?.fcMax, _profile?.birthDate);
-
-  List<ZoneRange> get currentZones =>
-      _zonesService.zonesFor(effectiveFcMax ?? 180);
+  // Aquí vivían `effectiveFcMax` y `currentZones`, que derivaban las zonas del
+  // perfil **guardado**. La pantalla los usaba para previsualizar y por eso
+  // elegir 197 en la rueda dejaba la tabla de abajo en 194 hasta pulsar
+  // Guardar. La previsualización ahora sale del valor en pantalla
+  // (`ZonesService().fcMaxEffective(_fcMax, birthDate)` en la vista), así que
+  // estos getters no solo sobraban: usarlos reintroducía el desfase.
 
   // ── Actions ────────────────────────────────────────────────────────
 

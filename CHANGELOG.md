@@ -1,5 +1,24 @@
 # CHANGELOG — Running Laps
 
+## [Fix] — La pantalla de zonas se contradecía a sí misma — 2026-08-03
+Encontrado probando en dispositivo, no por los tests: al elegir 197 en la rueda
+de FCmáx, la tabla de abajo seguía diciendo "FCmáx 194 bpm" con los límites
+viejos hasta pulsar Guardar. Dos números distintos para lo mismo, a la vez, en
+la misma pantalla.
+
+La causa: la previsualización salía de `ZonesViewModel.effectiveFcMax`, que
+deriva del perfil **guardado**, mientras el campo mostraba el valor en pantalla.
+No lo introdujo la migración a rueda —con el `TextField` pasaba igual—, pero se
+nota más ahora que elegir un valor es un gesto y no teclear.
+
+Ahora la previsualización usa `ZonesService().fcMaxEffective(_fcMax, birthDate)`
+sobre el valor en pantalla. De paso, el botón de limpiar por fin se ve hacer
+algo: las zonas saltan de vuelta a las estimadas por edad.
+
+Se eliminan `effectiveFcMax` y `currentZones` del viewmodel: quedaron sin uso, y
+dejarlos era dejar la trampa puesta para el siguiente que previsualizara con
+ellos.
+
 ## [Feat] — La frecuencia cardíaca llega hasta el Coach — 2026-07-29
 Con el pulsómetro ya conectando, se recorrió la cadena entera de la FC: en
 vivo → resumen → historial → Coach IA. Funcionaba la mitad, y la mitad que
