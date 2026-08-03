@@ -57,16 +57,36 @@
 ## Checklist Google Play
 
 ### Cuenta y proceso
+- [x] **Clave de subida (upload key) creada** ✅ (3 ago 2026). Era un bloqueante
+  que no estaba en esta lista: `android/key.properties` apuntaba a un
+  `dummy.jks` inexistente, así que `flutter build appbundle --release` **fallaba**
+  (`validateSigningRelease: Keystore file 'dummy.jks' not found`) y no había
+  forma de subir nada a Play. Estado actual:
+  - Keystore PKCS12, RSA 2048, validez 10.000 días, alias `upload`,
+    `CN=Mario Mendoza, O=Running Laps, L=Madrid, C=ES`.
+  - Vive **fuera del repo**, en `C:/Users/mario/keys/running-laps-upload.jks`,
+    para que no pueda colarse en un commit. `android/key.properties` sigue
+    gitignoreado.
+  - ⚠️ En `key.properties` la ruta va con **barras normales**: es un
+    `.properties` de Java y `\` se interpreta como escape — con barras
+    invertidas el path se corrompe en silencio (`C:Usersmariokeys...`).
+  - AAB verificado: `jarsigner -verify` → `jar verified`, firmado por ese CN.
+  - 🔐 **Respaldar el `.jks` y su contraseña.** Con Play App Signing la clave
+    de firma real la custodia Google y la de subida es reseteable pidiéndoselo
+    a Google, así que perderla no es fatal — pero sí un trámite.
 - [ ] Crear cuenta de **Play Console** (25 $, pago único).
-  - ⚠️ Si es cuenta **personal** (no organización) creada después de nov 2023:
-    obligatorio pasar una **prueba cerrada con 12 testers durante 14 días** antes
-    de poder solicitar producción. Planificar el calendario con esto.
+  - ✅ **Decidido (3 ago 2026): cuenta personal.** Consecuencia asumida: al ser
+    personal creada después de nov 2023, es obligatorio pasar una **prueba
+    cerrada con 12 testers durante 14 días seguidos** antes de poder solicitar
+    producción. Los 12 tienen que ser cuentas de Google reales, aceptar la
+    invitación y **permanecer** en la prueba esos 14 días: el contador se mide
+    sobre testers activos, no sobre invitaciones enviadas. Conviene arrancarla
+    cuanto antes porque corre en paralelo a la ficha y los formularios.
   - Verificación de identidad (DNI) y datos de contacto de desarrollador
     **públicos** en la ficha (email obligatorio; teléfono/dirección según caso).
 - [ ] Crear la app en Console y subir el AAB firmado a prueba interna.
 - [ ] **Play App Signing**: Google custodia la clave de firma; tu keystore es la
-  "upload key". ⚠️ Respaldar el keystore y sus contraseñas — perderlo complica
-  cualquier futuro fuera de Play.
+  "upload key".
 
 ### Formularios de política (los que rechazan apps)
 - [ ] **Data Safety** — declarar con precisión:
