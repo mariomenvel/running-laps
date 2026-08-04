@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:running_laps/core/widgets/app_confirm_dialog.dart';
 import 'package:running_laps/core/widgets/wheel_sheets.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'package:flutter/foundation.dart';
@@ -647,113 +648,12 @@ class _TrainingStartViewState extends State<TrainingStartView>
     Navigator.of(modalContext).pop();
 
     // Pedimos confirmación con bottom sheet moderno
-    final bool? confirm = await showModalBottomSheet<bool>(
+    final bool? confirm = await showAppConfirmDialog(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: const EdgeInsets.all(28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 24),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-
-            // Icono de warning
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.rpeMax,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.warning_rounded,
-                size: 48,
-                color: AppColors.rpeMax,
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Título
-            Text(
-              '¿Descartar entrenamiento?',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-
-            // Descripción
-            Text(
-              'Se perderán todas las series registradas de esta sesión.',
-              style: TextStyle(
-                fontSize: 15,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                height: 1.4,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            
-            // Botón de descarte (rojo y prominente)
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.rpeMax,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 4,
-                  shadowColor: AppColors.rpeMax.withValues(alpha: 0.4),
-                ),
-                child: const Text(
-                  'Descartar',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            
-            // Botón cancelar (secundario)
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-              child: Text(
-                'Cancelar',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      title: '¿Descartar entrenamiento?',
+      message: 'Se perderán todas las series registradas de esta sesión.',
+      confirmLabel: 'Descartar',
+      isDestructive: true,
     );
 
     if (confirm == true) {
@@ -2331,97 +2231,13 @@ class _TrainingStartViewState extends State<TrainingStartView>
               child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
             ),
             confirmDismiss: (direction) async {
-              return await showModalBottomSheet<bool>(
+              return await showAppConfirmDialog(
                 context: context,
-                backgroundColor: Colors.transparent,
-                builder: (ctx) => Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(ctx).colorScheme.surface,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(32),
-                      topRight: Radius.circular(32),
-                    ),
-                  ),
-                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppColors.rpeMax,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(Icons.delete_sweep_rounded, color: AppColors.rpeMax, size: 40),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        "¿Borrar esta serie?",
-                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Theme.of(ctx).colorScheme.onSurface),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "La serie #${i + 1} se eliminará permanentemente de esta sesión.",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 15, color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.6)),
-                      ),
-                      const SizedBox(height: 32),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextButton(
-                              onPressed: () => Navigator.pop(ctx, false),
-                              style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                              ),
-                              child: Text(
-                                'Cancelar',
-                                style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: AppColors.rpeMax,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.rpeMax.withValues(alpha: 0.3),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: ElevatedButton(
-                                onPressed: () => Navigator.pop(ctx, true),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.transparent,
-                                  foregroundColor: Colors.white,
-                                  shadowColor: Colors.transparent,
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                ),
-                                child: const Text('Sí, borrar', style: TextStyle(fontWeight: FontWeight.w600)),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+                title: '¿Borrar esta serie?',
+                message: 'La serie #${i + 1} se eliminará permanentemente de '
+                    'esta sesión.',
+                confirmLabel: 'Borrar',
+                isDestructive: true,
               );
             },
             onDismissed: (direction) {

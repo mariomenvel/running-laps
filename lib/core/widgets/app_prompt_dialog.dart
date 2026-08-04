@@ -1,9 +1,10 @@
-import 'package:flutter/cupertino.dart';
-import '../theme/app_colors.dart';
+import 'package:flutter/material.dart';
+import 'package:running_laps/core/theme/app_colors.dart';
+import 'package:running_laps/core/theme/app_theme.dart';
+import 'package:running_laps/core/widgets/app_dialog.dart';
 
-/// Diálogo de entrada de **texto** estilo iOS — la contraparte de
-/// [showAppConfirmDialog] para cuando hace falta pedir un nombre.
-/// Reemplaza showDialog() + AlertDialog + TextField de Material.
+/// Diálogo de entrada de **texto** — la contraparte de [showAppConfirmDialog]
+/// para cuando hace falta pedir un nombre.
 ///
 /// Solo para texto libre: cualquier campo **numérico** debe usar
 /// `NumberPickerField` / `IosPicker`, nunca un teclado (ver CLAUDE.md).
@@ -26,34 +27,29 @@ Future<String?> showAppPromptDialog({
   int? maxLength,
   String confirmLabel = 'Guardar',
   String cancelLabel = 'Cancelar',
-}) async {
-  final controller = TextEditingController(text: initialValue ?? '');
-  controller.selection = TextSelection(
-    baseOffset: 0,
-    extentOffset: controller.text.length,
+}) {
+  // El controller lo crea y libera el propio diálogo. Antes se creaba aquí y
+  // se liberaba en un `finally` nada más volver de showDialog — pero la
+  // animación de cierre sigue viva en ese momento y el TextField todavía lo
+  // referencia, lo que reventaba el scope de foco (`_dependents.isEmpty`).
+  return showDialog<String>(
+    context: context,
+    barrierDismissible: true,
+    barrierColor: Colors.black.withValues(alpha: 0.45),
+    builder: (ctx) => _PromptDialog(
+      initialValue: initialValue,
+      title: title,
+      hintText: hintText,
+      maxLength: maxLength,
+      confirmLabel: confirmLabel,
+      cancelLabel: cancelLabel,
+    ),
   );
-
-  try {
-    return await showCupertinoDialog<String>(
-      context: context,
-      barrierDismissible: true,
-      builder: (ctx) => _PromptDialog(
-        controller: controller,
-        title: title,
-        hintText: hintText,
-        maxLength: maxLength,
-        confirmLabel: confirmLabel,
-        cancelLabel: cancelLabel,
-      ),
-    );
-  } finally {
-    controller.dispose();
-  }
 }
 
 class _PromptDialog extends StatefulWidget {
   const _PromptDialog({
-    required this.controller,
+    required this.initialValue,
     required this.title,
     required this.hintText,
     required this.maxLength,
@@ -61,7 +57,7 @@ class _PromptDialog extends StatefulWidget {
     required this.cancelLabel,
   });
 
-  final TextEditingController controller;
+  final String? initialValue;
   final String title;
   final String? hintText;
   final int? maxLength;
@@ -73,53 +69,94 @@ class _PromptDialog extends StatefulWidget {
 }
 
 class _PromptDialogState extends State<_PromptDialog> {
+  late final TextEditingController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = TextEditingController(text: widget.initialValue ?? '');
+    // Preseleccionado: escribir encima reemplaza el nombre por defecto en vez
+    // de concatenarse a él.
+    controller.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: controller.text.length,
+    );
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  void _confirmar(BuildContext ctx) {
+    final text = controller.text.trim();
+    if (text.isNotEmpty) Navigator.of(ctx).pop(text);
+  }
+
   @override
   Widget build(BuildContext context) {
-    // El botón se habilita/deshabilita en vivo, igual que hacía el
-    // FilledButton del AlertDialog al que sustituye.
-    return ValueListenableBuilder<TextEditingValue>(
-      valueListenable: widget.controller,
-      builder: (ctx, value, _) {
-        final text = value.text.trim();
-        final canConfirm = text.isNotEmpty;
-        return CupertinoAlertDialog(
-          title: Text(widget.title),
-          content: Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: CupertinoTextField(
-              controller: widget.controller,
-              autofocus: true,
-              maxLength: widget.maxLength,
-              placeholder: widget.hintText,
-              textCapitalization: TextCapitalization.sentences,
-              onSubmitted: (_) {
-                if (canConfirm) Navigator.of(ctx).pop(text);
-              },
-            ),
+    // ⚠️ El TextField se construye UNA vez, fuera del ValueListenableBuilder.
+    // Envolver el diálogo entero en el listener lo reconstruía en cada tecla y,
+    // con `autofocus: true`, eso revienta el scope de foco de Flutter
+    // (`_dependents.isEmpty`). Solo el botón depende de lo que hay escrito.
+    final campo = TextField(
+      controller: controller,
+      autofocus: true,
+      maxLength: widget.maxLength,
+      textCapitalization: TextCapitalization.sentences,
+      style: AppTypography.body.copyWith(
+        color: AppColors.textPrimary(context),
+        fontSize: 16,
+      ),
+      decoration: InputDecoration(
+        hintText: widget.hintText,
+        hintStyle: AppTypography.body.copyWith(
+          color: AppColors.textSecondary(context),
+          fontSize: 16,
+        ),
+        counterText: '',
+        filled: true,
+        fillColor: AppColors.surface2Of(context),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.l,
+          vertical: AppSpacing.m,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: AppColors.borderOf(context)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.brand, width: 1.5),
+        ),
+      ),
+      onSubmitted: (_) => _confirmar(context),
+    );
+
+    return AppDialog(
+      title: widget.title,
+      content: campo,
+      actions: [
+        AppDialogSecondaryAction(
+          label: widget.cancelLabel,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        // Solo esto se repinta al escribir.
+        ValueListenableBuilder<TextEditingValue>(
+          valueListenable: controller,
+          builder: (ctx, value, _) => AppDialogPrimaryAction(
+            label: widget.confirmLabel,
+            onPressed: value.text.trim().isEmpty
+                ? null
+                : () => _confirmar(context),
           ),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(
-                widget.cancelLabel,
-                style: TextStyle(color: AppColors.textSecondary(context)),
-              ),
-            ),
-            CupertinoDialogAction(
-              onPressed: canConfirm ? () => Navigator.of(ctx).pop(text) : null,
-              child: Text(
-                widget.confirmLabel,
-                style: TextStyle(
-                  color: canConfirm
-                      ? AppColors.brand
-                      : AppColors.textSecondary(context),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+        ),
+      ],
     );
   }
 }

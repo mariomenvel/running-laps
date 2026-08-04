@@ -172,6 +172,51 @@ void main() {
     expect(offenders, isEmpty, reason: offenders.join('\n'));
   });
 
+  test('nadie se construye su propio diálogo de confirmación', () {
+    // Los diálogos van por showAppConfirmDialog / showAppPromptDialog. Un
+    // `showModalBottomSheet<bool>` es la firma de una confirmación hecha a
+    // mano: templates_list_view tenía una de 90 líneas que hacía lo mismo que
+    // el helper, con otro aspecto y con un icono invisible (papelera roja
+    // sobre círculo rojo). Esta regla encontró otras tres que no aparecían
+    // buscando por texto.
+    //
+    // Excepciones: devolver bool no convierte un sheet en un diálogo. Estos
+    // dos son formularios cuyo bool significa "se guardó", no "aceptó".
+    const formulariosQueDevuelvenBool = [
+      'premium_training_card.dart',   // TagSelectorSheet: editar etiquetas
+      'training_session_view.dart',   // _showRpePicker: elegir el RPE
+    ];
+
+    final offenders = <String>[];
+    for (final entity in Directory('lib').listSync(recursive: true)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      if (formulariosQueDevuelvenBool.any(entity.path.endsWith)) continue;
+      if (entity.readAsStringSync().contains('showModalBottomSheet<bool>')) {
+        offenders.add(entity.path);
+      }
+    }
+    expect(offenders, isEmpty,
+        reason: 'Usa showAppConfirmDialog: ' + offenders.join(', '));
+  });
+
+  test('los selectores comparten la misma cabecera', () {
+    // Había tres patrones y tres palabras distintas para lo mismo: "Hecho" en
+    // number_picker_field, "Confirmar" en app_date_picker y un botón relleno
+    // abajo en wheel_sheets. Ahora los tres usan PickerSheetHeader.
+    const selectores = [
+      'lib/core/widgets/number_picker_field.dart',
+      'lib/core/widgets/app_date_picker.dart',
+      'lib/core/widgets/wheel_sheets.dart',
+    ];
+    for (final ruta in selectores) {
+      final src = File(ruta).readAsStringSync();
+      expect(src.contains('PickerSheetHeader'), isTrue,
+          reason: '$ruta no usa la cabecera común');
+      expect(src.contains("'Hecho'"), isFalse,
+          reason: '$ruta vuelve a decir "Hecho" en vez de "Confirmar"');
+    }
+  });
+
   test('nadie usa AlertDialog de Material en lib/', () {
     // Confirmaciones → showAppConfirmDialog; pedir un nombre →
     // showAppPromptDialog. Se repite fuera del grupo de vistas por la misma

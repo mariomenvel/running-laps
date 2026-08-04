@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:running_laps/core/widgets/app_dialog.dart';
 import 'package:running_laps/core/widgets/app_prompt_dialog.dart';
 
 void main() {
@@ -44,11 +45,12 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('es un diálogo Cupertino, no Material', (tester) async {
+    testWidgets('es el diálogo propio, no uno de plataforma', (tester) async {
       await openDialog(tester);
-      expect(find.byType(CupertinoAlertDialog), findsOneWidget);
+      expect(find.byType(AppDialog), findsOneWidget);
+      expect(find.byType(CupertinoAlertDialog), findsNothing);
       expect(find.byType(AlertDialog), findsNothing);
-      expect(find.byType(CupertinoTextField), findsOneWidget);
+      expect(find.byType(TextField), findsOneWidget);
     });
 
     testWidgets('muestra título, placeholder y botones', (tester) async {
@@ -61,8 +63,8 @@ void main() {
 
     testWidgets('precarga initialValue y lo deja seleccionado', (tester) async {
       await openDialog(tester, initialValue: 'Series 400m');
-      final field = tester.widget<CupertinoTextField>(
-        find.byType(CupertinoTextField),
+      final field = tester.widget<TextField>(
+        find.byType(TextField),
       );
       expect(field.controller!.text, 'Series 400m');
       // Seleccionado entero: escribir encima reemplaza el nombre por defecto
@@ -73,7 +75,7 @@ void main() {
 
     testWidgets('devuelve el texto al confirmar', (tester) async {
       await openDialog(tester);
-      await tester.enterText(find.byType(CupertinoTextField), 'Mi bloque');
+      await tester.enterText(find.byType(TextField), 'Mi bloque');
       await tester.pumpAndSettle();
       await tester.tap(find.text('Guardar'));
       await tester.pumpAndSettle();
@@ -82,7 +84,7 @@ void main() {
 
     testWidgets('recorta los espacios del texto devuelto', (tester) async {
       await openDialog(tester);
-      await tester.enterText(find.byType(CupertinoTextField), '  Rodaje  ');
+      await tester.enterText(find.byType(TextField), '  Rodaje  ');
       await tester.pumpAndSettle();
       await tester.tap(find.text('Guardar'));
       await tester.pumpAndSettle();
@@ -100,8 +102,8 @@ void main() {
     testWidgets('el botón de confirmar está deshabilitado si está vacío',
         (tester) async {
       await openDialog(tester);
-      final accion = tester.widget<CupertinoDialogAction>(
-        find.widgetWithText(CupertinoDialogAction, 'Guardar'),
+      final accion = tester.widget<AppDialogPrimaryAction>(
+        find.widgetWithText(AppDialogPrimaryAction, 'Guardar'),
       );
       expect(accion.onPressed, isNull);
     });
@@ -109,28 +111,28 @@ void main() {
     testWidgets('un texto de solo espacios tampoco habilita el botón',
         (tester) async {
       await openDialog(tester);
-      await tester.enterText(find.byType(CupertinoTextField), '   ');
+      await tester.enterText(find.byType(TextField), '   ');
       await tester.pumpAndSettle();
-      final accion = tester.widget<CupertinoDialogAction>(
-        find.widgetWithText(CupertinoDialogAction, 'Guardar'),
+      final accion = tester.widget<AppDialogPrimaryAction>(
+        find.widgetWithText(AppDialogPrimaryAction, 'Guardar'),
       );
       expect(accion.onPressed, isNull);
     });
 
     testWidgets('el botón se habilita al escribir', (tester) async {
       await openDialog(tester);
-      await tester.enterText(find.byType(CupertinoTextField), 'x');
+      await tester.enterText(find.byType(TextField), 'x');
       await tester.pumpAndSettle();
-      final accion = tester.widget<CupertinoDialogAction>(
-        find.widgetWithText(CupertinoDialogAction, 'Guardar'),
+      final accion = tester.widget<AppDialogPrimaryAction>(
+        find.widgetWithText(AppDialogPrimaryAction, 'Guardar'),
       );
       expect(accion.onPressed, isNotNull);
     });
 
     testWidgets('respeta maxLength', (tester) async {
       await openDialog(tester, maxLength: 5);
-      final field = tester.widget<CupertinoTextField>(
-        find.byType(CupertinoTextField),
+      final field = tester.widget<TextField>(
+        find.byType(TextField),
       );
       expect(field.maxLength, 5);
     });

@@ -1,8 +1,12 @@
-import 'package:flutter/cupertino.dart';
-import '../theme/app_colors.dart';
+import 'package:flutter/material.dart';
+import 'package:running_laps/core/widgets/app_dialog.dart';
 
-/// Diálogo de confirmación estilo iOS.
-/// Reemplaza showDialog() + AlertDialog de Material.
+/// Diálogo de confirmación. Única forma permitida de preguntar
+/// "¿seguro?" en la app.
+///
+/// Antes era un `CupertinoAlertDialog`; ahora se apoya en [AppDialog], que es
+/// la misma cara en Android e iOS. La API no cambia — los 16 call sites siguen
+/// funcionando igual.
 ///
 /// Parámetros:
 /// - [title] — título del diálogo
@@ -20,38 +24,23 @@ Future<bool?> showAppConfirmDialog({
   String confirmLabel = 'Confirmar',
   String cancelLabel = 'Cancelar',
   bool isDestructive = false,
-}) async {
-  return await showCupertinoDialog<bool>(
+}) {
+  return showDialog<bool>(
     context: context,
     barrierDismissible: true,
-    builder: (ctx) => CupertinoAlertDialog(
-      title: Text(title),
-      content: message != null
-          ? Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(message),
-            )
-          : null,
+    barrierColor: Colors.black.withValues(alpha: 0.45),
+    builder: (ctx) => AppDialog(
+      title: title,
+      message: message,
       actions: [
-        CupertinoDialogAction(
+        AppDialogSecondaryAction(
+          label: cancelLabel,
           onPressed: () => Navigator.of(ctx).pop(false),
-          child: Text(
-            cancelLabel,
-            style: TextStyle(color: AppColors.textSecondary(context)),
-          ),
         ),
-        CupertinoDialogAction(
-          isDestructiveAction: isDestructive,
+        AppDialogPrimaryAction(
+          label: confirmLabel,
+          isDestructive: isDestructive,
           onPressed: () => Navigator.of(ctx).pop(true),
-          child: Text(
-            confirmLabel,
-            style: isDestructive
-                ? null
-                : const TextStyle(
-                    color: AppColors.brand,
-                    fontWeight: FontWeight.w600,
-                  ),
-          ),
         ),
       ],
     ),

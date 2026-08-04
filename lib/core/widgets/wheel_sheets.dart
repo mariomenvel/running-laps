@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/widgets/picker_sheet_header.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/ios_picker.dart';
 
@@ -139,14 +140,10 @@ class _WheelSheetState extends State<_WheelSheet> {
       ),
       child: Column(
         children: [
-          const SizedBox(height: 12),
-          Text(
-            widget.title,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary(context),
-            ),
+          PickerSheetHeader(
+            title: widget.title,
+            onCancel: () => Navigator.pop(context),
+            onConfirm: valido ? () => Navigator.pop(context, valor) : null,
           ),
           Expanded(
             child: Center(
@@ -169,17 +166,7 @@ class _WheelSheetState extends State<_WheelSheet> {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: AppColors.brand),
-                onPressed: valido ? () => Navigator.pop(context, valor) : null,
-                child: const Text('Confirmar'),
-              ),
-            ),
-          ),
+          const SizedBox(height: 12),
         ],
       ),
     );

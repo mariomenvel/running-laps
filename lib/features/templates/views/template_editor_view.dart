@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/widgets/app_confirm_dialog.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
@@ -358,97 +359,12 @@ class _TemplateEditorViewState extends State<TemplateEditorView> {
   }
 
   void _showDiscardDialog() async {
-    final result = await showModalBottomSheet<bool>(
+    final result = await showAppConfirmDialog(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        decoration: BoxDecoration(
-          color: Theme.of(ctx).colorScheme.surface,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(32),
-            topRight: Radius.circular(32),
-          ),
-        ),
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.rpeMid,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.warning_amber_rounded, color: AppColors.rpeMid, size: 40),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              "¿Descartar cambios?",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Theme.of(ctx).colorScheme.onSurface),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              "Tienes cambios sin guardar en esta plantilla. Si sales ahora, se perderán para siempre.",
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.6)),
-            ),
-            const SizedBox(height: 32),
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(ctx, false),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                    child: Text(
-                      'Seguir editando',
-                      style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.rpeMax,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.rpeMax.withValues(alpha: 0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        foregroundColor: Colors.white,
-                        shadowColor: Colors.transparent,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      child: const Text('Sí, descartar', style: TextStyle(fontWeight: FontWeight.w600)),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+      title: '¿Descartar cambios?',
+      confirmLabel: 'Descartar',
+      cancelLabel: 'Seguir editando',
+      isDestructive: true,
     );
 
     if (result == true) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/widgets/picker_sheet_header.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/widgets/ios_picker.dart';
@@ -62,44 +63,13 @@ class NumberPickerField extends StatelessWidget {
                   ),
                 ),
               ),
-              // Header
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.m, vertical: AppSpacing.s),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.of(ctx).pop(),
-                      child: Text(
-                        'Cancelar',
-                        style: AppTypography.body.copyWith(
-                          color: AppColors.textSecondary(context),
-                        ),
-                      ),
-                    ),
-                    Text(
-                      label,
-                      style: AppTypography.body.copyWith(
-                        color: AppColors.textPrimary(context),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(ctx).pop();
-                        onChanged(tempValue);
-                      },
-                      child: Text(
-                        'Hecho',
-                        style: AppTypography.body.copyWith(
-                          color: AppColors.brand,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              PickerSheetHeader(
+                title: label,
+                onCancel: () => Navigator.of(ctx).pop(),
+                onConfirm: () {
+                  Navigator.of(ctx).pop();
+                  onChanged(tempValue);
+                },
               ),
               Divider(
                 height: 0.5,

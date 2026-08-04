@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:running_laps/core/widgets/app_confirm_dialog.dart';
+import 'package:running_laps/core/widgets/app_dialog.dart';
 
 void main() {
   group('showAppConfirmDialog', () {
@@ -114,22 +115,43 @@ void main() {
       expect(find.text('Volver'), findsOneWidget);
     });
 
-    testWidgets('isDestructive usa CupertinoDialogAction destructiva',
-        (tester) async {
-      await openDialog(tester, isDestructive: true);
-      final action = tester.widget<CupertinoDialogAction>(
-        find.widgetWithText(CupertinoDialogAction, 'Confirmar'),
-      );
-      expect(action.isDestructiveAction, true);
+    testWidgets('es el diálogo propio, no uno de plataforma', (tester) async {
+      // Una sola cara en Android e iOS: ni CupertinoAlertDialog (que se veía
+      // como iOS 13) ni AlertDialog de Material.
+      await openDialog(tester);
+      expect(find.byType(AppDialog), findsOneWidget);
+      expect(find.byType(CupertinoAlertDialog), findsNothing);
+      expect(find.byType(AlertDialog), findsNothing);
     });
 
-    testWidgets('isDestructive false no usa acción destructiva',
+    testWidgets('isDestructive pinta el botón de acción en rojo',
+        (tester) async {
+      await openDialog(tester, isDestructive: true);
+      final action = tester.widget<AppDialogPrimaryAction>(
+        find.widgetWithText(AppDialogPrimaryAction, 'Confirmar'),
+      );
+      expect(action.isDestructive, isTrue);
+    });
+
+    testWidgets('sin isDestructive el botón va en color de marca',
         (tester) async {
       await openDialog(tester, isDestructive: false);
-      final action = tester.widget<CupertinoDialogAction>(
-        find.widgetWithText(CupertinoDialogAction, 'Confirmar'),
+      final action = tester.widget<AppDialogPrimaryAction>(
+        find.widgetWithText(AppDialogPrimaryAction, 'Confirmar'),
       );
-      expect(action.isDestructiveAction, false);
+      expect(action.isDestructive, isFalse);
+    });
+
+    testWidgets('cancelar y confirmar son botones distintos', (tester) async {
+      // El que ejecuta la acción es el primario; el de cancelar, secundario.
+      // Si se invirtieran, un toque distraído borraría datos.
+      await openDialog(tester);
+      expect(find.byType(AppDialogPrimaryAction), findsOneWidget);
+      expect(find.byType(AppDialogSecondaryAction), findsOneWidget);
+      expect(
+        find.widgetWithText(AppDialogSecondaryAction, 'Cancelar'),
+        findsOneWidget,
+      );
     });
   });
 }

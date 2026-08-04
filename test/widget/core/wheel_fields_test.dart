@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/widgets/picker_sheet_header.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:running_laps/core/widgets/duration_picker_field.dart';
 import 'package:running_laps/core/widgets/wheel_sheets.dart';
@@ -8,6 +9,11 @@ import 'package:running_laps/core/widgets/wheel_value_field.dart';
 /// (deuda técnica #8). Lo que se protege aquí no es el aspecto, sino las dos
 /// cosas que se rompen sin querer: el formato del valor y la posibilidad de
 /// volver a "sin valor", que en estos campos significa algo distinto de cero.
+/// La accion de confirmar vive ahora en `PickerSheetHeader`, compartida por
+/// los tres selectores. null = deshabilitada.
+VoidCallback? _confirmarDe(WidgetTester tester) =>
+    tester.widget<PickerSheetHeader>(find.byType(PickerSheetHeader)).onConfirm;
+
 void main() {
   group('DurationPickerField.format', () {
     test('rellena los segundos a dos dígitos', () {
@@ -161,10 +167,7 @@ void main() {
         tester,
         (ctx) => showDistanceWheelSheet(context: ctx, initialMeters: 0),
       );
-      final boton = tester.widget<FilledButton>(
-        find.widgetWithText(FilledButton, 'Confirmar'),
-      );
-      expect(boton.onPressed, isNull);
+      expect(_confirmarDe(tester), isNull);
     });
 
     testWidgets('una duración de 0 tampoco, salvo que se permita',
@@ -173,14 +176,7 @@ void main() {
         tester,
         (ctx) => showDurationWheelSheet(context: ctx, initialSeconds: 0),
       );
-      expect(
-        tester
-            .widget<FilledButton>(
-              find.widgetWithText(FilledButton, 'Confirmar'),
-            )
-            .onPressed,
-        isNull,
-      );
+      expect(_confirmarDe(tester), isNull);
     });
 
     testWidgets('allowZero habilita el 0 (descanso de series encadenadas)',
@@ -193,14 +189,7 @@ void main() {
           allowZero: true,
         ),
       );
-      expect(
-        tester
-            .widget<FilledButton>(
-              find.widgetWithText(FilledButton, 'Confirmar'),
-            )
-            .onPressed,
-        isNotNull,
-      );
+      expect(_confirmarDe(tester), isNotNull);
     });
 
     testWidgets('confirmar devuelve los metros elegidos', (tester) async {

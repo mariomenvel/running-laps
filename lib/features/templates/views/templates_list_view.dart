@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/widgets/app_confirm_dialog.dart';
 import 'package:running_laps/config/app_theme.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/utils/app_transitions.dart';
@@ -38,109 +39,16 @@ class _TemplatesListViewState extends State<TemplatesListView> {
 
 
   Future<void> _deleteTemplate(TrainingTemplate template) async {
-    final confirm = await showModalBottomSheet<bool>(
+    // Esto eran 90 líneas de sheet a mano que hacían exactamente lo que el
+    // helper. Traían además un icono invisible: la papelera se pintaba en
+    // AppColors.rpeMax sobre un círculo del mismo AppColors.rpeMax.
+    final confirm = await showAppConfirmDialog(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(32),
-            topRight: Radius.circular(32),
-          ),
-        ),
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.rpeMax,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.delete_sweep_rounded, size: 40, color: AppColors.rpeMax),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              '¿Eliminar plantilla?',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                color: Theme.of(context).colorScheme.onSurface,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Vas a eliminar "${template.name}". Esta acción no se puede deshacer.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 32),
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                    child: Text(
-                      'Cancelar',
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.w600, fontSize: 16),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.rpeMax,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.rpeMax.withValues(alpha: 0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        foregroundColor: Colors.white,
-                        shadowColor: Colors.transparent,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      child: const Text(
-                        'Eliminar',
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+      title: '¿Eliminar plantilla?',
+      message: 'Vas a eliminar "${template.name}". Esta acción no se puede '
+          'deshacer.',
+      confirmLabel: 'Eliminar',
+      isDestructive: true,
     );
 
     if (confirm == true) {
