@@ -84,7 +84,7 @@
     {
       "@type": "Question",
       "name": "¿Cómo sabe a qué ritmo tengo que ir?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Del método VDOT, que deriva tus ritmos de entrenamiento de tus marcas reales, no de tablas genéricas por edad. Además se recalibra solo: si empiezas a batir los ritmos prescritos sin acabar fundido, el coach entiende que has mejorado y te los aprieta, y te explica por qué lo ha hecho." }
+      "acceptedAnswer": { "@type": "Answer", "text": "Del método VDOT, que deriva tus ritmos de entrenamiento de tus marcas reales, no de tablas genéricas por edad. Además se recalibra solo: si empiezas a batir los ritmos prescritos sin acabar fundido, el coach entiende que has mejorado y te los aprieta, y te explica por qué lo ha hecho. La fórmula completa y su origen están en la página El método." }
     },
     {
       "@type": "Question",
@@ -94,7 +94,7 @@
     {
       "@type": "Question",
       "name": "¿Qué es el RPE y por qué lo usa la app?",
-      "acceptedAnswer": { "@type": "Answer", "text": "El RPE es el esfuerzo percibido en una escala de 1 a 10. Combinado con ritmo y frecuencia cardíaca permite calcular la carga real de cada sesión, no solo los kilómetros acumulados." }
+      "acceptedAnswer": { "@type": "Answer", "text": "El RPE es el esfuerzo percibido en una escala de 1 a 10. Combinado con ritmo y frecuencia cardíaca permite calcular la carga real de cada sesión, no solo los kilómetros acumulados. Puedes ver de dónde sale la escala y cómo entra en el cálculo en la página El método." }
     },
     {
       "@type": "Question",
@@ -345,10 +345,45 @@ section{padding:80px 0}
 }
 .bento-card h3{margin-bottom:8px;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
 .bento-card p{font-size:14px}
+/* Línea de beneficio: qué significa el mecanismo de arriba para el que corre */
+.bento-benefit{
+  display:flex;gap:8px;align-items:flex-start;
+  margin-top:14px;padding-top:14px;border-top:.5px solid var(--border);
+  font-size:14px;font-weight:500;color:var(--text);
+}
+.bento-benefit::before{
+  content:"";flex-shrink:0;width:6px;height:6px;border-radius:50%;
+  background:var(--brand);margin-top:7px;
+}
 .tag-platform{
   font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--text-3);
   border:.5px solid var(--border);border-radius:6px;padding:2px 8px;
 }
+
+/* ---- Enlace de sección (a página de detalle) ---- */
+.section-link{
+  display:inline-flex;align-items:center;gap:10px;margin-top:32px;
+  font-size:15px;font-weight:500;color:var(--brand);
+  transition:gap .2s var(--ease);
+}
+.section-link:hover{gap:14px}
+.section-link svg{flex-shrink:0}
+
+/* ---- Tira de compatibilidad (pulsómetros BLE) ---- */
+.compat{
+  background:var(--surface);border-top:.5px solid var(--border);
+  border-bottom:.5px solid var(--border);padding:32px 0;
+}
+.compat-inner{display:grid;gap:20px;align-items:center}
+@media(min-width:900px){.compat-inner{grid-template-columns:auto 1fr;gap:40px}}
+.compat-title{font-size:14px;font-weight:500;color:var(--text);max-width:260px}
+.compat-title span{display:block;font-size:13px;color:var(--text-3);font-weight:400;margin-top:4px}
+.compat-brands{display:flex;flex-wrap:wrap;gap:8px}
+.compat-brands li{
+  list-style:none;font-size:14px;font-weight:500;color:var(--text-2);
+  background:var(--bg);border:.5px solid var(--border);border-radius:999px;padding:8px 16px;
+}
+.compat-note{font-size:13px;color:var(--text-3);margin-top:16px}
 
 /* ---- Más de la app (4 capturas curadas) ---- */
 .gallery{background:var(--surface)}
@@ -538,6 +573,29 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
   </div>
 </section>
 
+<!-- ============ COMPATIBILIDAD (pulsómetros BLE) ============ -->
+<section class="compat" aria-label="Pulsómetros compatibles">
+  <div class="container">
+    <div class="compat-inner reveal">
+      <p class="compat-title">
+        Funciona con el pulsómetro que ya tienes
+        <span>Sin comprar nada nuevo.</span>
+      </p>
+      <ul class="compat-brands">
+        <li>Polar</li>
+        <li>Garmin</li>
+        <li>Wahoo</li>
+        <li>COROS</li>
+        <li>Suunto</li>
+        <li>Decathlon</li>
+        <li>Magene</li>
+        <li>Scosche</li>
+      </ul>
+    </div>
+    <p class="compat-note reveal">Running Laps se conecta por el perfil Bluetooth estándar de frecuencia cardíaca, el que usan prácticamente todas las bandas de pulso del mercado. Los nombres son ejemplos de fabricantes que lo implementan; Running Laps no está asociada a ninguno de ellos.</p>
+  </div>
+</section>
+
 <!-- ============ COACH, NO CHEERLEADER ============ -->
 <section class="contrast" id="diferencia">
   <div class="container">
@@ -605,33 +663,43 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
         <span class="bi" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 21V9l8-5 8 5v12M4 21h16M9 21v-6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
         <h3>Base aeróbica primero</h3>
         <p>El 70–80% de tu volumen es rodaje suave. Es lo que construye el motor que sostiene todo lo demás — y el coach vigila que no lo conviertas en medio fondo sin querer.</p>
+        <p class="bento-benefit">Llegas a las series con piernas, no arrastrándote.</p>
       </div>
       <div class="bento-card">
         <span class="bi" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.2" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.2" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.2" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.2" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 2"/></svg></span>
         <h3>Bloques con descarga incluida</h3>
         <p>Entrenas por bloques de varias semanas con la descarga ya programada, no cuando ya estás roto. Cuánto puede subir tu carga cada semana es un límite duro del sistema, no un consejo que se olvida.</p>
+        <p class="bento-benefit">Descansas antes de romperte, no después.</p>
       </div>
       <div class="bento-card">
         <span class="bi" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 12c3-6 6-6 9 0s6 6 9 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         <h3>La progresión se gana, no se calendariza</h3>
         <p>El plan parte de lo que <em>corriste</em>, no de lo que estaba escrito. Una mala racha lo baja contigo en vez de acumularte semanas fallidas; cuando vuelves, vuelve a subir solo.</p>
+        <p class="bento-benefit">Faltar una semana no te echa del plan.</p>
       </div>
       <div class="bento-card">
         <span class="bi" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 18a8 8 0 0 1 16 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 18l4.5-6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="18" r="1.3" fill="currentColor"/></svg></span>
         <h3>Ritmos que se recalibran solos</h3>
         <p>Tus ritmos de series salen de tus marcas reales (VDOT), no de tablas genéricas. Y si mejoras entrenando, el coach lo detecta y te aprieta los ritmos sin esperar a que corras una carrera — con el motivo explicado.</p>
+        <p class="bento-benefit">Nunca corres series a un ritmo que se te ha quedado corto.</p>
       </div>
       <div class="bento-card">
         <span class="bi" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 12a9 9 0 1 1-3.2-6.9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M9 12l2.2 2.2L21 4.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         <h3>Un cuestionario que se acuerda de ti</h3>
         <p>Si una semana le cuentas que te molesta el gemelo, la siguiente te pregunta cómo va — y no sube la carga hasta que le digas que ya no duele. Pregunta poco, y solo lo que va a cambiar tu plan.</p>
+        <p class="bento-benefit">No tienes que repetir lo que ya contaste.</p>
       </div>
       <div class="bento-card">
         <span class="bi" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="8" width="16" height="9" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M19 11h2v3h-2M11.5 10l-2.3 3.6h2.6L9.5 17" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg></span>
         <h3>Tu fatiga manda</h3>
         <p>El plan se ajusta a tu carga acumulada (TSB). Si necesitas descargar, el coach lo detecta antes de que te rompas — y ninguna preferencia tuya puede saltarse ese freno.</p>
+        <p class="bento-benefit">El plan frena por ti cuando tú no lo harías.</p>
       </div>
     </div>
+    <a class="section-link reveal" href="/metodo">
+      Ver de dónde sale cada número — fórmulas, fuentes y límites
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
   </div>
 </section>
 
@@ -823,12 +891,12 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
       <div class="step">
         <div class="num">02</div>
         <h3>Recibe tu plan semanal</h3>
-        <p>El coach genera la semana con series, rodajes y descanso, calculados sobre tu carga.</p>
+        <p>El coach genera la semana con series, rodajes y descanso, y cada sesión ya trae su ritmo objetivo calculado sobre tus marcas.</p>
       </div>
       <div class="step">
         <div class="num">03</div>
-        <h3>Entrena y mide</h3>
-        <p>GPS, FC y RPE en cada sesión. El plan de la semana siguiente aprende de esta.</p>
+        <h3>Tú corres. El plan se recalcula.</h3>
+        <p>La semana siguiente no sale de un calendario: sale de lo que corriste <em>de verdad</em>. Carga, ritmos y descarga se ajustan solos — y te dice por qué ha cambiado cada cosa.</p>
       </div>
     </div>
   </div>
@@ -903,7 +971,7 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
       </div>
       <div class="faq-item">
         <button class="faq-q" aria-expanded="false">¿Cómo sabe a qué ritmo tengo que ir?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        <div class="faq-a"><p>Del método VDOT, que deriva tus ritmos de entrenamiento de tus marcas reales, no de tablas genéricas por edad. Además se recalibra solo: si empiezas a batir los ritmos prescritos sin acabar fundido, el coach entiende que has mejorado y te los aprieta — y te explica por qué lo ha hecho.</p></div>
+        <div class="faq-a"><p>Del método VDOT, que deriva tus ritmos de entrenamiento de tus marcas reales, no de tablas genéricas por edad. Además se recalibra solo: si empiezas a batir los ritmos prescritos sin acabar fundido, el coach entiende que has mejorado y te los aprieta — y te explica por qué lo ha hecho. La fórmula completa y su origen están en <a href="/metodo#ritmos">El método</a>.</p></div>
       </div>
       <div class="faq-item">
         <button class="faq-q" aria-expanded="false">¿Puedo entrenar por mi cuenta sin seguir el plan?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -911,7 +979,7 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
       </div>
       <div class="faq-item">
         <button class="faq-q" aria-expanded="false">¿Qué es el RPE y por qué lo usa la app?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        <div class="faq-a"><p>El RPE es el esfuerzo percibido en una escala de 1 a 10. Combinado con ritmo y frecuencia cardíaca permite calcular la carga real de cada sesión, no solo los kilómetros acumulados.</p></div>
+        <div class="faq-a"><p>El RPE es el esfuerzo percibido en una escala de 1 a 10. Combinado con ritmo y frecuencia cardíaca permite calcular la carga real de cada sesión, no solo los kilómetros acumulados. Puedes ver de dónde sale la escala y cómo entra en el cálculo en <a href="/metodo#rpe">El método</a>.</p></div>
       </div>
       <div class="faq-item">
         <button class="faq-q" aria-expanded="false">¿Sirve si soy principiante?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -947,6 +1015,7 @@ footer{background:var(--ink);color:#fff;padding:64px 0 40px}
         <ul>
           <li><a href="#coach">Coach IA</a></li>
           <li><a href="#metodo">El método</a></li>
+          <li><a href="/metodo">De dónde sale cada número</a></li>
           <li><a href="#creador">Sesiones</a></li>
           <li><a href="#analisis">Análisis</a></li>
           <li><a href="#como-funciona">Cómo funciona</a></li>

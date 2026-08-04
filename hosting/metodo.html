@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>El método — De dónde sale cada número | Running Laps</title>
+<meta name="description" content="Las fórmulas que usa Running Laps y su origen: VDOT de Daniels para los ritmos, TRIMP de Banister para la carga, CTL·ATL·TSB para forma y fatiga, RPE de sesión de Foster, zonas de frecuencia cardíaca y periodización por bloques. Con sus límites explicados.">
+<link rel="canonical" href="https://runninglaps.com/metodo">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#8E24AA">
+
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Running Laps">
+<meta property="og:locale" content="es_ES">
+<meta property="og:url" content="https://runninglaps.com/metodo">
+<meta property="og:title" content="El método — De dónde sale cada número">
+<meta property="og:description" content="Las fórmulas que usa Running Laps, su origen y sus límites. Sin humo.">
+<meta property="og:image" content="https://runninglaps.com/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="El método — De dónde sale cada número">
+<meta name="twitter:description" content="Las fórmulas que usa Running Laps, su origen y sus límites.">
+<meta name="twitter:image" content="https://runninglaps.com/assets/og-image.png">
+
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
+<link rel="preload" href="/assets/fonts/GeneralSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/GeneralSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "El método — De dónde sale cada número",
+  "description": "Las fórmulas que usa Running Laps para calcular ritmos, carga, forma y fatiga, con su origen bibliográfico y sus límites.",
+  "inLanguage": "es",
+  "url": "https://runninglaps.com/metodo",
+  "author": { "@type": "Organization", "name": "Running Laps" },
+  "publisher": { "@type": "Organization", "name": "Running Laps" },
+  "mainEntityOfPage": "https://runninglaps.com/metodo"
+}
+</script>
+
+<style>
+  @font-face{font-family:'General Sans';src:url('/assets/fonts/GeneralSans-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+  @font-face{font-family:'General Sans';src:url('/assets/fonts/GeneralSans-Medium.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap}
+  @font-face{font-family:'General Sans';src:url('/assets/fonts/GeneralSans-Semibold.woff2') format('woff2');font-weight:600;font-style:normal;font-display:swap}
+
+  :root{
+    --bg:#FFFFFF;--surface:#F5F5F5;--border:#E0E0E0;
+    --text:#1A1A1A;--text-2:#666666;--text-3:#9B9BA1;
+    --brand:#8E24AA;--brand-dark:#6A1B9A;
+    --radius:16px;--max:780px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'General Sans',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+    color:var(--text);background:var(--bg);line-height:1.7;
+    -webkit-font-smoothing:antialiased;letter-spacing:-0.007em;
+  }
+  a{color:var(--brand);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .container{max-width:var(--max);margin:0 auto;padding:0 24px}
+
+  header{border-bottom:.5px solid var(--border);padding:20px 0}
+  .logo{display:flex;align-items:center;max-width:var(--max);margin:0 auto;padding:0 24px}
+  .logo img{height:24px;display:block}
+
+  main{padding:56px 0 80px}
+  .label{
+    display:block;font-size:12px;font-weight:600;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--brand);margin-bottom:14px;
+  }
+  h1{font-size:clamp(32px,5vw,44px);font-weight:600;line-height:1.1;letter-spacing:-0.02em;margin-bottom:16px}
+  .lead{font-size:18px;color:var(--text-2);margin-bottom:24px}
+  .intro p{color:var(--text-2);margin-bottom:16px}
+  .intro{padding-bottom:40px;border-bottom:.5px solid var(--border);margin-bottom:8px}
+
+  /* Índice */
+  .toc{background:var(--surface);border-radius:var(--radius);padding:24px 28px;margin:40px 0 8px}
+  .toc h2{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:14px}
+  .toc ol{margin:0;padding-left:20px}
+  .toc li{font-size:15px;margin-bottom:8px}
+  .toc li::marker{color:var(--text-3);font-variant-numeric:tabular-nums}
+  .toc a{color:var(--text)}
+
+  /* Bloques de método */
+  .block{padding:48px 0;border-bottom:.5px solid var(--border)}
+  .block:last-of-type{border-bottom:none}
+  .block h2{font-size:26px;font-weight:600;letter-spacing:-0.02em;line-height:1.2;margin-bottom:6px}
+  .block .kicker{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:10px}
+  .block p{color:var(--text-2);margin-bottom:16px}
+  .block h3{
+    font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--text);margin:24px 0 8px;
+  }
+
+  /* Fórmula */
+  .formula{
+    background:var(--surface);border-radius:12px;padding:18px 20px;margin:16px 0;
+    font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+    font-size:14.5px;line-height:1.7;color:var(--text);overflow-x:auto;
+  }
+  .formula .frow{white-space:nowrap}
+  .formula .cmt{color:var(--text-3)}
+  code{
+    font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+    font-size:.92em;background:var(--surface);border-radius:5px;padding:2px 6px;color:var(--text);
+  }
+
+  /* Fuente bibliográfica */
+  .source{
+    border-left:2px solid var(--brand);padding:2px 0 2px 16px;margin:16px 0;
+    font-size:14.5px;color:var(--text-2);
+  }
+  .source strong{color:var(--text);font-weight:500}
+
+  /* Límite / honestidad */
+  .limit{
+    background:var(--surface);border-radius:12px;padding:18px 20px;margin:16px 0;
+    font-size:14.5px;color:var(--text-2);
+  }
+  .limit strong{color:var(--text);font-weight:600;display:block;margin-bottom:4px;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+
+  ul.plain{margin:0 0 16px;padding-left:20px}
+  ul.plain li{color:var(--text-2);margin-bottom:8px;font-size:15.5px}
+  ul.plain li::marker{color:var(--text-3)}
+
+  /* Cierre */
+  .closing{background:var(--surface);border-radius:var(--radius);padding:32px;margin-top:48px}
+  .closing h2{font-size:22px;font-weight:600;letter-spacing:-0.015em;margin-bottom:12px}
+  .closing p{color:var(--text-2);margin-bottom:16px;font-size:15.5px}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;height:48px;padding:0 24px;
+    border-radius:12px;background:var(--brand);color:#fff;font-size:15px;font-weight:500;
+    transition:background .2s cubic-bezier(.2,0,0,1);
+  }
+  .btn:hover{background:var(--brand-dark);text-decoration:none}
+
+  .disclaimer{font-size:13.5px;color:var(--text-3);margin-top:32px;padding-top:24px;border-top:.5px solid var(--border)}
+
+  footer{border-top:.5px solid var(--border);padding:32px 0;text-align:center;font-size:13px;color:var(--text-3)}
+  footer a{color:var(--text-3)}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="logo">
+    <img src="/assets/logo-wordmark.png" alt="Running Laps" width="140" height="24">
+  </a>
+</header>
+
+<main class="container">
+
+  <span class="label">El método</span>
+  <h1>De dónde sale cada número</h1>
+  <p class="lead">Running Laps no se inventa tus ritmos ni tu carga. Cada cifra que ves sale de una fórmula concreta, y cada fórmula tiene un autor. Aquí están todas, con sus límites.</p>
+
+  <div class="intro">
+    <p>Casi ninguna app de entrenamiento cuenta cómo calcula lo que te enseña. Es cómodo: si nadie sabe de dónde sale el número, nadie puede discutirlo. Nosotros preferimos lo contrario, por dos razones.</p>
+    <p>La primera es que un entrenador que no sabe explicar por qué te manda una sesión no es un entrenador. La segunda es más egoísta: publicar las fórmulas nos obliga a que sean defendibles.</p>
+    <p>Nada de lo que hay aquí es original nuestro. Son modelos con décadas encima, algunos de los años cincuenta. Lo nuestro es la implementación y las decisiones de diseño — y también las decimos.</p>
+  </div>
+
+  <nav class="toc" aria-label="Índice">
+    <h2>Lo que hay en esta página</h2>
+    <ol>
+      <li><a href="#ritmos">Tus ritmos — VDOT</a></li>
+      <li><a href="#carga">La carga de cada sesión — TRIMP</a></li>
+      <li><a href="#forma">Forma y fatiga — CTL, ATL y TSB</a></li>
+      <li><a href="#rpe">El esfuerzo que sientes — RPE</a></li>
+      <li><a href="#zonas">Las zonas de frecuencia cardíaca</a></li>
+      <li><a href="#bloques">La periodización por bloques</a></li>
+      <li><a href="#autorregulacion">La autorregulación</a></li>
+      <li><a href="#limites">Lo que no afirmamos</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1. RITMOS -->
+  <section class="block" id="ritmos">
+    <p class="kicker">01 · Tus ritmos</p>
+    <h2>VDOT</h2>
+    <p>Cuando el coach te dice que hagas las series a 4:12 /km, ese número no sale de tu nivel declarado ni de una tabla por edades. Sale de una marca que has corrido de verdad.</p>
+    <p>El VDOT es un valor único que resume tu capacidad actual a partir de un tiempo en carrera. Con él se derivan los cinco ritmos de entrenamiento — suave, maratón, umbral, intervalo y repetición — que son los que el coach reparte por tu semana.</p>
+
+    <div class="source">
+      <strong>Origen:</strong> Jack Daniels, <em>Daniels' Running Formula</em>. Daniels y Gilbert modelaron la relación entre el consumo de oxígeno y la velocidad de carrera, y de ahí sale tanto el VDOT como las tablas de ritmos equivalentes por distancia.
+    </div>
+
+    <h3>Qué hacemos nosotros encima</h3>
+    <p>El VDOT clásico solo cambia cuando corres una carrera. Eso es un problema si entrenas por tu cuenta y compites dos veces al año: pasas meses corriendo a ritmos que se te han quedado viejos.</p>
+    <p>Running Laps lo mantiene al día por dos vías. Una, por evidencia de ejecución: si bates los ritmos prescritos sin pasarte del esfuerzo percibido, sube; si no llegas, baja. Es asimétrico a propósito — hacen falta tres sesiones para subirlo y solo dos para bajarlo, porque equivocarse hacia arriba te lesiona y equivocarse hacia abajo solo te aburre. Y dos, por test encubierto: un esfuerzo continuo de 3 km o más a esfuerzo máximo se trata como una carrera y entra directo por la fórmula de Daniels.</p>
+
+    <div class="limit">
+      <strong>Su límite</strong>
+      El VDOT asume que tu rendimiento en distintas distancias sigue una curva típica. Si eres muy explosivo o muy resistente comparado con la media, tu VDOT será bueno para la distancia de la que salió y algo optimista o pesimista para las demás. Las series de nuestro test encubierto se excluyen del cálculo, porque su tiempo total incluye los descansos y saldría un VDOT falso.
+    </div>
+  </section>
+
+  <!-- 2. CARGA -->
+  <section class="block" id="carga">
+    <p class="kicker">02 · La carga de cada sesión</p>
+    <h2>TRIMP</h2>
+    <p>Una hora suave y veinte minutos de series no se pueden comparar en kilómetros. Hace falta una unidad que mezcle cuánto duró con lo duro que fue. Eso es el TRIMP (<em>training impulse</em>).</p>
+    <p>Esta es literalmente la fórmula que corre dentro de la app:</p>
+
+    <div class="formula">
+      <div class="frow">r = (FC media − FC reposo) / (FC máxima − FC reposo) &nbsp;<span class="cmt">// reserva cardíaca</span></div>
+      <div class="frow">TRIMP = minutos × r × 0,64 × e<sup>1,92 × r</sup></div>
+    </div>
+
+    <p>La exponencial es lo importante: hace que el minuto duro pese mucho más que el minuto suave, en vez de sumarlos como si fueran iguales. Correr 60 minutos a media intensidad no da la misma carga que 30 a intensidad alta.</p>
+
+    <div class="source">
+      <strong>Origen:</strong> el TRIMP ponderado por reserva cardíaca de <strong>Eric Banister</strong>, desarrollado en los años setenta. La fracción de reserva cardíaca es el método de <strong>Karvonen</strong>, que usa la FC de reposo como suelo en vez de contar desde cero.
+    </div>
+
+    <div class="limit">
+      <strong>Sus límites</strong>
+      Dos, y los dos son reales. El primero: los coeficientes 0,64 y 1,92 son los que Banister derivó para hombres; para mujeres la literatura usa otros (en torno a 0,86 y 1,67). Hoy la app aplica los primeros a todo el mundo. Está en nuestra lista para corregir. El segundo: si no llevas pulsómetro no hay FC, y entonces la carga se estima a partir de distancia, tipo de sesión y RPE. Es una aproximación razonable, pero es una aproximación — y la app te lo indica.
+    </div>
+  </section>
+
+  <!-- 3. FORMA Y FATIGA -->
+  <section class="block" id="forma">
+    <p class="kicker">03 · Forma y fatiga</p>
+    <h2>CTL, ATL y TSB</h2>
+    <p>Sumar la carga de todas tus sesiones no sirve de mucho: lo que entrenaste en marzo ya no te sostiene en julio, y lo que hiciste ayer todavía te pesa. Hace falta un modelo donde lo viejo se desvanezca.</p>
+    <p>Se usan dos medias móviles exponenciales sobre tu carga diaria:</p>
+    <ul class="plain">
+      <li><strong>CTL</strong> (<em>chronic training load</em>) — ventana de <strong>42 días</strong>. Es tu forma acumulada: sube despacio y baja despacio.</li>
+      <li><strong>ATL</strong> (<em>acute training load</em>) — ventana de <strong>7 días</strong>. Es tu fatiga reciente: reacciona rápido a la semana que acabas de hacer.</li>
+      <li><strong>TSB</strong> (<em>training stress balance</em>) — la resta, <code>CTL − ATL</code>. Positivo significa que llegas fresco; muy negativo, que estás cavando un agujero.</li>
+    </ul>
+    <p>El coach mira el TSB antes de proponerte la semana. Es el freno que ninguna preferencia tuya puede saltarse: puedes pedirle más volumen, pero si vienes muy negativo no te lo va a dar.</p>
+
+    <div class="source">
+      <strong>Origen:</strong> el modelo impulso-respuesta de <strong>Banister</strong>, que representa el entrenamiento como dos efectos simultáneos y opuestos —uno que construye forma despacio y otro que acumula fatiga rápido— con constantes de tiempo distintas. Las ventanas de 42 y 7 días son la parametrización que se popularizó después en el ciclismo y el triatlón.
+    </div>
+
+    <div class="limit">
+      <strong>Su límite</strong>
+      Esto es un modelo, no una medición. Nadie te está midiendo la forma: se está estimando a partir de la carga que registraste. Si entrenas sin registrar, el modelo cree que has descansado. Y las constantes de 42 y 7 días son un promedio poblacional — hay gente que se recupera bastante más rápido o más lento que eso.
+    </div>
+  </section>
+
+  <!-- 4. RPE -->
+  <section class="block" id="rpe">
+    <p class="kicker">04 · El esfuerzo que sientes</p>
+    <h2>RPE de sesión</h2>
+    <p>Después de cada serie te pedimos un número del 1 al 10: cómo de duro te ha parecido. No es un adorno ni una encuesta de satisfacción. Es el único dato que recoge lo que ningún sensor ve — que dormiste mal, que hacía 34 grados, que vienes de una semana de trabajo horrible.</p>
+    <p>El RPE entra en tres sitios: valida si un ritmo mejorado fue una mejora real o un sobreesfuerzo, alimenta la estimación de carga cuando no hay pulsómetro, y dispara preguntas del cuestionario semanal cuando se desvía de lo esperado.</p>
+
+    <div class="source">
+      <strong>Origen:</strong> la escala de esfuerzo percibido de <strong>Gunnar Borg</strong>, en su versión de razón categórica de 0 a 10. El uso concreto de un solo valor por sesión —el <em>session-RPE</em>— y su validación como medida de carga de entrenamiento vienen del trabajo de <strong>Carl Foster</strong> y sus colaboradores.
+    </div>
+
+    <div class="limit">
+      <strong>Su límite</strong>
+      Es subjetivo, y esa es a la vez su virtud y su defecto. Un mismo 7 no significa lo mismo en dos personas distintas. Por eso lo usamos siempre <em>contra ti mismo</em> —comparando tu RPE de hoy con tu RPE de hace tres semanas al mismo ritmo— y nunca para compararte con nadie.
+    </div>
+  </section>
+
+  <!-- 5. ZONAS -->
+  <section class="block" id="zonas">
+    <p class="kicker">05 · Las zonas</p>
+    <h2>Frecuencia cardíaca</h2>
+    <p>Las cinco zonas se calculan como porcentaje de tu frecuencia cardíaca máxima:</p>
+    <ul class="plain">
+      <li><strong>Z1</strong> — por debajo del 60%. Recuperación.</li>
+      <li><strong>Z2</strong> — 60 a 70%. Rodaje aeróbico, donde vive la mayor parte de tu volumen.</li>
+      <li><strong>Z3</strong> — 70 a 80%. Ritmo medio.</li>
+      <li><strong>Z4</strong> — 80 a 90%. Umbral.</li>
+      <li><strong>Z5</strong> — 90% o más. Máximo esfuerzo.</li>
+    </ul>
+    <p>El reparto del tiempo por zona se pondera <strong>por tiempo real</strong>, no por número de lecturas del pulsómetro. Puede sonar a detalle menor y no lo es: si una serie se muestrea más densa que un rodaje, contar lecturas le regala porcentaje a la serie y te dice que entrenas más fuerte de lo que entrenas.</p>
+    <p>Es también el motivo por el que la app y el coach nunca te dan porcentajes distintos del mismo entreno: el cálculo es uno solo y lo comparten los dos.</p>
+
+    <div class="source">
+      <strong>Origen:</strong> el modelo de cinco zonas por porcentaje de FC máxima es convención establecida en fisiología del ejercicio, no la aportación de un autor concreto. La idea de que la mayor parte del volumen debe ir en la parte baja —lo que solemos llamar 80/20— viene del trabajo de <strong>Stephen Seiler</strong> sobre la distribución de intensidad en atletas de resistencia.
+    </div>
+
+    <div class="limit">
+      <strong>Su límite, y es el mayor de esta página</strong>
+      Si no has medido tu FC máxima, la app la estima con <code>220 − edad</code>. Esa fórmula es popular porque es fácil de recordar, no porque sea buena: su error típico ronda los ±10-12 latidos, lo que puede desplazarte una zona entera. Si vas a usar las zonas para algo serio, mide tu máxima de verdad y métela a mano en tu perfil. Mientras no lo hagas, trata las zonas como orientación y confía más en el RPE.
+    </div>
+  </section>
+
+  <!-- 6. BLOQUES -->
+  <section class="block" id="bloques">
+    <p class="kicker">06 · La estructura</p>
+    <h2>Periodización por bloques</h2>
+    <p>No te generamos una semana suelta y volvemos a empezar de cero la siguiente. Entrenas en bloques de varias semanas con una forma definida: la carga sube con desaceleración progresiva y la última semana es de descarga, programada desde el principio y no cuando ya estás roto.</p>
+    <p>El bloque fija un <strong>techo</strong> de carga para cada semana. Ese techo es aritmético: el coach puede pedir menos, nunca más. No es una instrucción en un prompt que el modelo pueda ignorar un martes.</p>
+
+    <div class="source">
+      <strong>Origen:</strong> la periodización en mesociclos con semanas de descarga es práctica estándar en la planificación deportiva desde la escuela soviética de los años sesenta, y hoy es común a prácticamente todas las metodologías de resistencia.
+    </div>
+
+    <h3>Sobre la regla del 10%</h3>
+    <p>El límite de subida semanal que aplicamos ronda el 10%, y aquí toca ser honestos: <strong>la regla del 10% no tiene detrás la evidencia que su fama sugiere</strong>. Se repite desde hace décadas en revistas de running, pero los intentos de demostrar que un programa graduado al 10% reduce las lesiones frente a uno normal no han dado resultados concluyentes.</p>
+    <p>Entonces, ¿por qué la usamos? Porque como <em>techo</em> conservador es útil aunque no sea una ley biológica: acota el peor caso, impide que un plan generado por un modelo de lenguaje te doble el volumen en una semana buena, y el coste de equivocarse por debajo es bajo. La usamos como barandilla, no como objetivo.</p>
+
+    <div class="limit">
+      <strong>Lo que no hacemos</strong>
+      No usamos el cociente de carga aguda/crónica (ACWR) para predecir riesgo de lesión. Se puso muy de moda y después recibió críticas metodológicas serias. Preferimos no construir sobre algo que puede caerse.
+    </div>
+  </section>
+
+  <!-- 7. AUTORREGULACIÓN -->
+  <section class="block" id="autorregulacion">
+    <p class="kicker">07 · La adaptación</p>
+    <h2>Autorregulación</h2>
+    <p>Esta parte no viene de ningún paper. Es nuestra decisión de diseño y la explicamos como tal.</p>
+    <p>Cada semana, antes de generar la siguiente, el sistema emite un veredicto sobre lo que <em>de verdad</em> corriste — no sobre lo que estaba planificado. Cuatro salidas posibles: seguir progresando, mantener, retroceder o reiniciar el bloque.</p>
+    <p>La diferencia con un plan de calendario es esta: si un plan te pone 50 km y corres 30, un calendario te pone 55 la semana siguiente y te hunde. Aquí la referencia son los 30. La progresión se gana, no se calendariza.</p>
+    <p>Encima de eso va un cuestionario semanal corto. El núcleo es fijo —sensaciones y sueño— para conservar la serie temporal, y se le añaden como mucho dos preguntas más elegidas por reglas deterministas, no generadas por el modelo. Si una semana cuentas que te molesta el gemelo, la siguiente te pregunta cómo va, y la carga no sube hasta que digas que ya no duele.</p>
+
+    <div class="limit">
+      <strong>Su límite</strong>
+      Un sistema que reacciona a lo ejecutado puede confundir "no pude" con "no quise". Si dejas de correr dos semanas por vacaciones, el plan baja como si hubieras tenido una mala racha. Se recupera solo en cuanto vuelves, pero tardará algunas semanas en volver a donde estabas.
+    </div>
+  </section>
+
+  <!-- LÍMITES GENERALES -->
+  <section class="block" id="limites">
+    <p class="kicker">08 · Honestidad</p>
+    <h2>Lo que no afirmamos</h2>
+    <ul class="plain">
+      <li><strong>Que esto sustituya a un entrenador humano.</strong> Un entrenador te ve correr, te corrige la técnica y detecta cosas que ningún dato recoge. Running Laps es para quien no tiene uno, no para quien lo tiene.</li>
+      <li><strong>Que prevenga lesiones.</strong> Un techo de carga reduce una de las causas conocidas. No es lo mismo que prevenir.</li>
+      <li><strong>Que los modelos midan tu fisiología.</strong> CTL, ATL, TSB y VDOT son estimaciones a partir de lo que registras. Un laboratorio te mediría el consumo de oxígeno; nosotros lo inferimos.</li>
+      <li><strong>Que sea válido para todo el mundo.</strong> Estas fórmulas se derivaron mayoritariamente en corredores adultos sanos. Cuanto más te alejes de ese perfil, más orientativas son.</li>
+      <li><strong>Que la IA decida sola.</strong> El modelo de lenguaje redacta y elige entre opciones. Los techos de carga, los ritmos y los frenos por fatiga los calcula código determinista que el modelo no puede saltarse.</li>
+    </ul>
+
+    <p class="disclaimer">Running Laps no es un producto sanitario y nada de esta página es consejo médico. Si tienes una lesión, una condición cardíaca o cualquier duda sobre si puedes entrenar, habla con un profesional sanitario antes que con una app.</p>
+  </section>
+
+  <div class="closing">
+    <h2>Todo esto se ve dentro de la app</h2>
+    <p>No es una página de marketing sobre algo que pasa en una caja negra. Tu VDOT actual, el motivo de su último cambio, la curva de tu bloque y el reparto por zonas de cada entreno están en pantalla, con su explicación al lado.</p>
+    <a class="btn" href="/#unirse">Entrar en la beta</a>
+  </div>
+
+</main>
+
+<footer>
+  © 2026 Running Laps · <a href="/">Inicio</a> · <a href="/#faq">Preguntas frecuentes</a> · <a href="/privacy">Privacidad</a> · <a href="/terms">Términos</a>
+</footer>
+
+</body>
+</html>
