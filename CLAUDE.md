@@ -33,6 +33,11 @@ Feature-First + MVVM. Cada feature en `lib/features/<name>/` con subcarpetas `vi
   - `users/{uid}/trainings` → `TrainingRepository` (incluye `getTrainingById`, `overwriteTraining` — que sella `updatedAt` y usa `merge` — y `deleteTraining`)
   - ⚠️ **Las trazas GPS NO van en el documento del entrenamiento** (jul 2026): viven en `users/{uid}/trainings/{id}/track/data` (`trackPoints` de la sesión + `seriesGps` por índice de serie). El listado de entrenamientos arrastraba megas de coordenadas que calendario, analytics e historial no pintan. Guardar: `Entrenamiento.toMap(includeTrack: false)` + `_saveTrack` (lo hace `createTraining`). Leer para pintar un mapa: `TrainingRepository.withTrack(training)`. Los entrenamientos anteriores a jul 2026 llevan la traza embebida y siguen funcionando: `withTrack` los devuelve tal cual y `overwriteTraining` usa `merge` para no borrársela.
   - `users/{uid}/aiCoachFeedback` y demás docs del coach → `AiCoachRepository`
+  - `users/{uid}/settings/healthConsent` → `HealthConsentService` y
+    `users/{uid}/settings/healthScreening` → `HealthScreeningService`
+    (`core/services/`). Datos de salud del art. 9 RGPD: **no escribirlos desde
+    ninguna otra parte** — el valor de estos documentos es ser la prueba
+    auditable de qué se preguntó, qué se consintió y cuándo.
   - Generación de datos de prueba del panel admin → `TestDataService` (`core/services/test_data_service.dart`)
 
   - Uid del usuario → `UserService().currentUid`, o `await UserService().awaitCurrentUid()` cuando haya que esperar a que Firebase restaure la sesión en un arranque en frío (home, calendario y analytics lo necesitan). Resto de auth (stream de sesión, signOut, verificación de email) → `AuthRepository`.
@@ -129,6 +134,16 @@ Arquitectura de servicios en `lib/features/ai_coach/data/`:
 - `ai_coach_session_generator.dart` — genera sesión individual desde prompt
 - `ai_coach_session_analysis_service.dart` — análisis post-sesión (planificado vs ejecutado), fire-and-forget al guardar; persiste `coachAnalysis` en el training
 - `ai_coach_repository.dart` — CRUD Firestore: `users/{uid}/settings/aiCoachProfile` + `aiCoachUsage`
+- **Consentimiento de datos de salud (art. 9 RGPD)** — el contexto del Coach
+  lleva molestias y lesiones en texto libre, FC, edad y sexo a un proveedor
+  externo, así que `planNextWeek()` **se niega a generar sin consentimiento** y
+  lanza `HealthConsentRequiredException`. Es el único candado y basta con uno:
+  las cuatro rutas de generación (automática del domingo, forzada, onboarding y
+  chat) pasan por ahí. Se pide en el paso 7 del onboarding y, para perfiles
+  anteriores al 4 ago 2026, en el sheet de `ensureAiCoachHealthConsent`. El
+  consentimiento es **por ámbito** (`HealthConsentScope.heartRate` / `.aiCoach`):
+  aceptar el pulsómetro no autoriza al Coach ni al revés. Detalle en
+  PUBLISHING.md § Coach IA: cribado y consentimiento.
 - `race_goal.dart` + `race_goal_repository.dart` — **competiciones objetivo** (`RaceGoal`) en `users/{uid}/raceGoals`: fecha + distancia (5K/10K/media/maratón/otra) + prioridad `high`/`medium`/`low`. Fuente única de la fecha objetivo: el context builder deriva el `targetDate`/taper de la próxima carrera de prioridad alta (`nextPrimaryFrom`) y pasa todas al LLM vía `coachSignals.upcomingRace(s)`. **No** es un tipo de sesión — la categoría `competicion` se retiró del vocabulario del Coach **y** del selector de tipos del editor activo (`WorkoutTypeSelector`; enums `WorkoutType.competition`/`SessionCategory.competicion` conservados por compat). UI: `ai_coach/views/race_goals_section.dart` (lista "Tus objetivos" + sheet crear/editar/eliminar) embebida en `AiCoachSettingsView` (tab 16, alcanzable desde Perfil → "Configurar IA"); marcador de bandera + entrada rápida "Marcar competición" en `calendar/views/calendar_view.dart` (tab 1, el calendario real de `MainShell`); y `home/widgets/home_race_countdown.dart` (cuenta atrás en Home solo si hay carrera de prioridad alta).
 
 Modelos principales (`ai_coach_models.dart`):

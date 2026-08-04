@@ -4,6 +4,7 @@ import 'package:running_laps/core/utils/app_transitions.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_automation_service.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
+import 'package:running_laps/features/ai_coach/views/ai_coach_health_gate.dart';
 import 'package:running_laps/features/ai_coach/views/ai_coach_onboarding_view.dart';
 import 'package:running_laps/core/widgets/main_shell.dart';
 
@@ -34,6 +35,12 @@ Future<void> launchAiCoachOnboarding(
   if (!context.mounted) return;
 
   if (existingProfile != null) {
+    // Perfiles creados antes del 4 ago 2026 no pasaron por el cribado ni por
+    // el consentimiento del art. 9. Se les pide aquí, una vez: sin esto
+    // planNextWeek se niega a generar y el atleta no sabría por qué.
+    if (!await ensureAiCoachHealthConsent(context)) return;
+    if (!context.mounted) return;
+
     MainShell.shellKey.currentState?.navigateTo(16);
     onCompleted?.call();
     return;

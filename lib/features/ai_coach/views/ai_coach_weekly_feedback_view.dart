@@ -6,6 +6,7 @@ import '../data/ai_coach_automation_service.dart';
 import '../data/ai_coach_models.dart';
 import '../data/ai_coach_question_planner.dart';
 import '../data/ai_coach_repository.dart';
+import 'ai_coach_health_gate.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart' show AppMotion;
 import '../../../core/widgets/app_header.dart';
@@ -184,7 +185,12 @@ class _AiCoachWeeklyFeedbackViewState
       ModernSnackBar.showSuccess(context, '¡Gracias! Tu coach lo tendrá en cuenta');
 
       debugPrint('[Feedback] generatePlanAfter=${widget.generatePlanAfter}');
-      if (widget.generatePlanAfter) {
+      // Sin el consentimiento del art. 9 el planificador se niega a generar.
+      // Se pide aquí antes de intentarlo para que el atleta no se coma un
+      // fallo mudo justo después de rellenar el cuestionario.
+      if (widget.generatePlanAfter &&
+          await ensureAiCoachHealthConsent(context) &&
+          mounted) {
         debugPrint('[Feedback] iniciando generación...');
         setState(() => _isGeneratingPlan = true);
         try {

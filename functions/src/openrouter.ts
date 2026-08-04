@@ -66,6 +66,15 @@ export const callOpenRouter = onCall(
       model: data.model,
       temperature,
       messages,
+      // El contexto del coach lleva datos de salud (art. 9 RGPD): molestias y
+      // lesiones en texto libre, FC, edad. `data_collection: "deny"` descarta
+      // los proveedores que se reservan el derecho a almacenar el prompt o a
+      // entrenar con el. Va por peticion a proposito: el ajuste equivalente de
+      // la cuenta de OpenRouter es invisible desde aqui y se puede cambiar sin
+      // que nadie lo note.
+      provider: {
+        data_collection: "deny",
+      },
       response_format: {
         type: "json_schema",
         json_schema: {

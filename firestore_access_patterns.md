@@ -10,7 +10,7 @@
 | Colección | Quién lee | Quién escribe | Regla aplicada |
 |-----------|-----------|---------------|----------------|
 | `users/{uid}` | Cualquier usuario autenticado | Solo el propietario (sin poder cambiar `isAdmin`) | `read: isSignedIn()` · `write: isOwner && !affectsIsAdmin` |
-| `users/{uid}/trainings/{id}` | Cualquier usuario autenticado ⚠️ | Solo el propietario | `read: isSignedIn()` · `write: isOwner` |
+| `users/{uid}/trainings/{id}` | Solo el propietario | Solo el propietario | `read/write: isOwner` |
 | `users/{uid}/tags/{id}` | Solo el propietario | Solo el propietario | `read/write: isOwner` |
 | `users/{uid}/groups/{groupId}` | Solo el propietario | Solo el propietario | `read/write: isOwner` |
 | `users/{uid}/result_notifications/{id}` | Solo el propietario | Propietario (update/delete) · Cualquier autenticado (create) ⚠️ | `read/delete: isOwner` · `create: isSignedIn()` |
@@ -19,6 +19,8 @@
 | `users/{uid}/aiCoachEvents/{id}` | Solo el propietario | Solo el propietario | `read/write: isOwner` |
 | `users/{uid}/settings/aiCoachProfile` | Solo el propietario | Solo el propietario | `read/write: isOwner` |
 | `users/{uid}/settings/aiCoachUsage` | Solo el propietario | Propietario + Cloud Functions (reset semanal) | `read/write: isOwner` |
+| `users/{uid}/settings/healthConsent` 🔒 | Solo el propietario | Solo el propietario (vía `HealthConsentService`) | `read/write: isOwner` |
+| `users/{uid}/settings/healthScreening` 🔒 | Solo el propietario | Solo el propietario (vía `HealthScreeningService`) | `read/write: isOwner` |
 | `appConfig/aiCoachProvider` | Cualquier autenticado | Solo app-admin | `read: isSignedIn()` · `write: isAdmin` |
 | `appConfig/global` | Cualquier autenticado | Solo app-admin | `read: isSignedIn()` · `write: isAdmin` · campo `betaFreeAccess: bool` — durante beta: `true`; lanzamiento: `false` |
 | `groups/{groupId}` | Cualquier autenticado | Create: cualquier autenticado · Update/delete: admin del grupo | `read/create: isSignedIn()` · `update/delete: isGroupAdmin` |
@@ -109,15 +111,29 @@
 
 ## Limitaciones conocidas y recomendaciones
 
-### ⚠️ Lectura cruzada de entrenamientos (`users/{uid}/trainings`)
-**Problema:** La regla actual permite a cualquier usuario autenticado leer entrenamientos de cualquier otro usuario. El principio correcto sería "solo si comparten un grupo", pero Firestore Rules no puede hacer joins (necesitaría saber el `groupId` en tiempo de evaluación).
+### ✅ Lectura cruzada de entrenamientos — cerrada (ago 2026)
+Esta sección describía que cualquier usuario autenticado podía leer los
+entrenamientos de cualquier otro, para que el ranking de grupo funcionase. La
+regla se cerró a `isOwner(uid)` al eliminarse la feature de grupos, pero **ni
+esta doc ni el comentario de `firestore.rules` se actualizaron** y ambos
+siguieron describiendo un agujero que ya no existía (corregido el 4 ago 2026).
 
-**Solución recomendada:** Migrar el cálculo de ranking a una Cloud Function con Admin SDK. La función recibe el `groupId`, obtiene los miembros y compila el ranking server-side. La regla de cliente se puede restringir a `isOwner(uid)`.
+⚠️ No volver a abrirla sin pensarlo: el documento de entrenamiento lleva FC
+(`fcMediaSesion`, `fcMaxSesion` y, por serie, `fcMedia`/`fcReadings`), que es
+dato de salud del art. 9. Si vuelven los rankings, calcularlos en una Cloud
+Function con Admin SDK y dejar la regla en `isOwner`.
 
-### ⚠️ Escritura cruzada en `result_notifications`
-**Problema:** `ChallengeFinalizationService` escribe notificaciones en la cuenta de otros usuarios (ganadores del desafío) desde el cliente.
+### ⚠️ Escritura cruzada en `result_notifications` — abierta y ya sin cliente
+`allow create: if isSignedIn()` permite a cualquier usuario autenticado crear
+documentos dentro de `users/{otroUid}/result_notifications`. Se puso para
+`ChallengeFinalizationService`, que **se eliminó con la feature de grupos**: hoy
+no queda una sola referencia en `lib/` (verificado 4 ago 2026).
 
-**Solución recomendada:** Mover la lógica de finalización a una Cloud Function con Admin SDK. La regla de cliente se puede restringir a `isOwner(uid)`.
+A diferencia de las reglas de `groups`/`global_challenges` —que se conservaron
+a propósito y son inertes porque nadie escribe ahí—, esta **sí es una puerta
+abierta**: escribe dentro del árbol de la cuenta de otro usuario y cualquiera
+con una cuenta puede usarla para spam. Sin cliente que la necesite, el arreglo
+es cambiar `create` a `isOwner(uid)`. Requiere desplegar reglas.
 
 ### ⚠️ isAdmin protegido solo contra auto-modificación
 El campo `isAdmin` en `users/{uid}` está protegido contra auto-modificación (`!affectedKeys().hasAny(['isAdmin'])`), pero solo el Firebase console o una Cloud Function con Admin SDK debería establecerlo. Nunca expongas un endpoint no autenticado que pueda cambiar este campo.

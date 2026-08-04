@@ -87,14 +87,16 @@ service cloud.firestore {
 
       // ── users/{uid}/trainings/{id} ─────────────────────────────────────────
       match /trainings/{trainingId} {
-        // Reads allow any signed-in user.
-        // WHY: GroupDetailRepository fetches members' training documents to
-        //   compute group leaderboard rankings (cross-user read by design).
-        // LIMITATION: Ideally reads should require shared-group membership, but
-        //   Firestore rules have no way to query "does a group exist where both
-        //   request.auth.uid and uid are members?" without a known groupId.
-        //   PRODUCTION RECOMMENDATION: move ranking computation to a Cloud
-        //   Function (Admin SDK) and restrict this rule to isOwner(uid) only.
+        // Owner-only reads. This comment used to say the opposite ("reads
+        // allow any signed-in user") because GroupDetailRepository needed
+        // cross-user reads for group leaderboards; the rule was tightened when
+        // the groups feature was removed (Aug 2026) but the comment was not.
+        //
+        // Do not loosen this again without a hard look: training documents
+        // carry heart-rate data (fcMediaSesion, fcMaxSesion, and per-serie
+        // fcMedia/fcReadings), which is art. 9 GDPR health data. A cross-user
+        // read here exposes it. If leaderboards ever come back, compute them
+        // in a Cloud Function with the Admin SDK and leave this at isOwner.
         allow read: if isOwner(uid);
 
         // Authenticated owner can delete their own trainings.
