@@ -1,5 +1,34 @@
 # CHANGELOG — Running Laps
 
+## [Fix] — El cronómetro olvidado — 2026-08-03
+En el historial había un "Rodaje 45 min" registrado con **17 h 06 m y 0,0 km**.
+El cronómetro de la sesión mide tiempo de reloj, no tiempo corriendo: si alguien
+empieza un entreno y se olvida de terminarlo, sigue contando con el móvil en el
+bolsillo.
+
+No es solo una fila fea. Ese tiempo entra en el volumen semanal, en el TRIMP, en
+la distribución de intensidad y en el **contexto que lee el Coach IA** para
+planificar la semana siguiente — una sesión así desplaza la carga del atleta
+durante semanas. Se arregla ahora y no después porque la prueba cerrada mete a
+12 personas durante 14 días, y que alguien se olvide de parar es cuestión de
+días.
+
+`SessionPlausibility` (función pura, 14 tests) marca tres casos: duración por
+encima de 9 h, mucho tiempo sin distancia, y ritmo más lento que caminar
+sostenido más de una hora. El resumen post-entreno enseña un aviso.
+
+**Deliberadamente no corrige ni descarta nada.** El tiempo medido es el que es y
+recortarlo sería inventarse un entreno que no sabemos cómo fue; el atleta ve el
+aviso y decide, que para eso tiene "Descartar" al lado. Los umbrales son
+generosos por la misma razón: dejar pasar una sesión rara es preferible a
+acusar de error a quien de verdad hizo una tirada larga — un ultra de 8 h no
+salta.
+
+⚠️ Queda abierto que, si el atleta guarda igualmente, ese tiempo sigue entrando
+en la carga y en el Coach. Excluirlo por nuestra cuenta sería otra forma de
+mentir sobre el dato; si molesta, la vía es dejar editar el tiempo antes de
+guardar.
+
 ## [Fix] — La pantalla de zonas se contradecía a sí misma — 2026-08-03
 Encontrado probando en dispositivo, no por los tests: al elegir 197 en la rueda
 de FCmáx, la tabla de abajo seguía diciendo "FCmáx 194 bpm" con los límites

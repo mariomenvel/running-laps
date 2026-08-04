@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/features/training/data/session_plausibility.dart';
 import 'package:running_laps/core/widgets/app_confirm_dialog.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'package:running_laps/core/services/pb_celebration_service.dart';
@@ -476,6 +477,7 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildTop(theme),
+                  ...?_buildImplausibleWarning(),
                   _divider(),
                   _buildTypeSpecificStats(context, theme),
                   _divider(),
@@ -512,6 +514,52 @@ class _TrainingSummaryScreenState extends State<TrainingSummaryScreen>
   }
 
   // ── _buildTop ─────────────────────────────────────────────────────────────
+
+  /// Aviso cuando los números de la sesión no cuadran — normalmente porque el
+  /// cronómetro se quedó corriendo. No corrige ni descarta nada: el tiempo
+  /// medido es el que es y recortarlo sería inventarse el entreno. Solo lo
+  /// señala para que el atleta decida, que para eso tiene "Descartar" al lado.
+  ///
+  /// Importa más de lo que parece: ese tiempo entra en el volumen semanal, en
+  /// el TRIMP y en el contexto que lee el Coach IA para planificar la semana
+  /// siguiente.
+  List<Widget>? _buildImplausibleWarning() {
+    final aviso = SessionPlausibility.check(
+      durationSec: widget.entrenamiento.tiempoTotalSec(),
+      distanceM: widget.entrenamiento.distanciaTotalM(),
+    );
+    if (aviso == null) return null;
+
+    return [
+      const SizedBox(height: 12),
+      Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.rpeMid.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.rpeMid.withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.warning_amber_rounded,
+                color: AppColors.rpeMid, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                aviso.message,
+                style: TextStyle(
+                  fontSize: 13,
+                  height: 1.4,
+                  color: AppColors.textPrimary(context),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ];
+  }
 
   Widget _buildTop(SessionTheme theme) {
     return SizedBox(
