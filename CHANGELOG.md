@@ -1,5 +1,64 @@
 # CHANGELOG — Running Laps
 
+## [Legal] — Pautar con IA sin consentimiento — 2026-08-04
+El consentimiento de datos de salud solo tapaba el pulsómetro. Su única puerta
+era `heart_rate_monitor_view`, así que quien nunca conectó una banda usaba el
+Coach entero sin haber consentido nada — mientras el contexto semanal se
+llevaba a OpenRouter sus molestias y lesiones **en texto libre**, el motivo por
+el que paró y sus datos de FC. Eso es categoría especial del art. 9 RGPD
+saliendo a un tercero en EEUU sin base legal.
+
+El consentimiento pasa a tener **ámbitos** (`heartRate` / `aiCoach`): el art. 9
+lo exige por finalidad, no un "sí" genérico. Se conceden y se retiran por
+separado, y quien ya aceptó el pulsómetro no vuelve a ver el diálogo — el
+booleano suelto anterior se sigue leyendo como el ámbito `heartRate`.
+
+**Un solo candado, en `planNextWeek()`.** Las cuatro rutas de generación
+(domingo automático, forzada, onboarding y chat) pasan por ahí, así que basta
+con uno y no quedan agujeros. Sin consentimiento lanza
+`HealthConsentRequiredException` — tipo propio para que la UI pueda ofrecer
+consentir en vez de un "error al generar el plan".
+
+Se añade un cribado PAR-Q de cuatro preguntas antes del primer plan. **No
+bloquea nada**: un "sí" solo cambia el consejo (visto bueno médico si la bandera
+es cardíaca, arranque suave si es una molestia) y queda registrado. Que no
+bloquee es lo que evita que la gente responda "no" a todo para quitárselo de
+encima. Su valor es doble: ajustar la carga inicial y poder acreditar qué se
+preguntó y qué se recomendó, que es lo que un disclaimer enterrado en unos
+términos no demuestra. El disclaimer médico, de hecho, vivía solo en
+`terms.html`; ahora está en la pantalla que el atleta sí lee.
+
+⚠️ **Consecuencia asumida**: un atleta con perfil previo que no abra el Coach
+deja de recibir plan hasta que pase por el sheet. La alternativa era seguir
+mandando datos de salud sin base legal.
+
+**Lo que apareció al tirar del hilo:**
+
+- `privacy.html` §5 afirmaba que el envío a OpenRouter era "solo métricas" y
+  "ningún identificador personal". No era cierto, y describir mal un
+  tratamiento en la propia política es peor que no mencionarlo. Reescrita
+  contra lo que manda `_buildContextPayload` de verdad.
+- **OpenRouter no consta como entidad del EU-U.S. Data Privacy Framework**; su
+  política se ampara en cláusulas contractuales tipo. §6 amparaba a los dos
+  proveedores en el DPF "y/o" SCC: separado, DPF para Google, SCC para
+  OpenRouter.
+- **Su DPA del art. 28 solo se firma con cuentas enterprise.** Es lo más serio
+  que queda abierto y no lo arregla ningún commit.
+- Los términos exigen 16 años y **ningún selector lo respetaba**: el onboarding
+  del Coach dejaba declararse de 10 y la pantalla de zonas de 5. Ahora salen de
+  `LegalPolicy.latestAllowedBirthDate()`, con un test que lo contrasta contra el
+  texto publicado en `terms.html`.
+- La regla de lectura de `trainings` ya estaba cerrada a `isOwner`, pero su
+  propio comentario y `firestore_access_patterns.md` seguían describiendo el
+  agujero de la época de grupos. Corregido: importa porque el documento de
+  entrenamiento lleva FC dentro.
+- `result_notifications` sigue con `create: isSignedIn()` y su único cliente
+  (`ChallengeFinalizationService`) se fue con grupos. **Puerta abierta sin nadie
+  que la use** — documentada, no cerrada: cambiar reglas pide despliegue propio.
+
+⚠️ `data_collection: "deny"` en la llamada a OpenRouter **no surte efecto hasta
+desplegar functions**.
+
 ## [Fix] — El cronómetro olvidado — 2026-08-03
 En el historial había un "Rodaje 45 min" registrado con **17 h 06 m y 0,0 km**.
 El cronómetro de la sesión mide tiempo de reloj, no tiempo corriendo: si alguien
