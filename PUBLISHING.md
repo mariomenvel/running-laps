@@ -228,9 +228,18 @@ Apple obliga a ofrecer Sign in with Apple si ofreces login de terceros
 Hasta esta fecha el consentimiento del art. 9 solo tapaba el pulsómetro: su
 única puerta era `heart_rate_monitor_view`. Mientras tanto el Coach recogía y
 **enviaba a OpenRouter** molestias y lesiones en texto libre
-(`weeklyFeedback.molestias`, `motivoParon: 'lesion'`, `recurringConstraints`),
-`fcMax`/`fcRest`, fecha de nacimiento y sexo biológico. Un atleta que nunca
-conectó una banda usaba el Coach entero sin haber consentido nada.
+(`weeklyFeedback.molestias`, `motivoParon: 'lesion'`, `observaciones`,
+`coachNotes`, `recurringConstraints`, `temporaryStatuses`) y datos de FC
+(`fcMax`/`fcRest` en el perfil, medias/máximas y reparto por zonas por sesión).
+Un atleta que nunca conectó una banda usaba el Coach entero sin haber
+consentido nada.
+
+> ⚠️ **Qué NO se envía**, verificado en `ai_coach_prompt_builder.dart`
+> (`_buildContextPayload`) y `ai_coach_context_builder.dart`: fecha de
+> nacimiento, sexo biológico, nombre, email y coordenadas GPS. La edad solo se
+> usa en local para derivar la FCmáx (220−edad) vía `ZonesService`. Si alguien
+> añade edad o sexo al payload, hay que actualizar `privacy.html` §2 y §5, que
+> hoy afirman expresamente que no salen.
 
 Qué se ha hecho:
 
@@ -274,13 +283,23 @@ Qué se ha hecho:
   ver docs/MONETIZATION_ARCHITECTURE.md; no aplica al MVP gratuito).
 - Si cambia el texto del consentimiento de salud de forma sustancial, subir
   `HealthConsentService.policyVersion` para forzar re-consentimiento.
-- **Verificar que OpenRouter está en la lista del EU-U.S. Data Privacy
-  Framework**: `privacy.html` §6 ampara la transferencia en el DPF. Si no
-  figura en la lista oficial, la base son las SCC y el texto está mal. Pendiente
-  también el DPA del art. 28 y conocer sus subencargados (OpenRouter enruta a
-  proveedores de modelo).
-- **`privacy.html` no menciona el cribado de salud** (`healthScreening`) ni el
-  ámbito `aiCoach` del consentimiento. Actualizar la tabla de tratamientos.
+- ⚠️ **DPA del art. 28 con OpenRouter — no lo tenemos.** Su DPA firmado es
+  **solo para cuentas enterprise**; las self-serve pueden verlo en su Trust
+  Portal "a título informativo", que no es lo mismo que tenerlo firmado. Con
+  datos del art. 9 de por medio esto es lo más serio que queda abierto. Tres
+  salidas: subir a enterprise (además habilita *EU in-region routing*, que
+  mantendría los prompts dentro de la UE), ir directo a Anthropic con su DPA, o
+  dejar de mandar los campos de texto libre de salud. **Decisión de producto,
+  no de código.**
+- ~~Verificar el DPF de OpenRouter~~ — hecho (4 ago 2026): **no consta como
+  entidad DPF**; su propia política se ampara en decisiones de adecuación
+  (art. 45) y en cláusulas contractuales tipo (art. 46). `privacy.html` §6
+  decía "DPF y/o SCC" para ambos proveedores y ya está corregido: DPF para
+  Google, SCC para OpenRouter. ⚠️ Confirmar en
+  `dataprivacyframework.gov` antes del lanzamiento — no pude consultar la lista
+  oficial (403 desde este entorno), así que se ha escrito la versión
+  conservadora.
+- Conocer los subencargados de OpenRouter (enruta a proveedores de modelo).
 - **Edad mínima 16 sin comprobar**: los términos la exigen y la app no la
   valida en ningún punto; `birthDate` es opcional y se pide en el onboarding
   del Coach.

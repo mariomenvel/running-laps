@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/constants/legal_policy.dart';
 import 'package:running_laps/core/services/zones_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/widgets/app_date_picker.dart';
@@ -374,7 +375,9 @@ class _OnboardingSheetState extends State<_OnboardingSheet> {
       title: 'Fecha de nacimiento',
       initialDate: _selectedDate ?? DateTime(now.year - 25),
       minimumDate: DateTime(1930),
-      maximumDate: DateTime(now.year - 5),
+      // Mismo campo que el paso 5 del onboarding del Coach: el límite sale de
+      // la misma constante para que no puedan divergir. Antes permitía 5 años.
+      maximumDate: LegalPolicy.latestAllowedBirthDate(now),
     );
     if (!mounted) return;
     if (picked != null) setState(() => _selectedDate = picked);

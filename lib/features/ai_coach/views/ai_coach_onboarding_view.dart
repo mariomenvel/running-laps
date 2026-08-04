@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/constants/legal_policy.dart';
 import 'package:running_laps/core/services/health_consent_service.dart';
 import 'package:running_laps/core/services/health_screening_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
@@ -783,7 +784,11 @@ class _BirthDateStepPage extends StatelessWidget {
                 title: 'Fecha de nacimiento',
                 initialDate: birthDate ?? DateTime(DateTime.now().year - 30),
                 minimumDate: DateTime(1940),
-                maximumDate: DateTime(DateTime.now().year - 10),
+                // La rueda no llega a una edad por debajo del mínimo de los
+                // términos en vez de aceptar la fecha y rechazarla después:
+                // no tiene sentido recoger datos de salud de alguien que no
+                // puede tener cuenta. Antes permitía declararse de 10 años.
+                maximumDate: LegalPolicy.latestAllowedBirthDate(),
               );
               if (picked != null) onBirthDateChanged(picked);
             },
