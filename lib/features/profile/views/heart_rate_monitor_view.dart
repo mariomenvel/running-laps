@@ -17,7 +17,7 @@ class HeartRateMonitorView extends StatelessWidget {
   /// recoge hasta que el usuario lo acepta. Ver PUBLISHING.md § Legal.
   Future<bool> _ensureHealthConsent(BuildContext context) async {
     final consent = HealthConsentService();
-    if (await consent.hasConsent()) return true;
+    if (await consent.hasConsent(HealthConsentScope.heartRate)) return true;
     if (!context.mounted) return false;
 
     final accepted = await showAppConfirmDialog(
@@ -35,7 +35,7 @@ class HeartRateMonitorView extends StatelessWidget {
     );
     if (accepted != true) return false;
 
-    await consent.grant();
+    await consent.grant(HealthConsentScope.heartRate);
     return true;
   }
 
@@ -52,7 +52,7 @@ class HeartRateMonitorView extends StatelessWidget {
     );
     if (confirmed != true) return;
 
-    await HealthConsentService().revoke();
+    await HealthConsentService().revoke(HealthConsentScope.heartRate);
     // Sin consentimiento no debe quedar dispositivo guardado: forgetDevice
     // desconecta y evita la reconexión automática al abrir la app.
     await HeartRateService().forgetDevice();
@@ -278,7 +278,8 @@ class HeartRateMonitorView extends StatelessWidget {
   /// cuando está concedido (referenciado desde la política de privacidad).
   Widget _buildConsentFooter(BuildContext context) {
     return ValueListenableBuilder<bool?>(
-      valueListenable: HealthConsentService.consentGranted,
+      valueListenable:
+          HealthConsentService.grantedNotifier(HealthConsentScope.heartRate),
       builder: (context, granted, _) {
         if (granted != true) return const SizedBox.shrink();
         return Center(
@@ -408,8 +409,10 @@ class HeartRateMonitorView extends StatelessWidget {
     final svc    = HeartRateService();
 
     // Cargar el estado de consentimiento una sola vez (null = sin cargar)
-    if (HealthConsentService.consentGranted.value == null) {
-      HealthConsentService().hasConsent();
+    if (HealthConsentService.grantedNotifier(HealthConsentScope.heartRate)
+            .value ==
+        null) {
+      HealthConsentService().hasConsent(HealthConsentScope.heartRate);
     }
 
     return Scaffold(

@@ -192,6 +192,8 @@ Apple obliga a ofrecer Sign in with Apple si ofreces login de terceros
   del primer escaneo de pulsómetro en `heart_rate_monitor_view` + opción
   "Retirar consentimiento" en la misma pantalla (revoca + olvida el dispositivo
   para cortar la reconexión automática). Con tests (`health_consent_service_test`).
+- ✅ **El consentimiento cubre también al Coach IA** (4 ago 2026) — ver
+  § Coach IA: cribado y consentimiento.
 - ✅ **Enlace a Privacidad/Términos dentro de la app** (jul 2026) — Google Play
   exige explícitamente que el enlace esté accesible *dentro* de la app, no solo
   en la ficha de la tienda ("must be linked directly within the app itself").
@@ -221,11 +223,67 @@ Apple obliga a ofrecer Sign in with Apple si ofreces login de terceros
 > (soporte/borrado de cuenta) vía Cloudflare Email Routing sobre el dominio
 > propio, edad mínima 16, ley española.
 
+### Coach IA: cribado y consentimiento (4 ago 2026)
+
+Hasta esta fecha el consentimiento del art. 9 solo tapaba el pulsómetro: su
+única puerta era `heart_rate_monitor_view`. Mientras tanto el Coach recogía y
+**enviaba a OpenRouter** molestias y lesiones en texto libre
+(`weeklyFeedback.molestias`, `motivoParon: 'lesion'`, `recurringConstraints`),
+`fcMax`/`fcRest`, fecha de nacimiento y sexo biológico. Un atleta que nunca
+conectó una banda usaba el Coach entero sin haber consentido nada.
+
+Qué se ha hecho:
+
+- **Consentimiento por ámbito** (`HealthConsentScope.heartRate` / `.aiCoach`).
+  El art. 9 exige consentimiento para fines determinados, no un "sí" genérico:
+  cada ámbito se concede y se retira por separado, en el mismo documento
+  `users/{uid}/settings/healthConsent` bajo `scopes.<ámbito>`. Quien ya aceptó
+  el pulsómetro **no vuelve a ver el diálogo**: el booleano suelto de la raíz
+  se sigue leyendo como el ámbito `heartRate` (y se mantiene sincronizado, para
+  que revertir esta versión no pierda el consentimiento).
+- **Cribado PAR-Q abreviado** (`HealthScreeningService`, 4 preguntas) en
+  `users/{uid}/settings/healthScreening`. **No bloquea nada**: un "sí" solo
+  muestra el consejo correspondiente — visto bueno médico si la bandera es
+  cardíaca, arranque suave si es una molestia — y queda registrado. Su valor es
+  doble: ajustar el arranque y poder demostrar que se preguntó y se avisó.
+- **Un solo candado, en `planNextWeek()`**: las cuatro rutas de generación
+  (automática del domingo, forzada, onboarding y chat) pasan por ahí, así que
+  sin consentimiento se lanza `HealthConsentRequiredException` y no sale ni un
+  dato. Es un tipo propio para que la UI ofrezca el consentimiento en vez de un
+  "error al generar el plan".
+- **Dónde se pide**: atletas nuevos → último paso del onboarding del Coach
+  (`HealthSafetyForm`, con el botón "Crear mi plan" deshabilitado hasta marcar
+  la casilla). Atletas con perfil previo → sheet de `ensureAiCoachHealthConsent`
+  una sola vez, desde `launchAiCoachOnboarding` y desde el cuestionario semanal.
+  El formulario es **el mismo widget** en los dos sitios: si los textos
+  divergieran, el consentimiento dejaría de ser demostrable.
+- **Disclaimer médico dentro de la app**, no solo en `terms.html` §4: la línea
+  "no es un servicio médico / no sustituye el criterio de un profesional" va en
+  `HealthSafetyForm`, que es la pantalla que el atleta sí lee.
+- **`provider: { data_collection: "deny" }`** en `functions/src/openrouter.ts`:
+  descarta los proveedores que se reservan almacenar el prompt o entrenar con
+  él. Va por petición a propósito — el ajuste equivalente de la cuenta de
+  OpenRouter es invisible desde el código. ⚠️ Requiere desplegar functions.
+
+> ⚠️ **Consecuencia asumida**: un atleta con perfil previo que no abra el Coach
+> deja de recibir plan hasta que pase por el sheet. Es deliberado — la
+> alternativa era seguir mandando datos de salud sin base legal.
+
 ### Pendiente legal (futuro)
 - **Derecho de desistimiento** en los términos cuando haya pagos (Stripe —
   ver docs/MONETIZATION_ARCHITECTURE.md; no aplica al MVP gratuito).
 - Si cambia el texto del consentimiento de salud de forma sustancial, subir
   `HealthConsentService.policyVersion` para forzar re-consentimiento.
+- **Verificar que OpenRouter está en la lista del EU-U.S. Data Privacy
+  Framework**: `privacy.html` §6 ampara la transferencia en el DPF. Si no
+  figura en la lista oficial, la base son las SCC y el texto está mal. Pendiente
+  también el DPA del art. 28 y conocer sus subencargados (OpenRouter enruta a
+  proveedores de modelo).
+- **`privacy.html` no menciona el cribado de salud** (`healthScreening`) ni el
+  ámbito `aiCoach` del consentimiento. Actualizar la tabla de tratamientos.
+- **Edad mínima 16 sin comprobar**: los términos la exigen y la app no la
+  valida en ningún punto; `birthDate` es opcional y se pide en el onboarding
+  del Coach.
 - Revisión por un profesional antes del lanzamiento (recomendado: datos de
   salud + RGPD).
 

@@ -5,10 +5,13 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:running_laps/core/services/health_consent_service.dart';
+import 'package:running_laps/core/services/health_screening_service.dart';
 import 'package:running_laps/core/theme/app_colors.dart';
 import 'package:running_laps/core/theme/app_theme.dart';
 import 'package:running_laps/core/widgets/app_date_picker.dart';
 import 'package:running_laps/core/widgets/modern_snackbar.dart';
+import 'package:running_laps/features/ai_coach/views/health_safety_form.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_models_config.dart';
 import 'package:running_laps/features/ai_coach/data/ai_coach_repository.dart';
@@ -48,6 +51,14 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
   DateTime? _birthDate;
   String? _biologicalSex;
 
+  // Paso 7 — cribado de seguridad + consentimiento de datos de salud.
+  // Ninguna respuesta bloquea nada; el consentimiento sí, porque sin él no
+  // podemos mandar molestias ni lesiones al proveedor de IA (art. 9 RGPD).
+  final Map<HealthScreeningQuestion, bool> _screeningAnswers = {
+    ...HealthScreening.allNegative,
+  };
+  bool _healthConsent = false;
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -72,7 +83,7 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
   }
 
   void _nextStep() {
-    if (_currentStep < 5) {
+    if (_currentStep < 6) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 350),
         curve: AppMotion.snap,
@@ -113,9 +124,23 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
       return;
     }
 
+    if (!_healthConsent) {
+      ModernSnackBar.showWarning(
+        context,
+        'Necesito tu permiso para usar tus datos de salud.',
+      );
+      return;
+    }
+
     setState(() => _isProcessing = true);
 
     try {
+      // Antes de la primera llamada al LLM, no después: el paso 4 del wizard
+      // es texto libre sobre lesiones y va dentro de ese prompt. Guardar el
+      // consentimiento después dejaría el dato ya enviado sin base legal.
+      await HealthScreeningService().save(_screeningAnswers);
+      await HealthConsentService().grant(HealthConsentScope.aiCoach);
+
       final client = OpenRouterClient();
       final userPrompt =
           'Extrae la información de este runner y devuelve un JSON con esta estructura exacta:\n'
@@ -290,7 +315,7 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
     return Column(
       children: [
         const SizedBox(height: 24),
-        _StepIndicator(currentStep: _currentStep, totalSteps: 6),
+        _StepIndicator(currentStep: _currentStep, totalSteps: 7),
         Expanded(
           child: PageView(
             controller: _pageController,
@@ -347,16 +372,35 @@ class _AiCoachOnboardingViewState extends State<AiCoachOnboardingView> {
                 onChangedHalf: (v) => setState(() => _pbHalfMarathonSeconds = v),
                 onChangedMarathon: (v) => setState(() => _pbMarathonSeconds = v),
               ),
+              SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 12,
+                ),
+                child: HealthSafetyForm(
+                  answers: _screeningAnswers,
+                  consentGranted: _healthConsent,
+                  onAnswerChanged: (q, v) =>
+                      setState(() => _screeningAnswers[q] = v),
+                  onConsentChanged: (v) => setState(() => _healthConsent = v),
+                ),
+              ),
             ],
           ),
         ),
-        if (_currentStep == 5)
-          _CreatePlanButton(onCreate: _processOnboarding)
+        if (_currentStep == 6)
+          _CreatePlanButton(
+            onCreate: _processOnboarding,
+            enabled: _healthConsent,
+          )
         else
           _NextButton(
             isLastStep: false,
             controller: _controllerForStep(_currentStep),
-            isOptional: _currentStep == 3 || _currentStep == 4,
+            // A partir del paso 3 todo es opcional (notas, datos físicos,
+            // marcas): esos pasos no tienen un campo de texto que exigir, y
+            // el controller que les toca por defecto suele venir vacío.
+            isOptional: _currentStep >= 3,
             onNext: _nextStep,
           ),
         const SizedBox(height: 32),
@@ -812,7 +856,11 @@ class _BirthDateStepPage extends StatelessWidget {
 class _CreatePlanButton extends StatelessWidget {
   final VoidCallback onCreate;
 
-  const _CreatePlanButton({required this.onCreate});
+  /// Sin el consentimiento de datos de salud no hay plan: el onboarding manda
+  /// lesiones y molestias en texto libre al proveedor de IA.
+  final bool enabled;
+
+  const _CreatePlanButton({required this.onCreate, this.enabled = true});
 
   @override
   Widget build(BuildContext context) {
@@ -821,9 +869,11 @@ class _CreatePlanButton extends StatelessWidget {
       child: SizedBox(
         width: double.infinity,
         child: FilledButton(
-          onPressed: onCreate,
+          onPressed: enabled ? onCreate : null,
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.brand,
+            disabledBackgroundColor: AppColors.brand.withValues(alpha: 0.3),
+            disabledForegroundColor: Colors.white70,
             foregroundColor: Colors.white,
             minimumSize: const Size.fromHeight(54),
             shape: RoundedRectangleBorder(

@@ -90,16 +90,33 @@ Las competiciones son una **entidad propia** (`RaceGoal`, `features/ai_coach/dat
 
 Archivos: `ai_coach_onboarding_view.dart` + `ai_coach_onboarding_launcher.dart`
 
-### Cuestionario inicial (wizard multi-paso)
+### Cuestionario inicial (wizard de 7 pasos)
 
-1. **Objetivo** — selección de `AiCoachGoalType` (7 opciones)
-2. **Competición** — fecha objetivo (opcional según tipo)
-3. **Disponibilidad** — días/semana (1-7), días concretos (L-D multi-select), tiempo por sesión (min)
-4. **Estado actual** — marcas opcionales (5K, 10K, HM, Maratón en segundos), lesiones/limitaciones (texto libre), preferencias (texto libre)
+Los cuatro primeros son texto libre: un LLM los convierte en `AiCoachProfile`
+(ver `_profileExtractionSchema`). Los tres últimos son campos estructurados.
+
+1. **Nivel** — experiencia como runner (texto libre)
+2. **Objetivo** — qué quiere conseguir (texto libre)
+3. **Disponibilidad** — días y tiempo (texto libre)
+4. **Algo más** — lesiones pasadas, limitaciones, preferencias (texto libre, opcional)
+5. **Datos físicos** — fecha de nacimiento + sexo biológico (opcional)
+6. **Marcas personales** — 5K, 10K, HM, Maratón en segundos (opcional)
+7. **Seguridad y permisos** — cribado PAR-Q + consentimiento de datos de salud
+   (`HealthSafetyForm`). Único paso que bloquea: sin marcar la casilla, el botón
+   "Crear mi plan" está deshabilitado. Ver PUBLISHING.md § Coach IA: cribado y
+   consentimiento.
+
+⚠️ A partir del paso 4 todos son opcionales y el botón "Siguiente" no debe
+exigir texto (`isOptional: _currentStep >= 3`): esos pasos no tienen campo de
+texto propio y heredan el controller del paso 4, que suele venir vacío.
+
+⚠️ El consentimiento y el cribado se persisten **antes** de la primera llamada
+al LLM, no después: el paso 4 es texto libre sobre lesiones y viaja dentro de
+ese mismo prompt.
 
 Al completar: `isAthleteMode = true` + `onboardingCompleted = true` en Firestore (escritura atómica en un solo `update()`) → `AuthWrapper` reacciona automáticamente al stream.
 
-El launcher (`launchAiCoachOnboarding()`) verifica si ya existe perfil; si existe, va directamente a settings (tab 16).
+El launcher (`launchAiCoachOnboarding()`) verifica si ya existe perfil; si existe, pide el consentimiento del Coach a quien aún no lo haya dado (`ensureAiCoachHealthConsent`) y va a settings (tab 16).
 
 ### Flujo de navegación al completar
 

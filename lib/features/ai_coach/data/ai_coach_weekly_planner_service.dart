@@ -10,6 +10,7 @@ import 'package:running_laps/features/ai_coach/data/ai_coach_session_generator.d
 import 'package:running_laps/features/ai_coach/data/vdot_auto_updater.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_model.dart';
 import 'package:running_laps/features/athlete/data/athlete_session_repository.dart';
+import 'package:running_laps/core/services/health_consent_service.dart';
 import 'package:running_laps/core/services/user_service.dart';
 import 'package:flutter/foundation.dart';
 
@@ -31,12 +32,14 @@ class AiCoachWeeklyPlannerService {
     AthleteSessionRepository? sessionRepository,
     AiCoachSessionGenerator? sessionGenerator,
     UserService? userService,
+    HealthConsentService? healthConsentService,
   })  : _decisionServiceOverride = decisionService,
         _contextBuilderOverride = contextBuilder,
         _aiCoachRepositoryOverride = aiCoachRepository,
         _sessionRepositoryOverride = sessionRepository,
         _sessionGenerator = sessionGenerator ?? const AiCoachSessionGenerator(),
-        _userServiceOverride = userService;
+        _userServiceOverride = userService,
+        _healthConsentOverride = healthConsentService;
 
   // Colaboradores perezosos: construir el planificador no debe exigir Firebase
   // inicializado (mismo criterio que AiCoachChatService). El reparto de días
@@ -46,6 +49,7 @@ class AiCoachWeeklyPlannerService {
   final AiCoachRepository? _aiCoachRepositoryOverride;
   final AthleteSessionRepository? _sessionRepositoryOverride;
   final UserService? _userServiceOverride;
+  final HealthConsentService? _healthConsentOverride;
 
   late final AiCoachDecisionService _decisionService =
       _decisionServiceOverride ?? AiCoachDecisionService();
@@ -56,6 +60,8 @@ class AiCoachWeeklyPlannerService {
   late final AthleteSessionRepository _sessionRepository =
       _sessionRepositoryOverride ?? AthleteSessionRepository();
   late final UserService _userService = _userServiceOverride ?? UserService();
+  late final HealthConsentService _healthConsent =
+      _healthConsentOverride ?? HealthConsentService();
 
   final AiCoachSessionGenerator _sessionGenerator;
 
@@ -75,6 +81,18 @@ class AiCoachWeeklyPlannerService {
       throw Exception(
         'El plan IA solo esta disponible con modo atleta activado.',
       );
+    }
+
+    // Candado único de datos de salud: el contexto semanal lleva molestias,
+    // lesiones, FC y zonas a un proveedor externo. Las cuatro rutas de
+    // generacion (automatica, forzada, onboarding y chat) pasan por aqui, asi
+    // que basta comprobarlo en este punto. Sin consentimiento no se genera.
+    final hasConsent = await _healthConsent.hasConsent(
+      HealthConsentScope.aiCoach,
+      uid: uid,
+    );
+    if (!hasConsent) {
+      throw const HealthConsentRequiredException(HealthConsentScope.aiCoach);
     }
 
     final anchor = referenceDate ?? DateTime.now();
