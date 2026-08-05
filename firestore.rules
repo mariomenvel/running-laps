@@ -68,9 +68,21 @@ service cloud.firestore {
     match /users/{uid} {
 
       // Any signed-in user can read any profile document or run a query.
-      // Required for:
-      //   (a) Group ranking UI reads name / photoUrl / avatarConfig of other members.
-      //   (b) UserLookupService queries users by email field when sending invites.
+      //
+      // ⚠️ The two reasons this comment used to give are both gone: the group
+      // ranking UI (removed with the groups feature, Aug 2026) and
+      // UserLookupService (email lookup for invites — no longer in lib/).
+      // What still needs it is the admin panel: AdminRepository counts
+      // `users` and queries it by `generativeAvatarConfig`, and those run as
+      // a normal signed-in user because there is no isAdmin-scoped read rule.
+      //
+      // So this is a real cross-user read of profile documents, which carry
+      // birthDate, sex and fcMax. Tightening it to `isOwner(uid) || isAdmin()`
+      // is the obvious next step, but it changes what the admin panel can do
+      // and cannot be verified from the analyzer or the test suite — it needs
+      // a rules-emulator run or a live check before deploying. The panel is
+      // slated to move to a web dashboard (see CLAUDE.md, deuda #5), which
+      // would remove the last reason to keep this open.
       allow read: if isSignedIn();
 
       // A user can create their own profile on first register / Google login.
@@ -176,29 +188,34 @@ service cloud.firestore {
         allow read, write: if isOwner(uid);
       }
 
-      // ── users/{uid}/result_notifications/{id} ──────────────────────────────
+      // ── users/{uid}/aiCoachEvents/{id} ─────────────────────────────────────
       match /aiCoachEvents/{eventId} {
         allow read, write: if isOwner(uid);
       }
 
+      // ── users/{uid}/aiCoachFeedback/{weekStart} ────────────────────────────
       match /aiCoachFeedback/{weekStart} {
         allow read, write: if isOwner(uid);
       }
 
+      // ── users/{uid}/result_notifications/{id} ─────────────────────────────
       match /result_notifications/{notifId} {
-        // The owner reads and deletes their own reward notifications.
-        allow read, delete: if isOwner(uid);
+        // The owner reads, updates (mark-as-read) and deletes their own
+        // reward notifications.
+        allow read, update, delete: if isOwner(uid);
 
-        // Updates (e.g. mark-as-read) are owner-only.
-        allow update: if isOwner(uid);
-
-        // ChallengeFinalizationService writes award notifications for winners
-        // whose uid differs from the authenticated caller (cross-user create).
-        // Content is non-sensitive (medal / badge award info).
-        // toUid must match the document's parent uid to prevent cross-user spam.
-        // TEMP: any signed-in user can create until Cloud Functions are available.
-        // PRODUCTION: restrict to Admin SDK via Cloud Function only.
-        allow create: if isSignedIn()
+        // Creates were open to any signed-in user (`isSignedIn()`) so that
+        // ChallengeFinalizationService could write award notifications into
+        // the winner's own tree — a cross-user write. That service went away
+        // with the groups feature (Aug 2026) and no client creates these
+        // documents any more, so the rule is back to owner-only: unlike the
+        // groups/global_challenges rules, which are inert because nobody
+        // writes there, this one wrote inside *another* account's tree and
+        // anyone with an account could use it to spam.
+        //
+        // If cross-user notifications ever come back, write them from a Cloud
+        // Function with the Admin SDK and leave this at isOwner.
+        allow create: if isOwner(uid)
             && request.resource.data.keys().size() < 15
             && request.resource.data.get("type", "").size() < 50
             && request.resource.data.get("toUid", "") == uid;

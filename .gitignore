@@ -122,6 +122,14 @@ test_output.txt
 test_output_utf8.txt
 test_output_v2.txt
 
+# Volcados temporales de git/diff que ya se colaron una vez en un commit
+# (0d615b3, jul 2026): diff_docs.txt, merge_diff_vs_remote.txt, temp_status.txt
+# y una captura suelta acabaron en la raíz del repo.
+temp_status.txt
+diff_docs.txt
+merge_diff*.txt
+flutter_*.png
+
 # ============================
 # IDE / Editor files
 # ============================

@@ -1,5 +1,44 @@
 # CHANGELOG — Running Laps
 
+## [Seguridad] — La puerta que dejó grupos al irse — 2026-08-05
+`users/{uid}/result_notifications` tenía `allow create: if isSignedIn()`:
+cualquier persona con una cuenta podía crear documentos **dentro del árbol de
+otro usuario**. Se puso para `ChallengeFinalizationService`, que escribía la
+notificación de premio al ganador de un reto — un uid distinto del que llamaba.
+Ese servicio se fue con la feature de grupos y la regla se quedó. La entrada del
+4 de agosto la dejó documentada pero no cerrada, porque cambiar reglas pide su
+propio despliegue.
+
+Ahora es `isOwner(uid)`, conservando los topes que ya tenía (nº de claves,
+tamaño de `type`, `toUid == uid`). No rompe nada: no queda una sola referencia a
+la colección en `lib/`, `test/` ni `functions/src/` — solo un comentario en
+`deleteUserData.ts` que la lista entre las subcolecciones que borra
+recursivamente, y eso va por Admin SDK, que no pasa por las reglas.
+
+⚠️ **No surte efecto hasta `firebase deploy --only firestore:rules`.**
+
+**Lo que apareció al tirar del hilo** (documentado, no tocado):
+
+- **`users/{uid}` sigue con `read: isSignedIn()`** y el comentario que lo
+  justificaba nombraba dos cosas que ya no existen: el ranking de grupo y
+  `UserLookupService`. Lo único que hoy necesita esa lectura cruzada es el panel
+  de admin. No es inocuo: el documento de perfil lleva `birthDate`, `sex` y
+  `fcMax`. El arreglo (`isOwner(uid) || isAdmin()`) cambia lo que el panel puede
+  leer y no lo ve ni el analizador ni la suite — pide emulador de reglas.
+- **Las métricas globales del panel de admin ya están rotas.**
+  `AdminRepository.getGlobalStats()` hace `collectionGroup('trainings')`, y desde
+  que `trainings` es `read: isOwner` Firestore lo deniega. El `try` interno se
+  come el error, así que el panel enseña ceros en vez de fallar. No se arregla
+  aflojando la regla —el entreno lleva FC, art. 9—; se arregla agregando en una
+  Cloud Function, que es lo que hará el panel web al que está previsto migrar.
+
+De paso, la raíz del repo tenía seis ficheros que se colaron en el commit
+`0d615b3` (24 jul): `partner_gps_service.dart` (667 líneas, una variante de
+`gps_service.dart` que no importa nadie), `diff_docs.txt`,
+`merge_diff_vs_remote.txt`, `temp_status.txt`, `flutter_01.png` y un fichero
+cuyo nombre era un comando de git mal escapado. Fuera, y al `.gitignore` los
+patrones para que no vuelvan.
+
 ## [Legal] — Pautar con IA sin consentimiento — 2026-08-04
 El consentimiento de datos de salud solo tapaba el pulsómetro. Su única puerta
 era `heart_rate_monitor_view`, así que quien nunca conectó una banda usaba el

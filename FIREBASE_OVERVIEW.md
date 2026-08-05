@@ -38,9 +38,11 @@ esta tabla es una foto fija, no un dashboard en vivo.
 El detalle completo de colecciones, quién lee/escribe cada una y por qué ya
 está mantenido en **[`firestore_access_patterns.md`](firestore_access_patterns.md)**
 — no lo duplico aquí para no tener dos fuentes que se desincronicen. Ese
-documento incluye también las limitaciones conocidas (lectura cruzada de
-`trainings`, escritura cruzada en `result_notifications`) que ya están en la
-deuda técnica de CLAUDE.md.
+documento incluye también las limitaciones conocidas. Las dos escrituras/lecturas
+cruzadas que se arrastraban de la época de grupos ya están cerradas
+(`trainings` en ago 2026, `result_notifications` el 5 ago 2026); la que sigue
+abierta es la **lectura cruzada de `users/{uid}`**, que solo sostiene el panel
+de admin.
 
 ⚠️ Al releerlo ahora (jul 2026) noté que menciona `hasPremiumCoach` escrito
 "por Cloud Function webhook Stripe" — esa función **no existe** en
